@@ -617,6 +617,29 @@ set_property(
 #           ^-----  game_view
 # ---------------------------------------------------------------------------
 
+# The strategic world: regions, sites, routes, armies, supply and the campaign
+# chronology above any one battlefield. Pure data and graph queries on Qt Core;
+# it names nothing in the simulation, so the editor, the content validator and
+# any campaign layer can read it without a match. See docs/STRATEGIC_WORLD.md.
+add_library(
+    soi_strategic
+    STATIC
+    strategic/strategic_types.cpp
+    strategic/strategic_world.cpp
+    strategic/strategic_geometry.cpp
+    strategic/strategic_json.cpp
+    strategic/strategic_graph.cpp
+    strategic/strategic_supply.cpp
+    strategic/strategic_events.cpp
+    strategic/strategic_encounter.cpp
+    strategic/strategic_validation.cpp
+    strategic/strategic_assets.cpp
+)
+target_include_directories(soi_strategic PUBLIC .)
+target_link_libraries(soi_strategic PUBLIC Qt${QT_VERSION_MAJOR}::Core)
+# The shared precompiled header pulls in QtGui; this library links Core only.
+set_target_properties(soi_strategic PROPERTIES DISABLE_PRECOMPILE_HEADERS ON)
+
 # The campaign definition: which missions exist, in what order, and what a
 # province is worth. Read before a match starts and by the save database, never
 # during one.

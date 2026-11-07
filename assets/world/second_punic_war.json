@@ -1,0 +1,2842 @@
+{
+  "schema_version": 1,
+  "id": "second_punic_war",
+  "name": "The Barcid Road: the Western Mediterranean, 218–201 BC",
+  "campaign": "second_punic_war",
+  "start_label": "218 BC, spring",
+  "player_faction": "carthage",
+  "geometry": "assets/campaign_map/provinces.json",
+  "projection": {"lat_max": 47.5, "lat_min": 30, "lon_max": 18, "lon_min": -10},
+  "factions": [
+    {"id": "carthage", "name": "Carthage", "capital": "carthage", "color": "#692a5c"},
+    {"id": "rome", "name": "Rome", "capital": "rome", "color": "#b8302a"}
+  ],
+  "regions": [
+    {
+      "id": "iberia_carthaginian",
+      "name": "Carthaginian Iberia",
+      "historical_name": "Hispania Barcina",
+      "terrain": "hills",
+      "tags": ["iberian", "coastal"],
+      "adjacent": ["iberia_interior"],
+      "importance": 4
+    },
+    {
+      "id": "iberia_interior",
+      "name": "Iberian Interior",
+      "historical_name": "Celtiberia and the Ebro",
+      "terrain": "hills",
+      "tags": ["iberian"],
+      "adjacent": ["iberia_carthaginian", "transalpine_gaul"],
+      "importance": 2
+    },
+    {
+      "id": "transalpine_gaul",
+      "name": "Transalpine Gaul",
+      "historical_name": "Gallia Transalpina",
+      "terrain": "plains",
+      "tags": ["gallic"],
+      "adjacent": ["iberia_interior", "cisalpine_gaul", "etruria"],
+      "importance": 3
+    },
+    {
+      "id": "cisalpine_gaul",
+      "name": "Cisalpine Gaul",
+      "historical_name": "Gallia Cisalpina",
+      "terrain": "plains",
+      "tags": ["gallic", "river_po"],
+      "adjacent": ["transalpine_gaul", "etruria"],
+      "districts": [
+        {
+          "id": "alps",
+          "name": "The Alps",
+          "outline": [
+            [5.6000000000000005, 44], [6.4, 44.1], [7, 44.1], [7.7, 44.25], [7.45, 44.75],
+            [7.25, 45.150000000000006], [7.3500000000000005, 45.6], [7.9, 45.95],
+            [8.8, 46.150000000000006], [9.6, 46.2], [10.5, 46.35], [11.3, 46.45], [11.5, 47],
+            [10, 47.300000000000004], [8.6, 47.1], [7.4, 46.75], [6.800000000000001, 46.45],
+            [6.1000000000000005, 46], [5.800000000000001, 45.400000000000006],
+            [5.7, 44.800000000000004]
+          ]
+        }
+      ],
+      "importance": 4
+    },
+    {
+      "id": "etruria",
+      "name": "Etruria",
+      "historical_name": "Etruria and Umbria",
+      "terrain": "hills",
+      "tags": ["italian"],
+      "adjacent": ["cisalpine_gaul", "roman_core", "transalpine_gaul"],
+      "importance": 4
+    },
+    {
+      "id": "roman_core",
+      "name": "Roman Core",
+      "historical_name": "Latium, Campania and Samnium",
+      "terrain": "plains",
+      "tags": ["italian"],
+      "adjacent": ["etruria", "southern_italy"],
+      "districts": [
+        {
+          "id": "campania",
+          "name": "Campania",
+          "outline": [
+            [13.700000000000001, 41.35], [14.25, 41.45], [14.65, 41.35],
+            [14.600000000000001, 41.120000000000005], [14.72, 41], [14.950000000000001, 40.95],
+            [14.950000000000001, 40.6], [14.450000000000001, 40.35], [13.9, 40.6],
+            [13.700000000000001, 41]
+          ]
+        },
+        {
+          "id": "samnium",
+          "name": "Samnium",
+          "outline": [
+            [13.9, 41.95], [14.350000000000001, 42.15], [14.950000000000001, 41.85],
+            [14.950000000000001, 41.550000000000004], [15.15, 41.300000000000004],
+            [14.950000000000001, 40.95], [14.72, 41], [14.600000000000001, 41.120000000000005],
+            [14.65, 41.35], [14.25, 41.45], [13.9, 41.6]
+          ]
+        }
+      ],
+      "importance": 5
+    },
+    {
+      "id": "southern_italy",
+      "name": "Southern Italy",
+      "historical_name": "Apulia, Lucania and Bruttium",
+      "terrain": "hills",
+      "tags": ["italian", "coastal"],
+      "adjacent": ["roman_core"],
+      "districts": [
+        {
+          "id": "apulia",
+          "name": "Apulia",
+          "outline": [
+            [14.950000000000001, 41.85], [15.3, 42.050000000000004], [16.3, 41.95],
+            [17.2, 41.25], [18.2, 40.75], [18.6, 40.1], [18.2, 39.75], [17.6, 40.25],
+            [16.95, 40.42], [16.5, 40.7], [16.05, 40.9], [15.55, 41.050000000000004],
+            [15.15, 41.300000000000004], [14.950000000000001, 41.550000000000004]
+          ]
+        }
+      ],
+      "importance": 5
+    },
+    {
+      "id": "sicily_roman",
+      "name": "Sicily",
+      "historical_name": "Sicilia",
+      "terrain": "hills",
+      "tags": ["island"],
+      "importance": 4
+    },
+    {
+      "id": "sardinia",
+      "name": "Sardinia",
+      "historical_name": "Sardinia",
+      "terrain": "hills",
+      "tags": ["island"],
+      "importance": 2
+    },
+    {
+      "id": "corsica",
+      "name": "Corsica",
+      "historical_name": "Corsica",
+      "terrain": "mountains",
+      "tags": ["island"],
+      "importance": 1
+    },
+    {
+      "id": "carthage_core",
+      "name": "Carthage Core",
+      "historical_name": "Africa (the Carthaginian chora)",
+      "terrain": "plains",
+      "tags": ["african", "coastal"],
+      "adjacent": ["numidia", "libya"],
+      "importance": 5
+    },
+    {
+      "id": "numidia",
+      "name": "Numidia",
+      "historical_name": "Numidia and Mauretania",
+      "terrain": "hills",
+      "tags": ["african"],
+      "adjacent": ["carthage_core"],
+      "importance": 3
+    },
+    {
+      "id": "libya",
+      "name": "Libya",
+      "historical_name": "The Emporia and the Syrtis",
+      "terrain": "desert",
+      "tags": ["african"],
+      "adjacent": ["carthage_core"],
+      "importance": 2
+    },
+    {
+      "id": "illyrian_coast",
+      "name": "Illyrian Coast",
+      "historical_name": "Illyricum (Roman protectorate)",
+      "terrain": "coast",
+      "adjacent": ["illyria"],
+      "importance": 2
+    },
+    {
+      "id": "illyria",
+      "name": "Illyrian Interior",
+      "historical_name": "The Illyrian hinterland",
+      "terrain": "mountains",
+      "adjacent": ["illyrian_coast"],
+      "importance": 1
+    }
+  ],
+  "sites": [
+    {
+      "id": "new_carthage",
+      "name": "New Carthage",
+      "latin": "Carthago Nova",
+      "kind": "city",
+      "region": "iberia_carthaginian",
+      "lonlat": [-0.9860000000000001, 37.6],
+      "population": "large",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 3, "iron": 4, "manpower": 4, "stone": 2, "timber": 2},
+      "tags": ["barcid_capital", "silver_mines"]
+    },
+    {
+      "id": "gades",
+      "name": "Gades",
+      "latin": "Gades",
+      "kind": "city",
+      "region": "iberia_carthaginian",
+      "lonlat": [-6.29, 36.53],
+      "population": "medium",
+      "fortification": 2,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 3, "iron": 1, "manpower": 2, "timber": 1}
+    },
+    {
+      "id": "castulo",
+      "name": "Castulo",
+      "latin": "Castulo",
+      "kind": "town",
+      "region": "iberia_carthaginian",
+      "lonlat": [-3.6300000000000003, 38.04],
+      "population": "medium",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 3, "iron": 5, "manpower": 3, "stone": 2},
+      "tags": ["silver_mines"]
+    },
+    {
+      "id": "toletum",
+      "name": "Toletum",
+      "latin": "Toletum",
+      "kind": "town",
+      "region": "iberia_carthaginian",
+      "lonlat": [-4.0200000000000005, 39.86],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 2, "iron": 3, "manpower": 2, "stone": 1}
+    },
+    {
+      "id": "saguntum",
+      "name": "Saguntum",
+      "latin": "Saguntum",
+      "kind": "town",
+      "region": "iberia_carthaginian",
+      "lonlat": [-0.27, 39.68],
+      "population": "medium",
+      "fortification": 3,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 2, "stone": 2}
+    },
+    {
+      "id": "dertosa",
+      "name": "Dertosa",
+      "latin": "Dertosa",
+      "kind": "town",
+      "region": "iberia_carthaginian",
+      "lonlat": [0.52, 40.81],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "river",
+      "resources": {"food": 3, "manpower": 2, "timber": 1},
+      "tags": ["ebro_crossing"]
+    },
+    {
+      "id": "tarraco",
+      "name": "Tarraco",
+      "latin": "Tarraco",
+      "kind": "town",
+      "region": "iberia_interior",
+      "lonlat": [1.25, 41.120000000000005],
+      "population": "medium",
+      "fortification": 2,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 2, "stone": 1, "timber": 2}
+    },
+    {
+      "id": "emporiae",
+      "name": "Emporiae",
+      "latin": "Emporiae",
+      "kind": "town",
+      "region": "iberia_interior",
+      "lonlat": [3.12, 42.13],
+      "population": "small",
+      "fortification": 2,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1},
+      "tags": ["greek"]
+    },
+    {
+      "id": "ilerda",
+      "name": "Ilerda",
+      "latin": "Ilerda",
+      "kind": "town",
+      "region": "iberia_interior",
+      "lonlat": [0.62, 41.620000000000005],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 2, "manpower": 3}
+    },
+    {
+      "id": "numantia",
+      "name": "Numantia",
+      "latin": "Numantia",
+      "kind": "town",
+      "region": "iberia_interior",
+      "lonlat": [-2.44, 41.81],
+      "population": "small",
+      "fortification": 3,
+      "terrain": "hills",
+      "resources": {"food": 2, "iron": 2, "manpower": 3, "stone": 1}
+    },
+    {
+      "id": "helmantica",
+      "name": "Helmantica",
+      "latin": "Helmantica",
+      "kind": "town",
+      "region": "iberia_interior",
+      "lonlat": [-5.66, 40.96],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 2}
+    },
+    {
+      "id": "pyrenean_pass",
+      "name": "Pyrenean Pass",
+      "latin": "Summum Pyrenaeum",
+      "kind": "pass",
+      "region": "iberia_interior",
+      "lonlat": [2.87, 42.47],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "mountains",
+      "resources": {"stone": 1, "timber": 2}
+    },
+    {
+      "id": "ruscino",
+      "name": "Ruscino",
+      "latin": "Ruscino",
+      "kind": "town",
+      "region": "transalpine_gaul",
+      "lonlat": [2.93, 42.71],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "narbo",
+      "name": "Narbo",
+      "latin": "Narbo",
+      "kind": "town",
+      "region": "transalpine_gaul",
+      "lonlat": [3, 43.18],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 2, "manpower": 2},
+      "tags": ["volcae"]
+    },
+    {
+      "id": "rhone_crossing",
+      "name": "Rhône Crossing",
+      "latin": "Transitus Rhodani",
+      "kind": "crossing",
+      "region": "transalpine_gaul",
+      "lonlat": [4.75, 44],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "river",
+      "resources": {"food": 1, "timber": 2},
+      "battlefield": {"mission": "crossing_the_rhone", "map": "assets/maps/map_crossing_rhone.json"}
+    },
+    {
+      "id": "massalia",
+      "name": "Massalia",
+      "latin": "Massilia",
+      "kind": "city",
+      "region": "transalpine_gaul",
+      "lonlat": [5.37, 43.300000000000004],
+      "population": "large",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 2, "stone": 2, "timber": 2},
+      "tags": ["greek", "roman_ally"]
+    },
+    {
+      "id": "allobrogian_island",
+      "name": "The Island",
+      "latin": "Insula Allobrogum",
+      "kind": "town",
+      "region": "transalpine_gaul",
+      "lonlat": [4.95, 45],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "river",
+      "resources": {"food": 3, "manpower": 2, "timber": 1},
+      "tags": ["allobroges"]
+    },
+    {
+      "id": "alpine_pass",
+      "name": "Alpine Pass",
+      "latin": "Alpes",
+      "kind": "pass",
+      "region": "cisalpine_gaul",
+      "district": "alps",
+      "lonlat": [6.9, 45.2],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "mountains",
+      "resources": {"iron": 1, "stone": 3, "timber": 2},
+      "battlefield": {"mission": "crossing_the_alps", "map": "assets/maps/map_crossing_alps.json"}
+    },
+    {
+      "id": "taurasia",
+      "name": "Taurasia",
+      "latin": "Taurasia",
+      "kind": "town",
+      "region": "cisalpine_gaul",
+      "lonlat": [7.680000000000001, 45.07],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "plains",
+      "resources": {"food": 2, "manpower": 2, "timber": 1},
+      "tags": ["taurini"]
+    },
+    {
+      "id": "victumulae",
+      "name": "Victumulae",
+      "latin": "Victumulae",
+      "kind": "town",
+      "region": "cisalpine_gaul",
+      "lonlat": [8.42, 45.330000000000005],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 3, "manpower": 1, "stone": 1},
+      "battlefield": {"mission": "storming_of_victumulae", "map": "assets/maps/map_victumulae.json"}
+    },
+    {
+      "id": "ticinus",
+      "name": "Ticinus Crossing",
+      "latin": "Ticinus",
+      "kind": "crossing",
+      "region": "cisalpine_gaul",
+      "lonlat": [8.950000000000001, 45.22],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "river",
+      "resources": {"food": 1, "timber": 1},
+      "battlefield": {"mission": "battle_of_ticino", "map": "assets/maps/map_battle_ticino.json"}
+    },
+    {
+      "id": "mediolanum",
+      "name": "Mediolanum",
+      "latin": "Mediolanum",
+      "kind": "town",
+      "region": "cisalpine_gaul",
+      "lonlat": [9.190000000000001, 45.46],
+      "population": "medium",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 4, "manpower": 4, "timber": 1},
+      "tags": ["insubres"]
+    },
+    {
+      "id": "clastidium",
+      "name": "Clastidium",
+      "latin": "Clastidium",
+      "kind": "fort",
+      "region": "cisalpine_gaul",
+      "lonlat": [9.33, 45],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "plains",
+      "resources": {"food": 4},
+      "tags": ["granary"]
+    },
+    {
+      "id": "placentia",
+      "name": "Placentia",
+      "latin": "Placentia",
+      "kind": "colony",
+      "region": "cisalpine_gaul",
+      "lonlat": [9.690000000000001, 45.050000000000004],
+      "population": "medium",
+      "fortification": 2,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 2, "timber": 1}
+    },
+    {
+      "id": "trebia",
+      "name": "Trebia",
+      "latin": "Trebia",
+      "kind": "field",
+      "region": "cisalpine_gaul",
+      "lonlat": [9.6, 44.980000000000004],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "river",
+      "resources": {"food": 1},
+      "battlefield": {"mission": "battle_of_trebia", "map": "assets/maps/map_battle_trebia.json"}
+    },
+    {
+      "id": "cremona",
+      "name": "Cremona",
+      "latin": "Cremona",
+      "kind": "colony",
+      "region": "cisalpine_gaul",
+      "lonlat": [10.020000000000001, 45.13],
+      "population": "medium",
+      "fortification": 2,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 2, "timber": 1}
+    },
+    {
+      "id": "mutina",
+      "name": "Mutina",
+      "latin": "Mutina",
+      "kind": "town",
+      "region": "cisalpine_gaul",
+      "lonlat": [10.93, 44.650000000000006],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 1}
+    },
+    {
+      "id": "felsina",
+      "name": "Felsina",
+      "latin": "Bononia",
+      "kind": "town",
+      "region": "etruria",
+      "lonlat": [11.34, 44.49],
+      "population": "medium",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 3, "timber": 1},
+      "tags": ["boii"]
+    },
+    {
+      "id": "genua",
+      "name": "Genua",
+      "latin": "Genua",
+      "kind": "town",
+      "region": "etruria",
+      "lonlat": [8.93, 44.410000000000004],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 1, "manpower": 1, "timber": 3}
+    },
+    {
+      "id": "ariminum",
+      "name": "Ariminum",
+      "latin": "Ariminum",
+      "kind": "colony",
+      "region": "etruria",
+      "lonlat": [12.57, 44.06],
+      "population": "medium",
+      "fortification": 2,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 2, "timber": 1}
+    },
+    {
+      "id": "arretium",
+      "name": "Arretium",
+      "latin": "Arretium",
+      "kind": "town",
+      "region": "etruria",
+      "lonlat": [11.88, 43.46],
+      "population": "medium",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 3, "iron": 3, "manpower": 2, "timber": 1},
+      "tags": ["arms_works"]
+    },
+    {
+      "id": "trasimene",
+      "name": "Lake Trasimene",
+      "latin": "Lacus Trasumennus",
+      "kind": "field",
+      "region": "etruria",
+      "lonlat": [12.100000000000001, 43.190000000000005],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "hills",
+      "resources": {"food": 1, "timber": 1},
+      "battlefield": {"mission": "battle_of_trasimene", "map": "assets/maps/map_battle_trasimene.json"}
+    },
+    {
+      "id": "pisae",
+      "name": "Pisae",
+      "latin": "Pisae",
+      "kind": "town",
+      "region": "etruria",
+      "lonlat": [10.4, 43.72],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1, "timber": 3}
+    },
+    {
+      "id": "populonia",
+      "name": "Populonia",
+      "latin": "Populonia",
+      "kind": "town",
+      "region": "etruria",
+      "lonlat": [10.49, 42.99],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 1, "iron": 5, "manpower": 1, "timber": 1},
+      "tags": ["elban_iron"]
+    },
+    {
+      "id": "metaurus",
+      "name": "Metaurus Crossing",
+      "latin": "Metaurus",
+      "kind": "crossing",
+      "region": "etruria",
+      "lonlat": [12.850000000000001, 43.7],
+      "population": "none",
+      "fortification": 0,
+      "terrain": "river",
+      "resources": {"food": 1}
+    },
+    {
+      "id": "rome",
+      "name": "Rome",
+      "latin": "Roma",
+      "kind": "city",
+      "region": "roman_core",
+      "lonlat": [12.48, 41.89],
+      "population": "metropolis",
+      "fortification": 3,
+      "terrain": "hills",
+      "resources": {"food": 3, "iron": 2, "manpower": 5, "stone": 3, "timber": 2},
+      "tags": ["capital"]
+    },
+    {
+      "id": "ostia",
+      "name": "Ostia",
+      "latin": "Ostia",
+      "kind": "town",
+      "region": "roman_core",
+      "lonlat": [12.290000000000001, 41.75],
+      "population": "small",
+      "fortification": 1,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "spoletium",
+      "name": "Spoletium",
+      "latin": "Spoletium",
+      "kind": "colony",
+      "region": "roman_core",
+      "lonlat": [12.74, 42.730000000000004],
+      "population": "small",
+      "fortification": 3,
+      "terrain": "hills",
+      "resources": {"food": 2, "manpower": 2, "timber": 1}
+    },
+    {
+      "id": "casinum",
+      "name": "Casinum",
+      "latin": "Casinum",
+      "kind": "town",
+      "region": "roman_core",
+      "lonlat": [13.83, 41.49],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "hills",
+      "resources": {"food": 2, "manpower": 2, "stone": 1}
+    },
+    {
+      "id": "capua",
+      "name": "Capua",
+      "latin": "Capua",
+      "kind": "city",
+      "region": "roman_core",
+      "district": "campania",
+      "lonlat": [14.25, 41.080000000000005],
+      "population": "large",
+      "fortification": 3,
+      "terrain": "plains",
+      "resources": {"food": 5, "iron": 2, "manpower": 4, "stone": 2},
+      "battlefield": {"mission": "campania_campaign", "map": "assets/maps/map_campania_campaign.json"}
+    },
+    {
+      "id": "neapolis",
+      "name": "Neapolis",
+      "latin": "Neapolis",
+      "kind": "town",
+      "region": "roman_core",
+      "district": "campania",
+      "lonlat": [14.25, 40.85],
+      "population": "medium",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1, "stone": 1, "timber": 1},
+      "tags": ["greek"]
+    },
+    {
+      "id": "beneventum",
+      "name": "Beneventum",
+      "latin": "Beneventum",
+      "kind": "colony",
+      "region": "roman_core",
+      "district": "samnium",
+      "lonlat": [14.780000000000001, 41.13],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 3, "manpower": 2}
+    },
+    {
+      "id": "gerunium",
+      "name": "Gerunium",
+      "latin": "Gerunium",
+      "kind": "town",
+      "region": "roman_core",
+      "district": "samnium",
+      "lonlat": [14.930000000000001, 41.730000000000004],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "hills",
+      "resources": {"food": 4},
+      "tags": ["granary"]
+    },
+    {
+      "id": "luceria",
+      "name": "Luceria",
+      "latin": "Luceria",
+      "kind": "colony",
+      "region": "roman_core",
+      "lonlat": [15.33, 41.510000000000005],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 2}
+    },
+    {
+      "id": "arpi",
+      "name": "Arpi",
+      "latin": "Arpi",
+      "kind": "town",
+      "region": "roman_core",
+      "lonlat": [15.55, 41.46],
+      "population": "medium",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 4, "manpower": 2}
+    },
+    {
+      "id": "canusium",
+      "name": "Canusium",
+      "latin": "Canusium",
+      "kind": "town",
+      "region": "southern_italy",
+      "district": "apulia",
+      "lonlat": [16.07, 41.22],
+      "population": "medium",
+      "fortification": 2,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 2}
+    },
+    {
+      "id": "cannae",
+      "name": "Cannae",
+      "latin": "Cannae",
+      "kind": "town",
+      "region": "southern_italy",
+      "district": "apulia",
+      "lonlat": [16.13, 41.300000000000004],
+      "population": "hamlet",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 4},
+      "battlefield": {"mission": "battle_of_cannae", "map": "assets/maps/map_battle_cannae.json"},
+      "tags": ["granary"]
+    },
+    {
+      "id": "venusia",
+      "name": "Venusia",
+      "latin": "Venusia",
+      "kind": "colony",
+      "region": "southern_italy",
+      "lonlat": [15.81, 40.96],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "hills",
+      "resources": {"food": 2, "manpower": 2}
+    },
+    {
+      "id": "tarentum",
+      "name": "Tarentum",
+      "latin": "Tarentum",
+      "kind": "city",
+      "region": "southern_italy",
+      "lonlat": [17.240000000000002, 40.47],
+      "population": "large",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 3, "timber": 2},
+      "tags": ["greek"]
+    },
+    {
+      "id": "brundisium",
+      "name": "Brundisium",
+      "latin": "Brundisium",
+      "kind": "colony",
+      "region": "southern_italy",
+      "lonlat": [17.94, 40.64],
+      "population": "small",
+      "fortification": 2,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "croton",
+      "name": "Croton",
+      "latin": "Croton",
+      "kind": "town",
+      "region": "southern_italy",
+      "lonlat": [17.130000000000003, 39.080000000000005],
+      "population": "medium",
+      "fortification": 2,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1, "timber": 2},
+      "tags": ["greek"]
+    },
+    {
+      "id": "rhegium",
+      "name": "Rhegium",
+      "latin": "Rhegium",
+      "kind": "town",
+      "region": "southern_italy",
+      "lonlat": [15.65, 38.11],
+      "population": "medium",
+      "fortification": 2,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1, "timber": 1},
+      "tags": ["greek"]
+    },
+    {
+      "id": "syracuse",
+      "name": "Syracuse",
+      "latin": "Syracusae",
+      "kind": "city",
+      "region": "sicily_roman",
+      "lonlat": [15.290000000000001, 37.08],
+      "population": "large",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 4, "manpower": 2, "stone": 3, "timber": 1},
+      "tags": ["greek", "roman_ally"]
+    },
+    {
+      "id": "messana",
+      "name": "Messana",
+      "latin": "Messana",
+      "kind": "town",
+      "region": "sicily_roman",
+      "lonlat": [15.55, 38.190000000000005],
+      "population": "medium",
+      "fortification": 2,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "agrigentum",
+      "name": "Agrigentum",
+      "latin": "Agrigentum",
+      "kind": "city",
+      "region": "sicily_roman",
+      "lonlat": [13.58, 37.31],
+      "population": "medium",
+      "fortification": 3,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 4, "manpower": 1, "stone": 1}
+    },
+    {
+      "id": "lilybaeum",
+      "name": "Lilybaeum",
+      "latin": "Lilybaeum",
+      "kind": "town",
+      "region": "sicily_roman",
+      "lonlat": [12.440000000000001, 37.800000000000004],
+      "population": "medium",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1},
+      "tags": ["naval_base"]
+    },
+    {
+      "id": "panormus",
+      "name": "Panormus",
+      "latin": "Panormus",
+      "kind": "town",
+      "region": "sicily_roman",
+      "lonlat": [13.360000000000001, 38.120000000000005],
+      "population": "medium",
+      "fortification": 2,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 1}
+    },
+    {
+      "id": "caralis",
+      "name": "Caralis",
+      "latin": "Carales",
+      "kind": "town",
+      "region": "sardinia",
+      "lonlat": [9.110000000000001, 39.22],
+      "population": "medium",
+      "fortification": 1,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 4, "iron": 1, "manpower": 1},
+      "tags": ["grain"]
+    },
+    {
+      "id": "olbia",
+      "name": "Olbia",
+      "latin": "Olbia",
+      "kind": "town",
+      "region": "sardinia",
+      "lonlat": [9.5, 40.92],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "timber": 1}
+    },
+    {
+      "id": "tharros",
+      "name": "Tharros",
+      "latin": "Tharros",
+      "kind": "town",
+      "region": "sardinia",
+      "lonlat": [8.43, 39.870000000000005],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "aleria",
+      "name": "Aleria",
+      "latin": "Aleria",
+      "kind": "town",
+      "region": "corsica",
+      "lonlat": [9.51, 42.09],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 1, "manpower": 1, "timber": 3}
+    },
+    {
+      "id": "carthage",
+      "name": "Carthage",
+      "latin": "Carthago",
+      "kind": "city",
+      "region": "carthage_core",
+      "lonlat": [10.32, 36.85],
+      "population": "metropolis",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 4, "iron": 2, "manpower": 4, "stone": 3, "timber": 2},
+      "tags": ["capital"]
+    },
+    {
+      "id": "utica",
+      "name": "Utica",
+      "latin": "Utica",
+      "kind": "city",
+      "region": "carthage_core",
+      "lonlat": [10.06, 37.06],
+      "population": "medium",
+      "fortification": 3,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 2}
+    },
+    {
+      "id": "tunes",
+      "name": "Tunes",
+      "latin": "Tunes",
+      "kind": "town",
+      "region": "carthage_core",
+      "lonlat": [10.18, 36.800000000000004],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 1}
+    },
+    {
+      "id": "hadrumetum",
+      "name": "Hadrumetum",
+      "latin": "Hadrumetum",
+      "kind": "town",
+      "region": "carthage_core",
+      "lonlat": [10.64, 35.83],
+      "population": "medium",
+      "fortification": 2,
+      "port": "major",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 2}
+    },
+    {
+      "id": "zama",
+      "name": "Zama",
+      "latin": "Zama Regia",
+      "kind": "town",
+      "region": "carthage_core",
+      "lonlat": [9.200000000000001, 36.1],
+      "population": "small",
+      "fortification": 1,
+      "terrain": "plains",
+      "resources": {"food": 3, "manpower": 1},
+      "battlefield": {"mission": "battle_of_zama", "map": "assets/maps/map_battle_zama.json"}
+    },
+    {
+      "id": "hippo_regius",
+      "name": "Hippo Regius",
+      "latin": "Hippo Regius",
+      "kind": "town",
+      "region": "carthage_core",
+      "lonlat": [7.7700000000000005, 36.88],
+      "population": "medium",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 2, "timber": 1}
+    },
+    {
+      "id": "cirta",
+      "name": "Cirta",
+      "latin": "Cirta",
+      "kind": "city",
+      "region": "numidia",
+      "lonlat": [6.61, 36.370000000000005],
+      "population": "medium",
+      "fortification": 3,
+      "terrain": "hills",
+      "resources": {"food": 3, "manpower": 4, "stone": 1},
+      "tags": ["numidian_horse"]
+    },
+    {
+      "id": "siga",
+      "name": "Siga",
+      "latin": "Siga",
+      "kind": "town",
+      "region": "numidia",
+      "lonlat": [-1.47, 35.260000000000005],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 3},
+      "tags": ["numidian_horse"]
+    },
+    {
+      "id": "tingis",
+      "name": "Tingis",
+      "latin": "Tingis",
+      "kind": "town",
+      "region": "numidia",
+      "lonlat": [-5.800000000000001, 35.77],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 2}
+    },
+    {
+      "id": "oea",
+      "name": "Oea",
+      "latin": "Oea",
+      "kind": "town",
+      "region": "libya",
+      "lonlat": [13.180000000000001, 32.9],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "leptis",
+      "name": "Leptis",
+      "latin": "Leptis Magna",
+      "kind": "town",
+      "region": "libya",
+      "lonlat": [14.260000000000002, 32.64],
+      "population": "medium",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 3, "manpower": 1}
+    },
+    {
+      "id": "salona",
+      "name": "Salona",
+      "latin": "Salona",
+      "kind": "town",
+      "region": "illyrian_coast",
+      "lonlat": [16.48, 43.54],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 1, "manpower": 1, "timber": 2}
+    },
+    {
+      "id": "narona",
+      "name": "Narona",
+      "latin": "Narona",
+      "kind": "town",
+      "region": "illyrian_coast",
+      "lonlat": [17.62, 43.050000000000004],
+      "population": "small",
+      "fortification": 1,
+      "port": "minor",
+      "terrain": "coast",
+      "resources": {"food": 2, "manpower": 1}
+    },
+    {
+      "id": "delminium",
+      "name": "Delminium",
+      "latin": "Delminium",
+      "kind": "town",
+      "region": "illyria",
+      "lonlat": [17.25, 43.730000000000004],
+      "population": "small",
+      "fortification": 2,
+      "terrain": "mountains",
+      "resources": {"food": 1, "manpower": 2, "timber": 1}
+    }
+  ],
+  "routes": [
+    {
+      "id": "baetis_road",
+      "name": "Baetis Valley Road",
+      "kind": "road",
+      "from": "gades",
+      "to": "castulo",
+      "throughput": 3
+    },
+    {
+      "id": "castulo_road",
+      "name": "Saltus Castulonensis",
+      "kind": "road",
+      "from": "castulo",
+      "to": "new_carthage",
+      "throughput": 3
+    },
+    {
+      "id": "heraclea_contestania",
+      "name": "Via Heraclea (Contestania)",
+      "kind": "major_road",
+      "from": "new_carthage",
+      "to": "saguntum",
+      "throughput": 4
+    },
+    {
+      "id": "heraclea_edetania",
+      "name": "Via Heraclea (Edetania)",
+      "kind": "major_road",
+      "from": "saguntum",
+      "to": "dertosa",
+      "throughput": 4
+    },
+    {
+      "id": "heraclea_ebro",
+      "name": "Via Heraclea (Ebro Crossing)",
+      "kind": "major_road",
+      "from": "dertosa",
+      "to": "tarraco",
+      "throughput": 4
+    },
+    {
+      "id": "heraclea_laeetania",
+      "name": "Via Heraclea (Laeetania)",
+      "kind": "major_road",
+      "from": "tarraco",
+      "to": "emporiae",
+      "throughput": 3
+    },
+    {
+      "id": "ilergetes_road",
+      "name": "Ilergetan Road",
+      "kind": "road",
+      "from": "tarraco",
+      "to": "ilerda",
+      "throughput": 3
+    },
+    {
+      "id": "ebro_valley_track",
+      "name": "Ebro Valley Track",
+      "kind": "track",
+      "from": "ilerda",
+      "to": "numantia",
+      "throughput": 2
+    },
+    {
+      "id": "meseta_track",
+      "name": "Meseta Track",
+      "kind": "track",
+      "from": "numantia",
+      "to": "toletum",
+      "throughput": 2
+    },
+    {
+      "id": "carpetani_track",
+      "name": "Carpetanian Track",
+      "kind": "track",
+      "from": "toletum",
+      "to": "castulo",
+      "throughput": 2
+    },
+    {
+      "id": "vaccaei_track",
+      "name": "Vaccaean Track",
+      "kind": "track",
+      "from": "toletum",
+      "to": "helmantica",
+      "throughput": 2
+    },
+    {
+      "id": "pyrenees_ascent",
+      "name": "Pyrenees (Iberian Side)",
+      "kind": "mountain_pass",
+      "from": "emporiae",
+      "to": "pyrenean_pass",
+      "throughput": 2,
+      "chokepoint": true
+    },
+    {
+      "id": "pyrenees_descent",
+      "name": "Pyrenees (Gallic Side)",
+      "kind": "mountain_pass",
+      "from": "pyrenean_pass",
+      "to": "ruscino",
+      "throughput": 2,
+      "chokepoint": true
+    },
+    {
+      "id": "heraclea_roussillon",
+      "name": "Heraclean Way (Roussillon)",
+      "kind": "road",
+      "from": "ruscino",
+      "to": "narbo",
+      "throughput": 3
+    },
+    {
+      "id": "heraclea_volcae",
+      "name": "Heraclean Way (Volcae)",
+      "kind": "road",
+      "from": "narbo",
+      "to": "rhone_crossing",
+      "throughput": 3
+    },
+    {
+      "id": "massalia_road",
+      "name": "Massaliot Road",
+      "kind": "road",
+      "from": "rhone_crossing",
+      "to": "massalia",
+      "throughput": 3
+    },
+    {
+      "id": "rhone_valley_track",
+      "name": "Rhône Valley Track",
+      "kind": "track",
+      "from": "rhone_crossing",
+      "to": "allobrogian_island",
+      "throughput": 3
+    },
+    {
+      "id": "alpine_ascent",
+      "name": "Alpine Ascent",
+      "kind": "mountain_pass",
+      "from": "allobrogian_island",
+      "to": "alpine_pass",
+      "throughput": 1,
+      "chokepoint": true
+    },
+    {
+      "id": "alpine_descent",
+      "name": "Alpine Descent",
+      "kind": "mountain_pass",
+      "from": "alpine_pass",
+      "to": "taurasia",
+      "throughput": 1,
+      "chokepoint": true
+    },
+    {
+      "id": "taurini_road",
+      "name": "Taurine Road",
+      "kind": "road",
+      "from": "taurasia",
+      "to": "victumulae",
+      "throughput": 2
+    },
+    {
+      "id": "insubrian_road",
+      "name": "Insubrian Road",
+      "kind": "road",
+      "from": "victumulae",
+      "to": "ticinus",
+      "throughput": 2
+    },
+    {
+      "id": "mediolanum_road",
+      "name": "Mediolanum Road",
+      "kind": "road",
+      "from": "ticinus",
+      "to": "mediolanum",
+      "throughput": 3
+    },
+    {
+      "id": "ticinus_bridge",
+      "name": "Ticinus Bridge",
+      "kind": "river_crossing",
+      "from": "ticinus",
+      "to": "clastidium",
+      "throughput": 2,
+      "chokepoint": true
+    },
+    {
+      "id": "clastidium_road",
+      "name": "Clastidium Road",
+      "kind": "road",
+      "from": "clastidium",
+      "to": "placentia",
+      "throughput": 3
+    },
+    {
+      "id": "trebia_road",
+      "name": "Trebia Road",
+      "kind": "road",
+      "from": "placentia",
+      "to": "trebia",
+      "throughput": 2
+    },
+    {
+      "id": "stradella_road",
+      "name": "Stradella Road",
+      "kind": "road",
+      "from": "trebia",
+      "to": "clastidium",
+      "throughput": 2
+    },
+    {
+      "id": "po_crossing",
+      "name": "Po Crossing",
+      "kind": "river_crossing",
+      "from": "placentia",
+      "to": "cremona",
+      "throughput": 2,
+      "chokepoint": true
+    },
+    {
+      "id": "aemilian_track_west",
+      "name": "Aemilian Track (Anamares)",
+      "kind": "track",
+      "from": "placentia",
+      "to": "mutina",
+      "throughput": 3
+    },
+    {
+      "id": "aemilian_track_boii",
+      "name": "Aemilian Track (Boii)",
+      "kind": "track",
+      "from": "mutina",
+      "to": "felsina",
+      "throughput": 3
+    },
+    {
+      "id": "aemilian_track_east",
+      "name": "Aemilian Track (Lingones)",
+      "kind": "track",
+      "from": "felsina",
+      "to": "ariminum",
+      "throughput": 3
+    },
+    {
+      "id": "arno_marshes",
+      "name": "Apennines and the Arno Marshes",
+      "kind": "mountain_pass",
+      "from": "felsina",
+      "to": "arretium",
+      "throughput": 1,
+      "chokepoint": true
+    },
+    {
+      "id": "ligurian_apennine",
+      "name": "Ligurian Apennine Pass",
+      "kind": "mountain_pass",
+      "from": "genua",
+      "to": "clastidium",
+      "throughput": 1,
+      "chokepoint": true
+    },
+    {
+      "id": "ligurian_coast_west",
+      "name": "Ligurian Coast Road",
+      "kind": "coastal",
+      "from": "massalia",
+      "to": "genua",
+      "throughput": 2
+    },
+    {
+      "id": "ligurian_coast_east",
+      "name": "Ligurian Coast Road (Luna)",
+      "kind": "coastal",
+      "from": "genua",
+      "to": "pisae",
+      "throughput": 2
+    },
+    {
+      "id": "aurelia_north",
+      "name": "Via Aurelia (Etruscan Coast)",
+      "kind": "road",
+      "from": "pisae",
+      "to": "populonia",
+      "throughput": 3
+    },
+    {
+      "id": "aurelia",
+      "name": "Via Aurelia",
+      "kind": "major_road",
+      "from": "rome",
+      "to": "populonia",
+      "throughput": 4
+    },
+    {
+      "id": "cassia",
+      "name": "Etruscan Road",
+      "kind": "road",
+      "from": "rome",
+      "to": "arretium",
+      "throughput": 3
+    },
+    {
+      "id": "cortona_road",
+      "name": "Cortona Road",
+      "kind": "road",
+      "from": "arretium",
+      "to": "trasimene",
+      "throughput": 3
+    },
+    {
+      "id": "umbrian_road",
+      "name": "Umbrian Road",
+      "kind": "road",
+      "from": "trasimene",
+      "to": "spoletium",
+      "throughput": 3
+    },
+    {
+      "id": "flaminia",
+      "name": "Via Flaminia",
+      "kind": "major_road",
+      "from": "rome",
+      "to": "spoletium",
+      "throughput": 4
+    },
+    {
+      "id": "flaminia_furlo",
+      "name": "Via Flaminia (Furlo Gorge)",
+      "kind": "major_road",
+      "from": "spoletium",
+      "to": "metaurus",
+      "throughput": 4
+    },
+    {
+      "id": "flaminia_coast",
+      "name": "Via Flaminia (Adriatic)",
+      "kind": "major_road",
+      "from": "metaurus",
+      "to": "ariminum",
+      "throughput": 4
+    },
+    {
+      "id": "ostiensis",
+      "name": "Via Ostiensis",
+      "kind": "road",
+      "from": "rome",
+      "to": "ostia",
+      "throughput": 4
+    },
+    {
+      "id": "appia",
+      "name": "Via Appia",
+      "kind": "major_road",
+      "from": "rome",
+      "to": "capua",
+      "throughput": 5
+    },
+    {
+      "id": "latina_north",
+      "name": "Via Latina",
+      "kind": "road",
+      "from": "rome",
+      "to": "casinum",
+      "throughput": 4
+    },
+    {
+      "id": "latina_south",
+      "name": "Via Latina (Campania)",
+      "kind": "road",
+      "from": "casinum",
+      "to": "capua",
+      "throughput": 4
+    },
+    {
+      "id": "campana",
+      "name": "Via Campana",
+      "kind": "road",
+      "from": "capua",
+      "to": "neapolis",
+      "throughput": 3
+    },
+    {
+      "id": "appia_caudium",
+      "name": "Via Appia (Caudine Forks)",
+      "kind": "major_road",
+      "from": "capua",
+      "to": "beneventum",
+      "throughput": 4,
+      "chokepoint": true
+    },
+    {
+      "id": "appia_hirpini",
+      "name": "Via Appia (Hirpini)",
+      "kind": "major_road",
+      "from": "beneventum",
+      "to": "venusia",
+      "throughput": 4
+    },
+    {
+      "id": "appia_lucania",
+      "name": "Via Appia (Lucania)",
+      "kind": "major_road",
+      "from": "venusia",
+      "to": "tarentum",
+      "throughput": 3
+    },
+    {
+      "id": "appia_calabria",
+      "name": "Via Appia (Calabria)",
+      "kind": "major_road",
+      "from": "tarentum",
+      "to": "brundisium",
+      "throughput": 3
+    },
+    {
+      "id": "samnite_road",
+      "name": "Samnite Road",
+      "kind": "road",
+      "from": "beneventum",
+      "to": "luceria",
+      "throughput": 3
+    },
+    {
+      "id": "gerunium_road",
+      "name": "Gerunium Road",
+      "kind": "road",
+      "from": "gerunium",
+      "to": "luceria",
+      "throughput": 2
+    },
+    {
+      "id": "frentani_road",
+      "name": "Frentanian Track",
+      "kind": "track",
+      "from": "casinum",
+      "to": "gerunium",
+      "throughput": 2
+    },
+    {
+      "id": "daunian_road",
+      "name": "Daunian Road",
+      "kind": "road",
+      "from": "luceria",
+      "to": "arpi",
+      "throughput": 3
+    },
+    {
+      "id": "aufidus_road",
+      "name": "Aufidus Road",
+      "kind": "road",
+      "from": "arpi",
+      "to": "canusium",
+      "throughput": 3
+    },
+    {
+      "id": "cannae_road",
+      "name": "Cannae Road",
+      "kind": "road",
+      "from": "canusium",
+      "to": "cannae",
+      "throughput": 3
+    },
+    {
+      "id": "venusia_road",
+      "name": "Venusia Road",
+      "kind": "road",
+      "from": "canusium",
+      "to": "venusia",
+      "throughput": 3
+    },
+    {
+      "id": "adriatic_coast_south",
+      "name": "Adriatic Coast Road",
+      "kind": "coastal",
+      "from": "cannae",
+      "to": "brundisium",
+      "throughput": 2
+    },
+    {
+      "id": "picene_coast",
+      "name": "Picene Coast Road",
+      "kind": "coastal",
+      "from": "ariminum",
+      "to": "arpi",
+      "throughput": 2
+    },
+    {
+      "id": "ionian_coast",
+      "name": "Ionian Coast Road",
+      "kind": "coastal",
+      "from": "tarentum",
+      "to": "croton",
+      "throughput": 2
+    },
+    {
+      "id": "bruttian_road",
+      "name": "Bruttian Road",
+      "kind": "track",
+      "from": "croton",
+      "to": "rhegium",
+      "throughput": 2
+    },
+    {
+      "id": "strait_of_messana",
+      "name": "Strait of Messana",
+      "kind": "sea_lane",
+      "from": "rhegium",
+      "to": "messana",
+      "throughput": 3,
+      "chokepoint": true
+    },
+    {
+      "id": "sicilian_east_coast",
+      "name": "Sicilian East Coast Road",
+      "kind": "coastal",
+      "from": "messana",
+      "to": "syracuse",
+      "throughput": 3
+    },
+    {
+      "id": "syracuse_agrigentum",
+      "name": "Agrigentine Road",
+      "kind": "road",
+      "from": "syracuse",
+      "to": "agrigentum",
+      "throughput": 3
+    },
+    {
+      "id": "agrigentum_lilybaeum",
+      "name": "Selinuntine Road",
+      "kind": "road",
+      "from": "agrigentum",
+      "to": "lilybaeum",
+      "throughput": 3
+    },
+    {
+      "id": "valeria_sicily",
+      "name": "Via Valeria",
+      "kind": "road",
+      "from": "messana",
+      "to": "panormus",
+      "throughput": 3
+    },
+    {
+      "id": "panormus_lilybaeum",
+      "name": "Panormitan Road",
+      "kind": "road",
+      "from": "panormus",
+      "to": "lilybaeum",
+      "throughput": 3
+    },
+    {
+      "id": "sardinian_road",
+      "name": "Sardinian Road",
+      "kind": "road",
+      "from": "caralis",
+      "to": "olbia",
+      "throughput": 2
+    },
+    {
+      "id": "tharros_road",
+      "name": "Tharrian Road",
+      "kind": "road",
+      "from": "caralis",
+      "to": "tharros",
+      "throughput": 2
+    },
+    {
+      "id": "carthage_tunes",
+      "name": "Tunes Road",
+      "kind": "road",
+      "from": "carthage",
+      "to": "tunes",
+      "throughput": 4
+    },
+    {
+      "id": "bagradas_road",
+      "name": "Bagradas Road",
+      "kind": "road",
+      "from": "carthage",
+      "to": "utica",
+      "throughput": 4
+    },
+    {
+      "id": "sahel_road",
+      "name": "Sahel Road",
+      "kind": "road",
+      "from": "tunes",
+      "to": "hadrumetum",
+      "throughput": 3
+    },
+    {
+      "id": "zama_road",
+      "name": "Bagradas Valley Road",
+      "kind": "road",
+      "from": "tunes",
+      "to": "zama",
+      "throughput": 3
+    },
+    {
+      "id": "numidian_highland",
+      "name": "Numidian Highland Track",
+      "kind": "track",
+      "from": "zama",
+      "to": "cirta",
+      "throughput": 3
+    },
+    {
+      "id": "hippo_road",
+      "name": "Hippo Road",
+      "kind": "road",
+      "from": "cirta",
+      "to": "hippo_regius",
+      "throughput": 2
+    },
+    {
+      "id": "african_coast",
+      "name": "African Coast Road",
+      "kind": "coastal",
+      "from": "hippo_regius",
+      "to": "utica",
+      "throughput": 2
+    },
+    {
+      "id": "masaesylian_track",
+      "name": "Masaesylian Track",
+      "kind": "track",
+      "from": "cirta",
+      "to": "siga",
+      "throughput": 2
+    },
+    {
+      "id": "mauretanian_track",
+      "name": "Mauretanian Track",
+      "kind": "track",
+      "from": "siga",
+      "to": "tingis",
+      "throughput": 2,
+      "waypoints": [[-2.9000000000000004, 34.9], [-4, 34.7], [-5.3, 35.2]]
+    },
+    {
+      "id": "syrtic_coast_west",
+      "name": "Syrtic Coast (Emporia)",
+      "kind": "coastal",
+      "from": "hadrumetum",
+      "to": "oea",
+      "throughput": 1,
+      "waypoints": [
+        [10.700000000000001, 35.300000000000004], [10.1, 34.35], [10.1, 33.88],
+        [11.1, 33.300000000000004], [12.200000000000001, 32.9]
+      ]
+    },
+    {
+      "id": "syrtic_coast_east",
+      "name": "Syrtic Coast (Leptis)",
+      "kind": "coastal",
+      "from": "oea",
+      "to": "leptis",
+      "throughput": 1
+    },
+    {
+      "id": "dalmatian_coast",
+      "name": "Dalmatian Coast",
+      "kind": "coastal",
+      "from": "salona",
+      "to": "narona",
+      "throughput": 2
+    },
+    {
+      "id": "delmatae_track",
+      "name": "Delmatian Track",
+      "kind": "track",
+      "from": "salona",
+      "to": "delminium",
+      "throughput": 1
+    },
+    {
+      "id": "cape_bon_crossing",
+      "name": "Cape Bon Crossing",
+      "kind": "sea_lane",
+      "from": "lilybaeum",
+      "to": "carthage",
+      "throughput": 3,
+      "chokepoint": true
+    },
+    {
+      "id": "tyrrhenian_lane",
+      "name": "Tyrrhenian Lane",
+      "kind": "sea_lane",
+      "from": "ostia",
+      "to": "neapolis",
+      "throughput": 4
+    },
+    {
+      "id": "campanian_lane",
+      "name": "Campanian Lane",
+      "kind": "sea_lane",
+      "from": "neapolis",
+      "to": "messana",
+      "throughput": 3
+    },
+    {
+      "id": "sardinian_grain_lane",
+      "name": "Sardinian Grain Lane",
+      "kind": "sea_lane",
+      "from": "ostia",
+      "to": "caralis",
+      "throughput": 3
+    },
+    {
+      "id": "sardinian_channel",
+      "name": "Sardinian Channel",
+      "kind": "sea_lane",
+      "from": "caralis",
+      "to": "carthage",
+      "throughput": 3
+    },
+    {
+      "id": "sicilian_channel",
+      "name": "Sicilian Channel",
+      "kind": "sea_lane",
+      "from": "caralis",
+      "to": "lilybaeum",
+      "throughput": 2
+    },
+    {
+      "id": "bonifacio_strait",
+      "name": "Strait of Bonifacio",
+      "kind": "sea_lane",
+      "from": "olbia",
+      "to": "aleria",
+      "throughput": 2
+    },
+    {
+      "id": "elba_channel",
+      "name": "Elba Channel",
+      "kind": "sea_lane",
+      "from": "aleria",
+      "to": "populonia",
+      "throughput": 2
+    },
+    {
+      "id": "ligurian_lane",
+      "name": "Ligurian Lane",
+      "kind": "sea_lane",
+      "from": "pisae",
+      "to": "massalia",
+      "throughput": 3
+    },
+    {
+      "id": "gulf_of_lion_lane",
+      "name": "Gulf of Lion Lane",
+      "kind": "sea_lane",
+      "from": "massalia",
+      "to": "emporiae",
+      "throughput": 3
+    },
+    {
+      "id": "barcid_lane",
+      "name": "Barcid Lane",
+      "kind": "sea_lane",
+      "from": "new_carthage",
+      "to": "carthage",
+      "throughput": 4
+    },
+    {
+      "id": "numidian_lane",
+      "name": "Numidian Lane",
+      "kind": "sea_lane",
+      "from": "new_carthage",
+      "to": "siga",
+      "throughput": 2
+    },
+    {
+      "id": "pillars_of_heracles",
+      "name": "Pillars of Heracles",
+      "kind": "sea_lane",
+      "from": "gades",
+      "to": "tingis",
+      "throughput": 3,
+      "chokepoint": true
+    },
+    {
+      "id": "scipio_crossing",
+      "name": "Scipio's Crossing",
+      "kind": "sea_lane",
+      "from": "lilybaeum",
+      "to": "utica",
+      "throughput": 3
+    },
+    {
+      "id": "hannibal_return",
+      "name": "Hannibal's Return",
+      "kind": "sea_lane",
+      "from": "croton",
+      "to": "hadrumetum",
+      "throughput": 2
+    },
+    {
+      "id": "syracusan_lane",
+      "name": "Syracusan Lane",
+      "kind": "sea_lane",
+      "from": "syracuse",
+      "to": "carthage",
+      "throughput": 2
+    },
+    {
+      "id": "adriatic_crossing",
+      "name": "Adriatic Crossing",
+      "kind": "sea_lane",
+      "from": "brundisium",
+      "to": "narona",
+      "throughput": 2
+    }
+  ],
+  "commanders": [
+    {
+      "id": "hannibal",
+      "name": "Hannibal Barca",
+      "title": "Strategos of Iberia",
+      "faction": "carthage"
+    },
+    {
+      "id": "hasdrubal_barca",
+      "name": "Hasdrubal Barca",
+      "title": "Strategos of Iberia (after 218)",
+      "faction": "carthage"
+    },
+    {
+      "id": "mago_barca",
+      "name": "Mago Barca",
+      "faction": "carthage",
+      "catalog_id": "carthage_mago_barca"
+    },
+    {
+      "id": "maharbal",
+      "name": "Maharbal",
+      "title": "Master of horse",
+      "faction": "carthage",
+      "catalog_id": "carthage_maharbal"
+    },
+    {
+      "id": "hanno_bomilcar",
+      "name": "Hanno son of Bomilcar",
+      "faction": "carthage",
+      "catalog_id": "carthage_hanno_bomilcar"
+    },
+    {
+      "id": "hasdrubal_horse",
+      "name": "Hasdrubal (cavalry)",
+      "faction": "carthage",
+      "catalog_id": "carthage_hasdrubal_cavalry"
+    },
+    {"id": "hanno_iberia", "name": "Hanno (north of the Ebro)", "faction": "carthage"},
+    {"id": "hasdrubal_gisco", "name": "Hasdrubal Gisco", "faction": "carthage"},
+    {
+      "id": "masinissa",
+      "name": "Masinissa",
+      "title": "Prince of the Massyli",
+      "faction": "carthage",
+      "catalog_id": "numidian_masinissa"
+    },
+    {
+      "id": "publius_scipio",
+      "name": "Publius Cornelius Scipio",
+      "title": "Consul 218 BC",
+      "faction": "rome",
+      "catalog_id": "roman_scipio_consul_218"
+    },
+    {
+      "id": "gnaeus_scipio",
+      "name": "Gnaeus Cornelius Scipio Calvus",
+      "title": "Legate in Iberia",
+      "faction": "rome"
+    },
+    {
+      "id": "sempronius",
+      "name": "Tiberius Sempronius Longus",
+      "title": "Consul 218 BC",
+      "faction": "rome",
+      "catalog_id": "roman_sempronius_longus"
+    },
+    {
+      "id": "manlius",
+      "name": "Lucius Manlius Vulso",
+      "title": "Praetor 218 BC",
+      "faction": "rome"
+    },
+    {
+      "id": "flaminius",
+      "name": "Gaius Flaminius",
+      "title": "Consul 217 BC",
+      "faction": "rome",
+      "catalog_id": "roman_gaius_flaminius"
+    },
+    {
+      "id": "servilius",
+      "name": "Gnaeus Servilius Geminus",
+      "title": "Consul 217 BC",
+      "faction": "rome"
+    },
+    {
+      "id": "fabius",
+      "name": "Quintus Fabius Maximus",
+      "title": "Dictator 217 BC",
+      "faction": "rome"
+    },
+    {
+      "id": "varro",
+      "name": "Gaius Terentius Varro",
+      "title": "Consul 216 BC",
+      "faction": "rome",
+      "catalog_id": "roman_terentius_varro"
+    },
+    {
+      "id": "paullus",
+      "name": "Lucius Aemilius Paullus",
+      "title": "Consul 216 BC",
+      "faction": "rome",
+      "catalog_id": "roman_aemilius_paullus"
+    },
+    {
+      "id": "marcellus",
+      "name": "Marcus Claudius Marcellus",
+      "title": "Consul 214 BC",
+      "faction": "rome"
+    },
+    {
+      "id": "flaccus",
+      "name": "Quintus Fulvius Flaccus",
+      "title": "Proconsul at Capua",
+      "faction": "rome"
+    },
+    {"id": "nero", "name": "Gaius Claudius Nero", "title": "Consul 207 BC", "faction": "rome"},
+    {
+      "id": "scipio_africanus",
+      "name": "Publius Cornelius Scipio Africanus",
+      "title": "Proconsul in Iberia and Africa",
+      "faction": "rome"
+    }
+  ],
+  "initial_state": {
+    "regions": {
+      "carthage_core": {"controller": "carthage"},
+      "cisalpine_gaul": {"controller": "neutral"},
+      "corsica": {"controller": "rome"},
+      "etruria": {"controller": "rome"},
+      "iberia_carthaginian": {"controller": "carthage"},
+      "iberia_interior": {"controller": "neutral"},
+      "illyria": {"controller": "neutral"},
+      "illyrian_coast": {"controller": "rome"},
+      "libya": {"controller": "carthage"},
+      "numidia": {"controller": "carthage"},
+      "roman_core": {"controller": "rome"},
+      "sardinia": {"controller": "rome"},
+      "sicily_roman": {"controller": "rome"},
+      "southern_italy": {"controller": "rome"},
+      "transalpine_gaul": {"controller": "neutral"}
+    },
+    "sites": {
+      "clastidium": {"controller": "rome"},
+      "cremona": {"controller": "rome", "garrison": 6000},
+      "emporiae": {"controller": "rome"},
+      "felsina": {"controller": "neutral"},
+      "genua": {"controller": "rome"},
+      "ilerda": {"controller": "neutral"},
+      "massalia": {"controller": "rome"},
+      "mutina": {"controller": "rome"},
+      "placentia": {"controller": "rome", "garrison": 6000},
+      "saguntum": {"controller": "carthage"},
+      "tarraco": {"controller": "neutral"},
+      "toletum": {"controller": "carthage"},
+      "victumulae": {"controller": "rome"}
+    },
+    "armies": [
+      {
+        "id": "hannibal_army",
+        "name": "Army of Hannibal",
+        "faction": "carthage",
+        "commander": "hannibal",
+        "location": "new_carthage",
+        "objective": "rome",
+        "infantry": 90000,
+        "cavalry": 12000,
+        "elephants": 37
+      },
+      {
+        "id": "iberian_army",
+        "name": "Army of Iberia",
+        "faction": "carthage",
+        "commander": "hasdrubal_barca",
+        "location": "new_carthage",
+        "infantry": 12650,
+        "cavalry": 2550,
+        "elephants": 21
+      },
+      {
+        "id": "african_army",
+        "name": "Home Army of Africa",
+        "faction": "carthage",
+        "commander": "hasdrubal_gisco",
+        "location": "carthage",
+        "infantry": 20000,
+        "cavalry": 1200
+      },
+      {
+        "id": "scipio_army",
+        "name": "Consular Army of Scipio",
+        "faction": "rome",
+        "commander": "publius_scipio",
+        "location": "pisae",
+        "objective": "new_carthage",
+        "infantry": 22000,
+        "cavalry": 2200
+      },
+      {
+        "id": "sempronius_army",
+        "name": "Consular Army of Sempronius",
+        "faction": "rome",
+        "commander": "sempronius",
+        "location": "lilybaeum",
+        "objective": "carthage",
+        "infantry": 24000,
+        "cavalry": 2400
+      },
+      {
+        "id": "manlius_army",
+        "name": "Praetorian Army of Gaul",
+        "faction": "rome",
+        "commander": "manlius",
+        "location": "placentia",
+        "infantry": 9000,
+        "cavalry": 600
+      }
+    ]
+  },
+  "events": [
+    {
+      "id": "march_from_new_carthage",
+      "name": "The march from New Carthage",
+      "year": -218,
+      "season": "spring",
+      "site": "ilerda",
+      "summary": "Hannibal crosses the Ebro, subdues the tribes to the Pyrenees and leaves Hanno to hold the new country.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "ilerda"},
+        {"op": "set_controller", "target": "tarraco", "faction": "carthage"},
+        {"op": "set_controller", "target": "ilerda", "faction": "carthage"},
+        {
+          "op": "create_army",
+          "target": "ebro_army",
+          "name": "Army of the Ebro",
+          "faction": "carthage",
+          "to": "tarraco",
+          "commander": "hanno_iberia",
+          "infantry": 10000,
+          "cavalry": 1000
+        },
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 50000,
+          "cavalry": 9000
+        }
+      ]
+    },
+    {
+      "id": "pyrenees_crossed",
+      "name": "The Pyrenees crossed",
+      "year": -218,
+      "season": "summer",
+      "site": "pyrenean_pass",
+      "summary": "The army passes the Pyrenees by the coast and buys its way through the Gauls of Ruscino.",
+      "effects": [{"op": "move_army", "target": "hannibal_army", "to": "narbo"}]
+    },
+    {
+      "id": "crossing_of_the_rhone",
+      "name": "Crossing of the Rhône",
+      "year": -218,
+      "season": "autumn",
+      "mission": "crossing_the_rhone",
+      "site": "rhone_crossing",
+      "summary": "Hanno's flanking column breaks the Volcae; Scipio lands at Massalia three days too late.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "rhone_crossing"},
+        {"op": "set_controller", "target": "rhone_crossing", "faction": "carthage"},
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 38000,
+          "cavalry": 8000
+        },
+        {"op": "move_army", "target": "scipio_army", "to": "massalia"}
+      ]
+    },
+    {
+      "id": "scipio_divides",
+      "name": "Scipio sends his army to Iberia",
+      "year": -218,
+      "season": "autumn",
+      "site": "massalia",
+      "summary": "Publius sends his consular army on to Iberia under Gnaeus and returns to take command in the Po valley.",
+      "effects": [
+        {
+          "op": "create_army",
+          "target": "iberian_legions",
+          "name": "Legions in Iberia",
+          "faction": "rome",
+          "to": "emporiae",
+          "commander": "gnaeus_scipio",
+          "infantry": 20000,
+          "cavalry": 2000
+        },
+        {"op": "disband_army", "target": "scipio_army"},
+        {"op": "set_commander", "target": "manlius", "status": "recalled"},
+        {"op": "set_commander", "target": "publius_scipio", "army": "manlius_army"}
+      ]
+    },
+    {
+      "id": "alps_crossed",
+      "name": "Crossing of the Alps",
+      "year": -218,
+      "season": "autumn",
+      "mission": "crossing_the_alps",
+      "site": "alpine_pass",
+      "summary": "Fifteen days in the passes. The column descends to the Taurini with half the men it set out with, and storms their town.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "taurasia"},
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 20000,
+          "cavalry": 6000
+        },
+        {"op": "set_controller", "target": "alpine_pass", "faction": "carthage"},
+        {"op": "set_controller", "target": "taurasia", "faction": "carthage"}
+      ]
+    },
+    {
+      "id": "battle_of_cissa",
+      "name": "Battle of Cissa",
+      "year": -218,
+      "season": "autumn",
+      "site": "tarraco",
+      "summary": "Gnaeus Scipio destroys Hanno's army near Tarraco and takes the country north of the Ebro.",
+      "effects": [
+        {"op": "move_army", "target": "iberian_legions", "to": "tarraco"},
+        {"op": "disband_army", "target": "ebro_army"},
+        {"op": "set_commander", "target": "hanno_iberia", "status": "captured"},
+        {"op": "set_controller", "target": "tarraco", "faction": "rome"},
+        {"op": "set_controller", "target": "ilerda", "faction": "rome"},
+        {"op": "set_contested", "target": "iberia_interior", "enabled": true}
+      ]
+    },
+    {
+      "id": "battle_of_ticinus",
+      "name": "Battle of the Ticinus",
+      "year": -218,
+      "season": "autumn",
+      "mission": "battle_of_ticino",
+      "site": "ticinus",
+      "summary": "The Numidians ride round Scipio's screen; the consul is carried wounded from the field and falls back on Placentia. Clastidium's granary is betrayed to Hannibal.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "ticinus"},
+        {"op": "set_army_strength", "target": "manlius_army", "cavalry": 200},
+        {"op": "set_commander", "target": "publius_scipio", "status": "wounded"},
+        {"op": "set_controller", "target": "ticinus", "faction": "carthage"},
+        {"op": "set_controller", "target": "mediolanum", "faction": "carthage"},
+        {"op": "set_controller", "target": "clastidium", "faction": "carthage"},
+        {"op": "set_contested", "target": "cisalpine_gaul", "enabled": true}
+      ]
+    },
+    {
+      "id": "sempronius_recalled",
+      "name": "Sempronius recalled from Sicily",
+      "year": -218,
+      "season": "autumn",
+      "site": "lilybaeum",
+      "summary": "The invasion of Africa is abandoned; Sempronius marches the length of Italy to join his colleague.",
+      "effects": [
+        {"op": "move_army", "target": "sempronius_army", "to": "placentia"},
+        {"op": "set_flag", "target": "african_invasion_abandoned", "value": "true"}
+      ]
+    },
+    {
+      "id": "battle_of_the_trebia",
+      "name": "Battle of the Trebia",
+      "year": -218,
+      "season": "winter",
+      "mission": "battle_of_trebia",
+      "site": "trebia",
+      "summary": "Sempronius wades the freezing river into Mago's ambush. Ten thousand legionaries cut their way out to Placentia; the Gauls of the Po rise for Carthage.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "trebia"},
+        {
+          "op": "set_army_strength",
+          "target": "sempronius_army",
+          "infantry": 10000,
+          "cavalry": 1000
+        },
+        {"op": "move_army", "target": "manlius_army", "to": "cremona"},
+        {"op": "set_army_strength", "target": "manlius_army", "infantry": 6000, "cavalry": 200},
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 32000,
+          "cavalry": 9000,
+          "elephants": 1
+        },
+        {"op": "set_controller", "target": "trebia", "faction": "carthage"},
+        {"op": "set_controller", "target": "felsina", "faction": "carthage"},
+        {"op": "set_controller", "target": "cisalpine_gaul", "faction": "carthage"}
+      ]
+    },
+    {
+      "id": "storming_of_victumulae",
+      "name": "Storming of Victumulae",
+      "year": -218,
+      "season": "winter",
+      "mission": "storming_of_victumulae",
+      "site": "victumulae",
+      "summary": "The fortified market of the Insubrian plain falls to assault; Hannibal winters among his new Gallic allies.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "victumulae"},
+        {"op": "set_controller", "target": "victumulae", "faction": "carthage"}
+      ]
+    },
+    {
+      "id": "consuls_of_217",
+      "name": "The consuls of 217 take the field",
+      "year": -217,
+      "season": "spring",
+      "site": "arretium",
+      "summary": "Rome guards both roads south: Flaminius at Arretium, Servilius at Ariminum.",
+      "effects": [
+        {
+          "op": "create_army",
+          "target": "flaminius_army",
+          "name": "Consular Army of Flaminius",
+          "faction": "rome",
+          "to": "arretium",
+          "commander": "flaminius",
+          "infantry": 25000,
+          "cavalry": 1600
+        },
+        {
+          "op": "create_army",
+          "target": "servilius_army",
+          "name": "Consular Army of Servilius",
+          "faction": "rome",
+          "to": "ariminum",
+          "commander": "servilius",
+          "infantry": 20000,
+          "cavalry": 4000
+        },
+        {"op": "disband_army", "target": "sempronius_army"},
+        {"op": "disband_army", "target": "manlius_army"},
+        {"op": "set_commander", "target": "sempronius", "status": "recalled"}
+      ]
+    },
+    {
+      "id": "battle_of_lake_trasimene",
+      "name": "Battle of Lake Trasimene",
+      "year": -217,
+      "season": "summer",
+      "mission": "battle_of_trasimene",
+      "site": "trasimene",
+      "summary": "The consular army is trapped in the morning mist between the hills and the lake; Flaminius dies with fifteen thousand men, and Maharbal destroys Servilius's cavalry.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "trasimene"},
+        {"op": "disband_army", "target": "flaminius_army"},
+        {"op": "set_commander", "target": "flaminius", "status": "dead"},
+        {"op": "set_army_strength", "target": "servilius_army", "cavalry": 0},
+        {"op": "set_controller", "target": "trasimene", "faction": "carthage"},
+        {"op": "set_contested", "target": "etruria", "enabled": true}
+      ]
+    },
+    {
+      "id": "fabius_dictator",
+      "name": "Fabius named dictator",
+      "year": -217,
+      "season": "summer",
+      "site": "rome",
+      "summary": "Rome names a dictator. Fabius takes four legions and refuses battle.",
+      "effects": [
+        {
+          "op": "create_army",
+          "target": "fabius_army",
+          "name": "Dictatorial Army of Fabius",
+          "faction": "rome",
+          "to": "rome",
+          "commander": "fabius",
+          "infantry": 36000,
+          "cavalry": 4000
+        },
+        {"op": "disband_army", "target": "servilius_army"},
+        {"op": "set_commander", "target": "servilius", "status": "recalled"}
+      ]
+    },
+    {
+      "id": "march_to_apulia",
+      "name": "Hannibal marches to Apulia",
+      "year": -217,
+      "season": "summer",
+      "site": "arpi",
+      "summary": "Repulsed at Spoletium, Hannibal turns down the Adriatic; Fabius shadows him from the hills by Aecae.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "arpi"},
+        {"op": "move_army", "target": "fabius_army", "to": "luceria"}
+      ]
+    },
+    {
+      "id": "ager_falernus",
+      "name": "The Falernian raid and the oxen at Callicula",
+      "year": -217,
+      "season": "autumn",
+      "site": "gerunium",
+      "summary": "Hannibal burns the Falernian plain, slips Fabius's trap by night behind a herd of burning oxen and takes Gerunium for his winter granary.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "gerunium"},
+        {"op": "set_controller", "target": "gerunium", "faction": "carthage"},
+        {"op": "move_army", "target": "fabius_army", "to": "casinum"}
+      ]
+    },
+    {
+      "id": "cannae_muster",
+      "name": "Rome raises eight legions",
+      "year": -216,
+      "season": "summer",
+      "site": "canusium",
+      "summary": "The largest army Rome has ever fielded marches into Apulia; Hannibal, his ranks filled with Gallic and Italian recruits, seizes the depot at Cannae.",
+      "effects": [
+        {"op": "disband_army", "target": "fabius_army"},
+        {
+          "op": "create_army",
+          "target": "consular_army_216",
+          "name": "Army of Varro and Paullus",
+          "faction": "rome",
+          "to": "canusium",
+          "commander": "varro",
+          "infantry": 80000,
+          "cavalry": 6000
+        },
+        {"op": "move_army", "target": "hannibal_army", "to": "cannae"},
+        {"op": "set_controller", "target": "cannae", "faction": "carthage"},
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 40000,
+          "cavalry": 10000
+        }
+      ]
+    },
+    {
+      "id": "battle_of_cannae",
+      "name": "Battle of Cannae",
+      "year": -216,
+      "season": "summer",
+      "mission": "battle_of_cannae",
+      "site": "cannae",
+      "summary": "The double envelopment. Paullus and some fifty thousand Romans fall; Varro gathers the survivors at Venusia, and the south of Italy begins to waver.",
+      "effects": [
+        {
+          "op": "set_army_strength",
+          "target": "consular_army_216",
+          "infantry": 14000,
+          "cavalry": 400
+        },
+        {"op": "move_army", "target": "consular_army_216", "to": "venusia"},
+        {"op": "set_commander", "target": "paullus", "status": "dead"},
+        {"op": "scale_army", "target": "hannibal_army", "factor": 0.86},
+        {"op": "set_controller", "target": "arpi", "faction": "carthage"},
+        {"op": "set_contested", "target": "southern_italy", "enabled": true},
+        {"op": "set_contested", "target": "roman_core", "enabled": true}
+      ]
+    },
+    {
+      "id": "capua_defects",
+      "name": "Capua goes over to Hannibal",
+      "year": -216,
+      "season": "autumn",
+      "site": "capua",
+      "summary": "The second city of Italy opens its gates; Hannibal winters in Campania.",
+      "effects": [
+        {"op": "set_controller", "target": "capua", "faction": "carthage"},
+        {"op": "move_army", "target": "hannibal_army", "to": "capua"},
+        {"op": "set_flag", "target": "capua_allied", "value": "true"}
+      ]
+    },
+    {
+      "id": "syracuse_defects",
+      "name": "Syracuse breaks with Rome",
+      "year": -214,
+      "season": "summer",
+      "site": "syracuse",
+      "summary": "Hiero's heirs take Syracuse over to Carthage; Marcellus crosses to Sicily.",
+      "effects": [
+        {"op": "set_controller", "target": "syracuse", "faction": "carthage"},
+        {"op": "set_contested", "target": "sicily_roman", "enabled": true},
+        {
+          "op": "create_army",
+          "target": "marcellus_army",
+          "name": "Army of Marcellus",
+          "faction": "rome",
+          "to": "messana",
+          "commander": "marcellus",
+          "infantry": 20000,
+          "cavalry": 1500
+        }
+      ]
+    },
+    {
+      "id": "fall_of_syracuse",
+      "name": "Fall of Syracuse",
+      "year": -212,
+      "season": "autumn",
+      "site": "syracuse",
+      "summary": "After two years against Archimedes' engines, Marcellus storms Syracuse.",
+      "effects": [
+        {"op": "move_army", "target": "marcellus_army", "to": "syracuse"},
+        {"op": "set_controller", "target": "syracuse", "faction": "rome"},
+        {"op": "set_contested", "target": "sicily_roman", "enabled": false}
+      ]
+    },
+    {
+      "id": "tarentum_betrayed",
+      "name": "Tarentum betrayed",
+      "year": -212,
+      "season": "winter",
+      "site": "tarentum",
+      "summary": "Tarentine conspirators open the gates by night; the Roman garrison holds out in the citadel.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "tarentum"},
+        {"op": "set_controller", "target": "tarentum", "faction": "carthage"}
+      ]
+    },
+    {
+      "id": "fall_of_the_scipios",
+      "name": "The Scipios fall in Iberia",
+      "year": -211,
+      "season": "spring",
+      "site": "castulo",
+      "summary": "Divided, both Scipio brothers are destroyed on the upper Baetis; the survivors hold the Ebro line.",
+      "effects": [
+        {
+          "op": "set_army_strength",
+          "target": "iberian_legions",
+          "infantry": 8000,
+          "cavalry": 600
+        },
+        {"op": "set_commander", "target": "gnaeus_scipio", "status": "dead"},
+        {"op": "set_commander", "target": "publius_scipio", "status": "dead"},
+        {"op": "move_army", "target": "iberian_legions", "to": "tarraco"},
+        {"op": "set_controller", "target": "saguntum", "faction": "carthage"}
+      ]
+    },
+    {
+      "id": "fall_of_capua",
+      "name": "Hannibal marches on Rome; Capua falls",
+      "year": -211,
+      "season": "summer",
+      "mission": "campania_campaign",
+      "site": "capua",
+      "summary": "Hannibal marches to the gates of Rome to draw off the besiegers. They do not move. Capua surrenders, and Hannibal falls back into Bruttium.",
+      "effects": [
+        {
+          "op": "create_army",
+          "target": "capua_siege_army",
+          "name": "Siege Army of Capua",
+          "faction": "rome",
+          "to": "casinum",
+          "commander": "flaccus",
+          "infantry": 30000,
+          "cavalry": 2000
+        },
+        {"op": "move_army", "target": "hannibal_army", "to": "casinum"},
+        {"op": "move_army", "target": "capua_siege_army", "to": "capua"},
+        {"op": "set_controller", "target": "capua", "faction": "rome"},
+        {"op": "set_flag", "target": "capua_allied", "value": "false"},
+        {"op": "move_army", "target": "hannibal_army", "to": "croton"},
+        {"op": "set_controller", "target": "croton", "faction": "carthage"}
+      ]
+    },
+    {
+      "id": "africanus_in_iberia",
+      "name": "Scipio takes command in Iberia",
+      "year": -210,
+      "season": "autumn",
+      "site": "tarraco",
+      "summary": "The son of the consul of 218 is given his father's command.",
+      "effects": [
+        {"op": "set_commander", "target": "scipio_africanus", "army": "iberian_legions"},
+        {
+          "op": "set_army_strength",
+          "target": "iberian_legions",
+          "infantry": 25000,
+          "cavalry": 2500
+        }
+      ]
+    },
+    {
+      "id": "capture_of_new_carthage",
+      "name": "Capture of New Carthage",
+      "year": -209,
+      "season": "spring",
+      "site": "new_carthage",
+      "summary": "Scipio wades the lagoon at ebb tide and takes the Barcid capital, its silver and its hostages in a single day.",
+      "effects": [
+        {"op": "move_army", "target": "iberian_legions", "to": "new_carthage"},
+        {"op": "move_army", "target": "iberian_army", "to": "castulo"},
+        {"op": "set_controller", "target": "new_carthage", "faction": "rome"}
+      ]
+    },
+    {
+      "id": "tarentum_recovered",
+      "name": "Fabius recovers Tarentum",
+      "year": -209,
+      "season": "summer",
+      "site": "tarentum",
+      "summary": "The garrison that held the citadel for three years is relieved; Fabius takes the city by treachery from within.",
+      "effects": [{"op": "set_controller", "target": "tarentum", "faction": "rome"}]
+    },
+    {
+      "id": "hasdrubal_marches_to_italy",
+      "name": "Hasdrubal marches to Italy",
+      "year": -207,
+      "season": "spring",
+      "site": "alpine_pass",
+      "summary": "Beaten at Baecula, Hasdrubal slips north round Scipio, crosses the Alps and recruits in Gaul.",
+      "effects": [
+        {"op": "move_army", "target": "iberian_army", "to": "placentia"},
+        {
+          "op": "set_army_strength",
+          "target": "iberian_army",
+          "infantry": 30000,
+          "cavalry": 4000,
+          "elephants": 10
+        }
+      ]
+    },
+    {
+      "id": "battle_of_the_metaurus",
+      "name": "Battle of the Metaurus",
+      "year": -207,
+      "season": "summer",
+      "site": "metaurus",
+      "summary": "Nero's forced march joins the two consular armies; Hasdrubal dies on the Metaurus and his head is thrown into Hannibal's camp.",
+      "effects": [
+        {"op": "move_army", "target": "iberian_army", "to": "metaurus"},
+        {"op": "disband_army", "target": "iberian_army"},
+        {"op": "set_commander", "target": "hasdrubal_barca", "status": "dead"},
+        {"op": "set_controller", "target": "metaurus", "faction": "rome"}
+      ]
+    },
+    {
+      "id": "battle_of_ilipa",
+      "name": "Battle of Ilipa",
+      "year": -206,
+      "season": "spring",
+      "site": "castulo",
+      "summary": "Scipio's reversed deployment breaks Hasdrubal Gisco. Carthage loses Iberia, and Masinissa changes sides.",
+      "effects": [
+        {"op": "set_controller", "target": "iberia_carthaginian", "faction": "rome"},
+        {"op": "set_controller", "target": "castulo", "faction": "rome"},
+        {"op": "set_controller", "target": "gades", "faction": "rome"},
+        {"op": "set_controller", "target": "saguntum", "faction": "rome"},
+        {"op": "set_controller", "target": "toletum", "faction": "rome"},
+        {"op": "set_contested", "target": "iberia_interior", "enabled": false},
+        {"op": "set_commander", "target": "masinissa", "faction": "rome"}
+      ]
+    },
+    {
+      "id": "scipio_lands_in_africa",
+      "name": "Scipio lands in Africa",
+      "year": -204,
+      "season": "spring",
+      "site": "utica",
+      "summary": "The Cannae legions, exiled to Sicily, sail with Scipio for Utica.",
+      "effects": [
+        {
+          "op": "create_army",
+          "target": "africanus_army",
+          "name": "Army of Africa",
+          "faction": "rome",
+          "to": "lilybaeum",
+          "commander": "scipio_africanus",
+          "infantry": 28000,
+          "cavalry": 2500
+        },
+        {"op": "move_army", "target": "africanus_army", "to": "utica"},
+        {"op": "set_contested", "target": "carthage_core", "enabled": true}
+      ]
+    },
+    {
+      "id": "battle_of_the_great_plains",
+      "name": "Battle of the Great Plains",
+      "year": -203,
+      "season": "spring",
+      "site": "tunes",
+      "summary": "Syphax is taken; Masinissa enters Cirta as king and Scipio camps at Tunes within sight of Carthage.",
+      "effects": [
+        {"op": "move_army", "target": "africanus_army", "to": "tunes"},
+        {"op": "set_controller", "target": "tunes", "faction": "rome"},
+        {"op": "set_controller", "target": "cirta", "faction": "rome"},
+        {"op": "set_controller", "target": "numidia", "faction": "rome"},
+        {"op": "set_army_strength", "target": "african_army", "infantry": 8000, "cavalry": 500}
+      ]
+    },
+    {
+      "id": "hannibal_recalled",
+      "name": "Hannibal recalled from Italy",
+      "year": -203,
+      "season": "autumn",
+      "site": "hadrumetum",
+      "summary": "After fifteen years in Italy Hannibal sails from Croton and lands at Hadrumetum with his veterans.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "hadrumetum"},
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 24000,
+          "cavalry": 2000,
+          "elephants": 80
+        },
+        {"op": "set_controller", "target": "croton", "faction": "rome"},
+        {"op": "set_contested", "target": "southern_italy", "enabled": false},
+        {"op": "set_contested", "target": "roman_core", "enabled": false}
+      ]
+    },
+    {
+      "id": "battle_of_zama",
+      "name": "Battle of Zama",
+      "year": -202,
+      "season": "autumn",
+      "mission": "battle_of_zama",
+      "site": "zama",
+      "summary": "The elephants run down Scipio's lanes, the Numidian horse return in time, and the Carthaginian army is destroyed.",
+      "effects": [
+        {"op": "move_army", "target": "hannibal_army", "to": "zama"},
+        {"op": "move_army", "target": "africanus_army", "to": "zama"},
+        {
+          "op": "set_army_strength",
+          "target": "hannibal_army",
+          "infantry": 3000,
+          "cavalry": 500,
+          "elephants": 0
+        },
+        {"op": "set_controller", "target": "zama", "faction": "rome"}
+      ]
+    },
+    {
+      "id": "peace_of_201",
+      "name": "Peace of 201 BC",
+      "year": -201,
+      "season": "spring",
+      "site": "carthage",
+      "summary": "Carthage gives up her fleet, her elephants and Iberia, and may make no war without Rome's leave.",
+      "effects": [
+        {"op": "disband_army", "target": "hannibal_army"},
+        {"op": "set_contested", "target": "carthage_core", "enabled": false},
+        {"op": "set_flag", "target": "war_over", "value": "true"},
+        {"op": "set_port", "target": "carthage", "enabled": false}
+      ]
+    }
+  ]
+}

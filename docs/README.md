@@ -26,6 +26,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 - [RPG_PLAYABILITY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RPG_PLAYABILITY.md) — direct-control commander play
 - [SKIRMISH_BASES.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SKIRMISH_BASES.md) — choosing a starting base
 - [CAMPAIGN_MISSIONS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CAMPAIGN_MISSIONS.md) — campaign mission roster
+- [STRATEGIC_WORLD.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/STRATEGIC_WORLD.md) — the strategic world: regions, sites, roads, armies, supply, campaign events, validation and the editor view
 - [IRON_SEPULCHER.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/IRON_SEPULCHER.md), [CURSED_GOLD_VEIN.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CURSED_GOLD_VEIN.md),
   [ROCKFALL.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ROCKFALL.md) — individual mission write-ups
 - [RAFTS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RAFTS.md) — river rafts: placement rules and ferrying

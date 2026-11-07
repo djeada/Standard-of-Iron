@@ -1,10 +1,12 @@
 #include "editor_window.h"
 
 #include <QAction>
+#include <QButtonGroup>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>
+#include <QDirIterator>
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QFileDialog>
@@ -21,31 +23,43 @@
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProcess>
+#include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSettings>
+#include <QShortcut>
 #include <QSignalBlocker>
 #include <QSplitter>
+#include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTabWidget>
+#include <QTextBrowser>
 #include <QToolBar>
 #include <QToolButton>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <QtMath>
 
 #include <cmath>
 
+#include "campaign_workspace.h"
 #include "element_edit_json.h"
 #include "game/map/environment_lighting.h"
 #include "game/map/map_definition.h"
+#include "game/strategic/strategic_assets.h"
+#include "game/strategic/strategic_encounter.h"
+#include "game/strategic/strategic_events.h"
 #include "generator_client.h"
 #include "generator_panel.h"
 #include "json_edit_dialog.h"
 #include "json_schema.h"
 #include "map_json_keys.h"
 #include "resize_dialog.h"
+#include "road_network.h"
 #include "tool_catalog.h"
+#include "world_canvas.h"
+#include "world_document.h"
 
 namespace {
 
@@ -448,17 +462,36 @@ EditorWindow::EditorWindow(QWidget* parent)
           this,
           &EditorWindow::refresh_json_preview);
 
-  setWindowTitle("Standard of Iron - Map Editor");
-  resize(1400, 900);
+  resize(1600, 960);
 
   reset_to_new_map();
+  refresh_workspace_bar();
+  update_window_title();
 }
 
 EditorWindow::~EditorWindow() = default;
 
 void EditorWindow::setup_ui() {
-  auto* central_widget = new QWidget(this);
-  setCentralWidget(central_widget);
+  auto* shell = new QWidget(this);
+  setCentralWidget(shell);
+  auto* shell_layout = new QVBoxLayout(shell);
+  shell_layout->setContentsMargins(0, 0, 0, 0);
+  shell_layout->setSpacing(0);
+  auto* workspace_row = addToolBar(QStringLiteral("Workspaces"));
+  workspace_row->setObjectName(QStringLiteral("workspace_row"));
+  workspace_row->setMovable(false);
+  workspace_row->setFloatable(false);
+  workspace_row->setContextMenuPolicy(Qt::PreventContextMenu);
+  workspace_row->setStyleSheet(
+      QStringLiteral("QToolBar{border:none;padding:0;margin:0;spacing:0;}"));
+  workspace_row->addWidget(build_workspace_bar());
+  addToolBarBreak();
+  m_stack = new QStackedWidget(shell);
+  shell_layout->addWidget(m_stack, 1);
+
+  auto* central_widget = new QWidget(m_stack);
+  m_battlefield_page = central_widget;
+  m_stack->addWidget(central_widget);
 
   auto* main_layout = new QHBoxLayout(central_widget);
   main_layout->setContentsMargins(0, 0, 0, 0);
@@ -506,7 +539,7 @@ void EditorWindow::setup_ui() {
 
   m_sidebar_tabs = new QTabWidget(splitter);
   m_sidebar_tabs->setMinimumWidth(300);
-  m_sidebar_tabs->setMaximumWidth(460);
+  m_sidebar_tabs->setMaximumWidth(560);
 
   m_tool_panel = new ToolPanel(m_sidebar_tabs);
   connect(
@@ -574,6 +607,23 @@ void EditorWindow::setup_ui() {
   generator_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   m_sidebar_tabs->addTab(generator_scroll, "Generator");
 
+  m_campaign_context = new QTextBrowser(m_sidebar_tabs);
+  m_campaign_context->setOpenLinks(false);
+  m_campaign_context->document()->setDefaultStyleSheet(
+      QStringLiteral("body{color:#F4E7C8;} a{color:#E8C98B;text-decoration:none;} "
+                     "h2{margin:0;font-size:14pt;}"
+                     "h4{margin:10px 0 3px 0;color:#C7A66D;font-size:9pt;} "
+                     ".dim{color:#9C8158;} td{padding:1px 8px 1px 0;}"));
+  connect(
+      m_campaign_context, &QTextBrowser::anchorClicked, this, [this](const QUrl& url) {
+        const QString link = url.toString();
+        if (link.startsWith(QStringLiteral("site:"))) {
+          set_workspace(Workspace::Campaign);
+          m_campaign->select_entity(link.mid(5));
+        }
+      });
+  m_sidebar_tabs->addTab(m_campaign_context, "Campaign");
+
   auto* guide_scroll = new QScrollArea(m_sidebar_tabs);
   guide_scroll->setWidget(createGuidePanel(guide_scroll));
   guide_scroll->setWidgetResizable(true);
@@ -594,7 +644,7 @@ void EditorWindow::setup_ui() {
   splitter->addWidget(m_sidebar_tabs);
   splitter->setStretchFactor(0, 1);
   splitter->setStretchFactor(1, 0);
-  splitter->setSizes({1160, 340});
+  splitter->setSizes({1180, 480});
   set_mission_mode(false);
 
   main_layout->addWidget(splitter);
@@ -646,7 +696,7 @@ void EditorWindow::setup_ui() {
   statusBar()->addPermanentWidget(m_file_label);
   statusBar()->addPermanentWidget(m_zoom_widget);
   statusBar()->addPermanentWidget(m_dimensions_label);
-  auto* version_label = new QLabel("Mission Editor v2.0", this);
+  auto* version_label = new QLabel("Standard of Iron Editor", this);
   version_label->setProperty("status", "muted");
   statusBar()->addPermanentWidget(version_label);
 }
@@ -673,9 +723,29 @@ void EditorWindow::setup_menus() {
   connect(open_action, &QAction::triggered, this, &EditorWindow::open_map);
   file_menu->addAction(open_action);
 
+  auto* open_world_action = new QAction("Open Campaign &World…", this);
+  open_world_action->setToolTip(
+      "Open a strategic world file in the Campaign workspace");
+  connect(open_world_action, &QAction::triggered, this, [this]() {
+    ensure_campaign();
+    if (!m_campaign->maybe_save()) {
+      return;
+    }
+    const QString path =
+        QFileDialog::getOpenFileName(this,
+                                     "Open Campaign World",
+                                     QDir(repository_root()).filePath("assets/world"),
+                                     "Campaign world (*.json)");
+    if (!path.isEmpty()) {
+      open_campaign(path);
+    }
+  });
+  file_menu->addAction(open_world_action);
+
   file_menu->addSeparator();
 
   auto* save_action = new QAction("&Save", this);
+  m_save_action = save_action;
   save_action->setShortcut(QKeySequence::Save);
   save_action->setToolTip("Save the current map (Ctrl+S)");
   connect(save_action, &QAction::triggered, this, &EditorWindow::save_map);
@@ -810,6 +880,7 @@ void EditorWindow::setup_menus() {
   }
 
   auto* toolbar = addToolBar("Main");
+  m_main_toolbar = toolbar;
   toolbar->setMovable(false);
   toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
   toolbar->addAction(new_action);
@@ -822,7 +893,42 @@ void EditorWindow::setup_menus() {
   toolbar->addSeparator();
   toolbar->addAction(resize_action);
 
+  auto* go_menu = menuBar()->addMenu("&Go");
+  const auto add_go = [&](const QString& text, const QKeySequence& key, auto&& slot) {
+    auto* action = new QAction(text, this);
+    action->setShortcut(key);
+    action->setShortcutContext(Qt::ApplicationShortcut);
+    connect(action, &QAction::triggered, this, slot);
+    go_menu->addAction(action);
+    return action;
+  };
+  add_go("&Campaign", QKeySequence(Qt::CTRL | Qt::Key_1), [this]() {
+    set_workspace(Workspace::Campaign);
+  });
+  add_go("&Battlefield", QKeySequence(Qt::CTRL | Qt::Key_2), [this]() {
+    set_workspace(Workspace::Battlefield);
+  });
+  add_go("&Mission", QKeySequence(Qt::CTRL | Qt::Key_3), [this]() {
+    set_workspace(Workspace::Mission);
+  });
+  go_menu->addSeparator();
+  add_go("Command &Palette…", QKeySequence(Qt::CTRL | Qt::Key_K), [this]() {
+    open_command_palette();
+  });
+  add_go("Back to Campaign &Site", QKeySequence(Qt::ALT | Qt::Key_Left), [this]() {
+    set_workspace(Workspace::Campaign);
+    if (!m_anchor_site.isEmpty() && m_campaign != nullptr) {
+      m_campaign->select_entity(m_anchor_site);
+    }
+  });
+
   auto* test_menu = menuBar()->addMenu("&Test");
+  auto* roads_action = new QAction("Check &Road Network…", this);
+  roads_action->setToolTip("Find roads that do not join the rest of the network, and "
+                           "snap near misses closed");
+  connect(roads_action, &QAction::triggered, this, &EditorWindow::check_road_network);
+  test_menu->addAction(roads_action);
+  test_menu->addSeparator();
   auto* validate_action = new QAction("&Validate Mission", this);
   connect(validate_action, &QAction::triggered, this, &EditorWindow::validate_mission);
   test_menu->addAction(validate_action);
@@ -840,6 +946,684 @@ void EditorWindow::setup_menus() {
   test_menu->addAction(launch_arena_action);
 }
 
+void EditorWindow::check_road_network() {
+  const RoadNetworkReport report = analyse_road_network(m_map_data->linear_elements());
+  QString details = report.summary();
+  for (int g = 1; g < report.groups.size(); ++g) {
+    const auto& group = report.groups[g];
+    const auto& first = m_map_data->linear_elements().at(group.first());
+    details +=
+        QStringLiteral("\n• Separate network %1: %2 element(s), starting near (%3, %4)")
+            .arg(g)
+            .arg(group.size())
+            .arg(first.start.x(), 0, 'f', 0)
+            .arg(first.start.y(), 0, 'f', 0);
+  }
+  for (const auto& miss : report.near_misses) {
+    details += QStringLiteral("\n• Road #%1 stops %2 cells short of #%3 at (%4, %5)")
+                   .arg(miss.element)
+                   .arg(miss.gap, 0, 'f', 1)
+                   .arg(miss.target_element)
+                   .arg(miss.end.x(), 0, 'f', 0)
+                   .arg(miss.end.y(), 0, 'f', 0);
+  }
+  if (!report.near_misses.isEmpty()) {
+    m_canvas->center_on(report.near_misses.first().end);
+  } else if (report.groups.size() > 1) {
+    const auto& stray = m_map_data->linear_elements().at(report.groups[1].first());
+    m_canvas->center_on(QPointF(stray.start.x(), stray.start.y()));
+  }
+  QMessageBox box(this);
+  box.setWindowTitle(QStringLiteral("Road Network"));
+  box.setIcon(report.connected() ? QMessageBox::Information : QMessageBox::Warning);
+  box.setText(report.summary());
+  box.setDetailedText(details);
+  QPushButton* snap = nullptr;
+  if (!report.near_misses.isEmpty()) {
+    snap = box.addButton(
+        QStringLiteral("Snap %1 Near Miss(es)").arg(report.near_misses.size()),
+        QMessageBox::AcceptRole);
+  }
+  box.addButton(QMessageBox::Close);
+  box.exec();
+  if (snap == nullptr || box.clickedButton() != snap) {
+    show_action_feedback(report.summary(), report.connected());
+    return;
+  }
+  std::vector<std::unique_ptr<Command>> commands;
+  for (const auto& miss : report.near_misses) {
+    const LinearElement before = m_map_data->linear_elements().at(miss.element);
+    commands.push_back(
+        std::make_unique<UpdateLinearCmd>(m_map_data,
+                                          miss.element,
+                                          before,
+                                          snapped(before, miss),
+                                          QStringLiteral("Snap road end")));
+  }
+  m_map_data->execute_command(std::make_unique<CompositeCmd>(
+      std::move(commands), QStringLiteral("Snap road near misses")));
+  const RoadNetworkReport after = analyse_road_network(m_map_data->linear_elements());
+  show_action_feedback(QStringLiteral("Snapped %1 road end(s). %2")
+                           .arg(report.near_misses.size())
+                           .arg(after.summary()),
+                       after.connected());
+}
+
+auto EditorWindow::build_workspace_bar() -> QWidget* {
+  auto* bar = new QWidget(this);
+  bar->setObjectName(QStringLiteral("workspace_bar"));
+  bar->setStyleSheet(QStringLiteral(
+      "#workspace_bar{background:#1A140F;border-bottom:1px solid #4A3820;}"
+      "#workspace_bar QToolButton[workspace='true']{padding:6px 16px;border:none;"
+      "border-bottom:2px solid "
+      "transparent;color:#C7A66D;font-weight:600;background:transparent;}"
+      "#workspace_bar "
+      "QToolButton[workspace='true']:checked{color:#F4E7C8;border-bottom:2px solid "
+      "#D4A15A;}"
+      "#workspace_bar QToolButton[workspace='true']:disabled{color:#5A4630;}"
+      "#workspace_bar QToolButton[workspace='true']:hover{color:#F4E7C8;}"
+      "#workspace_bar QLabel{color:#9C8158;}"
+      "#workspace_bar QLabel a{color:#E8C98B;}"
+      "#workspace_search{background:#231B14;border:1px solid "
+      "#4A3820;border-radius:12px;"
+      "padding:4px 12px;color:#8D7146;text-align:left;}"
+      "#workspace_search:hover{border-color:#A7814A;color:#C7A66D;}"));
+  auto* layout = new QHBoxLayout(bar);
+  layout->setContentsMargins(8, 2, 8, 0);
+  layout->setSpacing(2);
+  auto* group = new QButtonGroup(bar);
+  group->setExclusive(true);
+  const auto tab = [&](const QString& text, const QString& tip, Workspace workspace) {
+    auto* button = new QToolButton(bar);
+    button->setText(text);
+    button->setToolTip(tip);
+    button->setCheckable(true);
+    button->setProperty("workspace", true);
+    group->addButton(button);
+    connect(button, &QToolButton::clicked, this, [this, workspace]() {
+      set_workspace(workspace);
+    });
+    layout->addWidget(button);
+    return button;
+  };
+  m_campaign_tab = tab(QStringLiteral("Campaign"),
+                       QStringLiteral("The strategic world: regions, roads, armies, "
+                                      "supply and the war's timeline (Ctrl+1)"),
+                       Workspace::Campaign);
+  m_battlefield_tab =
+      tab(QStringLiteral("Battlefield"),
+          QStringLiteral(
+              "Edit the battle map: terrain, roads, settlements, spawns (Ctrl+2)"),
+          Workspace::Battlefield);
+  m_mission_tab =
+      tab(QStringLiteral("Mission"),
+          QStringLiteral(
+              "Objectives, forces, waves and dialogue on top of the map (Ctrl+3)"),
+          Workspace::Mission);
+  layout->addSpacing(18);
+  m_breadcrumb = new QLabel(bar);
+  m_breadcrumb->setTextFormat(Qt::RichText);
+  connect(m_breadcrumb, &QLabel::linkActivated, this, [this](const QString& link) {
+    if (link == QLatin1String("campaign")) {
+      set_workspace(Workspace::Campaign);
+    } else if (link.startsWith(QStringLiteral("site:"))) {
+      set_workspace(Workspace::Campaign);
+      m_campaign->select_entity(link.mid(5));
+    } else if (link == QLatin1String("battlefield")) {
+      set_workspace(Workspace::Battlefield);
+    }
+  });
+  layout->addWidget(m_breadcrumb, 1);
+  m_problem_badge = new QToolButton(bar);
+  m_problem_badge->setAutoRaise(true);
+  m_problem_badge->setToolTip(QStringLiteral("Campaign problems — click to review"));
+  connect(m_problem_badge, &QToolButton::clicked, this, [this]() {
+    set_workspace(Workspace::Campaign);
+    m_campaign->show_problems();
+  });
+  layout->addWidget(m_problem_badge);
+  auto* search = new QToolButton(bar);
+  search->setObjectName(QStringLiteral("workspace_search"));
+  search->setText(QStringLiteral("Search or run a command…     Ctrl+K"));
+  search->setMinimumWidth(280);
+  connect(search, &QToolButton::clicked, this, [this]() { open_command_palette(); });
+  layout->addWidget(search);
+  m_palette = new CommandPalette(this);
+  return bar;
+}
+
+void EditorWindow::ensure_campaign() {
+  if (m_campaign != nullptr) {
+    return;
+  }
+  m_campaign = new CampaignWorkspace(m_stack);
+  m_stack->addWidget(m_campaign);
+  connect(m_campaign,
+          &CampaignWorkspace::feedback,
+          this,
+          [this](const QString& message, bool success) {
+            show_action_feedback(message, success);
+          });
+  connect(
+      m_campaign, &CampaignWorkspace::cursor_text, this, [this](const QString& text) {
+        if (m_cursor_label != nullptr && m_workspace == Workspace::Campaign) {
+          m_cursor_label->setText(text);
+        }
+      });
+  connect(m_campaign, &CampaignWorkspace::summary_changed, this, [this]() {
+    refresh_workspace_bar();
+    on_undo_redo_changed();
+    update_window_title();
+  });
+  connect(m_campaign,
+          &CampaignWorkspace::open_battlefield_requested,
+          this,
+          &EditorWindow::open_battlefield_from_campaign);
+  connect(
+      m_campaign,
+      &CampaignWorkspace::generate_battlefield_requested,
+      this,
+      [this](const QJsonObject& request, const QString& title, const QString& site) {
+        if (!maybe_save()) {
+          return;
+        }
+        reset_to_new_map();
+        m_anchor_site = site;
+        set_workspace(Workspace::Battlefield);
+        select_sidebar_tab(QStringLiteral("Generator"));
+        m_generator_panel->prefill_from(request);
+        show_action_feedback(
+            QStringLiteral(
+                "Generator prefilled for %1. Press Generate to build the battlefield.")
+                .arg(title));
+      });
+}
+
+auto EditorWindow::open_campaign(const QString& path) -> CampaignWorkspace* {
+  ensure_campaign();
+  const QString target =
+      path.isEmpty()
+          ? QDir(repository_root())
+                .filePath(QString::fromLatin1(Game::Strategic::k_default_world_path))
+          : path;
+  if (m_campaign->document()->path() != target) {
+    m_campaign->open_world(target);
+  }
+  set_workspace(Workspace::Campaign);
+  return m_campaign;
+}
+
+void EditorWindow::open_battlefield_from_campaign(const QString& map_path,
+                                                  const QString& mission_id,
+                                                  const QString& site_id) {
+  const QString mission_path =
+      mission_id.isEmpty()
+          ? QString()
+          : QDir(repository_root())
+                .filePath(QStringLiteral("assets/missions/%1.json").arg(mission_id));
+  const QString target = !mission_path.isEmpty() && QFileInfo::exists(mission_path)
+                             ? mission_path
+                             : map_path;
+  if (target.isEmpty()) {
+    show_action_feedback(QStringLiteral("That site links no battlefield file."), false);
+    return;
+  }
+  if (QFileInfo(target).absoluteFilePath() != m_current_file_path) {
+    if (!maybe_save() || !load_file(target)) {
+      return;
+    }
+  }
+  m_anchor_site = site_id;
+  set_workspace(m_mission_mode ? Workspace::Mission : Workspace::Battlefield);
+}
+
+void EditorWindow::ensure_campaign_context_world() {
+  ensure_campaign();
+  if (m_campaign->has_world()) {
+    return;
+  }
+  const QString path =
+      QDir(repository_root())
+          .filePath(QString::fromLatin1(Game::Strategic::k_default_world_path));
+  if (QFileInfo::exists(path)) {
+    QString error;
+    (void)m_campaign->document()->load(path, &error);
+  }
+}
+
+void EditorWindow::set_workspace(Workspace workspace) {
+  if (workspace == Workspace::Campaign && m_campaign == nullptr) {
+    open_campaign();
+    return;
+  }
+  if (workspace == Workspace::Mission && !m_mission_mode) {
+    open_command_palette();
+    m_palette->open_with(QStringLiteral("mission "));
+    return;
+  }
+  m_workspace = workspace;
+  const bool campaign = workspace == Workspace::Campaign;
+  m_stack->setCurrentWidget(campaign ? static_cast<QWidget*>(m_campaign)
+                                     : m_battlefield_page);
+  if (m_main_toolbar != nullptr) {
+    m_main_toolbar->setVisible(!campaign);
+  }
+  if (m_cursor_label != nullptr) {
+    m_cursor_label->clear();
+  }
+  for (QWidget* widget : {static_cast<QWidget*>(m_dimensions_label),
+                          m_zoom_widget,
+                          static_cast<QWidget*>(m_tool_label),
+                          static_cast<QWidget*>(m_file_label)}) {
+    if (widget != nullptr) {
+      widget->setVisible(!campaign);
+    }
+  }
+  if (!campaign && m_sidebar_tabs != nullptr) {
+    if (workspace == Workspace::Mission && m_mission_scroll != nullptr) {
+      m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
+    } else if (m_sidebar_tabs->currentWidget() == m_mission_scroll) {
+      m_sidebar_tabs->setCurrentIndex(0);
+    }
+  }
+  if (campaign) {
+    m_campaign->canvas()->setFocus();
+  } else {
+    m_canvas->setFocus();
+  }
+  refresh_workspace_bar();
+  on_undo_redo_changed();
+  update_window_title();
+}
+
+void EditorWindow::refresh_workspace_bar() {
+  if (m_campaign_tab == nullptr) {
+    return;
+  }
+  m_campaign_tab->setChecked(m_workspace == Workspace::Campaign);
+  m_battlefield_tab->setChecked(m_workspace == Workspace::Battlefield);
+  m_mission_tab->setChecked(m_workspace == Workspace::Mission);
+  m_mission_tab->setText(m_mission_mode ? QStringLiteral("Mission")
+                                        : QStringLiteral("Mission…"));
+  QStringList crumbs;
+  const QString link_style = QStringLiteral("color:#E8C98B;text-decoration:none");
+  const QString campaign_name =
+      m_campaign != nullptr && m_campaign->has_world()
+          ? m_campaign->document()->definition().name.section(QLatin1Char(':'), 0, 0)
+          : QStringLiteral("Campaign");
+  if (m_workspace == Workspace::Campaign) {
+    crumbs.append(QStringLiteral("<b style='color:#F4E7C8'>%1</b>")
+                      .arg(campaign_name.toHtmlEscaped()));
+    if (m_campaign != nullptr) {
+      const auto& doc = *m_campaign->document();
+      if (const auto* event = doc.current_event()) {
+        crumbs.append(event->date_label());
+      } else {
+        crumbs.append(doc.definition().start_label);
+      }
+      if (!doc.selection().isEmpty()) {
+        crumbs.append(
+            QStringLiteral("<span style='color:#E8C98B'>%1</span>")
+                .arg(doc.definition().display_name(doc.selection()).toHtmlEscaped()));
+      }
+    }
+  } else {
+    QString site = m_anchor_site;
+    if (site.isEmpty() && m_campaign != nullptr) {
+      site = m_campaign->site_for_battlefield(
+          m_mission_mode ? m_linked_map_file_path : m_current_file_path,
+          m_mission_mode ? m_mission_data->id() : QString());
+    }
+    crumbs.append(QStringLiteral("<a href='campaign' style='%2'>%1</a>")
+                      .arg(campaign_name.toHtmlEscaped(), link_style));
+    if (!site.isEmpty() && m_campaign != nullptr) {
+      crumbs.append(QStringLiteral("<a href='site:%1' style='%3'>%2</a>")
+                        .arg(site,
+                             m_campaign->document()
+                                 ->definition()
+                                 .display_name(site)
+                                 .toHtmlEscaped(),
+                             link_style));
+    }
+    refresh_campaign_context(site);
+    const QString map_file =
+        QFileInfo(m_mission_mode ? m_linked_map_file_path : m_current_file_path)
+            .fileName();
+    const QString map_label = map_file.isEmpty() ? m_map_data->name() : map_file;
+    crumbs.append(m_workspace == Workspace::Mission
+                      ? QStringLiteral("<a href='battlefield' style='%2'>%1</a>")
+                            .arg(map_label.toHtmlEscaped(), link_style)
+                      : QStringLiteral("<b style='color:#F4E7C8'>%1</b>")
+                            .arg(map_label.toHtmlEscaped()));
+    if (m_workspace == Workspace::Mission) {
+      crumbs.append(QStringLiteral("<b style='color:#F4E7C8'>%1</b>")
+                        .arg(m_mission_data->title().toHtmlEscaped()));
+    }
+  }
+  m_breadcrumb->setText(
+      crumbs.join(QStringLiteral("  <span style='color:#5A4630'>›</span>  ")));
+  if (m_campaign != nullptr && m_campaign->has_world()) {
+    const auto& report = m_campaign->document()->report();
+    m_problem_badge->setVisible(true);
+    m_problem_badge->setText(
+        report.errors() + report.warnings() == 0
+            ? QStringLiteral("✔ Campaign valid")
+            : QStringLiteral("✖ %1  ⚠ %2").arg(report.errors()).arg(report.warnings()));
+  } else {
+    m_problem_badge->setVisible(false);
+  }
+}
+
+void EditorWindow::refresh_campaign_context(const QString& site_id) {
+  namespace S = Game::Strategic;
+  if (m_campaign_context == nullptr) {
+    return;
+  }
+  if (m_campaign == nullptr || !m_campaign->has_world() || site_id.isEmpty()) {
+    m_campaign_context->setHtml(
+        QStringLiteral("<h2>Campaign</h2><p class='dim'>This battlefield is not linked "
+                       "to a campaign site. Link "
+                       "one from the Campaign workspace (a site's <i>Battlefield "
+                       "map</i> and <i>Mission</i> "
+                       "fields), or open it from the campaign map.</p>"));
+    return;
+  }
+  const auto& def = m_campaign->document()->definition();
+  const auto* site = def.site(site_id);
+  if (site == nullptr) {
+    return;
+  }
+  int index = static_cast<int>(def.events.size());
+  QString event_label;
+  for (int i = 0; i < def.events.size(); ++i) {
+    if (!site->battlefield.mission.isEmpty() &&
+        def.events[i].mission == site->battlefield.mission) {
+      index = i;
+      event_label =
+          def.events[i].name + QStringLiteral(" · ") + def.events[i].date_label();
+      break;
+    }
+  }
+  const S::WorldState state = S::state_after(def, index);
+  const S::Season season =
+      index < def.events.size() ? def.events[index].season : S::Season::Spring;
+  const S::Encounter encounter = S::encounter_at(def, state, site_id);
+  const S::EncounterContext context =
+      S::encounter_context(def, state, encounter, season);
+  const auto name = [&def](const QString& id) {
+    return def.display_name(id).toHtmlEscaped();
+  };
+  QString html = QStringLiteral("<h2>%1</h2><div class='dim'>%2 · %3 · <a "
+                                "href='site:%4'>show on the campaign map</a></div>")
+                     .arg(site->name.toHtmlEscaped(),
+                          name(site->region),
+                          S::to_string(site->terrain),
+                          site_id);
+  if (!event_label.isEmpty()) {
+    html += QStringLiteral("<h4>THE SITUATION BEFORE</h4>%1")
+                .arg(event_label.toHtmlEscaped());
+  }
+  QStringList combatants;
+  if (index < def.events.size()) {
+    for (const auto& effect : def.events[index].effects) {
+      const bool army_effect = effect.op == S::EffectOp::MoveArmy ||
+                               effect.op == S::EffectOp::SetArmyStrength ||
+                               effect.op == S::EffectOp::ScaleArmy ||
+                               effect.op == S::EffectOp::DisbandArmy;
+      if (army_effect && state.army(effect.target) != nullptr &&
+          !combatants.contains(effect.target)) {
+        combatants.append(effect.target);
+      }
+    }
+  }
+  html += QStringLiteral("<table>");
+  html += QStringLiteral("<tr><td>Held by</td><td><b>%1</b></td></tr>")
+              .arg(name(context.controller));
+  if (!combatants.isEmpty()) {
+    for (const auto& id : combatants) {
+      const auto* army = state.army(id);
+      html +=
+          QStringLiteral("<tr><td>%1</td><td><b>%2</b> — %3 foot, %4 horse%5</td></tr>")
+              .arg(name(army->faction), name(id))
+              .arg(army->infantry)
+              .arg(army->cavalry)
+              .arg(army->elephants == 1 ? QStringLiteral(", 1 elephant")
+                   : army->elephants > 1
+                       ? QStringLiteral(", %1 elephants").arg(army->elephants)
+                       : QString());
+    }
+  } else {
+    html += QStringLiteral("<tr><td>Attacker</td><td><b>%1</b>%2</td></tr>")
+                .arg(name(context.attacker),
+                     encounter.attacker_army.isEmpty()
+                         ? QString()
+                         : QStringLiteral(" — %1, %2 men")
+                               .arg(name(encounter.attacker_army))
+                               .arg(context.attacker_soldiers));
+    html += QStringLiteral("<tr><td>Defender</td><td><b>%1</b>%2</td></tr>")
+                .arg(name(context.defender),
+                     encounter.defender_army.isEmpty()
+                         ? QString()
+                         : QStringLiteral(" — %1, %2 men")
+                               .arg(name(encounter.defender_army))
+                               .arg(context.defender_soldiers));
+  }
+  html +=
+      QStringLiteral("<tr><td>Season</td><td>%1</td></tr>").arg(S::to_string(season));
+  html +=
+      QStringLiteral("<tr><td>Walls</td><td>%1</td></tr>").arg(context.fortification);
+  html += QStringLiteral("</table>");
+  html += QStringLiteral("<h4>ROADS THAT SHOULD ENTER THIS MAP</h4>");
+  for (const auto* route : def.routes_at(site_id)) {
+    html += QStringLiteral(
+                "%1 <span class='dim'>from</span> %2 <span class='dim'>(%3)</span><br>")
+                .arg(name(route->id),
+                     name(route->other_end(site_id)),
+                     S::to_string(route->kind));
+  }
+  html += QStringLiteral("<h4>WHAT THE GENERATOR WOULD BUILD</h4>%1 · preset <b>%2</b> "
+                         "· biome <b>%3</b>%4")
+              .arg(context.kind,
+                   context.preset,
+                   context.biome,
+                   context.coastal ? QStringLiteral(" · coast") : QString());
+  m_campaign_context->setHtml(html);
+}
+
+auto EditorWindow::palette_entries() -> QVector<PaletteEntry> {
+  QVector<PaletteEntry> entries;
+  const auto command =
+      [&](const QString& title, const QString& detail, std::function<void()> run) {
+        entries.append({title, detail, QStringLiteral("Command"), std::move(run)});
+      };
+  command(QStringLiteral("Go to Campaign"), QStringLiteral("Ctrl+1"), [this]() {
+    set_workspace(Workspace::Campaign);
+  });
+  command(QStringLiteral("Go to Battlefield"), QStringLiteral("Ctrl+2"), [this]() {
+    set_workspace(Workspace::Battlefield);
+  });
+  if (m_mission_mode) {
+    command(QStringLiteral("Go to Mission"), QStringLiteral("Ctrl+3"), [this]() {
+      set_workspace(Workspace::Mission);
+    });
+  }
+  command(QStringLiteral("Save"), QStringLiteral("Ctrl+S"), [this]() { save_map(); });
+  command(QStringLiteral("New Map"), QStringLiteral("Battlefield"), [this]() {
+    new_map();
+    set_workspace(Workspace::Battlefield);
+  });
+  command(QStringLiteral("New Mission"), QStringLiteral("Mission"), [this]() {
+    new_mission();
+  });
+  command(QStringLiteral("Check Road Network"),
+          QStringLiteral("Battlefield roads, bridges and fords"),
+          [this]() {
+            set_workspace(Workspace::Battlefield);
+            check_road_network();
+          });
+  command(QStringLiteral("Validate Mission"), QStringLiteral("Mission"), [this]() {
+    validate_mission();
+  });
+  command(QStringLiteral("Validate Campaign"),
+          QStringLiteral("Every strategic check"),
+          [this]() {
+            open_campaign();
+            m_campaign->validate_now();
+          });
+  command(QStringLiteral("Complete Road Network"),
+          QStringLiteral("Campaign: connect every site"),
+          [this]() {
+            open_campaign();
+            m_campaign->complete_network();
+          });
+  const QDir root(repository_root());
+  QHash<QString, int> campaign_order;
+  {
+    QFile campaign(
+        root.filePath(QStringLiteral("assets/campaigns/second_punic_war.json")));
+    if (campaign.open(QIODevice::ReadOnly)) {
+      for (const auto value : QJsonDocument::fromJson(campaign.readAll())
+                                  .object()
+                                  .value(QStringLiteral("missions"))
+                                  .toArray()) {
+        const QJsonObject mission = value.toObject();
+        campaign_order.insert(mission.value(QStringLiteral("mission_id")).toString(),
+                              mission.value(QStringLiteral("order_index")).toInt());
+      }
+    }
+  }
+  static const QStringList k_numerals = {QStringLiteral("I"),
+                                         QStringLiteral("II"),
+                                         QStringLiteral("III"),
+                                         QStringLiteral("IV"),
+                                         QStringLiteral("V"),
+                                         QStringLiteral("VI"),
+                                         QStringLiteral("VII"),
+                                         QStringLiteral("VIII"),
+                                         QStringLiteral("IX"),
+                                         QStringLiteral("X")};
+  QStringList mission_files = QDir(root.filePath(QStringLiteral("assets/missions")))
+                                  .entryList({QStringLiteral("*.json")}, QDir::Files);
+  std::sort(mission_files.begin(),
+            mission_files.end(),
+            [&](const QString& a, const QString& b) {
+              const int oa = campaign_order.value(QFileInfo(a).baseName(), 1000);
+              const int ob = campaign_order.value(QFileInfo(b).baseName(), 1000);
+              return oa != ob ? oa < ob : a < b;
+            });
+  for (const auto& file_name : mission_files) {
+    const QString path =
+        root.filePath(QStringLiteral("assets/missions/%1").arg(file_name));
+    QFile file(path);
+    QString title = QFileInfo(path).baseName();
+    if (file.open(QIODevice::ReadOnly)) {
+      const QString read = QJsonDocument::fromJson(file.readAll())
+                               .object()
+                               .value(QStringLiteral("title"))
+                               .toString();
+      if (!read.isEmpty()) {
+        title = read;
+      }
+    }
+    const QString id = QFileInfo(path).baseName();
+    const int order = campaign_order.value(id, -1);
+    const QString detail =
+        order >= 0 && order < k_numerals.size()
+            ? QStringLiteral("campaign %1 · %2").arg(k_numerals[order], file_name)
+            : QStringLiteral("standalone · %1").arg(file_name);
+    entries.append({QStringLiteral("Mission: %1").arg(title),
+                    detail,
+                    QStringLiteral("Mission"),
+                    [this, path]() {
+                      if (maybe_save() && load_file(path)) {
+                        m_anchor_site.clear();
+                        set_workspace(Workspace::Mission);
+                      }
+                    }});
+  }
+  QDirIterator maps(root.filePath(QStringLiteral("assets/maps")),
+                    {QStringLiteral("*.json")},
+                    QDir::Files);
+  while (maps.hasNext()) {
+    const QString path = maps.next();
+    entries.append({QStringLiteral("Map: %1").arg(
+                        QFileInfo(path)
+                            .baseName()
+                            .remove(QStringLiteral("map_"))
+                            .replace(QLatin1Char('_'), QLatin1Char(' '))),
+                    QFileInfo(path).fileName(),
+                    QStringLiteral("Map"),
+                    [this, path]() {
+                      if (maybe_save() && load_file(path)) {
+                        m_anchor_site.clear();
+                        set_workspace(Workspace::Battlefield);
+                      }
+                    }});
+  }
+  if (m_campaign != nullptr && m_campaign->has_world()) {
+    const auto& def = m_campaign->document()->definition();
+    for (const auto& site : def.sites) {
+      entries.append(
+          {site.name,
+           QStringLiteral("%1 in %2%3")
+               .arg(Game::Strategic::to_string(site.kind),
+                    def.display_name(site.region),
+                    site.battlefield.empty() ? QString()
+                                             : QStringLiteral(" · battlefield")),
+           QStringLiteral("Site"),
+           [this, id = site.id]() {
+             set_workspace(Workspace::Campaign);
+             m_campaign->select_entity(id);
+           }});
+    }
+    for (const auto& region : def.regions) {
+      entries.append({region.name,
+                      QStringLiteral("region"),
+                      QStringLiteral("Region"),
+                      [this, id = region.id]() {
+                        set_workspace(Workspace::Campaign);
+                        m_campaign->select_entity(id);
+                      }});
+    }
+    for (const auto& route : def.routes) {
+      if (route.name.isEmpty()) {
+        continue;
+      }
+      entries.append({route.name,
+                      Game::Strategic::to_string(route.kind),
+                      QStringLiteral("Route"),
+                      [this, id = route.id]() {
+                        set_workspace(Workspace::Campaign);
+                        m_campaign->select_entity(id);
+                      }});
+    }
+    for (const auto& army : m_campaign->document()->state().armies) {
+      entries.append({army.name,
+                      QStringLiteral("army at %1").arg(def.display_name(army.location)),
+                      QStringLiteral("Army"),
+                      [this, id = army.id]() {
+                        set_workspace(Workspace::Campaign);
+                        m_campaign->select_entity(id);
+                      }});
+    }
+    for (const auto& event : def.events) {
+      entries.append({event.name,
+                      event.date_label(),
+                      QStringLiteral("Event"),
+                      [this, id = event.id]() {
+                        set_workspace(Workspace::Campaign);
+                        m_campaign->set_timeline(id);
+                      }});
+    }
+  }
+  return entries;
+}
+
+void EditorWindow::open_command_palette() {
+  m_palette->set_entries(palette_entries());
+  m_palette->open_with();
+}
+
 void EditorWindow::reset_to_new_map() {
   m_map_data->clear();
   set_mission_mode(false);
@@ -855,6 +1639,8 @@ void EditorWindow::new_map() {
   }
 
   reset_to_new_map();
+  m_anchor_site.clear();
+  set_workspace(Workspace::Battlefield);
   show_action_feedback("Created a new unsaved map.");
 }
 
@@ -873,6 +1659,8 @@ void EditorWindow::new_mission() {
   update_window_title();
   update_current_file_label();
   m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
+  m_anchor_site.clear();
+  set_workspace(Workspace::Mission);
   show_action_feedback(QStringLiteral("Created a new unsaved mission."));
 }
 
@@ -939,6 +1727,9 @@ bool EditorWindow::load_file(const QString& file_path) {
     update_window_title();
     update_current_file_label();
     m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
+    m_anchor_site.clear();
+    ensure_campaign_context_world();
+    set_workspace(Workspace::Mission);
     return true;
   }
 
@@ -953,6 +1744,9 @@ bool EditorWindow::load_file(const QString& file_path) {
     show_action_feedback(
         QString("Loaded \"%1\" from %2")
             .arg(m_map_data->name(), normalizedDisplayPath(file_path)));
+    m_anchor_site.clear();
+    ensure_campaign_context_world();
+    set_workspace(Workspace::Battlefield);
     return true;
   }
   show_load_failure(file_path, error_message);
@@ -960,6 +1754,10 @@ bool EditorWindow::load_file(const QString& file_path) {
 }
 
 void EditorWindow::save_map() {
+  if (m_workspace == Workspace::Campaign && m_campaign != nullptr) {
+    m_campaign->save();
+    return;
+  }
   if (m_current_file_path.isEmpty()) {
     save_map_as();
   } else if (m_mission_mode) {
@@ -970,6 +1768,10 @@ void EditorWindow::save_map() {
 }
 
 void EditorWindow::save_map_as() {
+  if (m_workspace == Workspace::Campaign && m_campaign != nullptr) {
+    m_campaign->save_as();
+    return;
+  }
   QString suggested_name =
       m_mission_mode ? m_mission_data->id().trimmed() : m_map_data->name().trimmed();
   if (suggested_name.isEmpty()) {
@@ -1038,6 +1840,10 @@ void EditorWindow::edit_biome() {
 }
 
 void EditorWindow::undo() {
+  if (m_workspace == Workspace::Campaign && m_campaign != nullptr) {
+    m_campaign->undo();
+    return;
+  }
   const QString desc = m_map_data->undo_description();
   m_map_data->undo();
   m_canvas->clear_selection();
@@ -1045,6 +1851,10 @@ void EditorWindow::undo() {
 }
 
 void EditorWindow::redo() {
+  if (m_workspace == Workspace::Campaign && m_campaign != nullptr) {
+    m_campaign->redo();
+    return;
+  }
   const QString desc = m_map_data->redo_description();
   m_map_data->redo();
   m_canvas->clear_selection();
@@ -1070,6 +1880,16 @@ void EditorWindow::on_grid_double_clicked() {
 }
 
 void EditorWindow::on_undo_redo_changed() {
+  if (m_undo_action == nullptr) {
+    return;
+  }
+  if (m_workspace == Workspace::Campaign && m_campaign != nullptr) {
+    m_undo_action->setEnabled(m_campaign->document()->can_undo());
+    m_redo_action->setEnabled(m_campaign->document()->can_redo());
+    m_undo_action->setText("&Undo");
+    m_redo_action->setText("&Redo");
+    return;
+  }
   const bool can_undo = m_map_data->can_undo();
   const bool can_redo = m_map_data->can_redo();
 
@@ -1530,17 +2350,28 @@ void EditorWindow::set_mission_mode(bool enabled) {
 }
 
 void EditorWindow::update_window_title() {
-  QString title = m_mission_mode ? "Standard of Iron - Mission Editor"
-                                 : "Standard of Iron - Map Editor";
-  if (!m_current_file_path.isEmpty()) {
-    title += " - " + QFileInfo(m_current_file_path).fileName();
+  QString title;
+  if (m_workspace == Workspace::Campaign && m_campaign != nullptr) {
+    const auto* doc = m_campaign->document();
+    title = QStringLiteral("%1%2 — Campaign — Standard of Iron Editor")
+                .arg(doc->path().isEmpty() ? doc->definition().name
+                                           : QFileInfo(doc->path()).fileName(),
+                     doc->is_modified() ? QStringLiteral(" •") : QString());
   } else {
-    title += " - " + (m_mission_mode ? m_mission_data->title() : m_map_data->name());
-  }
-  if (m_map_data->is_modified() || (m_mission_mode && m_mission_data->is_modified())) {
-    title += " *";
+    const QString name =
+        !m_current_file_path.isEmpty()
+            ? QFileInfo(m_current_file_path).fileName()
+            : (m_mission_mode ? m_mission_data->title() : m_map_data->name());
+    const bool modified =
+        m_map_data->is_modified() || (m_mission_mode && m_mission_data->is_modified());
+    title = QStringLiteral("%1%2 — %3 — Standard of Iron Editor")
+                .arg(name,
+                     modified ? QStringLiteral(" •") : QString(),
+                     m_workspace == Workspace::Mission ? QStringLiteral("Mission")
+                                                       : QStringLiteral("Battlefield"));
   }
   setWindowTitle(title);
+  refresh_workspace_bar();
 }
 
 bool EditorWindow::maybe_save() {
@@ -1567,6 +2398,10 @@ bool EditorWindow::maybe_save() {
 }
 
 void EditorWindow::closeEvent(QCloseEvent* event) {
+  if (m_campaign != nullptr && !m_campaign->maybe_save()) {
+    event->ignore();
+    return;
+  }
   if (maybe_save()) {
     event->accept();
   } else {

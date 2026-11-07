@@ -21,6 +21,8 @@ add_executable(
     tools/hill_projection_model_test.cpp
     tools/balance_sim_test.cpp
     tools/campaign_film_spec_test.cpp
+    tools/map_editor_world_document_test.cpp
+    tools/map_editor_road_network_test.cpp
     widget_main.cpp
 )
 target_link_libraries(

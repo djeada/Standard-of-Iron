@@ -124,7 +124,7 @@ Missions reference provinces via `world_region_id` field in campaign JSON files:
 - `battle_of_trebia` → `cisalpine_gaul`
 - `battle_of_trasimene` → `etruria`
 - `battle_of_cannae` → `southern_italy`
-- `campania_campaign` → `southern_italy`
+- `campania_campaign` → `roman_core` (Capua lies in the `roman_core` province on the map)
 - `crossing_the_alps` → `cisalpine_gaul`
 - `battle_of_zama` → `carthage_core`
 

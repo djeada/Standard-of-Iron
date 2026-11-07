@@ -29,6 +29,8 @@ add_executable(
     map/campaign_roster_test.cpp
     map/campaign_content_integration_test.cpp
     map/campaign_province_data_test.cpp
+    strategic/strategic_world_test.cpp
+    strategic/strategic_validation_test.cpp
     # The mission runtime, checked without a client. These were in app_tests
     # while the code they exercise sat in app/mission/; running them here is what
     # proves the move -- setting a mission up, spawning its forces, stepping the
@@ -54,5 +56,6 @@ target_link_libraries(
         game_sim
         soi_missions
         soi_mission_runtime
+        soi_strategic
 )
 soi_register_test_binary(campaign_tests)

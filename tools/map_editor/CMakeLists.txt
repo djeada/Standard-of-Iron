@@ -18,12 +18,17 @@ add_library(
     element_ops.cpp
     json_schema.cpp
     hill_projection_model.cpp
+    world_document.cpp
+    road_network.cpp
 )
 target_include_directories(
     map_editor_core
     PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-target_link_libraries(map_editor_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
+target_link_libraries(
+    map_editor_core
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui soi_strategic
+)
 
 # The widget sources. game/map/environment_lighting.cpp and ui/widget_shell.cpp
 # used to be listed here too, compiled a second time into the editor even though
@@ -43,6 +48,9 @@ set(MAP_EDITOR_SOURCES
     mountain_projection_widget.cpp
     json_edit_dialog.cpp
     resize_dialog.cpp
+    world_canvas.cpp
+    campaign_workspace.cpp
+    command_palette.cpp
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

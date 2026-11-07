@@ -98,6 +98,9 @@ Rectangle {
         return region && region.name ? region.name : qsTr("Mission Region");
     }
 
+    property var world_mission_uv: ({})
+    property var world_sources: ["assets/world/second_punic_war.json", "qrc:/assets/world/second_punic_war.json", "qrc:/StandardOfIron/assets/world/second_punic_war.json", "qrc:/qt/qml/StandardOfIron/assets/world/second_punic_war.json"]
+
     property var city_markers: []
     property var campaign_state: null
     property var campaign_state_sources: ["assets/campaign_map/campaign_state.json", "qrc:/assets/campaign_map/campaign_state.json", "qrc:/StandardOfIron/assets/campaign_map/campaign_state.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/campaign_state.json"]
@@ -175,6 +178,43 @@ Rectangle {
                 apply_campaign_state();
             }
         }
+    }
+
+    function load_world_sites_from(index) {
+        if (index >= world_sources.length)
+            return;
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", world_sources[index]);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return;
+            if (xhr.status !== 200 && xhr.status !== 0) {
+                load_world_sites_from(index + 1);
+                return;
+            }
+            try {
+                var world = JSON.parse(xhr.responseText);
+                var p = world.projection;
+                var uv = {};
+                for (var i = 0; i < world.sites.length; i++) {
+                    var site = world.sites[i];
+                    if (site.battlefield && site.battlefield.mission)
+                        uv[site.battlefield.mission] = [(site.lonlat[0] - p.lon_min) / (p.lon_max - p.lon_min), (site.lonlat[1] - p.lat_min) / (p.lat_max - p.lat_min)];
+                }
+                world_mission_uv = uv;
+                label_refresh += 1;
+            } catch (e) {
+                load_world_sites_from(index + 1);
+            }
+        };
+        xhr.send();
+    }
+
+    function marker_uv_for_selected() {
+        if (selected_mission && selected_mission.mission_id && world_mission_uv[selected_mission.mission_id])
+            return world_mission_uv[selected_mission.mission_id];
+        var region = mission_regions[active_region_id];
+        return region && region.uv ? region.uv : null;
     }
 
     function load_campaign_state() {
@@ -410,9 +450,9 @@ Rectangle {
                     "bottom": region_badge.height + Theme.spacingMedium * 2
                 });
         }
-        var region = root.mission_regions[root.active_region_id];
-        if (region && region.uv) {
-            var region_pos = view.screen_pos_for_uv(region.uv[0], region.uv[1]);
+        var region_uv = root.marker_uv_for_selected();
+        if (region_uv) {
+            var region_pos = view.screen_pos_for_uv(region_uv[0], region_uv[1]);
             kept.push({
                     "left": region_pos.x - 40,
                     "right": region_pos.x - 4,
@@ -597,6 +637,7 @@ Rectangle {
     Component.onCompleted: {
         load_provinces();
         load_campaign_state();
+        load_world_sites_from(0);
     }
     onSelected_missionChanged: {
         if (selected_mission && selected_mission.world_region_id) {
@@ -1017,7 +1058,7 @@ Rectangle {
 
             delegate: Item {
                 property var region_info: root.mission_regions[root.active_region_id] || null
-                property var marker_uv: region_info ? region_info.uv : null
+                property var marker_uv: root.world_mission_uv && root.selected_mission ? root.marker_uv_for_selected() : null
                 property int _refresh: root.label_refresh
                 property var _pos: (marker_uv !== null && _refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
 
