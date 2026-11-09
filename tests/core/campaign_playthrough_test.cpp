@@ -86,7 +86,9 @@ protected:
     EXPECT_GE(report.commanders_killed, floor.commanders_killed) << report.line();
     EXPECT_GE(report.camps_captured, floor.camps_captured) << report.line();
     EXPECT_GE(report.stages_complete, floor.stages_complete) << report.line();
-    EXPECT_GE(report.seconds, floor.survives_seconds) << report.line();
+    if (report.outcome != QStringLiteral("victory")) {
+      EXPECT_GE(report.seconds, floor.survives_seconds) << report.line();
+    }
   }
 
   static void expect_victory(const Report& report) {
@@ -537,6 +539,7 @@ auto occupy(std::string label,
 }
 
 TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
+  static constexpr G k_crossing{249.0F, 190.0F};
   static constexpr G k_hill_fort{376.0F, 38.0F};
   static constexpr G k_branch_bank{450.0F, 222.0F};
   static constexpr G k_island_muster{452.0F, 266.0F};
@@ -546,6 +549,9 @@ TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
   };
   const auto fort_falls = [](Mission& m) {
     return !m.commander_alive(2);
+  };
+  const auto reached_crossing = [](Mission& m) {
+    return m.active_stage_id() != QStringLiteral("reach_crossing");
   };
   const auto fort_party = [](Mission& m) {
     if (m.group("fort").empty() && !m.commander_alive(2)) {
@@ -589,6 +595,9 @@ TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
                             },
                         .garrison = 0,
                         .defend_radius = 0.0F,
+                        .strike_radius = 120.0F,
+                        .breach_after = cap_seconds(),
+                        .engaged_radius = 0.0F,
                         .order = {2},
                         .regroup_beyond = 80.0F,
                         .regroup_short = 50.0F}),
@@ -608,11 +617,21 @@ TEST_F(CampaignPlaythroughTest, CrossingTheRhoneKeepsItsProgress) {
              },
              5.0F},
             occupy("take the fallen hill fort", fort_falls, fort_party, k_hill_fort),
-            ferry("raft the army over the eastern branch",
-                  fort_falls,
-                  field_army,
-                  k_branch_bank,
-                  on_island),
+            occupy(
+                "bring the column to the pontoon crossing",
+                [fort_falls, reached_crossing](Mission& m) {
+                  return fort_falls(m) && !reached_crossing(m);
+                },
+                field_army,
+                k_crossing),
+            ferry(
+                "raft the army over the eastern branch",
+                [fort_falls, reached_crossing](Mission& m) {
+                  return fort_falls(m) && reached_crossing(m);
+                },
+                field_army,
+                k_branch_bank,
+                on_island),
             recruiting(),
             fight_men_not_stones()}),
       Progress{.commanders_killed = 1,
@@ -644,21 +663,55 @@ auto gather_quota(int wood, int stone, int iron) -> Step {
 
           const std::size_t pick = i < 2 ? 0 : std::min<std::size_t>(i - 1, 2);
           auto& current = (*assigned)[builders[i]];
-          if (needs[pick].behind > 0.0 && current != needs[pick].product) {
+          if (needs[pick].behind > 0.0 && current != needs[pick].product &&
+              m.auto_gather({builders[i]}, needs[pick].product)) {
             current = needs[pick].product;
-            m.auto_gather({builders[i]}, needs[pick].product);
           }
         }
       },
       45.0F};
 }
 
+auto defend_camp(std::function<bool(Mission&)> when,
+                 std::function<Ids(Mission&)> who,
+                 G line) -> Step {
+  return {"defend within range of the camp towers",
+          std::move(when),
+          [who = std::move(who), line](Mission& m) {
+            const Ids troops = m.idle(who(m));
+            m.attack_move(m.all_but(troops, m.near(troops, line, 14.0F)), line);
+          },
+          5.0F};
+}
+
 TEST_F(CampaignPlaythroughTest, CrossingTheAlpsKeepsItsProgress) {
+  static constexpr G k_defensive_line{92.0F, 118.0F};
+  const auto at_first_pass = [](Mission& m) {
+    return m.active_stage_id() != QStringLiteral("reach_first_pass");
+  };
   expect_progress(play("crossing_the_alps",
                        {gather_quota(600, 350, 300),
                         recruiting(),
-                        fight_men_not_stones(),
-                        decapitate({})}),
+                        {"send the mounted scouts to the first pass",
+                         always(),
+                         [](Mission& m) {
+                           const Ids scouts = m.local_of_type({SpawnType::HorseArcher});
+                           m.tag("pass_scouts", scouts);
+                           m.move(scouts, {108.0F, 148.0F});
+                         }},
+                        {"withdraw the scouts into the supply camp's defenses",
+                         at_first_pass,
+                         [](Mission& m) {
+                           m.move(m.group("pass_scouts"), k_defensive_line);
+                         }},
+                        defend_camp(
+                            always(),
+                            [at_first_pass](Mission& m) {
+                              return at_first_pass(m)
+                                         ? m.army()
+                                         : m.all_but(m.army(), m.group("pass_scouts"));
+                            },
+                            k_defensive_line)}),
                   Progress{.stages_complete = 1, .survives_seconds = 1150.0F});
 }
 

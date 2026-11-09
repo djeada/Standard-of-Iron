@@ -377,19 +377,27 @@ TEST_F(MissionWaveAssaultTest, WaveCannotWalkThroughAnIntactRampart) {
 
   const auto rampart_is_intact = [&]() {
     return std::all_of(rampart.begin(), rampart.end(), [&](EntityID id) {
-      return session.world().get_entity(id) != nullptr;
+      const auto* unit = session.world().try_get<UnitComponent>(id);
+      return unit != nullptr && unit->health > 0 &&
+             !session.world().has<Engine::Core::PendingRemovalComponent>(id);
     });
   };
 
-  for (int second = 1; second <= 240 && rampart_is_intact(); ++second) {
-    run_for(session, 1.0);
+  auto& clock = session.clock();
+  while (clock.now_seconds() < 240.0) {
+    run_for(session, clock.tick_seconds());
+    // Read the wall and the units from the same tick. A wave can breach and
+    // enter the camp within one second.
+    if (!rampart_is_intact()) {
+      break;
+    }
     for (const auto id : wave) {
       if (session.world().get_entity(id) == nullptr) {
         continue;
       }
       const QVector3D position = position_of(session, id);
       ASSERT_FALSE(is_inside_ring(position))
-          << "a wave unit stood inside the camp at t=" << second
+          << "a wave unit stood inside the camp at t=" << clock.now_seconds()
           << "s without a single rampart section coming down: (" << position.x() << ", "
           << position.z() << ")";
     }

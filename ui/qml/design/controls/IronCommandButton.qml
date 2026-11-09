@@ -42,25 +42,26 @@ AbstractButton {
     property bool tile: false
 
     readonly property real minimumTightLabelWidth: Design.Metrics.space24 + Design.Metrics.space4
-    readonly property real tightChromeWidth: Design.Metrics.space16 + Design.Metrics.space4 + Design.Metrics.space4 + Design.Metrics.space4 + hotkeyWidth
-    readonly property bool compact: control.iconOnly || (width > 0 && width < tightChromeWidth + minimumTightLabelWidth)
-    readonly property bool tightLabel: !control.compact && width > 0 && width < minimumShortWidth
-    readonly property bool cornerHotkey: control.tightLabel && control.hotkey !== "" && width < tightChromeWidth + tightLabelMetrics.width + Design.Metrics.space4
+    readonly property real tightChromeWidth: Design.Metrics.iconSmall + 3 * Design.Metrics.space4 + hotkeyWidth
+    readonly property bool compact: control.iconOnly || (availableWidth > 0 && availableWidth < tightChromeWidth + minimumTightLabelWidth)
+    readonly property bool tightLabel: !control.compact && availableWidth > 0 && availableWidth < minimumShortWidth
+    readonly property bool cornerHotkey: control.tightLabel && control.hotkey !== "" && availableWidth < tightChromeWidth + Math.ceil(Math.max(tightLabelMetrics.width, tightLabelMetrics.advanceWidth))
 
-    readonly property bool showsShortLabel: !control.iconOnly && control.shortLabel !== "" && width < minimumLabelledWidth
+    readonly property bool showsShortLabel: !control.iconOnly && control.shortLabel !== "" && availableWidth < minimumLabelledWidth
     readonly property string displayLabel: control.showsShortLabel ? control.shortLabel : control.label
+    readonly property int labelWeight: control.highlighted ? Design.Typography.bold : Design.Typography.medium
 
     readonly property real labelChromeWidth: Design.Metrics.iconMedium + Design.Metrics.space8 + Design.Metrics.space8 + Design.Metrics.space4 + hotkeyWidth
     readonly property real minimumLabelledWidth: labelChromeWidth + Math.ceil(Math.max(labelMetrics.width, labelMetrics.advanceWidth))
     readonly property real minimumShortWidth: control.shortLabel !== "" ? labelChromeWidth + Math.ceil(Math.max(shortLabelMetrics.width, shortLabelMetrics.advanceWidth)) : minimumLabelledWidth
-    readonly property real hotkeyWidth: control.hotkey !== "" ? hotkeyMetrics.width + Design.Metrics.space8 + Design.Metrics.space4 : 0
+    readonly property real hotkeyWidth: control.hotkey !== "" ? hotkeyLabel.implicitWidth + Design.Metrics.space4 : 0
 
     TextMetrics {
         id: labelMetrics
 
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.label
-        font.weight: Design.Typography.medium
+        font.weight: control.labelWeight
         text: control.label
     }
 
@@ -69,7 +70,7 @@ AbstractButton {
 
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.label
-        font.weight: Design.Typography.medium
+        font.weight: control.labelWeight
         text: control.shortLabel
     }
 
@@ -78,16 +79,8 @@ AbstractButton {
 
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.caption
-        font.weight: Design.Typography.medium
+        font.weight: control.labelWeight
         text: control.displayLabel
-    }
-
-    TextMetrics {
-        id: hotkeyMetrics
-
-        font.family: "monospace"
-        font.pixelSize: Design.Typography.caption
-        text: control.hotkey
     }
 
     readonly property bool highlighted: active || placing
@@ -230,7 +223,7 @@ AbstractButton {
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: control.tile && tileHotkey.visible ? -Design.Metrics.space2 : 0
 
-            width: control.tile ? Math.round(Design.Metrics.iconMedium * 1.1) : control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : control.tightLabel ? Design.Metrics.space16 + Design.Metrics.space4 : Design.Metrics.iconMedium
+            width: control.tile ? Math.round(Design.Metrics.iconMedium * 1.1) : control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : control.tightLabel ? Design.Metrics.iconSmall : Design.Metrics.iconMedium
             height: width
             opacity: control.interactive ? 1 : 0.45
 
@@ -283,7 +276,7 @@ AbstractButton {
                 color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 font.family: Design.Typography.family
                 font.pixelSize: control.tightLabel ? Design.Typography.caption : Design.Typography.label
-                font.weight: control.highlighted ? Design.Typography.bold : Design.Typography.medium
+                font.weight: control.labelWeight
                 elide: Text.ElideRight
             }
 
