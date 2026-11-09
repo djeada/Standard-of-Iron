@@ -62,6 +62,30 @@ class MapPropRepairTest(unittest.TestCase):
             REPAIR.Segment(100.0, 100.0, 110.0, 100.0, 1.0).depth_into(timber, 0.0), 0.0
         )
 
+    def test_road_trim_clears_authored_endpoints_in_both_formats(self):
+        anchor = self.body()
+        anchor.kind = "structure"
+        anchor.priority = REPAIR.PRIORITY_ANCHOR
+        for waypoints in (None, [[0, 6], [0, 8]]):
+            with self.subTest(waypoints=waypoints):
+                road = {"start": [0, 0], "end": [0, 10], "width": 2}
+                if waypoints is not None:
+                    road["waypoints"] = waypoints
+                data = {"roads": [road]}
+                before = REPAIR.collect_roads(data)
+                self.assertGreater(before[0].depth_into(anchor, 0.0), 0.0)
+                self.assertEqual(before[-1].z2, 10.0)
+                self.assertEqual(
+                    REPAIR.trim_roads_out_of_anchors(data, [anchor], 0.0), 1
+                )
+                after = REPAIR.collect_roads(data)
+                self.assertLessEqual(after[0].depth_into(anchor, 0.0), 0.0)
+                self.assertEqual(after[-1].z2, 10.0)
+                self.assertEqual(road["start"][1], after[0].z1)
+                self.assertEqual(
+                    REPAIR.trim_roads_out_of_anchors(data, [anchor], 0.0), 0
+                )
+
     def test_wall_defenders_may_overlap_their_supporting_wall(self):
         wall = self.body()
         wall.kind = "structure"

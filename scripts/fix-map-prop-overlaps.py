@@ -802,10 +802,26 @@ class Segment:
         return deepest
 
 
-def polyline_segments(entries, default_width: float) -> list[Segment]:
+def road_points(road: dict) -> list[list[float]]:
+    """Read the start, waypoints and end in the same order as the map loader."""
+    points = []
+    for point in [road.get("start"), *(road.get("waypoints") or []), road.get("end")]:
+        if not isinstance(point, list) or len(point) < 2:
+            continue
+        position = [float(point[0]), float(point[1])]
+        if not points or position != points[-1]:
+            points.append(position)
+    return points
+
+
+def polyline_segments(
+    entries,
+    default_width: float,
+    points_for: Callable[[dict], list[list[float]]] = river_points,
+) -> list[Segment]:
     segments: list[Segment] = []
     for entry in entries or []:
-        points = river_points(entry)
+        points = points_for(entry)
         half_width = float(entry.get("width", default_width)) * 0.5
         for first, second in zip(points, points[1:], strict=False):
             segments.append(
@@ -828,7 +844,7 @@ def collect_water(map_data: dict) -> list[Segment]:
 
 
 def collect_roads(map_data: dict) -> list[Segment]:
-    return polyline_segments(map_data.get("roads"), DEFAULT_ROAD_WIDTH)
+    return polyline_segments(map_data.get("roads"), DEFAULT_ROAD_WIDTH, road_points)
 
 
 def collect_lakes(map_data: dict) -> list[tuple[float, float, float]]:
@@ -1619,16 +1635,9 @@ def trim_roads_out_of_anchors(
 
     trimmed = 0
     for road in map_data.get("roads") or []:
-        points = road.get("waypoints")
-        if not points:
-            start, end = road.get("start"), road.get("end")
-            if not start or not end:
-                continue
-            points = [list(start), list(end)]
-            explicit_pair = True
-        else:
-            points = [list(point) for point in points]
-            explicit_pair = False
+        points = road_points(road)
+        if len(points) < 2:
+            continue
         half_width = float(road.get("width", DEFAULT_ROAD_WIDTH)) * 0.5
 
         changed = False
@@ -1645,7 +1654,7 @@ def trim_roads_out_of_anchors(
                 ):
                     break
                 inside_count += 1
-            if inside_count == 0 or inside_count >= len(points) - 1:
+            if inside_count == 0 or inside_count == len(points):
                 continue
 
             keep = (
@@ -1672,10 +1681,11 @@ def trim_roads_out_of_anchors(
         if not changed:
             continue
         rounded = [[tidy(point[0]), tidy(point[1])] for point in points]
-        if explicit_pair:
+        if "start" in road:
             road["start"] = rounded[0]
+        if "end" in road:
             road["end"] = rounded[-1]
-        else:
+        if road.get("waypoints"):
             road["waypoints"] = rounded
         trimmed += 1
     return trimmed
