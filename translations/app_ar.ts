@@ -5361,6 +5361,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Move troops next to a river raft</source>
         <translation>حرّك القوات إلى جانب طوف النهر</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>اذهب إلى الثكنات</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5687,14 +5691,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation> [أنت]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>استئناف</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>إيقاف مؤقت</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>تتبّع التحديد بالكاميرا</translation>
     </message>
@@ -5813,6 +5809,18 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>%1%</source>
         <translation>%1%</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>استئناف (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>إيقاف مؤقت (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>تسريع %1، إبطاء %2</translation>
     </message>
 </context>
 <context>

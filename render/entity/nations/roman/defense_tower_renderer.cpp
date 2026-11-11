@@ -65,7 +65,8 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
 
   const float shaft_top = destroyed ? 1.56F : (damaged ? 2.50F : 2.90F);
   const float shaft_radius = destroyed ? 0.76F : (damaged ? 0.84F : 0.90F);
-  const float belt_radius = (damaged ? 0.86F : 0.93F);
+  const float shaft_half = shaft_radius * 0.82F;
+  const float belt_half = shaft_half + 0.035F;
   const float platform_radius = damaged ? 0.96F : 1.06F;
   const float battlement_radius = damaged ? 0.88F : 0.98F;
   const float battlement_half_extent = damaged ? 0.13F : 0.15F;
@@ -100,39 +101,36 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   for (int i = 0; i < k_courses; ++i) {
     const float y0 = 0.52F + course_height * static_cast<float>(i);
     const bool even = (i % 2) == 0;
-    desc.add_cylinder(QVector3D(0.0F, y0, 0.0F),
-                      QVector3D(0.0F, y0 + course_height + 0.005F, 0.0F),
-                      even ? shaft_radius : shaft_radius * 0.995F,
-                      weathered(c.limestone, i + 31, 0.045F));
+    const float course_half = even ? shaft_half : shaft_half * 0.992F;
+    desc.add_box(QVector3D(0.0F, y0 + (course_height + 0.005F) * 0.5F, 0.0F),
+                 QVector3D(course_half, (course_height + 0.005F) * 0.5F, course_half),
+                 weathered(c.limestone, i + 31, 0.045F));
   }
 
   for (const float angle : {0.0F, 1.5708F, 3.1416F, 4.7124F}) {
-    desc.add_box(QVector3D(std::sin(angle) * shaft_radius,
-                           0.76F,
-                           std::cos(angle) * shaft_radius),
-                 QVector3D(0.095F, 0.11F, 0.095F),
-                 c.limestone_shade,
-                 k_building_state_mask_intact);
+    desc.add_box(
+        QVector3D(std::sin(angle) * shaft_half, 0.76F, std::cos(angle) * shaft_half),
+        QVector3D(0.095F, 0.11F, 0.095F),
+        c.limestone_shade,
+        k_building_state_mask_intact);
   }
 
   if (!destroyed) {
     const float belt_low = 0.52F + (shaft_top - 0.52F) * 0.40F;
     const float belt_high = 0.52F + (shaft_top - 0.52F) * 0.72F;
-    desc.add_cylinder(QVector3D(0.0F, belt_low, 0.0F),
-                      QVector3D(0.0F, belt_low + 0.06F, 0.0F),
-                      belt_radius,
-                      c.marble);
-    desc.add_cylinder(QVector3D(0.0F, belt_high, 0.0F),
-                      QVector3D(0.0F, belt_high + 0.04F, 0.0F),
-                      belt_radius * 0.98F,
-                      c.limestone_shade);
+    desc.add_box(QVector3D(0.0F, belt_low + 0.03F, 0.0F),
+                 QVector3D(belt_half, 0.03F, belt_half),
+                 c.marble);
+    desc.add_box(QVector3D(0.0F, belt_high + 0.02F, 0.0F),
+                 QVector3D(belt_half * 0.985F, 0.02F, belt_half * 0.985F),
+                 c.limestone_shade);
 
     add_embrasures(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
           desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         belt_low - 0.28F,
-        shaft_radius - 0.008F,
+        shaft_half - 0.004F,
         QVector3D(0.035F, 0.17F, 0.012F),
         c.limestone_dark * 0.45F);
     add_embrasures(
@@ -140,7 +138,7 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
           desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         belt_high + 0.26F,
-        shaft_radius - 0.008F,
+        shaft_half - 0.004F,
         QVector3D(0.032F, 0.13F, 0.012F),
         c.limestone_dark * 0.45F);
   }
@@ -152,8 +150,8 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
       continue;
     }
     const float angle = static_cast<float>(index) * 1.57F + 0.785F;
-    const float ox = std::sin(angle) * (shaft_radius - 0.04F);
-    const float oz = std::cos(angle) * (shaft_radius - 0.04F);
+    const float ox = (std::sin(angle) > 0.0F ? 1.0F : -1.0F) * (shaft_half - 0.02F);
+    const float oz = (std::cos(angle) > 0.0F ? 1.0F : -1.0F) * (shaft_half - 0.02F);
     const float column_top = destroyed ? 0.82F : shaft_top - 0.15F;
 
     desc.add_cylinder(
@@ -171,10 +169,9 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   }
 
   if (!destroyed) {
-    desc.add_cylinder(QVector3D(0.0F, shaft_top + 0.02F, 0.0F),
-                      QVector3D(0.0F, shaft_top + 0.08F, 0.0F),
-                      damaged ? 0.90F : 0.96F,
-                      c.limestone);
+    desc.add_box(QVector3D(0.0F, shaft_top + 0.05F, 0.0F),
+                 QVector3D(shaft_half + 0.09F, 0.03F, shaft_half + 0.09F),
+                 c.limestone);
 
     const int corbel_count = damaged ? 8 : 12;
     for (int i = 0; i < corbel_count; ++i) {
@@ -277,7 +274,7 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   if (!destroyed) {
     add_roman_aquila_relief(
         desc,
-        QVector3D(0.0F, damaged ? 1.62F : 1.86F, shaft_radius + 0.02F),
+        QVector3D(0.0F, damaged ? 1.62F : 1.86F, shaft_half + 0.02F),
         BuildingFacadePlane::XY,
         damaged ? 0.54F : 0.68F,
         c.gold,
@@ -287,7 +284,7 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   add_broken_rim(desc,
                  BrokenRim{.center = QVector3D(0.0F, shaft_top - 0.17F, 0.0F),
                            .color = c.limestone_dark,
-                           .radius = shaft_radius * 0.94F,
+                           .radius = shaft_half * 0.98F,
                            .chunk_half = 0.15F,
                            .rise = 0.13F,
                            .count = 8,
@@ -425,7 +422,10 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
                                  .selection = BuildingSelectionStyle{1.6F, 1.6F},
                                  .night_brazier_deck_y = 3.20F,
                                  .night_brazier_offset = 0.62F,
-                                 .torches = k_torches});
+                                 .torches = k_torches,
+                                 .lookout_deck_top = 3.07F,
+                                 .lookout_deck_top_damaged = 2.67F,
+                                 .lookout_walk_half = 0.40F});
 }
 
 } // namespace Render::GL::Roman

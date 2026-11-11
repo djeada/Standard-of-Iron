@@ -43,6 +43,8 @@ private:
                               BuilderPool& pool,
                               std::vector<AICommand>& out_commands) -> bool;
 
+  void note_abandoned_sites(const AISnapshot& snapshot);
+
   auto resolve_site(const AISnapshot& snapshot,
                     const AIContext& context,
                     const ConstructionIntent* chosen) -> PendingSite;

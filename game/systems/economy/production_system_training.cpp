@@ -15,6 +15,7 @@
 #include "game_config.h"
 #include "map/map_transformer.h"
 #include "production_service.h"
+#include "recruitment_gate.h"
 #include "systems/movement/body_profile.h"
 #include "systems/movement/command_service.h"
 #include "systems/nation_registry.h"
@@ -61,7 +62,7 @@ auto production_count_increment(const Engine::Core::UnitComponent* unit_comp,
 
 void spawn_recruit(Engine::Core::World& world,
                    Engine::Core::Entity& building,
-                   const Engine::Core::ProductionComponent& prod,
+                   Engine::Core::ProductionComponent& prod,
                    const Engine::Core::TransformComponent& transform,
                    const Engine::Core::UnitComponent& owner,
                    Game::Systems::NationID nation_id) {
@@ -85,19 +86,36 @@ void spawn_recruit(Engine::Core::World& world,
   sp.is_initial_spawn = false;
 
   constexpr float k_recruit_exit_search = 50.0F;
-  sp.position =
-      Walkability::nearest_standable(raw_exit_pos, BodyProfile{}, k_recruit_exit_search)
-          .value_or(raw_exit_pos);
+  constexpr float k_gate_search = 4.0F;
+  const bool through_gate = owner.spawn_type == Game::Units::SpawnType::Barracks;
+  const RecruitmentGate gate = barracks_gate(transform);
+  if (through_gate) {
+    sp.position =
+        Walkability::nearest_standable(gate.position, BodyProfile{}, k_gate_search)
+            .value_or(gate.position);
+  } else {
+    sp.position = Walkability::nearest_standable(
+                      raw_exit_pos, BodyProfile{}, k_recruit_exit_search)
+                      .value_or(raw_exit_pos);
+  }
 
   auto unit = reg->create(sp.spawn_type, world, sp);
   if (!unit) {
     return;
   }
-  if (prod.rally_set) {
-    CommandService::MoveOptions rally;
-    rally.kind = MoveOrderKind::ScriptedMove;
+  CommandService::MoveOptions muster;
+  muster.kind = MoveOrderKind::ScriptedMove;
+  const bool chosen_rally = prod.rally_set && !(through_gate && prod.rally_default);
+  if (chosen_rally) {
     CommandService::move_unit(
-        world, unit->id(), QVector3D(prod.rally_x, 0.0F, prod.rally_z), rally);
+        world, unit->id(), QVector3D(prod.rally_x, 0.0F, prod.rally_z), muster);
+  } else if (through_gate) {
+    const QVector3D assembly = barracks_assembly_point(transform, prod);
+    CommandService::move_unit(
+        world,
+        unit->id(),
+        barracks_assembly_slot(assembly, gate, prod.produced_count),
+        muster);
   }
   attach_spawn_flare(
       world, unit->id(), sp.spawn_type, Engine::Core::SpawnFlareStyle::Recruit);
@@ -201,6 +219,16 @@ void advance_unit_training(Engine::Core::World& world, float delta_time) {
 
     prod->reserve_short = unit_comp != nullptr && ProductionService::reserve_is_short(
                                                       *prod, unit_comp->spawn_type);
+
+    if (prod->rally_default && !prod->assembly_cached && unit_comp != nullptr &&
+        unit_comp->spawn_type == Game::Units::SpawnType::Barracks) {
+      if (const auto* transform =
+              world.try_get<Engine::Core::TransformComponent>(e->get_id())) {
+        const QVector3D assembly = barracks_assembly_point(*transform, *prod);
+        prod->rally_x = assembly.x();
+        prod->rally_z = assembly.z();
+      }
+    }
 
     if (!prod->in_progress) {
       continue;

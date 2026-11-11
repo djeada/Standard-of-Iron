@@ -15,6 +15,8 @@
 #include "map/terrain_service.h"
 #include "systems/builder_product_types.h"
 #include "systems/building_collision_registry.h"
+#include "systems/navigation/nav_grid.h"
+#include "systems/navigation/pathfinding.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
@@ -371,7 +373,8 @@ auto find_clear_site(const Engine::Core::World& world,
                      float facing_degrees,
                      std::span<const Engine::Core::EntityID> crew,
                      std::span<const SiteKeepOut> keep_out,
-                     bool clear_of_troops) -> std::optional<QVector3D> {
+                     bool clear_of_troops,
+                     const SiteAcceptor& acceptable) -> std::optional<QVector3D> {
   const auto reserved = pending_sites(world, crew);
   const auto size = BuildingCollisionRegistry::get_building_size(building_type);
   const float own_reach = (0.5F * std::max(size.width, size.depth)) + k_site_margin;
@@ -384,7 +387,7 @@ auto find_clear_site(const Engine::Core::World& world,
     });
   };
   const auto usable = [&](float x, float z) {
-    return !kept_out(x, z) &&
+    return !kept_out(x, z) && (!acceptable || acceptable(x, z)) &&
            assess_ground(world, reserved, building_type, x, z, 0, facing_degrees) ==
                GroundVerdict::Clear &&
            (!clear_of_troops ||
@@ -415,6 +418,38 @@ auto find_clear_site(const Engine::Core::World& world,
     }
   }
   return std::nullopt;
+}
+
+auto site_access_on_foot(float from_x,
+                         float from_z,
+                         float site_x,
+                         float site_z) -> SiteAccess {
+  constexpr int k_start_snap_cells = 8;
+  constexpr int k_site_snap_cells = 4;
+  constexpr auto k_passability = Pathfinding::Passability::Light;
+
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return SiteAccess::Unknown;
+  }
+  const Point start =
+      Pathfinding::find_nearest_walkable_point(NavGrid::world_to_grid(from_x, from_z),
+                                               k_start_snap_cells,
+                                               *pathfinder,
+                                               k_passability);
+  if (!pathfinder->is_walkable(start.x, start.y, k_passability)) {
+    return SiteAccess::Unknown;
+  }
+  const Point goal =
+      Pathfinding::find_nearest_walkable_point(NavGrid::world_to_grid(site_x, site_z),
+                                               k_site_snap_cells,
+                                               *pathfinder,
+                                               k_passability);
+  if (!pathfinder->is_walkable(goal.x, goal.y, k_passability)) {
+    return SiteAccess::Unknown;
+  }
+  return pathfinder->can_reach(start, goal, k_passability) ? SiteAccess::Reachable
+                                                           : SiteAccess::CutOff;
 }
 
 auto troops_stand_on(const Engine::Core::World& world,

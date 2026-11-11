@@ -234,6 +234,7 @@ auto ProductionService::set_rally_point(Engine::Core::World& world,
   p->rally_x = x;
   p->rally_z = z;
   p->rally_set = true;
+  p->rally_default = false;
   return true;
 }
 

@@ -79,6 +79,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/WaveTracker.qml
             ui/qml/MissionDeadline.qml
             ui/qml/HUDBottom.qml
+            ui/qml/HudConsolePlate.qml
             ui/qml/HUDBottomCommander.qml
             ui/qml/HUDBottomSpectator.qml
             ui/qml/UnitInspectPanel.qml

@@ -24,6 +24,7 @@
 #include "../units/spawn_type.h"
 #include "../units/squad.h"
 #include "command_handlers.h"
+#include "systems/economy/recruitment_gate.h"
 
 namespace Game::Command::handlers {
 
@@ -342,11 +343,16 @@ void apply_deliver_civilians(World& world,
     delivery->target_barracks_id = order.barracks;
 
     move.units.push_back(id);
-    move.targets.push_back(Game::Systems::CommandService::structure_work_position(
-        worker_position_or(*entity, barracks_position),
-        barracks_position,
-        "barracks",
-        Game::Systems::CommandService::get_unit_radius(world, id)));
+    if (barracks_unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      move.targets.push_back(
+          Game::Systems::barracks_gate(*barracks_transform).position);
+    } else {
+      move.targets.push_back(Game::Systems::CommandService::structure_work_position(
+          worker_position_or(*entity, barracks_position),
+          barracks_position,
+          "barracks",
+          Game::Systems::CommandService::get_unit_radius(world, id)));
+    }
     --remaining;
   }
   if (!move.units.empty()) {

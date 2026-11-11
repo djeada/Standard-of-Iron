@@ -15,12 +15,14 @@
 #include "../../command/command_dispatcher.h"
 #include "../../command/command_queue.h"
 #include "../../core/ambient_session.h"
+#include "../../core/component_core.h"
 #include "../../core/component_structures.h"
 #include "../../core/world.h"
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"
 #include "../../session/session_context.h"
 #include "../../units/troop_config.h"
+#include "../builder_product_types.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
 #include "../combat_system/combat_utils.h"
@@ -51,6 +53,30 @@ void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload pay
                                     Engine::Core::EntityID unit_id) -> bool {
   const auto* unit = world.try_get<Engine::Core::UnitComponent>(unit_id);
   return unit != nullptr && unit->owner_id == owner_id && unit->health > 0;
+}
+
+[[nodiscard]] auto crew_can_walk_to(Engine::Core::World& world,
+                                    const std::vector<Engine::Core::EntityID>& crew,
+                                    float site_x,
+                                    float site_z) -> bool {
+  bool cut_off = false;
+  for (const auto id : crew) {
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(id);
+    if (transform == nullptr) {
+      continue;
+    }
+    switch (Game::Systems::site_access_on_foot(
+        transform->position.x, transform->position.z, site_x, site_z)) {
+    case Game::Systems::SiteAccess::Reachable:
+      return true;
+    case Game::Systems::SiteAccess::CutOff:
+      cut_off = true;
+      break;
+    case Game::Systems::SiteAccess::Unknown:
+      break;
+    }
+  }
+  return !cut_off;
 }
 
 } // namespace
@@ -222,6 +248,8 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       const bool wall_link =
           Game::Systems::is_wall_link_building_type(command.construction_type);
       const bool fortification = is_fortification_or_tower(command.construction_type);
+      const bool walled_off_by_design =
+          Game::Systems::is_wall_builder_product(command.construction_type);
       const auto site = Game::Systems::find_clear_site(
           world,
           command.construction_type,
@@ -230,7 +258,10 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           command.construction_rotation_y,
           command.units,
           command.construction_keep_out,
-          !fortification);
+          !fortification,
+          [&world, &command, walled_off_by_design](float x, float z) {
+            return walled_off_by_design || crew_can_walk_to(world, command.units, x, z);
+          });
       if (!site.has_value() || (fortification && Game::Systems::troops_stand_on(
                                                      world,
                                                      command.construction_type,

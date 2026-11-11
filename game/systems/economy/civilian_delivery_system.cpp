@@ -6,6 +6,7 @@
 
 #include "core/component_economy.h"
 #include "core/world.h"
+#include "recruitment_gate.h"
 #include "systems/building_collision_registry.h"
 #include "systems/player_feedback.h"
 #include "units/spawn_type.h"
@@ -24,6 +25,16 @@ auto barracks_delivery_clearance() -> float {
 }
 
 constexpr float k_delivery_settle_radius = 9.0F;
+constexpr float k_gate_step_in_radius = 1.1F;
+
+auto is_at_barracks_gate(const Engine::Core::TransformComponent& civilian_transform,
+                         const Engine::Core::TransformComponent& barracks_transform)
+    -> bool {
+  const QVector3D gate = barracks_gate(barracks_transform).position;
+  const float dx = civilian_transform.position.x - gate.x();
+  const float dz = civilian_transform.position.z - gate.z();
+  return (dx * dx) + (dz * dz) <= k_gate_step_in_radius * k_gate_step_in_radius;
+}
 
 auto is_at_barracks_delivery_edge(
     const Engine::Core::TransformComponent& civilian_transform,
@@ -97,8 +108,13 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
         ((to_barracks_x * to_barracks_x) + (to_barracks_z * to_barracks_z)) <=
             (k_delivery_settle_radius * k_delivery_settle_radius);
 
-    if (!is_at_barracks_delivery_edge(*civilian_transform, *barracks_transform) &&
-        !settled_beside_it) {
+    const bool through_gate =
+        barracks_unit->spawn_type == Game::Units::SpawnType::Barracks;
+    const bool arrived =
+        through_gate
+            ? is_at_barracks_gate(*civilian_transform, *barracks_transform)
+            : is_at_barracks_delivery_edge(*civilian_transform, *barracks_transform);
+    if (!arrived && !settled_beside_it) {
       continue;
     }
 

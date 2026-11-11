@@ -24,6 +24,11 @@ inline constexpr float k_slot_gap = 0.2F;
                                 float world_x,
                                 float world_z) -> bool;
 
+[[nodiscard]] auto builders_can_reach_site(const AISnapshot& snapshot,
+                                           const char* building_type,
+                                           float world_x,
+                                           float world_z) -> bool;
+
 void clamp_to_map_bounds(const AISnapshot& snapshot, float& x, float& z);
 
 } // namespace Game::Systems::AI

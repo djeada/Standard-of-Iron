@@ -235,6 +235,8 @@ void apply_benchmark_action(GameEngine* engine,
     orders->on_right_click(sx, sy);
   } else if (name == QLatin1String("attack_at")) {
     orders->attack_at(sx, sy);
+  } else if (name == QLatin1String("deliver_at")) {
+    orders->deliver_civilians_at(sx, sy);
   } else if (name == QLatin1String("guard_at")) {
     orders->guard_at(sx, sy);
   } else if (name == QLatin1String("patrol_at")) {

@@ -5353,6 +5353,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Move troops next to a river raft</source>
         <translation>Move troops next to a river raft</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Go to Barracks</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5679,14 +5683,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation> [You]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>Resume</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pause</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Follow the selection with the camera</translation>
     </message>
@@ -5805,6 +5801,18 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>%1%</source>
         <translation>%1%</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>Resume (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>Pause (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>Speed up %1, slow down %2</translation>
     </message>
 </context>
 <context>

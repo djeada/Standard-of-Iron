@@ -144,6 +144,31 @@ void submit_temple_incense(const DrawContext& ctx,
   }
 }
 
+void submit_cookfire_smoke(const DrawContext& ctx,
+                           ISubmitter& out,
+                           std::span<const QVector3D> vents) {
+  if (vents.empty() || ctx.template_prewarm || ctx.entity == nullptr ||
+      ctx.distance_sq > k_far_metres * k_far_metres) {
+    return;
+  }
+  if (resolve_building_state(ctx) != BuildingState::Normal) {
+    return;
+  }
+  const auto owner = static_cast<std::uint32_t>(ctx.entity->get_id());
+  std::uint32_t index = 0;
+  for (const QVector3D& vent : vents) {
+    ++index;
+    const float offset = hash01(owner * 31U + index) * 80.0F;
+    const float breath =
+        0.82F + 0.18F * std::sin(ctx.animation_time * 0.11F + offset * 0.37F);
+    out.hearth_smoke(ctx.model.map(vent),
+                     QVector3D(0.42F, 0.40F, 0.39F),
+                     1.15F,
+                     1.0F * breath,
+                     ctx.animation_time * 0.8F + offset);
+  }
+}
+
 void submit_building_torches(const DrawContext& ctx,
                              ISubmitter& out,
                              std::span<const TorchMount> mounts) {

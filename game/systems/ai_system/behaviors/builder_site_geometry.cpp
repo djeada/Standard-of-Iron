@@ -2,7 +2,9 @@
 
 #include <algorithm>
 
+#include "../../builder_product_types.h"
 #include "../../building_collision_registry.h"
+#include "../../economy/build_site.h"
 #include "../ai_utils.h"
 #include "builder_catalog.h"
 
@@ -65,6 +67,31 @@ auto site_is_free(const AISnapshot& snapshot,
     }
   }
   return true;
+}
+
+auto builders_can_reach_site(const AISnapshot& snapshot,
+                             const char* building_type,
+                             float world_x,
+                             float world_z) -> bool {
+  if (building_type == nullptr || is_wall_builder_product(building_type)) {
+    return true;
+  }
+  bool cut_off = false;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.spawn_type != Game::Units::SpawnType::Builder || entity.health <= 0) {
+      continue;
+    }
+    switch (site_access_on_foot(entity.pos_x, entity.pos_z, world_x, world_z)) {
+    case SiteAccess::Reachable:
+      return true;
+    case SiteAccess::CutOff:
+      cut_off = true;
+      break;
+    case SiteAccess::Unknown:
+      break;
+    }
+  }
+  return !cut_off;
 }
 
 void clamp_to_map_bounds(const AISnapshot& snapshot, float& x, float& z) {

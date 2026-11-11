@@ -31,6 +31,7 @@ class StoneRenderer;
 class SupplyCartRenderer;
 class TentRenderer;
 class TreeRenderer;
+struct AnchoredTree;
 class WeaponRackRenderer;
 
 class TerrainScatterManager : public IRenderPass {
@@ -44,6 +45,7 @@ public:
                  const std::vector<Game::Map::WorldProp>& runtime_world_props = {});
   void refresh_runtime_world_props(
       const std::vector<Game::Map::WorldProp>& runtime_world_props);
+  void set_anchored_trees(const std::vector<AnchoredTree>& trees);
 
   void set_light_direction(const QVector3D& dir);
 
@@ -107,6 +109,7 @@ private:
   std::unique_ptr<AbandonedHomeRenderer> m_abandoned_home;
   std::unique_ptr<StatueRenderer> m_statue;
   std::vector<ScatterPassEntry> m_scatter_passes;
+  std::vector<AnchoredTree> m_anchored_trees;
   std::vector<IRenderPass*> m_passes;
   std::uint32_t m_applied_graphics_generation{0U};
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;

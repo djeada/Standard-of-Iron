@@ -145,6 +145,24 @@ void mark_capture_objectives(Engine::Core::World& world,
   }
 }
 
+void name_ai_owner_after_nation(Game::Systems::OwnerRegistry& owners,
+                                const Game::Systems::NationRegistry& nations,
+                                int owner_id) {
+  const auto* nation = nations.get_nation_for_player(owner_id);
+  if (nation == nullptr || nation->display_name.empty()) {
+    return;
+  }
+  std::string name =
+      Game::Util::tr_asset_std(Game::Util::k_nations_context, nation->display_name);
+  for (const auto& other : owners.get_all_owners()) {
+    if (other.owner_id != owner_id && other.name == name) {
+      name += " (" + std::to_string(owner_id) + ")";
+      break;
+    }
+  }
+  owners.set_owner_name(owner_id, name);
+}
+
 } // namespace
 
 auto MissionSetupCoordinator::apply_mission_setup(
@@ -570,6 +588,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
 
     const auto ai_nation_id = resolve_nation_id(ai_setup.nation);
     nation_registry.set_player_nation(ai_owner_id, ai_nation_id);
+    name_ai_owner_after_nation(owner_registry, nation_registry, ai_owner_id);
     apply_owner_color(ai_owner_id, ai_setup.color);
 
     verify_owner_commander(ai_owner_id, ai_setup.id);

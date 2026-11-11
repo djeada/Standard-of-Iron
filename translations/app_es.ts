@@ -5353,6 +5353,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Move troops next to a river raft</source>
         <translation>Mueve tropas junto a una balsa del río</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Ir a los cuarteles</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5679,14 +5683,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation> [Tú]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>Reanudar</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pausa</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Seguir la selección con la cámara</translation>
     </message>
@@ -5805,6 +5801,18 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
     <message>
         <source>%1%</source>
         <translation>%1 %</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>Reanudar (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>Pausa (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>Acelerar %1, frenar %2</translation>
     </message>
 </context>
 <context>

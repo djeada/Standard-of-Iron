@@ -48,6 +48,16 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
             palette);
         config.draw_ornaments(ctx, out, unit, white, team, &cloth);
         submit_building_torches(ctx, out, config.torches);
+        submit_cookfire_smoke(ctx, out, config.smoke_vents);
+        if (config.grounds != nullptr) {
+          submit_barracks_activity(
+              ctx, out, config.nation_slug == "carthage", *config.grounds);
+        }
+        submit_ambient_people(ctx,
+                              out,
+                              config.nation_slug == "carthage",
+                              config.people,
+                              config.walk_surfaces);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

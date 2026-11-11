@@ -218,23 +218,30 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                    c.stone_light,
                    k_building_state_mask_intact);
     }
-    BuildingPartMaterial const plant(desc, k_building_material_plant);
-    QVector3D const tree(mid_x + 0.02F, 0.215F, mid_z - 0.02F);
-    desc.add_cylinder(tree,
-                      tree + QVector3D(0.0F, roof_y - 0.10F, 0.0F),
-                      0.030F,
-                      c.wood_dark,
-                      k_building_state_mask_intact);
-    desc.add_cone(tree + QVector3D(0.0F, roof_y - 0.42F, 0.0F),
-                  tree + QVector3D(0.0F, roof_y + 0.12F, 0.0F),
-                  0.22F,
-                  QVector3D(0.27F, 0.42F, 0.17F),
-                  k_building_state_mask_intact);
-    desc.add_cone(tree + QVector3D(0.0F, roof_y - 0.05F, 0.0F),
-                  tree + QVector3D(0.0F, roof_y + 0.36F, 0.0F),
-                  0.16F,
-                  QVector3D(0.33F, 0.50F, 0.20F),
-                  k_building_state_mask_intact);
+    desc.add_box(QVector3D(mid_x, 0.235F, mid_z),
+                 QVector3D(half_x, 0.02F, half_z),
+                 QVector3D(0.36F, 0.29F, 0.20F),
+                 k_building_state_mask_intact);
+    {
+      BuildingPartLabel const pot_label(desc, "roof_cypress_pot");
+      BuildingPartMaterial const ceramic(desc, k_building_material_ceramic);
+      QVector3D const pot(0.62F, roof_y + 0.05F, 0.62F);
+      desc.add_cylinder(pot,
+                        pot + QVector3D(0.0F, 0.13F, 0.0F),
+                        0.10F,
+                        QVector3D(0.68F, 0.40F, 0.25F),
+                        k_building_state_mask_intact);
+      desc.add_cylinder(pot + QVector3D(0.0F, 0.12F, 0.0F),
+                        pot + QVector3D(0.0F, 0.15F, 0.0F),
+                        0.115F,
+                        QVector3D(0.60F, 0.34F, 0.21F),
+                        k_building_state_mask_intact);
+      desc.add_cylinder(pot + QVector3D(0.0F, 0.145F, 0.0F),
+                        pot + QVector3D(0.0F, 0.152F, 0.0F),
+                        0.095F,
+                        QVector3D(0.30F, 0.22F, 0.14F),
+                        k_building_state_mask_intact);
+    }
   } else {
     desc.add_palette_box(QVector3D(0.0F, roof_y, 0.0F),
                          QVector3D(1.02F, 0.05F, 1.02F),

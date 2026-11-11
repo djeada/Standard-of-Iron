@@ -709,6 +709,7 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
     prod->rally_x = hit.x();
     prod->rally_z = hit.z();
     prod->rally_set = true;
+    prod->rally_default = false;
     updated_any = true;
   }
   return updated_any;

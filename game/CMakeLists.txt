@@ -355,6 +355,7 @@ add_library(
     systems/economy/production_system_shared_site.cpp
     systems/economy/production_system_site_ghosts.cpp
     systems/economy/production_system_training.cpp
+    systems/economy/recruitment_gate.cpp
     systems/economy/production_system_wall.cpp
     systems/economy/civilian_delivery_system.cpp
     systems/economy/resource_delivery_system.cpp

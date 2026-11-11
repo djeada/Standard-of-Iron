@@ -39,6 +39,7 @@
 #include "game/systems/ai_system/behaviors/builder_intent.h"
 #include "game/systems/ai_system/behaviors/builder_ledger.h"
 #include "game/systems/ai_system/behaviors/builder_site_geometry.h"
+#include "game/systems/ai_system/behaviors/builder_site_planner.h"
 #include "game/systems/ai_system/behaviors/builder_town_plan.h"
 #include "game/systems/ai_system/behaviors/commander_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
@@ -54,6 +55,7 @@
 #include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/default_content.h"
+#include "game/systems/economy/build_site.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/navigation_service.h"
 #include "game/systems/owner_registry.h"
@@ -821,6 +823,238 @@ TEST_F(AISystemTest, BuilderBehaviorSkipsDuplicateExpansionConstructionWhilePend
     EXPECT_FALSE(command.construction_site_x == 80.0F &&
                  command.construction_site_z == 60.0F)
         << "a second outpost was ordered on top of the one already being raised";
+  }
+}
+
+namespace {
+
+void split_map_with_a_river() {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 121;
+  map_def.grid.height = 121;
+  map_def.grid.tile_size = 1.0F;
+  map_def.coordSystem = Game::Map::CoordSystem::World;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -60.0F), QVector3D(0.0F, 0.0F, 60.0F), 8.0F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    pathfinder->update_navigation_grid();
+  }
+}
+
+} // namespace
+
+TEST_F(AISystemTest, BuildersAreNotSentToASiteAcrossAnImpassableRiver) {
+  split_map_with_a_river();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  const QVector3D west(-30.0F, 0.0F, 10.0F);
+  const QVector3D east(30.0F, 0.0F, 10.0F);
+  ASSERT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(west));
+  ASSERT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(east));
+  ASSERT_FALSE(
+      pathfinder->can_reach(Game::Systems::NavGrid::world_to_grid(west.x(), west.z()),
+                            Game::Systems::NavGrid::world_to_grid(east.x(), east.z())))
+      << "the fixture must cut the map in two";
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.friendly_units = {make_builder(11, -30.0F, 0.0F)};
+
+  EXPECT_TRUE(
+      Game::Systems::AI::builders_can_reach_site(snapshot, "home", west.x(), west.z()));
+  EXPECT_FALSE(
+      Game::Systems::AI::builders_can_reach_site(snapshot, "home", east.x(), east.z()))
+      << "a house ordered on the far bank can never be walked to";
+  EXPECT_TRUE(Game::Systems::AI::builders_can_reach_site(
+      snapshot, "wall_segment", east.x(), east.z()))
+      << "walls are raised by the wall-network builders, not by the approach walk";
+
+  snapshot.friendly_units.clear();
+  EXPECT_TRUE(
+      Game::Systems::AI::builders_can_reach_site(snapshot, "home", east.x(), east.z()))
+      << "with no builder to judge from there is nothing to veto";
+}
+
+TEST_F(AISystemTest, TheSitePlannerSkipsASlotTheBuildersCannotWalkTo) {
+  split_map_with_a_river();
+  const QVector3D builder_spot(-30.0F, 0.0F, 0.0F);
+  const QVector3D first_field(18.0F, 0.0F, 14.0F);
+  ASSERT_EQ(Game::Systems::site_access_on_foot(
+                builder_spot.x(), builder_spot.z(), first_field.x(), first_field.z()),
+            Game::Systems::SiteAccess::CutOff)
+      << "the fixture must put the second field slot across the river";
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_builder(11, builder_spot.x(), builder_spot.z())};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.base_pos_x = 0.0F;
+  context.base_pos_z = 0.0F;
+
+  const Game::Systems::AI::ConstructionLedger ledger;
+  int counter = 1;
+  const auto site = Game::Systems::AI::find_free_site(
+      snapshot, context, ledger, Game::Systems::AI::BUILDING_TYPE_FARM, counter);
+
+  ASSERT_TRUE(site.resolved);
+  EXPECT_LT(site.x, 0.0F)
+      << "the planner picked the field slot on the far side of the river";
+  EXPECT_TRUE(Game::Systems::AI::builders_can_reach_site(
+      snapshot, Game::Systems::AI::BUILDING_TYPE_FARM, site.x, site.z));
+}
+
+TEST_F(AISystemTest, TheSitePlannerDoesNotRetryASiteThatWasAbandonedAsUnreachable) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_builder(11, 0.0F, 0.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.base_pos_x = 0.0F;
+  context.base_pos_z = 0.0F;
+
+  Game::Systems::AI::ConstructionLedger ledger;
+  int counter = 0;
+  const auto first = Game::Systems::AI::find_free_site(
+      snapshot, context, ledger, Game::Systems::AI::BUILDING_TYPE_FARM, counter);
+  ASSERT_TRUE(first.resolved);
+
+  ledger.note_site_order(first.x, first.z, -1, snapshot.game_time);
+  ledger.note_unreachable_site(
+      first.x + 3.0F, first.z - 2.0F, snapshot.game_time + 20.0F);
+
+  snapshot.game_time = 40.0F;
+  counter = 0;
+  const auto again = Game::Systems::AI::find_free_site(
+      snapshot, context, ledger, Game::Systems::AI::BUILDING_TYPE_FARM, counter);
+  ASSERT_TRUE(again.resolved);
+  EXPECT_GT(std::hypot(again.x - first.x, again.z - first.z), 4.0F)
+      << "the planner picked the slot its builders had just given up on";
+
+  snapshot.game_time = 700.0F;
+  counter = 0;
+  const auto later = Game::Systems::AI::find_free_site(
+      snapshot, context, ledger, Game::Systems::AI::BUILDING_TYPE_FARM, counter);
+  ASSERT_TRUE(later.resolved);
+  EXPECT_FLOAT_EQ(later.x, first.x)
+      << "the memory of an abandoned slot must fade so the ground can be retried";
+  EXPECT_FLOAT_EQ(later.z, first.z);
+}
+
+TEST_F(AISystemTest, TheLedgerBlocksThePlanSlotOfAnAbandonedSiteForAWhile) {
+  Game::Systems::AI::ConstructionLedger ledger;
+  ledger.note_site_order(40.0F, 40.0F, 3, 5.0F);
+  ledger.note_unreachable_site(46.0F, 44.0F, 50.0F);
+
+  EXPECT_TRUE(ledger.site_was_abandoned(40.0F, 40.0F, 60.0F))
+      << "the ordered slot, not only the nudged spot the crew walked to, is remembered";
+  EXPECT_TRUE(ledger.site_was_abandoned(46.0F, 44.0F, 60.0F));
+  EXPECT_FALSE(ledger.site_was_abandoned(80.0F, 80.0F, 60.0F));
+
+  const auto blocked = ledger.blocked_plan_slots_at(60.0F);
+  EXPECT_NE(std::find(blocked.begin(), blocked.end(), 3), blocked.end());
+
+  ledger.note_unreachable_site(46.5F, 44.0F, 55.0F);
+  EXPECT_EQ(ledger.blocked_plan_slots_at(60.0F).size(), 1U)
+      << "every crew of one abandoned site reports it; that is still one site";
+
+  EXPECT_FALSE(ledger.site_was_abandoned(40.0F, 40.0F, 5000.0F));
+  EXPECT_TRUE(ledger.blocked_plan_slots_at(5000.0F).empty());
+}
+
+TEST_F(AISystemTest, BuilderBehaviorDoesNotReorderAnOutpostItsBuildersGaveUpOn) {
+  Game::Systems::AI::AIContext fresh;
+  fresh.player_id = 3;
+  fresh.state = Game::Systems::AI::AIState::Expanding;
+  fresh.builder_count = 1;
+  fresh.home_count = 3;
+  fresh.barracks_count = 1;
+  fresh.has_expansion_site = true;
+  fresh.expansion_site_x = 80.0F;
+  fresh.expansion_site_z = 60.0F;
+  fresh.strategy_config.base_home_target = 3;
+  fresh.strategy_config.desired_outpost_barracks_count = 1;
+  fresh.outpost_barracks_count = 0;
+
+  const auto ordered_at_the_outpost =
+      [](const std::vector<Game::Systems::AI::AICommand>& commands) {
+        return std::any_of(
+            commands.begin(),
+            commands.end(),
+            [](const Game::Systems::AI::AICommand& command) {
+              return command.type ==
+                         Game::Systems::AI::AICommandType::StartBuilderConstruction &&
+                     std::hypot(command.construction_site_x - 80.0F,
+                                command.construction_site_z - 60.0F) < 4.0F;
+            });
+      };
+
+  Game::Systems::AI::BuilderBehavior behavior;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 8.0F;
+  snapshot.friendly_units = {make_builder(11, 78.0F, 58.0F)};
+
+  auto context = fresh;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 3.1F, commands);
+  ASSERT_TRUE(ordered_at_the_outpost(commands)) << "the fixture must order the outpost";
+
+  auto gave_up = make_builder(11, 78.0F, 58.0F);
+  gave_up.builder_production.gave_up_site_unreachable = true;
+  gave_up.builder_production.construction_site_x = 80.0F;
+  gave_up.builder_production.construction_site_z = 60.0F;
+  snapshot.game_time = 40.0F;
+  snapshot.friendly_units = {gave_up};
+
+  context = fresh;
+  commands.clear();
+  behavior.execute(snapshot, context, 3.1F, commands);
+
+  snapshot.game_time = 50.0F;
+  snapshot.friendly_units = {make_builder(11, 78.0F, 58.0F)};
+  context = fresh;
+  commands.clear();
+  behavior.execute(snapshot, context, 3.1F, commands);
+  EXPECT_FALSE(ordered_at_the_outpost(commands))
+      << "the planner paid for, abandoned and re-ordered the same unreachable outpost";
+}
+
+TEST_F(AISystemTest, BuilderBehaviorDoesNotOrderAnOutpostAcrossAnImpassableRiver) {
+  split_map_with_a_river();
+
+  Game::Systems::AI::BuilderBehavior behavior;
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 8.0F;
+  snapshot.friendly_units = {make_builder(11, -30.0F, 0.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Expanding;
+  context.builder_count = 1;
+  context.home_count = 3;
+  context.barracks_count = 1;
+  context.has_base_anchor = true;
+  context.base_pos_x = -30.0F;
+  context.base_pos_z = 0.0F;
+  context.has_expansion_site = true;
+  context.expansion_site_x = 30.0F;
+  context.expansion_site_z = 10.0F;
+  context.strategy_config.base_home_target = 3;
+  context.strategy_config.desired_outpost_barracks_count = 1;
+  context.outpost_barracks_count = 0;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 3.1F, commands);
+
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::StartBuilderConstruction) {
+      continue;
+    }
+    EXPECT_LT(command.construction_site_x, 0.0F)
+        << "an order was sent to a site no builder can walk to";
   }
 }
 

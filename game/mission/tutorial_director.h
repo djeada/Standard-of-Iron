@@ -210,6 +210,7 @@ private:
   void enter_step(std::size_t index, bool from_replay);
   void mark_step_complete();
   void go_to_next_step();
+  void finish_on_victory();
   [[nodiscard]] auto evaluate(const TutorialObservation& observation,
                               qreal& progress,
                               QString& progress_text) const -> bool;

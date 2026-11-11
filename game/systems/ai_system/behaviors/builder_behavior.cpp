@@ -21,6 +21,7 @@ namespace {
 
 constexpr int k_smallest_useful_work_party = 4;
 constexpr float k_unsited_retry_seconds = 60.0F;
+constexpr float k_cut_off_slot_embargo_seconds = 90.0F;
 
 auto desired_work_parties(const AIContext& context) -> int {
   (void)context;
@@ -61,6 +62,16 @@ void BuilderBehavior::divide_work_parties(const AISnapshot& snapshot,
   out_commands.push_back(std::move(command));
 }
 
+void BuilderBehavior::note_abandoned_sites(const AISnapshot& snapshot) {
+  for (const auto& entity : snapshot.friendly_units) {
+    const auto& work = entity.builder_production;
+    if (work.has_component && work.gave_up_site_unreachable) {
+      m_ledger.note_unreachable_site(
+          work.construction_site_x, work.construction_site_z, snapshot.game_time);
+    }
+  }
+}
+
 auto BuilderBehavior::resolve_site(const AISnapshot& snapshot,
                                    const AIContext& context,
                                    const ConstructionIntent* chosen) -> PendingSite {
@@ -79,6 +90,16 @@ auto BuilderBehavior::resolve_site(const AISnapshot& snapshot,
     site.x = chosen->x;
     site.z = chosen->z;
     site.resolved = true;
+
+    float reach_x = site.x;
+    float reach_z = site.z;
+    clamp_to_map_bounds(snapshot, reach_x, reach_z);
+    if (!site_is_workable(snapshot, m_ledger, site.building, reach_x, reach_z)) {
+      m_ledger.embargo_plan_slot(site.plan_slot,
+                                 snapshot.game_time + k_cut_off_slot_embargo_seconds);
+      site.building = nullptr;
+      site.resolved = false;
+    }
     return site;
   }
   if (!context.has_base_anchor) {
@@ -86,8 +107,8 @@ auto BuilderBehavior::resolve_site(const AISnapshot& snapshot,
     return site;
   }
 
-  const ResolvedSite found =
-      find_free_site(snapshot, context, site.building, m_construction_counter);
+  const ResolvedSite found = find_free_site(
+      snapshot, context, m_ledger, site.building, m_construction_counter);
   if (found.resolved) {
     site.x = found.x;
     site.z = found.z;
@@ -134,6 +155,8 @@ auto BuilderBehavior::issue_construction(const AISnapshot& snapshot,
                       static_cast<int>(context.buildings.size()),
                       snapshot.game_time,
                       site.plan_slot);
+  m_ledger.note_site_order(
+      construction_x, construction_z, site.plan_slot, snapshot.game_time);
   m_construction_counter++;
   return true;
 }
@@ -144,8 +167,12 @@ auto BuilderBehavior::run_construction_cycle(const AISnapshot& snapshot,
                                              std::vector<AICommand>& out_commands)
     -> bool {
   const SettlementAssessment town = assess_settlement(snapshot, context);
-  auto intents = gather_construction_intents(
-      snapshot, context, town, m_ledger.blocked_plan_slots(), m_construction_counter);
+  auto intents =
+      gather_construction_intents(snapshot,
+                                  context,
+                                  town,
+                                  m_ledger.blocked_plan_slots_at(snapshot.game_time),
+                                  m_construction_counter);
   IntentChoice choice =
       choose_construction_intent(snapshot, context, intents, m_ledger);
 
@@ -202,6 +229,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   if (context.nation != nullptr && !context.nation->has_economy) {
     return;
   }
+
+  note_abandoned_sites(snapshot);
 
   m_construction_timer += delta_time;
   if (m_construction_timer < 3.0F) {

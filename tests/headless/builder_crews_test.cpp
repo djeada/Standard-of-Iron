@@ -8,6 +8,7 @@
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
+#include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
 #include "game/game_config.h"
@@ -20,6 +21,7 @@
 #include "game/systems/default_content.h"
 #include "game/systems/economy/build_site.h"
 #include "game/systems/economy/construction_cost_catalog.h"
+#include "game/systems/economy/production_system_shared_site.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
@@ -38,6 +40,7 @@ using Engine::Core::EntityID;
 using Game::Session::SessionContext;
 
 constexpr int k_player = 1;
+constexpr int k_rival = 2;
 constexpr int k_map_size = 96;
 
 class BuilderCrewsTest : public ::testing::Test {
@@ -70,10 +73,10 @@ protected:
     m_session.reset();
   }
 
-  auto spawn_builder(int grid_x, int grid_z) -> EntityID {
+  auto spawn_builder(int grid_x, int grid_z, int owner_id = k_player) -> EntityID {
     Game::Units::SpawnParams params;
     params.position = Game::Systems::NavGrid::grid_to_world({grid_x, grid_z});
-    params.player_id = k_player;
+    params.player_id = owner_id;
     params.spawn_type = Game::Units::SpawnType::Builder;
     params.is_initial_spawn = true;
     auto unit =
@@ -641,6 +644,73 @@ TEST_F(BuilderCrewsTest, WorkingMenFaceTheirSiteEvenWhenTheCrewHasFacedAbout) {
   }
   EXPECT_TRUE(saw_about_faced_crew_at_work)
       << "the case under test never had a faced-about crew at work";
+}
+
+TEST_F(BuilderCrewsTest, AnAbandonedSiteIsOnlyAnnouncedToTheLocalHumanPlayer) {
+  auto& owners = m_session->owners();
+  owners.register_owner_with_id(k_rival, Game::Systems::OwnerType::AI, "red");
+  owners.set_owner_team(k_rival, 2);
+  owners.set_local_player_id(k_player);
+
+  auto& world = m_session->world();
+  auto& economy = m_session->economy();
+  const EntityID own_crew = spawn_builder(30, 40, k_player);
+  const EntityID rival_crew = spawn_builder(30, 56, k_rival);
+  ASSERT_NE(own_crew, 0U);
+  ASSERT_NE(rival_crew, 0U);
+
+  const auto strand = [this](EntityID crew) {
+    auto* builder = builder_of(crew);
+    builder->product_type = "home";
+    builder->has_construction_site = true;
+    builder->construction_site_x = 10.0F;
+    builder->construction_site_z = 10.0F;
+  };
+
+  std::vector<int> notified_owners;
+  const Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
+      subscription([&notified_owners](const Engine::Core::MissionAnnouncementEvent& e) {
+        notified_owners.push_back(e.owner_id);
+      });
+
+  strand(own_crew);
+  Game::Systems::ProductionTasks::abandon_paid_site(
+      world, own_crew, k_player, Engine::Core::BuilderTaskFault::Unreachable);
+  EXPECT_EQ(notified_owners, (std::vector<int>{k_player}))
+      << "the human player must be told their builders could not reach the site";
+
+  notified_owners.clear();
+  const int rival_wood = economy.get(k_rival, Game::Systems::ResourceType::Wood);
+  strand(rival_crew);
+  Game::Systems::ProductionTasks::abandon_paid_site(
+      world, rival_crew, k_rival, Engine::Core::BuilderTaskFault::Unreachable);
+  EXPECT_TRUE(notified_owners.empty())
+      << "an AI player's abandoned building is no business of the human player";
+  EXPECT_GT(economy.get(k_rival, Game::Systems::ResourceType::Wood), rival_wood)
+      << "silencing the notice must not skip the refund";
+}
+
+TEST_F(BuilderCrewsTest, ASpectatorIsNotToldAboutTheFollowedAiPlayersAbandonedSites) {
+  auto& owners = m_session->owners();
+  owners.register_owner_with_id(k_rival, Game::Systems::OwnerType::AI, "red");
+  owners.set_owner_team(k_rival, 2);
+  owners.set_local_player_id(k_rival);
+
+  const EntityID crew = spawn_builder(30, 40, k_rival);
+  ASSERT_NE(crew, 0U);
+  auto* builder = builder_of(crew);
+  builder->product_type = "home";
+  builder->has_construction_site = true;
+
+  int notices = 0;
+  const Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
+      subscription(
+          [&notices](const Engine::Core::MissionAnnouncementEvent&) { ++notices; });
+  Game::Systems::ProductionTasks::abandon_paid_site(
+      m_session->world(), crew, k_rival, Engine::Core::BuilderTaskFault::Unreachable);
+  Game::Systems::ProductionTasks::abandon_paid_site(
+      m_session->world(), crew, k_rival, Engine::Core::BuilderTaskFault::Interrupted);
+  EXPECT_EQ(notices, 0) << "a spectator following an AI sees no builder notices";
 }
 
 } // namespace

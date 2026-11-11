@@ -428,11 +428,11 @@ struct UnitDrawPlan {
 };
 
 namespace {
-constexpr float k_selection_marker_thickness = 0.11F;
-constexpr float k_selection_marker_min_thickness = 0.05F;
-constexpr float k_selected_marker_alpha = 0.7F;
+constexpr float k_selection_marker_thickness = 0.078F;
+constexpr float k_selection_marker_min_thickness = 0.036F;
+constexpr float k_selected_marker_alpha = 0.64F;
 constexpr float k_hovered_marker_alpha = 0.55F;
-const QVector3D k_selected_marker_color(0.98F, 0.76F, 0.34F);
+const QVector3D k_selected_marker_color(1.0F, 0.80F, 0.42F);
 const QVector3D k_hovered_marker_color(0.96F, 0.93F, 0.80F);
 } // namespace
 

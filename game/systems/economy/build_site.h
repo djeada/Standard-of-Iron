@@ -2,6 +2,8 @@
 
 #include <QVector3D>
 
+#include <cstdint>
+#include <functional>
 #include <optional>
 #include <span>
 #include <string>
@@ -16,6 +18,21 @@ class World;
 }
 
 namespace Game::Systems {
+
+enum class SiteAccess : std::uint8_t {
+  Reachable,
+
+  CutOff,
+
+  Unknown,
+};
+
+[[nodiscard]] auto site_access_on_foot(float from_x,
+                                       float from_z,
+                                       float site_x,
+                                       float site_z) -> SiteAccess;
+
+using SiteAcceptor = std::function<bool(float x, float z)>;
 
 [[nodiscard]] auto
 assess_ground(const Engine::Core::World& world,
@@ -34,7 +51,8 @@ find_clear_site(const Engine::Core::World& world,
                 float facing_degrees = 0.0F,
                 std::span<const Engine::Core::EntityID> crew = {},
                 std::span<const SiteKeepOut> keep_out = {},
-                bool clear_of_troops = false) -> std::optional<QVector3D>;
+                bool clear_of_troops = false,
+                const SiteAcceptor& acceptable = {}) -> std::optional<QVector3D>;
 
 [[nodiscard]] auto
 troops_stand_on(const Engine::Core::World& world,

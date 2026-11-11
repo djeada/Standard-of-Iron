@@ -26,7 +26,7 @@
   "environment": {
     "start_time": 8.5,
     "time_mode": "continuous",
-    "day_length_seconds": 2400.0,
+    "day_length_seconds": 4800.0,
     "lighting_profile": "river_mist"
   },
   "biome": {

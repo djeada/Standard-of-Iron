@@ -209,6 +209,18 @@ void TutorialDirector::go_to_next_step() {
   enter_step(m_index + 1, false);
 }
 
+void TutorialDirector::finish_on_victory() {
+  std::fill(m_done.begin(), m_done.end(), true);
+  m_index = k_steps.size() - 1;
+  m_active = false;
+  m_finished = true;
+  m_step_complete = true;
+  publish(-1.0, {}, {}, {});
+  emit step_changed();
+  emit tutorial_finished();
+  emit state_changed();
+}
+
 void TutorialDirector::skip_step() {
   if (!m_active) {
     return;
@@ -367,6 +379,10 @@ void TutorialDirector::advance(const TutorialObservation& observation, float rea
   }
   if (observation.defeat) {
     stop();
+    return;
+  }
+  if (observation.victory && step() != TutorialStepId::Assault) {
+    finish_on_victory();
     return;
   }
 

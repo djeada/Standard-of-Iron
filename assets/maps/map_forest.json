@@ -22,11 +22,11 @@
     "near": 1.0,
     "far": 492.8
   },
-  "time_of_day": "afternoon",
+  "time_of_day": "day",
   "environment": {
-    "start_time": 16.0,
+    "start_time": 14.0,
     "time_mode": "continuous",
-    "day_length_seconds": 2400.0,
+    "day_length_seconds": 4800.0,
     "lighting_profile": "pine_overcast"
   },
   "biome": {
@@ -69,7 +69,7 @@
   "rain": {
     "enabled": true,
     "type": "rain",
-    "intensity": 0.62,
+    "intensity": 0.45,
     "cycle_duration": 300.0,
     "active_duration": 70.0,
     "fade_duration": 6.0,

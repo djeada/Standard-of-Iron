@@ -14,6 +14,7 @@ Rectangle {
     property var player_state: null
     readonly property var hs: StyleGuide.historical
     readonly property bool has_barracks_selection: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks"))
+    readonly property bool has_content: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks") || productionPanel.has_selected_type("builder") || productionPanel.has_selected_type("home") || productionPanel.has_selected_type("marketplace") || productionPanel.has_selected_type("temple") || productionPanel.has_selected_type("farm"))
     readonly property var barracks_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
     readonly property var barracks_ally_call: (productionPanel.selection_tick, (productionPanel.has_barracks_selection && productionPanel.production && productionPanel.production.ally_call_state) ? productionPanel.production.ally_call_state(productionPanel.production.selected_building_id()) : ({}))
 

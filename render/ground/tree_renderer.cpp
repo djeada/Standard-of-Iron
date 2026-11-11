@@ -145,7 +145,47 @@ void TreeRenderer::refresh_world_props(
 void TreeRenderer::rebuild_instances() {
   m_state.instances.clear();
   append_world_prop_trees();
+  append_anchored_trees();
   finish_instance_rebuild();
+}
+
+void TreeRenderer::assign_anchored_trees(const std::vector<AnchoredTree>& trees) {
+  m_anchored.clear();
+  for (const AnchoredTree& tree : trees) {
+    if (tree.species == m_species) {
+      m_anchored.push_back(tree);
+    }
+  }
+}
+
+void TreeRenderer::set_anchored_trees(const std::vector<AnchoredTree>& trees) {
+  assign_anchored_trees(trees);
+  rebuild_instances();
+}
+
+void TreeRenderer::append_anchored_trees() {
+  const auto& profile = *m_profile;
+  const auto& terrain_service = world().terrain_or_empty();
+  for (const AnchoredTree& tree : m_anchored) {
+    const QVector3D surface = terrain_service.resolve_surface_world_position(
+        tree.position.x(), tree.position.z(), 0.0F, tree.position.y());
+    const float scale =
+        tree.scale * Game::Map::world_prop_render_scale(profile.prop_type);
+    const QVector3D pos(surface.x(),
+                        tree.grounded
+                            ? bed_tree_base(terrain_service, m_species, surface, scale)
+                            : tree.position.y(),
+                        surface.z());
+    uint32_t look_state = mix_tree_look_hash(tree.seed ^ profile.prop_salt);
+    const auto look = tree_world_prop_look(profile, look_state);
+    TreeInstanceGpu inst;
+    inst.pos_scale = QVector4D(pos.x(), pos.y(), pos.z(), scale);
+    inst.color_sway =
+        QVector4D(look.tint.x(), look.tint.y(), look.tint.z(), look.sway_phase);
+    inst.rotation =
+        QVector4D(tree.rotation, look.silhouette_seed, look.leaf_seed, look.bark_seed);
+    m_state.instances.push_back(inst);
+  }
 }
 
 void TreeRenderer::set_light_direction(const QVector3D& dir) {

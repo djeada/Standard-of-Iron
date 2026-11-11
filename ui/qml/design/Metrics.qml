@@ -41,9 +41,15 @@ QtObject {
     readonly property int notificationWidth: A11y.scaled(340)
     readonly property int hudZoneMargin: A11y.scaled(12)
 
-    readonly property int rtsBottomBarMinHeight: A11y.scaled(184)
-    readonly property int rtsBottomBarMaxHeight: A11y.scaled(224)
-    readonly property real rtsBottomBarShare: 0.21
+    readonly property int rtsBottomBarMinHeight: A11y.scaled(196)
+    readonly property int rtsBottomBarMaxHeight: A11y.scaled(206)
+    readonly property real rtsBottomBarShare: 0.18
+
+    // Extra height the RTS bar borrows while a production building is
+    // selected, so the recruit grid keeps two whole rows. HUDBottom reports
+    // when it needs this; HUD.qml adds it to bottomBarHeight().
+    readonly property int rtsBottomBarProductionExtra: A11y.scaled(28)
+    readonly property real bottomBarGrownViewportCeiling: 0.34
 
     readonly property int commanderBottomBarMinHeight: A11y.scaled(148)
     readonly property int commanderBottomBarMaxHeight: A11y.scaled(176)
@@ -58,5 +64,11 @@ QtObject {
         var share = commanderMode ? root.commanderBottomBarShare : root.rtsBottomBarShare;
         var preferred = Math.max(floor, Math.min(ceiling, height * share));
         return Math.min(preferred, Math.max(floor, height * root.bottomBarViewportCeiling));
+    }
+
+    function grownBottomBarHeight(viewportHeight, baseHeight, extra) {
+        var height = Number(viewportHeight) || 0;
+        var wanted = Number(baseHeight) + Math.max(0, Number(extra) || 0);
+        return Math.min(wanted, Math.max(Number(baseHeight), height * root.bottomBarGrownViewportCeiling));
     }
 }

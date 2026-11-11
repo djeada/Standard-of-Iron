@@ -11,12 +11,15 @@
 
 #include "build_site.h"
 #include "construction_cost_catalog.h"
+#include "core/ambient_session.h"
 #include "core/component_gameplay.h"
 #include "core/event_manager.h"
+#include "core/local_audience.h"
 #include "core/world.h"
 #include "production_system_approach.h"
 #include "production_system_builder_task.h"
 #include "systems/builder_product_types.h"
+#include "systems/owner_registry.h"
 #include "systems/player_feedback.h"
 #include "units/squad.h"
 
@@ -127,6 +130,13 @@ void publish_crew_pace(Engine::Core::World& world,
   }
 }
 
+auto notice_is_for_the_local_human(const Engine::Core::World& world,
+                                   int owner_id) -> bool {
+  const auto* owners = Game::Session::services_for(world).owners;
+  return owners != nullptr && owners->is_player(owner_id) &&
+         Engine::Core::LocalAudience{owners->get_local_player_id()}.is_local(owner_id);
+}
+
 } // namespace
 
 auto raises_shared_site(const Engine::Core::BuilderProductionComponent& builder)
@@ -194,6 +204,10 @@ void abandon_paid_site(Engine::Core::World& world,
                        int owner_id,
                        Engine::Core::BuilderTaskFault fault) {
   if (!refund_abandoned_site(world, crew)) {
+    return;
+  }
+
+  if (!notice_is_for_the_local_human(world, owner_id)) {
     return;
   }
   const QString text =

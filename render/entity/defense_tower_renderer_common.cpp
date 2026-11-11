@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "../entity_appearance.h"
+#include "ambient_people.h"
 #include "game/core/component_core.h"
 #include "render/scene_renderer.h"
 
@@ -54,6 +55,36 @@ void draw_night_braziers(const DrawContext& ctx,
   }
 }
 
+void draw_lookout(const DrawContext& ctx,
+                  ISubmitter& out,
+                  const DefenseTowerRendererConfig& config,
+                  BuildingState state) {
+  if (state == BuildingState::Destroyed) {
+    return;
+  }
+  const float top = state == BuildingState::Damaged ? config.lookout_deck_top_damaged
+                                                    : config.lookout_deck_top;
+  if (top <= 0.0F) {
+    return;
+  }
+  const float half = config.lookout_walk_half;
+  const std::array<QVector3D, 4> route{QVector3D(-half, top, -half),
+                                       QVector3D(half, top, -half),
+                                       QVector3D(half, top, half),
+                                       QVector3D(-half, top, half)};
+  const std::array<WalkSurface, 1> deck{{WalkSurface{.min_x = -half - 0.2F,
+                                                     .max_x = half + 0.2F,
+                                                     .min_z = -half - 0.2F,
+                                                     .max_z = half + 0.2F,
+                                                     .top = top}}};
+  const std::array<AmbientPerson, 1> lookout{
+      {AmbientPerson{.role = AmbientRole::Stroll,
+                     .route = route,
+                     .facing = QVector3D(0.0F, top + 0.4F, 4.0F),
+                     .linger = AmbientRole::Stand}}};
+  submit_ambient_people(ctx, out, config.nation_slug == "carthage", lookout, deck);
+}
+
 } // namespace
 
 void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
@@ -78,6 +109,7 @@ void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
         config.draw_banner(ctx, out, team, state);
         draw_night_braziers(ctx, out, config, state);
         submit_building_torches(ctx, out, config.torches);
+        draw_lookout(ctx, out, config, state);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

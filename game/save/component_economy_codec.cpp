@@ -36,6 +36,7 @@ void write_production(const Entity* entity, QJsonObject& entity_obj) {
     production_obj["rally_x"] = production->rally_x;
     production_obj["rally_z"] = production->rally_z;
     production_obj["rally_set"] = production->rally_set;
+    production_obj["rally_default"] = production->rally_default;
     production_obj["villager_cost"] = production->villager_cost;
     production_obj["manpower_available"] = production->manpower_available;
 
@@ -66,6 +67,7 @@ void read_production(Entity* entity, const QJsonObject& json) {
     production->rally_x = static_cast<float>(production_obj["rally_x"].toDouble());
     production->rally_z = static_cast<float>(production_obj["rally_z"].toDouble());
     production->rally_set = production_obj["rally_set"].toBool(false);
+    production->rally_default = production_obj["rally_default"].toBool(false);
     production->villager_cost = production_obj["villager_cost"].toInt(1);
     production->manpower_available = production_obj["manpower_available"].toInt(0);
 
