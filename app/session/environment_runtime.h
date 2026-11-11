@@ -2,9 +2,11 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "app/world/ambient_state_manager.h"
 #include "game/systems/match_snapshot.h"
+#include "render/ground/tree_renderer.h"
 
 namespace Game::Session {
 class SessionContext;
@@ -76,6 +78,8 @@ private:
   std::unique_ptr<Game::Map::EnvironmentClock> m_clock;
   std::unique_ptr<AmbientStateManager> m_ambient;
   std::uint64_t m_last_world_props_revision = 0;
+  std::vector<Render::GL::AnchoredTree> m_anchored_trees;
+  bool m_anchored_trees_synced = false;
 };
 
 } // namespace App::Session

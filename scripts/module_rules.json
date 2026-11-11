@@ -299,6 +299,7 @@
         "game/systems/economy/production_system_shared_site",
         "game/systems/economy/production_system_site_ghosts",
         "game/systems/economy/production_system_training",
+        "game/systems/economy/recruitment_gate",
         "game/systems/economy/production_system_wall",
         "game/systems/economy/build_site",
         "game/systems/economy/construction_cost_catalog",

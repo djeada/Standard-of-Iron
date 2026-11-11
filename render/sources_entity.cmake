@@ -113,6 +113,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_crew.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_activity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_stockpile.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/carried_load_renderer.cpp

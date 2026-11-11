@@ -205,7 +205,7 @@ Item {
 
                         Design.IronIconButton {
                             iconText: topRoot.game_is_paused ? Design.Icons.play : Design.Icons.pause
-                            tooltip: topRoot.game_is_paused ? qsTr("Resume") : qsTr("Pause")
+                            tooltip: (topRoot.game_is_paused ? qsTr("Resume (%1)") : qsTr("Pause (%1)")).arg(InputBindings.display_shortcut_for("rts.pause"))
                             onClicked: topRoot.pause_toggled()
                         }
 
@@ -219,15 +219,36 @@ Item {
                             model: topRoot.speedOptions
 
                             delegate: Design.IronButton {
-                                required property var modelData
+                                id: speedButton
 
+                                required property var modelData
+                                readonly property bool isCurrent: topRoot.current_speed === speedButton.modelData
+
+                                objectName: "speedButton"
                                 visible: !topRoot.compact
                                 Layout.preferredWidth: Design.Metrics.space24 * 2
                                 implicitWidth: Design.Metrics.space24 * 2
                                 text: topRoot.speed_label(modelData)
-                                tone: topRoot.current_speed === modelData ? "primary" : "secondary"
+                                tone: speedButton.isCurrent ? "primary" : "secondary"
                                 accessibleName: qsTr("Battle speed %1").arg(topRoot.speed_label(modelData))
+                                ToolTip.text: qsTr("Battle speed %1").arg(topRoot.speed_label(modelData)) + "\n" + qsTr("Speed up %1, slow down %2").arg(InputBindings.display_shortcut_for("rts.speed_up")).arg(InputBindings.display_shortcut_for("rts.speed_down"))
+                                ToolTip.visible: speedButton.hovered
+                                ToolTip.delay: Design.Metrics.tooltipDelay
                                 onClicked: topRoot.speed_changed(modelData)
+
+                                Rectangle {
+                                    objectName: "speedActiveMark"
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    anchors.leftMargin: Design.Metrics.space8
+                                    anchors.rightMargin: Design.Metrics.space8
+                                    anchors.bottomMargin: Design.Metrics.space2
+                                    height: Design.Metrics.space2
+                                    radius: height / 2
+                                    color: Design.Theme.accent
+                                    visible: speedButton.isCurrent
+                                }
                             }
                         }
 

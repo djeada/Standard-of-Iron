@@ -181,6 +181,8 @@ struct BuilderProductionSnapshot {
 
   bool raising_a_building = false;
   Game::Units::SpawnType building_under_way = Game::Units::SpawnType::Barracks;
+
+  bool gave_up_site_unreachable = false;
 };
 
 struct EntitySnapshot {

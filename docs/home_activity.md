@@ -88,7 +88,7 @@ cooking fire seen through a roof should not illuminate the street.
 
 Each house is lit for a stretch and then goes out. Its offset, period, duty
 cycle and strength all come from a hash of its entity id, so neighbours never
-share a cycle and a street never animates in lockstep. Roughly a third of
+share a cycle and a street never animates in lockstep. Close to half of
 eligible houses are alight at midday. The intensity ramps in and out over
 about nine seconds at each end, so a hearth is banked up and dies down rather
 than switching.
@@ -172,7 +172,7 @@ the line and are brought in one at a time as dusk comes.
 `doorstep_plan(id, time)` is the ordinary ambient, far more common than the
 gag. Each house keeps its own rhythm (69-136 s) and within it each turn outside
 is decided afresh from a hash of house and cycle: whether anyone comes out at
-all (58% of turns), for how long (12-34 s), what they do, and whether a second
+all (72% of turns), for how long (12-34 s), what they do, and whether a second
 resident joins them. Activities:
 
 | Activity | What is drawn                                                     |

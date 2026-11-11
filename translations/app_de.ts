@@ -5353,6 +5353,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Move troops next to a river raft</source>
         <translation>Bewege Truppen zu einem Flussfloß</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Zur Kaserne</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5679,14 +5683,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation> [Du]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>Fortsetzen</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pause</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Der Auswahl mit der Kamera folgen</translation>
     </message>
@@ -5805,6 +5801,18 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>%1%</source>
         <translation>%1 %</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>Fortsetzen (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>Pause (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>Schneller %1, langsamer %2</translation>
     </message>
 </context>
 <context>

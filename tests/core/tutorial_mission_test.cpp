@@ -10,6 +10,7 @@
 #include "app/session/skirmish_loader.h"
 #include "core/component_gameplay.h"
 #include "core/world.h"
+#include "game/core/event_manager.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/mission/campaign_manager.h"
@@ -242,4 +243,40 @@ TEST_F(TutorialMissionTest, TheRaidClosesOnThePlayerCampWhileTheCommanderKeepsHi
   EXPECT_LT((position(roman_commander) - post).length(), 13.0F)
       << "the Roman commander followed the raid; the assault step expects him at "
          "his outpost";
+}
+
+TEST_F(TutorialMissionTest, TheRomanOutpostIsNamedAfterItsNationNotAPlaceholder) {
+  const std::string name = m_session->owners().get_owner_name(2);
+  EXPECT_EQ(name.find("AI Player"), std::string::npos) << name;
+  EXPECT_EQ(name, "Roman Republic");
+}
+
+TEST_F(TutorialMissionTest, TheFallenRomanCommanderIsAnnouncedByNationName) {
+  std::vector<QString> announcements;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent> const
+      subscription([&announcements](const Engine::Core::MissionAnnouncementEvent& e) {
+        announcements.push_back(e.text);
+      });
+
+  Engine::Core::Entity* roman_commander = nullptr;
+  for (auto* entity :
+       m_world.collect_entities_with<Engine::Core::CommanderComponent>()) {
+    const auto* unit = entity->get_component<UnitComponent>();
+    if (unit != nullptr && unit->owner_id == 2) {
+      roman_commander = entity;
+    }
+  }
+  ASSERT_NE(roman_commander, nullptr);
+  roman_commander->get_component<UnitComponent>()->health = 0;
+  for (int tick = 0; tick < 10; ++tick) {
+    m_world.update(k_tick);
+  }
+
+  const auto lost =
+      std::find_if(announcements.begin(), announcements.end(), [](const QString& text) {
+        return text.contains(QStringLiteral("lost its commander"));
+      });
+  ASSERT_NE(lost, announcements.end()) << "no announcement for the fallen commander";
+  EXPECT_TRUE(lost->contains(QStringLiteral("Roman Republic"))) << lost->toStdString();
+  EXPECT_FALSE(lost->contains(QStringLiteral("AI Player"))) << lost->toStdString();
 }

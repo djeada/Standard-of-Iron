@@ -93,6 +93,7 @@ void TerrainScatterManager::configure(
   m_stone->configure(height_map, biome_settings, m_scatter_seed_world_props);
   m_plant->configure(height_map, biome_settings, m_scatter_seed_world_props);
   for (auto& tree_pass : m_trees) {
+    tree_pass->assign_anchored_trees(m_anchored_trees);
     tree_pass->configure(height_map, biome_settings, runtime_world_props);
   }
   m_firecamp->configure(height_map, biome_settings, runtime_world_props);
@@ -134,6 +135,17 @@ void TerrainScatterManager::refresh_runtime_world_props(
   m_cursed_gold_vein->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_abandoned_home->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_statue->configure(*m_height_map, m_biome_settings, runtime_world_props);
+}
+
+void TerrainScatterManager::set_anchored_trees(const std::vector<AnchoredTree>& trees) {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  m_anchored_trees = trees;
+  if (m_height_map == nullptr) {
+    return;
+  }
+  for (auto& tree_pass : m_trees) {
+    tree_pass->set_anchored_trees(m_anchored_trees);
+  }
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {

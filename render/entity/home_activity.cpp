@@ -29,7 +29,7 @@ constexpr float k_pi = 3.14159265F;
 constexpr float k_tau = 6.2831853F;
 
 constexpr float k_hearth_period = 190.0F;
-constexpr float k_hearth_duty = 0.46F;
+constexpr float k_hearth_duty = 0.56F;
 constexpr float k_hearth_ramp = 9.0F;
 
 auto anchors() -> std::array<HomeSmokeAnchor, 2>& {
@@ -128,7 +128,7 @@ void HomeActivity::begin_frame(Engine::Core::World* snapshot,
       quality != GraphicsQuality::Low && quality != GraphicsQuality::Medium;
   remaining_plumes = max_plumes;
   remaining_actors = actors_allowed ? (max_plumes >= 32 ? 10 : 6) : 0;
-  remaining_ambient_actors = actors_allowed ? (max_plumes >= 32 ? 28 : 16) : 0;
+  remaining_ambient_actors = actors_allowed ? (max_plumes >= 32 ? 48 : 28) : 0;
   homes.clear();
   if (snapshot == nullptr || max_plumes == 0) {
     return;
@@ -234,7 +234,7 @@ auto HomeActivity::doorstep_plan(std::uint64_t id, float time) const -> Doorstep
   const auto cycle = static_cast<std::uint32_t>(std::floor(shifted / period));
   const float phase = shifted - (static_cast<float>(cycle) * period);
   const auto turn = mix(seed ^ mix(cycle * 0x27d4eb2fU));
-  if (roll(turn, 1U) >= 0.58F) {
+  if (roll(turn, 1U) >= 0.72F) {
     return visit;
   }
   visit.activity = static_cast<DoorstepActivity>(

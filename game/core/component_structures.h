@@ -53,12 +53,17 @@ public:
   Game::Units::TroopType product_type{Game::Units::TroopType::Archer};
   float rally_x{0.0F}, rally_z{0.0F};
   bool rally_set{false};
+  bool rally_default{false};
   int villager_cost{1};
   int manpower_available{0};
 
   int manpower_ceiling{0};
   bool reserve_short{false};
   std::vector<Game::Units::TroopType> production_queue;
+
+  bool assembly_cached{false};
+  float assembly_x{0.0F};
+  float assembly_z{0.0F};
 
   [[nodiscard]] auto manpower_limit() const -> int {
 

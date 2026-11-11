@@ -173,8 +173,18 @@ auto node_on_the_ground(const AISnapshot& snapshot,
   return found;
 }
 
+auto site_is_workable(const AISnapshot& snapshot,
+                      const ConstructionLedger& ledger,
+                      const char* building_type,
+                      float world_x,
+                      float world_z) -> bool {
+  return !ledger.site_was_abandoned(world_x, world_z, snapshot.game_time) &&
+         builders_can_reach_site(snapshot, building_type, world_x, world_z);
+}
+
 auto find_free_site(const AISnapshot& snapshot,
                     const AIContext& context,
+                    const ConstructionLedger& ledger,
                     const char* building_type,
                     int& construction_counter) -> ResolvedSite {
   constexpr int k_site_search_attempts = 24;
@@ -193,7 +203,9 @@ auto find_free_site(const AISnapshot& snapshot,
           context, building_type, construction_counter + attempt);
       const float candidate_x = context.base_pos_x + offset.x();
       const float candidate_z = context.base_pos_z + offset.z();
-      if (!site_is_free(snapshot, building_type, candidate_x, candidate_z)) {
+      if (!site_is_free(snapshot, building_type, candidate_x, candidate_z) ||
+          !site_is_workable(
+              snapshot, ledger, building_type, candidate_x, candidate_z)) {
         continue;
       }
       if (context.strategy_config.posture == AIPosture::Garrison && snapshot.has_ward &&

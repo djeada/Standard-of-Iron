@@ -1,13 +1,24 @@
 #include "app/session/environment_runtime.h"
 
+#include <QMatrix4x4>
+
+#include <array>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
 #include "app/audio/weather_audio.h"
+#include "game/core/component.h"
 #include "game/core/event_manager.h"
+#include "game/core/world.h"
 #include "game/map/environment_lighting.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/rain_manager.h"
+#include "render/entity/home_renderer_common.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
+#include "render/ground/tree_renderer.h"
 #include "render/scene_renderer.h"
 
 namespace App::Session {
@@ -86,6 +97,91 @@ void EnvironmentRuntime::capture_into(Game::Systems::LevelSnapshot& level) const
   }
 }
 
+namespace {
+
+struct LocalTree {
+  float x;
+  float z;
+  float scale;
+  float y{0.0F};
+};
+
+constexpr std::array<LocalTree, 2> k_punic_barracks_palms{
+    {{1.96F, 1.66F, 0.42F}, {-1.86F, -0.50F, 0.50F}}};
+constexpr LocalTree k_punic_roof_cypress{0.62F, 0.62F, 0.17F, 1.33F};
+constexpr int k_punic_light_well_variant = 4;
+
+auto building_is_standing(const Engine::Core::UnitComponent& unit) -> bool {
+  return unit.health > 0;
+}
+
+void anchor(std::vector<Render::GL::AnchoredTree>& out,
+            const Engine::Core::TransformComponent& transform,
+            const LocalTree& local,
+            Game::Map::TreeSpecies species,
+            std::uint32_t seed) {
+  QMatrix4x4 model;
+  model.translate(transform.position.x, transform.position.y, transform.position.z);
+  model.rotate(transform.rotation.y, 0.0F, 1.0F, 0.0F);
+  model.scale(transform.scale.x, transform.scale.y, transform.scale.z);
+  const QVector3D world = model.map(QVector3D(local.x, local.y, local.z));
+  const float rotation = static_cast<float>(seed % 360U);
+  out.push_back(Render::GL::AnchoredTree{.species = species,
+                                         .position = world,
+                                         .scale = local.scale * transform.scale.y,
+                                         .rotation = rotation,
+                                         .seed = seed,
+                                         .grounded = local.y <= 0.0F});
+}
+
+auto collect_building_trees(Game::Session::SessionContext& session)
+    -> std::vector<Render::GL::AnchoredTree> {
+  std::vector<Render::GL::AnchoredTree> trees;
+  auto& world = session.world();
+  const auto& biome = session.terrain().biome_settings();
+  const bool cold = biome.ground_type == Game::Map::GroundType::AlpineMix ||
+                    biome.snow_coverage >= 0.30F;
+  for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
+    if (unit.nation_id != Game::Systems::NationID::Carthage ||
+        !building_is_standing(unit)) {
+      continue;
+    }
+    const bool barracks = unit.spawn_type == Game::Units::SpawnType::Barracks;
+    const bool home = unit.spawn_type == Game::Units::SpawnType::Home;
+    if (!barracks && !home) {
+      continue;
+    }
+    const auto* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+    if (transform == nullptr) {
+      continue;
+    }
+    const auto id = static_cast<std::uint32_t>(entity_id);
+    if (barracks) {
+      std::uint32_t salt = 0;
+      for (const LocalTree& palm : k_punic_barracks_palms) {
+        anchor(trees,
+               *transform,
+               palm,
+               cold ? Game::Map::TreeSpecies::Pine : Game::Map::TreeSpecies::Palm,
+               id * 2654435761U + (++salt));
+      }
+      continue;
+    }
+    const auto seed = Render::GL::home_placement_seed(
+        transform->position.x, transform->position.z, id);
+    if (Render::GL::home_visual_variant(seed) == k_punic_light_well_variant) {
+      anchor(trees,
+             *transform,
+             k_punic_roof_cypress,
+             Game::Map::TreeSpecies::Cypress,
+             seed);
+    }
+  }
+  return trees;
+}
+
+} // namespace
+
 void EnvironmentRuntime::reset_ambient() {
   m_ambient = std::make_unique<AmbientStateManager>();
   Engine::Core::EventManager::instance().publish(Engine::Core::AmbientStateChangedEvent(
@@ -102,13 +198,19 @@ void EnvironmentRuntime::sync_scatter_world_props(
   }
 
   auto const revision = terrain_service.world_props_revision();
-  if (revision == m_last_world_props_revision) {
-    return;
+  if (revision != m_last_world_props_revision) {
+    scatter->set_world_view(Render::WorldView::of(session));
+    scatter->refresh_runtime_world_props(terrain_service.world_props());
+    m_last_world_props_revision = revision;
   }
 
-  scatter->set_world_view(Render::WorldView::of(session));
-  scatter->refresh_runtime_world_props(terrain_service.world_props());
-  m_last_world_props_revision = revision;
+  std::vector<Render::GL::AnchoredTree> trees = collect_building_trees(session);
+  if (!m_anchored_trees_synced || trees != m_anchored_trees) {
+    scatter->set_world_view(Render::WorldView::of(session));
+    scatter->set_anchored_trees(trees);
+    m_anchored_trees = std::move(trees);
+    m_anchored_trees_synced = true;
+  }
 }
 
 void EnvironmentRuntime::release() {

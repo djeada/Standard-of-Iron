@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -19,6 +20,17 @@ struct TreeScatterProfile;
 namespace Render::GL {
 class Renderer;
 
+struct AnchoredTree {
+  Game::Map::TreeSpecies species{Game::Map::TreeSpecies::Olive};
+  QVector3D position{};
+  float scale{1.0F};
+  float rotation{0.0F};
+  std::uint32_t seed{0};
+  bool grounded{true};
+
+  auto operator==(const AnchoredTree&) const -> bool = default;
+};
+
 class TreeRenderer : public ScatterRendererBase<TreeInstanceGpu, FoliageBatchParams> {
 public:
   explicit TreeRenderer(Game::Map::TreeSpecies species);
@@ -29,6 +41,9 @@ public:
                  const std::vector<Game::Map::WorldProp>& world_props = {});
 
   void refresh_world_props(const std::vector<Game::Map::WorldProp>& world_props);
+
+  void assign_anchored_trees(const std::vector<AnchoredTree>& trees);
+  void set_anchored_trees(const std::vector<AnchoredTree>& trees);
 
   void set_light_direction(const QVector3D& dir) override;
 
@@ -45,10 +60,12 @@ public:
 private:
   void rebuild_instances();
   void append_world_prop_trees();
+  void append_anchored_trees();
 
   Game::Map::TreeSpecies m_species;
   const Render::Ground::TreeScatterProfile* m_profile;
   std::shared_ptr<const Render::Ground::GroundEcologyField> m_ecology;
+  std::vector<AnchoredTree> m_anchored;
 };
 
 } // namespace Render::GL

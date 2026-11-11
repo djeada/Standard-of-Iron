@@ -9,5 +9,6 @@ namespace Render::GL::Roman {
 void register_barracks_renderer(EntityRendererRegistry& registry);
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc;
+auto build_barracks_grounds_desc(BuildingState state) -> BuildingArchetypeDesc;
 
 } // namespace Render::GL::Roman

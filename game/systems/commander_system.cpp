@@ -11,12 +11,14 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "healing_rules.h"
+#include "nation_registry.h"
 #include "owner_registry.h"
 #include "player_feedback.h"
 #include "systems/economy/nation_collapse_service.h"
 #include "systems/movement/command_service.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
+#include "util/asset_text.h"
 
 namespace Game::Systems {
 
@@ -252,6 +254,17 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
   }
 }
 
+auto fallen_host_name(const Game::Session::AmbientServices& services,
+                      int owner_id) -> QString {
+  if (services.nations != nullptr) {
+    const auto* nation = services.nations->get_nation_for_player(owner_id);
+    if (nation != nullptr && !nation->display_name.empty()) {
+      return Game::Util::tr_asset(Game::Util::k_nations_context, nation->display_name);
+    }
+  }
+  return QString::fromStdString(services.owners->get_owner_name(owner_id));
+}
+
 void collapse_nation_if_leaderless(Engine::Core::World& world, int owner_id) {
   if (NationCollapse::has_living_commander(world, owner_id)) {
     return;
@@ -260,8 +273,9 @@ void collapse_nation_if_leaderless(Engine::Core::World& world, int owner_id) {
     return;
   }
 
-  const auto& owners = *Game::Session::services_for(world).owners;
-  const QString name = QString::fromStdString(owners.get_owner_name(owner_id));
+  const auto& services = Game::Session::services_for(world);
+  const auto& owners = *services.owners;
+  const QString name = fallen_host_name(services, owner_id);
   Engine::Core::EventManager::instance().publish(Engine::Core::MissionAnnouncementEvent(
       owner_id == owners.get_local_player_id()
           ? QCoreApplication::translate(

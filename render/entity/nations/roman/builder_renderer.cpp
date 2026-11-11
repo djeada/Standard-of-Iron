@@ -1126,6 +1126,7 @@ void register_civilian_rig_for_nation() {
   rig.spec = CivilianRenderer::make_visual_spec();
   rig.idle = roman_civilian_idle_archetype();
   rig.working = roman_builder_sickle_unit_archetype();
+  rig.armed = roman_civilian_cudgel_unit_archetype();
   rig.fill_variant = &CivilianRenderer::fill_ambient_variant;
   register_nation_civilian_rig(false, rig);
 }

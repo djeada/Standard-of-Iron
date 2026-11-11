@@ -132,19 +132,19 @@ TestCase {
         return [{
                 "tag": "720p",
                 "height": 720,
-                "expected": 184
+                "expected": 196
             }, {
                 "tag": "1080p",
                 "height": 1080,
-                "expected": 224
+                "expected": 196
             }, {
                 "tag": "1440p",
                 "height": 1440,
-                "expected": 224
+                "expected": 206
             }, {
                 "tag": "tiny",
                 "height": 480,
-                "expected": 184
+                "expected": 196
             }];
     }
 
@@ -175,6 +175,15 @@ TestCase {
         var barHeight = Metrics.bottomBarHeight(data.height, false);
         verify(barHeight <= data.height * 0.28, "the bottom bar ate more than a quarter of the battlefield at " + data.tag + ", it was " + barHeight);
         verify(barHeight >= Metrics.commandButtonSize * 2 + Metrics.controlHeight, "the bottom bar is too short to seat two labelled command rows and their mode banner at " + data.tag + ", it was " + barHeight);
+    }
+
+    function test_the_rts_bar_borrows_height_for_a_recruit_grid_without_eating_the_screen() {
+        var base = Metrics.bottomBarHeight(1080, false);
+        var grown = Metrics.grownBottomBarHeight(1080, base, Metrics.rtsBottomBarProductionExtra);
+        compare(grown, base + Metrics.rtsBottomBarProductionExtra, "a recruit grid should get its extra rows at 1080p");
+        compare(Metrics.grownBottomBarHeight(1080, base, 0), base, "no extra height was asked for");
+        var small = Metrics.bottomBarHeight(480, false);
+        compare(Metrics.grownBottomBarHeight(480, small, 400), small, "a tiny window must not hand the battlefield to the bar");
     }
 
     function test_commander_mode_keeps_a_slim_bar() {

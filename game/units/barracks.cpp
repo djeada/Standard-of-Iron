@@ -99,6 +99,7 @@ void Barracks::init(const SpawnParams& params) {
       prod->rally_x = m_t->position.x + 4.0F;
       prod->rally_z = m_t->position.z + 2.0F;
       prod->rally_set = true;
+      prod->rally_default = true;
 
       const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
           nation_id, prod->product_type);

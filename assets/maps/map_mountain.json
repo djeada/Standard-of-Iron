@@ -26,7 +26,7 @@
   "environment": {
     "start_time": 9.0,
     "time_mode": "continuous",
-    "day_length_seconds": 2400.0,
+    "day_length_seconds": 4800.0,
     "lighting_profile": "alpine_clear"
   },
   "biome": {

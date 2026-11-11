@@ -20,6 +20,7 @@ struct NationCivilianRig {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   Render::Creature::ArchetypeId idle{Render::Creature::k_invalid_archetype};
   Render::Creature::ArchetypeId working{Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId armed{Render::Creature::k_invalid_archetype};
   void (*fill_variant)(const DrawContext& ctx,
                        std::uint32_t seed,
                        HumanoidVariant& out){nullptr};

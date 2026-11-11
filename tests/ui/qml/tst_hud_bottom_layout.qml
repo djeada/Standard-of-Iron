@@ -68,14 +68,74 @@ TestCase {
         };
     }
 
-    function test_the_three_zones_are_equally_wide_at_720p() {
+    QtObject {
+        id: barracksProduction
+
+        function has_selected_type(type) {
+            return type === "barracks";
+        }
+
+        function selected_state() {
+            return {
+                "has_barracks": true,
+                "produced_count": 0,
+                "max_units": 140,
+                "queue_size": 0,
+                "in_progress": false,
+                "production_queue": [],
+                "product_type": "",
+                "manpower_available": 102,
+                "build_time": 0,
+                "time_remaining": 0,
+                "nation_id": "roman_republic"
+            };
+        }
+
+        function unit_info(unitType, nationId) {
+            return {
+                "cost": 10,
+                "resource_costs": {},
+                "build_time": 5,
+                "display_name": unitType
+            };
+        }
+    }
+
+    function test_the_selection_and_order_zones_are_equal_thirds_at_720p() {
         var selection = named("selectionZone");
         var commands = named("commandDeck");
-        var production = named("productionZone");
         var expected = (panel.width - panel.spacing * 2) / 3;
-        var zones = [selection, commands, production];
+        var zones = [selection, commands];
         for (var i = 0; i < zones.length; ++i)
             verify(Math.abs(zones[i].width - expected) <= 1, zones[i].objectName + " is not an equal third: " + zones[i].width + " != " + expected);
+    }
+
+    function test_with_no_production_building_selected_the_right_third_is_left_to_the_battlefield() {
+        var production = named("productionZone");
+        verify(!production.visible, "the empty recruit box still takes the right third");
+        verify(!panel.production_open);
+        compare(panel.extra_height, 0, "the bar grew with nothing to recruit from");
+        verify(named("productionSpacer").visible, "the right third should be left empty for the battlefield");
+        var rightEdge = panel.width - Metrics.space24;
+        var middle = panel.height / 2;
+        verify(!panel.blocks_pointer(rightEdge, middle), "clicks in the collapsed right third must reach the 3D view");
+        var commands = named("commandDeck");
+        verify(panel.blocks_pointer(commands.x + commands.width / 2, commands.y + Metrics.space4), "the orders panel must still shield the world");
+        var selection = named("selectionZone");
+        verify(panel.blocks_pointer(selection.x + selection.width / 2, selection.y + selection.height / 2), "the selection panel must still shield the world");
+    }
+
+    function test_selecting_a_barracks_brings_the_recruit_panel_back() {
+        var production = named("productionZone");
+        production.production = barracksProduction;
+        tryCompare(production, "visible", true);
+        verify(panel.production_open);
+        compare(panel.extra_height, Metrics.rtsBottomBarProductionExtra, "the recruit grid needs its two rows back");
+        verify(!named("productionSpacer").visible, "the spacer should step aside for the recruit panel");
+        tryVerify(function () {
+                return Math.abs(production.width - named("commandDeck").width) <= 1;
+            }, 2000, "the recruit panel is not a full third");
+        verify(panel.blocks_pointer(production.x + production.width / 2, production.y + production.height / 2), "the recruit panel must shield the world");
     }
 
     function test_the_empty_specialist_hint_sits_on_its_own_backing() {

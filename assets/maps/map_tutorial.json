@@ -9,7 +9,13 @@
     "height": 96,
     "tile_size": 1.0
   },
-  "time_of_day": "morning",
+  "time_of_day": "day",
+  "environment": {
+    "start_time": 10.5,
+    "time_mode": "locked",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
   "biome": {
     "ground_type": "soil_fertile",
     "seed": 4471,

@@ -107,6 +107,13 @@ constexpr float k_tower_eave_y = 2.86F;
 
 constexpr float k_stub_wall_top = 0.66F;
 
+const QVector3D k_cookhouse_vent{0.86F, 2.17F, -0.64F};
+
+const BarracksGrounds k_grounds{.parade_centre = QVector3D(-2.86F, 0.0F, 0.10F),
+                                .parade_half_x = 0.92F,
+                                .parade_half_z = 1.30F,
+                                .smithy_centre = QVector3D(-0.30F, 0.0F, -2.24F)};
+
 inline auto mid(float a, float b) -> float {
   return (a + b) * 0.5F;
 }
@@ -979,6 +986,20 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   add_watchtower(desc, c, state);
   add_rampart(desc, c, state);
   add_drill_yard(desc, c, state);
+  if (state == BuildingState::Normal) {
+    desc.add_box(QVector3D(k_cookhouse_vent.x(),
+                           k_cookhouse_vent.y() - 0.10F,
+                           k_cookhouse_vent.z()),
+                 QVector3D(0.10F, 0.07F, 0.10F),
+                 c.limestone_dark,
+                 BuildingStateMask::Normal);
+    desc.add_box(QVector3D(k_cookhouse_vent.x(),
+                           k_cookhouse_vent.y() - 0.02F,
+                           k_cookhouse_vent.z()),
+                 QVector3D(0.13F, 0.015F, 0.13F),
+                 c.terracotta_dark,
+                 BuildingStateMask::Normal);
+  }
 
   if (state == BuildingState::Damaged) {
     add_rubble_field(desc,
@@ -1085,6 +1106,9 @@ void draw_barracks_ornaments(const DrawContext& p,
                              const QVector3D& team,
                              const BarracksFlagRenderer::ClothBannerResources* cloth) {
   RomanPalette const c = make_palette(team);
+  static const BuildingArchetypeSet& k_grounds_set =
+      building_archetype_set("roman_barracks_grounds");
+  submit_building_instance(out, p, k_grounds_set.for_state(resolve_building_state(p)));
   draw_stockpile_yard(p, out, unit, white, c);
   draw_vexillum(p, out, unit, white, c, cloth);
   draw_rally_flag(p, out, white, c, cloth);
@@ -1101,10 +1125,62 @@ const std::array<TorchMount, 4> k_torches{{
                .outward = QVector3D(0.0F, 0.0F, 1.0F)},
 }};
 
+const std::array<QVector3D, 1> k_smoke_vents{k_cookhouse_vent};
+
+const std::array<QVector3D, 1> k_sentry_left{QVector3D(-0.34F, 0.16F, 1.42F)};
+const std::array<QVector3D, 1> k_sentry_right{QVector3D(0.86F, 0.16F, 1.42F)};
+const std::array<QVector3D, 5> k_porter_route{QVector3D(-2.45F, 0.0F, 1.85F),
+                                              QVector3D(-1.20F, 0.0F, 2.05F),
+                                              QVector3D(0.26F, 0.0F, 1.95F),
+                                              QVector3D(0.26F, 0.16F, 1.40F),
+                                              QVector3D(0.26F, 0.16F, 0.80F)};
+const std::array<QVector3D, 4> k_stroll_route{QVector3D(2.40F, 0.0F, 2.20F),
+                                              QVector3D(-2.40F, 0.0F, 2.20F),
+                                              QVector3D(-2.40F, 0.0F, -2.20F),
+                                              QVector3D(2.40F, 0.0F, -2.20F)};
+const std::array<QVector3D, 1> k_rest_spot{QVector3D(1.95F, 0.0F, 1.90F)};
+const std::array<WalkSurface, 1> k_walk_surfaces{{
+    WalkSurface{
+        .min_x = -1.74F, .max_x = 1.74F, .min_z = -1.54F, .max_z = 1.54F, .top = 0.16F},
+}};
+const std::array<AmbientPerson, 5> k_people{{
+    AmbientPerson{.role = AmbientRole::Stand,
+                  .route = k_sentry_left,
+                  .facing = QVector3D(-0.34F, 0.4F, 3.2F)},
+    AmbientPerson{.role = AmbientRole::Stand,
+                  .route = k_sentry_right,
+                  .facing = QVector3D(0.86F, 0.4F, 3.2F)},
+    AmbientPerson{.role = AmbientRole::Porter,
+                  .route = k_porter_route,
+                  .facing = QVector3D(0.26F, 0.4F, -0.4F)},
+    AmbientPerson{.role = AmbientRole::Stroll,
+                  .route = k_stroll_route,
+                  .facing = QVector3D(0.0F, 0.4F, 3.0F),
+                  .linger = AmbientRole::Stand},
+    AmbientPerson{.role = AmbientRole::Squat,
+                  .route = k_rest_spot,
+                  .facing = QVector3D(1.2F, 0.3F, 2.6F)},
+}};
+
 } // namespace
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
   return build_barracks_desc_impl(state);
+}
+
+auto build_barracks_grounds_desc(BuildingState) -> BuildingArchetypeDesc {
+  RomanPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+  BuildingArchetypeDesc desc("roman_barracks_grounds");
+  add_barracks_grounds(desc,
+                       k_grounds,
+                       BarracksGroundsStyle{.stone = c.limestone,
+                                            .stone_dark = c.limestone_dark,
+                                            .timber = c.cedar,
+                                            .timber_dark = c.cedar_dark,
+                                            .roof = c.terracotta,
+                                            .roof_dark = c.terracotta_dark,
+                                            .team_cloth = c.dado});
+  return desc;
 }
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
@@ -1114,7 +1190,11 @@ void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
                              .archetype = &barracks_archetype,
                              .draw_ornaments = &draw_barracks_ornaments,
                              .selection = BuildingSelectionStyle{2.6F, 2.2F},
-                             .torches = k_torches});
+                             .torches = k_torches,
+                             .people = k_people,
+                             .walk_surfaces = k_walk_surfaces,
+                             .smoke_vents = k_smoke_vents,
+                             .grounds = &k_grounds});
 }
 
 } // namespace Render::GL::Roman

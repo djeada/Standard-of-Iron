@@ -8,6 +8,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/economy/civilian_delivery_system.h"
 #include "game/systems/economy/production_service.h"
+#include "game/systems/economy/recruitment_gate.h"
 #include "game/systems/movement/command_service.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
@@ -476,3 +477,97 @@ TEST(CivilianDeliverySystemTest, ACivilianTakenIntoTheBarracksGivesItsPopulation
 }
 
 } // namespace
+
+namespace {
+
+struct GateFixture {
+  Engine::Core::World world;
+  Engine::Core::Entity* barracks{nullptr};
+  Engine::Core::TransformComponent* barracks_transform{nullptr};
+  Engine::Core::ProductionComponent* barracks_prod{nullptr};
+
+  GateFixture() {
+    barracks = world.create_entity();
+    barracks_transform = barracks->add_component<Engine::Core::TransformComponent>();
+    auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
+    barracks_prod = barracks->add_component<Engine::Core::ProductionComponent>();
+    barracks_transform->position = {20.0F, 0.0F, 20.0F};
+    barracks_transform->rotation.y = 90.0F;
+    unit->spawn_type = Game::Units::SpawnType::Barracks;
+    unit->owner_id = 1;
+    barracks_prod->manpower_available = 0;
+  }
+
+  auto walking_civilian(const QVector3D& at) -> Engine::Core::EntityID {
+    auto* civilian = world.create_entity();
+    auto* transform = civilian->add_component<Engine::Core::TransformComponent>();
+    auto* unit = civilian->add_component<Engine::Core::UnitComponent>();
+    auto* delivery = civilian->add_component<Engine::Core::CivilianDeliveryComponent>();
+    auto* movement = civilian->add_component<Engine::Core::MovementComponent>();
+    transform->position = {at.x(), 0.0F, at.z()};
+    unit->spawn_type = Game::Units::SpawnType::Civilian;
+    unit->owner_id = 1;
+    delivery->target_barracks_id = barracks->get_id();
+    movement->engage_manual_move(at.x() + 6.0F, at.z());
+    return civilian->get_id();
+  }
+};
+
+} // namespace
+
+TEST(CivilianDeliverySystemTest,
+     AWalkingCivilianBrushingTheSideOfTheBarracksIsNotTakenIn) {
+  GateFixture f;
+  const auto gate = Game::Systems::barracks_gate(*f.barracks_transform);
+  const QVector3D side = QVector3D(20.0F, 0.0F, 20.0F) - gate.outward * 2.2F +
+                         QVector3D(gate.outward.z(), 0.0F, -gate.outward.x()) * 2.4F;
+  const auto id = f.walking_civilian(side);
+
+  Game::Systems::CivilianDeliverySystem system;
+  system.update(&f.world, 0.016F);
+
+  EXPECT_NE(f.world.get_entity(id), nullptr) << "civilians go in through the gate only";
+  EXPECT_EQ(f.barracks_prod->manpower_available, 0);
+}
+
+TEST(CivilianDeliverySystemTest, ACivilianAtTheGateStepsIn) {
+  GateFixture f;
+  const auto gate = Game::Systems::barracks_gate(*f.barracks_transform);
+  const auto id = f.walking_civilian(gate.position + gate.outward * 0.3F);
+
+  Game::Systems::CivilianDeliverySystem system;
+  system.update(&f.world, 0.016F);
+
+  EXPECT_EQ(f.world.get_entity(id), nullptr);
+  EXPECT_EQ(f.barracks_prod->manpower_available,
+            Game::Systems::k_civilian_delivery_reserve_grant);
+}
+
+TEST(RecruitmentGateTest, TheGateFacesOutOfTheBarracksFront) {
+  Engine::Core::TransformComponent transform;
+  transform.position = {10.0F, 0.0F, -4.0F};
+  transform.rotation.y = 0.0F;
+  const auto gate = Game::Systems::barracks_gate(transform);
+  const auto body =
+      Game::Systems::BuildingCollisionRegistry::get_building_body("barracks");
+  EXPECT_NEAR(gate.outward.z(), 1.0F, 1e-4F);
+  EXPECT_GT(gate.position.z(), -4.0F + body.offset_z + body.depth * 0.5F)
+      << "the gate must lie outside the barracks body";
+
+  transform.rotation.y = 90.0F;
+  const auto turned = Game::Systems::barracks_gate(transform);
+  EXPECT_NEAR(turned.outward.x(), 1.0F, 1e-4F) << "the gate turns with the building";
+}
+
+TEST(RecruitmentGateTest, AssemblySlotsDoNotStack) {
+  Engine::Core::TransformComponent transform;
+  const auto gate = Game::Systems::barracks_gate(transform);
+  const QVector3D assembly = gate.position + gate.outward * 2.6F;
+  for (int a = 0; a < 6; ++a) {
+    for (int b = a + 1; b < 6; ++b) {
+      const QVector3D pa = Game::Systems::barracks_assembly_slot(assembly, gate, a);
+      const QVector3D pb = Game::Systems::barracks_assembly_slot(assembly, gate, b);
+      EXPECT_GT((pa - pb).length(), 1.0F) << a << " and " << b << " share a spot";
+    }
+  }
+}

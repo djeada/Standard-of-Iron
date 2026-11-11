@@ -572,6 +572,15 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
           data.builder_production.building_under_way = *raising;
         }
       }
+      if (!builder_prod->has_construction_site && builder_prod->has_active_fault() &&
+          builder_prod->fault == Engine::Core::BuilderTaskFault::Unreachable) {
+        if (const auto abandoned =
+                Game::Units::spawn_typeFromString(builder_prod->product_type);
+            abandoned.has_value() && (Game::Units::is_building_spawn(*abandoned) ||
+                                      Game::Units::is_siege_engine_spawn(*abandoned))) {
+          data.builder_production.gave_up_site_unreachable = true;
+        }
+      }
     }
 
     snapshot.friendly_units.push_back(std::move(data));

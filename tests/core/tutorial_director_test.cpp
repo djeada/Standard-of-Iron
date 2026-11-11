@@ -147,6 +147,36 @@ TEST(TutorialDirectorTest, StepsFollowTheTeachingOrderAndFinishOnVictory) {
   EXPECT_EQ(finished_signals, 1);
 }
 
+TEST(TutorialDirectorTest, AnEarlyVictoryFinishesTheTutorialInsteadOfStrandingIt) {
+  TutorialDirector director;
+  director.begin();
+  director.skip_step();
+  director.skip_step();
+  director.skip_step();
+  ASSERT_EQ(director.step(), TutorialStepId::GatherWood);
+
+  int finished_signals = 0;
+  QObject::connect(&director, &TutorialDirector::tutorial_finished, &director, [&] {
+    ++finished_signals;
+  });
+
+  TutorialObservation o = running();
+  o.victory = true;
+  director.advance(o, 0.2F);
+
+  EXPECT_TRUE(director.finished());
+  EXPECT_FALSE(director.active());
+  EXPECT_TRUE(director.step_complete());
+  EXPECT_EQ(director.step(), TutorialStepId::Assault);
+  EXPECT_EQ(finished_signals, 1);
+  for (const QVariant& entry : director.steps()) {
+    EXPECT_EQ(entry.toMap().value("state").toString(), QStringLiteral("complete"));
+  }
+
+  director.advance(o, 0.2F);
+  EXPECT_EQ(finished_signals, 1) << "a finished tutorial does not finish twice";
+}
+
 TEST(TutorialDirectorTest, HoldsTheMissionClockUntilTheDefendStep) {
   TutorialDirector director;
   EXPECT_FALSE(director.holds_mission_clock())

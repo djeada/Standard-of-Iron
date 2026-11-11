@@ -148,55 +148,43 @@ AbstractButton {
         onPressed: Design.UiSound.warning()
     }
 
+    readonly property color giltLine: Qt.rgba(Design.Theme.accent.r, Design.Theme.accent.g, Design.Theme.accent.b, 1)
+
     background: Rectangle {
         id: face
 
-        radius: Design.Metrics.radiusMedium
-
-        gradient: Gradient {
-            GradientStop {
-                position: 0
-                color: control.down ? Design.Theme.sheenBottom(face.color) : Design.Theme.sheenTop(face.color)
-            }
-
-            GradientStop {
-                position: 1
-                color: control.down ? face.color : Design.Theme.sheenBottom(face.color)
-            }
-        }
-
-        color: !control.interactive ? Design.Theme.surfaceDisabled : control.down ? Qt.darker(Design.Theme.panelLeather, 1.2) : (control.highlighted || control.hovered) ? Design.Theme.panelLeather : Design.Theme.panelIron
-        border.width: (control.showFocusRing || control.highlighted) ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-        border.color: control.showFocusRing ? Design.Theme.focus : control.stateColor
-
-        Rectangle {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.margins: Design.Metrics.borderThin
-            width: control.highlighted ? (control.tile ? Design.Metrics.space2 : Design.Metrics.space4) : 0
-            radius: Design.Metrics.radiusSmall
-            color: control.stateColor
-            visible: width > 0
-
-            Behavior on width  {
-                NumberAnimation {
-                    duration: Design.Motion.fast
-                    easing.type: Design.Motion.standardEasing
-                }
-            }
-        }
+        radius: Design.Metrics.radiusMedium + 1
+        color: !control.interactive ? Qt.rgba(1, 1, 1, 0.025) : control.down ? Qt.rgba(0, 0, 0, 0.35) : control.highlighted ? Qt.rgba(Design.Theme.accent.r, Design.Theme.accent.g, Design.Theme.accent.b, 0.20) : control.hovered ? Qt.rgba(1, 0.9, 0.7, 0.10) : Qt.rgba(1, 0.92, 0.78, 0.055)
+        border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
+        border.color: control.showFocusRing ? Design.Theme.focus : !control.interactive ? Qt.rgba(1, 1, 1, 0.05) : control.highlighted ? control.stateColor : control.hovered ? Qt.rgba(Design.Theme.accent.r, Design.Theme.accent.g, Design.Theme.accent.b, 0.55) : Qt.rgba(1, 0.9, 0.7, 0.11)
 
         Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.leftMargin: face.radius + face.border.width
-            anchors.rightMargin: face.radius + face.border.width
-            anchors.topMargin: face.border.width
-            height: Design.Metrics.borderThin
-            color: Design.Theme.edgeHighlight
-            visible: control.interactive && !control.down
+            anchors.margins: 1
+            height: parent.height * 0.5
+            radius: face.radius
+            color: Qt.rgba(1, 1, 1, control.interactive && !control.down ? 0.035 : 0)
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.leftMargin: face.radius
+            anchors.rightMargin: face.radius
+            height: control.highlighted ? Design.A11y.scaled(3) : Design.A11y.scaled(2)
+            radius: height / 2
+            color: control.highlighted ? control.stateColor : control.giltLine
+            opacity: control.highlighted ? 1 : control.hovered && control.interactive ? 0.75 : 0
+            visible: opacity > 0
+
+            Behavior on opacity  {
+                NumberAnimation {
+                    duration: Design.Motion.fast
+                }
+            }
         }
 
         Behavior on color  {
@@ -225,7 +213,7 @@ AbstractButton {
 
             width: control.tile ? Math.round(Design.Metrics.iconMedium * 1.1) : control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : control.tightLabel ? Design.Metrics.iconSmall : Design.Metrics.iconMedium
             height: width
-            opacity: control.interactive ? 1 : 0.45
+            opacity: control.interactive ? 1 : 0.32
 
             Image {
                 id: art

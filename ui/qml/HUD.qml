@@ -99,8 +99,14 @@ Item {
             return false;
         if (y < hud.top_panel_height)
             return true;
-        if (y > (hud.height - hud.bottom_panel_height))
+        if (y > (hud.height - hud.bottom_panel_height)) {
+            var bottomHud = bottomPanelLoader.item;
+            if (bottomHud && bottomHud.blocks_pointer) {
+                var local = hud.mapToItem(bottomHud, x, y);
+                return bottomHud.blocks_pointer(local.x, local.y);
+            }
             return true;
+        }
         if (hud.blocks_edge_scroll(x, y))
             return true;
         var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach, allyAppeals, objectivesCard, hudVictory.strip];
@@ -264,7 +270,10 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked ? 0 : Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
+        readonly property int baseHeight: Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
+        readonly property int extraHeight: (!hud.commander_rpg_mode && bottomPanelLoader.item && bottomPanelLoader.item.extra_height !== undefined) ? bottomPanelLoader.item.extra_height : 0
+
+        height: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked ? 0 : Math.round(Design.Metrics.grownBottomBarHeight(parent.height, bottomPanel.baseHeight, bottomPanel.extraHeight))
         visible: height > 0
         clip: true
 

@@ -5351,6 +5351,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Move troops next to a river raft</source>
         <translation>Birlikleri bir nehir salının yanına götür</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Kışlaya git</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5685,14 +5689,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation> [Sen]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>Sürdür</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Duraklat</translation>
-    </message>
-    <message>
         <source>Battle speed %1</source>
         <translation>Savaş hızı %1</translation>
     </message>
@@ -5803,6 +5799,18 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>%1%</source>
         <translation>%%1</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>Devam et (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>Duraklat (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>Hızlandır %1, yavaşlat %2</translation>
     </message>
 </context>
 <context>

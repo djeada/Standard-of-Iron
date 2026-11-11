@@ -24,4 +24,8 @@ void submit_temple_incense(const DrawContext& ctx,
                            ISubmitter& out,
                            std::span<const QVector3D> vents);
 
+void submit_cookfire_smoke(const DrawContext& ctx,
+                           ISubmitter& out,
+                           std::span<const QVector3D> vents);
+
 } // namespace Render::GL

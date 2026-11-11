@@ -235,6 +235,13 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                        QVector3D(0.135F, 0.03F, 0.135F),
                        c.brick_dark,
                        23);
+    add_square_parapet(add_part,
+                       merlon_y + (damaged ? 0.26F : 0.30F),
+                       parapet_half,
+                       damaged ? 3 : 4,
+                       QVector3D(0.066F, 0.06F, 0.066F),
+                       c.stone_light,
+                       23);
 
     if (!damaged) {
 
@@ -427,7 +434,10 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
                                  .selection = BuildingSelectionStyle{1.6F, 1.6F},
                                  .night_brazier_deck_y = 2.68F,
                                  .night_brazier_offset = 0.60F,
-                                 .torches = k_torches});
+                                 .torches = k_torches,
+                                 .lookout_deck_top = 2.57F,
+                                 .lookout_deck_top_damaged = 2.25F,
+                                 .lookout_walk_half = 0.40F});
 }
 
 } // namespace Render::GL::Carthage

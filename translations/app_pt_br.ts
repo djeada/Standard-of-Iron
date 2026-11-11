@@ -5353,6 +5353,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Move troops next to a river raft</source>
         <translation>Mova tropas para perto de uma jangada do rio</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Ir aos quartéis</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5679,14 +5683,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation> [Você]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>Continuar</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pausar</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Seguir a seleção com a câmera</translation>
     </message>
@@ -5805,6 +5801,18 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>%1%</source>
         <translation>%1%</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>Retomar (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>Pausar (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>Acelerar %1, desacelerar %2</translation>
     </message>
 </context>
 <context>

@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 
 #include "minimap_utils.h"
 
@@ -13,6 +14,8 @@ namespace {
 constexpr int k_fog_r = 45;
 constexpr int k_fog_g = 38;
 constexpr int k_fog_b = 30;
+constexpr int k_outside_map = -1;
+constexpr int k_alpha_outside = 150;
 constexpr int k_alpha_unseen = 255;
 constexpr int k_alpha_explored = 96;
 constexpr int k_alpha_visible = 0;
@@ -178,6 +181,13 @@ auto MinimapFogCompositor::compose_pixel(
     QRgb original,
     const VisibilityService::Snapshot& snapshot) const -> QRgb {
   const LookupEntry& sample = m_lookup_entries[pixel_index];
+  if (sample.idx00 == k_outside_map) {
+    const int keep = 255 - k_alpha_outside;
+    return qRgba((qRed(original) * keep + k_fog_r * k_alpha_outside) / 255,
+                 (qGreen(original) * keep + k_fog_g * k_alpha_outside) / 255,
+                 (qBlue(original) * keep + k_fog_b * k_alpha_outside) / 255,
+                 255);
+  }
   const int a00 =
       alpha_from_cell(snapshot.cells[static_cast<std::size_t>(sample.idx00)]);
   const int a10 =
@@ -286,6 +296,14 @@ void MinimapFogCompositor::rebuild_lookup(int vis_width,
       const int vy1 = std::clamp(base_vy + 1, 0, vis_height - 1);
 
       LookupEntry& entry = m_lookup_entries[lookup_index++];
+      if (vis_x < 0.0F || vis_y < 0.0F || vis_x > static_cast<float>(vis_width) ||
+          vis_y > static_cast<float>(vis_height)) {
+        entry = LookupEntry{.idx00 = k_outside_map,
+                            .idx10 = k_outside_map,
+                            .idx01 = k_outside_map,
+                            .idx11 = k_outside_map};
+        continue;
+      }
       entry.idx00 = vy0 * vis_width + vx0;
       entry.idx10 = vy0 * vis_width + vx1;
       entry.idx01 = vy1 * vis_width + vx0;
@@ -303,6 +321,9 @@ void MinimapFogCompositor::rebuild_lookup(int vis_width,
       static_cast<std::size_t>(vis_width) * static_cast<std::size_t>(vis_height);
   m_reverse_offsets.assign(visibility_cell_count + 1U, 0U);
   for (const LookupEntry& entry : m_lookup_entries) {
+    if (entry.idx00 == k_outside_map) {
+      continue;
+    }
     const std::array<int, 4> ids{entry.idx00, entry.idx10, entry.idx01, entry.idx11};
     for (std::size_t i = 0; i < ids.size(); ++i) {
       bool duplicate = false;
@@ -324,6 +345,9 @@ void MinimapFogCompositor::rebuild_lookup(int vis_width,
        pixel < static_cast<std::uint32_t>(m_lookup_entries.size());
        ++pixel) {
     const LookupEntry& entry = m_lookup_entries[pixel];
+    if (entry.idx00 == k_outside_map) {
+      continue;
+    }
     const std::array<int, 4> ids{entry.idx00, entry.idx10, entry.idx01, entry.idx11};
     for (std::size_t i = 0; i < ids.size(); ++i) {
       bool duplicate = false;

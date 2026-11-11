@@ -313,6 +313,7 @@
             "product_type": "archer",
             "queue": [
             ],
+            "rally_default": false,
             "rally_set": false,
             "rally_x": 0,
             "rally_z": 0,
@@ -785,6 +786,7 @@
             "product_type": "archer",
             "queue": [
             ],
+            "rally_default": true,
             "rally_set": true,
             "rally_x": 1,
             "rally_z": 1.5,
@@ -1256,6 +1258,7 @@
             "product_type": "archer",
             "queue": [
             ],
+            "rally_default": true,
             "rally_set": true,
             "rally_x": 1,
             "rally_z": 1.5,

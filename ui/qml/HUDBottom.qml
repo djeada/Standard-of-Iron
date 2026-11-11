@@ -5,7 +5,7 @@ import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import StandardOfIron.Core 1.0
 
-RowLayout {
+Item {
     id: bottomRoot
 
     property string current_command_mode: "normal"
@@ -17,6 +17,24 @@ RowLayout {
 
     readonly property int zoneMinimumWidth: Design.A11y.scaled(170)
     readonly property int zoneWidth: Math.max(bottomRoot.zoneMinimumWidth, Math.floor((bottomRoot.width - bottomRoot.spacing * 2) / 3))
+
+    readonly property bool production_open: productionZone.has_content
+    readonly property bool production_shown: productionZone.visible
+
+    readonly property int extra_height: Math.max(bottomRoot.production_open ? Design.Metrics.rtsBottomBarProductionExtra : 0, commandDeck.contextualRows > 1 ? Design.Metrics.commandButtonSize + Design.Metrics.space4 : 0)
+
+    function blocks_pointer(px, py) {
+        var zones = [selectionZone, commandDeck, productionZone];
+        for (var i = 0; i < zones.length; ++i) {
+            var zone = zones[i];
+            if (!zone.visible || zone.width <= 0 || zone.height <= 0)
+                continue;
+            var local = zone.mapFromItem(bottomRoot, px, py);
+            if (local.x >= 0 && local.y >= 0 && local.x < zone.width && local.y < zone.height)
+                return true;
+        }
+        return false;
+    }
 
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
@@ -649,421 +667,466 @@ RowLayout {
     anchors.fill: parent
     anchors.leftMargin: Design.Metrics.hudZoneMargin
     anchors.rightMargin: Design.Metrics.hudZoneMargin
-    anchors.topMargin: Design.Metrics.space4
+    anchors.topMargin: Design.Metrics.space12
     anchors.bottomMargin: Design.Metrics.space8
-    spacing: Design.Metrics.space8
+    readonly property int spacing: Design.Metrics.space16
+    readonly property real consoleRight: productionZone.visible ? zones.width : commandDeck.x + commandDeck.width
 
-    Connections {
-        function onCursor_mode_changed() {
-            bottomRoot.update_action_states();
-        }
+    HudConsolePlate {
+        id: consolePlate
 
-        function onSelected_units_changed() {
-            bottomRoot.refresh_selection();
-        }
-
-        target: bottomRoot.game_ready() ? game : null
+        objectName: "hudConsolePlate"
+        x: -Design.Metrics.hudZoneMargin
+        y: -Design.Metrics.space12
+        width: bottomRoot.consoleRight + Design.Metrics.hudZoneMargin + (productionZone.visible ? Design.Metrics.hudZoneMargin : Design.Metrics.space16)
+        height: bottomRoot.height + Design.Metrics.space12 + Design.Metrics.space8
+        reachesRightEdge: productionZone.visible
+        dividers: productionZone.visible ? [selectionZone.x + selectionZone.width + bottomRoot.spacing / 2 + Design.Metrics.hudZoneMargin, commandDeck.x + commandDeck.width + bottomRoot.spacing / 2 + Design.Metrics.hudZoneMargin] : [selectionZone.x + selectionZone.width + bottomRoot.spacing / 2 + Design.Metrics.hudZoneMargin]
     }
 
-    Connections {
-        function onModelReset() {
-            bottomRoot.refresh_selection();
-        }
+    RowLayout {
+        id: zones
 
-        function onDataChanged() {
-            bottomRoot.refresh_selection();
-        }
+        anchors.fill: parent
+        spacing: bottomRoot.spacing
 
-        ignoreUnknownSignals: true
-        target: bottomRoot.game_ready() ? game.selected_units_model : null
-    }
-
-    Timer {
-        interval: 500
-        repeat: true
-        running: bottomRoot.aura_is_ticking()
-        onTriggered: bottomRoot.update_action_states()
-    }
-
-    Connections {
-        target: (typeof game !== "undefined" && game) ? game.orders : null
-        ignoreUnknownSignals: true
-
-        function onContext_actions_changed() {
-            if (bottomRoot.selection_count > 0 && bottomRoot.game_ready())
+        Connections {
+            function onCursor_mode_changed() {
                 bottomRoot.update_action_states();
-        }
-    }
+            }
 
-    Connections {
-        function onPlacing_construction_changed() {
-            bottomRoot.update_action_states();
-        }
+            function onSelected_units_changed() {
+                bottomRoot.refresh_selection();
+            }
 
-        function onPlacing_formation_changed() {
-            bottomRoot.update_action_states();
+            target: bottomRoot.game_ready() ? game : null
         }
 
-        target: bottomRoot.game_ready() ? game.placement : null
-    }
+        Connections {
+            function onModelReset() {
+                bottomRoot.refresh_selection();
+            }
 
-    Design.IronSelectionSummary {
-        objectName: "selectionZone"
+            function onDataChanged() {
+                bottomRoot.refresh_selection();
+            }
 
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.preferredWidth: bottomRoot.zoneWidth
-        Layout.minimumWidth: bottomRoot.zoneMinimumWidth
-
-        model: bottomRoot.game_ready() ? game.selected_units_model : null
-        groups: bottomRoot.selection_groups
-        unitCount: bottomRoot.selection_count
-        inspected: bottomRoot.game_ready() && game.activity ? game.activity.inspect_target : null
-        profileLookup: bottomRoot.game_ready() && game.activity && game.activity.unit_profile ? game.activity.unit_profile : null
-        onProfileRequested: function (unitType, nation) {
-            bottomRoot.unit_profile_requested(unitType, nation, true);
+            ignoreUnknownSignals: true
+            target: bottomRoot.game_ready() ? game.selected_units_model : null
         }
-        onAllyCallRequested: function (entityId) {
-            if (bottomRoot.game_ready() && game.production && game.production.call_allies)
-                game.production.call_allies(entityId);
+
+        Timer {
+            interval: 500
+            repeat: true
+            running: bottomRoot.aura_is_ticking()
+            onTriggered: bottomRoot.update_action_states()
         }
-        onUnitActivated: function (unitId) {
-            if (bottomRoot.game_ready() && game.orders.select_unit_by_id)
-                game.orders.select_unit_by_id(unitId);
+
+        Connections {
+            target: (typeof game !== "undefined" && game) ? game.orders : null
+            ignoreUnknownSignals: true
+
+            function onContext_actions_changed() {
+                if (bottomRoot.selection_count > 0 && bottomRoot.game_ready())
+                    bottomRoot.update_action_states();
+            }
         }
-        onGroupActivated: function (unitType) {
-            if (bottomRoot.game_ready() && game.orders.select_by_type)
-                game.orders.select_by_type(unitType);
+
+        Connections {
+            function onPlacing_construction_changed() {
+                bottomRoot.update_action_states();
+            }
+
+            function onPlacing_formation_changed() {
+                bottomRoot.update_action_states();
+            }
+
+            target: bottomRoot.game_ready() ? game.placement : null
         }
-        onFocusRequested: function (unitId) {
-            if (!bottomRoot.game_ready() || !game.camera)
-                return;
-            if (unitId !== null && unitId !== undefined && game.camera.center_on_unit)
-                game.camera.center_on_unit(unitId);
-            else if (game.camera.center_on_selection)
-                game.camera.center_on_selection();
-        }
-    }
 
-    ColumnLayout {
-        id: commandDeck
+        Design.IronSelectionSummary {
+            id: selectionZone
 
-        readonly property int commandColumns: Math.max(1, bottomRoot.primaryCommands.length)
-        readonly property int commandCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.commandColumns - 1)) / commandDeck.commandColumns))
-        readonly property int contextualRows: Math.max(1, Math.ceil(bottomRoot.contextualCommands.length / commandDeck.commandColumns))
-        readonly property int contextualCardHeight: Math.max(Design.A11y.scaled(24), Math.min(Design.Metrics.commandButtonSize, Math.floor((contextualCommandArea.height - Design.Metrics.space4 * (commandDeck.contextualRows - 1)) / commandDeck.contextualRows)))
-
-        objectName: "commandDeck"
-
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.preferredWidth: bottomRoot.zoneWidth
-        Layout.minimumWidth: bottomRoot.zoneMinimumWidth
-        spacing: Design.Metrics.space4
-
-        Design.IronPanel {
-            id: commandBanner
-
-            readonly property var target: bottomRoot.game_ready() && game.activity ? game.activity.selection_target : null
-            readonly property bool showTarget: bottomRoot.selection_count > 0 && bottomRoot.current_command_mode === "normal" && !!target && target.valid === true
-
-            Layout.fillWidth: true
-            objectName: "commandModeBanner"
-
-            Layout.preferredHeight: Design.Metrics.controlHeight
+            objectName: "selectionZone"
+            color: "transparent"
+            gradient: null
+            border.width: 0
+            castsShadow: false
             contentPadding: 0
-            raised: bottomRoot.current_command_mode !== "normal"
-            border.color: showTarget ? Design.Theme.danger : bottomRoot.banner_tone()
-            opacity: bottomRoot.has_movable_units || commandBanner.showTarget ? 1 : 0.85
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: Design.Metrics.space12
-                anchors.rightMargin: Design.Metrics.space12
-                visible: !commandBanner.showTarget
-                spacing: Design.Metrics.space8
+            Layout.fillWidth: false
+            Layout.fillHeight: true
+            Layout.preferredWidth: bottomRoot.zoneWidth
+            Layout.minimumWidth: bottomRoot.zoneMinimumWidth
 
-                Text {
-                    text: qsTr("ORDERS")
-                    color: bottomRoot.current_command_mode === "normal" ? Design.Theme.textSecondary : bottomRoot.banner_tone()
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.weight: Design.Typography.bold
-                    font.letterSpacing: Design.Typography.trackingWide
-                }
+            model: bottomRoot.game_ready() ? game.selected_units_model : null
+            groups: bottomRoot.selection_groups
+            unitCount: bottomRoot.selection_count
+            inspected: bottomRoot.game_ready() && game.activity ? game.activity.inspect_target : null
+            profileLookup: bottomRoot.game_ready() && game.activity && game.activity.unit_profile ? game.activity.unit_profile : null
+            onProfileRequested: function (unitType, nation) {
+                bottomRoot.unit_profile_requested(unitType, nation, true);
+            }
+            onAllyCallRequested: function (entityId) {
+                if (bottomRoot.game_ready() && game.production && game.production.call_allies)
+                    game.production.call_allies(entityId);
+            }
+            onUnitActivated: function (unitId) {
+                if (bottomRoot.game_ready() && game.orders.select_unit_by_id)
+                    game.orders.select_unit_by_id(unitId);
+            }
+            onGroupActivated: function (unitType) {
+                if (bottomRoot.game_ready() && game.orders.select_by_type)
+                    game.orders.select_by_type(unitType);
+            }
+            onFocusRequested: function (unitId) {
+                if (!bottomRoot.game_ready() || !game.camera)
+                    return;
+                if (unitId !== null && unitId !== undefined && game.camera.center_on_unit)
+                    game.camera.center_on_unit(unitId);
+                else if (game.camera.center_on_selection)
+                    game.camera.center_on_selection();
+            }
+        }
 
-                Rectangle {
-                    Layout.preferredWidth: Design.Metrics.borderThin
-                    Layout.preferredHeight: Design.Metrics.space16
-                    color: bottomRoot.banner_tone()
-                }
+        ColumnLayout {
+            id: commandDeck
 
-                Item {
-                    Layout.preferredWidth: Design.Metrics.iconMedium
-                    Layout.preferredHeight: Design.Metrics.iconMedium
-                    visible: bottomRoot.current_command_mode !== "normal"
+            readonly property int commandColumns: Math.max(1, bottomRoot.primaryCommands.length)
+            readonly property int commandCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.commandColumns - 1)) / commandDeck.commandColumns))
+            readonly property int contextualRows: Math.max(1, Math.ceil(bottomRoot.contextualCommands.length / commandDeck.commandColumns))
+            readonly property int contextualCardHeight: Math.max(Design.A11y.scaled(24), Math.min(Design.Metrics.commandButtonSize, Math.floor((contextualCommandArea.height - Design.Metrics.space4 * (commandDeck.contextualRows - 1)) / commandDeck.contextualRows)))
 
-                    Image {
-                        id: commandModeArt
+            objectName: "commandDeck"
 
-                        anchors.fill: parent
-                        source: Design.Icons.command(bottomRoot.current_command_mode)
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        visible: status === Image.Ready
+            Layout.fillWidth: false
+            Layout.fillHeight: true
+            Layout.preferredWidth: bottomRoot.zoneWidth
+            Layout.minimumWidth: bottomRoot.zoneMinimumWidth
+            spacing: Design.Metrics.space8
+
+            Design.IronPanel {
+                id: commandBanner
+
+                readonly property var target: bottomRoot.game_ready() && game.activity ? game.activity.selection_target : null
+                readonly property bool showTarget: bottomRoot.selection_count > 0 && bottomRoot.current_command_mode === "normal" && !!target && target.valid === true
+
+                Layout.fillWidth: true
+                objectName: "commandModeBanner"
+
+                Layout.preferredHeight: Design.Metrics.controlHeight
+                contentPadding: 0
+                raised: bottomRoot.current_command_mode !== "normal"
+                castsShadow: false
+                color: commandBanner.raised || commandBanner.showTarget ? Design.Theme.panelLeather : "transparent"
+                gradient: null
+                border.width: commandBanner.raised || commandBanner.showTarget ? Design.Metrics.borderThin : 0
+                border.color: showTarget ? Design.Theme.danger : bottomRoot.banner_tone()
+                opacity: bottomRoot.has_movable_units || commandBanner.showTarget ? 1 : 0.85
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Design.Metrics.space12
+                    anchors.rightMargin: Design.Metrics.space12
+                    visible: !commandBanner.showTarget
+                    spacing: Design.Metrics.space8
+
+                    Text {
+                        text: qsTr("ORDERS")
+                        color: bottomRoot.current_command_mode === "normal" ? Design.Theme.textSecondary : bottomRoot.banner_tone()
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
+                        font.letterSpacing: Design.Typography.trackingWide
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: Design.Metrics.borderThin
+                        Layout.preferredHeight: Design.Metrics.space16
+                        color: bottomRoot.banner_tone()
+                    }
+
+                    Item {
+                        Layout.preferredWidth: Design.Metrics.iconMedium
+                        Layout.preferredHeight: Design.Metrics.iconMedium
+                        visible: bottomRoot.current_command_mode !== "normal"
+
+                        Image {
+                            id: commandModeArt
+
+                            anchors.fill: parent
+                            source: Design.Icons.command(bottomRoot.current_command_mode)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            visible: status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !commandModeArt.visible
+                            text: Design.Icons.commandGlyph(bottomRoot.current_command_mode)
+                            color: bottomRoot.banner_tone()
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.subheading
+                        }
                     }
 
                     Text {
-                        anchors.centerIn: parent
-                        visible: !commandModeArt.visible
-                        text: Design.Icons.commandGlyph(bottomRoot.current_command_mode)
-                        color: bottomRoot.banner_tone()
+                        Layout.fillWidth: true
+                        text: bottomRoot.command_banner_text()
+                        color: bottomRoot.has_movable_units ? Design.Theme.textPrimary : Design.Theme.textDisabled
                         font.family: Design.Typography.family
-                        font.pixelSize: Design.Typography.subheading
+                        font.pixelSize: Design.Typography.label
+                        font.weight: bottomRoot.current_command_mode === "normal" ? Design.Typography.medium : Design.Typography.bold
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        visible: bottomRoot.current_command_mode !== "normal"
+                        text: qsTr("Right-click to cancel")
+                        color: Design.Theme.textSecondary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
                     }
                 }
 
-                Text {
-                    Layout.fillWidth: true
-                    text: bottomRoot.command_banner_text()
-                    color: bottomRoot.has_movable_units ? Design.Theme.textPrimary : Design.Theme.textDisabled
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.label
-                    font.weight: bottomRoot.current_command_mode === "normal" ? Design.Typography.medium : Design.Typography.bold
-                    elide: Text.ElideRight
-                }
+                RowLayout {
+                    objectName: "commandBannerTarget"
+                    anchors.fill: parent
+                    anchors.leftMargin: Design.Metrics.space8
+                    anchors.rightMargin: Design.Metrics.space8
+                    visible: commandBanner.showTarget
+                    spacing: Design.Metrics.space8
 
-                Text {
-                    visible: bottomRoot.current_command_mode !== "normal"
-                    text: qsTr("Right-click to cancel")
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                }
-            }
+                    Text {
+                        text: qsTr("TARGET")
+                        color: Design.Theme.danger
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
+                        font.letterSpacing: Design.Typography.trackingWide
+                    }
 
-            RowLayout {
-                objectName: "commandBannerTarget"
-                anchors.fill: parent
-                anchors.leftMargin: Design.Metrics.space8
-                anchors.rightMargin: Design.Metrics.space8
-                visible: commandBanner.showTarget
-                spacing: Design.Metrics.space8
+                    Text {
+                        Layout.fillWidth: true
+                        text: !commandBanner.showTarget ? "" : commandBanner.target.isEnemy === true ? qsTr("%1 · Enemy").arg(commandBanner.target.name) : commandBanner.target.isOwn === true ? qsTr("%1 · Yours").arg(commandBanner.target.name) : commandBanner.target.name
 
-                Text {
-                    text: qsTr("TARGET")
-                    color: Design.Theme.danger
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.weight: Design.Typography.bold
-                    font.letterSpacing: Design.Typography.trackingWide
-                }
+                        color: !commandBanner.showTarget ? Design.Theme.textPrimary : commandBanner.target.isEnemy === true ? Design.Theme.danger : commandBanner.target.isOwn === true ? Design.Theme.success : Design.Theme.textPrimary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
+                        elide: Text.ElideRight
+                    }
 
-                Text {
-                    Layout.fillWidth: true
-                    text: !commandBanner.showTarget ? "" : commandBanner.target.isEnemy === true ? qsTr("%1 · Enemy").arg(commandBanner.target.name) : commandBanner.target.isOwn === true ? qsTr("%1 · Yours").arg(commandBanner.target.name) : commandBanner.target.name
+                    Text {
+                        visible: commandBanner.showTarget && commandBanner.target.attackedBySelection > 0
+                        text: commandBanner.showTarget ? qsTr("%n attacking", "", commandBanner.target.attackedBySelection) : ""
+                        color: Design.Theme.textSecondary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                    }
 
-                    color: !commandBanner.showTarget ? Design.Theme.textPrimary : commandBanner.target.isEnemy === true ? Design.Theme.danger : commandBanner.target.isOwn === true ? Design.Theme.success : Design.Theme.textPrimary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.weight: Design.Typography.bold
-                    elide: Text.ElideRight
-                }
+                    Design.IronProgressBar {
+                        Layout.preferredWidth: Math.max(Design.A11y.scaled(56), commandBanner.width * 0.2)
+                        Layout.preferredHeight: Design.Metrics.space4
+                        value: commandBanner.showTarget ? commandBanner.target.healthRatio : 0
+                        fillColor: Design.Theme.danger
+                    }
 
-                Text {
-                    visible: commandBanner.showTarget && commandBanner.target.attackedBySelection > 0
-                    text: commandBanner.showTarget ? qsTr("%n attacking", "", commandBanner.target.attackedBySelection) : ""
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                }
-
-                Design.IronProgressBar {
-                    Layout.preferredWidth: Math.max(Design.A11y.scaled(56), commandBanner.width * 0.2)
-                    Layout.preferredHeight: Design.Metrics.space4
-                    value: commandBanner.showTarget ? commandBanner.target.healthRatio : 0
-                    fillColor: Design.Theme.danger
-                }
-
-                Text {
-                    text: commandBanner.showTarget ? qsTr("%1%").arg(Math.round(commandBanner.target.healthRatio * 100)) : ""
-                    color: Design.Theme.danger
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.weight: Design.Typography.bold
+                    Text {
+                        text: commandBanner.showTarget ? qsTr("%1%").arg(Math.round(commandBanner.target.healthRatio * 100)) : ""
+                        color: Design.Theme.danger
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
+                    }
                 }
             }
-        }
 
-        Row {
-            id: primaryCommandRow
+            Row {
+                id: primaryCommandRow
 
-            objectName: "primaryCommandRow"
-            Layout.fillWidth: true
-            Layout.preferredHeight: Design.Metrics.commandButtonSize
-            spacing: Design.Metrics.space4
-
-            Repeater {
-                model: bottomRoot.primaryCommands
-
-                delegate: Design.IronCommandButton {
-                    id: primaryCommandButton
-
-                    required property var modelData
-                    readonly property var state: bottomRoot.action_state(primaryCommandButton.modelData.id)
-
-                    objectName: "primaryCommand_" + primaryCommandButton.modelData.id
-                    width: commandDeck.commandCardWidth
-                    height: Design.Metrics.commandButtonSize
-                    iconOnly: false
-
-                    actionId: primaryCommandButton.modelData.id
-                    label: primaryCommandButton.modelData.label
-                    shortLabel: primaryCommandButton.modelData.shortLabel || ""
-                    hotkey: bottomRoot.hotkey_for(primaryCommandButton.modelData)
-                    hint: primaryCommandButton.modelData.hint || ""
-                    details: bottomRoot.command_details(primaryCommandButton.modelData, primaryCommandButton.state)
-                    statusText: bottomRoot.command_status(primaryCommandButton.modelData, primaryCommandButton.state)
-                    cooldown: bottomRoot.command_cooldown(primaryCommandButton.modelData, primaryCommandButton.state)
-                    disabledReason: bottomRoot.unavailable_reason(primaryCommandButton.modelData, primaryCommandButton.state)
-
-                    blocked: (primaryCommandButton.modelData.needsTroops && !bottomRoot.has_movable_units) || (!primaryCommandButton.modelData.ignoreActionState && !primaryCommandButton.state.enabled)
-                    active: primaryCommandButton.modelData.activeFromPlacing ? primaryCommandButton.state.placing : (primaryCommandButton.modelData.mode ? (bottomRoot.current_command_mode === primaryCommandButton.modelData.mode && bottomRoot.has_movable_units) : primaryCommandButton.state.active)
-                    mixed: primaryCommandButton.state.mixed
-                    placing: primaryCommandButton.state.placing
-                    eligibleCount: primaryCommandButton.state.eligibleCount
-                    activeCount: primaryCommandButton.state.activeCount
-                    spotlit: bottomRoot.tutorial_spotlights(primaryCommandButton.modelData.id)
-
-                    onClicked: bottomRoot.invoke_command(primaryCommandButton.modelData)
-                }
-            }
-        }
-
-        Item {
-            id: contextualCommandArea
-
-            objectName: "contextualCommandArea"
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.minimumHeight: Design.Metrics.commandButtonSize
-
-            Grid {
-                id: contextualCommandRow
-
-                objectName: "contextualCommandRow"
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                columns: commandDeck.commandColumns
+                objectName: "primaryCommandRow"
+                Layout.fillWidth: true
+                Layout.preferredHeight: Design.Metrics.commandButtonSize
                 spacing: Design.Metrics.space4
-                visible: bottomRoot.contextualCommands.length > 0
 
                 Repeater {
-                    model: bottomRoot.contextualCommands
+                    model: bottomRoot.primaryCommands
 
                     delegate: Design.IronCommandButton {
-                        id: contextualCommandButton
+                        id: primaryCommandButton
 
                         required property var modelData
-                        readonly property var state: bottomRoot.action_state(contextualCommandButton.modelData.id)
+                        readonly property var state: bottomRoot.action_state(primaryCommandButton.modelData.id)
 
-                        objectName: "contextCommand_" + contextualCommandButton.modelData.id
+                        objectName: "primaryCommand_" + primaryCommandButton.modelData.id
                         width: commandDeck.commandCardWidth
-                        height: commandDeck.contextualCardHeight
+                        height: Design.Metrics.commandButtonSize
                         iconOnly: false
 
-                        actionId: contextualCommandButton.modelData.id
-                        label: contextualCommandButton.modelData.label
-                        shortLabel: contextualCommandButton.modelData.shortLabel || ""
-                        hotkey: bottomRoot.hotkey_for(contextualCommandButton.modelData)
-                        hint: contextualCommandButton.modelData.hint || ""
-                        details: bottomRoot.command_details(contextualCommandButton.modelData, contextualCommandButton.state)
-                        statusText: contextualCommandButton.state.passive ? qsTr("Auto") : bottomRoot.command_status(contextualCommandButton.modelData, contextualCommandButton.state)
-                        cooldown: bottomRoot.command_cooldown(contextualCommandButton.modelData, contextualCommandButton.state)
-                        disabledReason: bottomRoot.unavailable_reason(contextualCommandButton.modelData, contextualCommandButton.state)
+                        actionId: primaryCommandButton.modelData.id
+                        label: primaryCommandButton.modelData.label
+                        shortLabel: primaryCommandButton.modelData.shortLabel || ""
+                        hotkey: bottomRoot.hotkey_for(primaryCommandButton.modelData)
+                        hint: primaryCommandButton.modelData.hint || ""
+                        details: bottomRoot.command_details(primaryCommandButton.modelData, primaryCommandButton.state)
+                        statusText: bottomRoot.command_status(primaryCommandButton.modelData, primaryCommandButton.state)
+                        cooldown: bottomRoot.command_cooldown(primaryCommandButton.modelData, primaryCommandButton.state)
+                        disabledReason: bottomRoot.unavailable_reason(primaryCommandButton.modelData, primaryCommandButton.state)
 
-                        blocked: contextualCommandButton.state.passive || (contextualCommandButton.modelData.needsTroops && !bottomRoot.has_movable_units) || (!contextualCommandButton.modelData.ignoreActionState && !contextualCommandButton.state.enabled)
-                        active: contextualCommandButton.modelData.activeFromPlacing ? contextualCommandButton.state.placing : (contextualCommandButton.modelData.mode ? (bottomRoot.current_command_mode === contextualCommandButton.modelData.mode && bottomRoot.has_movable_units) : contextualCommandButton.state.active)
-                        mixed: contextualCommandButton.state.mixed
-                        placing: contextualCommandButton.state.placing
-                        eligibleCount: contextualCommandButton.state.eligibleCount
-                        activeCount: contextualCommandButton.state.activeCount
-                        spotlit: bottomRoot.tutorial_spotlights(contextualCommandButton.modelData.id)
+                        blocked: (primaryCommandButton.modelData.needsTroops && !bottomRoot.has_movable_units) || (!primaryCommandButton.modelData.ignoreActionState && !primaryCommandButton.state.enabled)
+                        active: primaryCommandButton.modelData.activeFromPlacing ? primaryCommandButton.state.placing : (primaryCommandButton.modelData.mode ? (bottomRoot.current_command_mode === primaryCommandButton.modelData.mode && bottomRoot.has_movable_units) : primaryCommandButton.state.active)
+                        mixed: primaryCommandButton.state.mixed
+                        placing: primaryCommandButton.state.placing
+                        eligibleCount: primaryCommandButton.state.eligibleCount
+                        activeCount: primaryCommandButton.state.activeCount
+                        spotlit: bottomRoot.tutorial_spotlights(primaryCommandButton.modelData.id)
 
-                        onClicked: bottomRoot.invoke_command(contextualCommandButton.modelData)
+                        onClicked: bottomRoot.invoke_command(primaryCommandButton.modelData)
                     }
                 }
             }
 
-            Rectangle {
-                objectName: "contextualEmptyHint"
-                anchors.centerIn: parent
-                visible: bottomRoot.contextualCommands.length === 0
-                width: Math.min(parent.width, emptyHintText.implicitWidth + Design.Metrics.space16 * 2)
-                height: emptyHintText.implicitHeight + Design.Metrics.space8
-                radius: height / 2
-                color: Qt.rgba(Design.Theme.backgroundDeep.r, Design.Theme.backgroundDeep.g, Design.Theme.backgroundDeep.b, 0.88)
-                border.width: Design.Metrics.borderThin
-                border.color: Design.Theme.borderSubtle
+            Item {
+                id: contextualCommandArea
 
-                Text {
-                    id: emptyHintText
+                objectName: "contextualCommandArea"
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.minimumHeight: Design.Metrics.commandButtonSize
 
-                    anchors.fill: parent
-                    anchors.leftMargin: Design.Metrics.space16
-                    anchors.rightMargin: Design.Metrics.space16
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    text: bottomRoot.selection_count > 0 ? qsTr("No specialist actions for this selection") : qsTr("Select troops to reveal their specialist actions")
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    elide: Text.ElideRight
+                Grid {
+                    id: contextualCommandRow
+
+                    objectName: "contextualCommandRow"
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    columns: commandDeck.commandColumns
+                    spacing: Design.Metrics.space4
+                    visible: bottomRoot.contextualCommands.length > 0
+
+                    Repeater {
+                        model: bottomRoot.contextualCommands
+
+                        delegate: Design.IronCommandButton {
+                            id: contextualCommandButton
+
+                            required property var modelData
+                            readonly property var state: bottomRoot.action_state(contextualCommandButton.modelData.id)
+
+                            objectName: "contextCommand_" + contextualCommandButton.modelData.id
+                            width: commandDeck.commandCardWidth
+                            height: commandDeck.contextualCardHeight
+                            iconOnly: false
+
+                            actionId: contextualCommandButton.modelData.id
+                            label: contextualCommandButton.modelData.label
+                            shortLabel: contextualCommandButton.modelData.shortLabel || ""
+                            hotkey: bottomRoot.hotkey_for(contextualCommandButton.modelData)
+                            hint: contextualCommandButton.modelData.hint || ""
+                            details: bottomRoot.command_details(contextualCommandButton.modelData, contextualCommandButton.state)
+                            statusText: contextualCommandButton.state.passive ? qsTr("Auto") : bottomRoot.command_status(contextualCommandButton.modelData, contextualCommandButton.state)
+                            cooldown: bottomRoot.command_cooldown(contextualCommandButton.modelData, contextualCommandButton.state)
+                            disabledReason: bottomRoot.unavailable_reason(contextualCommandButton.modelData, contextualCommandButton.state)
+
+                            blocked: contextualCommandButton.state.passive || (contextualCommandButton.modelData.needsTroops && !bottomRoot.has_movable_units) || (!contextualCommandButton.modelData.ignoreActionState && !contextualCommandButton.state.enabled)
+                            active: contextualCommandButton.modelData.activeFromPlacing ? contextualCommandButton.state.placing : (contextualCommandButton.modelData.mode ? (bottomRoot.current_command_mode === contextualCommandButton.modelData.mode && bottomRoot.has_movable_units) : contextualCommandButton.state.active)
+                            mixed: contextualCommandButton.state.mixed
+                            placing: contextualCommandButton.state.placing
+                            eligibleCount: contextualCommandButton.state.eligibleCount
+                            activeCount: contextualCommandButton.state.activeCount
+                            spotlit: bottomRoot.tutorial_spotlights(contextualCommandButton.modelData.id)
+
+                            onClicked: bottomRoot.invoke_command(contextualCommandButton.modelData)
+                        }
+                    }
+                }
+
+                Rectangle {
+                    objectName: "contextualEmptyHint"
+                    anchors.centerIn: parent
+                    visible: bottomRoot.contextualCommands.length === 0
+                    width: Math.min(parent.width, emptyHintText.implicitWidth + Design.Metrics.space16 * 2)
+                    height: emptyHintText.implicitHeight + Design.Metrics.space8
+                    radius: height / 2
+                    color: Qt.rgba(Design.Theme.backgroundDeep.r, Design.Theme.backgroundDeep.g, Design.Theme.backgroundDeep.b, 0.88)
+                    border.width: Design.Metrics.borderThin
+                    border.color: Design.Theme.borderSubtle
+
+                    Text {
+                        id: emptyHintText
+
+                        anchors.fill: parent
+                        anchors.leftMargin: Design.Metrics.space16
+                        anchors.rightMargin: Design.Metrics.space16
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        text: bottomRoot.selection_count > 0 ? qsTr("No specialist actions for this selection") : qsTr("Select troops to reveal their specialist actions")
+                        color: Design.Theme.textSecondary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        elide: Text.ElideRight
+                    }
                 }
             }
         }
-    }
 
-    ProductionPanel {
-        objectName: "productionZone"
+        ProductionPanel {
+            id: productionZone
 
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.preferredWidth: bottomRoot.zoneWidth
-        Layout.minimumWidth: bottomRoot.zoneMinimumWidth
+            objectName: "productionZone"
+            color: "transparent"
+            border.width: 0
 
-        Design.IronSpotlight {
-            active: bottomRoot.tutorialFocusRegion === "production"
-            inset: -Design.Metrics.space4
-            cornerRadius: Design.Metrics.radiusMedium
-        }
-        selection_tick: bottomRoot.selection_tick
-        production: bottomRoot.game_ready() ? game.production : null
-        placement: bottomRoot.game_ready() ? game.placement : null
-        player_state: bottomRoot.game_ready() ? game.selected_player_state : null
-        onRecruit_unit: function (unit_type) {
-            bottomRoot.recruit_unit(unit_type);
-        }
-        onUnit_details_requested: function (unit_type, nation) {
-            bottomRoot.unit_profile_requested(unit_type, nation, false);
-        }
-        onRally_mode_toggled: {
-            if (!bottomRoot.game_ready() || typeof gameView === 'undefined')
-                return;
-            if (gameView.cursor_mode === "place_barracks_rally") {
-                if (game.commander.cancel_barracks_rally)
-                    game.commander.cancel_barracks_rally();
-            } else if (game.commander.begin_barracks_rally) {
-                game.commander.begin_barracks_rally();
+            visible: productionZone.has_content || bottomRoot.tutorialFocusRegion === "production"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: bottomRoot.zoneWidth
+            Layout.minimumWidth: bottomRoot.zoneMinimumWidth
+
+            Design.IronSpotlight {
+                active: bottomRoot.tutorialFocusRegion === "production"
+                inset: -Design.Metrics.space4
+                cornerRadius: Design.Metrics.radiusMedium
+            }
+            selection_tick: bottomRoot.selection_tick
+            production: bottomRoot.game_ready() ? game.production : null
+            placement: bottomRoot.game_ready() ? game.placement : null
+            player_state: bottomRoot.game_ready() ? game.selected_player_state : null
+            onRecruit_unit: function (unit_type) {
+                bottomRoot.recruit_unit(unit_type);
+            }
+            onUnit_details_requested: function (unit_type, nation) {
+                bottomRoot.unit_profile_requested(unit_type, nation, false);
+            }
+            onRally_mode_toggled: {
+                if (!bottomRoot.game_ready() || typeof gameView === 'undefined')
+                    return;
+                if (gameView.cursor_mode === "place_barracks_rally") {
+                    if (game.commander.cancel_barracks_rally)
+                        game.commander.cancel_barracks_rally();
+                } else if (game.commander.begin_barracks_rally) {
+                    game.commander.begin_barracks_rally();
+                }
+            }
+            onBuild_tower: {
+                if (bottomRoot.game_ready() && game.placement.start_building_placement)
+                    game.placement.start_building_placement("defense_tower");
+            }
+            onBuilder_construction: function (item_type) {
+                if (bottomRoot.game_ready() && game.placement.start_builder_construction)
+                    game.placement.start_builder_construction(item_type);
             }
         }
-        onBuild_tower: {
-            if (bottomRoot.game_ready() && game.placement.start_building_placement)
-                game.placement.start_building_placement("defense_tower");
-        }
-        onBuilder_construction: function (item_type) {
-            if (bottomRoot.game_ready() && game.placement.start_builder_construction)
-                game.placement.start_builder_construction(item_type);
+        Item {
+            id: productionSpacer
+
+            objectName: "productionSpacer"
+            visible: !productionZone.visible
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: 0
         }
     }
 }

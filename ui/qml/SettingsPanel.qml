@@ -83,7 +83,7 @@ Item {
             return UiPreferences.displayWindowMode;
         if (win.visibility === Window.FullScreen)
             return "fullscreen";
-        if (win.flags & Qt.FramelessWindowHint)
+        if (UiPreferences.displayWindowMode === "borderless" && win.visibility === Window.Maximized)
             return "borderless";
         return "windowed";
     }
@@ -167,8 +167,8 @@ Item {
     Rectangle {
         id: container
 
-        width: Math.min(parent.width * 0.9, Design.A11y.scaled(700))
-        height: Math.min(parent.height * 0.9, Design.A11y.scaled(600))
+        width: Math.min(parent.width * 0.9, Design.A11y.scaled(960))
+        height: Math.min(parent.height * 0.92, Design.A11y.scaled(900))
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         color: Theme.panelBase
@@ -211,6 +211,7 @@ Item {
                 Label {
                     text: qsTr("Settings")
                     color: Theme.textMain
+                    font.family: Design.Typography.displayFamily
                     font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
@@ -258,6 +259,7 @@ Item {
                         Label {
                             text: qsTr("Audio Settings")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -463,6 +465,7 @@ Item {
                         Label {
                             text: qsTr("Display Settings")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -533,6 +536,7 @@ Item {
                         Label {
                             text: qsTr("Graphics Settings")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -593,6 +597,7 @@ Item {
                         Label {
                             text: qsTr("Controls")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -794,6 +799,7 @@ Item {
                         Label {
                             text: qsTr("Autosave")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -904,6 +910,7 @@ Item {
                         Label {
                             text: qsTr("Accessibility")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -1162,6 +1169,7 @@ Item {
                         Label {
                             text: qsTr("Language")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
@@ -1233,6 +1241,7 @@ Item {
                         Label {
                             text: qsTr("About")
                             color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
                             font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }

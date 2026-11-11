@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include "../ai_types.h"
+#include "builder_ledger.h"
 #include "builder_stall_watch.h"
 
 namespace Game::Systems::AI {
@@ -36,8 +37,15 @@ struct ResolvedSite {
   bool exhausted = false;
 };
 
+[[nodiscard]] auto site_is_workable(const AISnapshot& snapshot,
+                                    const ConstructionLedger& ledger,
+                                    const char* building_type,
+                                    float world_x,
+                                    float world_z) -> bool;
+
 [[nodiscard]] auto find_free_site(const AISnapshot& snapshot,
                                   const AIContext& context,
+                                  const ConstructionLedger& ledger,
                                   const char* building_type,
                                   int& construction_counter) -> ResolvedSite;
 

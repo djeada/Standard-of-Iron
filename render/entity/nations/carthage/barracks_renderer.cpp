@@ -97,6 +97,13 @@ constexpr float k_gate_z1 = 1.14F;
 constexpr float k_gate_arch_y = 1.42F;
 constexpr float k_gate_top = 2.24F;
 
+const QVector3D k_oven_vent{0.82F, k_keep_top + 0.30F, -1.02F};
+
+const BarracksGrounds k_grounds{.parade_centre = QVector3D(-2.92F, 0.0F, 0.10F),
+                                .parade_half_x = 0.92F,
+                                .parade_half_z = 1.30F,
+                                .smithy_centre = QVector3D(0.0F, 0.0F, -2.20F)};
+
 struct Heights {
   float keep;
   float tower;
@@ -168,21 +175,27 @@ void add_merlon(BuildingArchetypeDesc& desc,
                 BuildingStateMask states,
                 int) {
   const QVector3D rot(0.0F, yaw_deg, 0.0F);
-  const QVector3D body(half_size.x(), half_size.y() * 1.55F, half_size.z());
+  const float base_y = center.y() - half_size.y();
+  const QVector3D lower(half_size.x(), half_size.y() * 0.95F, half_size.z());
+  const QVector3D upper(half_size.x() * 0.52F, half_size.y() * 0.60F, half_size.z());
+  desc.add_rotated_box(QVector3D(center.x(), base_y + lower.y(), center.z()),
+                       lower,
+                       rot,
+                       c.sandstone_light,
+                       states);
   desc.add_rotated_box(
-      QVector3D(center.x(), center.y() + body.y() - half_size.y(), center.z()),
-      body,
+      QVector3D(center.x(), base_y + 2.0F * lower.y() + upper.y(), center.z()),
+      upper,
       rot,
       c.sandstone_light,
       states);
-  desc.add_rotated_box(
-      QVector3D(center.x(),
-                center.y() + 2.0F * body.y() - half_size.y() + 0.010F,
-                center.z()),
-      QVector3D(half_size.x() + 0.008F, 0.010F, half_size.z() + 0.008F),
-      rot,
-      c.sandstone_dark,
-      states);
+  desc.add_rotated_box(QVector3D(center.x(),
+                                 base_y + 2.0F * lower.y() + 2.0F * upper.y() + 0.008F,
+                                 center.z()),
+                       QVector3D(upper.x() + 0.008F, 0.008F, upper.z() + 0.008F),
+                       rot,
+                       c.sandstone_dark,
+                       states);
 }
 
 void add_slit_z_face(BuildingArchetypeDesc& desc,
@@ -377,64 +390,81 @@ void add_towers(BuildingArchetypeDesc& desc,
     const bool front = z > 0.0F;
     const float top = h.tower + (front ? 0.0F : 0.06F);
 
-    desc.add_cylinder(QVector3D(x, k_platform_top, z),
-                      QVector3D(x, k_keep_plinth_top, z),
-                      k_tower_r + 0.08F,
-                      c.stone_dark);
-    desc.add_cylinder(QVector3D(x, k_keep_plinth_top, z),
-                      QVector3D(x, top, z),
-                      k_tower_r,
-                      c.sandstone);
+    const float base_half = k_tower_r + 0.10F;
+    const float lower_half = k_tower_r + 0.04F;
+    const float upper_half = k_tower_r;
+    const float lower_top = std::min(k_keep_ashlar_top, top);
+    desc.add_box(
+        QVector3D(x, mid(k_platform_top, k_keep_plinth_top), z),
+        QVector3D(base_half, half(k_platform_top, k_keep_plinth_top), base_half),
+        c.stone_dark);
+    desc.add_box(QVector3D(x, mid(k_keep_plinth_top, lower_top), z),
+                 QVector3D(lower_half, half(k_keep_plinth_top, lower_top), lower_half),
+                 c.sandstone);
+    if (top > lower_top) {
+      desc.add_box(QVector3D(x, mid(lower_top, top), z),
+                   QVector3D(upper_half, half(lower_top, top), upper_half),
+                   c.plaster);
+    }
     if (h.destroyed) {
-      desc.add_cylinder(QVector3D(x, top, z),
-                        QVector3D(x, top + 0.22F + (front ? 0.14F : 0.0F), z),
-                        k_tower_r - 0.14F,
-                        c.sandstone_dark,
-                        BuildingStateMask::Destroyed);
+      const float stub = 0.11F + (front ? 0.07F : 0.0F);
+      desc.add_rotated_box(QVector3D(x, top + stub, z),
+                           QVector3D(upper_half - 0.12F, stub, upper_half - 0.10F),
+                           QVector3D(0.0F, 14.0F, 0.0F),
+                           c.sandstone_dark,
+                           BuildingStateMask::Destroyed);
       ++seed;
       continue;
     }
 
-    desc.add_cylinder(QVector3D(x, k_keep_ashlar_top + 0.02F, z),
-                      QVector3D(x, k_keep_ashlar_top + 0.08F, z),
-                      k_tower_r + 0.015F,
-                      c.indigo,
-                      k_mask_intact);
-    desc.add_cylinder(QVector3D(x, top - 0.09F, z),
-                      QVector3D(x, top - 0.04F, z),
-                      k_tower_r + 0.03F,
-                      c.sandstone_dark,
-                      k_mask_intact);
-    desc.add_cylinder(QVector3D(x, top - 0.04F, z),
-                      QVector3D(x, top + 0.05F, z),
-                      k_tower_r + 0.075F,
-                      c.sandstone_dark,
-                      k_mask_intact);
-    desc.add_cylinder(QVector3D(x, top + 0.05F, z),
-                      QVector3D(x, top + 0.08F, z),
-                      k_tower_r - 0.04F,
-                      c.sandstone_dark,
-                      k_mask_intact);
+    desc.add_box(QVector3D(x, k_keep_ashlar_top + 0.03F, z),
+                 QVector3D(lower_half + 0.012F, 0.03F, lower_half + 0.012F),
+                 c.sandstone_dark,
+                 k_mask_intact);
+    desc.add_box(QVector3D(x, k_keep_ashlar_top + 0.085F, z),
+                 QVector3D(upper_half + 0.012F, 0.025F, upper_half + 0.012F),
+                 c.indigo,
+                 k_mask_intact);
+    desc.add_box(QVector3D(x, top - 0.065F, z),
+                 QVector3D(upper_half + 0.03F, 0.025F, upper_half + 0.03F),
+                 c.oxblood,
+                 k_mask_intact);
+    desc.add_box(QVector3D(x, top + 0.005F, z),
+                 QVector3D(upper_half + 0.07F, 0.045F, upper_half + 0.07F),
+                 c.sandstone_dark,
+                 k_mask_intact);
+    desc.add_box(QVector3D(x, top + 0.065F, z),
+                 QVector3D(upper_half - 0.05F, 0.015F, upper_half - 0.05F),
+                 c.sandstone_dark,
+                 k_mask_intact);
 
-    for (int i = 0; i < 8; ++i) {
-      const float angle = static_cast<float>(i) * (k_pi * 0.25F) + k_pi * 0.125F;
-      const float mx = x + std::sin(angle) * (k_tower_r - 0.02F);
-      const float mz = z + std::cos(angle) * (k_tower_r - 0.02F);
+    const float rim = upper_half + 0.01F;
+    const std::array<QVector3D, 8> merlons{QVector3D(-rim, 0.0F, -rim),
+                                           QVector3D(0.0F, 0.0F, -rim),
+                                           QVector3D(rim, 0.0F, -rim),
+                                           QVector3D(rim, 90.0F, 0.0F),
+                                           QVector3D(rim, 0.0F, rim),
+                                           QVector3D(0.0F, 0.0F, rim),
+                                           QVector3D(-rim, 0.0F, rim),
+                                           QVector3D(-rim, 90.0F, 0.0F)};
+    for (std::size_t i = 0; i < merlons.size(); ++i) {
+      const bool corner_merlon = (i % 2U) == 0U;
       add_merlon(desc,
                  c,
-                 QVector3D(mx, top + 0.16F, mz),
-                 QVector3D(0.075F, 0.075F, 0.045F),
-                 angle * 180.0F / k_pi,
-                 (i % 3 == 1) ? k_mask_normal : k_mask_intact,
-                 seed + i);
+                 QVector3D(x + merlons[i].x(), top + 0.16F, z + merlons[i].z()),
+                 corner_merlon ? QVector3D(0.085F, 0.08F, 0.085F)
+                               : QVector3D(0.075F, 0.07F, 0.05F),
+                 merlons[i].y(),
+                 (i % 3U == 1U) ? k_mask_normal : k_mask_intact,
+                 seed + static_cast<int>(i));
     }
 
-    const float slit_x = x + (x > 0.0F ? 1.0F : -1.0F) * (k_tower_r - 0.005F);
+    const float slit_x = x + (x > 0.0F ? 1.0F : -1.0F) * (lower_half + 0.004F);
     desc.add_box(QVector3D(slit_x, 1.20F, z),
                  QVector3D(0.02F, 0.15F, 0.03F),
                  c.shadow,
                  k_mask_intact);
-    const float slit_z = z + (front ? 1.0F : -1.0F) * (k_tower_r - 0.005F);
+    const float slit_z = z + (front ? 1.0F : -1.0F) * (lower_half + 0.004F);
     desc.add_box(QVector3D(x, 1.20F, slit_z),
                  QVector3D(0.03F, 0.15F, 0.02F),
                  c.shadow,
@@ -999,6 +1029,17 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   add_gatehouse(desc, c, h);
   add_drill_yard(desc, c, h);
   add_roof_canopy(desc, c, h);
+  if (state == BuildingState::Normal) {
+    desc.add_box(QVector3D(k_oven_vent.x(), k_keep_top + 0.10F, k_oven_vent.z()),
+                 QVector3D(0.15F, 0.08F, 0.15F),
+                 c.plaster_shade,
+                 BuildingStateMask::Normal);
+    desc.add_cylinder(QVector3D(k_oven_vent.x(), k_keep_top + 0.18F, k_oven_vent.z()),
+                      QVector3D(k_oven_vent.x(), k_keep_top + 0.28F, k_oven_vent.z()),
+                      0.07F,
+                      c.brick_dark,
+                      BuildingStateMask::Normal);
+  }
 
   if (state == BuildingState::Damaged) {
     add_rubble_field(desc,
@@ -1126,12 +1167,9 @@ void draw_barracks_ornaments(const DrawContext& p,
                              const QVector3D& team,
                              const BarracksFlagRenderer::ClothBannerResources* cloth) {
   CarthagePalette const c = make_palette(team);
-  static const BuildingArchetypeSet& k_palms =
-      building_archetype_set("carthage_barracks_palms");
-  static const BuildingArchetypeSet& k_firs =
-      building_archetype_set("carthage_barracks_firs");
-  const auto& greenery = building_greenery_is_cold(p) ? k_firs : k_palms;
-  submit_building_instance(out, p, greenery.for_state(resolve_building_state(p)));
+  static const BuildingArchetypeSet& k_grounds_set =
+      building_archetype_set("carthage_barracks_grounds");
+  submit_building_instance(out, p, k_grounds_set.for_state(resolve_building_state(p)));
   draw_stockpile_yard(p, out, unit, white, c);
   draw_standards(p, out, unit, white, c, cloth);
   draw_rally_flag(p, out, white, c, cloth);
@@ -1148,10 +1186,65 @@ const std::array<TorchMount, 4> k_torches{{
                .outward = QVector3D(0.0F, 0.0F, 1.0F)},
 }};
 
+const std::array<QVector3D, 1> k_smoke_vents{k_oven_vent};
+
+const std::array<QVector3D, 1> k_sentry_left{QVector3D(-0.84F, 0.22F, 1.30F)};
+const std::array<QVector3D, 1> k_sentry_right{QVector3D(0.84F, 0.22F, 1.30F)};
+const std::array<QVector3D, 5> k_porter_route{QVector3D(2.50F, 0.0F, 1.80F),
+                                              QVector3D(1.00F, 0.0F, 2.10F),
+                                              QVector3D(0.0F, 0.0F, 2.00F),
+                                              QVector3D(0.0F, 0.22F, 1.42F),
+                                              QVector3D(0.0F, 0.22F, 0.92F)};
+const std::array<QVector3D, 4> k_stroll_route{QVector3D(-2.45F, 0.0F, 2.25F),
+                                              QVector3D(2.45F, 0.0F, 2.25F),
+                                              QVector3D(2.45F, 0.0F, -2.25F),
+                                              QVector3D(-2.45F, 0.0F, -2.25F)};
+const std::array<QVector3D, 1> k_rest_spot{QVector3D(-2.00F, 0.0F, 1.85F)};
+const std::array<WalkSurface, 1> k_walk_surfaces{{
+    WalkSurface{.min_x = -1.78F,
+                .max_x = 1.78F,
+                .min_z = -1.48F,
+                .max_z = 1.48F,
+                .top = k_platform_top},
+}};
+const std::array<AmbientPerson, 5> k_people{{
+    AmbientPerson{.role = AmbientRole::Stand,
+                  .route = k_sentry_left,
+                  .facing = QVector3D(-0.84F, 0.4F, 3.2F)},
+    AmbientPerson{.role = AmbientRole::Stand,
+                  .route = k_sentry_right,
+                  .facing = QVector3D(0.84F, 0.4F, 3.2F)},
+    AmbientPerson{.role = AmbientRole::Porter,
+                  .route = k_porter_route,
+                  .facing = QVector3D(0.0F, 0.4F, -0.4F)},
+    AmbientPerson{.role = AmbientRole::Stroll,
+                  .route = k_stroll_route,
+                  .facing = QVector3D(0.0F, 0.4F, 3.0F),
+                  .linger = AmbientRole::Stand},
+    AmbientPerson{.role = AmbientRole::Squat,
+                  .route = k_rest_spot,
+                  .facing = QVector3D(-1.2F, 0.3F, 2.6F)},
+}};
+
 } // namespace
 
 auto build_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
   return build_barracks_desc_impl(state);
+}
+
+auto build_barracks_grounds_desc(BuildingState) -> BuildingArchetypeDesc {
+  CarthagePalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+  BuildingArchetypeDesc desc("carthage_barracks_grounds");
+  add_barracks_grounds(desc,
+                       k_grounds,
+                       BarracksGroundsStyle{.stone = c.sandstone,
+                                            .stone_dark = c.stone_dark,
+                                            .timber = c.wood,
+                                            .timber_dark = c.wood_dark,
+                                            .roof = c.saffron,
+                                            .roof_dark = c.oxblood,
+                                            .team_cloth = c.indigo});
+  return desc;
 }
 
 auto build_barracks_palms_desc(BuildingState) -> BuildingArchetypeDesc {
@@ -1169,7 +1262,11 @@ void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
                              .archetype = &barracks_archetype,
                              .draw_ornaments = &draw_barracks_ornaments,
                              .selection = BuildingSelectionStyle{2.4F, 2.0F},
-                             .torches = k_torches});
+                             .torches = k_torches,
+                             .people = k_people,
+                             .walk_surfaces = k_walk_surfaces,
+                             .smoke_vents = k_smoke_vents,
+                             .grounds = &k_grounds});
 }
 
 } // namespace Render::GL::Carthage

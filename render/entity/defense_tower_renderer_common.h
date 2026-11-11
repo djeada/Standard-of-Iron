@@ -27,6 +27,9 @@ struct DefenseTowerRendererConfig {
   float night_brazier_deck_y = 2.90F;
   float night_brazier_offset = 0.62F;
   std::span<const TorchMount> torches{};
+  float lookout_deck_top = 0.0F;
+  float lookout_deck_top_damaged = 0.0F;
+  float lookout_walk_half = 0.42F;
 };
 
 void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,

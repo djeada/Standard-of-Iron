@@ -5355,6 +5355,10 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Move troops next to a river raft</source>
         <translation>Przesuń oddziały do tratwy na rzece</translation>
     </message>
+    <message>
+        <source>Go to Barracks</source>
+        <translation>Przejdź do koszar</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -5689,14 +5693,6 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation> [Ty]</translation>
     </message>
     <message>
-        <source>Resume</source>
-        <translation>Wznów</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Pauza</translation>
-    </message>
-    <message>
         <source>Battle speed %1</source>
         <translation>Tempo bitwy %1</translation>
     </message>
@@ -5807,6 +5803,18 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>%1%</source>
         <translation>%1%</translation>
+    </message>
+    <message>
+        <source>Resume (%1)</source>
+        <translation>Wznów (%1)</translation>
+    </message>
+    <message>
+        <source>Pause (%1)</source>
+        <translation>Pauza (%1)</translation>
+    </message>
+    <message>
+        <source>Speed up %1, slow down %2</source>
+        <translation>Przyspiesz %1, zwolnij %2</translation>
     </message>
 </context>
 <context>

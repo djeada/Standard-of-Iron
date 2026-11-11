@@ -129,6 +129,30 @@ Item {
         return ev.incoming ? "#e5322d" : "#f07f13";
     }
 
+    function plate_for(accent, loud) {
+        if (loud)
+            return Qt.rgba(0.10 + accent.r * 0.46, 0.04 + accent.g * 0.30, 0.04 + accent.b * 0.30, 0.94);
+        return Qt.rgba(0.085 + accent.r * 0.10, 0.065 + accent.g * 0.08, 0.05 + accent.b * 0.08, 0.90);
+    }
+
+    function ink_for(accent) {
+        return Qt.rgba(0.62 + accent.r * 0.38, 0.60 + accent.g * 0.40, 0.54 + accent.b * 0.46, 1.0);
+    }
+
+    function stack_offset_for(item) {
+        var taken = 0;
+        var siblings = tickLayer.children;
+        for (var i = 0; i < siblings.length; ++i) {
+            var other = siblings[i];
+            if (other === item || !other.visible)
+                continue;
+            var reach = (other.width + item.width) / 2;
+            if (Math.abs((other.x + other.width / 2) - (item.x + item.width / 2)) < reach && Math.abs(other.y - item.y) < item.height + 2)
+                taken = Math.max(taken, other.stackOffset + other.height + 3);
+        }
+        return taken;
+    }
+
     function body_for(ev) {
         if (ev.kind === "resource" || ev.kind === "reserve")
             return root.signed(Number(ev.amount));
@@ -181,14 +205,18 @@ Item {
             readonly property real rise: root.reducedMotion ? 6 : (46 + weight * 28 + (killingBlow ? 16 : 0))
             readonly property real drift: root.reducedMotion ? 0 : lane * 12
             readonly property color accent: root.accent_for(tick.event)
-            readonly property real fontSize: Design.Typography.display((focused ? 24 : 21) + (killingBlow ? 5 : 0) + weight * 4)
+            readonly property real fontSize: Design.Typography.display((focused ? 21 : 18) + (killingBlow ? 4 : 0) + weight * 4)
+            readonly property bool loud: tick.incoming && tick.kind === "damage"
+            readonly property color plate: root.plate_for(tick.accent, tick.loud)
+            readonly property color ink: tick.loud ? "#fff4ec" : root.ink_for(tick.accent)
+            property real stackOffset: 0
             readonly property real pop: root.reducedMotion ? 1.0 : (progress < 0.08 ? 0.55 + progress * 8.0 : (progress < 0.2 ? 1.18 - (progress - 0.08) * 1.5 : 1.0))
 
-            width: label.implicitWidth + 26
-            height: label.implicitHeight + 10
+            width: label.implicitWidth + 20
+            height: label.implicitHeight + 6
             visible: projection !== null
             x: root.view_x((projection !== null ? projection.x : 0) - width / 2 + drift * progress, width)
-            y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, height) : 0) - 22 - rise * progress, height)
+            y: root.view_y((projection !== null ? root.projector.clamped_y(projection.y, height) : 0) - 22 - stackOffset - rise * progress, height)
             opacity: progress < 0.62 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.62) / 0.38))
             scale: pop
 
@@ -214,38 +242,29 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                anchors.topMargin: 3
-                anchors.bottomMargin: -3
-                radius: height / 2
-                color: "#73000000"
+                anchors.topMargin: 2
+                anchors.bottomMargin: -2
+                radius: 5
+                color: "#66000000"
             }
 
             Rectangle {
                 id: pill
 
                 anchors.fill: parent
-                radius: height / 2
-                border.width: tick.focused || tick.killingBlow ? 3 : 2
-                border.color: Qt.lighter(tick.accent, 1.55)
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0.0
-                        color: Qt.lighter(tick.accent, 1.22)
-                    }
-                    GradientStop {
-                        position: 1.0
-                        color: Qt.darker(tick.accent, 1.45)
-                    }
-                }
+                radius: 5
+                color: tick.plate
+                border.width: tick.focused || tick.killingBlow ? 2 : 1
+                border.color: Qt.rgba(tick.accent.r, tick.accent.g, tick.accent.b, tick.killingBlow ? 1.0 : 0.82)
             }
 
             Rectangle {
-                x: pill.height * 0.32
-                y: 3
-                width: pill.width - pill.height * 0.64
-                height: pill.height * 0.36
-                radius: height / 2
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.26)
+                x: 1
+                y: 1
+                width: 3
+                height: pill.height - 2
+                radius: 2
+                color: tick.accent
             }
 
             Row {
@@ -258,65 +277,66 @@ Item {
                     visible: tick.killingBlow
                     anchors.verticalCenter: parent.verticalCenter
                     text: "☠"
-                    color: "#ffffff"
+                    color: tick.ink
                     font.pixelSize: tick.fontSize
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#a6000000"
+                    styleColor: "#cc000000"
                 }
 
                 Text {
                     visible: tick.resource >= 0
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.resource_glyph(tick.resource)
-                    color: "#ffffff"
+                    color: tick.ink
                     font.pixelSize: tick.fontSize
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#a6000000"
+                    styleColor: "#cc000000"
                 }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.body_for(tick.event)
-                    color: "#ffffff"
+                    color: tick.ink
+                    font.family: Design.Typography.displayFamily
                     font.pixelSize: tick.fontSize
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#b3000000"
+                    styleColor: "#cc000000"
                 }
 
                 Text {
                     visible: tick.kind === "reserve"
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("POP")
-                    color: "#ffffff"
+                    color: tick.ink
                     font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 6)
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#a6000000"
+                    styleColor: "#cc000000"
                 }
 
                 Text {
                     visible: tick.pairedResource >= 0
                     anchors.verticalCenter: parent.verticalCenter
                     text: "→ " + root.resource_glyph(tick.pairedResource) + root.signed(tick.pairedAmount)
-                    color: "#f2ffe8"
+                    color: tick.ink
                     font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 3)
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#a6000000"
+                    styleColor: "#cc000000"
                 }
 
                 Text {
                     visible: tick.hits > 1 && tick.kind === "damage"
                     anchors.verticalCenter: parent.verticalCenter
                     text: "×" + tick.hits
-                    color: "#ffffff"
+                    color: tick.ink
                     font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 6)
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#a6000000"
+                    styleColor: "#cc000000"
                 }
             }
         }
@@ -353,7 +373,7 @@ Item {
             }
             readonly property real driftX: (lane * 16) + (lane === 0 ? 0 : (lane > 0 ? 10 : -10)) * (0.45 + severity)
             readonly property real riseDistance: 98 + severity * 34 + Math.abs(lane) * 10
-            readonly property real ringSize: 76 + severity * 44
+            readonly property real ringSize: 60 + severity * 36
             readonly property color accentColor: killingBlow ? "#ffd36b" : (severity >= 0.72 ? "#ff784e" : (severity >= 0.46 ? "#ffae42" : "#ffffff"))
             readonly property color sparkColor: killingBlow ? "#fff6c2" : (severity >= 0.72 ? "#ffd0b0" : "#ffe4ad")
             readonly property color pillColor: killingBlow ? "#f0a000" : (severity >= 0.72 ? "#e0401f" : (severity >= 0.46 ? "#ee7a10" : "#d98a1c"))
@@ -477,69 +497,52 @@ Item {
 
                 x: burst.width / 2 - width / 2
                 y: 30
-                width: Math.max(110, damageText.implicitWidth + 34)
-                height: Math.max(52, damageText.implicitHeight + 18)
+                width: Math.max(84, damageText.implicitWidth + 30)
+                height: Math.max(44, damageText.implicitHeight + 12)
                 scale: burst.textScale
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.topMargin: 4
-                    anchors.bottomMargin: -4
-                    radius: height / 2
-                    color: "#80000000"
+                    anchors.topMargin: 3
+                    anchors.bottomMargin: -3
+                    radius: 7
+                    color: "#70000000"
                 }
 
                 Rectangle {
                     id: burstPill
 
                     anchors.fill: parent
-                    radius: height / 2
+                    radius: 7
+                    color: root.plate_for(burst.pillColor, false)
                     border.width: burst.killingBlow ? 3 : 2
-                    border.color: Qt.lighter(burst.pillColor, 1.6)
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0.0
-                            color: Qt.lighter(burst.pillColor, 1.25)
-                        }
-                        GradientStop {
-                            position: 1.0
-                            color: Qt.darker(burst.pillColor, 1.5)
-                        }
-                    }
+                    border.color: burst.accentColor
                 }
 
                 Rectangle {
-                    x: burstPill.height * 0.32
-                    y: 4
-                    width: burstPill.width - burstPill.height * 0.64
-                    height: burstPill.height * 0.36
-                    radius: height / 2
-                    color: Qt.rgba(1.0, 1.0, 1.0, 0.28)
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: 2
-                    text: burst.amount.toString()
-                    color: "#000000"
-                    opacity: 0.82
-                    font.pixelSize: Design.Typography.display(burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30))
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "#66000000"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 4
+                    width: parent.width - 22
+                    height: 2
+                    radius: 1
+                    color: burst.accentColor
+                    opacity: 0.7
                 }
 
                 Text {
                     id: damageText
 
                     anchors.centerIn: parent
+                    anchors.verticalCenterOffset: -1
                     text: burst.amount.toString()
-                    color: "#ffffff"
-                    font.pixelSize: Design.Typography.display(burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30))
+                    color: root.ink_for(burst.accentColor)
+                    font.family: Design.Typography.displayFamily
+                    font.pixelSize: Design.Typography.display(burst.killingBlow ? 36 : (burst.severity >= 0.72 ? 31 : 27))
                     font.bold: true
                     font.letterSpacing: burst.severity >= 0.72 ? 0.6 : 0.2
                     style: Text.Outline
-                    styleColor: "#b3000000"
+                    styleColor: "#cc000000"
                 }
             }
         }
@@ -609,7 +612,7 @@ Item {
                 if (!ev.killingBlow && root.anchor_busy(key, root.maxTicksPerAnchor))
                     continue;
                 root.acquire_anchor(key);
-                damageTick.createObject(tickLayer, {
+                var spawned = damageTick.createObject(tickLayer, {
                         "amount": Number(ev.amount || 0),
                         "hits": Number(ev.hits || 1),
                         "worldX": Number(ev.x || 0.0),
@@ -626,6 +629,8 @@ Item {
                         "pairedAmount": Number(ev.pairedAmount || 0),
                         "anchorKey": key
                     });
+                if (spawned !== null)
+                    spawned.stackOffset = root.stack_offset_for(spawned);
             }
         }
     }

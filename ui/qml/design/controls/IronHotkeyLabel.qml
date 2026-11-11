@@ -5,27 +5,18 @@ Rectangle {
     id: root
 
     property alias text: label.text
-    implicitWidth: label.implicitWidth + Design.Metrics.space8
-    implicitHeight: label.implicitHeight + Design.Metrics.space4
-    color: Design.Theme.backgroundDeep
+    implicitWidth: Math.max(label.implicitWidth + Design.Metrics.space8, label.implicitHeight + Design.Metrics.space2)
+    implicitHeight: label.implicitHeight + Design.Metrics.space2
+    color: Qt.rgba(0, 0, 0, 0.28)
     radius: Design.Metrics.radiusSmall
-    border.color: Design.Theme.borderSubtle
+    border.width: 0
 
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: root.radius
-        anchors.rightMargin: root.radius
-        height: Design.Metrics.borderThin
-        color: Design.Theme.borderStrong
-        opacity: 0.55
-    }
     Text {
         id: label
         anchors.centerIn: parent
-        color: Design.Theme.textSecondary
-        font.family: "monospace"
-        font.pixelSize: Design.Typography.caption
+        color: Qt.rgba(Design.Theme.accent.r, Design.Theme.accent.g, Design.Theme.accent.b, 0.85)
+        font.family: Design.Typography.family
+        font.weight: Design.Typography.bold
+        font.pixelSize: Math.max(10, Math.round(Design.Typography.caption * 0.85))
     }
 }
