@@ -87,6 +87,10 @@ public:
   void settle_primary_press();
   void clear_jump_edge();
   void clear_dodge_edge();
+  // Hold this tick's press for the next tick instead of resolving it now. The
+  // edge stays owed: it is consumed or refused later, or refused on release.
+  void carry_jump_edge();
+  void carry_dodge_edge();
   void clear_ability_edges();
   void release_for_rally();
   void release_all();
@@ -106,6 +110,10 @@ private:
   QVector3D m_requested_dodge_direction{0.0F, 0.0F, 0.0F};
   std::uint64_t m_input_snapshot_sequence = 0;
   bool m_carried_primary_press = false;
+  bool m_carried_jump_press = false;
+  bool m_carried_dodge_press = false;
+  bool m_carried_dodge_has_direction = false;
+  QVector3D m_carried_dodge_direction{0.0F, 0.0F, 0.0F};
   CommanderInputSnapshot m_tick_input;
   CommanderInputTrace m_edges;
   mutable std::mutex m_input_mutex;

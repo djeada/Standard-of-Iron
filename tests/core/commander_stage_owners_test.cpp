@@ -155,30 +155,54 @@ TEST(CommanderBodyFacingTest, SmallViewOffsetsDoNotTurnAStandingBody) {
       << "under the turn-in-place threshold the body stays put";
 }
 
-TEST(CommanderBodyFacingTest, ALargeOffsetTurnsInPlaceAtALimitedRate) {
+TEST(CommanderBodyFacingTest, AStandingBodyKeepsItsFacingWhileTheCameraOrbits) {
   CommanderBodyFacing facing;
   BodyFacingInput input;
   input.view_yaw = 0.0F;
   input.dt = 0.05F;
   static_cast<void>(facing.advance(input));
 
-  input.view_yaw = 90.0F;
-  float const first = facing.advance(input);
-  EXPECT_GT(first, 0.0F);
-  EXPECT_LT(first, 90.0F);
-  EXPECT_NEAR(first, 260.0F * 0.05F, 1.0e-3F);
+  for (float const view : {90.0F, 170.0F, 260.0F}) {
+    input.view_yaw = view;
+    EXPECT_FLOAT_EQ(facing.advance(input), 0.0F)
+        << "looking around must not drag an idle body after the camera";
+  }
 }
 
-TEST(CommanderBodyFacingTest, TravelKeepsTheBodyOnTheViewFast) {
+TEST(CommanderBodyFacingTest, FreeMovementTurnsTheBodyToItsTravelNotTheView) {
   CommanderBodyFacing facing;
   BodyFacingInput input;
   input.view_yaw = 0.0F;
   input.dt = 0.05F;
   static_cast<void>(facing.advance(input));
 
-  input.view_yaw = 30.0F;
-  input.follows_travel = true;
-  EXPECT_FLOAT_EQ(facing.advance(input), 30.0F);
+  input.travel_yaw = 90.0F;
+  float const first = facing.advance(input);
+  EXPECT_NEAR(first, 720.0F * 0.05F, 1.0e-3F) << "the turn is quick but not a flip";
+
+  float yaw = first;
+  for (int tick = 0; tick < 3; ++tick) {
+    yaw = facing.advance(input);
+  }
+  EXPECT_FLOAT_EQ(yaw, 90.0F);
+
+  input.travel_yaw.reset();
+  input.view_yaw = 200.0F;
+  EXPECT_FLOAT_EQ(facing.advance(input), 90.0F)
+      << "releasing the stick leaves him facing the way he ran";
+}
+
+TEST(CommanderBodyFacingTest, SquaringUpToTheViewOutranksTravel) {
+  CommanderBodyFacing facing;
+  BodyFacingInput input;
+  input.view_yaw = 0.0F;
+  input.dt = 0.05F;
+  static_cast<void>(facing.advance(input));
+
+  input.travel_yaw = 90.0F;
+  input.must_face_view = true;
+  EXPECT_FLOAT_EQ(facing.advance(input), 0.0F)
+      << "locked on or guarding, sideways input is a strafe, not a turn";
 }
 
 TEST(CommanderLookTest, MouseDeltasWrapYawAndClampPitch) {

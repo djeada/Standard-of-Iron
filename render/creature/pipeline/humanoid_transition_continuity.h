@@ -45,6 +45,26 @@ struct HumanoidTransitionResult {
   bool started{false};
 };
 
+struct HumanoidOverlayMemory {
+  Render::Creature::PlaybackLayerRequest shown{};
+  float sample_time{0.0F};
+  bool valid{false};
+};
+
+struct HumanoidOverlayFrame {
+  float time{0.0F};
+  bool persist{true};
+  float response_seconds{0.08F};
+  // A full-body reaction/action must not inherit a departing water/carry pose.
+  bool clear_immediately{false};
+};
+
+[[nodiscard]] auto
+advance_humanoid_overlay(const Render::Creature::PlaybackLayerRequest& requested,
+                         HumanoidOverlayMemory& memory,
+                         const HumanoidOverlayFrame& frame) noexcept
+    -> Render::Creature::PlaybackLayerRequest;
+
 [[nodiscard]] auto requested_clip_mix(
     const HumanoidAnimationSelection& selection) noexcept -> Animation::ClipMix;
 

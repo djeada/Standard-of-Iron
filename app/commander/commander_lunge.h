@@ -28,6 +28,8 @@ public:
                            bool airborne,
                            float dt) -> float;
 
+  void reset() { m_carry = {}; }
+
 private:
   void advance(Engine::Core::World& world,
                Engine::Core::Entity& commander,

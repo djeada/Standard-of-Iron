@@ -9,10 +9,12 @@ namespace App::Core {
 
 namespace {
 
-constexpr float k_turn_in_place_threshold_degrees = 50.0F;
-constexpr float k_turn_in_place_rate_degrees = 260.0F;
-constexpr float k_body_travel_turn_rate_degrees = 900.0F;
-
+// Steering a committed strike toward the view, scaled by its authority.
+constexpr float k_strike_redirect_turn_rate_degrees = 900.0F;
+// Turning to run where the player points: half a turn in a quarter second, so a
+// reversal reads as a plant and pivot rather than a flip.
+constexpr float k_travel_turn_rate_degrees = 720.0F;
+// Squaring up to the view for a fight.
 constexpr float k_face_view_turn_rate_degrees = 1080.0F;
 
 auto turn_toward(float& body_yaw, float view_yaw, float step) -> bool {
@@ -39,38 +41,24 @@ auto CommanderBodyFacing::advance(const BodyFacingInput& input) -> float {
   }
 
   if (input.attack_animation_active && input.action_redirect_authority < 1.0F) {
-    m_turning_in_place = false;
-    float const step = k_body_travel_turn_rate_degrees *
+    float const step = k_strike_redirect_turn_rate_degrees *
                        input.action_redirect_authority * std::max(0.0F, dt);
     static_cast<void>(turn_toward(m_body_yaw, view_yaw, step));
     return m_body_yaw;
   }
   if (input.snap_to_view) {
     m_body_yaw = view_yaw;
-    m_turning_in_place = false;
     return m_body_yaw;
   }
   if (input.must_face_view) {
     static_cast<void>(turn_toward(
         m_body_yaw, view_yaw, k_face_view_turn_rate_degrees * std::max(0.0F, dt)));
-    m_turning_in_place = false;
     return m_body_yaw;
   }
-
-  float const offset = signed_angle_delta(view_yaw, m_body_yaw);
-  float turn_rate = 0.0F;
-  if (input.follows_travel) {
-    turn_rate = k_body_travel_turn_rate_degrees;
-    m_turning_in_place = false;
-  } else {
-    if (std::abs(offset) > k_turn_in_place_threshold_degrees) {
-      m_turning_in_place = true;
-    }
-    turn_rate = m_turning_in_place ? k_turn_in_place_rate_degrees : 0.0F;
-  }
-
-  if (turn_toward(m_body_yaw, view_yaw, turn_rate * std::max(0.0F, dt))) {
-    m_turning_in_place = false;
+  if (input.travel_yaw.has_value()) {
+    static_cast<void>(turn_toward(m_body_yaw,
+                                  wrap_angle_degrees(*input.travel_yaw),
+                                  k_travel_turn_rate_degrees * std::max(0.0F, dt)));
   }
   return m_body_yaw;
 }

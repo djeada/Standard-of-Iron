@@ -129,7 +129,7 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_GT(reached, facade) << "the commander walked inside the drawn building";
 }
 
-TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
+TEST_F(CommanderControlControllerTest, JumpForwardStopsAtBlockedGroundCells) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -149,10 +149,13 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   Render::GL::Camera camera;
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.4F));
 
-  EXPECT_GT(transform->position.z, 0.9F);
   auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander_data, nullptr);
   EXPECT_TRUE(commander_data->jump_active);
+  EXPECT_LT(transform->position.z, 1.0F)
+      << "an airborne commander passed into a blocked cell";
+  EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+      *commander, transform->position.x, transform->position.z));
 }
 
 TEST_F(CommanderControlControllerTest, WalkingAsksForAFootstepOnEveryStride) {
@@ -211,8 +214,7 @@ TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection)
   EXPECT_LT(rpg->dodge_dir_z, -0.5F);
 }
 
-TEST_F(CommanderControlControllerTest,
-       JumpLandingInsideAnObstacleRecoversOntoWalkableGround) {
+TEST_F(CommanderControlControllerTest, JumpTowardAnObstacleLandsOnWalkableGround) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);

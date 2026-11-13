@@ -139,6 +139,7 @@ Arena expectations convert traces into explicit pass/fail rules. The standard co
 | `CommanderMotorCorrectionWithin`       | Separation correction and jump snap-back remain inside their per-frame budgets                    |
 | `NoUncommandedViewRotation`            | The view changes only from look input, framing, or an active lock                                 |
 | `CommanderSpeedIsContinuous`           | Planar velocity changes remain inside acceleration/deceleration budgets                           |
+| `CommanderJumpLandsClean`              | Jumps complete, and no airborne or landing frame leaves the body inside an obstacle               |
 | `CommanderContactCountAtMost`          | One running action produces no more contacts than authored                                        |
 | `CommanderCameraKeepsCommanderInSight` | Opaque geometry cannot remain between the lens and commander beyond the allowed run               |
 
@@ -390,13 +391,30 @@ In direct control the commander has at least 180 stamina and regenerates at leas
 
 Arena commanders carry a stamina component and expose the current value in the combat trace. `rpg_stamina_refusal_and_recovery` drives expenditure to refusal, waits for recovery, and verifies a later attack can be accepted.
 
+Mode entry preserves current stamina and the regeneration delay, including when
+raising a smaller pool to the direct-control capacity floor. It cannot refund an
+RTS sprint or skip the recovery delay after a dodge. `CommanderModeResourcesTest`
+checks first entry, 100 rapid handoffs, and regeneration across the actual stamina
+system. Guard-break recovery survives mode exit and is advanced once by
+`CommanderSystem` in both modes; controller upkeep owns input-related guard state,
+not that combat penalty. Exiting still releases active/perfect guard and dodge
+protection, so a held input cannot remain active after relinquishing control.
+
+## Body facing and control loss
+
+The body faces, in order: a committed strike's steered direction; the view while squared up (attacking, guarding, drawing a bow, or locked on); the heading of the movement input while moving freely; otherwise it keeps its facing, and the camera may orbit a standing commander. Strafe and backpedal speed scales apply only while squared up. A roll turns the body to the roll direction; a jump keeps the facing it took off with.
+
+A `StaggerComponent` on the commander suspends movement input, guard, roll and jump until it expires. A roll or jump pressed within `k_commander_movement_buffer_seconds` of the end is held and starts on recovery.
+
 ## Dodge
 
-The roll lasts 0.36 s and the i-frame window covers its first 0.20 s (`k_commander_dodge_timeline`), followed by 0.16 s of recovery. The commander travels 6.5 m/s along the dodge direction, about 2.3 m.
+The roll lasts 0.36 s and the i-frame window covers its first 0.20 s (`k_commander_dodge_timeline`), followed by 0.16 s of recovery. The commander travels about 2.3 m along the dodge direction (a mean 6.5 m/s), front-loaded: he leaves at 1.6 times the mean speed and arrives at 0.4 times it (`k_dodge_front_load`). The body faces the roll, whatever the camera or a lock is doing.
 
 The i-frames hold whichever way the commander rolls. `dodge_beats_contact` used to accept a contact only when the roll led away from it (a dot product above 0.15). Inside a crowd every roll is toward somebody, so a roll away from one skeleton was still cut down by the next, and rolling through a swing, the standard answer to it, never worked. `ARollThroughTheAttackerStillBeatsItsBlade` covers this.
 
 The presented roll is the crouched `Evade` reaction plus a full tumble of the model about the axis across the dodge direction (`CommanderComponent::dodge_dir_x/z`, mirrored into `CreaturePresentationComponent`). The tumble used to turn about the body's right axis, so a side or back roll was drawn as a forward somersault while the body slid sideways or backwards.
+
+A jump or dodge pressed within 0.20 s of the end of a jump or of a roll and its recovery (`k_commander_movement_buffer_seconds`) is held by the input port and resolved on the first tick the body is free; an earlier press is refused at once, as before. A held press is still one edge: it ends consumed or refused, a second press landing on it is refused, and releasing control refuses it. It pays the normal stamina cost when it starts and uses the movement input of that tick.
 
 ## Crowd pressure
 

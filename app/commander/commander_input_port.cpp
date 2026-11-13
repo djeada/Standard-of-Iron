@@ -222,6 +222,28 @@ void CommanderInputPort::capture_tick() {
   m_tick_input.primary_pressed =
       m_tick_input.primary_pressed || m_carried_primary_press;
   m_carried_primary_press = false;
+
+  // A fresh press landing on a held one merges into a single edge, so one of
+  // the two requests is refused here to keep the counters balanced.
+  if (m_carried_jump_press) {
+    if (m_tick_input.jump_pressed) {
+      ++m_edges.jump_refused_sequence;
+    }
+    m_tick_input.jump_pressed = true;
+    m_carried_jump_press = false;
+  }
+  if (m_carried_dodge_press) {
+    if (m_tick_input.dodge_pressed) {
+      ++m_edges.dodge_refused_sequence;
+    } else {
+      m_tick_input.dodge_pressed = true;
+      m_tick_input.has_dodge_direction = m_carried_dodge_has_direction;
+      m_tick_input.dodge_direction = m_carried_dodge_direction;
+    }
+    m_carried_dodge_press = false;
+    m_carried_dodge_has_direction = false;
+    m_carried_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
+  }
 }
 
 auto CommanderInputPort::exchange_recorded(Engine::Core::World& world,
@@ -261,6 +283,16 @@ void CommanderInputPort::discard_edges(CommanderInputSnapshot& snapshot) {
   if (snapshot.primary_pressed) {
     ++m_edges.primary_dropped_sequence;
     snapshot.primary_pressed = false;
+  }
+  if (m_carried_jump_press) {
+    ++m_edges.jump_refused_sequence;
+    m_carried_jump_press = false;
+  }
+  if (m_carried_dodge_press) {
+    ++m_edges.dodge_refused_sequence;
+    m_carried_dodge_press = false;
+    m_carried_dodge_has_direction = false;
+    m_carried_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
   }
   snapshot.heavy_pressed = false;
   if (snapshot.dodge_pressed) {
@@ -309,6 +341,20 @@ void CommanderInputPort::clear_dodge_edge() {
   m_tick_input.dodge_pressed = false;
   m_tick_input.has_dodge_direction = false;
   m_tick_input.dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
+}
+
+void CommanderInputPort::carry_jump_edge() {
+  m_carried_jump_press = m_carried_jump_press || m_tick_input.jump_pressed;
+  clear_jump_edge();
+}
+
+void CommanderInputPort::carry_dodge_edge() {
+  if (m_tick_input.dodge_pressed) {
+    m_carried_dodge_press = true;
+    m_carried_dodge_has_direction = m_tick_input.has_dodge_direction;
+    m_carried_dodge_direction = m_tick_input.dodge_direction;
+  }
+  clear_dodge_edge();
 }
 
 void CommanderInputPort::clear_ability_edges() {

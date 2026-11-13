@@ -155,6 +155,15 @@ private:
     const Engine::Core::RpgCommanderActionComponent* active_action{nullptr};
     bool attack_animation_active{false};
     bool drawing_bow{false};
+    // Seconds of hit stagger left. While it runs the player cannot move, roll,
+    // jump or guard; a hit has to cost more than health.
+    float stagger_remaining{0.0F};
+
+    [[nodiscard]] auto staggered() const -> bool { return stagger_remaining > 0.0F; }
+    // A roll or jump pressed this late in a stagger is held for the recovery.
+    [[nodiscard]] auto recovering_soon() const -> bool {
+      return staggered() && stagger_remaining <= k_commander_movement_buffer_seconds;
+    }
   };
 
   struct MotionOutcome {
@@ -190,11 +199,15 @@ private:
                   Engine::Core::UnitComponent& unit) -> App::Core::CommanderHandles;
   [[nodiscard]] static auto
   read_tick_facts(const Engine::Core::Entity& commander) -> TickFacts;
+  // True while the body faces the view for a fight rather than its own travel.
+  [[nodiscard]] auto squared_up(const TickFacts& facts) const -> bool;
   [[nodiscard]] auto advance_jump_stage(const App::Core::CommanderHandles& body,
+                                        const TickFacts& facts,
                                         float dt) -> bool;
   [[nodiscard]] auto
   start_dodge_stage(Engine::Core::World& world,
                     const App::Core::CommanderHandles& body,
+                    const TickFacts& facts,
                     const MotionOutcome& motion) -> App::Core::MoveBasis;
   void present_tick(Engine::Core::World& world,
                     const App::Core::CommanderHandles& body,

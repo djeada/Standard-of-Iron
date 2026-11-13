@@ -85,6 +85,7 @@ inline constexpr char k_rpg_motor_figure_eight_id[] = "rpg_motor_figure_eight";
 inline constexpr char k_rpg_locomotion_hitch_id[] = "rpg_locomotion_hitch";
 inline constexpr char k_rpg_close_quarters_id[] = "rpg_close_quarters";
 inline constexpr char k_rpg_obstacle_slide_id[] = "rpg_obstacle_slide";
+inline constexpr char k_rpg_jump_into_facade_id[] = "rpg_jump_into_facade";
 inline constexpr char k_rpg_camera_prop_gauntlet_id[] = "rpg_camera_prop_gauntlet";
 inline constexpr char k_rpg_camera_wall_pocket_id[] = "rpg_camera_wall_pocket";
 inline constexpr char k_rpg_camera_hill_bank_id[] = "rpg_camera_hill_bank";

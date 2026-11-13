@@ -2055,69 +2055,42 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   }
 
   if (locomotion_persistent_state != nullptr) {
-    constexpr float k_overlay_phase_jump = 0.2F;
-    constexpr float k_overlay_weight_rate = 2.1F;
-    constexpr float k_overlay_weight_spring = 20.0F;
-    auto& link_state = *locomotion_persistent_state;
     auto& overlay = graph_output.humanoid_selection->upper_body_overlay;
-    bool const has_target = overlay.active() && overlay.clip_id.has_value();
-    std::uint16_t const target_clip =
-        has_target ? *overlay.clip_id : Animation::k_unmapped_clip;
-    float const target_weight = has_target ? overlay.weight : 0.0F;
-    auto& shown = link_state.last_overlay;
-    float const dt = std::clamp(anim.time - link_state.overlay_sample_time, 0.0F, 0.1F);
-    float const max_step = k_overlay_weight_rate * dt;
-
-    Render::Creature::PlaybackLayerRequest next = shown;
-    if (shown.clip_id == Animation::k_unmapped_clip || shown.weight <= 1.0e-3F) {
-      next = {};
-      if (has_target) {
-        next = {.archetype = overlay.archetype,
+    Render::Creature::PlaybackLayerRequest target{};
+    if (overlay.active() && overlay.clip_id.has_value()) {
+      target = {.archetype = overlay.archetype,
                 .state = overlay.state,
                 .phase = overlay.phase,
-                .weight = std::min(target_weight, max_step),
+                .weight = overlay.weight,
                 .clip_variant = overlay.clip_variant,
-                .clip_id = target_clip,
+                .clip_id = *overlay.clip_id,
                 .mode = overlay.mode};
-      }
-    } else if (shown.clip_id == target_clip &&
-               std::abs(overlay.phase - shown.phase) <= k_overlay_phase_jump) {
-      next.archetype = overlay.archetype;
-      next.state = overlay.state;
-      next.phase = overlay.phase;
-      next.clip_variant = overlay.clip_variant;
-      next.mode = overlay.mode;
-      float velocity = link_state.overlay_weight_velocity;
-      velocity += (k_overlay_weight_spring * k_overlay_weight_spring *
-                       (target_weight - shown.weight) -
-                   2.0F * k_overlay_weight_spring * velocity) *
-                  dt;
-      velocity = std::clamp(velocity, -k_overlay_weight_rate, k_overlay_weight_rate);
-      next.weight = std::clamp(shown.weight + velocity * dt, 0.0F, 1.0F);
-      if (allow_animation_persistence) {
-        link_state.overlay_weight_velocity = velocity;
-      }
-    } else {
-      next.weight = std::max(0.0F, shown.weight - max_step);
     }
-    if (next.weight <= 1.0e-3F) {
-      next.clip_id = Animation::k_unmapped_clip;
-    }
-
-    if (next.clip_id != Animation::k_unmapped_clip) {
-      overlay.archetype = next.archetype;
-      overlay.state = next.state;
-      overlay.phase = next.phase;
-      overlay.clip_variant = next.clip_variant;
-      overlay.clip_id = next.clip_id;
-      overlay.mode = next.mode;
-      overlay.weight = next.weight;
-    } else {
-      overlay = {};
-    }
-    if (allow_animation_persistence) {
-      shown = next;
-      link_state.overlay_sample_time = anim.time;
+    bool const combat_pose = anim_ctx.inputs.is_attacking ||
+                             anim_ctx.inputs.is_guarding ||
+                             anim_ctx.inputs.is_hit_reacting;
+    bool const owns_full_body =
+        anim_ctx.inputs.is_dying || anim_ctx.inputs.is_dead ||
+        anim_ctx.inputs.is_hit_reacting || anim_ctx.inputs.is_attacking ||
+        anim_ctx.inputs.is_guarding || anim_ctx.inputs.is_exiting_guard ||
+        anim_ctx.inputs.is_in_hold_mode || anim_ctx.inputs.is_defensive_layout_locked ||
+        dodging || commander_jump.active;
+    auto const shown = RCP::advance_humanoid_overlay(
+        target,
+        locomotion_persistent_state->overlay,
+        {.time = anim.time,
+         .persist = allow_animation_persistence,
+         .response_seconds = combat_pose ? 0.035F : 0.08F,
+         .clear_immediately = owns_full_body && !target.active()});
+    overlay = {};
+    if (shown.active()) {
+      overlay.archetype = shown.archetype;
+      overlay.state = shown.state;
+      overlay.phase = shown.phase;
+      overlay.clip_variant = shown.clip_variant;
+      overlay.clip_id = shown.clip_id;
+      overlay.mode = shown.mode;
+      overlay.weight = shown.weight;
     }
   }
 

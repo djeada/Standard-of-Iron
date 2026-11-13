@@ -380,24 +380,19 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   EXPECT_TRUE(contains(source, "Framing{2.25F, 0.75F, 0.72F, 5.2F, 64.0F, 1.30F}"));
   EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
   EXPECT_TRUE(contains(source, "QVector3D const flat_forward("));
-  EXPECT_TRUE(contains(source, "pivot - flat_forward * m_framing_current.back"));
+  EXPECT_TRUE(contains(source, "pivot + orbit_back * m_framing_current.back"));
 
   EXPECT_TRUE(
       contains(source,
                "QVector3D const free_look_target =\n"
                "      eye_desired + forward_vec * m_framing_current.distance;"));
 
-  EXPECT_TRUE(contains(
-      source,
-      "  target_desired -= QVector3D(0.0F,\n"
-      "                              (m_framing_current.look_drop * (1.0F - "
-      "aim_blend)) +\n"
-      "                                  (crowd_lift * k_crowd_look_drop_share),\n"
-      "                              0.0F);"));
+  EXPECT_TRUE(contains(source, "target_desired -= orbit_up *"));
   EXPECT_FALSE(contains(source, "target_desired = pivot + forward_vec"));
 
-  EXPECT_TRUE(
-      contains(source, "camera.look_at(m_eye_smooth, m_target_smooth, up_final);"));
+  EXPECT_TRUE(contains(
+      source,
+      "camera.look_at(m_eye_smooth, m_target_smooth, QVector3D(0.0F, 1.0F, 0.0F));"));
   EXPECT_FALSE(contains(source, "shake_offset"));
 
   EXPECT_TRUE(contains(source, "bob_v + breath_v"));
@@ -810,8 +805,9 @@ TEST(CommanderControlRegressionTest, FpvCombatCameraHasNoSyntheticHitShakeOrPunc
   EXPECT_FALSE(contains(rig_hdr, "m_strike_camera_punch"));
   EXPECT_FALSE(contains(rig_hdr, "m_impact_shake"));
   EXPECT_FALSE(contains(rig_src, "shake_offset"));
-  EXPECT_TRUE(
-      contains(rig_src, "camera.look_at(m_eye_smooth, m_target_smooth, up_final);"));
+  EXPECT_TRUE(contains(
+      rig_src,
+      "camera.look_at(m_eye_smooth, m_target_smooth, QVector3D(0.0F, 1.0F, 0.0F));"));
 }
 
 TEST(CommanderControlRegressionTest, CommanderJumpKeyReachesTheController) {
@@ -935,10 +931,12 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(contains(controller_source, "constexpr float k_jump_duration ="));
   EXPECT_TRUE(contains(controller_source,
                        "cmd_comp->jump_height_offset = jump_height_offset;"));
-  EXPECT_TRUE(contains(controller_source, "m_jump_last_walkable_position"));
   EXPECT_TRUE(contains(controller_source, "m_jump_timer <= 0.0F"));
 
-  EXPECT_TRUE(contains(commander_mode_source, "commander_data->jump_active = false;"));
+  // The handoff clear lives in one helper; its behaviour is asserted by
+  // AHandoffLeavesNoAirborneStateToCutTheNextJump rather than by its spelling.
+  EXPECT_TRUE(
+      contains(commander_mode_source, "settle_body_on_handoff(*commander_data);"));
 
   EXPECT_TRUE(contains(prepare_submission_source, "RCP::set_model_world_y("));
   EXPECT_TRUE(contains(prepare_submission_source,
@@ -1025,20 +1023,13 @@ TEST(CommanderControlRegressionTest, DirectControlOwnsSteeringIntentAndNothingEl
   EXPECT_TRUE(contains(route_follow_source, "DesiredMotionSource::DirectControl"));
 }
 
-TEST(CommanderControlRegressionTest,
-     CommanderJumpAllowsAirborneTraversalAcrossGroundObstacles) {
+TEST(CommanderControlRegressionTest, AirborneCommanderSkipsRtsMovementCorrection) {
   const auto root = find_repo_root();
-  const auto controller_source = commander_control_source(root);
-  const auto motor_source = app_source(root, "commander_motor.cpp");
   const auto movement_source =
       read_text(root / "game" / "systems" / "movement" / "movement_system_gates.cpp");
-  ASSERT_FALSE(controller_source.empty());
-  ASSERT_FALSE(motor_source.empty());
   ASSERT_FALSE(movement_source.empty());
 
-  EXPECT_TRUE(contains(controller_source, ".airborne = input.jump_active,"));
-  EXPECT_TRUE(contains(motor_source, "airborne_step(request.to.x(), request.to.z())"));
-  EXPECT_TRUE(contains(controller_source, "jump_active"));
-  EXPECT_TRUE(contains(controller_source, "m_jump_safe_position_valid"));
+  // Airborne collision itself is covered behaviourally by
+  // CommanderMotorTest.AJumpIntoAWallStaysOutsideItAndNeverSnapsBack.
   EXPECT_TRUE(contains(movement_source, "commander->jump_active"));
 }

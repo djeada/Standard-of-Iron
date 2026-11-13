@@ -3,7 +3,7 @@
   "unit_test_filters": [
     {
       "binary": "app_tests",
-      "filter": "CommanderCameraRig*:CommanderControlControllerTest.*:CommanderDirectControlLatencyTest.*:CommanderModeTransitionTest.*:CommanderControlRegressionTest.*:CommanderPresentationTraceTest.*:CommanderDisplacementSourceTest.*:CommanderDefenseWindowsTest.*:CommanderAccessibilityTest.*:CommanderLifecycleSoakTest.*"
+      "filter": "CommanderCameraRig*:CommanderMotorTest.*:CommanderControlControllerTest.*:CommanderDirectControlLatencyTest.*:CommanderModeTransitionTest.*:CommanderModeResourcesTest.*:CommanderControlRegressionTest.*:CommanderPresentationTraceTest.*:CommanderDisplacementSourceTest.*:CommanderDefenseWindowsTest.*:CommanderAccessibilityTest.*:CommanderLifecycleSoakTest.*:CommanderBodyFacingTest.*:CommanderInputPortTest.*:CommanderLookTest.*:CommanderSharedTraversalTest.*"
     },
     {
       "binary": "arena_tests",
@@ -129,6 +129,13 @@
       "status": "required_green",
       "gate": "2",
       "notes": "Green since the commander's body collision and line of sight stopped using the RTS navigation footprint. 'home' registers a 4.3 x 4.4 m nav box for a building drawn 2.36 x 2.42 m, so a person-sized commander was stopped a metre short of every facade and the camera's obstruction ray fired on empty air. Person-scale queries now use the drawn extents from BuildingCollisionRegistry::get_building_body(); the nav footprint and its grid padding are untouched, so RTS formations keep their spacing."
+    },
+    {
+      "id": "rpg_jump_into_facade",
+      "status": "required_green",
+      "gate": "2",
+      "repeats": 3,
+      "notes": "Airborne motion used to skip collision entirely, so a running jump carried the commander through walls and building padding and an unwalkable landing teleported him back to the last walkable point. A 0.72 m jump clears no obstacle the grid records, so airborne steps now resolve against the same ground collision as walking. CommanderJumpLandsClean requires three complete jumps and no airborne or landing frame inside an obstacle; CommanderMotorCorrectionWithin catches any snap-back."
     },
     {
       "id": "rpg_pass_ranks",

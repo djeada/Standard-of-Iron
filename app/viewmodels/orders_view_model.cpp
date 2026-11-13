@@ -116,6 +116,7 @@ void OrdersViewModel::select_unit_by_id(qulonglong unit_id) {
   if (m_context.input != nullptr) {
     m_context.input->select_unit_by_id(static_cast<Engine::Core::EntityID>(unit_id),
                                        m_context.local_owner_id);
+    Engine::Core::note_coverage(Engine::Core::CoverageEvent::SelectionChange);
   }
 }
 

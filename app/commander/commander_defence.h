@@ -19,6 +19,7 @@ struct GuardTickInput {
   bool guard_held{false};
   bool dodging{false};
   bool airborne{false};
+  bool staggered{false};
   float dt{0.0F};
 };
 
@@ -45,10 +46,17 @@ public:
                                  const Engine::Core::TransformComponent& transform,
                                  PlayerFeedbackBus* bus);
 
-  void reset() { m_guard_was_active = false; }
+  void reset() {
+    m_guard_was_active = false;
+    m_contacts_adopted = false;
+  }
 
 private:
   bool m_guard_was_active = false;
+  // The counters live on the body. After a reset the body may be a different
+  // commander, a reloaded one, or the same one after a spell under RTS rules,
+  // so the first look adopts its totals instead of reporting them as new.
+  bool m_contacts_adopted = false;
   std::uint32_t m_observed_blocked_contacts = 0;
   std::uint32_t m_observed_perfect_guard_contacts = 0;
   std::uint32_t m_observed_dodged_contacts = 0;

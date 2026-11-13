@@ -50,7 +50,9 @@ void CommanderControlController::reset() {
   m_body_facing.reset();
   m_look.reset();
   m_camera_rig.reset();
+  m_tick_aim_ray.reset();
   m_locomotion.reset();
+  m_lunge.reset();
   m_targeting.reset();
   m_defence.reset();
   m_strike.reset();
@@ -353,24 +355,34 @@ void CommanderControlController::steer_view(Engine::Core::World& world,
 }
 
 auto CommanderControlController::advance_jump_stage(
-    const App::Core::CommanderHandles& body, float dt) -> bool {
+    const App::Core::CommanderHandles& body, const TickFacts& facts, float dt) -> bool {
   auto const& tick = m_input_port.tick();
+  bool const hold_press =
+      tick.jump_pressed &&
+      (facts.recovering_soon() ||
+       m_locomotion.frees_within(k_commander_movement_buffer_seconds));
   auto const jump = m_locomotion.advance_jump(
       body,
-      {.jump_pressed = tick.jump_pressed,
+      {.jump_pressed = tick.jump_pressed && !hold_press,
        .primary_held = tick.primary_held,
        .guard_held = tick.guard_held,
        .ability_requested = tick.shield_bash_pressed || tick.vanguard_rush_pressed ||
                             tick.second_wind_pressed,
+       .staggered = facts.staggered(),
        .dt = dt});
   m_input_port.record_jump(jump.edge);
-  m_input_port.clear_jump_edge();
+  if (hold_press) {
+    m_input_port.carry_jump_edge();
+  } else {
+    m_input_port.clear_jump_edge();
+  }
   return jump.active;
 }
 
 auto CommanderControlController::start_dodge_stage(
     Engine::Core::World& world,
     const App::Core::CommanderHandles& body,
+    const TickFacts& facts,
     const MotionOutcome& motion) -> App::Core::MoveBasis {
   auto const& tick = m_input_port.tick();
   auto const basis =
@@ -379,15 +391,24 @@ auto CommanderControlController::start_dodge_stage(
                                                  motion.right_axis,
                                                  body.transform,
                                                  m_targeting.locked_position(world));
+  bool const hold_press =
+      tick.dodge_pressed &&
+      (facts.recovering_soon() ||
+       m_locomotion.frees_within(k_commander_movement_buffer_seconds));
   m_input_port.record_dodge(
       m_locomotion.try_start_dodge(body,
-                                   {.pressed = tick.dodge_pressed,
+                                   {.pressed = tick.dodge_pressed && !hold_press,
+                                    .staggered = facts.staggered(),
                                     .has_direction = tick.has_dodge_direction,
                                     .direction = tick.dodge_direction,
                                     .move = basis.move,
                                     .forward = basis.forward},
                                    m_latency_probe));
-  m_input_port.clear_dodge_edge();
+  if (hold_press) {
+    m_input_port.carry_dodge_edge();
+  } else {
+    m_input_port.clear_dodge_edge();
+  }
   return basis;
 }
 
@@ -403,20 +424,22 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
       body.transform.position.x, body.transform.position.y, body.transform.position.z);
 
   m_locomotion.decay_dodge_kick(dt);
-  out.jump_active = advance_jump_stage(body, dt);
+  out.jump_active = advance_jump_stage(body, facts, dt);
   m_defence.advance_upkeep(body.entity, body.commander_data, tick.guard_held, dt);
-  auto const basis = start_dodge_stage(world, body, out);
+  auto const basis = start_dodge_stage(world, body, facts, out);
 
-  out.report = m_locomotion.advance_motion(body,
-                                           m_motor,
-                                           {.move = basis.move,
-                                            .forward_axis = out.forward_axis,
-                                            .right_axis = out.right_axis,
-                                            .run_held = tick.run,
-                                            .drawing_bow = facts.drawing_bow,
-                                            .jump_active = out.jump_active,
-                                            .dt = dt});
-  m_locomotion.recover_from_fall(body, m_motor, out.jump_active, out.report);
+  // A staggered body takes no steering: it brakes where it was hit.
+  out.report =
+      m_locomotion.advance_motion(body,
+                                  m_motor,
+                                  {.move = facts.staggered() ? QVector3D() : basis.move,
+                                   .forward_axis = out.forward_axis,
+                                   .right_axis = out.right_axis,
+                                   .run_held = tick.run,
+                                   .drawing_bow = facts.drawing_bow,
+                                   .jump_active = out.jump_active,
+                                   .squared_up = squared_up(facts),
+                                   .dt = dt});
 
   out.report.lunge_distance =
       m_lunge.apply(world,
@@ -451,19 +474,23 @@ void CommanderControlController::face_body(const App::Core::CommanderHandles& bo
     }
   }
 
-  bool const must_face_view = tick.primary_held || tick.guard_held ||
-                              m_locomotion.dodge_state() != DodgeState::None ||
-                              motion.jump_active || facts.drawing_bow ||
-                              m_targeting.locked_id() != 0 ||
-                              facts.attack_animation_active;
+  // The renderer rolls about the requested travel axis. Turning the body at
+  // the same time twists a backward roll through a half turn mid-somersault.
+  // Keep takeoff facing during the roll, as during an unsteered jump.
+  bool const dodging = m_locomotion.dodge_state() != DodgeState::None;
+  std::optional<float> travel_yaw;
+  if (!dodging && !motion.jump_active && motion.report.move.lengthSquared() > 1.0e-4F) {
+    travel_yaw = std::atan2(motion.report.move.x(), motion.report.move.z()) *
+                 App::Core::k_radians_to_degrees;
+  }
 
   float const body_yaw =
       m_body_facing.advance({.view_yaw = m_look.yaw(),
                              .attack_animation_active = facts.attack_animation_active,
                              .action_redirect_authority = action_redirect_authority,
-                             .must_face_view = must_face_view,
-                             .snap_to_view = tick.primary_held,
-                             .follows_travel = m_locomotion.follows_travel(),
+                             .must_face_view = !dodging && squared_up(facts),
+                             .snap_to_view = !dodging && tick.primary_held,
+                             .travel_yaw = travel_yaw,
                              .dt = dt});
   body.transform.rotation.y = body_yaw;
   body.transform.desired_yaw = body_yaw;
@@ -707,16 +734,25 @@ auto CommanderControlController::resolve_handles(
           movement};
 }
 
+auto CommanderControlController::squared_up(const TickFacts& facts) const -> bool {
+  auto const& tick = m_input_port.tick();
+  return tick.primary_held || tick.guard_held || facts.drawing_bow ||
+         facts.attack_animation_active || m_targeting.locked_id() != 0;
+}
+
 auto CommanderControlController::read_tick_facts(const Engine::Core::Entity& commander)
     -> TickFacts {
   auto const* aim_state =
       commander.get_component<Engine::Core::RpgCommanderAimComponent>();
   auto const* active_action =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
+  auto const* stagger = commander.get_component<Engine::Core::StaggerComponent>();
   return {.active_action = active_action,
           .attack_animation_active =
               active_action != nullptr && active_action->action_running,
-          .drawing_bow = aim_state != nullptr && aim_state->is_drawing()};
+          .drawing_bow = aim_state != nullptr && aim_state->is_drawing(),
+          .stagger_remaining =
+              stagger != nullptr ? std::max(0.0F, stagger->remaining) : 0.0F};
 }
 
 void CommanderControlController::present_tick(Engine::Core::World& world,
@@ -724,7 +760,6 @@ void CommanderControlController::present_tick(Engine::Core::World& world,
                                               Render::GL::Camera* camera,
                                               float dt) {
   m_presentation.publish_sample(body.entity, body.transform, dt);
-  m_look.set_pitch(m_look.pitch());
   if (camera != nullptr) {
     update_camera(world, body.entity, *camera, dt);
   }
@@ -742,6 +777,7 @@ auto CommanderControlController::advance_combat(Engine::Core::World& world,
                         {.guard_held = m_input_port.tick().guard_held,
                          .dodging = m_locomotion.dodge_state() != DodgeState::None,
                          .airborne = motion.jump_active,
+                         .staggered = facts.staggered(),
                          .dt = dt},
                         m_latency_probe);
   activate_abilities(world, body, commander_id, local_owner_id, dt);
@@ -807,8 +843,6 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   if (transform == nullptr) {
     return;
   }
-
-  m_look.set_pitch(m_look.pitch());
 
   App::Core::CameraFeed feed;
   feed.dt = dt;

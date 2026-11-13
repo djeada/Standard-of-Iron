@@ -4,10 +4,15 @@
 #include <sstream>
 #include <string>
 
+#include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_defence.h"
 #include "app/commander/commander_mode_coordinator.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
+#include "game/systems/commander_system.h"
+#include "game/systems/stamina_system.h"
+#include "scene/camera.h"
 
 namespace {
 
@@ -158,3 +163,127 @@ TEST(CommanderModeTransitionTest, ARallyInDirectControlNeedsNoCursorPlacement) {
   EXPECT_TRUE(effects.reset_commander_input);
   EXPECT_FALSE(data->fpv_controlled) << "the commander plants the flag where he stands";
 }
+
+namespace {
+class CommanderModeResourcesTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    commander = session.world().create_entity();
+    commander->add_component<Engine::Core::TransformComponent>();
+    auto* unit = commander->add_component<Engine::Core::UnitComponent>();
+    unit->owner_id = 1;
+    unit->health = 40;
+    unit->max_health = 100;
+    unit->spawn_type = Game::Units::SpawnType::Swordsman;
+    commander->add_component<Engine::Core::MovementComponent>();
+    commander->add_component<Engine::Core::CommanderComponent>();
+    stamina = commander->add_component<Engine::Core::StaminaComponent>();
+    guard = commander->add_component<Engine::Core::CommanderGuardComponent>();
+  }
+  auto context() -> App::Core::CommanderModeContext {
+    return {.world = &session.world(),
+            .commander = commander,
+            .commander_camera = &camera,
+            .commander_control = &controller,
+            .controlled_commander_id = commander->get_id(),
+            .local_owner_id = 1};
+  }
+  Game::Session::SessionContext session;
+  Engine::Core::Entity* commander{};
+  Engine::Core::StaminaComponent* stamina{};
+  Engine::Core::CommanderGuardComponent* guard{};
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  App::Core::CommanderModeCoordinator coordinator;
+};
+
+TEST_F(CommanderModeResourcesTest, FirstEntryDoesNotRefillASpentPool) {
+  stamina->max_stamina = 100.0F;
+  stamina->stamina = 12.0F;
+  stamina->regen_delay_remaining = 0.6F;
+  ASSERT_TRUE(coordinator.enter_commander_control_mode(context()).entered);
+  EXPECT_FLOAT_EQ(stamina->stamina, 12.0F);
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.6F);
+  EXPECT_GE(stamina->max_stamina, 100.0F);
+}
+
+TEST_F(CommanderModeResourcesTest, RepeatedSwitchesCannotEraseCombatDebt) {
+  stamina->stamina = 17.0F;
+  stamina->regen_delay_remaining = 0.6F;
+  guard->guard_break_remaining = 0.8F;
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  data->posture = 90.0F;
+  data->second_wind_cooldown_remaining = 12.0F;
+  for (int cycle = 0; cycle < 100; ++cycle) {
+    ASSERT_TRUE(coordinator.enter_commander_control_mode(context()).entered);
+    static_cast<void>(coordinator.exit_commander_control_mode(context()));
+    EXPECT_FLOAT_EQ(stamina->stamina, 17.0F);
+    EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.6F);
+    EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.8F);
+    EXPECT_FLOAT_EQ(data->posture, 90.0F);
+    EXPECT_FLOAT_EQ(data->second_wind_cooldown_remaining, 12.0F);
+    EXPECT_EQ(commander->get_component<Engine::Core::UnitComponent>()->health, 40);
+  }
+}
+
+TEST_F(CommanderModeResourcesTest, SwitchingDoesNotStartStaminaRecoveryEarly) {
+  stamina->stamina = 40.0F;
+  stamina->spend(20.0F);
+  ASSERT_TRUE(coordinator.enter_commander_control_mode(context()).entered);
+  Game::Systems::StaminaSystem system;
+  system.update(&session.world(), 0.25F);
+  EXPECT_FLOAT_EQ(stamina->stamina, 20.0F);
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.5F);
+  static_cast<void>(coordinator.exit_commander_control_mode(context()));
+  system.update(&session.world(), 0.25F);
+  ASSERT_TRUE(coordinator.enter_commander_control_mode(context()).entered);
+  EXPECT_FLOAT_EQ(stamina->stamina, 20.0F);
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.25F);
+  system.update(&session.world(), 0.3F);
+  EXPECT_GT(stamina->stamina, 20.0F);
+}
+
+TEST_F(CommanderModeResourcesTest, AHandoffLeavesNoAirborneStateToCutTheNextJump) {
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  for (bool const entering : {true, false}) {
+    data->jump_active = true;
+    data->jump_height_offset = 0.4F;
+    data->airborne_velocity = -11.0F;
+    data->dive_attack_active = true;
+    if (entering) {
+      ASSERT_TRUE(coordinator.enter_commander_control_mode(context()).entered);
+    } else {
+      static_cast<void>(coordinator.exit_commander_control_mode(context()));
+    }
+    EXPECT_FALSE(data->jump_active) << "entering=" << entering;
+    EXPECT_FLOAT_EQ(data->jump_height_offset, 0.0F) << "entering=" << entering;
+    EXPECT_FLOAT_EQ(data->airborne_velocity, 0.0F) << "entering=" << entering;
+    EXPECT_FALSE(data->dive_attack_active)
+        << "a stale dive shortens the next jump; entering=" << entering;
+  }
+}
+
+TEST_F(CommanderModeResourcesTest, GuardBreakRecoveryHasOneSimulationOwnerInBothModes) {
+  Game::Systems::CommanderSystem system;
+  App::Core::CommanderDefence defence;
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  for (bool controlled : {false, true}) {
+    data->fpv_controlled = controlled;
+    guard->guard_break_remaining = 0.5F;
+    if (controlled) {
+      defence.advance_upkeep(*commander, data, false, 0.1F);
+    }
+    // Controller upkeep cannot advance combat recovery independently of the world.
+    EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.5F);
+    system.update(&session.world(), 0.1F);
+    EXPECT_NEAR(guard->guard_break_remaining, 0.4F, 1.0e-6F);
+    defence.apply_guard(*commander, {.guard_held = true, .dt = 0.0F}, nullptr);
+    EXPECT_FALSE(guard->active);
+    system.update(&session.world(), 0.5F);
+    EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.0F);
+    defence.apply_guard(*commander, {.guard_held = true, .dt = 0.0F}, nullptr);
+    EXPECT_TRUE(guard->active);
+    defence.apply_guard(*commander, {.guard_held = false, .dt = 0.0F}, nullptr);
+  }
+}
+} // namespace

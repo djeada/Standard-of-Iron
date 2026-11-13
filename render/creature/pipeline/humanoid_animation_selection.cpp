@@ -871,6 +871,10 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
     if (!anim.inputs.is_wading || anim.inputs.wade_amount <= 0.0F ||
         anim.inputs.is_attacking || anim.inputs.is_casting || anim.inputs.is_mounted ||
         anim.inputs.has_showcase_clip || anim.inputs.has_authored_action_clip ||
+        anim.inputs.is_guarding || anim.inputs.is_exiting_guard ||
+        anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold ||
+        anim.inputs.is_defensive_layout_locked ||
+        anim.ambient_idle_type != Render::GL::AmbientIdleType::None ||
         anim.inputs.is_hit_reacting || anim.inputs.is_healing ||
         anim.inputs.is_constructing || anim.inputs.is_dying || anim.inputs.is_dead) {
       return false;
@@ -879,9 +883,9 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
     HumanoidAnimationSelection wade = target;
     wade.clip_id = Animation::k_humanoid_wade_clip;
     wade.clip_variant = 0U;
-    wade.phase = std::fmod(std::max(anim.inputs.time, 0.0F),
-                           Animation::k_humanoid_wade_cycle_time) /
-                 Animation::k_humanoid_wade_cycle_time;
+    // Match the accepted stride, including starts/stops, instead of waving the
+    // arms on a wall-clock loop unrelated to the legs underneath the water.
+    wade.phase = anim.gait.cycle_phase;
     target.upper_body_overlay = playback_layer_from_selection(
         wade,
         std::clamp(anim.inputs.wade_amount, 0.0F, 1.0F),

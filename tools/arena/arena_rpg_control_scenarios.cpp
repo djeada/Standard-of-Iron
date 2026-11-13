@@ -705,6 +705,74 @@ auto build_rpg_control_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_jump_into_facade_id),
+        QStringLiteral("RPG Jump Into Facade"),
+        QStringLiteral(
+            "Behind-head commander jumps straight at a house, then diagonally into "
+            "its facade, then away from it. A 0.72 m jump clears nothing a house "
+            "stands on: the airborne body has to stop at the facade or slide along "
+            "it exactly as a walking one does, and land where it stopped. Passing "
+            "through and snapping back on landing is the defect this pins."),
+        8.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -6.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto home = building(QStringLiteral("jump_home"),
+                         Game::Units::SpawnType::Home,
+                         Nation::RomanRepublic,
+                         1,
+                         1,
+                         {0.0F, 0.0F, 0.0F});
+    home.health_override = home.max_health_override = 4000;
+    s.groups = {commander, home};
+
+    auto move = [](float time, QVector3D axes, std::optional<float> yaw = {}) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = 0;
+      step.rpg_view_yaw_degrees = yaw;
+      return step;
+    };
+    auto jump = [](float time) {
+      return at(time, Command::RpgJump, QStringLiteral("rpg_commander"));
+    };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}, 0.0F),
+        jump(0.90F),
+        move(2.40F, {0.0F, 0.0F, 0.0F}),
+        move(2.70F, {0.0F, 0.0F, 1.0F}, 30.0F),
+        jump(2.90F),
+        move(4.60F, {0.0F, 0.0F, 0.0F}),
+        move(5.00F, {0.0F, 0.0F, -1.0F}, 0.0F),
+        jump(5.20F),
+        move(6.80F, {0.0F, 0.0F, 0.0F}),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+
+    s.expectations.push_back(expectation(Expect::RpgApproachWithin,
+                                         QStringLiteral("rpg_commander"),
+                                         QStringLiteral("jump_home"),
+                                         0.0F,
+                                         0.0F,
+                                         home_facade_reach()));
+    s.expectations.push_back(expectation(
+        Expect::CommanderJumpLandsClean, QStringLiteral("rpg_commander"), {}, 3.0F));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_rpg_camera_prop_gauntlet_id),
         QStringLiteral("RPG Camera Prop Gauntlet"),
         QStringLiteral(

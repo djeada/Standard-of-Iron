@@ -91,6 +91,9 @@ private:
   [[nodiscard]] auto measure_lock(Engine::Core::World& world,
                                   const Engine::Core::TransformComponent& body,
                                   float view_yaw) -> std::optional<LockGeometry>;
+  // Forget the explicit lock only; the soft target survives to seed the next scan.
+  void drop_lock();
+  // Forget the explicit lock and the soft target.
   void release_lock();
   [[nodiscard]] auto lock_expired(const LockGeometry& geometry, float dt) -> bool;
   [[nodiscard]] auto
@@ -105,6 +108,8 @@ private:
   float m_lock_spring_yaw = 0.0F;
   bool m_lock_spring_yaw_valid = false;
   float m_lock_manual_override_timer = 0.0F;
+  // False until the first look at a body's counter, which is adopted silently.
+  bool m_hit_confirm_adopted = false;
   std::uint32_t m_observed_hit_confirm_sequence = 0;
 };
 

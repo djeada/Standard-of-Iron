@@ -346,6 +346,14 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     auto* unit = &unit_ref;
     auto* transform = &transform_ref;
 
+    // A combat penalty belongs to world time, not to the current input mode.
+    // Keeping one owner also prevents controller and world updates ticking it twice.
+    if (auto* guard =
+            commander_entity->get_component<Engine::Core::CommanderGuardComponent>()) {
+      guard->guard_break_remaining =
+          std::max(0.0F, guard->guard_break_remaining - std::max(0.0F, delta_time));
+    }
+
     commander->rally_cooldown_remaining =
         std::max(0.0F, commander->rally_cooldown_remaining - delta_time);
     commander->rally_feedback_time =
@@ -612,6 +620,7 @@ auto CommanderSystem::access() const -> Engine::Core::SystemAccess {
                                      BuildingComponent,
                                      PendingRemovalComponent>{},
                                Writes<UnitComponent,
+                                      CommanderGuardComponent,
                                       CommanderComponent,
                                       CommanderAuraBuffComponent,
                                       MoraleComponent,

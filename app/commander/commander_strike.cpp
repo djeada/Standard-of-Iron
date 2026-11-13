@@ -75,8 +75,10 @@ auto hit_role_boost(const Engine::Core::RpgCommanderActionComponent& struck) -> 
 
 void CommanderStrike::reset() {
   m_observed_action_hit_count = 0;
+  m_hits_adopted = false;
   m_combo_miss_timer = 0.0F;
   m_primary_held_duration = 0.0F;
+  m_held_restart_delay = 0.0F;
 }
 
 void CommanderStrike::advance_hold_timers(
@@ -294,15 +296,13 @@ auto CommanderStrike::observe_hits(Engine::Core::Entity& commander)
     -> std::optional<float> {
   auto const* struck =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
-  if (struck == nullptr) {
+  bool const first_look = !m_hits_adopted;
+  m_hits_adopted = true;
+  if (struck == nullptr || !struck->action_running) {
     m_observed_action_hit_count = 0;
     return std::nullopt;
   }
-  if (!struck->action_running) {
-    m_observed_action_hit_count = 0;
-    return std::nullopt;
-  }
-  if (struck->hit_target_count < m_observed_action_hit_count) {
+  if (first_look || struck->hit_target_count < m_observed_action_hit_count) {
     m_observed_action_hit_count = struck->hit_target_count;
     return std::nullopt;
   }

@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "name": "rpg_feel_mode_resources",
+  "loop_seconds": 0,
+  "required_coverage": ["selection_change"],
+  "actions": [
+    {
+      "at": 0.1,
+      "action": "select_id",
+      "argument": "1"
+    },
+    {
+      "at": 0.2,
+      "action": "commander_enter",
+      "argument": ""
+    },
+    {
+      "at": 0.6,
+      "action": "commander_dodge",
+      "argument": ""
+    },
+    {
+      "at": 1.15,
+      "action": "commander_exit",
+      "argument": ""
+    },
+    {
+      "at": 1.25,
+      "action": "commander_enter",
+      "argument": ""
+    },
+    {
+      "at": 2.0,
+      "action": "commander_dodge",
+      "argument": ""
+    },
+    {
+      "at": 2.55,
+      "action": "commander_exit",
+      "argument": ""
+    },
+    {
+      "at": 2.65,
+      "action": "commander_enter",
+      "argument": ""
+    },
+    {
+      "at": 3.4,
+      "action": "commander_dodge",
+      "argument": ""
+    },
+    {
+      "at": 3.95,
+      "action": "commander_exit",
+      "argument": ""
+    },
+    {
+      "at": 4.05,
+      "action": "commander_enter",
+      "argument": ""
+    },
+    {
+      "at": 4.8,
+      "action": "commander_dodge",
+      "argument": ""
+    },
+    {
+      "at": 5.35,
+      "action": "commander_exit",
+      "argument": ""
+    },
+    {
+      "at": 5.45,
+      "action": "commander_enter",
+      "argument": ""
+    },
+    {
+      "at": 6.2,
+      "action": "commander_guard_down",
+      "argument": ""
+    },
+    {
+      "at": 6.8,
+      "action": "commander_guard_up",
+      "argument": ""
+    },
+    {
+      "at": 7.0,
+      "action": "commander_exit",
+      "argument": ""
+    }
+  ]
+}

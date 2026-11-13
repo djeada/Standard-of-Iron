@@ -99,6 +99,9 @@ private:
   float m_combo_miss_timer = 0.0F;
   float m_primary_held_duration = 0.0F;
   float m_held_restart_delay = 0.0F;
+  // False until the first look at a body, whose running action may already
+  // have landed hits under the previous owner.
+  bool m_hits_adopted = false;
   std::uint8_t m_observed_action_hit_count = 0;
 };
 

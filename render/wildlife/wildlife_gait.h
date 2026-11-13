@@ -12,6 +12,8 @@ struct GaitPlan {
   float lift{0.0F};
 
   float hip_swing{0.0F};
+
+  float paw_flex{0.0F};
 };
 
 [[nodiscard]] constexpr auto gait_advance(const GaitPlan& plan) noexcept -> float {

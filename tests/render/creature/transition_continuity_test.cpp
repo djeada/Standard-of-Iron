@@ -225,4 +225,98 @@ TEST(HumanoidTransitionContinuity, ALongGapStartsFresh) {
       << "a body that was not sampled for a second has nothing on screen to blend from";
 }
 
+auto water_overlay(float phase = 0.5F) -> Render::Creature::PlaybackLayerRequest {
+  return {.archetype = k_archetype,
+          .state = AnimationStateId::Walk,
+          .phase = phase,
+          .weight = 1.0F,
+          .clip_id = Animation::k_humanoid_wade_clip,
+          .mode = Render::Creature::PlaybackLayerMode::UpperBodyOverlay};
+}
+
+TEST(HumanoidOverlayContinuity, WaterCycleWrapDoesNotDropTheArms) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(0.99F), memory, {.time = 1.0F});
+  auto const next =
+      advance_humanoid_overlay(water_overlay(0.01F), memory, {.time = 1.0F + k_frame});
+  EXPECT_FLOAT_EQ(next.weight, 1.0F);
+  EXPECT_FLOAT_EQ(next.phase, 0.01F);
+  EXPECT_EQ(next.clip_id, Animation::k_humanoid_wade_clip);
+}
+
+TEST(HumanoidOverlayContinuity, BlendWeightDoesNotDependOnFrameRate) {
+  using namespace Render::Creature::Pipeline;
+  float reference = 0.0F;
+  for (const int hz : {30, 60, 120}) {
+    HumanoidOverlayMemory memory{};
+    (void)advance_humanoid_overlay({}, memory, {.time = 0.0F});
+    Render::Creature::PlaybackLayerRequest shown{};
+    for (int frame = 1; frame <= hz / 5; ++frame) {
+      shown = advance_humanoid_overlay(
+          water_overlay(), memory, {.time = static_cast<float>(frame) / hz});
+    }
+    EXPECT_GT(shown.weight, 0.9F);
+    EXPECT_LE(shown.weight, 1.0F);
+    if (hz == 30) {
+      reference = shown.weight;
+    } else {
+      EXPECT_NEAR(shown.weight, reference, 1.0e-5F);
+    }
+  }
+}
+
+TEST(HumanoidOverlayContinuity, AReactionClearsTheDepartingWaterPoseImmediately) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(), memory, {.time = 1.0F});
+  auto const reaction = advance_humanoid_overlay(
+      {}, memory, {.time = 1.0F + k_frame, .clear_immediately = true});
+  EXPECT_FALSE(reaction.active());
+  EXPECT_FALSE(memory.shown.active());
+}
+
+TEST(HumanoidOverlayContinuity, PreviewPassDoesNotAdvancePersistentBlend) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay({}, memory, {.time = 1.0F});
+  auto const preview = advance_humanoid_overlay(
+      water_overlay(), memory, {.time = 1.0F + k_frame, .persist = false});
+  EXPECT_FLOAT_EQ(memory.sample_time, 1.0F);
+  EXPECT_FALSE(memory.shown.active());
+  auto const visible =
+      advance_humanoid_overlay(water_overlay(), memory, {.time = 1.0F + k_frame});
+  EXPECT_FLOAT_EQ(visible.weight, preview.weight);
+  auto const same_frame =
+      advance_humanoid_overlay(water_overlay(), memory, {.time = 1.0F + k_frame});
+  EXPECT_FLOAT_EQ(same_frame.weight, visible.weight);
+}
+
+TEST(HumanoidOverlayContinuity, ASeekDoesNotResurrectThePreviousPose) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(), memory, {.time = 8.0F});
+  auto const after_seek = advance_humanoid_overlay({}, memory, {.time = 2.0F});
+  EXPECT_FALSE(after_seek.active());
+  auto const after_cull =
+      advance_humanoid_overlay(water_overlay(0.7F), memory, {.time = 9.0F});
+  EXPECT_FLOAT_EQ(after_cull.weight, 1.0F);
+  EXPECT_FLOAT_EQ(after_cull.phase, 0.7F);
+}
+
+TEST(HumanoidOverlayContinuity, AChangedArchetypeFadesBeforeSwappingTheSameClip) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(), memory, {.time = 0.0F});
+  auto target = water_overlay();
+  target.archetype = k_archetype + 1U;
+  auto const departing = advance_humanoid_overlay(target, memory, {.time = 0.02F});
+  EXPECT_EQ(departing.archetype, k_archetype);
+  EXPECT_LT(departing.weight, 1.0F);
+  auto const arriving = advance_humanoid_overlay(target, memory, {.time = 0.10F});
+  EXPECT_EQ(arriving.archetype, target.archetype);
+  EXPECT_GT(arriving.weight, 0.0F);
+  EXPECT_LT(arriving.weight, 1.0F);
+}
+
 } // namespace
