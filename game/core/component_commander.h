@@ -150,7 +150,13 @@ public:
   static constexpr float k_direct_control_gait_floor_speed = 0.60F;
   float posture{0.0F};
   float posture_max{100.0F};
+  // This commander is open: hits on it are punishing (guard broken, rushed,
+  // bashed). It is a vulnerability, never an opportunity.
   float punish_window_remaining{0.0F};
+  // This commander perfect-guarded riposte_target_id and may punish it: the
+  // next hit on that body is a punishing one. Consumed by that hit.
+  float riposte_window_remaining{0.0F};
+  EntityID riposte_target_id{0};
   bool close_camera_mode{false};
 
   float flag_rally_cost{3.0F};

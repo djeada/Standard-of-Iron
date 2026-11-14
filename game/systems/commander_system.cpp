@@ -364,6 +364,11 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         std::max(0.0F, commander->second_wind_cooldown_remaining - delta_time);
     commander->punish_window_remaining =
         std::max(0.0F, commander->punish_window_remaining - delta_time);
+    commander->riposte_window_remaining =
+        std::max(0.0F, commander->riposte_window_remaining - delta_time);
+    if (commander->riposte_window_remaining <= 0.0F) {
+      commander->riposte_target_id = 0;
+    }
     float const posture_recovery = (guard != nullptr && guard->active)
                                        ? k_guarded_posture_recovery_per_second
                                        : k_posture_recovery_per_second;

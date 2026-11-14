@@ -49,6 +49,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["posture_ratio"] = 0.0;
   result["punish_window_remaining"] = 0.0;
   result["punish_active"] = false;
+  result["exposed_window_remaining"] = 0.0;
   result["perfect_guard_remaining"] = 0.0;
   result["perfect_guard_active"] = false;
   result["guard_break_remaining"] = 0.0;
@@ -176,9 +177,13 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
       commander->posture_max > 0.0F
           ? static_cast<double>(commander->posture / commander->posture_max)
           : 0.0;
+  // "Punish" on the HUD is the player's opportunity after a perfect guard. Being
+  // open to punishment (guard broken) has its own callout.
   result["punish_window_remaining"] =
+      static_cast<double>(commander->riposte_window_remaining);
+  result["punish_active"] = commander->riposte_window_remaining > 0.0F;
+  result["exposed_window_remaining"] =
       static_cast<double>(commander->punish_window_remaining);
-  result["punish_active"] = commander->punish_window_remaining > 0.0F;
   result["finisher_ready"] = commander->combo_step >= 3;
   result["fight_context"] = QStringLiteral("none");
   result["threat_left"] = false;

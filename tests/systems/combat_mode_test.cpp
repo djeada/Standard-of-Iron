@@ -2741,7 +2741,10 @@ TEST_F(CombatModeTest, PerfectGuardNegatesDamageAndDoesNotConsumeCommanderComboS
   EXPECT_EQ(attacker_cmd->combo_step, 2);
   EXPECT_TRUE(attacker_cmd->power_strike_active);
   EXPECT_FALSE(attacker_cmd->just_struck_enemy);
-  EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
+  EXPECT_GT(target_cmd->riposte_window_remaining, 0.0F);
+  EXPECT_EQ(target_cmd->riposte_target_id, attacker->get_id());
+  EXPECT_FLOAT_EQ(target_cmd->punish_window_remaining, 0.0F)
+      << "a perfect guard must not leave the defender open to punishment";
 }
 
 TEST_F(CombatModeTest, ABeatenCommanderIsNeverStaggerLocked) {
@@ -5389,7 +5392,9 @@ TEST_F(CombatModeTest, CombatHitResolverUsesCommanderGuardForCommanderTarget) {
   EXPECT_TRUE(attacker->has_component<StaggerComponent>());
   EXPECT_EQ(attacker_cmd->combo_step, 2);
   EXPECT_TRUE(attacker_cmd->power_strike_active);
-  EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
+  EXPECT_GT(target_cmd->riposte_window_remaining, 0.0F);
+  EXPECT_EQ(target_cmd->riposte_target_id, attacker->get_id());
+  EXPECT_FLOAT_EQ(target_cmd->punish_window_remaining, 0.0F);
 }
 
 TEST_F(CombatModeTest, NormalCommanderBlockPreventsHealthDamageAtWeaponContact) {
@@ -5578,6 +5583,62 @@ TEST_F(CombatModeTest, CommanderFinisherUsesPunishOpeningThroughSharedResolver) 
   EXPECT_EQ(result.damage.effective_damage, 31);
   EXPECT_EQ(target->get_component<UnitComponent>()->health, 69);
   EXPECT_TRUE(attacker_commander->just_struck_enemy);
+}
+
+TEST_F(CombatModeTest, APerfectGuardDoesNotExposeTheDefenderToTheNextHit) {
+  auto* defender = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* defender_cmd = defender->get_component<CommanderComponent>();
+  ASSERT_NE(defender_cmd, nullptr);
+  auto* guard = defender->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  guard->perfect_guard_remaining = 0.1F;
+  auto* defender_rpg = defender->add_component<RpgHealthComponent>();
+  defender_rpg->active = true;
+  defender_rpg->crit_chance = 0.0F;
+  auto* attacker = make_enemy_soldier(*world, 0.0F, 1.0F);
+
+  auto const turned = Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+      world.get(), defender, 40, attacker->get_id());
+  ASSERT_TRUE(turned.perfect_guarded);
+  EXPECT_EQ(defender_cmd->riposte_target_id, attacker->get_id());
+
+  guard->active = false;
+  auto const follow_up = Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+      world.get(), defender, 10, attacker->get_id());
+  EXPECT_GT(follow_up.effective_damage, 0);
+  EXPECT_FALSE(defender->has_component<StaggerComponent>())
+      << "parrying used to open the parrier, so the next ordinary hit flinched them";
+}
+
+TEST_F(CombatModeTest, ARiposteMakesOneHitOnTheTurnedAttackerPunishing) {
+  auto* player = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* player_cmd = player->get_component<CommanderComponent>();
+  ASSERT_NE(player_cmd, nullptr);
+  auto* turned = make_enemy_soldier(*world, 0.0F, 1.0F);
+  auto* bystander = make_enemy_soldier(*world, 1.0F, 1.0F);
+  player_cmd->riposte_window_remaining = 0.6F;
+  player_cmd->riposte_target_id = turned->get_id();
+
+  // Below 20 damage an ordinary hit does not flinch; the stagger is the riposte's.
+  auto const ordinary = Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world.get(), bystander, 15, player->get_id());
+  ASSERT_GT(ordinary.effective_damage, 0);
+  EXPECT_FALSE(bystander->has_component<StaggerComponent>());
+  EXPECT_FLOAT_EQ(player_cmd->riposte_window_remaining, 0.6F)
+      << "the riposte belongs to the attacker that was turned";
+
+  auto const riposte = Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world.get(), turned, 15, player->get_id());
+  EXPECT_GT(riposte.effective_damage, ordinary.effective_damage);
+  EXPECT_TRUE(turned->has_component<StaggerComponent>());
+  EXPECT_FLOAT_EQ(player_cmd->riposte_window_remaining, 0.0F);
+  EXPECT_EQ(player_cmd->riposte_target_id, 0U);
+
+  turned->remove_component<StaggerComponent>();
+  auto const after = Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world.get(), turned, 15, player->get_id());
+  EXPECT_EQ(after.effective_damage, ordinary.effective_damage)
+      << "a riposte is one hit";
 }
 
 TEST_F(CombatModeTest, CombatHitResolverRoutesProjectileImpactWithExplicitDamage) {

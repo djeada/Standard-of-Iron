@@ -317,6 +317,22 @@ TEST_F(CommanderModeResourcesTest, AnUncontrolledCommandersOpeningCloses) {
   EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.0F);
 }
 
+TEST_F(CommanderModeResourcesTest, ARiposteExpiresWithItsTarget) {
+  Game::Systems::CommanderSystem system;
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  for (bool controlled : {false, true}) {
+    data->fpv_controlled = controlled;
+    data->riposte_window_remaining = 0.5F;
+    data->riposte_target_id = 42U;
+    system.update(&session.world(), 0.25F);
+    EXPECT_FLOAT_EQ(data->riposte_window_remaining, 0.25F);
+    EXPECT_EQ(data->riposte_target_id, 42U);
+    system.update(&session.world(), 0.25F);
+    EXPECT_FLOAT_EQ(data->riposte_window_remaining, 0.0F);
+    EXPECT_EQ(data->riposte_target_id, 0U);
+  }
+}
+
 TEST_F(CommanderModeResourcesTest, GuardBreakRecoveryHasOneSimulationOwnerInBothModes) {
   Game::Systems::CommanderSystem system;
   App::Core::CommanderDefence defence;
