@@ -59,6 +59,18 @@ void CommanderControlController::reset() {
   m_abilities.reset();
 }
 
+void CommanderControlController::release_for_rally() {
+  release_all_input();
+  m_body_facing.reset();
+  m_look.reset();
+  m_tick_aim_ray.reset();
+  m_lunge.reset();
+  m_targeting.reset();
+  m_defence.reset();
+  m_strike.reset();
+  m_abilities.reset();
+}
+
 void CommanderControlController::set_view_yaw(float yaw) {
   m_look.set_yaw(yaw);
 }
@@ -429,17 +441,18 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
   auto const basis = start_dodge_stage(world, body, facts, out);
 
   // A staggered body takes no steering: it brakes where it was hit.
-  out.report =
-      m_locomotion.advance_motion(body,
-                                  m_motor,
-                                  {.move = facts.staggered() ? QVector3D() : basis.move,
-                                   .forward_axis = out.forward_axis,
-                                   .right_axis = out.right_axis,
-                                   .run_held = tick.run,
-                                   .drawing_bow = facts.drawing_bow,
-                                   .jump_active = out.jump_active,
-                                   .squared_up = squared_up(facts),
-                                   .dt = dt});
+  out.report = m_locomotion.advance_motion(
+      body,
+      m_motor,
+      {.move = facts.staggered() ? QVector3D() : basis.move,
+       .forward_axis = out.forward_axis,
+       .right_axis = out.right_axis,
+       .run_held = tick.run,
+       .drawing_bow = facts.drawing_bow,
+       .jump_active = out.jump_active,
+       .squared_up = squared_up(facts),
+       .wading = world.try_get<Engine::Core::WadingComponent>(body.entity.get_id()),
+       .dt = dt});
 
   out.report.lunge_distance =
       m_lunge.apply(world,
@@ -448,6 +461,7 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
                     m_motor,
                     m_locomotion.dodge_state() != DodgeState::None,
                     body.commander_data != nullptr && body.commander_data->jump_active,
+                    m_look.yaw(),
                     dt);
   if (out.report.lunge_distance > 1.0e-5F) {
     out.report.source = App::Core::CommanderDisplacementSource::StrikeLunge;
@@ -488,6 +502,7 @@ void CommanderControlController::face_body(const App::Core::CommanderHandles& bo
       m_body_facing.advance({.view_yaw = m_look.yaw(),
                              .attack_animation_active = facts.attack_animation_active,
                              .action_redirect_authority = action_redirect_authority,
+                             .strike_aim_offset = m_lunge.aim_offset(),
                              .must_face_view = !dodging && squared_up(facts),
                              .snap_to_view = !dodging && tick.primary_held,
                              .travel_yaw = travel_yaw,
@@ -738,13 +753,15 @@ auto CommanderControlController::squared_up(const TickFacts& facts) const -> boo
          facts.attack_animation_active || m_targeting.locked_id() != 0;
 }
 
-auto CommanderControlController::read_tick_facts(const Engine::Core::Entity& commander)
+auto CommanderControlController::read_tick_facts(const Engine::Core::World& world,
+                                                 const Engine::Core::Entity& commander)
     -> TickFacts {
   auto const* aim_state =
       commander.get_component<Engine::Core::RpgCommanderAimComponent>();
   auto const* active_action =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
-  auto const* stagger = commander.get_component<Engine::Core::StaggerComponent>();
+  auto const* stagger =
+      world.try_get<Engine::Core::StaggerComponent>(commander.get_id());
   return {.active_action = active_action,
           .attack_animation_active =
               active_action != nullptr && active_action->action_running,
@@ -813,7 +830,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
   capture_input(world, commander_id, dt);
   auto const body = resolve_handles(*commander, *transform, *unit);
-  auto const facts = read_tick_facts(*commander);
+  auto const facts = read_tick_facts(world, *commander);
 
   if (body.commander_data != nullptr && body.commander_data->flag_rally_in_progress &&
       !body.commander_data->fpv_controlled) {

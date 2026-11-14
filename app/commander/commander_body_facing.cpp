@@ -33,7 +33,10 @@ auto turn_toward(float& body_yaw, float view_yaw, float step) -> bool {
 } // namespace
 
 auto CommanderBodyFacing::advance(const BodyFacingInput& input) -> float {
-  const float view_yaw = input.view_yaw;
+  const float view_yaw =
+      input.attack_animation_active
+          ? wrap_angle_degrees(input.view_yaw + input.strike_aim_offset)
+          : input.view_yaw;
   const float dt = input.dt;
   if (!m_body_yaw_valid) {
     m_body_yaw = view_yaw;

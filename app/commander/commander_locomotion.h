@@ -27,7 +27,8 @@ inline constexpr float k_commander_movement_buffer_seconds = 0.20F;
 
 namespace Engine::Core {
 class RpgCommanderActionComponent;
-}
+class WadingComponent;
+} // namespace Engine::Core
 
 namespace App::Core {
 
@@ -79,6 +80,8 @@ struct MotionTickInput {
   // Facing the view for a fight. Only then is he stepping back or sideways;
   // moving freely he turns and runs, at full speed in every direction.
   bool squared_up{false};
+  // Shared ford state for this tick (FordSystem owns it); null on dry ground.
+  const Engine::Core::WadingComponent* wading{nullptr};
   float dt{0.0F};
 };
 
@@ -153,7 +156,7 @@ private:
 
   void roll(const CommanderHandles& body,
             CommanderMotor& motor,
-            float dt,
+            const MotionTickInput& input,
             MotorReport& report);
   void recover_roll(const CommanderHandles& body,
                     CommanderMotor& motor,

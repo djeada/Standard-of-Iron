@@ -77,9 +77,8 @@ auto plan_walk(const CommanderHandles& body,
   float speed = std::max(0.1F, body.unit.speed) * k_fpv_walk_speed_scale;
 
   auto const* stamina = Game::Systems::ensure_run_stamina(body.entity);
-  auto const* wading = body.entity.get_component<Engine::Core::WadingComponent>();
   plan.running = input.run_held && !input.drawing_bow && stamina != nullptr &&
-                 Game::Systems::FordRules::can_run(wading) &&
+                 Game::Systems::FordRules::can_run(input.wading) &&
                  (stamina->is_running || stamina->can_start_running());
   if (plan.running) {
     speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
@@ -90,7 +89,7 @@ auto plan_walk(const CommanderHandles& body,
   if (input.squared_up) {
     speed *= directional_speed_scale(input.forward_axis, input.right_axis);
   }
-  speed *= Game::Systems::FordRules::speed_multiplier(wading);
+  speed *= Game::Systems::FordRules::speed_multiplier(input.wading);
   plan.speed = speed;
   return plan;
 }
@@ -298,8 +297,9 @@ auto CommanderLocomotion::try_start_dodge(const CommanderHandles& body,
 
 void CommanderLocomotion::roll(const CommanderHandles& body,
                                CommanderMotor& motor,
-                               float dt,
+                               const MotionTickInput& input,
                                MotorReport& report) {
+  float const dt = input.dt;
   auto& transform = body.transform;
   float const roll_seconds =
       Game::Systems::CombatActions::k_commander_dodge_timeline.roll_seconds;
@@ -311,8 +311,7 @@ void CommanderLocomotion::roll(const CommanderHandles& body,
 
   // Integrated over the tick, so the distance is the same at any tick rate.
   float const travel = k_dodge_speed * roll_seconds *
-                       Game::Systems::FordRules::speed_multiplier(
-                           body.entity.get_component<Engine::Core::WadingComponent>()) *
+                       Game::Systems::FordRules::speed_multiplier(input.wading) *
                        (dodge_travel_fraction(report.dodge_pose_phase) -
                         dodge_travel_fraction(phase_before));
   const float speed = dt > 0.0F ? travel / dt : 0.0F;
@@ -370,8 +369,7 @@ void CommanderLocomotion::recover_roll(const CommanderHandles& body,
 
   report.move.normalize();
   const float speed = std::max(0.1F, body.unit.speed) * 0.4F *
-                      Game::Systems::FordRules::speed_multiplier(
-                          body.entity.get_component<Engine::Core::WadingComponent>());
+                      Game::Systems::FordRules::speed_multiplier(input.wading);
   const float nx = transform.position.x + report.move.x() * speed * input.dt;
   const float nz = transform.position.z + report.move.z() * speed * input.dt;
   auto const step = motor.advance(body.entity,
@@ -492,7 +490,7 @@ auto CommanderLocomotion::advance_motion(const CommanderHandles& body,
   report.move = input.move;
 
   if (m_dodge_state == DodgeState::Rolling) {
-    roll(body, motor, input.dt, report);
+    roll(body, motor, input, report);
   } else if (m_dodge_state == DodgeState::Recovering) {
     recover_roll(body, motor, input, report);
   } else {
@@ -564,6 +562,10 @@ void CommanderLocomotion::hold_for_rally() {
   m_move_right_axis = 0;
   m_move_forward_axis = 0;
   m_move_running = false;
+  m_dodge_state = DodgeState::None;
+  m_dodge_timer = 0.0F;
+  m_dodge_fov_kick = 0.0F;
+  m_jump_followup_pending = false;
 }
 
 void CommanderLocomotion::release_input() {
