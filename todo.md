@@ -104,10 +104,11 @@ the twisting backward roll. Final gate reports have no issue codes. Evidence:
 baseline, capture timeout, exact builds and manual gameplay notes. The permanent
 gate now also includes body-facing, input-port, look and shared-traversal tests.
 
-- [ ] Repair the capture-enabled Arena watchdog failure reproduced by
-      `rpg_defense_contact --capture-interval 0.05` (60 captured frames then timeout).
-      Keep it distinct from the completed, passing uncaptured scenario; do not relax
-      behavioral checks or treat incomplete captures as passes.
+- [x] Repair the capture-enabled Arena watchdog failure reproduced by
+      `rpg_defense_contact --capture-interval 0.05`. Captures were taken on a
+      wall-clock timer that starved the fixed-step simulation; they now sample the
+      scenario clock after a rendered frame, and the watchdog does not count capture
+      time. The captured run passes with 65 frames (`artifacts/rpg-feel/capture-13/`).
 
 Slice 8 is animation overlay polish. Built and run 2026-11-14: its faster overlay
 timing snapped and spun the hands (53 motion-quality violations, the PR's CI

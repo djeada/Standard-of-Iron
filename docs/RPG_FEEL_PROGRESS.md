@@ -590,3 +590,24 @@ everything. Test: `ARallyHandoffDoesNotCutTheCamera`.
 - Translation coverage (failed on main since #1627): the catalogues still held
   the removed "Go to Barracks"; two preview strings in `Main.qml` were not
   wrapped. All eight catalogues are complete again.
+
+## Arena captures on the scenario clock (2026-11-14)
+
+`--capture-interval` grabbed and PNG-encoded a frame on a wall-clock `QTimer`
+between fixed-step ticks. Each capture stalled the simulation, so a 3.3 s
+scenario captured 60 frames and then hit the wall-clock watchdog; the frames
+also fell at different simulated moments on every run, so baseline and
+candidate captures could not be compared frame by frame. The batch runner now
+captures right after the rendered frame that reaches each multiple of the
+interval on the scenario clock (queued, never inside `paintGL`), and extends the
+watchdog by the time spent capturing. `rpg_defense_contact --capture-interval
+0.05` now completes and passes with 65 frames; uncaptured runs are unchanged
+(Arena tests 234/234). The frames confirm the corrected roll keeps its takeoff
+facing through the tumble (`artifacts/rpg-feel/capture-13/`).
+
+The production-game combat route `tools/arena/feel/combat.action.json` (duel
+mission) was filmed as well. It never reached an enemy: the troops streaming
+past the commander are his own, so the refused lock-on and "no target in reach"
+are correct. At `--film-fps 30` the fixed QML animation step plays HUD
+animations at half speed, so toasts last twice as long in the film; use
+`--film-fps 60` when judging HUD timing.
