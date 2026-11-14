@@ -1,6 +1,6 @@
 # Commander RPG feel: implementation and verification plan
 
-Status: implementation in progress; no full milestone below is complete. Updated 2026-11-13.
+Status: implementation in progress; no full milestone below is complete. Updated 2026-11-14.
 
 The goal is a coherent third-person action experience across movement, jumping,
 traversal, animation, fighting, receiving damage, camera control, and switching
@@ -77,8 +77,9 @@ Slice 6 is reset and handoff hygiene; the combined unit tests now pass.
 - [x] Adopt body event counters after a reset; clear stale dive state on handoff;
       single handoff-clear helpers; complete controller reset. Commander suites pass;
       full lifecycle/save/replay acceptance remains below.
-- [ ] Move ability cooldowns, posture and punish-window decay to `CommanderSystem`
-      in both modes, as guard-break recovery already is.
+- [x] Move ability cooldowns, posture and punish-window decay to `CommanderSystem`
+      in both modes, as guard-break recovery already is (slice 9). This also closes
+      AI commanders' punish windows, which nothing used to run down.
 
 Slice 7 changes the body rules toward the Souls reference. Integration caught
 a twisting backward roll; takeoff facing is now retained during the roll. The
@@ -89,9 +90,12 @@ free-movement and shaped-speed changes remain. See the integration evidence.
 - [x] Front-loaded roll with unchanged distance, duration and i-frames; verify
       dry/wet travel across fixed and irregular timesteps. Keep takeoff facing during
       the roll to avoid twisting the rendered somersault.
-- [ ] Hit stagger blocks movement, guard, roll and jump for its duration.
-- [ ] Decide whether strike target assist should turn the body; it is currently
-      overwritten by `face_body` every tick.
+- [x] Hit stagger blocks movement, guard, roll and jump for its duration
+      (`AStaggeredBodyCannotRollOrJumpOutOfTheHit`); stagger length against enemy
+      attack cadence still needs play review.
+- [x] Strike target assist turns the body (slice 11): a wind-up bend within the
+      authored cone and turn limit, applied by `CommanderBodyFacing` only; the lunge
+      no longer slides toward targets outside the swing's cone.
 
 Combined validation for slices 4–7: **317 commander/terrain tests, 73 Arena checks,
 174 combat-mode tests and all 34 RPG behavioral scenarios pass** after correcting
@@ -105,15 +109,27 @@ gate now also includes body-facing, input-port, look and shared-traversal tests.
       Keep it distinct from the completed, passing uncaptured scenario; do not relax
       behavioral checks or treat incomplete captures as passes.
 
-Slice 8 is animation overlay polish, **source changes only, uncompiled and untested**
-at the user's request. See the progress log for the exact verification commands.
+Slice 8 is animation overlay polish. Built and run 2026-11-14: its faster overlay
+timing snapped and spun the hands (53 motion-quality violations, the PR's CI
+failure) and was corrected; see the progress log.
 
-- [ ] Validate loop-boundary continuity and time-based overlay fades; eight new
-      rendering regression cases are written but not run.
-- [ ] Review faster combat-pose takeover and confirm water/carry overlays cannot
-      obscure guard, reaction, jump, roll or death transitions.
+- [x] Validate loop-boundary continuity and time-based overlay fades. Loop wrap,
+      seek/cull and preview purity kept; weights are rate-limited at 2.1/s again.
+- [x] Review faster combat-pose takeover: rejected (one-frame arm snaps). Only
+      water/carry overlays leave quickly (0.12 s) when a full-body pose takes over.
 - [ ] Play gait-synchronised wading and guard/release in water; check clip changes,
       cull/re-entry and replay seeks. Prior green gates do not cover slice 8.
+
+Slices 9–12 (2026-11-14) are in the progress log: one world-time owner for
+combat timers, perfect guard grants a riposte instead of exposing the defender,
+strike assist with a single yaw writer, and rally handoffs without a camera cut.
+
+- [x] Slice 9: combat timers ticked once, in either mode; punish windows survive
+      handoffs like guard-break recovery.
+- [x] Slice 10: perfect guard opens a one-hit riposte on the turned attacker.
+- [x] Slice 12: rally placement/confirm/restore keep the camera rig.
+- [ ] Play perfect guard → riposte and off-axis swings against a duelist and
+      three attackers; check that hit rates still feel fair.
 
 These changes contribute to milestones 0, 1, 2, 3, 4, 6 and 8. Full traversal, jump physics,
 animation quality, timing-harness work and acceptance playtesting remain open.

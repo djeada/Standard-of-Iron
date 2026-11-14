@@ -475,3 +475,118 @@ repeated walk/run/attack transitions, jump/roll interruption, camera cull/re-ent
 and replay seeking. Inspect the blend pace at 30/60/120 display Hz separately from
 simulation timestep checks. New roll/jump clips, landing compression and foot IK
 remain open; this slice does not claim that the whole animation milestone is done.
+
+## Slice 8 verification and correction (2026-11-14)
+
+Slice 8 was compiled and run for the first time. Its eight new overlay tests
+passed, but the full render suite exposed a real regression the earlier gates
+never saw: `HumanoidMotionQuality.MeleeHitsRecoveryAndRetargetingStayVisuallyContinuous`
+reported **53 violations** (hand speeds up to 85 m/s and 15,000 deg/s at 120 Hz,
+rising with frame rate, i.e. one-frame snaps). The pull request's CI failed on
+the same test. The pre-slice-8 overlay code passes it with zero violations.
+
+Causes, found by tracing overlay weights frame by frame:
+
+- The one-frame `clear_immediately` when a reaction takes over dropped an
+  attack overlay from 0.88 weight to zero: the arms jumped to the reaction pose.
+- The 35 ms combat response moved 60% of an arm swap in one 30 Hz frame at
+  attack start, after a reaction and on an authored phase wrap.
+- Faster fades alone are not enough. A swing blended at mid weight against a
+  different full-body pose spins the hand (3,700 deg/s sustained over 8 frames
+  at every frame rate). Linear 0.12 s, 0.16 s and 0.25 s ramps still left 31,
+  15 and 10 violations; only the original 2.1/s rate-limited spring passes.
+
+Correction (`a8935424e`): overlay weights move at most 2.1/s through the damped
+spring again. Kept from slice 8: circular phase distance for looping clips (the
+wading cycle no longer drops the arms at its wrap), seek and cull resets,
+preview passes that do not advance state, gait-synchronised wading arms and the
+guard/jump priority over wading. The takeover is kept only for ambient overlays:
+a water or carry pose leaves within 0.12 s when a full-body reaction takes over,
+still spread over several frames at 30 Hz; a combat overlay keeps the ordinary
+rate. The overlay unit tests now assert those rules, including that a combat
+pose is not cut short and that an archetype swap happens at near-zero weight.
+
+Validation: full `render_tests` **2042/2042**; motion-quality test 0 violations;
+`rpg_defense_contact`, `rpg_locomotion` (x3) and `rpg_attack_buffer_window` pass
+(`artifacts/rpg-feel/overlay-09/gate`). Wading in real-time play is still unreviewed.
+
+## Slice 9: one owner for commander combat timers (2026-11-14)
+
+Ability cooldowns, posture recovery and the punish window were run down by the
+direct-control controller while the player drove the commander and by
+`CommanderSystem` otherwise, split on `fpv_controlled`. Found by inspection:
+nothing ran an _AI_ commander's punish window down, so a vanguard rush or shield
+bash left it punishable (22-35% bonus damage, extra stagger) for the rest of the
+battle; during a rally request both owners ticked. `CommanderSystem` now advances
+all of them for every commander in either mode (a raised guard still slows
+posture recovery, 8/s instead of 18/s). `CommanderAbilities` keeps no cooldown
+copies; it reads and writes the component. `CommanderDefence::advance_upkeep`
+only handles input-owned guard state. Switching control no longer clears the
+punish window: like guard-break recovery, an opening the enemy earned survives
+a handoff. Tests: `CombatTimersHaveOneSimulationOwnerInBothModes`,
+`AnUncontrolledCommandersOpeningCloses`, the extended 100-handoff debt test and
+the rewritten `CooldownsRunDownOnceInEitherControlMode`.
+
+## Slice 10: a perfect guard opens the attacker (2026-11-14)
+
+`punish_window_remaining` meant "this body is open" in the damage rules, but a
+perfect guard set it on the _defender_. The parrier's next ordinary hit flinched
+them, their counter on the turned attacker earned no bonus, and the HUD showed
+PUNISH. A perfect guard now grants `riposte_window_remaining` (1 s) against
+`riposte_target_id`: the next hit on that attacker is a punishing one (bonus
+damage and a heavy stagger) and spends the riposte; hits on anyone else are
+ordinary. The HUD's PUNISH callout and crosshair read the riposte; being open
+after a guard break keeps the GUARD BROKEN callout. Tests:
+`APerfectGuardDoesNotExposeTheDefenderToTheNextHit`,
+`ARiposteMakesOneHitOnTheTurnedAttackerPunishing`, `ARiposteExpiresWithItsTarget`
+and updated perfect-guard expectations.
+
+## Slice 11: strike target assist has one yaw writer (2026-11-14)
+
+Decision for the open slice 7 question: the authored target assist turns the
+body. Before, `CommanderLunge` turned the transform toward the target and
+`face_body` overwrote it in the same tick, while `drive_lunge` pulled the body
+straight at any target, with no cone check. Measured with the new tests on the
+old code: against a target 20 degrees off the view the body faced 0 degrees
+while travelling at 20 degrees (a sideways slide), and a target 73 degrees off
+dragged the body 0.51 m sideways.
+
+Now the lunge never writes yaw. During the wind-up (before the first weapon-trace
+frame) it bends the swing's aim from the view toward its target, only if the
+target is inside the action's authored cone, by at most its
+`maximum_turn_degrees`, at a rate that completes the bend by the commit frame;
+the bend is then frozen. `CommanderBodyFacing` aims the body at view plus that
+offset for every strike rule (snap, square-up, authority-limited redirect). The
+lunge travels where the body faces and is pulled onto the target only when the
+target lies inside the swing's cone. Tests:
+`ASwingBendsTowardAnOffAxisTargetAndFacesItsTravel` and
+`ATargetOutsideTheSwingConeNeitherTurnsNorDragsIt`; both fail on the old code.
+
+Because this changes how often swings connect, the whole RPG gate was rerun on
+the candidate: **34/34 scenarios** matched their expectations, including melee
+contact, whiff recovery, three attackers, duel standoff, strike lunge and all
+weapon grammars (`artifacts/rpg-feel/assist-11/gate`). Frame times are reported,
+not enforced: one 34.9 ms frame in `rpg_friendly_livestock` overlapped a
+formatter run on the same machine. Hit rates against live opponents still need
+play review.
+
+## Slice 12: a rally does not cut the camera (2026-11-14)
+
+Starting placement, confirming a rally, rallying in place and regaining control
+after a rally all called the controller's full `reset()`, which also reset the
+camera rig (framing, shoulder, FOV, smoothing). The view stays on the commander
+throughout, so each step re-framed the camera. The rally paths now call
+`release_for_rally()`: input and action state are dropped, the camera rig, look
+and presented pose carry on. Entering and leaving direct control still reset
+everything. Test: `ARallyHandoffDoesNotCutTheCamera`.
+
+## Pull request CI (2026-11-14)
+
+- The motion-quality failure is the slice 8 regression above.
+- Entity-object access ratchet: the shared-ford, stagger and guard-recovery
+  changes had added five `get_component` calls. The controller now resolves the
+  wading component once per tick through the registry and passes it in
+  `MotionTickInput`; stagger and guard use `World::try_get`.
+- Translation coverage (failed on main since #1627): the catalogues still held
+  the removed "Go to Barracks"; two preview strings in `Main.qml` were not
+  wrapped. All eight catalogues are complete again.
