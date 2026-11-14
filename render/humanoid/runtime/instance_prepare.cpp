@@ -2080,8 +2080,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         locomotion_persistent_state->overlay,
         {.time = anim.time,
          .persist = allow_animation_persistence,
-         .response_seconds = combat_pose ? 0.035F : 0.08F,
-         .clear_immediately = owns_full_body && !target.active()});
+         .combat_pose = combat_pose,
+         .full_body_takeover = owns_full_body && !target.active()});
     overlay = {};
     if (shown.active()) {
       overlay.archetype = shown.archetype;
