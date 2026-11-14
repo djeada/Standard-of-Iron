@@ -82,35 +82,6 @@ void CommanderAbilities::refuse(const char* action) {
   ++m_last_refusal.sequence;
 }
 
-void CommanderAbilities::reset() {
-  m_shield_bash_cooldown = 0.0F;
-  m_vanguard_rush_cooldown = 0.0F;
-  m_second_wind_cooldown = 0.0F;
-}
-
-void CommanderAbilities::advance_cooldowns(Engine::Core::CommanderComponent* commander,
-                                           float dt) {
-  auto decay = [dt](float& cooldown) {
-    if (cooldown > 0.0F) {
-      cooldown = std::max(0.0F, cooldown - dt);
-    }
-  };
-  if (commander != nullptr) {
-    m_shield_bash_cooldown = commander->shield_bash_cooldown_remaining;
-    m_vanguard_rush_cooldown = commander->vanguard_rush_cooldown_remaining;
-    m_second_wind_cooldown = commander->second_wind_cooldown_remaining;
-  }
-  decay(m_shield_bash_cooldown);
-  decay(m_vanguard_rush_cooldown);
-  decay(m_second_wind_cooldown);
-
-  if (commander != nullptr) {
-    commander->shield_bash_cooldown_remaining = m_shield_bash_cooldown;
-    commander->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
-    commander->second_wind_cooldown_remaining = m_second_wind_cooldown;
-  }
-}
-
 auto CommanderAbilities::activate(const CommanderAbilityRequest& request,
                                   const CommanderAbilityContext& context)
     -> CommanderAbilityOutcome {
@@ -186,8 +157,8 @@ auto CommanderAbilities::try_shield_bash(const CommanderAbilityContext& context)
 
   auto* guard = commander.get_component<Engine::Core::CommanderGuardComponent>();
   auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  if (guard == nullptr || !guard->active || m_shield_bash_cooldown > 0.0F ||
-      context.airborne) {
+  if (guard == nullptr || !guard->active || cmd_comp == nullptr ||
+      cmd_comp->shield_bash_cooldown_remaining > 0.0F || context.airborne) {
     refuse(k_special_action);
     return false;
   }
@@ -223,11 +194,8 @@ auto CommanderAbilities::try_shield_bash(const CommanderAbilityContext& context)
     open_punish_window(*entity, k_bash_punish_window);
   }
 
-  m_shield_bash_cooldown = k_bash_cooldown;
+  cmd_comp->shield_bash_cooldown_remaining = k_bash_cooldown;
   Game::Audio::play_cue(Game::Audio::Cue::k_combat_shield_bash);
-  if (cmd_comp != nullptr) {
-    cmd_comp->shield_bash_cooldown_remaining = m_shield_bash_cooldown;
-  }
   return true;
 }
 
@@ -236,7 +204,9 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
   auto& world = *context.world;
   auto& commander = *context.commander;
 
-  if (m_vanguard_rush_cooldown > 0.0F || context.dodging || context.airborne) {
+  auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
+  if (cmd_comp == nullptr || cmd_comp->vanguard_rush_cooldown_remaining > 0.0F ||
+      context.dodging || context.airborne) {
     refuse(k_vanguard_rush_action);
     return false;
   }
@@ -244,7 +214,6 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
   auto* transform = commander.get_component<Engine::Core::TransformComponent>();
   auto* unit = commander.get_component<Engine::Core::UnitComponent>();
   auto* movement = commander.get_component<Engine::Core::MovementComponent>();
-  auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
   if (transform == nullptr || unit == nullptr) {
     return false;
   }
@@ -266,11 +235,8 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
             commander, Engine::Core::MountedChargeIntentSource::Player)) {
       return false;
     }
-    m_vanguard_rush_cooldown = k_rush_cooldown;
+    cmd_comp->vanguard_rush_cooldown_remaining = k_rush_cooldown;
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
-    if (cmd_comp != nullptr) {
-      cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
-    }
     return true;
   }
 
@@ -332,11 +298,8 @@ auto CommanderAbilities::try_vanguard_rush(const CommanderAbilityContext& contex
     }
   }
 
-  m_vanguard_rush_cooldown = k_rush_cooldown;
+  cmd_comp->vanguard_rush_cooldown_remaining = k_rush_cooldown;
   Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
-  if (cmd_comp != nullptr) {
-    cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
-  }
   return true;
 }
 
@@ -344,13 +307,10 @@ auto CommanderAbilities::try_second_wind(const CommanderAbilityContext& context)
     -> bool {
   auto& commander = *context.commander;
 
-  if (m_second_wind_cooldown > 0.0F || context.dodging || context.airborne) {
-    refuse(k_second_wind_action);
-    return false;
-  }
-
   auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  if (cmd_comp == nullptr) {
+  if (cmd_comp == nullptr || cmd_comp->second_wind_cooldown_remaining > 0.0F ||
+      context.dodging || context.airborne) {
+    refuse(k_second_wind_action);
     return false;
   }
   if (!is_idle_for_ability(commander)) {
@@ -372,9 +332,8 @@ auto CommanderAbilities::try_second_wind(const CommanderAbilityContext& context)
         std::max(guard->perfect_guard_remaining, k_second_wind_guard_window);
   }
 
-  m_second_wind_cooldown = k_second_wind_cooldown;
+  cmd_comp->second_wind_cooldown_remaining = k_second_wind_cooldown;
   Game::Audio::play_cue(Game::Audio::Cue::k_combat_second_wind);
-  cmd_comp->second_wind_cooldown_remaining = m_second_wind_cooldown;
   return true;
 }
 

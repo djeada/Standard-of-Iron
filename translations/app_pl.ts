@@ -5355,10 +5355,6 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <source>Move troops next to a river raft</source>
         <translation>Przesuń oddziały do tratwy na rzece</translation>
     </message>
-    <message>
-        <source>Go to Barracks</source>
-        <translation>Przejdź do koszar</translation>
-    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -7275,6 +7271,14 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>Click to look</source>
         <translation>Kliknij, aby spojrzeć</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>Wczytywanie...</translation>
+    </message>
+    <message>
+        <source>Roman field commander</source>
+        <translation>Rzymski dowódca polowy</translation>
     </message>
 </context>
 <context>

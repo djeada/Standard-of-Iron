@@ -129,7 +129,7 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_GT(reached, facade) << "the commander walked inside the drawn building";
 }
 
-TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
+TEST_F(CommanderControlControllerTest, JumpForwardStopsAtBlockedGroundCells) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -149,10 +149,13 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   Render::GL::Camera camera;
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.4F));
 
-  EXPECT_GT(transform->position.z, 0.9F);
   auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander_data, nullptr);
   EXPECT_TRUE(commander_data->jump_active);
+  EXPECT_LT(transform->position.z, 1.0F)
+      << "an airborne commander passed into a blocked cell";
+  EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+      *commander, transform->position.x, transform->position.z));
 }
 
 TEST_F(CommanderControlControllerTest, WalkingAsksForAFootstepOnEveryStride) {
@@ -211,8 +214,7 @@ TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection)
   EXPECT_LT(rpg->dodge_dir_z, -0.5F);
 }
 
-TEST_F(CommanderControlControllerTest,
-       JumpLandingInsideAnObstacleRecoversOntoWalkableGround) {
+TEST_F(CommanderControlControllerTest, JumpTowardAnObstacleLandsOnWalkableGround) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -1632,6 +1634,134 @@ TEST_F(CommanderControlControllerTest, MiddleMouseHeavyIsLongerAndHitsHarderThan
   EXPECT_GT(heavy->duration_seconds, light->duration_seconds);
   EXPECT_GT(heavy->damage.base_multiplier, light->damage.base_multiplier);
   EXPECT_GT(heavy->damage.posture_damage, light->damage.posture_damage);
+}
+
+namespace {
+
+struct StrikeRun {
+  float body_yaw{0.0F};
+  float max_body_yaw{0.0F};
+  QVector3D travelled;
+};
+
+auto run_strike_at(Engine::Core::World& world,
+                   Engine::Core::Entity& commander,
+                   Engine::Core::Entity& enemy,
+                   CommanderControlController& controller) -> StrikeRun {
+  Render::GL::Camera camera;
+  auto* transform = commander.get_component<Engine::Core::TransformComponent>();
+  controller.primary_action_down();
+  EXPECT_TRUE(controller.update(world, commander.get_id(), 1, camera, 0.016F));
+  controller.primary_action_up();
+  auto* action = commander.get_component<Engine::Core::RpgCommanderActionComponent>();
+  EXPECT_NE(action, nullptr);
+  if (action == nullptr) {
+    return {};
+  }
+  EXPECT_TRUE(action->action_running);
+  action->active_target_id = enemy.get_id();
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  EXPECT_NE(definition, nullptr);
+  if (definition == nullptr) {
+    return {};
+  }
+  QVector3D const start(transform->position.x, 0.0F, transform->position.z);
+  StrikeRun run;
+  constexpr float k_dt = 0.016F;
+  for (int frame = 0; frame < 40 && action->action_running; ++frame) {
+    (void)Game::Systems::CombatActions::advance_combat_action_events(
+        *action, k_dt, *definition);
+    EXPECT_TRUE(controller.update(world, commander.get_id(), 1, camera, k_dt));
+    run.max_body_yaw = std::max(run.max_body_yaw, std::abs(transform->rotation.y));
+  }
+  run.body_yaw = transform->rotation.y;
+  run.travelled = QVector3D(transform->position.x, 0.0F, transform->position.z) - start;
+  return run;
+}
+
+} // namespace
+
+TEST_F(CommanderControlControllerTest,
+       ASwingBendsTowardAnOffAxisTargetAndFacesItsTravel) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  constexpr float k_off_axis_degrees = 20.0F;
+  float const radians = k_off_axis_degrees / 57.29578F;
+  auto* enemy = create_enemy(world, 2.4F * std::sin(radians), 2.4F * std::cos(radians));
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  commander->get_component<Engine::Core::CommanderComponent>()->fpv_controlled = true;
+  enemy->get_component<Engine::Core::UnitComponent>()
+      ->render_individuals_per_unit_override = 1;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  auto const run = run_strike_at(world, *commander, *enemy, controller);
+
+  EXPECT_GT(run.body_yaw, 0.6F * k_off_axis_degrees)
+      << "the authored target assist must turn the body, not only the lunge";
+  EXPECT_LE(run.max_body_yaw, k_off_axis_degrees + 1.0F);
+  ASSERT_GT(run.travelled.length(), 0.1F);
+  float const travel_yaw = std::atan2(run.travelled.x(), run.travelled.z()) * 57.29578F;
+  EXPECT_LT(std::abs(travel_yaw - run.body_yaw), 8.0F)
+      << "the body slid " << travel_yaw << " degrees while facing " << run.body_yaw;
+}
+
+TEST_F(CommanderControlControllerTest,
+       ATargetOutsideTheSwingConeNeitherTurnsNorDragsIt) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  auto* enemy = create_enemy(world, 2.0F, 0.6F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  commander->get_component<Engine::Core::CommanderComponent>()->fpv_controlled = true;
+  enemy->get_component<Engine::Core::UnitComponent>()
+      ->render_individuals_per_unit_override = 1;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  auto const run = run_strike_at(world, *commander, *enemy, controller);
+
+  EXPECT_LT(run.max_body_yaw, 1.0F)
+      << "a target 73 degrees off the view bent the swing";
+  EXPECT_LT(std::abs(run.travelled.x()), 0.05F)
+      << "the swing slid sideways onto a target outside its cone";
+}
+
+TEST_F(CommanderControlControllerTest, ARallyHandoffDoesNotCutTheCamera) {
+  // Two identical runs: one only lets go of the keys, the other hands the body
+  // over for a rally. The view must not tell them apart.
+  QVector3D eyes[2];
+  for (int run = 0; run < 2; ++run) {
+    Engine::Core::World world;
+    auto* commander = create_commander(world, 0.0F, 0.0F);
+    ASSERT_NE(commander, nullptr);
+    commander->get_component<Engine::Core::CommanderComponent>()->fpv_controlled = true;
+    CommanderControlController controller;
+    controller.set_view_yaw(30.0F);
+    Render::GL::Camera camera;
+    controller.input().forward = true;
+    controller.input().run = true;
+    for (int tick = 0; tick < 40; ++tick) {
+      ASSERT_TRUE(
+          controller.update(world, commander->get_id(), 1, camera, 1.0F / 60.0F));
+    }
+    if (run == 0) {
+      controller.release_all_input();
+    } else {
+      controller.release_for_rally();
+    }
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 1.0F / 60.0F));
+    eyes[run] = camera.get_position();
+  }
+  EXPECT_LT((eyes[1] - eyes[0]).length(), 1.0e-3F)
+      << "starting or ending a rally re-framed the camera";
 }
 
 TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOfReach) {

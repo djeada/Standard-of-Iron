@@ -45,24 +45,14 @@ struct CommanderRefusal {
   const char* action{""};
 };
 
+// Cooldowns live on CommanderComponent and run down in CommanderSystem in
+// either control mode; this class only decides and starts abilities.
 class CommanderAbilities {
 public:
-  void advance_cooldowns(Engine::Core::CommanderComponent* commander, float dt);
-
   auto activate(const CommanderAbilityRequest& request,
                 const CommanderAbilityContext& context) -> CommanderAbilityOutcome;
 
-  [[nodiscard]] auto shield_bash_cooldown() const -> float {
-    return m_shield_bash_cooldown;
-  }
-  [[nodiscard]] auto vanguard_rush_cooldown() const -> float {
-    return m_vanguard_rush_cooldown;
-  }
-  [[nodiscard]] auto second_wind_cooldown() const -> float {
-    return m_second_wind_cooldown;
-  }
-
-  void reset();
+  void reset() {}
 
   void refuse(const char* action);
   [[nodiscard]] auto last_refusal() const -> const CommanderRefusal& {
@@ -77,9 +67,6 @@ private:
   auto try_vanguard_rush(const CommanderAbilityContext& context) -> bool;
   auto try_second_wind(const CommanderAbilityContext& context) -> bool;
 
-  float m_shield_bash_cooldown{0.0F};
-  float m_vanguard_rush_cooldown{0.0F};
-  float m_second_wind_cooldown{0.0F};
   CommanderRefusal m_last_refusal;
 };
 

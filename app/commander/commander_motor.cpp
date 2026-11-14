@@ -44,10 +44,6 @@ struct GroundMove {
   bool moved{false};
 };
 
-auto airborne_step(float to_x, float to_z) -> GroundMove {
-  return {.x = to_x, .z = to_z, .moved = true};
-}
-
 auto resolve_ground_step(const Game::Systems::BodyProfile& profile,
                          float from_x,
                          float from_z,
@@ -275,14 +271,12 @@ auto CommanderMotor::advance(const Engine::Core::Entity& commander,
       return *on_wall;
     }
   }
+  // Airborne and grounded bodies share one collision answer. A 0.72 m jump
+  // clears none of the obstacles the grid records, so letting it pass through
+  // them only moved the failure to the landing, which then had to snap back.
   auto const profile = Game::Systems::motor_profile_for(commander);
-  GroundMove const step = request.airborne
-                              ? airborne_step(request.to.x(), request.to.z())
-                              : resolve_ground_step(profile,
-                                                    request.from.x(),
-                                                    request.from.z(),
-                                                    request.to.x(),
-                                                    request.to.z());
+  GroundMove const step = resolve_ground_step(
+      profile, request.from.x(), request.from.z(), request.to.x(), request.to.z());
 
   CommanderMotorResult result;
   result.source = request.source;

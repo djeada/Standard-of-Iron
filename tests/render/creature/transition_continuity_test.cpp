@@ -225,4 +225,140 @@ TEST(HumanoidTransitionContinuity, ALongGapStartsFresh) {
       << "a body that was not sampled for a second has nothing on screen to blend from";
 }
 
+auto water_overlay(float phase = 0.5F) -> Render::Creature::PlaybackLayerRequest {
+  return {.archetype = k_archetype,
+          .state = AnimationStateId::Walk,
+          .phase = phase,
+          .weight = 1.0F,
+          .clip_id = Animation::k_humanoid_wade_clip,
+          .mode = Render::Creature::PlaybackLayerMode::UpperBodyOverlay};
+}
+
+TEST(HumanoidOverlayContinuity, WaterCycleWrapDoesNotDropTheArms) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(0.99F), memory, {.time = 1.0F});
+  auto const next =
+      advance_humanoid_overlay(water_overlay(0.01F), memory, {.time = 1.0F + k_frame});
+  EXPECT_FLOAT_EQ(next.weight, 1.0F);
+  EXPECT_FLOAT_EQ(next.phase, 0.01F);
+  EXPECT_EQ(next.clip_id, Animation::k_humanoid_wade_clip);
+}
+
+TEST(HumanoidOverlayContinuity, BlendWeightDoesNotDependOnFrameRate) {
+  using namespace Render::Creature::Pipeline;
+  for (const int hz : {30, 60, 120}) {
+    SCOPED_TRACE(hz);
+    HumanoidOverlayMemory memory{};
+    (void)advance_humanoid_overlay({}, memory, {.time = 0.0F});
+    Render::Creature::PlaybackLayerRequest shown{};
+    for (int frame = 1; frame <= hz / 5; ++frame) {
+      shown = advance_humanoid_overlay(
+          water_overlay(),
+          memory,
+          {.time = static_cast<float>(frame) / static_cast<float>(hz)});
+    }
+    // The fade is rate-limited from the first frame, so every rate is at the
+    // same point of it after 0.2 s.
+    EXPECT_NEAR(shown.weight, 0.2F * k_overlay_weight_rate_per_second, 1.0e-4F);
+  }
+}
+
+TEST(HumanoidOverlayContinuity, AReactionRetiresTheDepartingWaterPoseWithoutASnap) {
+  using namespace Render::Creature::Pipeline;
+  for (const int hz : {30, 60, 120}) {
+    SCOPED_TRACE(hz);
+    float const dt = 1.0F / static_cast<float>(hz);
+    HumanoidOverlayMemory memory{};
+    (void)advance_humanoid_overlay(water_overlay(), memory, {.time = 1.0F});
+    auto const first = advance_humanoid_overlay(
+        {}, memory, {.time = 1.0F + dt, .full_body_takeover = true});
+    EXPECT_TRUE(first.active())
+        << "the arms must not jump to the reaction in one frame";
+    EXPECT_EQ(first.clip_id, Animation::k_humanoid_wade_clip);
+    EXPECT_FLOAT_EQ(first.phase, 0.5F) << "a retiring pose fades where it stands";
+    EXPECT_NEAR(first.weight, 1.0F - dt / k_overlay_takeover_release_seconds, 1.0e-5F);
+
+    Render::Creature::PlaybackLayerRequest shown = first;
+    float time = 1.0F + dt;
+    while (time < 1.0F + k_overlay_takeover_release_seconds + dt) {
+      time += dt;
+      shown = advance_humanoid_overlay(
+          {}, memory, {.time = time, .full_body_takeover = true});
+    }
+    EXPECT_FALSE(shown.active()) << "the water pose must not linger over a flinch";
+    EXPECT_FALSE(memory.shown.active());
+  }
+}
+
+TEST(HumanoidOverlayContinuity, ACombatPoseIsNotCutShortByAReaction) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  auto swing = water_overlay();
+  swing.clip_id = Animation::k_humanoid_attack_sword_a_clip;
+  (void)advance_humanoid_overlay(swing, memory, {.time = 1.0F, .combat_pose = true});
+  auto const reacting = advance_humanoid_overlay(
+      {}, memory, {.time = 1.0F + k_frame, .full_body_takeover = true});
+  EXPECT_NEAR(
+      reacting.weight, 1.0F - k_frame * k_overlay_weight_rate_per_second, 1.0e-5F)
+      << "a swing fading at mid weight over a reaction spins the hand; it keeps the "
+         "ordinary rate";
+}
+
+TEST(HumanoidOverlayContinuity, PreviewPassDoesNotAdvancePersistentBlend) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay({}, memory, {.time = 1.0F});
+  auto const preview = advance_humanoid_overlay(
+      water_overlay(), memory, {.time = 1.0F + k_frame, .persist = false});
+  EXPECT_FLOAT_EQ(memory.sample_time, 1.0F);
+  EXPECT_FALSE(memory.shown.active());
+  auto const visible =
+      advance_humanoid_overlay(water_overlay(), memory, {.time = 1.0F + k_frame});
+  EXPECT_FLOAT_EQ(visible.weight, preview.weight);
+  auto const same_frame =
+      advance_humanoid_overlay(water_overlay(), memory, {.time = 1.0F + k_frame});
+  EXPECT_FLOAT_EQ(same_frame.weight, visible.weight);
+}
+
+TEST(HumanoidOverlayContinuity, ASeekDoesNotResurrectThePreviousPose) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(), memory, {.time = 8.0F});
+  auto const after_seek = advance_humanoid_overlay({}, memory, {.time = 2.0F});
+  EXPECT_FALSE(after_seek.active());
+  auto const after_cull =
+      advance_humanoid_overlay(water_overlay(0.7F), memory, {.time = 9.0F});
+  EXPECT_FLOAT_EQ(after_cull.weight, 1.0F);
+  EXPECT_FLOAT_EQ(after_cull.phase, 0.7F);
+}
+
+TEST(HumanoidOverlayContinuity, AChangedArchetypeFadesBeforeSwappingTheSameClip) {
+  using namespace Render::Creature::Pipeline;
+  HumanoidOverlayMemory memory{};
+  (void)advance_humanoid_overlay(water_overlay(), memory, {.time = 0.0F});
+  auto target = water_overlay();
+  target.archetype = k_archetype + 1U;
+  float previous = 1.0F;
+  float time = 0.0F;
+  Render::Creature::PlaybackLayerRequest shown{};
+  for (int frame = 0; frame < 120; ++frame) {
+    time += k_frame;
+    shown = advance_humanoid_overlay(target, memory, {.time = time});
+    if (shown.active() && shown.archetype == target.archetype) {
+      break;
+    }
+    if (shown.active()) {
+      EXPECT_EQ(shown.archetype, k_archetype);
+    }
+    EXPECT_LT(shown.weight, previous) << "the old pose fades before the swap";
+    previous = shown.active() ? shown.weight : 0.0F;
+  }
+  ASSERT_EQ(shown.archetype, target.archetype);
+  EXPECT_LE(previous, k_frame * k_overlay_weight_rate_per_second + 1.0e-5F)
+      << "the swap happens at (near) zero weight";
+  EXPECT_GT(shown.weight, 0.0F);
+  EXPECT_LE(shown.weight, k_frame * k_overlay_weight_rate_per_second + 1.0e-5F);
+}
+
 } // namespace

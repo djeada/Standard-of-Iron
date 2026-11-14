@@ -59,6 +59,87 @@ auto same_source(const Render::Creature::TransitionSource& lhs,
 
 } // namespace
 
+auto advance_humanoid_overlay(const Render::Creature::PlaybackLayerRequest& requested,
+                              HumanoidOverlayMemory& memory,
+                              const HumanoidOverlayFrame& frame) noexcept
+    -> Render::Creature::PlaybackLayerRequest {
+  using Render::Creature::PlaybackLayerRequest;
+  constexpr float k_phase_jump = 0.2F;
+  constexpr float k_weight_spring = 20.0F;
+
+  PlaybackLayerRequest target = requested;
+  if (!target.active() || target.clip_id == Animation::k_unmapped_clip) {
+    target = {};
+  }
+  target.weight = std::clamp(target.weight, 0.0F, 1.0F);
+  float const elapsed = frame.time - memory.sample_time;
+  bool const continuous =
+      memory.valid && elapsed >= 0.0F && elapsed <= k_max_sample_gap_seconds;
+
+  PlaybackLayerRequest next = memory.shown;
+  float velocity = memory.weight_velocity;
+  if (!continuous) {
+    // First visibility, a seek, or a long cull gap starts at the current pose.
+    next = frame.full_body_takeover ? PlaybackLayerRequest{} : target;
+    velocity = 0.0F;
+  } else if (elapsed > 0.0F) {
+    float const max_step = k_overlay_weight_rate_per_second * elapsed;
+    bool const same_clip =
+        next.active() && target.active() && next.clip_id == target.clip_id &&
+        next.archetype == target.archetype &&
+        next.clip_variant == target.clip_variant && next.mode == target.mode;
+    float phase_delta = std::abs(target.phase - next.phase);
+    if (same_clip && humanoid_clip_loops(target.clip_id)) {
+      // A looping cycle crossing 0.99 -> 0.01 has not jumped.
+      phase_delta = std::fmod(phase_delta, 1.0F);
+      phase_delta = std::min(phase_delta, 1.0F - phase_delta);
+    }
+    if (frame.full_body_takeover && next.active() && !memory.shown_combat) {
+      next.weight =
+          std::max(0.0F, next.weight - elapsed / k_overlay_takeover_release_seconds);
+      velocity = 0.0F;
+    } else if (!next.active() || next.weight <= k_negligible_weight) {
+      next = {};
+      velocity = 0.0F;
+      if (target.active()) {
+        next = target;
+        next.weight = std::min(target.weight, max_step);
+      }
+    } else if (same_clip && phase_delta <= k_phase_jump) {
+      float const weight = next.weight;
+      next = target;
+      velocity += (k_weight_spring * k_weight_spring * (target.weight - weight) -
+                   2.0F * k_weight_spring * velocity) *
+                  elapsed;
+      velocity = std::clamp(velocity,
+                            -k_overlay_weight_rate_per_second,
+                            k_overlay_weight_rate_per_second);
+      next.weight = std::clamp(weight + velocity * elapsed, 0.0F, 1.0F);
+    } else {
+      // A different pose, or a jump in this one: the shown pose fades where it
+      // stands before the new one starts.
+      next.weight = std::max(0.0F, next.weight - max_step);
+      velocity = 0.0F;
+    }
+  }
+  if (next.weight <= k_negligible_weight) {
+    next = {};
+    velocity = 0.0F;
+  }
+  if (frame.persist) {
+    if (target.active() && next.active() && next.clip_id == target.clip_id) {
+      memory.shown_combat = frame.combat_pose;
+    } else if (!next.active()) {
+      memory.shown_combat = false;
+    }
+    memory.shown = next;
+    memory.weight_velocity = velocity;
+    memory.sample_time = frame.time;
+    memory.valid = true;
+  }
+  return next;
+}
+
 auto requested_clip_mix(const HumanoidAnimationSelection& selection) noexcept
     -> Animation::ClipMix {
   float const blend = blend_weight_of(selection.full_body_blend);

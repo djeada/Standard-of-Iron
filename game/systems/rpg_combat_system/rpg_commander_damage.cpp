@@ -198,8 +198,9 @@ auto resolve_perfect_guard(Engine::Core::World* world,
 
   guard->perfect_guard_remaining = 0.0F;
   if (auto* commander = target->get_component<Engine::Core::CommanderComponent>()) {
-    commander->punish_window_remaining =
-        std::max(commander->punish_window_remaining, 1.0F);
+    commander->riposte_window_remaining =
+        std::max(commander->riposte_window_remaining, k_riposte_window_seconds);
+    commander->riposte_target_id = attacker_id;
     commander->posture = std::max(0.0F, commander->posture - 18.0F);
   }
   Game::Systems::Combat::add_or_extend_stagger(attacker, 0.75F);
@@ -351,7 +352,10 @@ deal_commander_attack_damage(Engine::Core::World* world,
     }
   }
 
-  bool const punish_opening = has_punish_opening(target);
+  bool const riposte = commander != nullptr &&
+                       commander->riposte_window_remaining > 0.0F &&
+                       commander->riposte_target_id == target->get_id();
+  bool const punish_opening = riposte || has_punish_opening(target);
   if (punish_opening) {
     float const punish_multiplier = finisher_hit ? 1.35F : 1.22F;
     damage =
@@ -364,6 +368,10 @@ deal_commander_attack_damage(Engine::Core::World* world,
         world, target, damage, commander_id, profile, contact_point, impact_speed);
     if (result.effective_damage > 0 && commander != nullptr) {
       mark_commander_hit(*commander, combo_step, power_strike_hit);
+      if (riposte) {
+        commander->riposte_window_remaining = 0.0F;
+        commander->riposte_target_id = 0;
+      }
     }
     return result;
   }
@@ -393,6 +401,10 @@ deal_commander_attack_damage(Engine::Core::World* world,
     }
     if (commander != nullptr) {
       mark_commander_hit(*commander, combo_step, power_strike_hit);
+      if (riposte) {
+        commander->riposte_window_remaining = 0.0F;
+        commander->riposte_target_id = 0;
+      }
     }
     if (punish_opening || finisher_hit) {
       auto tier = finisher_hit ? Engine::Core::StaggerTier::Knockback

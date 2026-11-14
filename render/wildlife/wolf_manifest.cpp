@@ -43,7 +43,7 @@ struct WolfClipSpec {
 };
 
 constexpr std::array<WolfClipSpec, 9> k_wolf_clips{{
-    {{"idle", 96U, 24.0F, true},
+    {{"idle", 168U, 24.0F, true},
      0.0F,
      0.0F,
      0.0F,
@@ -128,22 +128,68 @@ auto pulse(float phase, float centre, float width) -> float {
   return t * t * (3.0F - (2.0F * t));
 }
 
+struct Key {
+  float at;
+  float value;
+};
+
+template <std::size_t N>
+auto held(float phase, const std::array<Key, N>& keys) -> float {
+  float const t = phase - std::floor(phase);
+  for (std::size_t i = 1; i < N; ++i) {
+    if (t <= keys[i].at) {
+      float const span = keys[i].at - keys[i - 1U].at;
+      float const u = span > 1.0e-5F ? (t - keys[i - 1U].at) / span : 1.0F;
+      float const eased = u * u * (3.0F - (2.0F * u));
+      return keys[i - 1U].value + ((keys[i].value - keys[i - 1U].value) * eased);
+    }
+  }
+  return keys[N - 1U].value;
+}
+
+constexpr std::array<Key, 9> k_rest_gaze{{{0.00F, 0.10F},
+                                          {0.08F, 0.78F},
+                                          {0.27F, 0.78F},
+                                          {0.36F, 0.00F},
+                                          {0.50F, 0.00F},
+                                          {0.58F, -0.82F},
+                                          {0.78F, -0.82F},
+                                          {0.90F, 0.10F},
+                                          {1.00F, 0.10F}}};
+constexpr std::array<Key, 9> k_rest_nose{{{0.00F, 0.00F},
+                                          {0.34F, 0.00F},
+                                          {0.40F, -0.75F},
+                                          {0.48F, -0.75F},
+                                          {0.54F, 0.00F},
+                                          {0.82F, 0.00F},
+                                          {0.88F, 0.50F},
+                                          {0.93F, 0.50F},
+                                          {1.00F, 0.00F}}};
+constexpr std::array<Key, 6> k_rest_stance{{{0.00F, 0.60F},
+                                            {0.30F, 0.60F},
+                                            {0.40F, -0.60F},
+                                            {0.80F, -0.60F},
+                                            {0.92F, 0.60F},
+                                            {1.00F, 0.60F}}};
+
 void apply_ambient(WolfDrive& drive, WolfAmbient ambient, float phase) {
   switch (ambient) {
   case WolfAmbient::None:
     return;
-  case WolfAmbient::Resting:
+  case WolfAmbient::Resting: {
 
-    drive.breath = wave(phase, 2.0F, 0.0F);
-    drive.weight_shift = wave(phase, 1.0F, 0.7F) * 0.85F;
-    drive.head_turn =
-        (wave(phase, 1.0F, 1.9F) * 0.62F) + (wave(phase, 2.0F, 0.4F) * 0.2F);
-    drive.head_dip = wave(phase, 1.0F, 3.1F) * 0.45F;
-    drive.ear_swivel =
-        (pulse(phase, 0.31F, 0.055F) * 0.9F) - (pulse(phase, 0.74F, 0.045F) * 0.7F);
+    float const scenting = pulse(phase, 0.44F, 0.06F);
+    drive.breath = wave(phase, 3.0F, 0.0F);
+    drive.weight_shift = held(phase, k_rest_stance);
+    drive.head_turn = held(phase, k_rest_gaze) + (wave(phase, 5.0F, 0.4F) * 0.03F);
+    drive.head_dip =
+        held(phase, k_rest_nose) + (wave(phase, 28.0F, 0.0F) * 0.12F * scenting);
+    drive.ear_swivel = (pulse(phase, 0.05F, 0.04F) * 0.9F) -
+                       (pulse(phase, 0.56F, 0.04F) * 0.9F) + (scenting * 0.45F);
     drive.tail_sway =
-        (wave(phase, 1.0F, 0.0F) * 0.7F) + (wave(phase, 3.0F, 1.2F) * 0.22F);
+        (wave(phase, 2.0F, 0.0F) * 0.55F) + (wave(phase, 5.0F, 1.2F) * 0.18F);
     return;
+  }
   case WolfAmbient::Crouched:
 
     drive.breath = wave(phase, 3.0F, 0.0F) * 0.85F;

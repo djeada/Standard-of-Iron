@@ -14,21 +14,11 @@
 namespace App::Core {
 
 void CommanderDefence::advance_upkeep(Engine::Core::Entity& commander,
-                                      Engine::Core::CommanderComponent* cmd_comp,
                                       bool guard_held,
-                                      float dt) const {
-  if (cmd_comp != nullptr) {
-    cmd_comp->punish_window_remaining =
-        std::max(0.0F, cmd_comp->punish_window_remaining - dt);
-    cmd_comp->posture = std::max(
-        0.0F,
-        cmd_comp->posture - ((m_guard_was_active || guard_held) ? 8.0F : 18.0F) * dt);
-  }
-
+                                      float dt) {
   if (auto* guard = commander.get_component<Engine::Core::CommanderGuardComponent>()) {
     guard->perfect_guard_remaining =
         std::max(0.0F, guard->perfect_guard_remaining - dt);
-    guard->guard_break_remaining = std::max(0.0F, guard->guard_break_remaining - dt);
     if (!guard_held) {
       guard->rearm_requires_release = false;
     }
@@ -41,7 +31,6 @@ void CommanderDefence::hold_for_rally(Engine::Core::Entity& commander, float dt)
     guard->active = false;
     guard->perfect_guard_remaining =
         std::max(0.0F, guard->perfect_guard_remaining - dt);
-    guard->guard_break_remaining = std::max(0.0F, guard->guard_break_remaining - dt);
     guard->rearm_requires_release = false;
   }
   if (auto* rpg = commander.get_component<Engine::Core::RpgHealthComponent>()) {
@@ -59,7 +48,7 @@ void CommanderDefence::apply_guard(Engine::Core::Entity& commander,
     }
     if (guard != nullptr && guard->guard_break_remaining <= 0.0F &&
         !guard->rearm_requires_release && !input.dodging && !input.airborne &&
-        body_allows_now(commander).accepts_guard) {
+        !input.staggered && body_allows_now(commander).accepts_guard) {
       guard->active = true;
       if (!m_guard_was_active) {
         cancel_current_attack(commander);
@@ -108,6 +97,14 @@ void CommanderDefence::publish_resolved_feedback(
     PlayerFeedbackBus* bus) {
   auto const* rpg = commander.get_component<Engine::Core::RpgHealthComponent>();
   if (rpg == nullptr) {
+    return;
+  }
+  if (!m_contacts_adopted) {
+    m_contacts_adopted = true;
+    m_observed_perfect_guard_contacts = rpg->perfect_guard_contacts;
+    m_observed_dodged_contacts = rpg->dodged_contacts;
+    m_observed_blocked_contacts = rpg->blocked_contacts;
+    m_observed_guard_broken_contacts = rpg->guard_broken_contacts;
     return;
   }
 

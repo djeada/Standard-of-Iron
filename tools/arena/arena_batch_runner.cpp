@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
@@ -217,6 +218,12 @@ struct BatchState {
   bool finishing{false};
   int generation{0};
   int capture_index{0};
+  // Captures are taken on the scenario clock, not the wall clock, and the
+  // wall-clock watchdog is extended by the time they cost.
+  float next_capture_time{0.0F};
+  qint64 capture_spent_ms{0};
+  bool capturing{false};
+  QMetaObject::Connection capture_connection;
   std::vector<ScenarioResult> results;
 };
 
@@ -565,15 +572,35 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
     qInfo().noquote() << QStringLiteral("Running rendered Arena scenario: %1").arg(id);
     viewport->load_scenario(id);
 
+    QObject::disconnect(state->capture_connection);
+    state->capture_spent_ms = 0;
+    state->capturing = false;
     if (settings.capture_interval > 0.0F) {
-      int const capture_interval_ms = std::max(
-          1, static_cast<int>(std::lround(settings.capture_interval * 1000.0F)));
-      auto capture_next = std::make_shared<std::function<void()>>();
-      *capture_next =
-          [state, viewport, generation, capture_interval_ms, capture_next]() {
-            if (state->generation != generation || state->finishing) {
+      // Sample the scenario every capture_interval seconds of simulated time,
+      // right after the frame that reached it. A wall-clock timer grabbing and
+      // encoding frames between fixed-step ticks slowed the simulation until
+      // the watchdog fired, and captured different moments on every run.
+      float const interval = settings.capture_interval;
+      state->next_capture_time = interval;
+      state->capture_connection = QObject::connect(
+          viewport,
+          &ArenaViewport::frame_rendered,
+          viewport,
+          [state, viewport, generation, interval]() {
+            if (state->generation != generation || state->finishing ||
+                state->capturing) {
               return;
             }
+            float const elapsed = viewport->scenario_elapsed_seconds();
+            if (elapsed + 1.0e-4F < state->next_capture_time) {
+              return;
+            }
+            while (state->next_capture_time <= elapsed + 1.0e-4F) {
+              state->next_capture_time += interval;
+            }
+            state->capturing = true;
+            QElapsedTimer cost;
+            cost.start();
             QImage const frame = viewport->grabFramebuffer();
             if (!frame.isNull()) {
               frame.save(
@@ -582,10 +609,10 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
                           QStringLiteral("frame_%1.png")
                               .arg(++state->capture_index, 4, 10, QLatin1Char('0'))));
             }
-            QTimer::singleShot(capture_interval_ms,
-                               [capture_next]() { (*capture_next)(); });
-          };
-      QTimer::singleShot(capture_interval_ms, [capture_next]() { (*capture_next)(); });
+            state->capture_spent_ms += cost.elapsed();
+            state->capturing = false;
+          },
+          Qt::QueuedConnection);
     }
 
     auto const* definition = Arena::Scenarios::find_definition(id);
@@ -595,11 +622,21 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
             : (definition != nullptr ? definition->duration_seconds : 12.0F);
     int const watchdog_ms = static_cast<int>(
         std::max(15.0F, effective_duration * settings.watchdog_multiplier) * 1000.0F);
-    QTimer::singleShot(watchdog_ms, [state, viewport, start_next, generation]() {
+    auto watchdog = std::make_shared<std::function<void(qint64)>>();
+    *watchdog = [state, viewport, start_next, generation, watchdog](
+                    qint64 credited_capture_ms) {
       if (state->generation != generation || state->finishing) {
         return;
       }
+      // Time spent writing requested captures is not the scenario stalling.
+      if (qint64 const owed = state->capture_spent_ms - credited_capture_ms; owed > 0) {
+        qint64 const credited = state->capture_spent_ms;
+        QTimer::singleShot(static_cast<int>(owed),
+                           [watchdog, credited]() { (*watchdog)(credited); });
+        return;
+      }
       state->finishing = true;
+      QObject::disconnect(state->capture_connection);
       QImage const frame = viewport->grabFramebuffer();
       if (!frame.isNull()) {
         frame.save(
@@ -619,7 +656,8 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
                     ScenarioOutcome::TimedOut,
                     QStringLiteral("Scenario exceeded the local wall-clock watchdog."));
       QTimer::singleShot(25, [start_next]() { (*start_next)(); });
-    });
+    };
+    QTimer::singleShot(watchdog_ms, [watchdog]() { (*watchdog)(0); });
   };
 
   QObject::connect(
@@ -632,6 +670,7 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
           return;
         }
         state->finishing = true;
+        QObject::disconnect(state->capture_connection);
         QImage const final_frame = viewport->grabFramebuffer();
         if (!final_frame.isNull()) {
           final_frame.save(

@@ -39,9 +39,7 @@ struct HumanoidAnimationStateComponent {
   float jump_pitch_time{-1.0F};
 
   float last_reaction_time{-1.0F};
-  PlaybackLayerRequest last_overlay{};
-  float overlay_sample_time{0.0F};
-  float overlay_weight_velocity{0.0F};
+  Pipeline::HumanoidOverlayMemory overlay{};
 };
 
 struct HorseAnimationStateComponent {

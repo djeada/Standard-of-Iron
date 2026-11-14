@@ -273,6 +273,41 @@ void ArenaScenarioRunner::Impl::check_commander_expectation(
     }
     break;
   }
+  case ArenaExpectationKind::CommanderJumpLandsClean: {
+    // threshold = landings required. A landing is an airborne run of at least
+    // 0.3 s followed by a grounded frame; no airborne or landing frame may
+    // leave the body somewhere it could not stand.
+    int const required = std::max(1, static_cast<int>(expectation.threshold));
+    int landings = 0;
+    float airborne_seconds = 0.0F;
+    bool was_airborne = false;
+    for (auto const* frame : commander_frames()) {
+      auto const& motor = frame->commander.motor;
+      bool const airborne = !motor.grounded;
+      if ((airborne || was_airborne) && !motor.static_walkable) {
+        add_issue(
+            QStringLiteral("commander_jump_entered_obstacle"),
+            QStringLiteral("the %1 body stood in an obstacle at %2 s")
+                .arg(airborne ? QStringLiteral("airborne") : QStringLiteral("landing"))
+                .arg(frame->time_seconds, 0, 'f', 2));
+        return;
+      }
+      if (airborne) {
+        airborne_seconds += motor.dt;
+      } else if (was_airborne) {
+        landings += airborne_seconds >= 0.3F ? 1 : 0;
+        airborne_seconds = 0.0F;
+      }
+      was_airborne = airborne;
+    }
+    if (landings < required) {
+      add_issue(QStringLiteral("commander_jump_not_observed"),
+                QStringLiteral("observed %1 complete jump(s); expected at least %2")
+                    .arg(landings)
+                    .arg(required));
+    }
+    break;
+  }
   case ArenaExpectationKind::CommanderInputEdgesAllConsumed: {
     auto const frames = commander_frames();
     if (frames.empty()) {

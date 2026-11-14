@@ -12299,3 +12299,56 @@ TEST(HumanoidPrepare, BuilderToolMatchesRetainedWorkRoleThroughTransitions) {
     }
   }
 }
+
+TEST(HumanoidPrepare, WadingArmsFollowTheStrideInsteadOfWallClockTime) {
+  using namespace Render::Creature::Pipeline;
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  spec.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_wading = true;
+  anim.inputs.wade_amount = 0.75F;
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.gait.state = Render::GL::HumanoidMotionState::Walk;
+  anim.gait.locomotion_presence = 1.0F;
+  anim.gait.cycle_phase = 0.37F;
+  anim.inputs.time = 30.0F;
+  const auto first = resolve_humanoid_animation_selection(spec, anim, 1U);
+  ASSERT_EQ(first.upper_body_overlay.clip_id, Animation::k_humanoid_wade_clip);
+  EXPECT_FLOAT_EQ(first.upper_body_overlay.phase, anim.gait.cycle_phase);
+  anim.inputs.time = 90.0F;
+  const auto later = resolve_humanoid_animation_selection(spec, anim, 1U);
+  EXPECT_FLOAT_EQ(later.upper_body_overlay.phase, first.upper_body_overlay.phase);
+}
+
+TEST(HumanoidPrepare, WadingCannotReplaceGuardOrScriptedJumpPoses) {
+  using namespace Render::Creature::Pipeline;
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  spec.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  for (const bool moving : {false, true}) {
+    for (int pose = 0; pose < 3; ++pose) {
+      Render::GL::HumanoidAnimationContext anim{};
+      if (moving) {
+        anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+        anim.gait.state = Render::GL::HumanoidMotionState::Walk;
+        anim.gait.locomotion_presence = 1.0F;
+      }
+      anim.inputs.is_guarding = pose == 0;
+      anim.inputs.is_exiting_guard = pose == 1;
+      if (pose == 2) {
+        anim.ambient_idle_type = Render::GL::AmbientIdleType::Jump;
+        anim.ambient_idle_phase = 0.5F;
+        anim.ambient_idle_blend = 1.0F;
+      }
+      const auto dry = resolve_humanoid_animation_selection(spec, anim, 1U);
+      anim.inputs.is_wading = true;
+      anim.inputs.wade_amount = 1.0F;
+      const auto wet = resolve_humanoid_animation_selection(spec, anim, 1U);
+      EXPECT_NE(wet.upper_body_overlay.clip_id, Animation::k_humanoid_wade_clip);
+      EXPECT_EQ(wet.clip_id, dry.clip_id);
+      EXPECT_EQ(wet.upper_body_overlay.clip_id, dry.upper_body_overlay.clip_id);
+      EXPECT_EQ(wet.full_body_blend.clip_id, dry.full_body_blend.clip_id);
+    }
+  }
+}

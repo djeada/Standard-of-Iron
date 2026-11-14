@@ -174,6 +174,7 @@ private:
   void select_controlled_commander();
   void restore_rts_selection();
   void reset_input();
+  void release_input_for_rally();
   void enter_rts_runtime_mode();
   void enter_commander_runtime_mode();
   void exit_commander_runtime_mode();

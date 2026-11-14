@@ -32,7 +32,7 @@ constexpr float k_hind_hip_z = -0.212F;
 constexpr QVector3D k_withers(0.0F, 0.452F, 0.250F);
 constexpr QVector3D k_poll_up(0.0F, 0.616F, 0.366F);
 constexpr QVector3D k_graze_dir(0.0F, -0.974F, 0.226F);
-constexpr float k_head_length = 0.180F;
+constexpr float k_head_length = 0.170F;
 
 struct BodyRing {
   float z;
@@ -79,13 +79,20 @@ constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {0.114F, k_hind_hip_z, 0.0F, -0.056F, 0.006F},
 }};
 
-constexpr float k_bob_base = 0.011F;
-constexpr float k_bob_gain = 0.030F;
-constexpr float k_pitch_lag = 0.85F;
-constexpr float k_pitch_gain = 0.020F;
+constexpr float k_walk_bob = 0.010F;
+constexpr float k_walk_sway = 0.007F;
+constexpr float k_run_rock = 0.024F;
+constexpr float k_run_flight = 0.022F;
 
-constexpr GaitPlan k_gait_walk{0.320F, 0.64F, 0.042F, 0.092F};
-constexpr GaitPlan k_gait_run{0.530F, 0.44F, 0.115F, 0.145F};
+constexpr std::array<float, k_leg_count> k_walk_leg_phase{{0.25F, 0.75F, 0.0F, 0.5F}};
+constexpr std::array<float, k_leg_count> k_run_leg_phase{{0.0F, 0.12F, 0.48F, 0.60F}};
+
+constexpr QVector3D k_tail_base(0.0F, 0.512F, -0.316F);
+constexpr QVector3D k_tail_mid(0.0F, 0.440F, -0.356F);
+constexpr QVector3D k_tail_tip(0.0F, 0.370F, -0.364F);
+
+constexpr GaitPlan k_gait_walk{0.320F, 0.64F, 0.042F, 0.092F, 0.50F};
+constexpr GaitPlan k_gait_run{0.385F, 0.32F, 0.115F, 0.145F, 0.90F};
 
 auto gait_plan(SheepGait gait) noexcept -> GaitPlan {
   switch (gait) {
@@ -127,26 +134,62 @@ auto bezier(const QVector3D& p0,
   return (p0 * (inv * inv)) + (p1 * (2.0F * inv * t)) + (p2 * (t * t));
 }
 
-void fill_legs(RigPose& pose,
-               const SheepDrive& drive,
-               float fore_lift,
-               float hind_lift) {
+struct BodyMotion {
+  float fore{0.0F};
+  float hind{0.0F};
+  float sway{0.0F};
+  float fore_mid{0.0F};
+  float hind_mid{0.0F};
+};
+
+auto body_motion(const SheepDrive& drive) -> BodyMotion {
+  BodyMotion m;
+  if (drive.gait == SheepGait::Stand) {
+    return m;
+  }
+  float const duty = gait_plan(drive.gait).stance_duty;
+  float const phase = drive.stride_phase;
+
+  if (drive.gait == SheepGait::Run) {
+    float const effort = std::clamp(drive.speed_ratio, 0.0F, 1.0F);
+    m.fore_mid = (duty * 0.5F) - ((k_run_leg_phase[0] + k_run_leg_phase[1]) * 0.5F);
+    m.hind_mid = (duty * 0.5F) - ((k_run_leg_phase[2] + k_run_leg_phase[3]) * 0.5F);
+
+    float const flight = std::cos((phase - m.fore_mid - 0.25F) * k_two_pi * 2.0F) *
+                         k_run_flight * effort;
+    m.fore = flight - (std::cos((phase - m.fore_mid) * k_two_pi) * k_run_rock * effort);
+    m.hind = flight - (std::cos((phase - m.hind_mid) * k_two_pi) * k_run_rock * effort);
+    return m;
+  }
+
+  m.fore_mid = (duty * 0.5F) - k_walk_leg_phase[0];
+  m.hind_mid = (duty * 0.5F) - k_walk_leg_phase[2];
+  m.fore = std::cos((phase - m.fore_mid) * k_two_pi * 2.0F) * k_walk_bob;
+  m.hind = std::cos((phase - m.hind_mid) * k_two_pi * 2.0F) * k_walk_bob;
+
+  float const left_support = (m.fore_mid + m.hind_mid) * 0.5F;
+  m.sway = -std::cos((phase - left_support) * k_two_pi) * k_walk_sway;
+  return m;
+}
+
+void fill_legs(RigPose& pose, const SheepDrive& drive, const BodyMotion& motion) {
   const GaitPlan plan = gait_plan(drive.gait);
   float const weight = drive.gait == SheepGait::Stand ? 0.0F : 1.0F;
   for (std::size_t i = 0; i < k_leg_count; ++i) {
     LegRest rest = leg_rests()[i];
     bool const hind = k_leg_plans[i].z < 0.0F;
-    rest.hip.setY(rest.hip.y() + (hind ? hind_lift : fore_lift));
-    constexpr std::array<float, k_leg_count> walk_phase{0.25F, 0.75F, 0.0F, 0.5F};
-    constexpr std::array<float, k_leg_count> run_phase{0.0F, 0.12F, 0.48F, 0.60F};
-    float const offset = drive.gait == SheepGait::Run ? run_phase[i] : walk_phase[i];
+    rest.hip.setY(rest.hip.y() + (hind ? motion.hind : motion.fore));
+    rest.hip.setX(rest.hip.x() + motion.sway);
+    float const offset =
+        drive.gait == SheepGait::Run ? k_run_leg_phase[i] : k_walk_leg_phase[i];
     solve_leg(rest, plan, drive.stride_phase + offset, weight, pose.legs[i]);
   }
 }
 
 void fill_head(RigPose& pose, const SheepDrive& drive) {
-  float const nibble = std::sin(drive.stride_phase * k_two_pi * 6.0F) * 0.010F *
-                       std::clamp(drive.graze, 0.0F, 1.0F);
+  float const nibble = (std::sin(drive.stride_phase * k_two_pi * 6.0F) * 0.010F *
+                        std::clamp(drive.graze, 0.0F, 1.0F)) -
+                       (std::clamp(drive.chew, 0.0F, 1.0F) * 0.012F);
   float const neck_length = (k_poll_up - k_withers).length();
   QVector3D const poll_graze = k_withers + (k_graze_dir.normalized() * neck_length);
   QVector3D const control_up(0.0F, 0.590F, 0.292F);
@@ -179,11 +222,11 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
     QVector3D const base =
         poll - (facing * 0.014F) + (side * (sign * 0.050F)) + (head_up * 0.016F);
     QVector3D const relaxed =
-        ((side * (sign * 0.90F)) - (facing * 0.22F) - (head_up * 0.32F)).normalized();
+        ((side * (sign * 0.92F)) - (facing * 0.20F) - (head_up * 0.16F)).normalized();
     QVector3D const alert =
         ((side * (sign * 0.78F)) + (facing * 0.20F) + (head_up * 0.24F)).normalized();
     QVector3D const dir = lerp(relaxed, alert, drive.alert).normalized();
-    QVector3D const tip = base + (dir * 0.100F);
+    QVector3D const tip = base + (dir * 0.116F);
     if (sign_index == 0) {
       pose.ear_base_l = base;
       pose.ear_tip_l = tip;
@@ -192,6 +235,17 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
       pose.ear_tip_r = tip;
     }
   }
+}
+
+auto head_chain(RigPose& pose) -> std::array<QVector3D*, 8> {
+  return {&pose.poll,
+          &pose.muzzle,
+          &pose.jaw_hinge,
+          &pose.jaw_tip,
+          &pose.ear_base_l,
+          &pose.ear_base_r,
+          &pose.ear_tip_l,
+          &pose.ear_tip_r};
 }
 
 struct HeadAttachment {
@@ -249,17 +303,6 @@ auto rotate_about_y(const QVector3D& point,
   float const c = std::cos(radians);
   float const s = std::sin(radians);
   return pivot + QVector3D((d.x() * c) + (d.z() * s), d.y(), (d.z() * c) - (d.x() * s));
-}
-
-auto head_chain(RigPose& pose) -> std::array<QVector3D*, 8> {
-  return {&pose.poll,
-          &pose.muzzle,
-          &pose.jaw_hinge,
-          &pose.jaw_tip,
-          &pose.ear_base_l,
-          &pose.ear_base_r,
-          &pose.ear_tip_l,
-          &pose.ear_tip_r};
 }
 
 void apply_idle_motion(RigPose& pose, const SheepDrive& drive) {
@@ -507,42 +550,53 @@ auto rolled_head(const HeadAttachment& held, float roll) -> HeadAttachment {
 
 auto make_pose(const SheepDrive& drive) -> RigPose {
   RigPose pose;
-  float const cadence = drive.stride_phase * k_two_pi * 2.0F;
-  float const gait = std::clamp(drive.speed_ratio, 0.0F, 1.0F);
-  float const motion = drive.gait == SheepGait::Stand ? 0.0F : 1.0F;
-  float const bob = (std::sin(cadence) * (k_bob_base + (k_bob_gain * gait)) * motion) -
-                    (drive.graze * 0.030F);
-  float const pitch = std::sin(cadence - k_pitch_lag) * k_pitch_gain * gait * motion;
+  float const effort = std::clamp(drive.speed_ratio, 0.0F, 1.0F);
+  bool const running = drive.gait == SheepGait::Run;
+  bool const moving = drive.gait != SheepGait::Stand;
 
-  pose.root = QVector3D(0.0F, bob, 0.0F);
-  pose.body_rear = QVector3D(0.0F, 0.430F + bob + pitch, -0.300F);
-  pose.body_front = QVector3D(0.0F, 0.448F + bob - pitch, 0.280F);
+  BodyMotion motion = body_motion(drive);
+  float const settle = drive.graze * 0.030F;
+  motion.fore -= settle;
+  motion.hind -= settle;
+  float const bob = (motion.fore + motion.hind) * 0.5F;
+  QVector3D const shift(motion.sway, 0.0F, 0.0F);
 
-  fill_legs(pose, drive, bob - pitch, bob + pitch);
+  pose.root = QVector3D(motion.sway * 0.5F, bob, 0.0F);
+  pose.body_rear = QVector3D(motion.sway, 0.430F + motion.hind, -0.300F);
+  pose.body_front = QVector3D(motion.sway, 0.448F + motion.fore, 0.280F);
+
+  fill_legs(pose, drive, motion);
   fill_head(pose, drive);
-  pose.tail_base = QVector3D(0.0F, 0.520F, -0.300F);
-  pose.tail_mid = QVector3D(0.0F, 0.446F, -0.330F);
-  pose.tail_tip = QVector3D(0.0F, 0.382F, -0.336F);
+  pose.tail_base = k_tail_base;
+  pose.tail_mid = k_tail_mid;
+  pose.tail_tip = k_tail_tip;
   HeadAttachment const head_attachment = capture_head_attachment(pose);
   SkeletonLengths const skeleton = capture_skeleton_lengths(pose);
 
-  float const nod =
-      std::sin(cadence - 1.35F) * (k_bob_base + (k_bob_gain * gait)) * motion * 0.62F;
-  QVector3D const head_ride(0.0F, (bob * 0.55F) + nod, 0.0F);
-  pose.withers += QVector3D(0.0F, bob * 0.85F - pitch * 0.6F, 0.0F);
-  pose.poll += head_ride;
-  pose.muzzle += head_ride;
-  pose.jaw_hinge += head_ride;
-  pose.jaw_tip += head_ride;
-  pose.ear_base_l += head_ride;
-  pose.ear_base_r += head_ride;
-  pose.ear_tip_l += head_ride;
-  pose.ear_tip_r += head_ride;
+  float nod = 0.0F;
+  if (running) {
+    nod = -std::cos(((drive.stride_phase - motion.fore_mid) * k_two_pi) - 0.9F) *
+          0.014F * effort;
+  } else if (moving) {
+    nod = std::cos(((drive.stride_phase - motion.fore_mid) * k_two_pi * 2.0F) - 1.0F) *
+          0.009F;
+  }
+  QVector3D const head_ride =
+      (shift * 0.6F) + QVector3D(0.0F, (motion.fore * 0.55F) + nod, 0.0F);
+  pose.withers += shift + QVector3D(0.0F, motion.fore * 0.85F, 0.0F);
+  for (auto* point : head_chain(pose)) {
+    *point += head_ride;
+  }
 
-  float const wag =
-      std::sin(drive.stride_phase * k_two_pi) * 0.022F * drive.speed_ratio;
-  pose.tail_mid.setX(wag * 0.5F);
-  pose.tail_tip.setX(wag);
+  float const stream = running ? effort : 0.0F;
+  float const wag = std::sin(drive.stride_phase * k_two_pi * 2.0F) * 0.022F *
+                    (moving ? 0.4F + (effort * 0.6F) : 0.0F);
+  float const flap =
+      std::cos(((drive.stride_phase - motion.hind_mid) * k_two_pi) - 1.4F) * stream;
+  QVector3D const tail_ride = shift + QVector3D(0.0F, motion.hind, 0.0F);
+  pose.tail_base += tail_ride;
+  pose.tail_mid += tail_ride + QVector3D(wag * 0.5F, 0.010F * flap, -0.016F * stream);
+  pose.tail_tip += tail_ride + QVector3D(wag, 0.026F * flap, -0.050F * stream);
 
   apply_idle_motion(pose, drive);
   apply_startle(pose, drive);
@@ -571,6 +625,9 @@ auto ellipsoid(std::string_view name,
   if (g_minimal_tessellation) {
     data.ring_count = 3U;
     data.ring_vertices = 6U;
+  } else {
+    data.ring_count = 6U;
+    data.ring_vertices = 9U;
   }
   node.data = data;
   return node;
@@ -611,6 +668,8 @@ auto tube(std::string_view name,
   if (g_minimal_tessellation) {
     data.segment_count = 2U;
     data.ring_vertices = 5U;
+  } else {
+    data.ring_vertices = 8U;
   }
   node.data = data;
   return node;
@@ -666,7 +725,7 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   g_minimal_tessellation = wanted_lod == Render::Creature::k_lod_minimal;
   const RigPose& bind = sheep_bind_pose();
   std::vector<MeshNode> nodes;
-  nodes.reserve(64U);
+  nodes.reserve(96U);
 
   constexpr std::uint8_t k_full = Render::Creature::k_lod_full;
 
@@ -702,11 +761,37 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     }
   }
 
+  for (std::size_t i = 3U; i + 3U < k_body_rings.size(); i += 3U) {
+    auto const& ring = k_body_rings[i];
+    float const swell = 1.0F + (0.12F * std::sin(static_cast<float>(i) * 1.7F));
+    for (float sign : {-1.0F, 1.0F}) {
+      nodes.push_back(ellipsoid(
+          "sheep.fleece.flank",
+          Bone::Body,
+          k_sheep_role_wool,
+          {sign * ring.half_width * 0.84F, ring.y - (ring.bottom * 0.26F), ring.z},
+          QVector3D(0.052F, 0.064F, 0.076F) * swell,
+          k_full));
+    }
+  }
+  for (std::size_t i = 4U; i + 4U < k_body_rings.size(); i += 3U) {
+    auto const& ring = k_body_rings[i];
+    float const lean = 0.022F * std::sin(static_cast<float>(i) * 2.3F);
+    float const swell =
+        1.0F + (0.10F * std::sin((static_cast<float>(i) * 1.3F) + 0.8F));
+    nodes.push_back(ellipsoid("sheep.fleece.crest",
+                              Bone::Body,
+                              k_sheep_role_wool_light,
+                              {lean, ring.y + (ring.top * 0.84F), ring.z},
+                              QVector3D(0.074F, 0.042F, 0.080F) * swell,
+                              k_full));
+  }
+
   nodes.push_back(ellipsoid("sheep.belly",
                             Bone::Body,
                             k_sheep_role_wool_grubby,
-                            {0.0F, 0.268F, -0.010F},
-                            {0.112F, 0.042F, 0.210F}));
+                            {0.0F, 0.286F, -0.010F},
+                            {0.092F, 0.042F, 0.186F}));
   nodes.push_back(ellipsoid("sheep.brisket",
                             Bone::Body,
                             k_sheep_role_wool,
@@ -743,18 +828,24 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                             Bone::Head,
                             k_sheep_role_face,
                             bind.poll + (facing * 0.036F) + (head_up * 0.008F),
-                            {0.070F, 0.066F, 0.080F}));
+                            {0.072F, 0.070F, 0.082F}));
 
   nodes.push_back(ellipsoid("sheep.poll_wool",
                             Bone::Head,
                             k_sheep_role_wool_light,
-                            bind.poll - (facing * 0.048F) + (head_up * 0.020F),
-                            {0.072F, 0.058F, 0.064F}));
+                            bind.poll - (facing * 0.040F) + (head_up * 0.014F),
+                            {0.076F, 0.054F, 0.066F}));
   nodes.push_back(ellipsoid("sheep.cheek_wool",
                             Bone::NeckTop,
                             k_sheep_role_wool,
                             bind.poll - ((bind.poll - bind.withers) * 0.30F),
-                            {0.076F, 0.072F, 0.068F}));
+                            {0.084F, 0.078F, 0.072F}));
+  nodes.push_back(ellipsoid("sheep.neck_wool",
+                            Bone::NeckTop,
+                            k_sheep_role_wool,
+                            bind.poll - ((bind.poll - bind.withers) * 0.66F) +
+                                QVector3D(0.0F, -0.020F, 0.024F),
+                            {0.098F, 0.092F, 0.082F}));
 
   {
     MeshNode node;
@@ -762,32 +853,45 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     node.anchor_bone = bone_index(Bone::Head);
     node.color_role = k_sheep_role_face;
     SnoutNode data;
-    data.start = bind.poll + (facing * 0.062F);
+    data.start = bind.poll + (facing * 0.058F);
     data.end = bind.muzzle;
-    data.base_radius = 0.048F;
-    data.tip_radius = 0.030F;
+    data.base_radius = 0.056F;
+    data.tip_radius = 0.037F;
+    if (!g_minimal_tessellation) {
+      data.ring_vertices = 8U;
+    }
     node.data = data;
     nodes.push_back(node);
   }
+  nodes.push_back(ellipsoid("sheep.nose_bridge",
+                            Bone::Head,
+                            k_sheep_role_face,
+                            bind.poll + (facing * 0.096F) + (head_up * 0.016F),
+                            {0.038F, 0.038F, 0.050F}));
+  nodes.push_back(ellipsoid("sheep.jowl",
+                            Bone::Head,
+                            k_sheep_role_face,
+                            bind.poll + (facing * 0.070F) - (head_up * 0.026F),
+                            {0.042F, 0.040F, 0.048F}));
   nodes.push_back(ellipsoid("sheep.nose",
                             Bone::Head,
                             k_sheep_role_nose,
                             bind.muzzle + (facing * 0.006F),
-                            {0.030F, 0.026F, 0.024F}));
+                            {0.035F, 0.029F, 0.027F}));
   nodes.push_back(tube("sheep.jaw",
                        Bone::Jaw,
                        k_sheep_role_face,
                        bind.jaw_hinge,
                        bind.jaw_tip,
-                       0.030F,
-                       0.022F));
+                       0.034F,
+                       0.025F));
   for (float sign : {-1.0F, 1.0F}) {
     nodes.push_back(ellipsoid("sheep.eye",
                               Bone::Head,
                               k_sheep_role_eye,
-                              bind.poll + (facing * 0.032F) + (head_up * 0.016F) +
-                                  (side * (sign * 0.065F)),
-                              {0.009F, 0.010F, 0.013F},
+                              bind.poll + (facing * 0.036F) + (head_up * 0.018F) +
+                                  (side * (sign * 0.067F)),
+                              {0.012F, 0.013F, 0.016F},
                               k_full));
   }
 
@@ -795,9 +899,9 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     nodes.push_back(ellipsoid("sheep.nostril",
                               Bone::Head,
                               k_sheep_role_eye,
-                              bind.muzzle + facing * 0.016F + side * (sign * 0.020F) +
-                                  head_up * 0.010F,
-                              {0.007F, 0.006F, 0.008F},
+                              bind.muzzle + facing * 0.018F + side * (sign * 0.022F) +
+                                  head_up * 0.012F,
+                              {0.008F, 0.007F, 0.009F},
                               k_full));
   }
 
@@ -807,14 +911,14 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                            bind.ear_base_l,
                            bind.ear_tip_l,
                            head_up,
-                           0.036F));
+                           0.043F));
   nodes.push_back(ear_flap("sheep.ear_r",
                            Bone::EarR,
                            k_sheep_role_face,
                            bind.ear_base_r,
                            bind.ear_tip_r,
                            head_up,
-                           0.036F));
+                           0.043F));
 
   constexpr std::array<Bone, k_leg_count> k_shoulders{
       Bone::ShoulderFL, Bone::ShoulderFR, Bone::ShoulderBL, Bone::ShoulderBR};
@@ -847,22 +951,28 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                          k_sheep_role_wool_shade,
                          joints.shoulder,
                          joints.knee,
-                         0.048F,
-                         0.026F));
+                         0.052F,
+                         0.029F));
+    nodes.push_back(ellipsoid("sheep.leg.knee",
+                              k_knees[i],
+                              k_sheep_role_face,
+                              joints.knee,
+                              {0.027F, 0.029F, 0.029F},
+                              k_full));
     nodes.push_back(tube("sheep.leg.lower",
                          k_knees[i],
                          k_sheep_role_face,
                          joints.knee,
                          joints.foot,
-                         0.024F,
-                         0.019F));
+                         0.026F,
+                         0.021F));
     nodes.push_back(tube("sheep.leg.hoof",
                          k_feet[i],
                          k_sheep_role_hoof,
                          joints.foot,
                          joints.toe,
-                         0.021F,
-                         0.026F));
+                         0.023F,
+                         0.028F));
     for (float sign : {-1.0F, 1.0F}) {
       nodes.push_back(ellipsoid("sheep.cloven_hoof",
                                 k_feet[i],
@@ -878,15 +988,21 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                        k_sheep_role_wool,
                        bind.tail_base,
                        bind.tail_mid,
-                       0.038F,
-                       0.030F));
+                       0.044F,
+                       0.038F));
   nodes.push_back(tube("sheep.tail.tip",
                        Bone::TailTip,
-                       k_sheep_role_wool_grubby,
+                       k_sheep_role_wool,
                        bind.tail_mid,
                        bind.tail_tip,
-                       0.030F,
-                       0.014F));
+                       0.038F,
+                       0.022F));
+  nodes.push_back(ellipsoid("sheep.tail.tuft",
+                            Bone::TailTip,
+                            k_sheep_role_wool_grubby,
+                            bind.tail_tip + QVector3D(0.0F, -0.006F, 0.0F),
+                            {0.024F, 0.030F, 0.024F},
+                            k_full));
 
   std::erase_if(nodes, [wanted_lod](const MeshNode& node) {
     return (node.lod_mask & wanted_lod) == 0U;

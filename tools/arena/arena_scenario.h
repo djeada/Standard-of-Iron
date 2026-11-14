@@ -414,6 +414,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoUncommandedViewRotation,
   CommanderMotorCorrectionWithin,
   CommanderSpeedIsContinuous,
+  CommanderJumpLandsClean,
   CommanderInputEdgesAllConsumed,
   CommanderContactCountAtMost,
   CommanderActionObserved,

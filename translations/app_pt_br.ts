@@ -5353,10 +5353,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Move troops next to a river raft</source>
         <translation>Mova tropas para perto de uma jangada do rio</translation>
     </message>
-    <message>
-        <source>Go to Barracks</source>
-        <translation>Ir aos quartéis</translation>
-    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -7271,6 +7267,14 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>Click to look</source>
         <translation>Clique para ver</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>Carregando...</translation>
+    </message>
+    <message>
+        <source>Roman field commander</source>
+        <translation>Comandante de campo romano</translation>
     </message>
 </context>
 <context>

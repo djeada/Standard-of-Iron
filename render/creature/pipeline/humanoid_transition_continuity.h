@@ -45,6 +45,40 @@ struct HumanoidTransitionResult {
   bool started{false};
 };
 
+// Upper-body overlay weights move at most this fast. Faster fades were tried
+// (35-80 ms responses): at mid weight the overlay blends a fast swing against
+// a different full-body pose, and the hand spins or snaps at every frame rate
+// (HumanoidMotionQuality.MeleeHitsRecoveryAndRetargetingStayVisuallyContinuous).
+inline constexpr float k_overlay_weight_rate_per_second = 2.1F;
+// A water or carry overlay handed to a full-body reaction/action leaves this
+// fast, so it does not linger over a flinch or shield raise, yet still takes a
+// few frames at 30 Hz. Combat overlays keep the ordinary rate.
+inline constexpr float k_overlay_takeover_release_seconds = 0.12F;
+
+struct HumanoidOverlayMemory {
+  Render::Creature::PlaybackLayerRequest shown{};
+  float weight_velocity{0.0F};
+  float sample_time{0.0F};
+  bool valid{false};
+  // The shown overlay was requested by a combat pose (attack, guard, reaction).
+  bool shown_combat{false};
+};
+
+struct HumanoidOverlayFrame {
+  float time{0.0F};
+  bool persist{true};
+  // The request comes from a combat pose rather than water or carrying.
+  bool combat_pose{false};
+  // A full-body reaction/action owns the arms and requests no overlay.
+  bool full_body_takeover{false};
+};
+
+[[nodiscard]] auto
+advance_humanoid_overlay(const Render::Creature::PlaybackLayerRequest& requested,
+                         HumanoidOverlayMemory& memory,
+                         const HumanoidOverlayFrame& frame) noexcept
+    -> Render::Creature::PlaybackLayerRequest;
+
 [[nodiscard]] auto requested_clip_mix(
     const HumanoidAnimationSelection& selection) noexcept -> Animation::ClipMix;
 

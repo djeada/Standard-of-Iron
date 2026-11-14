@@ -20,7 +20,7 @@ namespace {
 constexpr float k_top_speed = 4.6F;
 constexpr float k_run_threshold = 0.55F;
 constexpr float k_walk_threshold = 0.02F;
-constexpr float k_idle_period_seconds = 96.0F / 24.0F;
+constexpr float k_idle_period_seconds = 168.0F / 24.0F;
 constexpr float k_crouch_period_seconds = 72.0F / 24.0F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {

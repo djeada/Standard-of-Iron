@@ -1,0 +1,110 @@
+{
+  "coord_system": "grid",
+  "grid": {
+    "width": 96,
+    "height": 96,
+    "tile_size": 1.0
+  },
+  "biome": {
+    "ground_type": "soil_fertile",
+    "seed": 4471,
+    "patch_density": 3.0,
+    "patch_jitter": 0.85,
+    "blade_height": [0.5, 1.3],
+    "blade_width": [0.024, 0.05],
+    "sway_strength": 0.2,
+    "sway_speed": 1.0,
+    "height_noise": [0, 0],
+    "grass_primary": [0.3, 0.55, 0.28],
+    "grass_secondary": [0.44, 0.66, 0.32],
+    "grass_dry": [0.58, 0.52, 0.36],
+    "soil_color": [0.27, 0.22, 0.16],
+    "rock_low": [0.42, 0.4, 0.38],
+    "rock_high": [0.66, 0.66, 0.64],
+    "plant_density": 0.1,
+    "ground_irregularity_enabled": false,
+    "irregularity_scale": 0.12,
+    "irregularity_amplitude": 0.05,
+    "procedural_trees_enabled": false,
+    "procedural_boulders_enabled": false,
+    "procedural_iron_ore_enabled": false
+  },
+  "camera": {
+    "center": [48, 0, 34],
+    "distance": 28,
+    "tilt_deg": 48.0,
+    "yaw": 0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 300.0
+  },
+  "time_of_day": "day",
+  "rain": {
+    "enabled": false
+  },
+  "name": "Commander traversal: ford and bridge",
+  "description": "Focused manual traversal course. Ford at x=48; bridge at x=72; river at z=48.",
+  "skirmish_hidden": true,
+  "spawns": [
+    {
+      "id": "scipio",
+      "type": "roman_veteran_consul",
+      "x": 48,
+      "z": 34,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "max_population": -1
+    },
+    {
+      "id": "hannibal",
+      "type": "carthage_sword_commander",
+      "x": 8,
+      "z": 86,
+      "player_id": 2,
+      "team_id": 2,
+      "nation": "carthage",
+      "max_population": -1
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 48],
+      "end": [96, 48],
+      "width": 8
+    }
+  ],
+  "fords": [
+    {
+      "id": "temperate_ford",
+      "position": [48, 48],
+      "length": 14,
+      "depth": 0.45,
+      "speed": 0.55,
+      "cold": 0
+    }
+  ],
+  "bridges": [
+    {
+      "id": "dry_crossing",
+      "start": [72, 37],
+      "end": [72, 59],
+      "width": 8,
+      "height": 0.5
+    }
+  ],
+  "terrain": [
+    {
+      "id": "north_slope",
+      "type": "hill",
+      "x": 48,
+      "z": 76,
+      "width": 20,
+      "depth": 20,
+      "height": 2
+    }
+  ],
+  "wildlife": {
+    "enabled": false
+  }
+}

@@ -18,10 +18,17 @@ enum class DodgeState {
 
 inline constexpr float k_commander_ground_acceleration_mps2 = 30.0F;
 inline constexpr float k_commander_ground_deceleration_mps2 = 36.0F;
+// Airborne steering. A jump commits to its takeoff momentum: releasing input
+// keeps it, and steering can bend it by at most 3.8 m/s over a full jump.
+inline constexpr float k_commander_air_acceleration_mps2 = 4.0F;
+// A jump or dodge pressed this close to the end of a jump or roll is held and
+// resolved on the first free tick. Earlier presses are still refused at once.
+inline constexpr float k_commander_movement_buffer_seconds = 0.20F;
 
 namespace Engine::Core {
 class RpgCommanderActionComponent;
-}
+class WadingComponent;
+} // namespace Engine::Core
 
 namespace App::Core {
 
@@ -44,6 +51,8 @@ struct JumpTickInput {
   bool primary_held{false};
   bool guard_held{false};
   bool ability_requested{false};
+  // Reeling from a hit: the body is not his to command until it recovers.
+  bool staggered{false};
   float dt{0.0F};
 };
 
@@ -54,6 +63,7 @@ struct JumpTickResult {
 
 struct DodgeStartInput {
   bool pressed{false};
+  bool staggered{false};
   bool has_direction{false};
   QVector3D direction{0.0F, 0.0F, 0.0F};
   QVector3D move{0.0F, 0.0F, 0.0F};
@@ -67,6 +77,11 @@ struct MotionTickInput {
   bool run_held{false};
   bool drawing_bow{false};
   bool jump_active{false};
+  // Facing the view for a fight. Only then is he stepping back or sideways;
+  // moving freely he turns and runs, at full speed in every direction.
+  bool squared_up{false};
+  // Shared ford state for this tick (FordSystem owns it); null on dry ground.
+  const Engine::Core::WadingComponent* wading{nullptr};
   float dt{0.0F};
 };
 
@@ -94,7 +109,6 @@ public:
   [[nodiscard]] auto planar_speed() const -> float {
     return m_planar_velocity.length();
   }
-  [[nodiscard]] auto follows_travel() const -> bool;
   [[nodiscard]] auto move_right_axis() const -> int { return m_move_right_axis; }
   [[nodiscard]] auto move_forward_axis() const -> int { return m_move_forward_axis; }
   [[nodiscard]] auto move_running() const -> bool { return m_move_running; }
@@ -103,6 +117,8 @@ public:
     return m_jump_followup_pending;
   }
   void clear_jump_followup() { m_jump_followup_pending = false; }
+  // True while a jump or dodge is running and ends within `seconds`.
+  [[nodiscard]] auto frees_within(float seconds) const -> bool;
 
   void decay_dodge_kick(float dt);
 
@@ -116,11 +132,6 @@ public:
   [[nodiscard]] auto advance_motion(const CommanderHandles& body,
                                     CommanderMotor& motor,
                                     const MotionTickInput& input) -> MotorReport;
-
-  void recover_from_fall(const CommanderHandles& body,
-                         CommanderMotor& motor,
-                         bool jump_active,
-                         MotorReport& report);
 
   void
   commit_motion(const MotorReport& report, int forward_axis, int right_axis, float dt);
@@ -141,14 +152,11 @@ private:
       const Game::Systems::CombatActions::CombatActionDefinition* current_definition);
   void begin_jump(const CommanderHandles& body, bool followup);
   void tick_jump_timer(const CommanderHandles& body, float dt);
-  void mark_jump_safe_position(const CommanderHandles& body,
-                               bool jump_active,
-                               float x,
-                               float z);
+  void steer_airborne(const QVector3D& desired_velocity, float target_speed, float dt);
 
   void roll(const CommanderHandles& body,
             CommanderMotor& motor,
-            float dt,
+            const MotionTickInput& input,
             MotorReport& report);
   void recover_roll(const CommanderHandles& body,
                     CommanderMotor& motor,
@@ -174,9 +182,7 @@ private:
   float m_dodge_fov_kick = 0.0F;
 
   float m_jump_timer = 0.0F;
-  bool m_jump_safe_position_valid = false;
   bool m_jump_followup_pending = false;
-  QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};
 };
 
 } // namespace App::Core

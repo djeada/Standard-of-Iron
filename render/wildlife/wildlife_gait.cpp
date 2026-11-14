@@ -50,6 +50,7 @@ void solve_leg(const LegRest& rest,
 
   float travel = 0.0F;
   float lift = 0.0F;
+  float flex = 0.0F;
   if (t < duty) {
     travel = (0.5F - (t / duty)) * plan.stride;
   } else {
@@ -63,6 +64,9 @@ void solve_leg(const LegRest& rest,
 
     float const bell = std::sin(u * k_pi);
     lift = plan.lift * bell * bell;
+
+    float const fold = std::sin(std::pow(u, 0.7F) * k_pi);
+    flex = plan.paw_flex * fold * fold;
   }
 
   float const w = std::clamp(weight, 0.0F, 1.0F);
@@ -71,7 +75,16 @@ void solve_leg(const LegRest& rest,
   QVector3D const hip =
       rest.hip + QVector3D(0.0F, 0.0F, reach_fraction * plan.hip_swing * w);
   QVector3D toe = rest.toe + QVector3D(0.0F, lift * w, travel * w);
-  QVector3D ankle = toe + rest.pastern;
+
+  QVector3D pastern = rest.pastern;
+  if (flex * w != 0.0F) {
+    float const c = std::cos(flex * w);
+    float const s = std::sin(flex * w);
+    pastern = QVector3D(rest.pastern.x(),
+                        (rest.pastern.y() * c) - (rest.pastern.z() * s),
+                        (rest.pastern.y() * s) + (rest.pastern.z() * c));
+  }
+  QVector3D ankle = toe + pastern;
 
   QVector3D span = ankle - hip;
   float len = span.length();
@@ -80,7 +93,7 @@ void solve_leg(const LegRest& rest,
     span *= reach / len;
     len = reach;
     ankle = hip + span;
-    toe = ankle - rest.pastern;
+    toe = ankle - pastern;
   }
   len = std::max(len, 1.0e-4F);
 

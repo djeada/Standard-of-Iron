@@ -157,6 +157,9 @@ void CommanderLook::release_mouse() {
 }
 
 void CommanderLook::reset() {
+  // The view is kept, but its history is not: a stale previous view would be
+  // read as one tick of aim movement by the first swing after a reset.
+  remember_previous_view();
   m_frame_intent = {};
   m_intent_sample_valid = false;
   m_mouse_center_valid = false;

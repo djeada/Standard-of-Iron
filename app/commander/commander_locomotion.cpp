@@ -6,6 +6,7 @@
 #include "app/commander/commander_heading.h"
 #include "game/audio/audio_cues.h"
 #include "game/core/component.h"
+#include "game/core/ford_rules.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/commander_defense_timeline.h"
 #include "game/systems/run_stamina.h"
@@ -21,6 +22,16 @@ constexpr float k_dive_fall_velocity = -11.0F;
 constexpr float k_fov_kick_decay = 22.0F;
 constexpr float k_dodge_fov_kick = 14.0F;
 constexpr float k_dodge_speed = 6.5F;
+// The roll covers k_dodge_speed * roll_seconds, front-loaded: it leaves at
+// (1 + k) times that mean speed and arrives at (1 - k), so the body bursts out
+// of danger and settles into the recovery instead of stopping dead from full speed.
+constexpr float k_dodge_front_load = 0.6F;
+
+// Fraction of the roll's distance covered by normalized time `phase`.
+auto dodge_travel_fraction(float phase) -> float {
+  float const p = std::clamp(phase, 0.0F, 1.0F);
+  return p * (1.0F + k_dodge_front_load * (1.0F - p));
+}
 
 constexpr float k_fpv_walk_speed_scale = 1.25F;
 constexpr float k_fpv_backpedal_speed_scale = 0.72F;
@@ -37,6 +48,11 @@ auto directional_speed_scale(int forward_axis, int right_axis) -> float {
     return k_fpv_strafe_speed_scale;
   }
   return 1.0F;
+}
+
+auto can_pay_movement_action(Engine::Core::Entity& entity, float cost) -> bool {
+  auto const* stamina = Game::Systems::ensure_run_stamina(entity);
+  return stamina != nullptr && stamina->stamina >= cost;
 }
 
 auto position_of(const Engine::Core::TransformComponent& transform) -> QVector3D {
@@ -62,6 +78,7 @@ auto plan_walk(const CommanderHandles& body,
 
   auto const* stamina = Game::Systems::ensure_run_stamina(body.entity);
   plan.running = input.run_held && !input.drawing_bow && stamina != nullptr &&
+                 Game::Systems::FordRules::can_run(input.wading) &&
                  (stamina->is_running || stamina->can_start_running());
   if (plan.running) {
     speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
@@ -69,7 +86,10 @@ auto plan_walk(const CommanderHandles& body,
   if (input.drawing_bow) {
     speed *= k_drawn_bow_move_scale;
   }
-  speed *= directional_speed_scale(input.forward_axis, input.right_axis);
+  if (input.squared_up) {
+    speed *= directional_speed_scale(input.forward_axis, input.right_axis);
+  }
+  speed *= Game::Systems::FordRules::speed_multiplier(input.wading);
   plan.speed = speed;
   return plan;
 }
@@ -83,28 +103,34 @@ auto CommanderLocomotion::move_basis(
     const Engine::Core::TransformComponent& transform,
     const std::optional<QVector3D>& lock_target_position) -> MoveBasis {
   const float yaw_rad = view_yaw * k_degrees_to_radians;
-  const QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
-  const QVector3D right(-forward.z(), 0.0F, forward.x());
-  QVector3D move = forward * static_cast<float>(forward_axis) +
-                   right * static_cast<float>(right_axis);
-
+  QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   if (lock_target_position.has_value()) {
-    QVector3D away(transform.position.x - lock_target_position->x(),
-                   0.0F,
-                   transform.position.z - lock_target_position->z());
-    if (away.lengthSquared() > 0.0001F) {
-      away.normalize();
-      const QVector3D tangent(-away.z(), 0.0F, away.x());
-      const QVector3D radial = -away;
-      move = radial * static_cast<float>(forward_axis) +
-             tangent * static_cast<float>(right_axis);
+    QVector3D const to_target(lock_target_position->x() - transform.position.x,
+                              0.0F,
+                              lock_target_position->z() - transform.position.z);
+    if (to_target.lengthSquared() > 0.0001F) {
+      forward = to_target.normalized();
     }
   }
-  return {.forward = forward, .move = move};
+  // Both modes use the same handedness. Deriving the tangent from an
+  // away-from-target vector inverted A/D when acquiring a lock.
+  const QVector3D right(-forward.z(), 0.0F, forward.x());
+  return {.forward = forward,
+          .move = forward * static_cast<float>(forward_axis) +
+                  right * static_cast<float>(right_axis)};
 }
 
-auto CommanderLocomotion::follows_travel() const -> bool {
-  return m_planar_velocity.length() > k_commander_rest_speed;
+auto CommanderLocomotion::frees_within(float seconds) const -> bool {
+  float remaining = std::max(0.0F, m_jump_timer);
+  if (m_dodge_state == DodgeState::Rolling) {
+    remaining = std::max(
+        remaining,
+        std::max(0.0F, m_dodge_timer) +
+            Game::Systems::CombatActions::k_commander_dodge_timeline.recovery_seconds);
+  } else if (m_dodge_state == DodgeState::Recovering) {
+    remaining = std::max(remaining, m_dodge_timer);
+  }
+  return remaining > 0.0F && remaining <= seconds;
 }
 
 void CommanderLocomotion::decay_dodge_kick(float dt) {
@@ -128,16 +154,12 @@ void CommanderLocomotion::resume_authored_jump(
   float const authored_phase =
       std::clamp(running_action->normalized_action_time, 0.0F, 0.96F);
   m_jump_timer = std::max(0.04F, k_jump_duration * (1.0F - authored_phase));
-  m_jump_safe_position_valid = true;
-  m_jump_last_walkable_position = position_of(body.transform);
 }
 
 void CommanderLocomotion::begin_jump(const CommanderHandles& body, bool followup) {
   m_jump_timer = k_jump_duration;
   m_jump_followup_pending = followup;
   Game::Audio::play_cue(Game::Audio::Cue::k_combat_jump);
-  m_jump_safe_position_valid = true;
-  m_jump_last_walkable_position = position_of(body.transform);
 
   if (auto* stamina = body.entity.get_component<Engine::Core::StaminaComponent>()) {
     stamina->spend(Engine::Core::CombatStateComponent::k_stamina_cost_jump);
@@ -201,12 +223,14 @@ auto CommanderLocomotion::advance_jump(const CommanderHandles& body,
                                    Game::Systems::CombatActions::CombatActionId::None;
   const bool jump_blocked_by_action =
       m_dodge_state != DodgeState::None || input.primary_held || input.guard_held ||
-      input.ability_requested ||
+      input.ability_requested || input.staggered ||
       (combat_state != nullptr &&
        combat_state->animation_state != Engine::Core::CombatAnimationState::Idle &&
        !can_jump_branch);
   const bool should_jump =
-      input.jump_pressed && m_jump_timer <= 0.0F && !jump_blocked_by_action;
+      input.jump_pressed && m_jump_timer <= 0.0F && !jump_blocked_by_action &&
+      can_pay_movement_action(body.entity,
+                              Engine::Core::CombatStateComponent::k_stamina_cost_jump);
   const bool jump_refused = input.jump_pressed && !should_jump;
 
   JumpTickResult result;
@@ -228,9 +252,11 @@ auto CommanderLocomotion::advance_jump(const CommanderHandles& body,
 auto CommanderLocomotion::try_start_dodge(const CommanderHandles& body,
                                           const DodgeStartInput& input,
                                           CommanderLatencyProbe* probe) -> EdgeOutcome {
-  const bool should_dodge = input.pressed && m_dodge_state == DodgeState::None &&
-                            m_jump_timer <= 0.0F &&
-                            body_allows_now(body.entity).accepts_dodge;
+  const bool should_dodge =
+      input.pressed && !input.staggered && m_dodge_state == DodgeState::None &&
+      m_jump_timer <= 0.0F && body_allows_now(body.entity).accepts_dodge &&
+      can_pay_movement_action(body.entity,
+                              Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
   const bool dodge_refused = input.pressed && !should_dodge;
   EdgeOutcome outcome = EdgeOutcome::None;
   if (should_dodge) {
@@ -269,37 +295,28 @@ auto CommanderLocomotion::try_start_dodge(const CommanderHandles& body,
   return outcome;
 }
 
-void CommanderLocomotion::mark_jump_safe_position(const CommanderHandles& body,
-                                                  bool jump_active,
-                                                  float x,
-                                                  float z) {
-  if (!jump_active || !CommanderMotor::is_walkable_at(body.entity, x, z)) {
-    return;
-  }
-  m_jump_safe_position_valid = true;
-  m_jump_last_walkable_position = QVector3D(x, body.transform.position.y, z);
-}
-
 void CommanderLocomotion::roll(const CommanderHandles& body,
                                CommanderMotor& motor,
-                               float dt,
+                               const MotionTickInput& input,
                                MotorReport& report) {
+  float const dt = input.dt;
   auto& transform = body.transform;
-  const float roll_dt = std::min(dt, m_dodge_timer);
+  float const roll_seconds =
+      Game::Systems::CombatActions::k_commander_dodge_timeline.roll_seconds;
+  float const phase_before =
+      1.0F - std::clamp(m_dodge_timer / roll_seconds, 0.0F, 1.0F);
   m_dodge_timer -= dt;
   report.dodge_pose_active = true;
-  report.dodge_pose_phase =
-      1.0F -
-      std::clamp(
-          m_dodge_timer /
-              Game::Systems::CombatActions::k_commander_dodge_timeline.roll_seconds,
-          0.0F,
-          1.0F);
+  report.dodge_pose_phase = 1.0F - std::clamp(m_dodge_timer / roll_seconds, 0.0F, 1.0F);
 
-  const float nx =
-      transform.position.x + m_dodge_direction.x() * k_dodge_speed * roll_dt;
-  const float nz =
-      transform.position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
+  // Integrated over the tick, so the distance is the same at any tick rate.
+  float const travel = k_dodge_speed * roll_seconds *
+                       Game::Systems::FordRules::speed_multiplier(input.wading) *
+                       (dodge_travel_fraction(report.dodge_pose_phase) -
+                        dodge_travel_fraction(phase_before));
+  const float speed = dt > 0.0F ? travel / dt : 0.0F;
+  const float nx = transform.position.x + m_dodge_direction.x() * travel;
+  const float nz = transform.position.z + m_dodge_direction.z() * travel;
   auto const step = motor.advance(body.entity,
                                   transform,
                                   {.from = position_of(transform),
@@ -308,16 +325,18 @@ void CommanderLocomotion::roll(const CommanderHandles& body,
                                    .airborne = false,
                                    .dt = dt});
   report.source = step.source;
-  report.requested_speed = k_dodge_speed;
+  report.requested_speed = speed;
   report.blocked = step.blocked;
   report.slid = step.slid;
-  m_planar_velocity = m_dodge_direction * k_dodge_speed;
+  // Keep the authored roll pose/timeline, but publish only displacement that
+  // collision actually accepted. A wall must not leave stored roll velocity.
+  m_planar_velocity = QVector3D(step.velocity.x(), 0.0F, step.velocity.z());
   if (body.movement != nullptr) {
-    body.movement->set_manual_velocity(m_dodge_direction.x() * k_dodge_speed,
-                                       m_dodge_direction.z() * k_dodge_speed);
+    body.movement->set_manual_velocity(m_planar_velocity.x(), m_planar_velocity.z());
   }
-  report.actual_speed = k_dodge_speed;
-  report.running = true;
+  report.actual_speed = m_planar_velocity.length();
+  // The dodge pays its action cost; it is not a stamina-draining sprint.
+  report.running = false;
 
   if (m_dodge_timer <= 0.0F) {
     m_dodge_state = DodgeState::Recovering;
@@ -349,7 +368,8 @@ void CommanderLocomotion::recover_roll(const CommanderHandles& body,
   }
 
   report.move.normalize();
-  const float speed = std::max(0.1F, body.unit.speed) * 0.4F;
+  const float speed = std::max(0.1F, body.unit.speed) * 0.4F *
+                      Game::Systems::FordRules::speed_multiplier(input.wading);
   const float nx = transform.position.x + report.move.x() * speed * input.dt;
   const float nz = transform.position.z + report.move.z() * speed * input.dt;
   auto const step = motor.advance(body.entity,
@@ -369,9 +389,11 @@ void CommanderLocomotion::recover_roll(const CommanderHandles& body,
       body.movement->set_manual_velocity(step.velocity.x(), step.velocity.z());
     }
     report.actual_speed = step.velocity.length();
-  } else if (body.movement != nullptr) {
+  } else {
     m_planar_velocity = QVector3D(0.0F, 0.0F, 0.0F);
-    body.movement->set_manual_velocity(0.0F, 0.0F);
+    if (body.movement != nullptr) {
+      body.movement->set_manual_velocity(0.0F, 0.0F);
+    }
   }
 }
 
@@ -394,13 +416,35 @@ void CommanderLocomotion::accelerate_toward(const QVector3D& desired_velocity,
   }
 }
 
+void CommanderLocomotion::steer_airborne(const QVector3D& desired_velocity,
+                                         float target_speed,
+                                         float dt) {
+  // Without input the jump keeps its takeoff momentum; steering only bends it.
+  if (target_speed <= 0.0F) {
+    return;
+  }
+  QVector3D const velocity_delta = desired_velocity - m_planar_velocity;
+  float const velocity_delta_length = velocity_delta.length();
+  float const acceleration_limit =
+      k_commander_air_acceleration_mps2 * std::max(dt, 0.0F);
+  if (velocity_delta_length <= acceleration_limit) {
+    m_planar_velocity = desired_velocity;
+  } else {
+    m_planar_velocity += velocity_delta * (acceleration_limit / velocity_delta_length);
+  }
+}
+
 void CommanderLocomotion::walk(const CommanderHandles& body,
                                CommanderMotor& motor,
                                const MotionTickInput& input,
                                MotorReport& report) {
   auto& transform = body.transform;
   auto const plan = plan_walk(body, input, report.move);
-  accelerate_toward(plan.direction * plan.speed, plan.speed, input.dt);
+  if (input.jump_active) {
+    steer_airborne(plan.direction * plan.speed, plan.speed, input.dt);
+  } else {
+    accelerate_toward(plan.direction * plan.speed, plan.speed, input.dt);
+  }
   report.requested_speed = plan.speed;
 
   if (m_planar_velocity.length() <= 0.01F) {
@@ -425,9 +469,6 @@ void CommanderLocomotion::walk(const CommanderHandles& body,
   report.blocked = step.blocked;
   report.slid = step.slid;
   if (step.moved) {
-    mark_jump_safe_position(
-        body, input.jump_active, step.position.x(), step.position.z());
-
     m_planar_velocity = QVector3D(step.velocity.x(), 0.0F, step.velocity.z());
     if (body.movement != nullptr) {
       body.movement->set_manual_velocity(step.velocity.x(), step.velocity.z());
@@ -448,11 +489,8 @@ auto CommanderLocomotion::advance_motion(const CommanderHandles& body,
   MotorReport report;
   report.move = input.move;
 
-  mark_jump_safe_position(
-      body, input.jump_active, body.transform.position.x, body.transform.position.z);
-
   if (m_dodge_state == DodgeState::Rolling) {
-    roll(body, motor, input.dt, report);
+    roll(body, motor, input, report);
   } else if (m_dodge_state == DodgeState::Recovering) {
     recover_roll(body, motor, input, report);
   } else {
@@ -466,36 +504,6 @@ auto CommanderLocomotion::advance_motion(const CommanderHandles& body,
     body.commander_data->dodge_dir_z = m_dodge_direction.z();
   }
   return report;
-}
-
-void CommanderLocomotion::recover_from_fall(const CommanderHandles& body,
-                                            CommanderMotor& motor,
-                                            bool jump_active,
-                                            MotorReport& report) {
-  if (!m_jump_safe_position_valid || jump_active) {
-    return;
-  }
-  if (CommanderMotor::is_on_wall(body.entity)) {
-    m_jump_safe_position_valid = false;
-    return;
-  }
-  auto& transform = body.transform;
-  if (!CommanderMotor::is_walkable_at(
-          body.entity, transform.position.x, transform.position.z)) {
-    report.snap_back_distance =
-        std::hypot(m_jump_last_walkable_position.x() - transform.position.x,
-                   m_jump_last_walkable_position.z() - transform.position.z);
-    report.source = CommanderDisplacementSource::JumpRecovery;
-    static_cast<void>(motor.teleport(transform,
-                                     m_jump_last_walkable_position,
-                                     CommanderDisplacementSource::JumpRecovery));
-    if (body.movement != nullptr) {
-      body.movement->set_manual_velocity(0.0F, 0.0F);
-    }
-    report.actual_speed = 0.0F;
-    report.running = false;
-  }
-  m_jump_safe_position_valid = false;
 }
 
 void CommanderLocomotion::commit_motion(const MotorReport& report,
@@ -554,6 +562,10 @@ void CommanderLocomotion::hold_for_rally() {
   m_move_right_axis = 0;
   m_move_forward_axis = 0;
   m_move_running = false;
+  m_dodge_state = DodgeState::None;
+  m_dodge_timer = 0.0F;
+  m_dodge_fov_kick = 0.0F;
+  m_jump_followup_pending = false;
 }
 
 void CommanderLocomotion::release_input() {
@@ -575,9 +587,7 @@ void CommanderLocomotion::reset() {
   m_dodge_direction = QVector3D(0.0F, 0.0F, 1.0F);
   m_dodge_fov_kick = 0.0F;
   m_jump_timer = 0.0F;
-  m_jump_safe_position_valid = false;
   m_jump_followup_pending = false;
-  m_jump_last_walkable_position = QVector3D(0.0F, 0.0F, 0.0F);
 }
 
 } // namespace App::Core

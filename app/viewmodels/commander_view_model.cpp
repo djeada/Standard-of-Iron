@@ -340,6 +340,10 @@ void CommanderViewModel::reset_input() {
   m_control.reset();
 }
 
+void CommanderViewModel::release_input_for_rally() {
+  m_control.release_for_rally();
+}
+
 void CommanderViewModel::release_input() {
   if (ignores_player_input()) {
     return;
@@ -484,7 +488,7 @@ void CommanderViewModel::trigger_rally() {
     return;
   }
   record_action(Game::Command::CommanderAction::ReleaseForRally);
-  reset_input();
+  release_input_for_rally();
   m_rally_preview.reset();
 }
 
@@ -608,7 +612,7 @@ void CommanderViewModel::start_flag_rally() {
     return;
   }
   if (effects.reset_commander_input) {
-    reset_input();
+    release_input_for_rally();
   }
   if (effects.clear_rally_preview) {
     m_rally_preview.reset();
@@ -643,7 +647,7 @@ void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
                                                    : CursorMode::Normal)});
   if (effects.reset_commander_input) {
     record_action(Game::Command::CommanderAction::ReleaseForRally);
-    reset_input();
+    release_input_for_rally();
   }
   if (effects.clear_rally_preview) {
     m_rally_preview.reset();
@@ -806,7 +810,7 @@ void CommanderViewModel::restore_direct_control_if_ready() {
        .commander_mode_active = active(),
        .placing_commander_rally = is_placing_rally()});
   if (effects.reset_commander_input) {
-    reset_input();
+    release_input_for_rally();
   }
 }
 
@@ -902,7 +906,7 @@ void CommanderViewModel::release_for_rally() {
       data->fpv_controlled = false;
     }
   }
-  reset_input();
+  release_input_for_rally();
   m_rally_preview.reset();
 }
 

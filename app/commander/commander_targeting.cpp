@@ -167,12 +167,11 @@ void clear_published_lock(Engine::Core::Entity& commander) {
 } // namespace
 
 void CommanderTargeting::reset() {
-  m_locked_target_id = 0;
-  m_locked_target_slot = k_no_slot;
-  m_soft_target_id = 0;
-  m_soft_target_slot = k_no_slot;
+  release_lock();
   m_primary_target_slot = k_no_slot;
-  m_lock_lost_timer = 0.0F;
+  m_lock_spring_yaw_valid = false;
+  m_lock_manual_override_timer = 0.0F;
+  m_hit_confirm_adopted = false;
 }
 
 auto CommanderTargeting::locked_position(Engine::Core::World& world) const
@@ -214,11 +213,7 @@ auto CommanderTargeting::cycle_lock(Engine::Core::World& world,
       collect_lock_candidates(world, commander_id, local_owner_id, origin, view_yaw);
 
   if (candidates.empty()) {
-    m_locked_target_id = 0;
-    m_locked_target_slot = k_no_slot;
-    m_soft_target_id = 0;
-    m_soft_target_slot = k_no_slot;
-    m_lock_lost_timer = 0.0F;
+    release_lock();
     clear_published_lock(*commander);
     return false;
   }
@@ -257,9 +252,7 @@ auto CommanderTargeting::measure_lock(Engine::Core::World& world,
                            : std::nullopt;
   if (target_unit == nullptr || target_unit->health <= 0 ||
       !target_sample.has_value()) {
-    m_locked_target_id = 0;
-    m_locked_target_slot = k_no_slot;
-    m_lock_lost_timer = 0.0F;
+    drop_lock();
     return std::nullopt;
   }
   m_locked_target_slot = target_sample->soldier_slot;
@@ -275,12 +268,16 @@ auto CommanderTargeting::measure_lock(Engine::Core::World& world,
   return geometry;
 }
 
-void CommanderTargeting::release_lock() {
+void CommanderTargeting::drop_lock() {
   m_locked_target_id = 0;
   m_locked_target_slot = k_no_slot;
+  m_lock_lost_timer = 0.0F;
+}
+
+void CommanderTargeting::release_lock() {
+  drop_lock();
   m_soft_target_id = 0;
   m_soft_target_slot = k_no_slot;
-  m_lock_lost_timer = 0.0F;
 }
 
 auto CommanderTargeting::lock_expired(const LockGeometry& geometry, float dt) -> bool {
@@ -294,9 +291,7 @@ auto CommanderTargeting::lock_expired(const LockGeometry& geometry, float dt) ->
   if (m_lock_lost_timer <= k_lock_lost_seconds) {
     return false;
   }
-  m_locked_target_id = 0;
-  m_locked_target_slot = k_no_slot;
-  m_lock_lost_timer = 0.0F;
+  drop_lock();
   return true;
 }
 
@@ -470,7 +465,10 @@ auto CommanderTargeting::publish_targets(Engine::Core::Entity& commander,
       aim_candidate_id != 0 ? m_primary_target_slot : k_no_slot;
   rpg_targets->aim_candidate_in_range = aim_candidate_id != 0;
 
-  if (rpg_targets->hit_confirm_sequence != m_observed_hit_confirm_sequence) {
+  if (!m_hit_confirm_adopted) {
+    m_hit_confirm_adopted = true;
+    m_observed_hit_confirm_sequence = rpg_targets->hit_confirm_sequence;
+  } else if (rpg_targets->hit_confirm_sequence != m_observed_hit_confirm_sequence) {
     m_observed_hit_confirm_sequence = rpg_targets->hit_confirm_sequence;
     impact_kick = rpg_targets->recent_hit_killed ? 1.0F : 0.7F;
   }

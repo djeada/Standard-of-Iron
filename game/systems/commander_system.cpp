@@ -323,6 +323,7 @@ void apply_commander_death_shock(Engine::Core::World* world,
 } // namespace
 
 constexpr float k_posture_recovery_per_second = 18.0F;
+constexpr float k_guarded_posture_recovery_per_second = 8.0F;
 
 void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
@@ -346,23 +347,40 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     auto* unit = &unit_ref;
     auto* transform = &transform_ref;
 
+    // Combat timers belong to world time, not to the current input mode: one
+    // owner for every commander, player-driven or not, so nothing ticks twice
+    // and nothing freezes when control changes hands.
+    auto* guard = world->try_get<Engine::Core::CommanderGuardComponent>(
+        commander_entity->get_id());
+    if (guard != nullptr) {
+      guard->guard_break_remaining =
+          std::max(0.0F, guard->guard_break_remaining - std::max(0.0F, delta_time));
+    }
+    commander->shield_bash_cooldown_remaining =
+        std::max(0.0F, commander->shield_bash_cooldown_remaining - delta_time);
+    commander->vanguard_rush_cooldown_remaining =
+        std::max(0.0F, commander->vanguard_rush_cooldown_remaining - delta_time);
+    commander->second_wind_cooldown_remaining =
+        std::max(0.0F, commander->second_wind_cooldown_remaining - delta_time);
+    commander->punish_window_remaining =
+        std::max(0.0F, commander->punish_window_remaining - delta_time);
+    commander->riposte_window_remaining =
+        std::max(0.0F, commander->riposte_window_remaining - delta_time);
+    if (commander->riposte_window_remaining <= 0.0F) {
+      commander->riposte_target_id = 0;
+    }
+    float const posture_recovery = (guard != nullptr && guard->active)
+                                       ? k_guarded_posture_recovery_per_second
+                                       : k_posture_recovery_per_second;
+    commander->posture =
+        std::max(0.0F, commander->posture - posture_recovery * delta_time);
+
     commander->rally_cooldown_remaining =
         std::max(0.0F, commander->rally_cooldown_remaining - delta_time);
     commander->rally_feedback_time =
         std::max(0.0F, commander->rally_feedback_time - delta_time);
     commander->aura_ability_cooldown_remaining =
         std::max(0.0F, commander->aura_ability_cooldown_remaining - delta_time);
-
-    if (!commander->fpv_controlled) {
-      commander->shield_bash_cooldown_remaining =
-          std::max(0.0F, commander->shield_bash_cooldown_remaining - delta_time);
-      commander->vanguard_rush_cooldown_remaining =
-          std::max(0.0F, commander->vanguard_rush_cooldown_remaining - delta_time);
-      commander->second_wind_cooldown_remaining =
-          std::max(0.0F, commander->second_wind_cooldown_remaining - delta_time);
-      commander->posture = std::max(
-          0.0F, commander->posture - k_posture_recovery_per_second * delta_time);
-    }
 
     commander->signature_cooldown_remaining =
         std::max(0.0F, commander->signature_cooldown_remaining - delta_time);
@@ -612,6 +630,7 @@ auto CommanderSystem::access() const -> Engine::Core::SystemAccess {
                                      BuildingComponent,
                                      PendingRemovalComponent>{},
                                Writes<UnitComponent,
+                                      CommanderGuardComponent,
                                       CommanderComponent,
                                       CommanderAuraBuffComponent,
                                       MoraleComponent,

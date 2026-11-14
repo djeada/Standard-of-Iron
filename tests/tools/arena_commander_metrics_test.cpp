@@ -366,3 +366,48 @@ TEST(ArenaCommanderMetricsTest, ExactCommanderActionMustRunInsideItsAuthoredWind
   EXPECT_TRUE(has_code(skipped, QStringLiteral("commander_action_not_observed")))
       << "a generic attack cannot satisfy an authored move requirement";
 }
+
+TEST(ArenaCommanderMetricsTest, AJumpMustLandOnGroundItCanStandOn) {
+  auto jump = [](int frame, App::Core::CommanderPresentationTrace& trace) {
+    trace.motor.grounded = frame < 10 || frame >= 40;
+    trace.motor.static_walkable = true;
+  };
+  auto const clean =
+      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)}, jump);
+  EXPECT_FALSE(has_code(clean, QStringLiteral("commander_jump_not_observed")));
+  EXPECT_FALSE(has_code(clean, QStringLiteral("commander_jump_entered_obstacle")));
+
+  auto const grounded =
+      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
+                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                       trace.motor.grounded = true;
+                       trace.motor.static_walkable = true;
+                     });
+  EXPECT_TRUE(has_code(grounded, QStringLiteral("commander_jump_not_observed")));
+
+  auto const hop =
+      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
+                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                       trace.motor.grounded = frame < 10 || frame >= 14;
+                       trace.motor.static_walkable = true;
+                     });
+  EXPECT_TRUE(has_code(hop, QStringLiteral("commander_jump_not_observed")))
+      << "four airborne frames are not a jump";
+
+  auto const tunnelled =
+      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
+                     [&jump](int frame, App::Core::CommanderPresentationTrace& trace) {
+                       jump(frame, trace);
+                       trace.motor.static_walkable = frame != 30;
+                     });
+  EXPECT_TRUE(has_code(tunnelled, QStringLiteral("commander_jump_entered_obstacle")));
+
+  auto const walked_in =
+      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
+                     [&jump](int frame, App::Core::CommanderPresentationTrace& trace) {
+                       jump(frame, trace);
+                       trace.motor.static_walkable = frame != 5;
+                     });
+  EXPECT_FALSE(has_code(walked_in, QStringLiteral("commander_jump_entered_obstacle")))
+      << "grounded penetration is the ground motor's, not the jump's";
+}

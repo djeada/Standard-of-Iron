@@ -44,6 +44,8 @@ struct SheepDrive {
   float weight_shift{0.0F};
 
   float startle{0.0F};
+
+  float chew{0.0F};
   SheepGait gait{SheepGait::Stand};
 };
 

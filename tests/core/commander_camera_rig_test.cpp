@@ -972,3 +972,66 @@ TEST_F(CommanderCameraCollisionTest, ABuriedPivotNeverPushesTheLensAwayFromTheBo
       << "depenetration carried the lens out to the nearest temple wall, which "
          "is where it used to lose the commander entirely";
 }
+
+TEST(CommanderCameraRigFeelTest, PitchOrbitsTheBodyInsteadOfLookingAwayFromIt) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  Game::Accessibility::CommanderInput::set_head_bob_enabled(false);
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+  rig.update(camera, inputs);
+  auto const rest = rig.trace();
+  float const rest_screen_y = screen_fraction_y(rest, rest.pivot, 16.0F / 9.0F);
+  for (float pitch : {-65.0F, -40.0F, 0.0F, 30.0F, 65.0F}) {
+    inputs.view_pitch_degrees = pitch;
+    rig.update(camera, inputs);
+    auto const& trace = rig.trace();
+    EXPECT_NEAR(trace.boom_unconstrained, rest.boom_unconstrained, 0.001F);
+    EXPECT_NEAR(
+        screen_fraction_y(trace, trace.pivot, 16.0F / 9.0F), rest_screen_y, 0.001F);
+  }
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+}
+
+TEST(CommanderCameraRigFeelTest, StrafingAndDodgingKeepTheHorizonLevel) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  inputs.move_right_axis = 1;
+  inputs.move_speed = 5.0F;
+  inputs.dodge_rolling = true;
+  inputs.dodge_direction = QVector3D(-1.0F, 0.0F, 0.0F);
+  for (int frame = 0; frame < 60; ++frame) {
+    inputs.dodge_tilt_progress = static_cast<float>(frame) / 60.0F;
+    rig.update(camera, inputs);
+    EXPECT_NEAR(camera.get_up_vector().x(), 0.0F, 1.0e-6F);
+  }
+}
+
+TEST(CommanderCameraRigFeelTest, NearbyEnemiesDoNotSteerFreeLook) {
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  settle(rig, camera, inputs);
+  QVector3D const direction = rig.forward();
+  inputs.soft_focus_position = QVector3D(4.0F, 0.0F, 1.0F);
+  settle(rig, camera, inputs);
+  EXPECT_LT((rig.forward() - direction).length(), 1.0e-5F);
+}
+
+TEST_F(CommanderCameraCollisionTest, RetractionDoesNotSteerTheViewingDirection) {
+  load_flat_ground_with_props({prop_at(Game::Map::WorldProp::Type::Ruins, 0.9F, 3.1F)});
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = looking_south(QVector3D(0.0F, 0.0F, 0.0F), true);
+  for (int frame = 0; frame < 120; ++frame) {
+    rig.update(camera, inputs);
+    auto const& trace = rig.trace();
+    QVector3D const intended =
+        (trace.target_unconstrained - trace.eye_unconstrained).normalized();
+    EXPECT_LT((rig.forward() - intended).length(), 1.0e-5F);
+  }
+  EXPECT_LT(rig.trace().occlusion_fraction, 0.95F);
+}

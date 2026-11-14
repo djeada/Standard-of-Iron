@@ -76,24 +76,29 @@ auto resolve_strike_target(Engine::Core::World& world,
           .stop_distance = stop_distance};
 }
 
-void steer_strike_toward(
-    const Game::Systems::CombatActions::CombatActionDefinition& definition,
-    const Engine::Core::RpgCommanderActionComponent& action,
-    const StrikeTarget& target,
-    Engine::Core::TransformComponent& transform,
-    float dt) {
-  if (!target.valid || definition.target_assist.maximum_turn_degrees <= 0.0F) {
-    return;
+// Where in the action the swing commits: from the first weapon-trace frame on,
+// the bend toward the target is frozen.
+auto strike_commit_time(
+    const Game::Systems::CombatActions::CombatActionDefinition& definition) -> float {
+  using Game::Systems::CombatActions::CombatActionEventType;
+  float const active = Game::Systems::CombatActions::action_event_normalized_time(
+      definition, CombatActionEventType::ActiveStart, 0.35F);
+  return Game::Systems::CombatActions::action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceStart, active);
+}
+
+auto target_yaw_of(const StrikeTarget& target) -> float {
+  return std::atan2(target.dir_x, target.dir_z) * k_radians_to_degrees;
+}
+
+auto inside_cone(const Game::Systems::CombatActions::CombatActionDefinition& definition,
+                 float facing_yaw,
+                 const StrikeTarget& target) -> bool {
+  float const cone = definition.target_assist.cone_degrees;
+  if (cone <= 0.0F) {
+    return true;
   }
-  float const target_yaw =
-      std::atan2(target.dir_x, target.dir_z) * k_radians_to_degrees;
-  float const yaw_delta = signed_angle_delta(target_yaw, transform.rotation.y);
-  float const turn_rate = definition.target_assist.maximum_turn_degrees /
-                          std::max(0.08F, action.action_duration * 0.45F);
-  float const correction = std::clamp(yaw_delta, -turn_rate * dt, turn_rate * dt);
-  transform.rotation.y = wrap_angle_degrees(transform.rotation.y + correction);
-  transform.desired_yaw = transform.rotation.y;
-  transform.has_desired_yaw = true;
+  return std::abs(signed_angle_delta(target_yaw_of(target), facing_yaw)) <= cone * 0.5F;
 }
 
 struct StrikeCarryWindow {
@@ -243,13 +248,18 @@ auto CommanderLunge::apply(Engine::Core::World& world,
                            CommanderMotor& motor,
                            bool dodging,
                            bool airborne,
+                           float view_yaw,
                            float dt) -> float {
-  if (dt <= 0.0F || dodging) {
+  if (dodging) {
+    m_aim_offset = 0.0F;
+    return 0.0F;
+  }
+  if (dt <= 0.0F) {
     return 0.0F;
   }
   float const before_x = transform.position.x;
   float const before_z = transform.position.z;
-  advance(world, commander, transform, motor, airborne, dt);
+  advance(world, commander, transform, motor, airborne, view_yaw, dt);
   return std::hypot(transform.position.x - before_x, transform.position.z - before_z);
 }
 
@@ -258,21 +268,47 @@ void CommanderLunge::advance(Engine::Core::World& world,
                              Engine::Core::TransformComponent& transform,
                              CommanderMotor& motor,
                              bool airborne,
+                             float view_yaw,
                              float dt) {
   auto const* action =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
   if (action == nullptr || !action->action_running) {
+    m_aim_offset = 0.0F;
     return;
   }
   auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
       static_cast<Game::Systems::CombatActions::CombatActionId>(
           action->combat_action_id));
   if (definition == nullptr) {
+    m_aim_offset = 0.0F;
     return;
   }
 
-  auto const target = resolve_strike_target(world, &commander, *action, transform);
-  steer_strike_toward(*definition, *action, target, transform, dt);
+  auto target = resolve_strike_target(world, &commander, *action, transform);
+  if (m_aim_sequence != action->melee_attack_sequence) {
+    m_aim_sequence = action->melee_attack_sequence;
+    m_aim_offset = 0.0F;
+  }
+  auto const& assist = definition->target_assist;
+  float const commit = strike_commit_time(*definition);
+  if (assist.maximum_turn_degrees > 0.0F && action->normalized_action_time < commit) {
+    float desired = 0.0F;
+    if (target.valid) {
+      float const off_view = signed_angle_delta(target_yaw_of(target), view_yaw);
+      if (assist.cone_degrees <= 0.0F ||
+          std::abs(off_view) <= assist.cone_degrees * 0.5F) {
+        desired = std::clamp(
+            off_view, -assist.maximum_turn_degrees, assist.maximum_turn_degrees);
+      }
+    }
+    float const windup_seconds = std::max(0.08F, action->action_duration * commit);
+    float const step = assist.maximum_turn_degrees / windup_seconds * dt;
+    m_aim_offset += std::clamp(desired - m_aim_offset, -step, step);
+  }
+  // A target outside the swing's cone does not pull the body sideways onto it.
+  if (target.valid && !inside_cone(*definition, transform.rotation.y, target)) {
+    target.valid = false;
+  }
 
   float const authored_distance = definition->movement.distance;
   if (std::abs(authored_distance) <= 0.01F) {

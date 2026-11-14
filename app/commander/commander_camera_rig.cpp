@@ -45,10 +45,7 @@ constexpr float k_focus_min_reach = 4.5F;
 constexpr float k_focus_blend_omega = 7.5F;
 constexpr float k_occlusion_follow = 18.0F;
 
-constexpr float k_lean_max_deg = 1.1F;
-constexpr float k_lean_follow = 6.5F;
-
-constexpr float k_fov_run_boost = 7.0F;
+constexpr float k_fov_run_boost = 3.0F;
 constexpr float k_fov_lerp = 5.0F;
 
 constexpr float k_aim_blend_rate = 9.0F;
@@ -165,7 +162,7 @@ void CommanderCameraRig::reset() {
   m_bob_amplitude = 0.0F;
   m_breath_phase = 0.0F;
   m_idle_presence = 1.0F;
-  m_strafe_lean = 0.0F;
+  m_terrain_lift = 0.0F;
   m_fov_current = 75.0F;
   m_aim_blend = 0.0F;
   m_hit_impact_kick = 0.0F;
@@ -282,10 +279,6 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   float const breath_v = std::sin(m_breath_phase) * k_breath_vert_amp * bob_scale *
                          m_idle_presence * sway_scale;
 
-  float const lean_target = -static_cast<float>(inputs.move_right_axis) *
-                            k_lean_max_deg * bob_scale * sway_scale;
-  m_strafe_lean += (lean_target - m_strafe_lean) * smooth_alpha(k_lean_follow, dt);
-
   m_threat_bias_smooth += (inputs.threat_side_bias - m_threat_bias_smooth) *
                           smooth_alpha(k_threat_bias_follow, dt);
   m_crowd_smooth += (std::clamp(inputs.crowd_density, 0.0F, 1.0F) - m_crowd_smooth) *
@@ -315,6 +308,14 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                               std::cos(yaw_rad) * pitch_cos);
   QVector3D const flat_forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   QVector3D const flat_right(-flat_forward.z(), 0.0F, flat_forward.x());
+
+  // Orbit the boom with pitch, preserving the authored framing at rest.
+  // Tilting only the look direction strands the body at the screen edges.
+  float const orbit_pitch = (inputs.view_pitch_degrees + 6.0F) * k_deg2rad;
+  QVector3D const orbit_back = -flat_forward * std::cos(orbit_pitch) -
+                               QVector3D(0.0F, std::sin(orbit_pitch), 0.0F);
+  QVector3D const orbit_up = QVector3D(0.0F, std::cos(orbit_pitch), 0.0F) -
+                             flat_forward * std::sin(orbit_pitch);
 
   QVector3D const commander_position = inputs.commander_position;
   if (!m_state.anchor_valid) {
@@ -358,8 +359,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       m_framing_current.side * (1.0F - (k_crowd_side_tuck * crowd));
   if (inputs.terrain != nullptr || inputs.buildings != nullptr) {
     auto shoulder_clearance = [&](float shoulder) {
-      QVector3D const eye = pivot - flat_forward * m_framing_current.back +
-                            QVector3D(0.0F, m_framing_current.up + crowd_lift, 0.0F) +
+      QVector3D const eye = pivot + orbit_back * m_framing_current.back +
+                            orbit_up * (m_framing_current.up + crowd_lift) +
                             flat_right * (shoulder_side * shoulder);
       return Game::Systems::camera_boom_clear_fraction(obstruction, pivot, eye);
     };
@@ -392,8 +393,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       (shoulder_side * m_shoulder) +
       (k_threat_bias_side * m_threat_bias_smooth * (1.0F - aim_blend));
   QVector3D eye_desired =
-      pivot - flat_forward * (m_framing_current.back + (k_crowd_pull_back * crowd)) +
-      QVector3D(0.0F, m_framing_current.up + crowd_lift + bob_v + breath_v, 0.0F) +
+      pivot + orbit_back * (m_framing_current.back + (k_crowd_pull_back * crowd)) +
+      orbit_up * (m_framing_current.up + crowd_lift + bob_v + breath_v) +
       flat_right * (side_offset + bob_l);
   eye_desired -= flat_forward * (k_hit_kick_dolly * m_hit_kick_dolly_envelope);
 
@@ -413,9 +414,6 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     focus_weight_target = 0.60F * (1.0F - aim_blend);
     focus_side_nudge_target =
         (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend);
-  } else if (inputs.soft_focus_position.has_value()) {
-    focus_world = reach_out(*inputs.soft_focus_position + QVector3D(0.0F, 1.1F, 0.0F));
-    focus_weight_target = 0.32F * (1.0F - aim_blend);
   }
 
   if (focus_world.has_value()) {
@@ -460,10 +458,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     }
   }
 
-  target_desired -= QVector3D(0.0F,
-                              (m_framing_current.look_drop * (1.0F - aim_blend)) +
-                                  (crowd_lift * k_crowd_look_drop_share),
-                              0.0F);
+  target_desired -= orbit_up * ((m_framing_current.look_drop * (1.0F - aim_blend)) +
+                                (crowd_lift * k_crowd_look_drop_share));
 
   QVector3D const eye_unconstrained = eye_desired;
   QVector3D const target_unconstrained = target_desired;
@@ -592,8 +588,14 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     }
     terrain_lift = std::min(required_lift, k_camera_terrain_max_lift);
     terrain_sight_clear = required_lift <= k_camera_terrain_max_lift;
-    eye_desired.setY(eye_desired.y() + terrain_lift);
   }
+  // Clear rising terrain immediately; ease the release to avoid a downward snap.
+  m_terrain_lift =
+      std::max(terrain_lift, m_terrain_lift * std::exp(-6.0F * std::max(dt, 0.0F)));
+  eye_desired.setY(eye_desired.y() + m_terrain_lift);
+  terrain_lift = m_terrain_lift;
+  // Collision translates the rig, rather than steering the player's view.
+  target_desired += eye_desired - eye_unconstrained;
 
   m_trace.valid = true;
   m_trace.commander_position = commander_position;
@@ -630,25 +632,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_target_smooth = target_desired;
   m_smooth_valid = true;
 
-  float const lean_rad = m_strafe_lean * k_deg2rad;
-  QVector3D const world_up(0.0F, 1.0F, 0.0F);
-  QVector3D const right_world =
-      QVector3D::crossProduct(forward_vec.normalized(), world_up).normalized();
-  QVector3D const up_leaned =
-      (world_up + right_world * std::sin(lean_rad)).normalized();
-
-  float dodge_tilt_rad = 0.0F;
-  if (inputs.dodge_rolling) {
-    float const tilt_curve =
-        std::sin(std::clamp(inputs.dodge_tilt_progress, 0.0F, 1.0F) * k_pi) * 0.12F;
-    float const dot_right = inputs.dodge_direction.x() * flat_right.x() +
-                            inputs.dodge_direction.z() * flat_right.z();
-
-    dodge_tilt_rad = tilt_curve * std::clamp(dot_right * 1.5F, -1.0F, 1.0F);
-  }
-
-  QVector3D const up_final = (up_leaned + right_world * dodge_tilt_rad).normalized();
-  camera.look_at(m_eye_smooth, m_target_smooth, up_final);
+  // Keep a stable horizon: character strafing and rolls must not roll the lens.
+  camera.look_at(m_eye_smooth, m_target_smooth, QVector3D(0.0F, 1.0F, 0.0F));
 
   float const impulse_degrees =
       std::clamp(k_hit_kick_fov * hit_kick, 0.0F, k_hit_kick_max_degrees);

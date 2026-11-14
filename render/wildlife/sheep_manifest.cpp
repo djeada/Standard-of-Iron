@@ -138,6 +138,7 @@ void apply_ambient(SheepDrive& drive, SheepAmbient ambient, float phase) {
         (pulse(phase, 0.22F, 0.045F) * 1.0F) - (pulse(phase, 0.66F, 0.04F) * 0.8F);
     drive.tail_flick =
         (wave(phase, 2.0F, 0.0F) * 0.35F) + (pulse(phase, 0.48F, 0.06F) * 0.9F);
+    drive.chew = std::max(0.0F, wave(phase, 9.0F, 0.0F)) * pulse(phase, 0.74F, 0.22F);
     return;
   case SheepAmbient::Browsing:
 
