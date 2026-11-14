@@ -16,6 +16,7 @@
 #include "game/core/wall_walk_geometry.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/util/planar_math.h"
 
 namespace Game::Systems {
 
@@ -168,22 +169,6 @@ auto to_local(const PropOccluder& occluder,
           .delta_z = (-occluder.sine * delta.x()) + (occluder.cosine * delta.z())};
 }
 
-auto slab(float start, float delta, float half, float& t_enter, float& t_exit) -> bool {
-  constexpr float k_epsilon = 1.0e-5F;
-  if (std::abs(delta) <= k_epsilon) {
-    return start >= -half && start <= half;
-  }
-  float const inverse = 1.0F / delta;
-  float t0 = (-half - start) * inverse;
-  float t1 = (half - start) * inverse;
-  if (t0 > t1) {
-    std::swap(t0, t1);
-  }
-  t_enter = std::max(t_enter, t0);
-  t_exit = std::min(t_exit, t1);
-  return t_enter <= t_exit;
-}
-
 auto prop_entry_fraction(const PropOccluder& occluder,
                          const QVector3D& pivot,
                          const QVector3D& eye,
@@ -193,15 +178,13 @@ auto prop_entry_fraction(const PropOccluder& occluder,
   float const half_x = occluder.half_x + radius;
   float const half_z = occluder.half_z + radius;
 
-  float t_enter = 0.0F;
-  float t_exit = 1.0F;
-  if (!slab(local.start_x, local.delta_x, half_x, t_enter, t_exit) ||
-      !slab(local.start_z, local.delta_z, half_z, t_enter, t_exit)) {
+  auto const span = segment_box_span(
+      local.start_x, local.start_z, local.delta_x, local.delta_z, half_x, half_z);
+  if (!span.has_value()) {
     return 1.0F;
   }
-  if (t_enter > 1.0F || t_exit < 0.0F || t_enter < 0.0F) {
-    return 1.0F;
-  }
+  float t_enter = span->enter;
+  float t_exit = span->exit;
 
   constexpr float k_epsilon = 1.0e-5F;
   float const start_y = pivot.y();

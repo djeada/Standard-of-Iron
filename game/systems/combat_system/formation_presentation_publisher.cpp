@@ -8,7 +8,9 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../map/scatter/world_prop_clearance_index.h"
 #include "../../units/spawn_type.h"
+#include "../building_collision_registry.h"
 #include "combat_utils.h"
 #include "formation_combat_roles.h"
 #include "formation_local_frame.h"
@@ -88,6 +90,61 @@ auto collect_damage_carriers(Engine::Core::Entity& entity,
                             : std::nullopt});
   }
   return carriers;
+}
+
+auto soldier_reach(const EntityFrame& frame) -> float {
+  float reach_sq = 0.0F;
+  for (auto const& slot : frame.layout.all_slots) {
+    reach_sq =
+        std::max(reach_sq, slot.local_x * slot.local_x + slot.local_z * slot.local_z);
+  }
+  for (auto const& soldier : frame.presentation.soldiers) {
+    if (soldier.alive && soldier.world_motion_valid) {
+      float const dx = soldier.world_x - frame.actor->position.x;
+      float const dz = soldier.world_z - frame.actor->position.z;
+      reach_sq = std::max(reach_sq, dx * dx + dz * dz);
+    }
+  }
+  return std::sqrt(reach_sq);
+}
+
+auto buildings_around(const EntityFrame& frame,
+                      float reach) -> const std::vector<SolidBody>* {
+  if (frame.wall_walker != nullptr || frame.structure.attacks_structure ||
+      frame.unit.spawn_type == Game::Units::SpawnType::Builder) {
+    return nullptr;
+  }
+  thread_local std::vector<SolidBody> bodies;
+  bodies.clear();
+  Pathfinding::building_collisions().for_each_solid_body_near(
+      frame.actor->position.x,
+      frame.actor->position.z,
+      reach * 2.0F + k_soldier_building_awareness,
+      [](float center_x, float center_z, float half_x, float half_z) {
+        bodies.push_back({center_x - half_x,
+                          center_x + half_x,
+                          center_z - half_z,
+                          center_z + half_z});
+      });
+  return bodies.empty() ? nullptr : &bodies;
+}
+
+void survey_surroundings(EntityFrame& frame,
+                         const Game::Map::WorldPropClearanceIndex& props) {
+  if (frame.actor == nullptr) {
+    return;
+  }
+  float const reach = soldier_reach(frame);
+  frame.solid_bodies = buildings_around(frame, reach);
+  float const prop_reach = reach + frame.layout.body_radius + k_soldier_prop_awareness;
+  if (!props.anything_near(
+          frame.actor->position.x, frame.actor->position.z, prop_reach)) {
+    return;
+  }
+  thread_local Game::Map::WorldPropClearanceIndex nearby;
+  props.gather_near(
+      frame.actor->position.x, frame.actor->position.z, prop_reach, nearby);
+  frame.props = nearby.empty() ? nullptr : &nearby;
 }
 
 void advance_squad_reform(Engine::Core::SquadReformComponent* reform,
@@ -280,6 +337,7 @@ void publish_entity(Engine::Core::World& world,
                     LayoutCache& layouts,
                     ForeignFighters& foreign,
                     const SurroundBoard& board,
+                    const Game::Map::WorldPropClearanceIndex& props,
                     float delta_time) {
   if (!FormationCombat::has_formation_slots(entity)) {
     return;
@@ -336,6 +394,7 @@ void publish_entity(Engine::Core::World& world,
   frame.squad_speed = squad_speed_of(world, id);
   frame.passability = passability_of(world, id);
   frame.mounted = Game::Units::is_cavalry(unit.spawn_type);
+  survey_surroundings(frame, props);
   frame.frame_sign = FormationCombat::layout_frame_sign(
       layout, traversal != nullptr && traversal->about_faced);
   thread_local std::vector<SurroundSpot> surround_spots;
@@ -374,9 +433,11 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
   layouts.begin_tick();
   collect_foreign_fighters(world, foreign.grid);
   enlist_surrounders(world, layouts, board);
+  auto const props = Game::Map::shared_world_prop_clearance_index();
   for (auto [entity_ref, entity_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
-    publish_entity(world, entity_ref, entity_unit, layouts, foreign, board, delta_time);
+    publish_entity(
+        world, entity_ref, entity_unit, layouts, foreign, board, *props, delta_time);
   }
 }
 

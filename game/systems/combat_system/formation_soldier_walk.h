@@ -8,9 +8,23 @@
 #include "../navigation/pathfinding.h"
 #include "formation_foreign_grid.h"
 
+namespace Game::Map {
+class WorldPropClearanceIndex;
+}
+
 namespace Game::Systems::Combat {
 
+inline constexpr float k_soldier_prop_awareness = 4.0F;
+inline constexpr float k_soldier_building_awareness = 1.5F;
+
 [[nodiscard]] auto foreign_gather_radius(float spacing, bool mounted) -> float;
+
+struct SolidBody {
+  float min_x{0.0F};
+  float max_x{0.0F};
+  float min_z{0.0F};
+  float max_z{0.0F};
+};
 
 struct SlotWalk {
   const Engine::Core::TransformComponent& actor;
@@ -30,6 +44,8 @@ struct SlotWalk {
   bool position_is_authored{false};
   bool walking_to_work_posts{false};
   bool worker{false};
+  const std::vector<SolidBody>* solid_bodies{nullptr};
+  const Game::Map::WorldPropClearanceIndex* props{nullptr};
   Pathfinding::Passability passability{Pathfinding::Passability::Light};
   float delta_time{0.0F};
 };
