@@ -14,17 +14,8 @@
 namespace App::Core {
 
 void CommanderDefence::advance_upkeep(Engine::Core::Entity& commander,
-                                      Engine::Core::CommanderComponent* cmd_comp,
                                       bool guard_held,
-                                      float dt) const {
-  if (cmd_comp != nullptr) {
-    cmd_comp->punish_window_remaining =
-        std::max(0.0F, cmd_comp->punish_window_remaining - dt);
-    cmd_comp->posture = std::max(
-        0.0F,
-        cmd_comp->posture - ((m_guard_was_active || guard_held) ? 8.0F : 18.0F) * dt);
-  }
-
+                                      float dt) {
   if (auto* guard = commander.get_component<Engine::Core::CommanderGuardComponent>()) {
     guard->perfect_guard_remaining =
         std::max(0.0F, guard->perfect_guard_remaining - dt);

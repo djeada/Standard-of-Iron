@@ -214,14 +214,19 @@ TEST_F(CommanderModeResourcesTest, RepeatedSwitchesCannotEraseCombatDebt) {
   auto* data = commander->get_component<Engine::Core::CommanderComponent>();
   data->posture = 90.0F;
   data->second_wind_cooldown_remaining = 12.0F;
+  data->punish_window_remaining = 0.9F;
   for (int cycle = 0; cycle < 100; ++cycle) {
     ASSERT_TRUE(coordinator.enter_commander_control_mode(context()).entered);
+    EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.9F)
+        << "taking control must not close an opening the enemy earned";
     static_cast<void>(coordinator.exit_commander_control_mode(context()));
     EXPECT_FLOAT_EQ(stamina->stamina, 17.0F);
     EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.6F);
     EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.8F);
     EXPECT_FLOAT_EQ(data->posture, 90.0F);
     EXPECT_FLOAT_EQ(data->second_wind_cooldown_remaining, 12.0F);
+    EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.9F)
+        << "leaving control must not close an opening the enemy earned";
     EXPECT_EQ(commander->get_component<Engine::Core::UnitComponent>()->health, 40);
   }
 }
@@ -263,6 +268,55 @@ TEST_F(CommanderModeResourcesTest, AHandoffLeavesNoAirborneStateToCutTheNextJump
   }
 }
 
+TEST_F(CommanderModeResourcesTest, CombatTimersHaveOneSimulationOwnerInBothModes) {
+  Game::Systems::CommanderSystem system;
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  for (bool controlled : {false, true}) {
+    SCOPED_TRACE(controlled ? "direct control" : "army view");
+    data->fpv_controlled = controlled;
+    data->shield_bash_cooldown_remaining = 3.0F;
+    data->vanguard_rush_cooldown_remaining = 4.5F;
+    data->second_wind_cooldown_remaining = 8.0F;
+    data->punish_window_remaining = 0.75F;
+    data->posture = 60.0F;
+    guard->active = false;
+    if (controlled) {
+      // The controller's own upkeep runs every direct-control tick; it must not
+      // advance world-owned timers a second time.
+      App::Core::CommanderDefence::advance_upkeep(*commander, true, 0.25F);
+      EXPECT_FLOAT_EQ(data->posture, 60.0F);
+      EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.75F);
+    }
+    system.update(&session.world(), 0.25F);
+    EXPECT_FLOAT_EQ(data->shield_bash_cooldown_remaining, 2.75F);
+    EXPECT_FLOAT_EQ(data->vanguard_rush_cooldown_remaining, 4.25F);
+    EXPECT_FLOAT_EQ(data->second_wind_cooldown_remaining, 7.75F);
+    EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.5F);
+    EXPECT_FLOAT_EQ(data->posture, 60.0F - 18.0F * 0.25F);
+
+    guard->active = true;
+    data->posture = 60.0F;
+    system.update(&session.world(), 0.25F);
+    EXPECT_FLOAT_EQ(data->posture, 60.0F - 8.0F * 0.25F)
+        << "a raised guard recovers posture more slowly in either mode";
+    guard->active = false;
+  }
+}
+
+TEST_F(CommanderModeResourcesTest, AnUncontrolledCommandersOpeningCloses) {
+  // Vanguard rush and shield bash open punish windows on enemy commanders.
+  // Only the player's controller used to run them down, so an AI commander
+  // stayed punishable for the rest of the battle.
+  Game::Systems::CommanderSystem system;
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  data->fpv_controlled = false;
+  data->punish_window_remaining = 0.85F;
+  for (int tick = 0; tick < 60; ++tick) {
+    system.update(&session.world(), 1.0F / 60.0F);
+  }
+  EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.0F);
+}
+
 TEST_F(CommanderModeResourcesTest, GuardBreakRecoveryHasOneSimulationOwnerInBothModes) {
   Game::Systems::CommanderSystem system;
   App::Core::CommanderDefence defence;
@@ -271,7 +325,7 @@ TEST_F(CommanderModeResourcesTest, GuardBreakRecoveryHasOneSimulationOwnerInBoth
     data->fpv_controlled = controlled;
     guard->guard_break_remaining = 0.5F;
     if (controlled) {
-      defence.advance_upkeep(*commander, data, false, 0.1F);
+      App::Core::CommanderDefence::advance_upkeep(*commander, false, 0.1F);
     }
     // Controller upkeep cannot advance combat recovery independently of the world.
     EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.5F);

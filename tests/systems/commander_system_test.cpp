@@ -1313,7 +1313,7 @@ TEST(CommanderSystemTest, NationOnlyCollapsesWhenItsLastCommanderFalls) {
 
 } // namespace
 
-TEST(CommanderAbilityCooldownTest, DirectControlCooldownsRunDownInArmyView) {
+TEST(CommanderAbilityCooldownTest, CooldownsRunDownOnceInEitherControlMode) {
   Engine::Core::World world;
 
   auto* commander = world.create_entity();
@@ -1333,13 +1333,15 @@ TEST(CommanderAbilityCooldownTest, DirectControlCooldownsRunDownInArmyView) {
   Game::Systems::CommanderSystem system;
   commander_data->fpv_controlled = true;
   system.update(&world, 1.0F);
-  EXPECT_FLOAT_EQ(commander_data->second_wind_cooldown_remaining, 8.0F);
-
-  commander_data->fpv_controlled = false;
-  system.update(&world, 1.0F);
   EXPECT_FLOAT_EQ(commander_data->second_wind_cooldown_remaining, 7.0F);
   EXPECT_FLOAT_EQ(commander_data->vanguard_rush_cooldown_remaining, 3.5F);
   EXPECT_FLOAT_EQ(commander_data->shield_bash_cooldown_remaining, 2.0F);
+
+  commander_data->fpv_controlled = false;
+  system.update(&world, 1.0F);
+  EXPECT_FLOAT_EQ(commander_data->second_wind_cooldown_remaining, 6.0F);
+  EXPECT_FLOAT_EQ(commander_data->vanguard_rush_cooldown_remaining, 2.5F);
+  EXPECT_FLOAT_EQ(commander_data->shield_bash_cooldown_remaining, 1.0F);
 }
 
 TEST(CommanderAbilityCooldownTest, PostureRecoversInArmyView) {

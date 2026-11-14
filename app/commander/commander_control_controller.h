@@ -244,8 +244,7 @@ private:
   void activate_abilities(Engine::Core::World& world,
                           const App::Core::CommanderHandles& body,
                           Engine::Core::EntityID commander_id,
-                          int local_owner_id,
-                          float dt);
+                          int local_owner_id);
   [[nodiscard]] auto advance_strike(Engine::Core::World& world,
                                     const App::Core::CommanderHandles& body,
                                     const TickFacts& facts,

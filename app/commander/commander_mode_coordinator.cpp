@@ -275,7 +275,6 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
       commander_data->combo_step = 0;
       settle_body_on_handoff(*commander_data);
     }
-    commander_data->punish_window_remaining = 0.0F;
   }
 
   if (auto* stamina =
@@ -594,7 +593,6 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     if (!preserve_advanced_action) {
       settle_body_on_handoff(*commander_data);
     }
-    commander_data->punish_window_remaining = 0.0F;
   }
   if (auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>()) {
     // Release input-owned protection; simulation-owned guard-break recovery

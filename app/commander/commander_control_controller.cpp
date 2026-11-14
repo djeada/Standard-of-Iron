@@ -425,7 +425,7 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
 
   m_locomotion.decay_dodge_kick(dt);
   out.jump_active = advance_jump_stage(body, facts, dt);
-  m_defence.advance_upkeep(body.entity, body.commander_data, tick.guard_held, dt);
+  App::Core::CommanderDefence::advance_upkeep(body.entity, tick.guard_held, dt);
   auto const basis = start_dodge_stage(world, body, facts, out);
 
   // A staggered body takes no steering: it brakes where it was hit.
@@ -524,8 +524,7 @@ void CommanderControlController::activate_abilities(
     Engine::Core::World& world,
     const App::Core::CommanderHandles& body,
     Engine::Core::EntityID commander_id,
-    int local_owner_id,
-    float dt) {
+    int local_owner_id) {
   auto const& tick = m_input_port.tick();
   App::Core::CommanderAbilityRequest request;
   request.shield_bash = tick.shield_bash_pressed;
@@ -533,7 +532,6 @@ void CommanderControlController::activate_abilities(
   request.second_wind = tick.second_wind_pressed;
   m_input_port.clear_ability_edges();
 
-  m_abilities.advance_cooldowns(body.commander_data, dt);
   if (!request.any()) {
     return;
   }
@@ -780,7 +778,7 @@ auto CommanderControlController::advance_combat(Engine::Core::World& world,
                          .staggered = facts.staggered(),
                          .dt = dt},
                         m_latency_probe);
-  activate_abilities(world, body, commander_id, local_owner_id, dt);
+  activate_abilities(world, body, commander_id, local_owner_id);
 
   auto const queue =
       advance_strike(world, body, facts, sync.aim, commander_id, local_owner_id, dt);
