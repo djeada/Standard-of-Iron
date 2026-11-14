@@ -5351,10 +5351,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>Move troops next to a river raft</source>
         <translation>Birlikleri bir nehir salının yanına götür</translation>
     </message>
-    <message>
-        <source>Go to Barracks</source>
-        <translation>Kışlaya git</translation>
-    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -7267,6 +7263,14 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Click to look</source>
         <translation>Bakmak için tıkla</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>Yükleniyor...</translation>
+    </message>
+    <message>
+        <source>Roman field commander</source>
+        <translation>Romalı saha komutanı</translation>
     </message>
 </context>
 <context>

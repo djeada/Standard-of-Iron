@@ -5353,10 +5353,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Move troops next to a river raft</source>
         <translation>Move troops next to a river raft</translation>
     </message>
-    <message>
-        <source>Go to Barracks</source>
-        <translation>Go to Barracks</translation>
-    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -7271,6 +7267,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Click to look</source>
         <translation>Click to look</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>Loading...</translation>
+    </message>
+    <message>
+        <source>Roman field commander</source>
+        <translation>Roman field commander</translation>
     </message>
 </context>
 <context>

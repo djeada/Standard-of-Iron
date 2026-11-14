@@ -519,7 +519,7 @@ ApplicationWindow {
         z: 15
         is_loading: (typeof game !== 'undefined') ? game.is_loading : false
         progress: (typeof game !== 'undefined') ? game.loading_progress : 0
-        stage_text: (typeof game !== 'undefined') ? game.loading_stage_text : "Loading..."
+        stage_text: (typeof game !== 'undefined') ? game.loading_stage_text : qsTr("Loading...")
 
         Connections {
             function onIs_loading_changed() {
@@ -863,7 +863,7 @@ ApplicationWindow {
             property bool active: true
             property string message_id: "preview"
             property string speaker_name: "Marcus Claudius Marcellus"
-            property string speaker_role: "Roman field commander"
+            property string speaker_role: qsTr("Roman field commander")
             property string nation: "roman_republic"
             property string relationship: "enemy"
             property string speaker_id: "roman_field_commander"

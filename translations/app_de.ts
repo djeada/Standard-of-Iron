@@ -5353,10 +5353,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Move troops next to a river raft</source>
         <translation>Bewege Truppen zu einem Flussfloß</translation>
     </message>
-    <message>
-        <source>Go to Barracks</source>
-        <translation>Zur Kaserne</translation>
-    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -7271,6 +7267,14 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>Click to look</source>
         <translation>Zum Ansehen klicken</translation>
+    </message>
+    <message>
+        <source>Loading...</source>
+        <translation>Wird geladen …</translation>
+    </message>
+    <message>
+        <source>Roman field commander</source>
+        <translation>Römischer Feldherr</translation>
     </message>
 </context>
 <context>
