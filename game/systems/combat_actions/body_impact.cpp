@@ -9,6 +9,7 @@
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/target_rules.h"
+#include "../formation_combat_geometry.h"
 
 namespace Game::Systems::CombatActions {
 
@@ -55,25 +56,41 @@ make_local_body_sample(Engine::Core::Entity& attacker,
   return sample;
 }
 
+constexpr float k_rank_front_share = 0.8F;
+constexpr float k_rank_flank_share = 0.4F;
+constexpr float k_widest_formation_reach = 6.0F;
+
+[[nodiscard]] auto ranks_between(const Engine::Core::Entity& attacker,
+                                 const Engine::Core::Entity& target) -> float {
+  namespace Formation = Game::Systems::FormationCombat;
+  float ranks = 0.0F;
+  if (Formation::has_formation_slots(attacker)) {
+    ranks += Formation::formation_turn_radius(attacker);
+  }
+  if (Formation::has_formation_slots(target)) {
+    ranks +=
+        std::min(Formation::formation_turn_radius(target), k_widest_formation_reach);
+  }
+  return ranks;
+}
+
 [[nodiscard]] auto
-body_contact_score(const LocalBodySample& sample,
-                   const CombatActionDefinition& definition) -> float {
-  if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
-      !std::isfinite(sample.right) || !std::isfinite(sample.distance)) {
-    return std::numeric_limits<float>::infinity();
+closing_distance_before_impact(Engine::Core::World& world,
+                               const Engine::Core::Entity& attacker,
+                               const CombatActionDefinition& definition) -> float {
+  auto const* movement =
+      world.try_get<Engine::Core::MovementComponent>(attacker.get_id());
+  if (movement == nullptr) {
+    return 0.0F;
   }
-
-  float const sample_radius =
-      std::isfinite(sample.radius) ? std::max(0.0F, sample.radius) : 0.0F;
-  float const target_radius = std::min(sample_radius, definition.hit_shape.radius);
-  float const reach = definition.hit_shape.reach + target_radius;
-  float const lateral_limit = definition.hit_shape.radius + target_radius;
-  if (sample.forward < -target_radius || sample.forward > reach ||
-      std::abs(sample.right) > lateral_limit) {
-    return std::numeric_limits<float>::infinity();
+  float impact_at = 0.0F;
+  for (auto const& event : definition.events) {
+    if (event.type == CombatActionEventType::ActiveStart) {
+      impact_at = event.normalized_time * definition.duration_seconds;
+      break;
+    }
   }
-
-  return std::max(0.0F, sample.forward) + std::abs(sample.right) * 0.35F;
+  return std::hypot(movement->get_vx(), movement->get_vz()) * impact_at;
 }
 
 } // namespace
@@ -95,9 +112,16 @@ auto find_body_impact_contact(
   auto const* attacker_transform =
       attacker.get_component<Engine::Core::TransformComponent>();
   float const hit_radius = std::max(0.0F, definition.hit_shape.radius);
+  float const own_ranks =
+      Game::Systems::FormationCombat::has_formation_slots(attacker)
+          ? Game::Systems::FormationCombat::formation_turn_radius(attacker)
+          : 0.0F;
+  float const closing = closing_distance_before_impact(world, attacker, definition);
   float const max_forward =
-      std::max(definition.hit_shape.reach + hit_radius, hit_radius);
-  float const max_lateral = 2.0F * hit_radius;
+      std::max(definition.hit_shape.reach + hit_radius, hit_radius) +
+      (own_ranks + k_widest_formation_reach) * k_rank_front_share + closing;
+  float const max_lateral =
+      2.0F * hit_radius + (own_ranks + k_widest_formation_reach) * k_rank_flank_share;
   float const reach_squared = (max_forward * max_forward) + (max_lateral * max_lateral);
 
   auto consider = [&](Engine::Core::Entity* candidate,
@@ -135,14 +159,17 @@ auto find_body_impact_contact(
     float const sample_radius =
         std::isfinite(sample.radius) ? std::max(0.0F, sample.radius) : 0.0F;
     float const target_radius = std::min(sample_radius, definition.hit_shape.radius);
-    float const reach = definition.hit_shape.reach + target_radius;
-    float const lateral_limit = definition.hit_shape.radius + target_radius;
+    float const ranks = ranks_between(attacker, *candidate);
+    float const reach = definition.hit_shape.reach + target_radius +
+                        ranks * k_rank_front_share + closing;
+    float const lateral_limit =
+        definition.hit_shape.radius + target_radius + ranks * k_rank_flank_share;
     if (sample.entity == nullptr || sample.forward < -target_radius ||
         sample.forward > reach || std::abs(sample.right) > lateral_limit) {
       return;
     }
 
-    float const score = body_contact_score(sample, definition);
+    float const score = std::max(0.0F, sample.forward) + std::abs(sample.right) * 0.35F;
     if (!std::isfinite(score) || score >= best_score) {
       return;
     }

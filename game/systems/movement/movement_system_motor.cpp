@@ -25,6 +25,9 @@ constexpr float k_motor_ramp_seconds = 0.12F;
 constexpr float k_heading_locked_deceleration = 2.6F;
 constexpr float k_heading_locked_pivot_degrees = 65.0F;
 constexpr float k_heading_locked_idle_speed = 0.05F;
+constexpr float k_ridden_deceleration = 6.0F;
+constexpr float k_ridden_turn_carry = 0.5F;
+constexpr float k_ridden_wheel_onset = 0.03F;
 
 } // namespace
 
@@ -87,6 +90,47 @@ void MovementSystem::Motor::drive_along_heading(
                                std::cos(yaw_radians) * speed);
 }
 
+void MovementSystem::Motor::ride_along_nose(Mover& mover,
+                                            const WantedVelocity& wanted) {
+  auto& movement = mover.movement;
+  float const dt = std::max(0.0F, mover.delta_time);
+  float const yaw = mover.transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const forward_x = std::sin(yaw);
+  float const forward_z = std::cos(yaw);
+  float speed =
+      std::max(0.0F, (movement.get_vx() * forward_x) + (movement.get_vz() * forward_z));
+
+  float const wanted_speed = wanted.present ? std::hypot(wanted.vx, wanted.vz) : 0.0F;
+  float target_speed = 0.0F;
+  if (wanted_speed > k_heading_locked_idle_speed) {
+    float const along =
+        ((wanted.vx * forward_x) + (wanted.vz * forward_z)) / wanted_speed;
+    bool const room_to_sweep_round = MovementHeading::ridden_has_room_to_wheel(
+        movement, mover.transform, &mover.facts);
+    float const wheeling =
+        std::clamp((1.0F - along) / k_ridden_wheel_onset, 0.0F, 1.0F);
+    float const outer_file_limit =
+        mover.unit.speed * MovementHeading::ridden_wheel(mover.entity, speed).pace;
+    float const keeps_pace =
+        room_to_sweep_round
+            ? std::clamp(along + k_ridden_turn_carry, k_ridden_turn_carry, 1.0F)
+            : std::max(along, 0.0F);
+    target_speed = wanted_speed * keeps_pace;
+    if (wheeling > 0.0F && target_speed > outer_file_limit) {
+      target_speed += (outer_file_limit - target_speed) * wheeling;
+    }
+  }
+
+  if (speed < target_speed) {
+    float const accelerate =
+        std::max(0.1F, Game::Units::body_acceleration(mover.unit.spawn_type));
+    speed = std::min(target_speed, speed + accelerate * dt);
+  } else {
+    speed = std::max(target_speed, speed - k_ridden_deceleration * dt);
+  }
+  movement.set_manual_velocity(forward_x * speed, forward_z * speed);
+}
+
 auto MovementSystem::Motor::wanted_velocity(const Mover& mover,
                                             const MotorCollision& collision,
                                             float old_x,
@@ -135,6 +179,8 @@ void MovementSystem::Motor::accelerate_toward(Mover& mover,
                         wanted.present ? wanted.vx : 0.0F,
                         wanted.present ? wanted.vz : 0.0F,
                         delta_time);
+  } else if (Game::Units::rides_its_nose(mover.unit.spawn_type)) {
+    ride_along_nose(mover, wanted);
   } else if (!wanted.present) {
     movement.vx *= std::max(0.0F, 1.0F - limits.damping * delta_time);
     movement.vz *= std::max(0.0F, 1.0F - limits.damping * delta_time);
@@ -285,7 +331,12 @@ void MovementSystem::Motor::drive(Mover& mover) {
       Game::Units::heading_locked_locomotion(mover.unit.spawn_type);
   accelerate_toward(mover, limits, wanted, heading_locked);
 
-  auto const sweep = sweep_step(mover, collision, old_x, old_z, heading_locked);
+  auto const sweep =
+      sweep_step(mover,
+                 collision,
+                 old_x,
+                 old_z,
+                 heading_locked || Game::Units::rides_its_nose(mover.unit.spawn_type));
   record_motion(mover, old_x, old_z, sweep);
 
   if (MovementHeading::finalize_orientation(mover.world,
@@ -294,8 +345,10 @@ void MovementSystem::Motor::drive(Mover& mover) {
                                             &mover.movement,
                                             &mover.facts,
                                             mover.delta_time)) {
-    movement.vx = -movement.vx;
-    movement.vz = -movement.vz;
+    bool const turns_about_on_the_spot =
+        Game::Units::rides_its_nose(mover.unit.spawn_type);
+    movement.vx = turns_about_on_the_spot ? 0.0F : -movement.vx;
+    movement.vz = turns_about_on_the_spot ? 0.0F : -movement.vz;
   }
 }
 

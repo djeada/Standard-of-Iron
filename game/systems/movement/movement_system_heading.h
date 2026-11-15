@@ -11,6 +11,19 @@ inline constexpr float k_hold_mode_turn_speed_degrees = 180.0F;
                                                 const Engine::Core::UnitComponent& unit,
                                                 float single_body_turn_speed) -> float;
 
+struct RiddenWheel {
+  float radius{0.0F};
+  float pace{1.0F};
+};
+
+[[nodiscard]] auto ridden_wheel(const Engine::Core::Entity& entity,
+                                float speed) -> RiddenWheel;
+
+[[nodiscard]] auto
+ridden_has_room_to_wheel(const Engine::Core::MovementComponent& movement,
+                         const Engine::Core::TransformComponent& transform,
+                         const Engine::Core::MovementFactsComponent* facts) -> bool;
+
 void apply_desired_yaw(Engine::Core::TransformComponent* transform,
                        float delta_time,
                        float turn_speed_degrees);

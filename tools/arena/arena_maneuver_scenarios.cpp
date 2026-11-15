@@ -673,11 +673,61 @@ auto countermarch_streets_scenario() -> ArenaScenarioDefinition {
 
 } // namespace
 
+auto cavalry_wheel_scenario() -> ArenaScenarioDefinition {
+  auto scenario = definition(
+      QStringLiteral("maneuver_cavalry_wheel"),
+      QStringLiteral("Manoeuvre: Cavalry Wheels On The Move"),
+      QStringLiteral(
+          "Two cavalry squadrons on open ground ride a course of turns without "
+          "ever halting: a right-angle wheel, a hairpin, a long diagonal and a "
+          "reversal. Each horse has to ride its own curve nose first; the "
+          "squadron must not spin about its centre like a turntable and no horse "
+          "may slide sideways along a ruled line."),
+      46.0F,
+      {40.0F, 58.0F, 20.0F});
+  scenario.terrain_grid_extent = 160;
+  scenario.arena_floor_half_extent = 60.0F;
+  scenario.suppress_terrain_scatter = true;
+  scenario.owner_teams = {{.owner_id = 1, .team_id = 1}};
+  QString const swords = QStringLiteral("horse_swords");
+  QString const spears = QStringLiteral("horse_spears");
+  scenario.groups.push_back(
+      group(swords, Troop::MountedSwordsman, 1, 1, QVector3D(-24.0F, 0.0F, -5.0F), 8));
+  scenario.groups.push_back(
+      group(spears, Troop::HorseSpearman, 1, 1, QVector3D(-24.0F, 0.0F, 5.0F), 8));
+  struct Leg {
+    float at;
+    QVector3D to;
+    const char* name;
+  };
+  for (Leg const& leg : {Leg{0.5F, QVector3D(14.0F, 0.0F, 0.0F), "advance"},
+                         Leg{6.0F, QVector3D(10.0F, 0.0F, 24.0F), "wheel"},
+                         Leg{13.0F, QVector3D(-20.0F, 0.0F, -18.0F), "hairpin"},
+                         Leg{25.0F, QVector3D(22.0F, 0.0F, -14.0F), "diagonal"},
+                         Leg{32.0F, QVector3D(-6.0F, 0.0F, 10.0F), "reverse"}}) {
+    order_army(scenario,
+               leg.at,
+               {swords, spears},
+               leg.to,
+               QString::fromLatin1(leg.name),
+               10.0F);
+  }
+  for (QString const& name : {swords, spears}) {
+    scenario.expectations.push_back(expectation(Expect::NoRootTeleport, name));
+    scenario.expectations.push_back(expectation(Expect::GroupIsRendered, name));
+    scenario.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, name));
+  }
+  scenario.collect_animation_diagnostics = true;
+  return scenario;
+}
+
 auto build_maneuver_definitions() -> std::vector<ArenaScenarioDefinition> {
   return {
       town_relay_scenario(),
       obstacle_slalom_scenario(),
       countermarch_streets_scenario(),
+      cavalry_wheel_scenario(),
   };
 }
 

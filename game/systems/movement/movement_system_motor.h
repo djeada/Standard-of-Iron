@@ -46,6 +46,7 @@ private:
                                   float target_vx,
                                   float target_vz,
                                   float delta_time);
+  static void ride_along_nose(Mover& mover, const WantedVelocity& wanted);
   static void accelerate_toward(Mover& mover,
                                 const MotorLimits& limits,
                                 const WantedVelocity& wanted,

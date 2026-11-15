@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "combat_hit_types.h"
 
@@ -9,10 +11,16 @@ class World;
 
 namespace Game::Systems::Combat {
 
+enum class CasualtyLaunch : std::uint8_t {
+  Blasted,
+  RiddenDown
+};
+
 void launch_new_casualties(Engine::Core::Entity& casualty_unit,
                            const Engine::Core::Entity& impact_source,
                            int casualty_count,
-                           float impact_speed);
+                           float impact_speed,
+                           CasualtyLaunch launch = CasualtyLaunch::Blasted);
 
 void launch_new_casualties_along(Engine::Core::World& world,
                                  Engine::Core::EntityID casualty_unit,

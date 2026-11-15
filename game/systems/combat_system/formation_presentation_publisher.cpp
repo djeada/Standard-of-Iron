@@ -92,6 +92,10 @@ auto collect_damage_carriers(Engine::Core::Entity& entity,
   return carriers;
 }
 
+constexpr float k_mount_reach = 1.0F;
+constexpr float k_mount_shoulder_room = 1.2F;
+constexpr float k_mount_length = 2.1F;
+
 auto soldier_reach(const EntityFrame& frame) -> float {
   float reach_sq = 0.0F;
   for (auto const& slot : frame.layout.all_slots) {
@@ -256,11 +260,12 @@ auto read_front_facts(const Engine::Core::AttackComponent* attack,
 }
 
 auto single_body_opponent(Engine::Core::World& world,
-                          Engine::Core::EntityID id) -> Engine::Core::Entity* {
+                          Engine::Core::EntityID id,
+                          bool riders_ring_great_beasts) -> Engine::Core::Entity* {
   auto* opponent = world.get_entity(id);
   if (opponent == nullptr || is_building(opponent) ||
       FormationCombat::has_formation_slots(*opponent) ||
-      world.has<Engine::Core::ElephantComponent>(id) ||
+      (world.has<Engine::Core::ElephantComponent>(id) && !riders_ring_great_beasts) ||
       world.has<Engine::Core::WildlifeComponent>(id)) {
     return nullptr;
   }
@@ -276,7 +281,11 @@ auto surrounds_its_opponent(Engine::Core::World& world,
       world.has<Engine::Core::RaftRiderComponent>(id)) {
     return nullptr;
   }
-  auto* opponent = single_body_opponent(world, facts.display_target);
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(id);
+  auto* opponent = single_body_opponent(world,
+                                        facts.display_target,
+                                        unit != nullptr &&
+                                            Game::Units::is_cavalry(unit->spawn_type));
   auto const* actor = world.try_get<Engine::Core::TransformComponent>(id);
   auto const* target =
       opponent != nullptr
@@ -444,17 +453,19 @@ void publish_entity(Engine::Core::World& world,
         frame.display_opponent->get_id());
     auto const& opponent_layout = layouts.for_entity(*frame.display_opponent);
     float const weapon_reach = attack != nullptr ? attack->melee_range : 1.5F;
-    plan_surround(
-        {.actor = *frame.actor,
-         .layout = layout,
-         .previous = presentation->soldiers,
-         .sector = *sector,
-         .target_x = target.position.x,
-         .target_z = target.position.z,
-         .first_ring_radius =
-             layout.body_radius + opponent_layout.body_radius + weapon_reach * 0.35F,
-         .frame_sign = frame.frame_sign},
-        surround_spots);
+    plan_surround({.actor = *frame.actor,
+                   .layout = layout,
+                   .previous = presentation->soldiers,
+                   .sector = *sector,
+                   .target_x = target.position.x,
+                   .target_z = target.position.z,
+                   .first_ring_radius =
+                       layout.body_radius + opponent_layout.body_radius +
+                       weapon_reach * 0.35F + (frame.mounted ? k_mount_reach : 0.0F),
+                   .frame_sign = frame.frame_sign,
+                   .least_shoulder_room = frame.mounted ? k_mount_shoulder_room : 0.0F,
+                   .least_ring_gap = frame.mounted ? k_mount_length : 0.0F},
+                  surround_spots);
     frame.surround = &surround_spots;
   }
 

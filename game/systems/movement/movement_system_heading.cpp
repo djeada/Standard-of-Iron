@@ -34,6 +34,17 @@ constexpr float k_formation_align_max_deviation_degrees = 55.0F;
 constexpr float k_formation_heading_deadband_degrees = 6.0F;
 constexpr float k_heading_hold_speed = 0.25F;
 
+constexpr float k_ridden_wheel_margin_at_walk = 0.6F;
+constexpr float k_ridden_wheel_margin_at_speed = 2.0F;
+constexpr float k_ridden_wheel_full_speed = 3.0F;
+constexpr float k_ridden_outer_file_headroom = 1.2F;
+constexpr float k_ridden_pivot_degrees = 60.0F;
+constexpr float k_ridden_slow_wheel_degrees = 45.0F;
+constexpr float k_ridden_about_face_degrees = 115.0F;
+constexpr float k_ridden_standing_about_face_degrees = 90.0F;
+constexpr float k_ridden_wheel_room = 9.0F;
+constexpr float k_ridden_slot_settle_speed = 0.6F;
+
 constexpr float k_formation_outer_file_speed_floor = 1.8F;
 constexpr float k_formation_outer_file_speed_scale = 1.0F;
 
@@ -65,7 +76,12 @@ auto heading_reference(const Engine::Core::Entity& entity,
                        const Engine::Core::UnitComponent* unit) -> HeadingReference {
   bool const formation =
       unit != nullptr && FormationCombat::has_formation_slots(entity);
-  if (movement.get_following_formation_slot()) {
+  bool const rides_toward_its_slot =
+      unit != nullptr && Game::Units::rides_its_nose(unit->spawn_type) &&
+      facts != nullptr && facts->desired.valid &&
+      std::hypot(facts->desired.velocity_x, facts->desired.velocity_z) >
+          k_ridden_slot_settle_speed;
+  if (movement.get_following_formation_slot() && !rides_toward_its_slot) {
     const auto* membership =
         entity.get_component<Engine::Core::ArmyFormationMembershipComponent>();
     const auto* group = membership != nullptr
@@ -93,8 +109,16 @@ auto heading_reference(const Engine::Core::Entity& entity,
     float const remaining =
         std::sqrt((to_target_x * to_target_x) + (to_target_z * to_target_z));
     if (facts != nullptr && facts->desired.valid) {
-      float dx = facts->desired.heading_x;
-      float dz = facts->desired.heading_z;
+      bool const ridden =
+          unit != nullptr && Game::Units::rides_its_nose(unit->spawn_type);
+      float const wanted_x = facts->steering.valid ? facts->steering.velocity_x
+                                                   : facts->desired.velocity_x;
+      float const wanted_z = facts->steering.valid ? facts->steering.velocity_z
+                                                   : facts->desired.velocity_z;
+      bool const follows_its_wanted_velocity =
+          ridden && std::hypot(wanted_x, wanted_z) > k_formation_heading_min_speed;
+      float dx = follows_its_wanted_velocity ? wanted_x : facts->desired.heading_x;
+      float dz = follows_its_wanted_velocity ? wanted_z : facts->desired.heading_z;
       if (dx * dx + dz * dz <= 1.0e-5F) {
         dx = facts->desired.velocity_x;
         dz = facts->desired.velocity_z;
@@ -113,6 +137,17 @@ auto heading_reference(const Engine::Core::Entity& entity,
                                 transform,
                                 remaining)};
     }
+  }
+  if (unit != nullptr && Game::Units::rides_its_nose(unit->spawn_type) &&
+      facts != nullptr && facts->desired.valid) {
+    float const wanted_x =
+        facts->steering.valid ? facts->steering.velocity_x : facts->desired.velocity_x;
+    float const wanted_z =
+        facts->steering.valid ? facts->steering.velocity_z : facts->desired.velocity_z;
+    if (std::hypot(wanted_x, wanted_z) > k_formation_heading_min_speed) {
+      return {true, Game::Systems::yaw_degrees_from_direction(wanted_x, wanted_z)};
+    }
+    return {};
   }
   float const vx = movement.get_vx();
   float const vz = movement.get_vz();
@@ -153,6 +188,20 @@ public:
     m_shell_holds_its_face =
         DefensiveUnitLayoutService::holds_position(entity) && transform.has_desired_yaw;
     m_formation = unit != nullptr && FormationCombat::has_formation_slots(entity);
+    m_ridden = m_formation && Game::Units::rides_its_nose(unit->spawn_type);
+    if (m_ridden) {
+      float const speed = facts != nullptr ? facts->last_accepted_speed : 0.0F;
+      float const arc_degrees = speed / ridden_wheel(entity, speed).radius * 180.0F /
+                                std::numbers::pi_v<float>;
+      m_ridden_about_face_degrees =
+          k_ridden_standing_about_face_degrees +
+          (k_ridden_about_face_degrees - k_ridden_standing_about_face_degrees) *
+              std::clamp(speed / k_ridden_wheel_full_speed, 0.0F, 1.0F);
+      float const pivot_degrees = ridden_has_room_to_wheel(movement, transform, facts)
+                                      ? k_ridden_slow_wheel_degrees
+                                      : k_ridden_pivot_degrees;
+      m_turn_speed = std::min(m_turn_speed, std::max(pivot_degrees, arc_degrees));
+    }
     if (!m_formation) {
       if (const auto* combat =
               world.try_get<Engine::Core::CombatStateComponent>(entity.get_id());
@@ -190,7 +239,7 @@ private:
     m_faced_about =
         m_formation && may_face_about && !m_shell_holds_its_face &&
         std::fabs(Game::Systems::signed_yaw_delta(m_transform.rotation.y, yaw)) >
-            k_formation_about_face_degrees &&
+            (m_ridden ? m_ridden_about_face_degrees : k_formation_about_face_degrees) &&
         FormationCombat::face_about_in_place(m_entity);
     if (m_faced_about && m_traversal != nullptr) {
       m_traversal->about_face_cooldown_seconds = k_about_face_cooldown_seconds;
@@ -205,7 +254,7 @@ private:
     bool const jostled = m_formation && m_facts != nullptr &&
                          (m_facts->steering.contact_push_x != 0.0F ||
                           m_facts->steering.contact_push_z != 0.0F);
-    float const deadband = m_movement.get_following_formation_slot() ? 0.5F
+    float const deadband = m_movement.get_following_formation_slot() || m_ridden ? 0.5F
                            : (standing_still || jostled)
                                ? full_translation_heading_error_degrees
                            : m_formation ? k_formation_heading_deadband_degrees
@@ -239,6 +288,8 @@ private:
   float m_turn_speed{0.0F};
   bool m_shell_holds_its_face{false};
   bool m_formation{false};
+  bool m_ridden{false};
+  float m_ridden_about_face_degrees{0.0F};
   bool m_faced_about{false};
 };
 
@@ -258,6 +309,34 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
   float const derived =
       max_outer_speed / turn_radius * 180.0F / std::numbers::pi_v<float>;
   return std::min(derived, std::min(75.0F, single_body_turn_speed));
+}
+
+auto ridden_wheel(const Engine::Core::Entity& entity, float speed) -> RiddenWheel {
+  float const reach = FormationCombat::formation_turn_radius(entity);
+  float const at_speed = std::clamp(speed / k_ridden_wheel_full_speed, 0.0F, 1.0F);
+  float const radius =
+      reach + k_ridden_wheel_margin_at_walk +
+      (k_ridden_wheel_margin_at_speed - k_ridden_wheel_margin_at_walk) * at_speed;
+  return {.radius = radius,
+          .pace =
+              std::min(1.0F, k_ridden_outer_file_headroom * radius / (radius + reach))};
+}
+
+auto ridden_has_room_to_wheel(const Engine::Core::MovementComponent& movement,
+                              const Engine::Core::TransformComponent& transform,
+                              const Engine::Core::MovementFactsComponent* facts)
+    -> bool {
+  if (!movement.get_has_target()) {
+    return false;
+  }
+  if (facts != nullptr &&
+      (facts->progress.blocked_steps > 0U || facts->motor.has_contact)) {
+    return false;
+  }
+  return movement.remaining_waypoints() > 1U ||
+         std::hypot(movement.get_target_x() - transform.position.x,
+                    movement.get_target_y() - transform.position.z) >
+             k_ridden_wheel_room;
 }
 
 void apply_desired_yaw(Engine::Core::TransformComponent* transform,

@@ -54,6 +54,8 @@ struct SurroundInputs {
   float target_z{0.0F};
   float first_ring_radius{0.0F};
   float frame_sign{1.0F};
+  float least_shoulder_room{0.0F};
+  float least_ring_gap{0.0F};
 };
 
 inline constexpr float k_surround_reach = 7.0F;

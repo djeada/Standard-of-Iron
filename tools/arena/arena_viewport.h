@@ -17,6 +17,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "arena_casting.h"
@@ -109,6 +110,9 @@ public:
     m_scenario_tilt_override = degrees;
   }
   void set_scenario_yaw_offset(float degrees) { m_scenario_yaw_offset = degrees; }
+  void set_scenario_follow_group(QString group) {
+    m_scenario_follow_group = std::move(group);
+  }
   void set_graphics_quality_override(Render::GraphicsQuality quality) {
     m_graphics_quality_override = quality;
   }
@@ -621,6 +625,7 @@ private:
   float m_scenario_distance_scale = 1.0F;
   std::optional<float> m_scenario_tilt_override;
   float m_scenario_yaw_offset = 0.0F;
+  QString m_scenario_follow_group;
   bool m_clean_capture = false;
   bool m_promo_mode = false;
   bool m_capture_gameplay_ui = false;

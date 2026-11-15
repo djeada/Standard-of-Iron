@@ -32,6 +32,10 @@ using Soldier = Engine::Core::FormationSoldierPresentation;
 
 constexpr float k_engage_close_speed = 3.2F;
 constexpr float k_contact_turn_degrees = 180.0F;
+constexpr float k_rider_frontage = 1.25F;
+constexpr float k_rider_rank_depth = 2.1F;
+constexpr float k_rider_reach_to_wall = 0.9F;
+constexpr std::size_t k_riders_past_the_corners = 2U;
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
 constexpr float k_weapon_contact_distance = 0.72F;
@@ -366,6 +370,81 @@ void press_against_attacked_structure(const EntityFrame& frame,
   }
 }
 
+void line_riders_along_structure(const EntityFrame& frame,
+                                 const SlotContext& slot,
+                                 Soldier& directive) {
+  auto const& structure = frame.structure;
+  auto const& live = frame.layout.live_slots;
+  if (!structure.attacks_structure || frame.actor == nullptr || live.empty() ||
+      frame.display_opponent == nullptr) {
+    return;
+  }
+  auto const& facade = structure.facade;
+  auto const along_face = [&](float local_x, float local_z) {
+    QVector3D const world = local_to_world(
+        *frame.actor, frame.frame_sign * local_x, frame.frame_sign * local_z);
+    return QVector3D::dotProduct(world - facade.point, facade.tangent);
+  };
+  float const own_place = along_face(slot.original.local_x, slot.original.local_z);
+  std::size_t order = 0U;
+  for (auto const& other : live) {
+    float const place = along_face(other.local_x, other.local_z);
+    if (place < own_place ||
+        (place == own_place && other.index < slot.original.index)) {
+      ++order;
+    }
+  }
+
+  auto const riders = live.size();
+  auto const abreast = std::clamp(
+      static_cast<std::size_t>(2.0F * facade.tangent_half_extent / k_rider_frontage) +
+          k_riders_past_the_corners,
+      std::size_t{2U},
+      riders);
+  auto const ranks = (riders + abreast - 1U) / abreast;
+  auto const files = (riders + ranks - 1U) / ranks;
+  float const line_half = static_cast<float>(files - 1U) * 0.5F * k_rider_frontage;
+
+  float line_centre = 0.0F;
+  if (auto const* building = frame.world.try_get<Engine::Core::TransformComponent>(
+          frame.display_opponent->get_id())) {
+    float const face_centre = QVector3D::dotProduct(
+        QVector3D(building->position.x, facade.point.y(), building->position.z) -
+            facade.point,
+        facade.tangent);
+    float const slack = std::max(0.0F,
+                                 facade.tangent_half_extent +
+                                     static_cast<float>(k_riders_past_the_corners) *
+                                         0.5F * k_rider_frontage -
+                                     line_half);
+    line_centre = std::clamp(0.0F, face_centre - slack, face_centre + slack);
+  }
+
+  float const beside =
+      line_centre + static_cast<float>(order / ranks) * k_rider_frontage - line_half;
+  float const back = structure_attack_profile(&frame.entity).contact_clearance +
+                     k_rider_reach_to_wall +
+                     static_cast<float>(order % ranks) * k_rider_rank_depth;
+  QVector3D const post =
+      facade.point + facade.tangent * beside + facade.outward_normal * back;
+  auto const [post_x, post_z] = world_to_local(*frame.actor, post.x(), post.z());
+  directive.local_x = post_x;
+  directive.local_z = post_z;
+
+  auto const nearest_wall = closest_structure_surface(*frame.display_opponent, post);
+  QVector3D const to_wall = nearest_wall.point - post;
+  bool const sees_the_wall =
+      to_wall.x() * to_wall.x() + to_wall.z() * to_wall.z() > 1.0e-4F;
+  float const face_yaw = yaw_degrees_from_direction(
+                             sees_the_wall ? to_wall.x() : -facade.outward_normal.x(),
+                             sees_the_wall ? to_wall.z() : -facade.outward_normal.z()) -
+                         frame.actor->rotation.y;
+  float const prior_yaw =
+      slot.previous != nullptr ? slot.previous->local_yaw : directive.local_yaw;
+  directive.local_yaw = turn_yaw_toward(
+      prior_yaw, face_yaw, k_contact_turn_degrees * std::max(0.0F, frame.delta_time));
+}
+
 void continue_follow_through(const EntityFrame& frame,
                              const Soldier* previous,
                              Soldier& directive) {
@@ -391,7 +470,11 @@ void apply_unassigned_melee(const EntityFrame& frame,
                                                 frame.combat_motion_time);
   directive.action = action_for_role(directive.combat_role);
   face_crowd_opponent(frame, directive);
-  press_against_attacked_structure(frame, slot, directive);
+  if (frame.mounted) {
+    line_riders_along_structure(frame, slot, directive);
+  } else {
+    press_against_attacked_structure(frame, slot, directive);
+  }
   continue_follow_through(frame, slot.previous, directive);
 }
 
