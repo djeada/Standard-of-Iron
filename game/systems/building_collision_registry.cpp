@@ -14,6 +14,7 @@
 #include "../core/world.h"
 #include "../units/building_body.h"
 #include "../units/spawn_type.h"
+#include "../util/planar_math.h"
 
 namespace Game::Systems {
 
@@ -539,48 +540,18 @@ footprint_penetration(const BuildingFootprint& footprint, float x, float z) -> f
          footprint.center_z + half_depth > min_z;
 }
 
-[[nodiscard]] auto slab_overlap(float start,
-                                float delta,
-                                float min_bound,
-                                float max_bound,
-                                float& t_enter,
-                                float& t_exit) -> bool {
-  constexpr float k_epsilon = 1.0e-5F;
-  if (std::abs(delta) <= k_epsilon) {
-    return start >= min_bound && start <= max_bound;
-  }
-
-  float t0 = (min_bound - start) / delta;
-  float t1 = (max_bound - start) / delta;
-  if (t0 > t1) {
-    std::swap(t0, t1);
-  }
-  t_enter = std::max(t_enter, t0);
-  t_exit = std::min(t_exit, t1);
-  return t_enter <= t_exit;
-}
-
 [[nodiscard]] auto segment_hits_footprint(const BuildingFootprint& footprint,
                                           float start_x,
                                           float start_z,
                                           float delta_x,
                                           float delta_z) -> bool {
-  float const half_width = footprint.width / 2.0F;
-  float const half_depth = footprint.depth / 2.0F;
-  float t_enter = 0.0F;
-  float t_exit = 1.0F;
-  return slab_overlap(start_x,
-                      delta_x,
-                      footprint.center_x - half_width,
-                      footprint.center_x + half_width,
-                      t_enter,
-                      t_exit) &&
-         slab_overlap(start_z,
-                      delta_z,
-                      footprint.center_z - half_depth,
-                      footprint.center_z + half_depth,
-                      t_enter,
-                      t_exit);
+  return segment_box_span(start_x - footprint.center_x,
+                          start_z - footprint.center_z,
+                          delta_x,
+                          delta_z,
+                          footprint.width / 2.0F,
+                          footprint.depth / 2.0F)
+      .has_value();
 }
 
 } // namespace

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <utility>
 
 #include "../../map/scatter/world_prop_clearance_index.h"
@@ -31,6 +32,14 @@ constexpr float k_slot_settle_distance = 0.12F;
 constexpr float k_squared_distance_clear_margin = 1.001F;
 constexpr float k_obstacle_catch_up_ratio = 1.25F;
 constexpr float k_min_prop_clearance = 0.22F;
+constexpr float k_side_step_lookahead = 2.0F;
+static_assert(k_side_step_lookahead < k_soldier_prop_awareness);
+constexpr float k_side_step_min_speed = 0.15F;
+constexpr float k_side_step_full_speed = 0.6F;
+constexpr float k_building_standoff = 0.3F;
+constexpr float k_building_shy_share = 0.5F;
+constexpr float k_building_step_skin = 0.05F;
+constexpr float k_building_corner_margin = 0.12F;
 
 constexpr float k_mounted_turn_radius = 1.8F;
 constexpr float k_mounted_pivot_degrees = 130.0F;
@@ -75,6 +84,7 @@ struct SlotAim {
   float distance{0.0F};
   float slot_distance{0.0F};
   bool routed{false};
+  bool detoured{false};
 };
 
 struct CatchDirection {
@@ -97,6 +107,7 @@ struct StepPlan {
   float x{0.0F};
   float z{0.0F};
   float wanted{0.0F};
+  bool settled{false};
 };
 
 auto measure_timing(const SlotWalk& walk,
@@ -234,6 +245,146 @@ auto prop_clearance_of(const SlotWalk& walk) -> float {
   return std::max(walk.body_radius, k_min_prop_clearance);
 }
 
+struct Blockage {
+  const SolidBody* body{nullptr};
+  float fraction{1.0F};
+};
+
+auto first_blockage(const std::vector<SolidBody>& bodies,
+                    float from_x,
+                    float from_z,
+                    float to_x,
+                    float to_z) -> Blockage {
+  Blockage first;
+  float const low_x = std::min(from_x, to_x);
+  float const high_x = std::max(from_x, to_x);
+  float const low_z = std::min(from_z, to_z);
+  float const high_z = std::max(from_z, to_z);
+  for (const auto& body : bodies) {
+    if (high_x <= body.min_x || low_x >= body.max_x || high_z <= body.min_z ||
+        low_z >= body.max_z) {
+      continue;
+    }
+    if (from_x > body.min_x && from_x < body.max_x && from_z > body.min_z &&
+        from_z < body.max_z) {
+      continue;
+    }
+    float const center_x = (body.min_x + body.max_x) * 0.5F;
+    float const center_z = (body.min_z + body.max_z) * 0.5F;
+    auto const entry = segment_box_entry({from_x - center_x, from_z - center_z},
+                                         {to_x - center_x, to_z - center_z},
+                                         (body.max_x - body.min_x) * 0.5F,
+                                         (body.max_z - body.min_z) * 0.5F);
+    if (entry.has_value() && *entry < first.fraction) {
+      first = {&body, *entry};
+    }
+  }
+  return first;
+}
+
+auto clear_fraction(const std::vector<SolidBody>& bodies,
+                    float from_x,
+                    float from_z,
+                    float to_x,
+                    float to_z) -> float {
+  return first_blockage(bodies, from_x, from_z, to_x, to_z).fraction;
+}
+
+auto way_round_buildings(const SlotWalk& walk,
+                         const Soldier& soldier,
+                         const QVector3D& destination) -> std::optional<QVector3D> {
+  if (walk.solid_bodies == nullptr || walk.solid_bodies->empty()) {
+    return std::nullopt;
+  }
+  auto const& bodies = *walk.solid_bodies;
+  auto const blockage = first_blockage(
+      bodies, soldier.world_x, soldier.world_z, destination.x(), destination.z());
+  if (blockage.body == nullptr) {
+    return std::nullopt;
+  }
+  auto const& body = *blockage.body;
+  float const center_x = (body.min_x + body.max_x) * 0.5F;
+  float const center_z = (body.min_z + body.max_z) * 0.5F;
+  auto const usable = [&](PlanarPoint corner) {
+    float const x = center_x + corner.x;
+    float const z = center_z + corner.z;
+    for (const auto& other : bodies) {
+      if (x > other.min_x && x < other.max_x && z > other.min_z && z < other.max_z) {
+        return false;
+      }
+    }
+    return clear_fraction(bodies, soldier.world_x, soldier.world_z, x, z) >= 1.0F;
+  };
+  auto const corner =
+      box_detour_corner({soldier.world_x - center_x, soldier.world_z - center_z},
+                        {destination.x() - center_x, destination.z() - center_z},
+                        (body.max_x - body.min_x) * 0.5F,
+                        (body.max_z - body.min_z) * 0.5F,
+                        k_building_corner_margin,
+                        usable);
+  if (!corner.has_value()) {
+    return std::nullopt;
+  }
+  return QVector3D(center_x + corner->x, destination.y(), center_z + corner->z);
+}
+
+void keep_out_of_buildings(const SlotWalk& walk, QVector3D& destination) {
+  if (walk.engaged || walk.solid_bodies == nullptr || walk.solid_bodies->empty()) {
+    return;
+  }
+  float const from_x = walk.actor.position.x;
+  float const from_z = walk.actor.position.z;
+  float const dx = destination.x() - from_x;
+  float const dz = destination.z() - from_z;
+  float const distance = std::hypot(dx, dz);
+  if (distance < 1.0e-3F) {
+    return;
+  }
+  float const probe = distance / k_building_shy_share + k_building_standoff;
+  float const fraction = clear_fraction(*walk.solid_bodies,
+                                        from_x,
+                                        from_z,
+                                        from_x + dx / distance * probe,
+                                        from_z + dz / distance * probe);
+  if (fraction >= 1.0F) {
+    return;
+  }
+  float const room = std::max(0.0F, fraction * probe - k_building_standoff);
+  float const open = room * k_building_shy_share;
+  if (distance <= open) {
+    return;
+  }
+  float const band = room - open;
+  float const squeezed =
+      band > 1.0e-3F ? open + band * (1.0F - std::exp(-(distance - open) / band))
+                     : room;
+  destination.setX(from_x + dx / distance * squeezed);
+  destination.setZ(from_z + dz / distance * squeezed);
+}
+
+auto stop_step_at_buildings(const SlotWalk& walk,
+                            const Soldier& soldier,
+                            float& step_x,
+                            float& step_z) -> bool {
+  float const step = std::hypot(step_x, step_z);
+  if (walk.solid_bodies == nullptr || walk.solid_bodies->empty() || step < 1.0e-5F) {
+    return false;
+  }
+  float const reach = step + k_building_step_skin;
+  float const fraction = clear_fraction(*walk.solid_bodies,
+                                        soldier.world_x,
+                                        soldier.world_z,
+                                        soldier.world_x + step_x / step * reach,
+                                        soldier.world_z + step_z / step * reach);
+  if (fraction >= 1.0F) {
+    return false;
+  }
+  float const allowed = std::max(0.0F, fraction * reach - k_building_step_skin);
+  step_x *= allowed / step;
+  step_z *= allowed / step;
+  return true;
+}
+
 auto worker_waypoint(const SlotWalk& walk,
                      const Soldier& soldier,
                      QVector3D destination,
@@ -281,6 +432,29 @@ auto aim_at_slot(const SlotWalk& walk,
   destination.setX(destination.x() + soldier.crowd_offset_x);
   destination.setZ(destination.z() + soldier.crowd_offset_z);
   QVector3D const slot_destination = destination;
+  if (!walk.worker && timing.dt > 0.0F) {
+    float const turn_rate =
+        signed_yaw_delta(walk.formation.motion_root_yaw, walk.actor.rotation.y) *
+        std::numbers::pi_v<float> / 180.0F / timing.dt;
+    float const march_x =
+        (walk.actor.position.x - walk.formation.motion_root_x) / timing.dt +
+        turn_rate * (destination.z() - walk.actor.position.z);
+    float const march_z =
+        (walk.actor.position.z - walk.formation.motion_root_z) / timing.dt -
+        turn_rate * (destination.x() - walk.actor.position.x);
+    float const march = std::hypot(march_x, march_z);
+    if (march > k_side_step_min_speed) {
+      auto const shift = props.side_step(destination.x(),
+                                         destination.z(),
+                                         march_x,
+                                         march_z,
+                                         prop_clearance_of(walk),
+                                         k_side_step_lookahead);
+      float const commit = std::min(1.0F, march / k_side_step_full_speed);
+      destination.setX(destination.x() + shift.x * commit);
+      destination.setZ(destination.z() + shift.z * commit);
+    }
+  }
   {
     float x = destination.x();
     float z = destination.z();
@@ -293,13 +467,21 @@ auto aim_at_slot(const SlotWalk& walk,
     pull_onto_terrain(
         *pathfinder, walk.actor.position.x, walk.actor.position.z, destination);
   }
+  keep_out_of_buildings(walk, destination);
 
   SlotAim aim;
   aim.obstructed = destination != slot_destination || previous.relocation_blocked;
   aim.slot_distance =
       std::hypot(destination.x() - soldier.world_x, destination.z() - soldier.world_z);
+  bool const walled_off =
+      walk.solid_bodies != nullptr && clear_fraction(*walk.solid_bodies,
+                                                     soldier.world_x,
+                                                     soldier.world_z,
+                                                     destination.x(),
+                                                     destination.z()) < 1.0F;
   bool const route_around =
-      !walk.worker && previous.stranded_seconds >= k_route_around_after_seconds;
+      !walk.worker &&
+      (walled_off || previous.stranded_seconds >= k_route_around_after_seconds);
   if ((walk.worker || route_around) && pathfinder != nullptr) {
     bool held_short = false;
     auto const waypoint =
@@ -309,6 +491,26 @@ auto aim_at_slot(const SlotWalk& walk,
     aim.obstructed = aim.obstructed || waypoint != destination;
     destination = waypoint;
   }
+  if (!walk.worker && !aim.routed) {
+    if (auto const corner = way_round_buildings(walk, soldier, destination)) {
+      destination = *corner;
+      aim.obstructed = true;
+      aim.detoured = true;
+    }
+  }
+  if (!walk.worker && !aim.routed) {
+    if (auto const corner = props.way_round(soldier.world_x,
+                                            soldier.world_z,
+                                            destination.x(),
+                                            destination.z(),
+                                            prop_clearance_of(walk))) {
+      destination.setX(corner->x);
+      destination.setZ(corner->z);
+      aim.obstructed = true;
+      aim.detoured = true;
+    }
+  }
+  aim.detoured = aim.detoured || aim.routed;
   aim.heading_change =
       signed_yaw_delta(walk.formation.motion_root_yaw, walk.actor.rotation.y);
   float const dt = timing.dt;
@@ -563,7 +765,7 @@ auto plan_step(const SlotWalk& walk,
       plan.x *= catch_up_limit / aim.distance;
       plan.z *= catch_up_limit / aim.distance;
     }
-  } else if (walk.foreign_neighbors.empty() &&
+  } else if (!aim.detoured && walk.foreign_neighbors.empty() &&
              std::hypot(soldier.crowd_offset_x, soldier.crowd_offset_z) <
                  k_crowd_offset_settled &&
              aim.distance > 0.0001F && aim.distance < k_slot_settle_distance &&
@@ -571,6 +773,15 @@ auto plan_step(const SlotWalk& walk,
                                    k_mounted_settle_slot_speed)) {
     plan.x = aim.dx;
     plan.z = aim.dz;
+    float const settle_limit = (std::hypot(aim.slot_velocity_x, aim.slot_velocity_z) +
+                                timing.max_speed * k_obstacle_catch_up_ratio) *
+                               timing.dt;
+    if (aim.distance > settle_limit) {
+      plan.x *= settle_limit / aim.distance;
+      plan.z *= settle_limit / aim.distance;
+    } else {
+      plan.settled = true;
+    }
   }
   plan.wanted = std::hypot(plan.x, plan.z);
   return plan;
@@ -705,11 +916,14 @@ void land_step(const SlotWalk& walk,
       plan.z *= budget / step;
     }
   }
+  if (stop_step_at_buildings(walk, soldier, plan.x, plan.z)) {
+    soldier.relocation_blocked = true;
+  }
   soldier.world_x += plan.x;
   soldier.world_z += plan.z;
   if (dt > 0.0F) {
-    soldier.world_velocity_x = plan.x / dt;
-    soldier.world_velocity_z = plan.z / dt;
+    soldier.world_velocity_x = plan.settled ? aim.slot_velocity_x : plan.x / dt;
+    soldier.world_velocity_z = plan.settled ? aim.slot_velocity_z : plan.z / dt;
     if (walk.position_is_authored) {
       float const blend = std::min(1.0F, dt / k_authored_velocity_smoothing_seconds);
       soldier.world_velocity_x =
@@ -775,6 +989,7 @@ void walk_formation_slot(const SlotWalk& walk,
     pull_onto_terrain(
         *pathfinder, walk.actor.position.x, walk.actor.position.z, destination);
   }
+  keep_out_of_buildings(walk, destination);
   WalkTiming const timing = measure_timing(walk, previous, soldier);
   if (timing.reset || (walk.external_reform && !walk.worker)) {
     snap_to_slot(walk, previous, soldier, destination, timing);
@@ -785,9 +1000,10 @@ void walk_formation_slot(const SlotWalk& walk,
   float const personal_space = personal_space_of(walk.spacing);
   relax_crowd_offset(walk, *previous, soldier, personal_space, timing.dt);
 
-  auto const props = Game::Map::shared_world_prop_clearance_index();
+  static const Game::Map::WorldPropClearanceIndex k_open_ground;
+  auto const& props = walk.props != nullptr ? *walk.props : k_open_ground;
   SlotAim const aim =
-      aim_at_slot(walk, *previous, soldier, destination, timing, pathfinder, *props);
+      aim_at_slot(walk, *previous, soldier, destination, timing, pathfinder, props);
   soldier.relocation_blocked = soldier.relocation_blocked || aim.held_short;
   begin_turn_response(walk, soldier, aim, timing);
 
@@ -800,8 +1016,8 @@ void walk_formation_slot(const SlotWalk& walk,
   }
 
   StepPlan plan = plan_step(walk, soldier, aim, timing);
-  constrain_step(walk, soldier, plan, pathfinder, *props, timing);
-  land_step(walk, *previous, soldier, plan, aim, pathfinder, *props, timing);
+  constrain_step(walk, soldier, plan, pathfinder, props, timing);
+  land_step(walk, *previous, soldier, plan, aim, pathfinder, props, timing);
   write_local_frame(walk, *previous, soldier);
   update_reforming_flags(soldier, aim, plan, timing);
   settle_soldier_gait(previous, soldier, timing.dt, timing.run_speed);

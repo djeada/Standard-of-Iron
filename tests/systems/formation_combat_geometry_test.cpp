@@ -1582,6 +1582,7 @@ TEST_F(FormationCombatGeometry,
                                                 .squad_speed = 1.5F,
                                                 .march_speed = 1.5F,
                                                 .spacing = 0.6F,
+                                                .props = props.get(),
                                                 .delta_time = 1.0F / 60.0F},
                                                &previous,
                                                next);
@@ -1596,6 +1597,173 @@ TEST_F(FormationCombatGeometry,
   Game::Systems::NavGrid::initialize(k_map, k_map);
   EXPECT_LT(worst_step, 0.1F) << "the soldier must walk, not appear in his slot";
   EXPECT_LT(worst_depth, 0.05F) << "and he never sinks into the boulder";
+  EXPECT_LT(std::hypot(previous.world_x - root.position.x,
+                       previous.world_z - root.position.z),
+            0.05F)
+      << "and he finds his way round it to his slot";
+  EXPECT_LT(std::hypot(previous.world_velocity_x, previous.world_velocity_z), 0.05F)
+      << "where he comes to rest";
+}
+
+TEST_F(FormationCombatGeometry, AMarchingSoldierWalksRoundABoulderInHisFile) {
+  Game::Map::MapDefinition map;
+  map.grid.width = k_map;
+  map.grid.height = k_map;
+  map.grid.tile_size = 1.0F;
+  map.biome.procedural_boulders_enabled = false;
+  map.biome.procedural_iron_ore_enabled = false;
+  map.biome.procedural_trees_enabled = false;
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map);
+  Game::Map::WorldProp boulder;
+  boulder.type = Game::Map::WorldProp::Type::Boulder;
+  boulder.scale = 1.6F;
+  ASSERT_NE(terrain.add_world_prop_at_world(boulder, 0.0F, 0.0F), 0U);
+  Game::Systems::NavGrid::initialize(k_map, k_map);
+  Game::Systems::NavGrid::get_pathfinder()->update_navigation_grid();
+  auto const props = Game::Map::shared_world_prop_clearance_index();
+
+  constexpr float k_dt = 1.0F / 30.0F;
+  constexpr float k_speed = 1.5F;
+  for (float const file_x : {0.0F, 0.05F, -0.3F, 0.6F}) {
+    Engine::Core::TransformComponent root;
+    root.position = {0.0F, 0.0F, -6.0F};
+    Engine::Core::FormationPresentationComponent formation;
+    formation.motion_root_valid = true;
+    formation.motion_root_x = root.position.x;
+    formation.motion_root_z = root.position.z;
+    Engine::Core::FormationSoldierPresentation previous;
+    previous.alive = true;
+    previous.world_motion_valid = true;
+    previous.world_x = file_x;
+    previous.world_z = root.position.z;
+    std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+    float worst_step = 0.0F;
+    float worst_depth = 0.0F;
+    float worst_lag = 0.0F;
+    for (int tick = 0; tick < 360; ++tick) {
+      formation.motion_root_x = root.position.x;
+      formation.motion_root_z = root.position.z;
+      root.position.z += k_speed * k_dt;
+      std::vector<Engine::Core::FormationSoldierPresentation> neighbors{previous};
+      auto next = previous;
+      next.relocation_blocked = false;
+      next.local_x = file_x;
+      next.local_z = 0.0F;
+      Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                  .formation = formation,
+                                                  .neighbors = neighbors,
+                                                  .foreign_neighbors = foreign,
+                                                  .squad_speed = k_speed,
+                                                  .march_speed = k_speed,
+                                                  .spacing = 0.6F,
+                                                  .position_is_authored = true,
+                                                  .props = props.get(),
+                                                  .delta_time = k_dt},
+                                                 &previous,
+                                                 next);
+      worst_step = std::max(
+          worst_step,
+          std::hypot(next.world_x - previous.world_x, next.world_z - previous.world_z));
+      worst_depth =
+          std::max(worst_depth, props->overlap_depth(next.world_x, next.world_z, 0.2F));
+      float const lag =
+          std::hypot(next.world_x - file_x, next.world_z - root.position.z);
+      worst_lag = std::max(worst_lag, lag);
+      previous = next;
+    }
+    float const final_lag =
+        std::hypot(previous.world_x - file_x, previous.world_z - root.position.z);
+    EXPECT_LT(worst_step, 0.2F) << "file " << file_x << ": he walks, never jumps";
+    EXPECT_LT(worst_depth, 0.05F) << "file " << file_x << ": he stays out of the rock";
+    EXPECT_LT(worst_lag, 2.0F) << "file " << file_x << ": he keeps up round the rock";
+    EXPECT_LT(final_lag, 0.1F) << "file " << file_x << ": and is back in his slot";
+  }
+  terrain.clear();
+  Game::Systems::NavGrid::initialize(k_map, k_map);
+}
+
+TEST_F(FormationCombatGeometry, SoldiersBesideABuildingNeverStandInsideOrBeyondIt) {
+  std::vector<Game::Systems::Combat::SolidBody> const wall{
+      {.min_x = 1.0F, .max_x = 3.0F, .min_z = -20.0F, .max_z = 20.0F}};
+  constexpr float k_dt = 1.0F / 30.0F;
+  constexpr float k_speed = 1.5F;
+  std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+  for (bool const authored : {true, false}) {
+    Engine::Core::TransformComponent root;
+    root.position = {0.0F, 0.0F, -6.0F};
+    Engine::Core::FormationPresentationComponent formation;
+    formation.motion_root_valid = true;
+    std::vector<Engine::Core::FormationSoldierPresentation> soldiers;
+    for (int file = -3; file <= 3; ++file) {
+      Engine::Core::FormationSoldierPresentation soldier;
+      soldier.alive = true;
+      soldier.world_motion_valid = true;
+      soldier.slot_index = static_cast<std::uint16_t>(file + 3);
+      soldier.local_x = static_cast<float>(file) * 0.6F;
+      soldier.world_x = std::min(soldier.local_x, 0.5F);
+      soldier.world_z = root.position.z;
+      soldiers.push_back(soldier);
+    }
+    float deepest = -100.0F;
+    float worst_step = 0.0F;
+    for (int tick = 0; tick < 240; ++tick) {
+      formation.motion_root_x = root.position.x;
+      formation.motion_root_z = root.position.z;
+      root.position.z += k_speed * k_dt;
+      auto const before = soldiers;
+      for (std::size_t i = 0; i < soldiers.size(); ++i) {
+        auto next = before[i];
+        next.relocation_blocked = false;
+        next.local_x = (static_cast<float>(i) - 3.0F) * 0.6F;
+        next.local_z = 0.0F;
+        Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                    .formation = formation,
+                                                    .neighbors = before,
+                                                    .foreign_neighbors = foreign,
+                                                    .squad_speed = k_speed,
+                                                    .march_speed = k_speed,
+                                                    .spacing = 0.6F,
+                                                    .position_is_authored = authored,
+                                                    .solid_bodies = &wall,
+                                                    .delta_time = k_dt},
+                                                   &before[i],
+                                                   next);
+        deepest = std::max(deepest, next.world_x - 1.0F);
+        worst_step = std::max(worst_step,
+                              std::hypot(next.world_x - before[i].world_x,
+                                         next.world_z - before[i].world_z));
+        soldiers[i] = next;
+      }
+    }
+    EXPECT_LT(deepest, -0.2F) << "authored " << authored
+                              << ": every man keeps clear of the wall face";
+    EXPECT_LT(worst_step, 0.2F) << "authored " << authored;
+    for (std::size_t i = 1; i < soldiers.size(); ++i) {
+      EXPECT_GT(soldiers[i].world_x, soldiers[i - 1].world_x - 0.01F)
+          << "authored " << authored << ": files keep their order";
+    }
+    EXPECT_NEAR(soldiers.front().world_x, -1.8F, 0.05F)
+        << "authored " << authored << ": the open flank is untouched";
+  }
+
+  Engine::Core::TransformComponent root;
+  Engine::Core::FormationPresentationComponent formation;
+  Engine::Core::FormationSoldierPresentation fresh;
+  fresh.alive = true;
+  fresh.local_x = 1.8F;
+  std::vector<Engine::Core::FormationSoldierPresentation> none;
+  Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                              .formation = formation,
+                                              .neighbors = none,
+                                              .foreign_neighbors = foreign,
+                                              .spacing = 0.6F,
+                                              .solid_bodies = &wall,
+                                              .delta_time = k_dt},
+                                             nullptr,
+                                             fresh);
+  EXPECT_LT(fresh.world_x, 0.8F)
+      << "a man who appears beside a wall appears outside it";
 }
 
 TEST_F(FormationCombatGeometry, RepairAndDismantlePostsSurroundTheTargetBuilding) {

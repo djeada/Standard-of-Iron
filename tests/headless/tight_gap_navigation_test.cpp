@@ -18,6 +18,7 @@
 #include "game/core/world.h"
 #include "game/formation/traversal_layout_policy.h"
 #include "game/map/map_definition.h"
+#include "game/map/scatter/world_prop_clearance_index.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
@@ -814,6 +815,7 @@ TEST_F(FormationMovementRegressionTest,
   auto const original_scale = transform->scale;
   CommandService::move_unit(m_session->world(), id, world_of(38, 24));
   bool compressed = false;
+  constexpr float k_wall_reach = 10.5F;
   double const step = m_session->clock().tick_seconds();
   for (double elapsed = 0.0; elapsed < 20.0; elapsed += step) {
     run_for(step);
@@ -831,8 +833,20 @@ TEST_F(FormationMovementRegressionTest,
     for (auto const& soldier : presentation->soldiers) {
       auto const* slot = state->slot_for(soldier.slot_index);
       ASSERT_NE(slot, nullptr);
-      EXPECT_NEAR(soldier.local_x, slot->current_local_x, 1e-5F);
-      EXPECT_NEAR(soldier.local_z, slot->current_local_z, 1e-5F);
+      if (std::abs(position_of(id).x() - world_of(24, 24).x()) > k_wall_reach) {
+        EXPECT_NEAR(soldier.local_x, slot->current_local_x, 1e-5F);
+        EXPECT_NEAR(soldier.local_z, slot->current_local_z, 1e-5F);
+      } else {
+
+        EXPECT_LE(std::hypot(soldier.local_x, soldier.local_z),
+                  std::hypot(slot->current_local_x, slot->current_local_z) + 0.5F);
+        if (soldier.world_motion_valid) {
+          auto const cell =
+              pathfinder().world_to_grid(soldier.world_x, soldier.world_z);
+          EXPECT_FALSE(cell.x == 24 && cell.y != 24)
+              << "a soldier stands inside the wall at z " << soldier.world_z;
+        }
+      }
       EXPECT_EQ(soldier.row, slot->row);
       EXPECT_EQ(soldier.col, slot->col);
     }
@@ -851,6 +865,124 @@ TEST_F(FormationMovementRegressionTest,
       entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   EXPECT_FLOAT_EQ(state->lateral_scale, 1.0F);
   EXPECT_FALSE(state->active);
+}
+
+TEST_F(FormationMovementRegressionTest,
+       ATroopMarchingAlongAWallKeepsEveryManOnItsOwnSide) {
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  constexpr int k_wall_z = 26;
+  for (int grid_x = 4; grid_x <= 44; ++grid_x) {
+    block_cell(grid_x, k_wall_z);
+  }
+  refresh_grid();
+  float const wall_face = world_of(0, k_wall_z).z() - 0.5F;
+  auto const id = spawn(Game::Units::SpawnType::Spearman, world_of(10, 24), 90.0F);
+  auto* entity = m_session->world().get_entity(id);
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*entity);
+  ASSERT_GT(Game::Systems::FormationCombat::formation_lateral_half_extent(layout),
+            wall_face - world_of(10, 24).z())
+      << "the formation is too narrow to reach the wall; the test proves nothing";
+  CommandService::move_unit(m_session->world(), id, world_of(38, 24));
+  float nearest = -100.0F;
+  float longest_step = 0.0F;
+  std::vector<QVector3D> last;
+  double const step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const* presentation =
+        entity->get_component<Engine::Core::FormationPresentationComponent>();
+    ASSERT_NE(presentation, nullptr);
+    std::vector<QVector3D> now;
+    for (auto const& soldier : presentation->soldiers) {
+      if (!soldier.alive || !soldier.world_motion_valid) {
+        continue;
+      }
+      nearest = std::max(nearest, soldier.world_z - wall_face);
+      now.emplace_back(soldier.world_x, 0.0F, soldier.world_z);
+    }
+    if (now.size() == last.size()) {
+      for (std::size_t index = 0; index < now.size(); ++index) {
+        longest_step = std::max(longest_step, (now[index] - last[index]).length());
+      }
+    }
+    last = std::move(now);
+  }
+  EXPECT_GT(position_of(id).x(), world_of(36, 24).x()) << "the troop never arrived";
+  EXPECT_LT(nearest, -0.15F) << "a soldier stood " << nearest
+                             << " m past the wall face";
+  EXPECT_LT(longest_step, 0.25F) << "a soldier jumped instead of walking";
+}
+
+TEST_F(FormationMovementRegressionTest, ATroopMarchingPastABoulderFlowsRoundIt) {
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  Game::Map::WorldProp boulder;
+  boulder.type = Game::Map::WorldProp::Type::Boulder;
+  boulder.scale = 1.2F;
+  auto const rock = world_of(24, 26);
+  ASSERT_NE(m_session->terrain().add_world_prop_at_world(boulder, rock.x(), rock.z()),
+            0U);
+  refresh_grid();
+  auto const props = Game::Map::shared_world_prop_clearance_index();
+  ASSERT_TRUE(props->overlaps(rock.x(), rock.z(), 0.1F));
+
+  auto const id = spawn(Game::Units::SpawnType::Spearman, world_of(10, 24), 90.0F);
+  auto* entity = m_session->world().get_entity(id);
+  CommandService::move_unit(m_session->world(), id, world_of(38, 24));
+  float deepest = 0.0F;
+  float furthest_astray = 0.0F;
+  float longest_step = 0.0F;
+  bool crossed = false;
+  std::vector<QVector3D> last;
+  double const step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const* presentation =
+        entity->get_component<Engine::Core::FormationPresentationComponent>();
+    auto const* state =
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+    ASSERT_NE(presentation, nullptr);
+    ASSERT_NE(state, nullptr);
+    std::vector<QVector3D> now;
+    for (auto const& soldier : presentation->soldiers) {
+      if (!soldier.alive || !soldier.world_motion_valid) {
+        continue;
+      }
+      auto const* slot = state->slot_for(soldier.slot_index);
+      ASSERT_NE(slot, nullptr);
+      deepest = std::max(deepest,
+                         props->overlap_depth(soldier.world_x, soldier.world_z, 0.2F));
+      furthest_astray = std::max(furthest_astray,
+                                 std::hypot(soldier.local_x - slot->current_local_x,
+                                            soldier.local_z - slot->current_local_z));
+      crossed = crossed || std::hypot(soldier.world_x - rock.x(),
+                                      soldier.world_z - rock.z()) < 2.0F;
+      now.emplace_back(soldier.world_x, 0.0F, soldier.world_z);
+    }
+    if (now.size() == last.size()) {
+      for (std::size_t index = 0; index < now.size(); ++index) {
+        longest_step = std::max(longest_step, (now[index] - last[index]).length());
+      }
+    }
+    last = std::move(now);
+  }
+  EXPECT_GT(position_of(id).x(), world_of(36, 24).x()) << "the troop never arrived";
+  EXPECT_TRUE(crossed) << "no file passed the boulder; the test proves nothing";
+  EXPECT_LT(deepest, 0.05F) << "a soldier walked into the boulder";
+  EXPECT_LT(furthest_astray, 2.0F) << "a soldier fell behind at the boulder";
+  EXPECT_LT(longest_step, 0.25F) << "a soldier jumped instead of walking";
+  m_session->world().update(0.0F);
+  auto const* state =
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  auto const* presentation =
+      entity->get_component<Engine::Core::FormationPresentationComponent>();
+  for (auto const& soldier : presentation->soldiers) {
+    auto const* slot = state->slot_for(soldier.slot_index);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_NEAR(soldier.local_x, slot->current_local_x, 0.05F);
+    EXPECT_NEAR(soldier.local_z, slot->current_local_z, 0.05F);
+  }
 }
 
 TEST_F(FormationMovementRegressionTest,

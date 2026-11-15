@@ -260,6 +260,25 @@ public:
     }
   }
 
+  template <typename Fn>
+  void for_each_solid_body_near(float x, float z, float reach, Fn&& fn) const {
+    for_each_blocker_near(x, z, reach, [&fn](const BuildingFootprint& footprint) {
+      if (!footprint.blocks_navigation) {
+        return;
+      }
+      if (footprint.wall_gate) {
+        for (GateTowerBody const& tower : gate_tower_bodies(footprint)) {
+          fn(tower.center_x, tower.center_z, tower.half_x, tower.half_z);
+        }
+        return;
+      }
+      fn(footprint.body_center_x,
+         footprint.body_center_z,
+         footprint.body_width * 0.5F,
+         footprint.body_depth * 0.5F);
+    });
+  }
+
   [[nodiscard]] auto is_point_in_building(
       float x, float z, Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
 

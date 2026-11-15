@@ -12,6 +12,7 @@
 #include "../formation_combat_geometry.h"
 #include "../navigation/pathfinding.h"
 #include "formation_foreign_grid.h"
+#include "formation_soldier_walk.h"
 #include "formation_structure_facade.h"
 #include "formation_surround.h"
 
@@ -78,6 +79,8 @@ struct EntityFrame {
   float squad_speed{0.0F};
   Pathfinding::Passability passability{Pathfinding::Passability::Light};
   bool mounted{false};
+  const std::vector<SolidBody>* solid_bodies{nullptr};
+  const Game::Map::WorldPropClearanceIndex* props{nullptr};
   float frame_sign{1.0F};
   float delta_time{0.0F};
   const std::vector<SurroundSpot>* surround{nullptr};

@@ -5,35 +5,10 @@
 #include <limits>
 #include <utility>
 
+#include "../util/planar_math.h"
 #include "building_collision_registry.h"
 
 namespace Game::Systems {
-
-namespace {
-
-auto slab_intersection(float start,
-                       float delta,
-                       float min_bound,
-                       float max_bound,
-                       float& t_enter,
-                       float& t_exit) -> bool {
-  constexpr float k_epsilon = 0.00001F;
-  if (std::abs(delta) <= k_epsilon) {
-    return start >= min_bound && start <= max_bound;
-  }
-
-  const float inv_delta = 1.0F / delta;
-  float t0 = (min_bound - start) * inv_delta;
-  float t1 = (max_bound - start) * inv_delta;
-  if (t0 > t1) {
-    std::swap(t0, t1);
-  }
-  t_enter = std::max(t_enter, t0);
-  t_exit = std::min(t_exit, t1);
-  return t_enter <= t_exit;
-}
-
-} // namespace
 
 auto first_building_intersection_fraction(const BuildingCollisionRegistry& registry,
                                           const QVector3D& start,
@@ -47,27 +22,13 @@ auto first_building_intersection_fraction(const BuildingCollisionRegistry& regis
       continue;
     }
 
-    float t_enter = 0.0F;
-    float t_exit = 1.0F;
-    const float half_width = building.width * 0.5F;
-    const float half_depth = building.depth * 0.5F;
-    if (!slab_intersection(start.x(),
-                           delta.x(),
-                           building.center_x - half_width,
-                           building.center_x + half_width,
-                           t_enter,
-                           t_exit) ||
-        !slab_intersection(start.z(),
-                           delta.z(),
-                           building.center_z - half_depth,
-                           building.center_z + half_depth,
-                           t_enter,
-                           t_exit)) {
-      continue;
-    }
-
-    if (t_enter >= 0.0F && t_enter <= 1.0F) {
-      best_fraction = std::min(best_fraction, t_enter);
+    if (auto const span = segment_box_span(start.x() - building.center_x,
+                                           start.z() - building.center_z,
+                                           delta.x(),
+                                           delta.z(),
+                                           building.width * 0.5F,
+                                           building.depth * 0.5F)) {
+      best_fraction = std::min(best_fraction, span->enter);
     }
   }
   return best_fraction;
@@ -104,25 +65,13 @@ auto first_building_body_intersection_fraction(
       return 0.0F;
     }
 
-    float t_enter = 0.0F;
-    float t_exit = 1.0F;
-    if (!slab_intersection(start.x(),
-                           delta.x(),
-                           building.body_center_x - half_width,
-                           building.body_center_x + half_width,
-                           t_enter,
-                           t_exit) ||
-        !slab_intersection(start.z(),
-                           delta.z(),
-                           building.body_center_z - half_depth,
-                           building.body_center_z + half_depth,
-                           t_enter,
-                           t_exit)) {
-      continue;
-    }
-
-    if (t_enter >= 0.0F && t_enter <= 1.0F) {
-      best_fraction = std::min(best_fraction, t_enter);
+    if (auto const span = segment_box_span(start.x() - building.body_center_x,
+                                           start.z() - building.body_center_z,
+                                           delta.x(),
+                                           delta.z(),
+                                           half_width,
+                                           half_depth)) {
+      best_fraction = std::min(best_fraction, span->enter);
     }
   }
   return best_fraction;
