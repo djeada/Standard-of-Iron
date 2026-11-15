@@ -256,7 +256,15 @@ auto first_blockage(const std::vector<SolidBody>& bodies,
                     float to_x,
                     float to_z) -> Blockage {
   Blockage first;
+  float const low_x = std::min(from_x, to_x);
+  float const high_x = std::max(from_x, to_x);
+  float const low_z = std::min(from_z, to_z);
+  float const high_z = std::max(from_z, to_z);
   for (const auto& body : bodies) {
+    if (high_x <= body.min_x || low_x >= body.max_x || high_z <= body.min_z ||
+        low_z >= body.max_z) {
+      continue;
+    }
     if (from_x > body.min_x && from_x < body.max_x && from_z > body.min_z &&
         from_z < body.max_z) {
       continue;

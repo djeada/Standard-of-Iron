@@ -108,6 +108,44 @@ auto soldier_reach(const EntityFrame& frame) -> float {
   return std::sqrt(reach_sq);
 }
 
+void join_touching_bodies(std::vector<SolidBody>& bodies) {
+  constexpr float k_touching = 1.0e-3F;
+  auto const same = [](float a, float b) {
+    return std::abs(a - b) <= k_touching;
+  };
+  auto const join_runs =
+      [&](auto lane_low, auto lane_high, auto run_low, auto run_high) {
+        std::sort(
+            bodies.begin(), bodies.end(), [&](const SolidBody& a, const SolidBody& b) {
+              if (!same(a.*lane_low, b.*lane_low)) {
+                return a.*lane_low < b.*lane_low;
+              }
+              if (!same(a.*lane_high, b.*lane_high)) {
+                return a.*lane_high < b.*lane_high;
+              }
+              return a.*run_low < b.*run_low;
+            });
+        std::size_t kept = 0;
+        for (std::size_t index = 1; index < bodies.size(); ++index) {
+          SolidBody& run = bodies[kept];
+          SolidBody const& next = bodies[index];
+          if (same(run.*lane_low, next.*lane_low) &&
+              same(run.*lane_high, next.*lane_high) &&
+              next.*run_low <= run.*run_high + k_touching) {
+            run.*run_high = std::max(run.*run_high, next.*run_high);
+          } else {
+            bodies[++kept] = next;
+          }
+        }
+        bodies.resize(kept + 1U);
+      };
+  if (bodies.size() < 2U) {
+    return;
+  }
+  join_runs(&SolidBody::min_z, &SolidBody::max_z, &SolidBody::min_x, &SolidBody::max_x);
+  join_runs(&SolidBody::min_x, &SolidBody::max_x, &SolidBody::min_z, &SolidBody::max_z);
+}
+
 auto buildings_around(const EntityFrame& frame,
                       float reach) -> const std::vector<SolidBody>* {
   if (frame.wall_walker != nullptr || frame.structure.attacks_structure ||
@@ -126,6 +164,7 @@ auto buildings_around(const EntityFrame& frame,
                           center_z - half_z,
                           center_z + half_z});
       });
+  join_touching_bodies(bodies);
   return bodies.empty() ? nullptr : &bodies;
 }
 
