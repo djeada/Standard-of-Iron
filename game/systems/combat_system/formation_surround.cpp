@@ -156,10 +156,12 @@ void plan_surround(const SurroundInputs& in, std::vector<SurroundSpot>& spots) {
                              in.sector.center)});
   }
 
-  float const spacing_step =
-      std::max(layout.spacing * k_shoulder_spacing, layout.body_radius * 2.1F);
-  float const ring_gap =
-      std::max(layout.spacing * k_ring_gap_spacing, layout.body_radius * 2.0F);
+  float const spacing_step = std::max({layout.spacing * k_shoulder_spacing,
+                                       layout.body_radius * 2.1F,
+                                       in.least_shoulder_room});
+  float const ring_gap = std::max({layout.spacing * k_ring_gap_spacing,
+                                   layout.body_radius * 2.0F,
+                                   in.least_ring_gap});
   std::stable_sort(ranked.begin(), ranked.end(), [&](auto const& a, auto const& b) {
     float const row_a = std::round(a.forward / std::max(0.05F, layout.spacing * 0.5F));
     float const row_b = std::round(b.forward / std::max(0.05F, layout.spacing * 0.5F));

@@ -127,6 +127,10 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Degrees added to the scenario's camera yaw for batch capture."),
       QStringLiteral("degrees"),
       QStringLiteral("0"));
+  QCommandLineOption const scenario_follow_option(
+      QStringList{QStringLiteral("scenario-follow")},
+      QStringLiteral("Scenario group the batch capture camera keeps centred."),
+      QStringLiteral("group"));
   QCommandLineOption const promo_distance_option(
       QStringList{QStringLiteral("promo-distance")},
       QStringLiteral("Camera distance multiplier for campaign promo capture."),
@@ -313,6 +317,7 @@ auto main(int argc, char** argv) -> int {
                      scenario_distance_option,
                      scenario_tilt_option,
                      scenario_yaw_option,
+                     scenario_follow_option,
                      promo_distance_option,
                      promo_tilt_option,
                      fog_of_war_option,
@@ -519,6 +524,7 @@ auto main(int argc, char** argv) -> int {
   }
   window.viewport()->set_scenario_yaw_offset(
       parser.value(scenario_yaw_option).toFloat());
+  window.viewport()->set_scenario_follow_group(parser.value(scenario_follow_option));
   window.viewport()->set_prewarm_unit_templates(parser.isSet(prewarm_option));
   window.viewport()->set_force_animation_diagnostics(
       parser.isSet(animation_diagnostics_option));

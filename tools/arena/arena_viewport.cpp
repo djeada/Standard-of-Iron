@@ -300,6 +300,18 @@ void ArenaViewport::paintGL() {
                            m_capture_orbit_view.yaw + m_capture_orbit_yaw);
   }
 
+  if (m_capture_orbit_ready && !m_scenario_follow_group.isEmpty()) {
+    if (auto const followed = scenario_group_center(m_scenario_follow_group)) {
+      constexpr float k_follow_seconds = 0.6F;
+      float const ease = 1.0F - std::exp(-std::max(0.0F, real_dt) / k_follow_seconds);
+      m_capture_orbit_center += (*followed - m_capture_orbit_center) * ease;
+      m_camera->set_rts_view(m_capture_orbit_center,
+                             m_capture_orbit_view.distance,
+                             m_capture_orbit_view.angle,
+                             m_capture_orbit_view.yaw + m_capture_orbit_yaw);
+    }
+  }
+
   if (m_frame_hook && sampled_frame) {
     m_frame_hook(scenario_elapsed_seconds());
   }

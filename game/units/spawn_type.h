@@ -577,6 +577,10 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   return type == SpawnType::Elephant;
 }
 
+[[nodiscard]] inline auto rides_its_nose(SpawnType type) noexcept -> bool {
+  return is_cavalry(type);
+}
+
 [[nodiscard]] inline auto min_turn_radius(SpawnType type) noexcept -> float {
   return type == SpawnType::Elephant ? 2.6F : 0.0F;
 }

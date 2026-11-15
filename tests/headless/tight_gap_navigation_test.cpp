@@ -4,11 +4,13 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <gtest/gtest.h>
 #include <ios>
 #include <limits>
 #include <memory>
 #include <numbers>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -35,6 +37,7 @@
 #include "game/systems/runtime_system_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
+#include "game/util/planar_math.h"
 
 namespace {
 
@@ -983,6 +986,170 @@ TEST_F(FormationMovementRegressionTest, ATroopMarchingPastABoulderFlowsRoundIt) 
     EXPECT_NEAR(soldier.local_x, slot->current_local_x, 0.05F);
     EXPECT_NEAR(soldier.local_z, slot->current_local_z, 0.05F);
   }
+}
+
+TEST_F(FormationMovementRegressionTest, CavalryWheelsOnAnArcInsteadOfSpinningInPlace) {
+  open_field(120);
+  m_session->world().set_presentation_enabled(true);
+  for (auto const type : {Game::Units::SpawnType::MountedSwordsman,
+                          Game::Units::SpawnType::HorseSpearman,
+                          Game::Units::SpawnType::HorseArcher}) {
+    SCOPED_TRACE(static_cast<int>(type));
+    auto const id = spawn(type, world_of(30, 60), 90.0F);
+    ASSERT_NE(id, 0U);
+    auto* entity = m_session->world().get_entity(id);
+    float const reach = Game::Systems::FormationCombat::formation_turn_radius(*entity);
+    ASSERT_GT(reach, 1.0F);
+    CommandService::move_unit(m_session->world(), id, world_of(100, 60));
+    run_for(4.0);
+    ASSERT_GT(position_of(id).x(), world_of(38, 60).x())
+        << "the squadron never set off";
+    CommandService::move_unit(m_session->world(), id, world_of(60, 110));
+
+    float tightest_pivot = 1.0e9F;
+    float worst_crab_degrees = 0.0F;
+    float worst_slip_degrees = 0.0F;
+    float slowest = 1.0e9F;
+    QVector3D last_root = position_of(id);
+    float last_yaw = entity->get_component<TransformComponent>()->rotation.y;
+    std::vector<QVector3D> last_riders;
+    double const step = m_session->clock().tick_seconds();
+    for (double elapsed = 0.0; elapsed < 6.0; elapsed += step) {
+      run_for(step);
+      auto const* transform = entity->get_component<TransformComponent>();
+      QVector3D const root = position_of(id);
+      float const speed = (root - last_root).length() / static_cast<float>(step);
+      float const turned =
+          std::abs(Game::Systems::signed_yaw_delta(last_yaw, transform->rotation.y)) *
+          std::numbers::pi_v<float> / 180.0F / static_cast<float>(step);
+      slowest = std::min(slowest, speed);
+      if (turned > 0.2F) {
+        tightest_pivot = std::min(tightest_pivot, speed / turned);
+      }
+      if (speed > 1.0F) {
+        float const travel = Game::Systems::yaw_degrees_from_direction(
+            root.x() - last_root.x(), root.z() - last_root.z());
+        worst_crab_degrees = std::max(
+            worst_crab_degrees,
+            std::abs(Game::Systems::signed_yaw_delta(travel, transform->rotation.y)));
+      }
+      auto const* presentation =
+          entity->get_component<Engine::Core::FormationPresentationComponent>();
+      ASSERT_NE(presentation, nullptr);
+      std::vector<QVector3D> riders;
+      for (auto const& soldier : presentation->soldiers) {
+        if (soldier.alive && soldier.world_motion_valid) {
+          riders.emplace_back(soldier.world_x, soldier.world_yaw, soldier.world_z);
+        }
+      }
+      if (riders.size() == last_riders.size()) {
+        for (std::size_t index = 0; index < riders.size(); ++index) {
+          float const dx = riders[index].x() - last_riders[index].x();
+          float const dz = riders[index].z() - last_riders[index].z();
+          if (std::hypot(dx, dz) / static_cast<float>(step) > 1.5F) {
+            worst_slip_degrees =
+                std::max(worst_slip_degrees,
+                         std::abs(Game::Systems::signed_yaw_delta(
+                             Game::Systems::yaw_degrees_from_direction(dx, dz),
+                             riders[index].y())));
+          }
+        }
+      }
+      last_riders = std::move(riders);
+      last_root = root;
+      last_yaw = transform->rotation.y;
+    }
+    EXPECT_GT(tightest_pivot, reach * 0.8F)
+        << "the squadron spun about a point inside itself instead of wheeling";
+    EXPECT_LT(worst_crab_degrees, 8.0F)
+        << "the squadron travelled across its own facing";
+    EXPECT_LT(worst_slip_degrees, 35.0F) << "a horse slid sideways through the turn";
+    EXPECT_GT(slowest, 1.5F) << "the squadron stopped to turn";
+    auto const* transform = entity->get_component<TransformComponent>();
+    EXPECT_LT(std::abs(Game::Systems::signed_yaw_delta(
+                  transform->rotation.y,
+                  Game::Systems::yaw_degrees_from_direction(
+                      world_of(60, 110).x() - position_of(id).x(),
+                      world_of(60, 110).z() - position_of(id).z()))),
+              12.0F)
+        << "six seconds on, the squadron still has not come round";
+    m_session->world().destroy_entity(id);
+    run_for(0.2);
+  }
+}
+
+TEST_F(FormationMovementRegressionTest, DISABLED_CavalryManeuverTrace) {
+  const char* path = std::getenv("SOI_CAVALRY_TRACE");
+  if (path == nullptr) {
+    GTEST_SKIP();
+  }
+  open_field(120);
+  m_session->world().set_presentation_enabled(true);
+  const char* troop = std::getenv("SOI_CAVALRY_TROOP");
+  auto const type = troop != nullptr && std::string(troop) == "spear"
+                        ? Game::Units::SpawnType::HorseSpearman
+                    : troop != nullptr && std::string(troop) == "archer"
+                        ? Game::Units::SpawnType::HorseArcher
+                    : troop != nullptr && std::string(troop) == "foot"
+                        ? Game::Units::SpawnType::Spearman
+                        : Game::Units::SpawnType::MountedSwordsman;
+  auto const id = spawn(type, world_of(30, 60), 90.0F);
+  ASSERT_NE(id, 0U);
+  auto* entity = m_session->world().get_entity(id);
+  struct Order {
+    double at;
+    int x;
+    int z;
+  };
+  std::array const orders{Order{0.5, 80, 60},
+                          Order{5.0, 70, 95},
+                          Order{12.0, 35, 40},
+                          Order{22.0, 90, 45},
+                          Order{27.0, 60, 75}};
+  std::FILE* out = std::fopen(path, "w");
+  ASSERT_NE(out, nullptr);
+  std::fprintf(out, "t,kind,index,x,z,yaw,vx,vz,gait\n");
+  std::size_t next = 0;
+  double const step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 40.0; elapsed += step) {
+    if (next < orders.size() && elapsed >= orders[next].at) {
+      CommandService::move_unit(
+          m_session->world(), id, world_of(orders[next].x, orders[next].z));
+      ++next;
+    }
+    run_for(step);
+    auto const* transform = entity->get_component<TransformComponent>();
+    auto const* movement = entity->get_component<Engine::Core::MovementComponent>();
+    auto const* presentation =
+        entity->get_component<Engine::Core::FormationPresentationComponent>();
+    std::fprintf(out,
+                 "%.4f,root,0,%.4f,%.4f,%.3f,%.4f,%.4f,0\n",
+                 elapsed,
+                 transform->position.x,
+                 transform->position.z,
+                 transform->rotation.y,
+                 movement->get_vx(),
+                 movement->get_vz());
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto const& soldier : presentation->soldiers) {
+      if (!soldier.alive || !soldier.world_motion_valid) {
+        continue;
+      }
+      std::fprintf(out,
+                   "%.4f,soldier,%d,%.4f,%.4f,%.3f,%.4f,%.4f,%d\n",
+                   elapsed,
+                   static_cast<int>(soldier.slot_index),
+                   soldier.world_x,
+                   soldier.world_z,
+                   soldier.world_yaw,
+                   soldier.world_velocity_x,
+                   soldier.world_velocity_z,
+                   static_cast<int>(soldier.gait));
+    }
+  }
+  std::fclose(out);
 }
 
 TEST_F(FormationMovementRegressionTest,

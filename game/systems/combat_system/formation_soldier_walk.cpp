@@ -49,6 +49,11 @@ constexpr float k_mounted_sidestep_speed = 0.45F;
 constexpr float k_mounted_slot_behind_degrees = 100.0F;
 constexpr float k_mounted_slot_behind_distance = 2.5F;
 constexpr float k_mounted_settle_slot_speed = 0.25F;
+constexpr float k_ride_weave_per_metre_x = 0.37F;
+constexpr float k_ride_weave_per_metre_z = 0.31F;
+constexpr float k_ride_weave_across = 0.16F;
+constexpr float k_ride_surge_along = 0.24F;
+constexpr float k_ride_surge_ratio = 0.61F;
 
 constexpr float k_stranded_distance = 2.0F;
 constexpr float k_lost_distance = 12.0F;
@@ -431,6 +436,21 @@ auto aim_at_slot(const SlotWalk& walk,
                  const Game::Map::WorldPropClearanceIndex& props) -> SlotAim {
   destination.setX(destination.x() + soldier.crowd_offset_x);
   destination.setZ(destination.z() + soldier.crowd_offset_z);
+  if (walk.mounted && !walk.engaged) {
+    float const travelled = walk.actor.position.x * k_ride_weave_per_metre_x +
+                            walk.actor.position.z * k_ride_weave_per_metre_z;
+    float const turn = 2.0F * std::numbers::pi_v<float>;
+    float const across_phase =
+        hash_unit_float(walk.seed, soldier.slot_index * 131U + 17U) * turn;
+    float const along_phase =
+        hash_unit_float(walk.seed, soldier.slot_index * 173U + 29U) * turn;
+    float const across = std::sin(travelled + across_phase) * k_ride_weave_across;
+    float const along =
+        std::sin(travelled * k_ride_surge_ratio + along_phase) * k_ride_surge_along;
+    float const yaw = walk.actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
+    destination.setX(destination.x() + std::cos(yaw) * across + std::sin(yaw) * along);
+    destination.setZ(destination.z() - std::sin(yaw) * across + std::cos(yaw) * along);
+  }
   QVector3D const slot_destination = destination;
   if (!walk.worker && timing.dt > 0.0F) {
     float const turn_rate =

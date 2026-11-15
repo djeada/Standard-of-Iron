@@ -50,14 +50,16 @@ void launch_casualties_along(
     float direction_x,
     float direction_z,
     int casualty_count,
-    float impact_speed);
+    float impact_speed,
+    CasualtyLaunch launch = CasualtyLaunch::Blasted);
 
 } // namespace
 
 void launch_new_casualties(Engine::Core::Entity& casualty_unit,
                            const Engine::Core::Entity& impact_source,
                            int casualty_count,
-                           float impact_speed) {
+                           float impact_speed,
+                           CasualtyLaunch launch) {
   auto* casualties =
       casualty_unit.get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
   auto const* casualty_transform =
@@ -80,7 +82,7 @@ void launch_new_casualties(Engine::Core::Entity& casualty_unit,
     dz = casualty_transform->position.z - source_transform->position.z;
   }
   launch_casualties_along(
-      casualties, casualty_transform, dx, dz, casualty_count, impact_speed);
+      casualties, casualty_transform, dx, dz, casualty_count, impact_speed, launch);
 }
 
 void launch_new_casualties_along(Engine::Core::World& world,
@@ -112,7 +114,8 @@ void launch_casualties_along(
     float direction_x,
     float direction_z,
     int casualty_count,
-    float impact_speed) {
+    float impact_speed,
+    CasualtyLaunch launch) {
   float dx = direction_x;
   float dz = direction_z;
   float const length = std::hypot(dx, dz);
@@ -126,10 +129,14 @@ void launch_casualties_along(
   float const yaw = casualty_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
   float const local_x = std::cos(yaw) * dx - std::sin(yaw) * dz;
   float const local_z = std::sin(yaw) * dx + std::cos(yaw) * dz;
+  bool const ridden_down = launch == CasualtyLaunch::RiddenDown;
   float const horizontal_impulse =
-      std::clamp(std::max(impact_speed, 4.0F) * 1.22F, 6.5F, 11.5F);
+      ridden_down ? std::clamp(impact_speed * 0.85F, 3.2F, 5.2F)
+                  : std::clamp(std::max(impact_speed, 4.0F) * 1.22F, 6.5F, 11.5F);
   float const vertical_impulse =
-      std::clamp(6.8F + std::max(impact_speed - 4.0F, 0.0F) * 0.48F, 6.8F, 9.2F);
+      ridden_down
+          ? std::clamp(2.4F + std::max(impact_speed - 4.0F, 0.0F) * 0.22F, 2.4F, 3.2F)
+          : std::clamp(6.8F + std::max(impact_speed - 4.0F, 0.0F) * 0.48F, 6.8F, 9.2F);
   int remaining = casualty_count;
   int launched_index = 0;
   for (auto it = casualties->entries.rbegin();
@@ -139,11 +146,13 @@ void launch_casualties_along(
     float const side = (launched_index & 1) == 0 ? -1.0F : 1.0F;
     float const spread =
         side * (0.85F + 0.22F * static_cast<float>(launched_index % 3));
+    float const carried =
+        ridden_down ? 0.72F + 0.14F * static_cast<float>(it->slot_index % 4U) : 1.0F;
     it->launched = true;
-    it->launch_velocity_x = local_x * horizontal_impulse + local_z * spread;
+    it->launch_velocity_x = (local_x * horizontal_impulse + local_z * spread) * carried;
     it->launch_velocity_y =
         vertical_impulse + 0.28F * static_cast<float>(it->slot_index % 3U);
-    it->launch_velocity_z = local_z * horizontal_impulse - local_x * spread;
+    it->launch_velocity_z = (local_z * horizontal_impulse - local_x * spread) * carried;
     it->launch_pitch_speed = 235.0F + 28.0F * static_cast<float>(it->slot_index % 3U);
     it->launch_roll_speed =
         side * (95.0F + 17.0F * static_cast<float>(it->slot_index % 4U));
@@ -876,7 +885,8 @@ auto resolve_mounted_charge_impact_hit(
     launch_new_casualties(*attacker,
                           *target,
                           application.queued_soldier_casualties,
-                          result.contact.relative_speed);
+                          result.contact.relative_speed,
+                          CasualtyLaunch::RiddenDown);
     return result;
   }
   result.raw_damage =
@@ -905,7 +915,8 @@ auto resolve_mounted_charge_impact_hit(
       launch_new_casualties(*target,
                             *attacker,
                             application.queued_soldier_casualties,
-                            result.contact.relative_speed);
+                            result.contact.relative_speed,
+                            CasualtyLaunch::RiddenDown);
     }
   }
 

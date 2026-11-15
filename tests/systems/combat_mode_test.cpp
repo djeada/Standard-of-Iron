@@ -5037,12 +5037,17 @@ TEST_F(CombatModeTest, RunningRtsCavalryChargeKillsAndLaunchesInfantryOnce) {
   EXPECT_TRUE(std::all_of(casualties->entries.begin(),
                           casualties->entries.end(),
                           [](auto const& entry) { return entry.launched; }));
-  EXPECT_TRUE(std::all_of(
-      casualties->entries.begin(), casualties->entries.end(), [](auto const& entry) {
-        return std::hypot(entry.launch_velocity_x, entry.launch_velocity_z) >= 5.0F &&
-               entry.launch_velocity_y >= 6.8F && entry.launch_pitch_speed >= 235.0F &&
-               std::abs(entry.launch_roll_speed) >= 95.0F;
-      }));
+  for (auto const& entry : casualties->entries) {
+    float const carried = std::hypot(entry.launch_velocity_x, entry.launch_velocity_z);
+    float const apex = entry.launch_velocity_y * entry.launch_velocity_y / 19.6F;
+    float const thrown = carried * entry.launch_velocity_y / 4.9F;
+    EXPECT_GT(carried, 2.0F) << "a man ridden down is knocked off his feet";
+    EXPECT_GT(apex, 0.2F);
+    EXPECT_LT(apex, 0.8F) << "he is bowled over, not thrown over the horses' heads";
+    EXPECT_LT(thrown, 5.0F) << "and lands within a few strides";
+    EXPECT_GE(entry.launch_pitch_speed, 235.0F);
+    EXPECT_GE(std::abs(entry.launch_roll_speed), 95.0F);
+  }
   EXPECT_LT(casualties->entries[0].launch_velocity_x *
                 casualties->entries[1].launch_velocity_x,
             0.0F);
