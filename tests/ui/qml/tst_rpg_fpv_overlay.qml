@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtTest 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Core 1.0
@@ -93,7 +94,9 @@ TestCase {
             });
         verify(overlay !== null, "overlay was not created");
         host.overlay = overlay;
-        wait(1);
+        // Nested layouts need a rendered frame before their geometry is measured.
+        verify(waitForRendering(overlay), "the overlay did not finish its first frame");
+        verify(waitForPolish(overlay.Window.window), "the overlay layouts did not settle");
         return host;
     }
 
@@ -378,6 +381,7 @@ TestCase {
         var health = findChild(host.overlay, "rpgHealthMeter");
         var stamina = findChild(host.overlay, "rpgStaminaMeter");
         verify(health !== null && stamina !== null, "vitals meters are missing");
+        verify(health.width > 0, "the health meter collapsed");
         verify(stamina.width > health.width * 0.6, "the stamina meter collapsed to " + stamina.width + " px");
         host.destroy();
     }

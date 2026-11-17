@@ -3,6 +3,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string>
+#include <vector>
 
 #include "core/component.h"
 #include "core/entity.h"
@@ -11,6 +12,7 @@
 #include "game/core/nav_profile.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/combat_system/attack_chase.h"
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
@@ -1025,6 +1027,57 @@ TEST_F(MeleeEngagementTest, BypassDestinationIsRefusedWhenNoStandingSpotClears) 
   const auto bypass = Game::Systems::Combat::melee_bypass_destination(
       QVector3D(0.0F, 0.0F, 0.0F), QVector3D(10.0F, 0.0F, 0.0F), 4.0F, 1.75F);
   EXPECT_FALSE(bypass.has_value());
+}
+
+TEST_F(MeleeEngagementTest, ChaseEntersABreachWhenNoStandoffFitsBehindTheWall) {
+  Engine::Core::World world;
+  auto* attacker = spawn_formation(world,
+                                   Game::Units::SpawnType::Swordsman,
+                                   1,
+                                   QVector3D(-12.0F, 0.0F, -12.0F),
+                                   Game::Systems::NationID::Carthage);
+  auto* defender = spawn(world,
+                         Game::Units::SpawnType::RomanLegionOrganizer,
+                         2,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(attacker, nullptr);
+  ASSERT_NE(defender, nullptr);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+  // The defender is reachable through a corridor with a turn just inside its
+  // entrance. None of the normal standoff positions has a clear line to him.
+  for (int x = -8; x <= 8; ++x) {
+    for (int z = -8; z <= 8; ++z) {
+      bool const corridor = (x == 0 && z == 0) || (x >= 0 && z == 1);
+      auto const cell = pathfinder->world_to_grid(float(x), float(z));
+      pathfinder->set_obstacle(cell.x, cell.y, !corridor);
+    }
+  }
+  auto* from = attacker->get_component<TransformComponent>();
+  auto* to = defender->get_component<TransformComponent>();
+  QVector3D const start(from->position.x, 0.0F, from->position.z);
+  QVector3D const target(to->position.x, 0.0F, to->position.z);
+  ASSERT_TRUE(pathfinder->can_reach(pathfinder->world_to_grid(start.x(), start.z()),
+                                    pathfinder->world_to_grid(target.x(), target.z())));
+  auto const geometry =
+      Game::Systems::FormationCombat::contact_geometry(*attacker, *defender);
+  ASSERT_FALSE(Game::Systems::Combat::melee_bypass_destination(
+                   start, target, geometry.contact_center_distance, 1.75F)
+                   .has_value());
+  std::vector<Game::Systems::CommandService::MoveIntent> moves;
+  Game::Systems::Combat::steer_toward_target({.attacker = attacker,
+                                              .attacker_transform = from,
+                                              .target = defender,
+                                              .target_transform = to,
+                                              .range = 2.0F,
+                                              .ranged_unit = false,
+                                              .delta_time = 1.0F / 60.0F},
+                                             moves);
+  ASSERT_EQ(moves.size(), 1U);
+  EXPECT_LT((moves.front().target - target).length(), 0.01F)
+      << "the troop stopped outside the wall instead of routing through the breach";
 }
 
 TEST_F(MeleeEngagementTest, GridOnlyObstaclePreventsMeleeThroughIt) {

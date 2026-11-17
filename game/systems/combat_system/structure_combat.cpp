@@ -1,7 +1,9 @@
 #include "structure_combat.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <limits>
 #include <numbers>
 #include <string>
 #include <string_view>
@@ -389,7 +391,16 @@ auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
     return result;
   }
 
-  if (!pathfinder->is_world_position_walkable(result.destination, passability, 0.0F)) {
+  auto const start = pathfinder->world_to_grid(current.x(), current.z());
+  auto const usable = [&](const QVector3D& candidate) {
+    return pathfinder->is_world_position_walkable(candidate, passability, 0.0F) &&
+           (!current_walkable ||
+            pathfinder->can_reach(
+                start,
+                pathfinder->world_to_grid(candidate.x(), candidate.z()),
+                passability));
+  };
+  if (!usable(result.destination)) {
     auto const surface = closest_structure_surface(structure, current);
     float const cell_size = std::max(0.1F, pathfinder->grid_cell_size());
     float const step = cell_size * 0.1F;
@@ -399,7 +410,7 @@ auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
     for (float distance = step; distance <= max_outward_search; distance += step) {
       QVector3D const candidate =
           result.destination + surface.outward_normal * distance;
-      if (!pathfinder->is_world_position_walkable(candidate, passability, 0.0F)) {
+      if (!usable(candidate)) {
         continue;
       }
       result.destination = candidate;
@@ -407,8 +418,34 @@ auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
       break;
     }
     if (!resolved) {
-      result.reached = false;
-      return result;
+      // A neighbouring wall can cut off the nearest corner of a gate. Try
+      // the other faces instead of continually requesting an unreachable point.
+      auto const footprint = structure_footprint(structure);
+      float best_distance = std::numeric_limits<float>::max();
+      for (auto const [nx, nz] : std::array<std::pair<float, float>, 4>{
+               {{-1.0F, 0.0F}, {1.0F, 0.0F}, {0.0F, -1.0F}, {0.0F, 1.0F}}}) {
+        for (float distance = 0.0F; distance <= max_outward_search; distance += step) {
+          float const gap = result.desired_surface_gap + distance;
+          auto candidate = local_to_world(footprint,
+                                          nx * (footprint.half_width + gap),
+                                          nz * (footprint.half_depth + gap));
+          candidate.setY(current.y());
+          if (!usable(candidate)) {
+            continue;
+          }
+          float const travel = (candidate - current).lengthSquared();
+          if (travel < best_distance) {
+            best_distance = travel;
+            result.destination = candidate;
+            resolved = true;
+          }
+          break;
+        }
+      }
+      if (!resolved) {
+        result.reached = false;
+        return result;
+      }
     }
   }
 
