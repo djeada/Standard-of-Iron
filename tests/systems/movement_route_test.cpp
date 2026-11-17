@@ -18,6 +18,8 @@
 #include "game/systems/default_content.h"
 #include "game/systems/movement/command_service.h"
 #include "game/systems/movement/movement_route.h"
+#include "game/systems/movement/movement_system_motor.h"
+#include "game/systems/movement/movement_system_mover.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
@@ -513,6 +515,46 @@ TEST_F(MovementMotorTest, AnElephantOrderedAwayFromItsFacingStillSetsOff) {
   EXPECT_LT(position_of(id).x(), start.x() - 4.0F)
       << "an elephant whose resting facing points away from its route turned back to "
          "that facing every tick and never left the spot (Zama, 21 Oct 2026)";
+}
+
+TEST_F(MovementMotorTest, AnElephantKeepsTheHeadingOfItsAvoidanceStep) {
+  const EntityID elephant = spawn(Game::Units::SpawnType::Elephant, world_of(24, 24));
+  ASSERT_NE(elephant, 0U);
+  auto& world = m_session->world();
+  CommandService::move_unit(world, elephant, world_of(40, 24));
+  auto* entity = world.get_entity(elephant);
+  auto* transform = entity->get_component<TransformComponent>();
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* unit = entity->get_component<UnitComponent>();
+  auto* facts = Engine::Core::get_or_add_component<MovementFactsComponent>(entity);
+  transform->rotation.y = 45.0F;
+  movement->set_manual_velocity(1.0F, 1.0F);
+  facts->last_accepted_speed = std::sqrt(2.0F);
+  facts->desired.valid = true;
+  facts->desired.heading_x = 1.0F;
+  facts->desired.heading_z = 0.0F;
+  facts->desired.velocity_x = unit->speed;
+  facts->steering.valid = true;
+  facts->steering.velocity_x = unit->speed / std::sqrt(2.0F);
+  facts->steering.velocity_z = unit->speed / std::sqrt(2.0F);
+
+  const QVector3D before = position_of(elephant);
+  Game::Systems::Mover mover{world,
+                             *entity,
+                             *transform,
+                             *movement,
+                             *unit,
+                             *facts,
+                             1.0F / 60.0F,
+                             before.x(),
+                             before.z()};
+  Game::Systems::MovementSystem::Motor::drive(mover);
+  const QVector3D step = position_of(elephant) - before;
+  ASSERT_GT(step.length(), 0.0F);
+  const float travel_yaw = std::atan2(step.x(), step.z()) * 180.0F / 3.14159265F;
+  EXPECT_NEAR(std::remainder(transform->rotation.y - travel_yaw, 360.0F), 0.0F, 0.05F)
+      << "the facing pass turned the elephant away from the avoidance step its motor "
+         "took";
 }
 
 TEST_F(MovementMotorTest, AUnitBoxedInByBuildingsWalksOutWhenOrdered) {

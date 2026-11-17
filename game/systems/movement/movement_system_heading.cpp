@@ -174,6 +174,14 @@ public:
   [[nodiscard]] auto faced_about() const -> bool { return m_faced_about; }
 
   void run() {
+    // The elephant motor turns toward the steered velocity, including local
+    // avoidance. Turning it back toward the route tangent here cancels that
+    // steering before the next tick.
+    if (m_unit != nullptr &&
+        Game::Units::heading_locked_locomotion(m_unit->spawn_type) &&
+        m_facts != nullptr && m_facts->desired.valid) {
+      return;
+    }
     auto const reference =
         heading_reference(m_entity, m_transform, m_movement, m_facts, m_unit);
     if (reference.valid && !m_shell_holds_its_face) {

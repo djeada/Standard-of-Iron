@@ -64,6 +64,31 @@ protected:
 
 } // namespace
 
+TEST_F(StructureCombatTest, MeleeApproachGoesAroundAnObstructedFacade) {
+  Engine::Core::World world;
+  auto* attacker = add_attacker(world, Game::Units::SpawnType::Swordsman, 0.0F, -6.0F);
+  auto* structure = add_structure(world, Game::Units::SpawnType::Home, 0.0F, 6.0F);
+  Game::Systems::NavGrid::initialize(33, 33);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  for (int x = -2; x <= 2; ++x) {
+    for (int z = -1; z <= 4; ++z) {
+      const auto cell = pathfinder->world_to_grid(float(x), float(z));
+      pathfinder->set_obstacle(cell.x, cell.y, true);
+    }
+  }
+  pathfinder->mark_navigation_grid_dirty();
+  pathfinder->update_navigation_grid();
+  auto const approach =
+      Game::Systems::Combat::structure_navigation_melee_approach(*attacker, *structure);
+  EXPECT_TRUE(pathfinder->is_world_position_walkable(approach.destination));
+  EXPECT_TRUE(pathfinder->can_reach(
+      pathfinder->world_to_grid(0.0F, -6.0F),
+      pathfinder->world_to_grid(approach.destination.x(), approach.destination.z())));
+  EXPECT_GT(std::abs(approach.destination.x()), 2.0F)
+      << "the closest facade is obstructed, so the attack must use a side";
+}
+
 TEST_F(StructureCombatTest, AttackClassesHaveExplicitStructureEffectiveness) {
   Engine::Core::World world;
 

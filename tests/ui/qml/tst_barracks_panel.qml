@@ -202,7 +202,7 @@ TestCase {
         verify(panel !== null, "the production panel was not created");
         panel.selection_tick = 1;
         tryCompare(panel, "has_barracks_selection", true);
-        wait(20);
+        verify(waitForRendering(panel), "the production panel did not finish its first frame");
         return panel;
     }
 
