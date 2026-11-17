@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtTest 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Core 1.0
@@ -95,6 +96,7 @@ TestCase {
         host.overlay = overlay;
         // Nested layouts need a rendered frame before their geometry is measured.
         verify(waitForRendering(overlay), "the overlay did not finish its first frame");
+        verify(waitForPolish(overlay.Window.window), "the overlay layouts did not settle");
         return host;
     }
 

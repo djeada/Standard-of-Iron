@@ -7,6 +7,8 @@
 
 #include "../../core/component.h"
 #include "../formation_combat_geometry.h"
+#include "../navigation/nav_grid.h"
+#include "../navigation/pathfinding.h"
 #include "combat_random.h"
 #include "combat_types.h"
 #include "combat_utils.h"
@@ -222,9 +224,20 @@ void route_around_separating_structure(const ChaseInputs& in,
                FormationCombat::formation_navigation_clearance(*in.attacker)));
   if (bypass.has_value()) {
     plan.desired_pos = *bypass;
-    plan.hold_position = false;
-    plan.goal_follows_attacker = false;
+  } else {
+    auto* pathfinder = NavGrid::get_pathfinder();
+    if (pathfinder == nullptr ||
+        !pathfinder->can_reach(
+            pathfinder->world_to_grid(geo.attacker_pos.x(), geo.attacker_pos.z()),
+            pathfinder->world_to_grid(geo.target_pos.x(), geo.target_pos.z()))) {
+      return;
+    }
+    // The usual formation standoff can lie outside a fort even after a breach.
+    // Route closer to the target when no unobstructed standoff fits inside it.
+    plan.desired_pos = geo.target_pos;
   }
+  plan.hold_position = false;
+  plan.goal_follows_attacker = false;
 }
 
 auto plan_chase(const ChaseInputs& in, const ChaseGeometry& geo) -> ChasePlan {

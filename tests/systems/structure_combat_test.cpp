@@ -77,8 +77,6 @@ TEST_F(StructureCombatTest, MeleeApproachGoesAroundAnObstructedFacade) {
       pathfinder->set_obstacle(cell.x, cell.y, true);
     }
   }
-  pathfinder->mark_navigation_grid_dirty();
-  pathfinder->update_navigation_grid();
   auto const approach =
       Game::Systems::Combat::structure_navigation_melee_approach(*attacker, *structure);
   EXPECT_TRUE(pathfinder->is_world_position_walkable(approach.destination));
