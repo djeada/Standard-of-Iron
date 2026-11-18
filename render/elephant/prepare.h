@@ -34,6 +34,12 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                              const Render::GL::HowdahAttachmentFrame* shared_howdah,
                              const Render::GL::ElephantMotionSample* shared_motion,
                              Render::Creature::CreatureLOD lod,
-                             ElephantPreparation& out);
+                             ElephantPreparation& out,
+                             QMatrix4x4* out_howdah_world = nullptr);
+
+void submit_howdah(const Render::GL::DrawContext& ctx,
+                   const Render::GL::ElephantProfile& profile,
+                   const QMatrix4x4& world,
+                   Render::GL::ISubmitter& out);
 
 } // namespace Render::Elephant

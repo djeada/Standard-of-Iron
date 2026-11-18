@@ -22,6 +22,16 @@ constexpr float k_metres_per_cycle = 0.66F;
 constexpr float k_far_metres = 120.0F;
 constexpr float k_min_pixels = 26.0F;
 constexpr std::size_t k_max_route = 20;
+constexpr float k_fall_stagger_seconds = 0.9F;
+constexpr float k_fall_seconds = 1.1F;
+constexpr float k_fall_drop_seconds = 0.7F;
+constexpr float k_body_linger_seconds = 16.0F;
+constexpr float k_body_sink_seconds = 3.0F;
+constexpr float k_body_sink_depth = 0.55F;
+constexpr std::array<std::uint16_t, 3> k_fall_clips{
+    Animation::k_humanoid_die_infantry_clip,
+    Animation::k_humanoid_die_infantry_side_clip,
+    Animation::k_humanoid_die_infantry_face_clip};
 
 auto roll(std::uint32_t seed, std::uint32_t salt) -> float {
   return static_cast<float>(ambient_hash(seed ^ (salt * 0x9e3779b9U)) & 0xffffU) /
@@ -195,9 +205,18 @@ void submit_ambient_people(const DrawContext& ctx,
       ctx.template_prewarm || ctx.submission_visibility == nullptr) {
     return;
   }
+
+  float fallen_for = -1.0F;
   if (resolve_building_state(ctx) == BuildingState::Destroyed) {
-    return;
+    fallen_for = building_state_transition_age(
+        static_cast<std::uint32_t>(ctx.entity->get_id()), ctx.animation_time);
+    if (fallen_for < 0.0F || fallen_for > k_fall_stagger_seconds +
+                                              k_body_linger_seconds +
+                                              k_body_sink_seconds) {
+      return;
+    }
   }
+  const bool fallen = fallen_for >= 0.0F;
   if (ctx.distance_sq > k_far_metres * k_far_metres) {
     return;
   }
@@ -240,17 +259,26 @@ void submit_ambient_people(const DrawContext& ctx,
       world_route[p] = ctx.model.map(person.route[p]);
     }
     const QVector3D facing = ctx.model.map(person.facing);
-    const float linger_turn = 18.0F * std::sin(time * 0.35F + roll(seed, 7U) * 6.0F);
+    const float linger_turn =
+        fallen ? 0.0F : 18.0F * std::sin(time * 0.35F + roll(seed, 7U) * 6.0F);
 
     const bool walks =
         (person.role == AmbientRole::Stroll || person.role == AmbientRole::Porter) &&
         count >= 2;
+    const float struck_after = roll(seed, 23U) * k_fall_stagger_seconds;
+    const float down_for = fallen ? fallen_for - struck_after : -1.0F;
+    const float life_time =
+        fallen ? time - fallen_for + std::min(fallen_for, struck_after) : time;
     Pose pose;
     AmbientRole stance = person.role;
-    float stance_time = time;
+    float stance_time = life_time;
     if (walks) {
-      pose = walk_route(
-          world_route, count, facing, time, seed, person.role == AmbientRole::Porter);
+      pose = walk_route(world_route,
+                        count,
+                        facing,
+                        life_time,
+                        seed,
+                        person.role == AmbientRole::Porter);
       stance = pose.dwelling ? person.linger : AmbientRole::Stroll;
       stance_time = pose.dwell_time;
     } else {
@@ -292,6 +320,19 @@ void submit_ambient_people(const DrawContext& ctx,
       }
     }
 
+    float body_sink = 0.0F;
+    if (down_for >= 0.0F) {
+      pose.clip = k_fall_clips[seed % k_fall_clips.size()];
+      pose.phase = std::clamp(down_for / k_fall_seconds, 0.0F, 1.0F);
+      pose.blend_clip = 0xFFFFU;
+      pose.blend_weight = 0.0F;
+      pose.overlay_clip = 0xFFFFU;
+      body_sink = k_body_sink_depth *
+                  smooth((down_for - k_body_linger_seconds) / k_body_sink_seconds);
+    }
+    const float standing =
+        down_for >= 0.0F ? 1.0F - smooth(down_for / k_fall_drop_seconds) : 1.0F;
+
     const auto& rig = person.priest && priest_rig.valid() ? priest_rig : civilian_rig;
     if (!surfaces.empty()) {
       QVector3D local = to_local.map(pose.position);
@@ -302,9 +343,13 @@ void submit_ambient_people(const DrawContext& ctx,
           floor = std::max(floor, surface.top);
         }
       }
-      local.setY(floor);
+      local.setY(floor * standing);
       pose.position = ctx.model.map(local);
+    } else if (down_for >= 0.0F) {
+      QVector3D const ground = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+      pose.position.setY(ground.y() + (pose.position.y() - ground.y()) * standing);
     }
+    pose.position.setY(pose.position.y() - body_sink);
 
     QMatrix4x4 world;
     world.translate(pose.position);

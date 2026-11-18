@@ -3,6 +3,7 @@
 #include <QVector2D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <vector>
@@ -26,28 +27,38 @@ constexpr unsigned int k_detail_segments = 6;
 constexpr unsigned int k_stroke_segments = 8;
 
 constexpr float k_head_radius = Render::GL::HumanProportions::HEAD_RADIUS;
-constexpr float k_face_drop = k_head_radius * 0.80F;
 constexpr float k_eye_x = k_head_radius * 0.48F;
-constexpr float k_eye_y = (k_head_radius * 0.12F) - k_face_drop;
-constexpr QVector2D k_white_extent{0.030F, 0.025F};
-constexpr QVector2D k_iris_extent{0.0150F, 0.0160F};
-constexpr QVector2D k_pupil_extent{0.0074F, 0.0088F};
-constexpr QVector2D k_catchlight_offset{0.0070F, 0.0076F};
-constexpr float k_catchlight_radius = 0.0034F;
+constexpr float k_eye_y = -k_head_radius * 0.68F;
+constexpr QVector2D k_white_extent{0.0270F, 0.0190F};
+constexpr QVector2D k_iris_extent{0.0140F, 0.0160F};
+constexpr QVector2D k_pupil_extent{0.0072F, 0.0086F};
+constexpr QVector2D k_catchlight_offset{0.0056F, 0.0066F};
+constexpr float k_catchlight_radius = 0.0036F;
 constexpr float k_eye_rim_lift = 0.0010F;
-constexpr float k_eye_bulge = 0.0018F;
+constexpr float k_eye_bulge = 0.0016F;
 constexpr float k_catchlight_lift = 0.0008F;
 
+constexpr float k_lid_rise = 0.0172F;
+constexpr QVector2D k_lid_extent{0.0300F, 0.0046F};
+constexpr float k_lid_roll = 0.07F;
+constexpr float k_lid_rim_lift = 0.0018F;
+constexpr float k_lid_bulge = 0.0010F;
+
 constexpr float k_brow_rise = k_head_radius * 0.35F;
-constexpr QVector2D k_brow_extent{0.026F, 0.0048F};
-constexpr float k_brow_roll = 0.05F;
+constexpr QVector2D k_brow_extent{0.0270F, 0.0056F};
+constexpr float k_brow_roll = 0.035F;
 constexpr float k_brow_rim_lift = 0.0012F;
 constexpr float k_brow_bulge = 0.0022F;
 
-constexpr float k_mouth_drop = k_head_radius * 0.55F;
-constexpr QVector2D k_mouth_extent{0.020F, 0.0035F};
-constexpr float k_mouth_rim_lift = 0.0008F;
+constexpr float k_mouth_y = -k_head_radius * 1.23F;
+constexpr QVector2D k_mouth_extent{0.0185F, 0.0040F};
+constexpr float k_mouth_rim_lift = 0.0010F;
 constexpr float k_mouth_bulge = 0.0006F;
+
+struct Ellipsoid {
+  QVector3D centre;
+  QVector3D radii;
+};
 
 struct Feature {
   QVector2D centre;
@@ -59,9 +70,8 @@ struct Feature {
 
 class FaceBuilder {
 public:
-  FaceBuilder(const QVector3D& centre, const QVector3D& radii)
-      : m_centre(centre)
-      , m_radii(radii) {}
+  FaceBuilder(const Ellipsoid& cranium, const Ellipsoid& jaw)
+      : m_shells{cranium, jaw} {}
 
   void ring_band(const Feature& f,
                  QVector2D inner,
@@ -108,13 +118,28 @@ public:
 
 private:
   auto surface(QVector2D xy, QVector3D& normal) const -> QVector3D {
-    float const nx = xy.x() / m_radii.x();
-    float const ny = (xy.y() - m_centre.y()) / m_radii.y();
-    float const nz = std::sqrt(std::max(1.0F - (nx * nx) - (ny * ny), 0.0F));
-    QVector3D const p(xy.x(), xy.y(), m_centre.z() + (m_radii.z() * nz));
-    normal =
-        QVector3D(nx / m_radii.x(), ny / m_radii.y(), nz / m_radii.z()).normalized();
-    return p;
+    float best_z = -1.0e9F;
+    for (auto const& shell : m_shells) {
+      float const nx = xy.x() / shell.radii.x();
+      float const ny = (xy.y() - shell.centre.y()) / shell.radii.y();
+      float const inside = 1.0F - (nx * nx) - (ny * ny);
+      if (inside < 0.0F) {
+        continue;
+      }
+      float const nz = std::sqrt(inside);
+      float const z = shell.centre.z() + (shell.radii.z() * nz);
+      if (z > best_z) {
+        best_z = z;
+        normal =
+            QVector3D(nx / shell.radii.x(), ny / shell.radii.y(), nz / shell.radii.z())
+                .normalized();
+      }
+    }
+    if (best_z < -1.0e8F) {
+      normal = QVector3D(0.0F, 0.0F, 1.0F);
+      best_z = m_shells.front().centre.z();
+    }
+    return {xy.x(), xy.y(), best_z};
   }
 
   void add(const Feature& f,
@@ -156,8 +181,7 @@ private:
     m_indices.insert(m_indices.end(), {a, b, c});
   }
 
-  QVector3D m_centre;
-  QVector3D m_radii;
+  std::array<Ellipsoid, 2> m_shells;
   std::vector<Vertex> m_vertices;
   std::vector<unsigned int> m_indices;
 };
@@ -165,9 +189,11 @@ private:
 } // namespace
 
 auto build_humanoid_face_mesh(const QVector3D& cranium_centre,
-                              const QVector3D& cranium_radii)
+                              const QVector3D& cranium_radii,
+                              const QVector3D& jaw_centre,
+                              const QVector3D& jaw_radii)
     -> std::unique_ptr<Render::GL::Mesh> {
-  FaceBuilder face(cranium_centre, cranium_radii);
+  FaceBuilder face({cranium_centre, cranium_radii}, {jaw_centre, jaw_radii});
   for (float const side : {-1.0F, 1.0F}) {
     Feature const eye{.centre = {side * k_eye_x, k_eye_y},
                       .extent = k_white_extent,
@@ -207,14 +233,21 @@ auto build_humanoid_face_mesh(const QVector3D& cranium_centre,
                    FaceFeatureTone::Catchlight,
                    k_detail_segments);
 
+    Feature const lid{.centre = {side * k_eye_x, k_eye_y + k_lid_rise},
+                      .roll = -side * k_lid_roll,
+                      .extent = k_lid_extent,
+                      .rim_lift = k_lid_rim_lift,
+                      .bulge = k_lid_bulge};
+    face.disc(lid, k_skin_role, FaceFeatureTone::Lid);
+
     Feature const brow{.centre = {side * k_eye_x, k_eye_y + k_brow_rise},
-                       .roll = -side * k_brow_roll,
+                       .roll = side * k_brow_roll,
                        .extent = k_brow_extent,
                        .rim_lift = k_brow_rim_lift,
                        .bulge = k_brow_bulge};
     face.disc(brow, k_humanoid_hair_role, FaceFeatureTone::EyeWhite);
   }
-  Feature const mouth{.centre = {0.0F, k_eye_y - k_mouth_drop},
+  Feature const mouth{.centre = {0.0F, k_mouth_y},
                       .extent = k_mouth_extent,
                       .rim_lift = k_mouth_rim_lift,
                       .bulge = k_mouth_bulge};

@@ -28,6 +28,12 @@ constexpr float k_fall_slump = 0.14F;
 constexpr float k_chunk_drop_seconds = 0.38F;
 constexpr float k_dust_settle_seconds = 5.0F;
 constexpr float k_smoke_seconds = 9.0F;
+constexpr float k_rubble_chunks_per_area = 0.62F;
+constexpr int k_rubble_min_chunks = 5;
+constexpr int k_rubble_max_chunks = 26;
+constexpr float k_rubble_min_size = 0.10F;
+constexpr float k_rubble_size_range = 0.30F;
+constexpr float k_rubble_reach = 0.90F;
 
 auto hash01(std::uint32_t seed, std::uint32_t salt) noexcept -> float {
   std::uint32_t h = seed * 747796405U + salt * 2891336453U + 0x9E3779B9U;
@@ -83,25 +89,59 @@ auto building_collapse_footprint(Game::Units::SpawnType type) noexcept
   using Game::Units::SpawnType;
   switch (type) {
   case SpawnType::Barracks:
-    return {.half_width = 2.6F, .half_depth = 2.6F, .height = 3.2F};
+    return {.half_width = 2.6F,
+            .half_depth = 2.6F,
+            .height = 3.2F,
+            .timber_share = 0.30F,
+            .rubble_mass = 1.0F};
   case SpawnType::Home:
-    return {.half_width = 2.15F, .half_depth = 2.2F, .height = 2.6F};
+    return {.half_width = 2.15F,
+            .half_depth = 2.2F,
+            .height = 2.6F,
+            .timber_share = 0.38F,
+            .rubble_mass = 0.80F};
   case SpawnType::Marketplace:
-    return {.half_width = 2.75F, .half_depth = 2.75F, .height = 2.2F};
+    return {.half_width = 2.75F,
+            .half_depth = 2.75F,
+            .height = 2.2F,
+            .timber_share = 0.70F,
+            .rubble_mass = 0.45F};
   case SpawnType::Temple:
-    return {.half_width = 6.2F, .half_depth = 4.6F, .height = 4.6F};
+    return {.half_width = 6.2F,
+            .half_depth = 4.6F,
+            .height = 4.6F,
+            .timber_share = 0.14F,
+            .rubble_mass = 0.85F};
   case SpawnType::Farm:
-    return {.half_width = 3.0F, .half_depth = 3.0F, .height = 2.0F};
+    return {.half_width = 3.0F,
+            .half_depth = 3.0F,
+            .height = 2.0F,
+            .timber_share = 0.78F,
+            .rubble_mass = 0.40F};
   case SpawnType::DefenseTower:
-    return {.half_width = 1.5F, .half_depth = 1.5F, .height = 4.8F};
+    return {.half_width = 1.5F,
+            .half_depth = 1.5F,
+            .height = 4.8F,
+            .timber_share = 0.26F,
+            .rubble_mass = 1.0F};
   case SpawnType::WallSegment:
-    return {.half_width = 1.1F, .half_depth = 1.0F, .height = 2.4F};
+    return {.half_width = 1.1F,
+            .half_depth = 1.0F,
+            .height = 2.4F,
+            .timber_share = 0.92F,
+            .rubble_mass = 0.70F};
   case SpawnType::WallLadder:
-    return {.half_width = 0.4F, .half_depth = 0.6F, .height = 1.6F};
+    return {.half_width = 0.4F,
+            .half_depth = 0.6F,
+            .height = 1.6F,
+            .timber_share = 1.0F,
+            .rubble_mass = 0.60F};
   case SpawnType::WallGate:
     return {.half_width = Engine::Core::GateComponent::k_structure_half_span,
             .half_depth = Engine::Core::GateComponent::k_cross_half_extent,
-            .height = 3.2F};
+            .height = 3.2F,
+            .timber_share = 0.88F,
+            .rubble_mass = 0.70F};
   default:
     return {};
   }
@@ -201,8 +241,11 @@ void submit_building_collapse_rubble(ISubmitter& out,
   float const radius = footprint_radius(collapse);
   float const area =
       4.0F * collapse.footprint.half_width * collapse.footprint.half_depth;
-  int const count = std::clamp(static_cast<int>(area * 0.9F), 10, 40);
-  float const chunk_scale = std::clamp(radius / 2.0F, 0.6F, 1.5F);
+  float const mass = std::clamp(collapse.footprint.rubble_mass, 0.2F, 1.0F);
+  int const count = std::clamp(static_cast<int>(area * k_rubble_chunks_per_area * mass),
+                               k_rubble_min_chunks,
+                               k_rubble_max_chunks);
+  float const chunk_scale = std::clamp(radius / 2.6F, 0.55F, 1.0F);
   float const sink = collapse.sink * building_collapse_sink_depth(collapse);
   QVector3D const heading = heading_direction(collapse);
 
@@ -222,12 +265,14 @@ void submit_building_collapse_rubble(ISubmitter& out,
         std::clamp((fall_time - released_at) / k_chunk_drop_seconds, 0.0F, 1.0F);
 
     float const angle = hash01(seed, 5U) * 2.0F * k_pi;
-    float const reach = std::sqrt(hash01(seed, 6U)) * 1.05F;
+    float const reach = std::sqrt(hash01(seed, 6U)) * k_rubble_reach;
     QVector3D rest =
         footprint_point(collapse, std::cos(angle) * reach, std::sin(angle) * reach);
-    rest += heading * (0.25F * radius * hash01(seed, 7U));
+    rest += heading * (0.12F * radius * hash01(seed, 7U));
 
-    float const size = (0.20F + (hash01(seed, 8U) * 0.34F)) * chunk_scale;
+    float const size = (k_rubble_min_size +
+                        (hash01(seed, 8U) * hash01(seed, 19U) * k_rubble_size_range)) *
+                       chunk_scale;
     float const height = size * (0.45F + (hash01(seed, 9U) * 0.45F));
     float const drop_from =
         collapse.footprint.height * (0.35F + (hash01(seed, 10U) * 0.55F));
@@ -240,10 +285,12 @@ void submit_building_collapse_rubble(ISubmitter& out,
     float const lift = drop_from * (1.0F - (drop_t * drop_t)) + rebound;
     float const tumble = (1.0F - drop_t) * 160.0F * signed_hash(seed, 11U);
 
-    bool const timber = hash01(seed, 12U) < 0.3F;
+    bool const timber = hash01(seed, 12U) < collapse.footprint.timber_share;
     QVector3D const stone(0.55F, 0.52F, 0.47F);
     QVector3D const stone_dark(0.34F, 0.32F, 0.29F);
-    QVector3D const beam(0.27F, 0.20F, 0.14F);
+    QVector3D const beam_dark(0.27F, 0.20F, 0.14F);
+    QVector3D const beam_light(0.46F, 0.35F, 0.24F);
+    QVector3D const beam = beam_dark + ((beam_light - beam_dark) * hash01(seed, 20U));
     float const shade = 0.80F + (hash01(seed, 13U) * 0.30F);
     QVector3D const color =
         (timber ? beam : stone_dark + ((stone - stone_dark) * hash01(seed, 14U))) *
@@ -254,7 +301,7 @@ void submit_building_collapse_rubble(ISubmitter& out,
     model.rotate((signed_hash(seed, 16U) * 24.0F) + tumble, 1.0F, 0.0F, 0.0F);
     model.rotate(signed_hash(seed, 17U) * 18.0F, 0.0F, 0.0F, 1.0F);
     if (timber) {
-      model.scale(size * 1.9F, height * 0.42F, height * 0.42F);
+      model.scale(size * 2.3F, height * 0.30F, height * 0.34F);
     } else {
       model.scale(size, height, size * (0.7F + (hash01(seed, 18U) * 0.3F)));
     }

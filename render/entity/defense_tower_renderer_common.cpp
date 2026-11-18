@@ -59,11 +59,8 @@ void draw_lookout(const DrawContext& ctx,
                   ISubmitter& out,
                   const DefenseTowerRendererConfig& config,
                   BuildingState state) {
-  if (state == BuildingState::Destroyed) {
-    return;
-  }
-  const float top = state == BuildingState::Damaged ? config.lookout_deck_top_damaged
-                                                    : config.lookout_deck_top;
+  const float top = state == BuildingState::Normal ? config.lookout_deck_top
+                                                   : config.lookout_deck_top_damaged;
   if (top <= 0.0F) {
     return;
   }

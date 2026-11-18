@@ -21,6 +21,10 @@ struct BuildingCollapseFootprint {
   float half_width{2.0F};
   float half_depth{2.0F};
   float height{2.6F};
+
+  float timber_share{0.30F};
+
+  float rubble_mass{1.0F};
 };
 
 struct BuildingCollapse {

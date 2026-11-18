@@ -82,6 +82,21 @@ float humanoid_equipment_metal_weight(vec3 base) {
   return max(bronze, iron);
 }
 
+const float k_character_sky_chroma_day = 0.30;
+const float k_skin_sky_chroma_day = 0.10;
+const vec3 k_skin_fill_warmth = vec3(1.06, 0.99, 0.93);
+
+vec3 character_sky_color(int material_id, int color_role) {
+  vec3 sky = environment_sky_color();
+  float luma = dot(sky, vec3(0.2126, 0.7152, 0.0722));
+  bool skin = material_id == 0 && color_role == k_humanoid_role_skin;
+  float night = environment_night_amount();
+  float keep =
+      mix(skin ? k_skin_sky_chroma_day : k_character_sky_chroma_day, 1.0, night);
+  vec3 fill = mix(vec3(luma), sky, keep);
+  return skin ? fill * mix(k_skin_fill_warmth, vec3(1.0), night) : fill;
+}
+
 vec3 shade_readable_character(vec3 base,
                               vec3 surface_normal,
                               vec3 world_position,
@@ -93,7 +108,7 @@ vec3 shade_readable_character(vec3 base,
   float scene_ambient = clamp(environment_ambient_intensity(), 0.08, 0.40);
   float readable_ambient = max(scene_ambient, 0.29);
   vec3 sun_color = environment_primary_color();
-  vec3 sky_color = environment_sky_color();
+  vec3 sky_color = character_sky_color(material_id, color_role);
 
   if (material_id == 0) {
     float sun_luma = dot(sun_color, vec3(0.299, 0.587, 0.114));
@@ -217,6 +232,9 @@ vec3 shade_readable_character(vec3 base,
 }
 
 const int k_role_blade_glow_flag = 128;
+const float k_blade_ambient_gain = 0.62;
+const float k_blade_reflection_gain = 0.34;
+const float k_blade_diffuse_gain = 0.46;
 const vec3 k_blade_glow_color = vec3(0.10, 0.38, 0.85);
 
 vec3 soi_blade_steel(vec3 base,
@@ -238,12 +256,14 @@ vec3 soi_blade_steel(vec3 base,
       mix(environment_ground_bounce_color() * 0.30, environment_sky_color(), sky);
   vec3 steel_tint = mix(base, sqrt(max(base, vec3(0.0))), 0.25);
 
-  vec3 metal = base * environment_ambient_light(surface_normal) * 0.24;
-  metal += reflected_environment * steel_tint * (0.10 + fresnel * 0.24);
-  metal += environment_primary_color() * environment_primary_intensity() *
-           (base * n_dot_l * 0.18 + steel_tint * n_dot_l *
-                                        (pow(n_dot_h, mix(96.0, 56.0, zoom)) * 1.10 +
-                                         pow(n_dot_h, 18.0) * 0.08));
+  vec3 metal = base * environment_ambient_light(surface_normal) * k_blade_ambient_gain;
+  metal +=
+      reflected_environment * steel_tint * (k_blade_reflection_gain + fresnel * 0.24);
+  metal +=
+      environment_primary_color() * environment_primary_intensity() *
+      (base * (0.30 + 0.70 * n_dot_l) * k_blade_diffuse_gain +
+       steel_tint * n_dot_l *
+           (pow(n_dot_h, mix(96.0, 56.0, zoom)) * 1.10 + pow(n_dot_h, 18.0) * 0.08));
   return metal * environment_exposure();
 }
 
@@ -265,7 +285,7 @@ vec3 soi_finish_character(vec3 color,
                           float zoom) {
   vec3 light_dir = environment_primary_direction();
   vec3 sun_color = environment_primary_color();
-  vec3 sky_color = environment_sky_color();
+  vec3 sky_color = character_sky_color(material_id, color_role);
   float shadow_floor = material_id == k_elephant_material   ? k_elephant_shadow_floor
                        : material_id == k_wildlife_material ? k_wildlife_shadow_floor
                                                             : k_readable_shadow_floor;
@@ -360,6 +380,9 @@ vec3 soi_finish_character(vec3 color,
   return color;
 }
 
+const float k_team_night_edge = 0.30;
+const float k_team_night_cloth_floor = 0.24;
+
 vec3 apply_team_accent(vec3 color,
                        vec3 team,
                        vec3 surface_normal,
@@ -368,7 +391,7 @@ vec3 apply_team_accent(vec3 color,
                        int color_role,
                        float fighting) {
   float night = environment_night_amount();
-  float strength = 0.20 * night + fighting * mix(0.05, 0.20, night);
+  float strength = k_team_night_edge * night + fighting * mix(0.05, 0.20, night);
   if (strength <= 0.0) {
     return color;
   }
@@ -377,7 +400,7 @@ vec3 apply_team_accent(vec3 color,
   bool cloth =
       color_role == k_humanoid_role_cloth || color_role == k_humanoid_role_cloth_dark;
   if (cloth) {
-    color = max(color, accent * 0.14 * night);
+    color = max(color, accent * k_team_night_cloth_floor * night);
   }
   vec3 view_dir = normalize(camera_position - world_position);
   float edge = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.2);
@@ -395,11 +418,12 @@ vec3 apply_hair_tone(vec3 base, int material_id, int color_role, vec2 tex) {
 }
 
 const float k_face_feature_uv = -3.0;
-const vec3 k_face_feature_tones[5] = vec3[5](vec3(0.92, 0.89, 0.82),
-                                             vec3(0.30, 0.18, 0.075),
+const vec3 k_face_feature_tones[6] = vec3[6](vec3(0.93, 0.90, 0.84),
+                                             vec3(0.27, 0.15, 0.065),
                                              vec3(0.025, 0.018, 0.012),
                                              vec3(1.0, 0.97, 0.90),
-                                             vec3(0.30, 0.10, 0.07));
+                                             vec3(0.42, 0.15, 0.11),
+                                             vec3(0.17, 0.095, 0.060));
 
 vec3 apply_face_features(vec3 base, int material_id, int color_role, vec2 tex) {
 
@@ -411,7 +435,7 @@ vec3 apply_face_features(vec3 base, int material_id, int color_role, vec2 tex) {
       abs(tex.x - k_face_feature_uv) > 0.5) {
     return base;
   }
-  return k_face_feature_tones[clamp(int(tex.y + 0.5), 0, 4)];
+  return k_face_feature_tones[clamp(int(tex.y + 0.5), 0, 5)];
 }
 
 const float k_pelt_uv_offset = -16.0;

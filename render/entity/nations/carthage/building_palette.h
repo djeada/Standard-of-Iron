@@ -20,9 +20,9 @@ inline constexpr QVector3D k_wood = Nation::k_carthage_materials.timber;
 inline constexpr QVector3D k_wood_dark{0.26F, 0.21F, 0.17F};
 inline constexpr QVector3D k_wood_light{0.53F, 0.44F, 0.33F};
 
-inline constexpr QVector3D k_palisade_light{0.53F, 0.37F, 0.27F};
-inline constexpr QVector3D k_palisade{0.42F, 0.28F, 0.21F};
-inline constexpr QVector3D k_palisade_dark{0.28F, 0.18F, 0.14F};
+inline constexpr QVector3D k_palisade_light{0.46F, 0.27F, 0.20F};
+inline constexpr QVector3D k_palisade{0.35F, 0.19F, 0.15F};
+inline constexpr QVector3D k_palisade_dark{0.22F, 0.12F, 0.10F};
 inline constexpr QVector3D k_bronze{0.67F, 0.50F, 0.25F};
 inline constexpr QVector3D k_indigo = Nation::k_carthage_materials.cloth;
 inline constexpr QVector3D k_oxblood{0.55F, 0.15F, 0.17F};

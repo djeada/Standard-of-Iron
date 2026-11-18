@@ -35,8 +35,8 @@ const float DENSITY_FADE_BAND = 0.12;
 
 const float EDGE_FADE_START = 0.7;
 
-const float NEAR_FADE_START = 0.5;
-const float NEAR_FADE_END = 3.5;
+const float NEAR_FADE_START = 2.0;
+const float NEAR_FADE_END = 9.0;
 
 const float TOP_FADE_START = 0.88;
 
@@ -63,7 +63,7 @@ const float RAIN_MIN_HALF_PIXELS = 0.55;
 
 const float RAIN_EDGE_ON_FLOOR = 0.55;
 
-const float RAIN_MAX_HALF_PIXELS = 3.0;
+const float RAIN_MAX_HALF_PIXELS = 1.6;
 
 const float INV_TWO_PI = 0.15915494;
 const float SHADE_FLOOR = 0.75;

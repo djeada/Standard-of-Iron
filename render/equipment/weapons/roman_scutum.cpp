@@ -55,6 +55,8 @@ constexpr float k_spine_half_width = 0.018F;
 constexpr float k_spine_half_height = 0.43F;
 constexpr float k_spine_half_depth = 0.008F;
 constexpr float k_boss_radius = 0.073F;
+constexpr float k_emblem_lift = 0.004F;
+constexpr int k_emblem_bar_segments = 6;
 constexpr int k_face_columns = 16;
 constexpr int k_face_rows = 20;
 constexpr int k_outline_samples = 16;
@@ -276,6 +278,29 @@ auto roman_scutum_archetype() -> const RenderArchetype& {
         get_unit_sphere(),
         sphere_at(QVector3D(0.0F, 0.0F, k_curve_depth + 0.030F), k_boss_radius),
         k_iron_boss);
+
+    auto emblem_bar = [&builder](float x0, float y0, float x1, float y1, float radius) {
+      builder.add_palette_mesh(
+          get_unit_cylinder(k_emblem_bar_segments),
+          cylinder_between(scutum_face_point(x0, y0, k_emblem_lift),
+                           scutum_face_point(x1, y1, k_emblem_lift),
+                           radius),
+          k_brass_boss_plate);
+    };
+    for (float const side : {-1.0F, 1.0F}) {
+      for (float const fan : {-1.0F, 0.0F, 1.0F}) {
+        emblem_bar(side * 0.118F,
+                   fan * 0.050F,
+                   side * (0.285F - std::abs(fan) * 0.030F),
+                   fan * 0.118F,
+                   0.0105F);
+      }
+      for (float const up : {-1.0F, 1.0F}) {
+        emblem_bar(side * 0.070F, up * 0.205F, side * 0.150F, up * 0.300F, 0.0090F);
+        emblem_bar(side * 0.150F, up * 0.300F, side * 0.120F, up * 0.345F, 0.0090F);
+        emblem_bar(side * 0.120F, up * 0.345F, side * 0.215F, up * 0.445F, 0.0080F);
+      }
+    }
 
     builder.add_palette_mesh(
         get_unit_cylinder(),
