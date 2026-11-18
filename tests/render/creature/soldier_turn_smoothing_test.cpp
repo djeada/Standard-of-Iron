@@ -402,8 +402,8 @@ TEST(SoldierTurnSmoothing, AlternatingGroundCorrectionsDoNotChangeFacing) {
 
 // A soldier in melee whose published spot flips a hand's breadth every frame (his pull
 // toward his foe against the push off the bodies round him) is drawn steady, not
-// zig-zagging 10 cm a frame; out of melee, and for a jump beyond a stride, the drawn spot
-// is the published one.
+// zig-zagging 10 cm a frame; out of melee, and for a jump beyond a stride, the drawn
+// spot is the published one.
 TEST(SoldierMeleeFootingEaseTest, AFrameToFrameFlipIsDrawnSteady) {
   Render::Humanoid::SoldierTurnSmoothingState state;
   constexpr float dt = 1.0F / 30.0F;

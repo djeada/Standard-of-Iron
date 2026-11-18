@@ -10,11 +10,11 @@
 #include <string_view>
 #include <utility>
 
-#include "audio_clock.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "audio_clock.h"
 #include "audio_cues.h"
 #include "audio_system.h"
 #include "core/event_manager.h"

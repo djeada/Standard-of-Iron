@@ -430,7 +430,8 @@ TEST_F(ShippedAudioTest, OfflineCooldownsRunOnRenderedTimeNotTheWallClock) {
   Game::Audio::Clock::use_rendered_time(false);
   const auto record =
       Game::Audio::CueTrace::instance().record_for("test.cue.rendered_cooldown");
-  EXPECT_EQ(record.outcomes.at(static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown)),
+  EXPECT_EQ(record.outcomes.at(
+                static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown)),
             1U);
 }
 

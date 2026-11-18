@@ -3,10 +3,13 @@
 #include <algorithm>
 #include <limits>
 
-#include "formation_combat_geometry.h"
-#include "raft_system.h"
+#include "../formation_combat_geometry.h"
 
 namespace Game::Systems {
+
+inline constexpr float k_raft_deck_half_length = 1.9F;
+
+inline constexpr float k_raft_deck_half_width = 2.7F;
 
 // How a passenger unit's formation is laid onto a raft deck.
 //

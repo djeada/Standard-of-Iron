@@ -96,8 +96,9 @@ void AudioSystem::render_offline(float* interleaved_stereo, unsigned frames) {
   m_music_player->render_offline(interleaved_stereo, frames);
   // Offline, cooldowns and holds run on the time the rendered audio has reached.
   Game::Audio::Clock::use_rendered_time(true);
-  Game::Audio::Clock::advance_rendered(static_cast<double>(frames) /
-                                       static_cast<double>(MiniaudioBackend::DEFAULT_SAMPLE_RATE));
+  Game::Audio::Clock::advance_rendered(
+      static_cast<double>(frames) /
+      static_cast<double>(MiniaudioBackend::DEFAULT_SAMPLE_RATE));
 }
 
 void AudioSystem::shutdown() {

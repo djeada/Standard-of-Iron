@@ -354,10 +354,10 @@ TEST_F(AudioGameplayScenarioTest, ADenseMeleeIsScatteredBlowsNotABeat) {
     gaps.push_back(played_at[index] - played_at[index - 1]);
   }
   const double shortest = *std::min_element(gaps.begin(), gaps.end());
-  EXPECT_GE(shortest + 1e-6,
-            std::chrono::duration<double>(
-                Game::Audio::AudioEventHandler::k_clash_gap_min)
-                .count())
+  EXPECT_GE(
+      shortest + 1e-6,
+      std::chrono::duration<double>(Game::Audio::AudioEventHandler::k_clash_gap_min)
+          .count())
       << "two clashes played closer together than the clash gap";
 
   const double mean =

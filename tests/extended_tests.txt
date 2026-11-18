@@ -59,6 +59,11 @@ MovementPaceTest.AnArmyReorderedThroughATownHoldsPace
 # pull-request runner in Debug. The battle-order unit tests stay on PRs.
 BattleOrderBehaviourTest.CrescentCentreGivesGroundWhileTheWingsHold
 BattleOrderBehaviourTest.CrescentFightIsDeterministicTakeToTake
+# Twelve squads storm a walled camp for 36 s of simulated time, once per wall
+# setup: 10.1 s on a pull-request runner in Debug. The wall-slide geometry test
+# (FormationCombatGeometry.AChargingFileKeepsPaceAlongAWallItsSlotsLieBehind)
+# keeps the rule itself on PRs.
+EnclosureEntryTest.*
 
 # arena_tests
 # Plays the whole Cannae battle script twice and compares the takes: 60.1 s on

@@ -16,13 +16,13 @@
 #include "../../util/planar_math.h"
 #include "../navigation/nav_grid.h"
 #include "../navigation/wall_walk_path.h"
-#include "../raft_deck_fit.h"
 #include "combat_utils.h"
 #include "core/wall_walk_geometry.h"
 #include "formation_combat_roles.h"
 #include "formation_local_frame.h"
 #include "formation_reform_walk.h"
 #include "formation_soldier_walk.h"
+#include "raft_deck_fit.h"
 #include "structure_combat.h"
 #include "target_rules.h"
 
@@ -230,10 +230,12 @@ auto press_stays_walkable(const EntityFrame& frame,
   if (frame.actor == nullptr || toward.distance <= 0.0001F || distance <= 0.0F) {
     return true;
   }
-  QVector3D const from = local_to_world(*frame.actor, directive.local_x, directive.local_z);
-  QVector3D const to = local_to_world(*frame.actor,
-                                      directive.local_x + toward.x / toward.distance * distance,
-                                      directive.local_z + toward.z / toward.distance * distance);
+  QVector3D const from =
+      local_to_world(*frame.actor, directive.local_x, directive.local_z);
+  QVector3D const to =
+      local_to_world(*frame.actor,
+                     directive.local_x + toward.x / toward.distance * distance,
+                     directive.local_z + toward.z / toward.distance * distance);
   if (auto* pathfinder = NavGrid::get_pathfinder();
       pathfinder != nullptr &&
       !pathfinder->is_world_segment_walkable(from, to, frame.passability)) {
@@ -291,9 +293,8 @@ auto press_toward_target(const EntityFrame& frame,
   if (!front_clear) {
     // His nearest foe is screened by his own comrades: go for the nearest foe he can
     // reach with a clear path instead, which wraps the files round the enemy's flank.
-    float const reach_limit =
-        frame.layout.spacing * k_front_line_press_spacings + k_weapon_contact_distance +
-        frame.layout.spacing;
+    float const reach_limit = frame.layout.spacing * k_front_line_press_spacings +
+                              k_weapon_contact_distance + frame.layout.spacing;
     // Only a foe about as near as his own: in a full-strength clash the rear ranks keep
     // formation instead of wrapping round the enemy's flanks.
     float const near_enough = contact_vector.distance + frame.layout.spacing * 0.5F;
@@ -336,18 +337,20 @@ auto press_toward_target(const EntityFrame& frame,
   float const gap_to_close = std::max(0.0F, contact_vector.distance - contact_distance);
   float pull_distance = 0.0F;
   if (rank.ranked) {
-    pull_distance = std::clamp(rank.surface.distance -
-                                   structure_attack_profile(&frame.entity).contact_clearance,
-                               0.0F,
-                               layout.spacing * 1.6F);
+    pull_distance =
+        std::clamp(rank.surface.distance -
+                       structure_attack_profile(&frame.entity).contact_clearance,
+                   0.0F,
+                   layout.spacing * 1.6F);
   } else if (single_opponent) {
     pull_distance = std::min(gap_to_close, layout.spacing * 1.6F);
-  } else if (front_clear && press_stays_walkable(frame,
-                                                  directive,
-                                                  contact_vector,
-                                                  std::min(gap_to_close,
-                                                           layout.spacing *
-                                                               k_front_line_press_spacings))) {
+  } else if (front_clear &&
+             press_stays_walkable(
+                 frame,
+                 directive,
+                 contact_vector,
+                 std::min(gap_to_close,
+                          layout.spacing * k_front_line_press_spacings))) {
     // Half the gap, or all but the stand-off when that is more: a man walking up to a
     // distant foe stops short enough that the foe can still step in without the two
     // bodies meeting inside each other, and close enough to reach him.
@@ -417,11 +420,12 @@ void apply_assigned_engagement(const EntityFrame& frame,
   float const weapon_reach =
       attack != nullptr ? attack->melee_range : frame.layout.spacing * 0.65F;
   // Reach is judged from where the soldier stands after stepping toward his foe.
-  float const stepped =
-      press_toward_target(frame, slot, opponent, opponent_layout, retained, rank, directive);
+  float const stepped = press_toward_target(
+      frame, slot, opponent, opponent_layout, retained, rank, directive);
   bool const opponent_within_reach =
-      opponent_is_structure ? rank.ranked
-                            : directive.engagement_surface_gap - stepped <= weapon_reach;
+      opponent_is_structure
+          ? rank.ranked
+          : directive.engagement_surface_gap - stepped <= weapon_reach;
   directive.combat_role =
       brawls_as_a_crowd(frame.world, frame.entity.get_id())
           ? crowd_brawl_role(slot.original.index)

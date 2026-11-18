@@ -15,8 +15,8 @@
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/combat_system/raft_deck_fit.h"
 #include "game/systems/navigation/pathfinding.h"
-#include "game/systems/raft_deck_fit.h"
 #include "game/systems/raft_system.h"
 #include "game/systems/unit_activity.h"
 #include "units/spawn_type.h"
@@ -449,8 +449,10 @@ TEST_F(RaftSystemTest, TheHudIsToldOnlyWhenSomeoneComesWithinReach) {
 
 namespace {
 
-auto grid_layout(int files, int ranks, float file_gap, float rank_gap)
-    -> Game::Systems::FormationCombat::FormationLayout {
+auto grid_layout(int files,
+                 int ranks,
+                 float file_gap,
+                 float rank_gap) -> Game::Systems::FormationCombat::FormationLayout {
   Game::Systems::FormationCombat::FormationLayout layout;
   layout.body_radius = 0.3F;
   std::uint16_t index = 0;
@@ -478,7 +480,8 @@ TEST(RaftDeckFitTest, EveryPassengerStandsOnThePlanks) {
   for (auto const& slot : layout.live_slots) {
     float const x = fit.fit_x(slot.local_x);
     float const z = fit.fit_z(slot.local_z);
-    EXPECT_LE(std::abs(x) + layout.body_radius, Game::Systems::k_raft_deck_half_width + 1e-4F)
+    EXPECT_LE(std::abs(x) + layout.body_radius,
+              Game::Systems::k_raft_deck_half_width + 1e-4F)
         << "file " << slot.index;
     EXPECT_LE(std::abs(z) + layout.body_radius,
               Game::Systems::k_raft_deck_half_length + 1e-4F)
