@@ -15,6 +15,7 @@
 #include "game/core/component.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/movement_animation.h"
 #include "render/creature/pipeline/corpse_sink.h"
@@ -381,8 +382,8 @@ void submit_howdah(const Render::GL::DrawContext& ctx,
                    const QMatrix4x4& world,
                    Render::GL::ISubmitter& out) {
   QVector3D team = profile.variant.howdah_fabric_color;
-  if (ctx.entity != nullptr &&
-      ctx.entity->get_component<Engine::Core::RenderableComponent>() != nullptr) {
+  if (ctx.entity != nullptr && ctx.world != nullptr &&
+      ctx.world->has<Engine::Core::UnitComponent>(ctx.entity->get_id())) {
     team = Render::entity_color(*ctx.entity);
   }
   std::array<QVector3D, k_howdah_slot_count> const palette{
