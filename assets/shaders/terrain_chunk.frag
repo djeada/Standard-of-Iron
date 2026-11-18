@@ -34,7 +34,16 @@ const float k_soi_tuft_light = 1.10;
 const float k_soi_sod_amount = 0.30;
 const float k_soi_earth_fleck_amount = 0.55;
 const float k_soi_terrain_relief_damping = 0.68;
-const float k_soi_meadow_drift_strength = 0.66;
+const float k_soi_meadow_drift_strength = 0.48;
+const float k_soi_meadow_cured_share = 0.42;
+const float k_soi_clump_frequency = 2.6;
+const float k_soi_clump_contrast = 0.20;
+const float k_soi_clump_hue = 0.16;
+const float k_soi_tussock_frequency = 0.78;
+const float k_soi_tussock_contrast = 0.11;
+const float k_soi_stroke_frequency = 3.4;
+const float k_soi_stroke_light = 0.20;
+const float k_soi_stroke_dark = 0.13;
 const float k_soi_meadow_frequency = 0.030;
 const float k_soi_normal_field_curvature_trust = 0.0;
 const float k_soi_terrain_hue_scale = 0.042;
@@ -130,6 +139,53 @@ float gradient_fbm_with_footprint(vec2 p, float footprint) {
 
 vec2 cellular_distances(vec2 p) {
   return soi_terrain_cellular_distances_9e14b7(p);
+}
+
+vec2 soi_grass_clump(vec2 p) {
+  vec2 cell = floor(p);
+  vec2 local = fract(p);
+  float weight_sum = 0.0;
+  float tone_sum = 0.0;
+  float cover = 0.0;
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 jitter = hash22(cell + offset);
+      float reach = 0.52 + 0.16 * jitter.y;
+      float d = length(offset + 0.5 + 0.42 * jitter - local) / reach;
+      float w = 1.0 - smoothstep(0.25, 1.0, d);
+      float tone = fract(sin(dot(cell + offset, vec2(41.3, 289.1))) * 43758.5453);
+      weight_sum += w;
+      tone_sum += w * tone;
+      cover = max(cover, w);
+    }
+  }
+  return vec2(weight_sum > 1e-4 ? tone_sum / weight_sum : 0.5, cover);
+}
+
+vec2 soi_grass_strokes(vec2 p) {
+  vec2 cell = floor(p);
+  vec2 local = fract(p);
+  float best = 0.0;
+  float tone = 0.5;
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 jitter = hash22(cell + offset);
+      float angle = 1.20 + 0.60 * jitter.x;
+      vec2 along = vec2(cos(angle), sin(angle));
+      float half_length = 0.30 + 0.12 * jitter.y;
+      vec2 q = local - (offset + 0.5 + 0.40 * jitter);
+      float t = clamp(dot(q, along), -half_length, half_length);
+      float mask = 1.0 - smoothstep(0.030, 0.095, length(q - along * t));
+      mask *= 1.0 - 0.7 * smoothstep(half_length * 0.45, half_length, abs(t));
+      if (mask > best) {
+        best = mask;
+        tone = fract(sin(dot(cell + offset, vec2(12.9898, 78.233))) * 43758.5453);
+      }
+    }
+  }
+  return vec2(best, tone);
 }
 
 float ecology_noise(vec2 p) {
@@ -843,7 +899,7 @@ void main() {
                                  (exposure_field - drainage_field) * 0.38,
                              0.0,
                              1.0);
-  vec3 sunlit_meadow = mix(grass_color, u_grass_dry, 0.55) * 1.06;
+  vec3 sunlit_meadow = mix(grass_color, u_grass_dry, k_soi_meadow_cured_share) * 1.05;
   vec3 deep_meadow = mix(grass_color, u_grass_secondary, 0.55) * 0.88;
   vec3 meadow_tone =
       mix(deep_meadow, sunlit_meadow, smoothstep(0.20, 0.80, meadow_drift));
@@ -887,6 +943,39 @@ void main() {
       mix(grass_color,
           mix(sod_lush, sod_cured, smoothstep(-0.28, 0.28, sod + dry_patch * 0.20)),
           k_soi_sod_amount);
+#if SOI_SURFACE_DETAIL
+  {
+    vec2 clump_coord = v_world_pos.xz * k_soi_clump_frequency + domain_warp * 0.35;
+    float clump_fade =
+        1.0 - smoothstep(0.22, 0.80, max(length(fwidth(clump_coord)), 1e-5));
+    if (clump_fade > k_soi_band_epsilon) {
+      vec2 clump = soi_grass_clump(clump_coord);
+      float swing = (clump.x - 0.5) * 2.0 * clump.y;
+      vec3 clump_color = grass_color * (1.0 + swing * k_soi_clump_contrast);
+      clump_color = mix(clump_color,
+                        mix(deep_sward, cropped_sward, clump.x),
+                        k_soi_clump_hue * clump.y);
+      grass_color = mix(grass_color, clump_color, clump_fade);
+    }
+    vec2 tussock_field_coord =
+        v_world_pos.xz * k_soi_tussock_frequency - domain_warp * 0.50 + vec2(17.0, 9.0);
+    float tussock_field_fade =
+        1.0 - smoothstep(0.18, 0.70, max(length(fwidth(tussock_field_coord)), 1e-5));
+    if (tussock_field_fade > k_soi_band_epsilon) {
+      vec2 patch_cell = soi_grass_clump(tussock_field_coord);
+      grass_color *= 1.0 + (patch_cell.x - 0.5) * 2.0 * patch_cell.y *
+                               k_soi_tussock_contrast * tussock_field_fade;
+    }
+    vec2 stroke_coord = v_world_pos.xz * k_soi_stroke_frequency + domain_warp * 0.20;
+    float stroke_fade =
+        1.0 - smoothstep(0.10, 0.34, max(length(fwidth(stroke_coord)), 1e-5));
+    if (stroke_fade > k_soi_band_epsilon) {
+      vec2 stroke = soi_grass_strokes(stroke_coord);
+      float lift = stroke.y > 0.45 ? k_soi_stroke_light : -k_soi_stroke_dark;
+      grass_color *= 1.0 + stroke.x * lift * stroke_fade;
+    }
+  }
+#endif
   float earth_fleck = smoothstep(-0.20, -0.40, tuft) * (0.30 + 0.70 * exposure_field) *
                       (1.0 - smoothstep(0.20, 0.50, slope)) *
                       (1.0 - 0.60 * u_moisture_level);

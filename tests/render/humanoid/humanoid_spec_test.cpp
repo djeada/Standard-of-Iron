@@ -786,17 +786,29 @@ TEST(HumanoidSpecTest, FullBodyCarriesABakedFaceOnTheCraniumFront) {
   ASSERT_NE(face->custom_mesh, nullptr);
   EXPECT_EQ(face->params.anchor_bone, static_cast<std::uint16_t>(HumanoidBone::Head));
 
-  QVector3D const centre = cranium->params.head_offset;
-  QVector3D const radii = cranium->params.half_extents * 2.0F;
+  auto const* jaw = find_primitive(spec.lod_full.primitives, "humanoid_full_jaw");
+  ASSERT_NE(jaw, nullptr);
+  auto shell_radius = [](const Render::Creature::PrimitiveInstance& shell,
+                         const std::array<float, 3>& position) {
+    QVector3D const centre = shell.params.head_offset;
+    QVector3D const radii = shell.params.half_extents * 2.0F;
+    QVector3D const d(
+        position[0] - centre.x(), position[1] - centre.y(), position[2] - centre.z());
+    return std::sqrt((d.x() * d.x()) / (radii.x() * radii.x()) +
+                     (d.y() * d.y()) / (radii.y() * radii.y()) +
+                     (d.z() * d.z()) / (radii.z() * radii.z()));
+  };
   auto const& vertices = face->custom_mesh->get_vertices();
   ASSERT_FALSE(vertices.empty());
+  bool mouth_on_jaw = false;
   for (auto const& v : vertices) {
-    QVector3D const d(v.position[0] - centre.x(),
-                      v.position[1] - centre.y(),
-                      v.position[2] - centre.z());
-    float const r = std::sqrt((d.x() * d.x()) / (radii.x() * radii.x()) +
-                              (d.y() * d.y()) / (radii.y() * radii.y()) +
-                              (d.z() * d.z()) / (radii.z() * radii.z()));
+
+    float const on_cranium = shell_radius(*cranium, v.position);
+    float const on_jaw = shell_radius(*jaw, v.position);
+    float const r = on_cranium < 1.03F ? on_cranium : on_jaw;
+    mouth_on_jaw = mouth_on_jaw || on_cranium >= 1.03F;
+    EXPECT_GE(on_cranium, 1.0F);
+    EXPECT_GE(on_jaw, 1.0F);
     EXPECT_GT(r, 1.0F);
     EXPECT_LT(r, 1.03F);
     EXPECT_GT(v.position[2], 0.0F);
@@ -804,6 +816,7 @@ TEST(HumanoidSpecTest, FullBodyCarriesABakedFaceOnTheCraniumFront) {
     EXPECT_EQ(v.bone_indices[0], static_cast<std::uint8_t>(HumanoidBone::Head));
     EXPECT_FLOAT_EQ(v.bone_weights[0], 1.0F);
   }
+  EXPECT_TRUE(mouth_on_jaw) << "the mouth is drawn on the jaw, where it can be seen";
 
   auto const& indices = face->custom_mesh->get_indices();
   ASSERT_EQ(indices.size() % 3U, 0U);

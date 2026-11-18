@@ -372,14 +372,16 @@ auto sample_mountain(float local_x,
       nx * 2.4F + config.phase, config.phase * 0.47F, config.seed ^ 0xA4093822U, 4);
   const float peak_wave =
       0.5F + 0.5F * std::sin(nx * 10.6F + config.phase * 1.7F + peak_warp * 1.25F);
-  const float peak_chain = 0.67F + 0.33F * smoothstep01((peak_wave - 0.12F) / 0.76F);
+  const float peak_chain = 0.54F + 0.46F * smoothstep01((peak_wave - 0.12F) / 0.76F);
   const float foothill = std::pow(envelope_position, 0.78F) * 0.11F;
-  const float ridge = main_fold * longitudinal_taper * peak_chain * 0.79F;
+  const float ridge = main_fold * longitudinal_taper * peak_chain * 0.76F;
   const float crest =
-      crest_fold * longitudinal_taper * std::pow(peak_chain, 1.35F) * 0.17F;
+      crest_fold * longitudinal_taper * std::pow(peak_chain, 1.55F) * 0.24F;
   const float folded_relief = branch_fold * longitudinal_taper * 0.13F;
 
-  const float weathering = broad_noise * 0.040F + fine_noise * 0.010F - gully * 0.040F;
+  const float crag = (1.0F - std::abs(fine_noise) * 2.0F) * main_fold * 0.030F;
+  const float weathering =
+      broad_noise * 0.070F + fine_noise * 0.022F + crag - gully * 0.075F;
   const float height =
       edge_fade *
       std::clamp(foothill + ridge + crest + folded_relief + weathering, 0.0F, 1.08F);

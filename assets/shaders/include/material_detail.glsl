@@ -378,11 +378,12 @@ vec3 soi_apply_damage_soot(vec3 color, vec3 world_pos, int damage_tier) {
   if (damage_tier <= 0 || !u_has_material_detail) {
     return color;
   }
-  float soot_amt = float(damage_tier) * 0.45;
-  vec2 soot_uv = world_pos.xz * 3.5;
-  float soot_patch =
-      soi_detail_coarse(soot_uv) * 0.6 + soi_detail_mid(soot_uv * 4.1) * 0.4;
-  float soot_mask = smoothstep(0.42, 0.65, soot_patch) * soot_amt;
-  vec3 char_color = mix(color * 0.25, vec3(0.08, 0.07, 0.06), 0.5);
-  return mix(color, char_color, clamp(soot_mask, 0.0, 0.85));
+  float soot_amt = float(damage_tier) * 0.32;
+  vec2 soot_uv = world_pos.xz * 1.7 + world_pos.y * vec2(0.9, -0.7);
+  float soot_patch = soi_detail_coarse(soot_uv) * 0.55 +
+                     soi_detail_mid(soot_uv * 3.1) * 0.30 +
+                     soi_detail_mid(soot_uv * 9.3) * 0.15;
+  float soot_mask = smoothstep(0.30, 0.80, soot_patch) * soot_amt;
+  vec3 char_color = mix(color * 0.42, vec3(0.10, 0.09, 0.08), 0.35);
+  return mix(color, char_color, clamp(soot_mask, 0.0, 0.70));
 }

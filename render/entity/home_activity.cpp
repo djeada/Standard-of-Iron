@@ -10,6 +10,7 @@
 #include <string>
 
 #include "animation/clip_manifest.h"
+#include "building_render_common.h"
 #include "building_state.h"
 #include "civilian_actor.h"
 #include "game/core/component_gameplay.h"
@@ -596,12 +597,19 @@ auto resident_pose(const DrawContext& ctx,
   return pose;
 }
 
+constexpr float k_resident_fall_stagger = 0.7F;
+constexpr float k_resident_fall_seconds = 1.1F;
+constexpr float k_resident_body_linger = 16.0F;
+constexpr float k_resident_body_sink_seconds = 3.0F;
+constexpr float k_resident_body_sink_depth = 0.55F;
+
 void submit_doorstep_residents(const DrawContext& ctx,
                                ISubmitter& out,
                                bool carthage,
                                const HomeSmokeAnchor& anchor,
                                std::uint64_t id,
-                               const QVector3D& doorstep) {
+                               const QVector3D& doorstep,
+                               float fallen_for = -1.0F) {
   auto* activity = ctx.home_activity;
   if (activity == nullptr || activity->remaining_actors <= 0) {
     return;
@@ -620,9 +628,25 @@ void submit_doorstep_residents(const DrawContext& ctx,
   for (int r = 0; r < visit.residents && activity->remaining_actors > 0; ++r) {
     const auto seed =
         mix((low32(id) * 2246822519U) + (static_cast<std::uint32_t>(r) * 7919U));
-    const auto pose = resident_pose(ctx, frame, visit, r, seed);
+    auto pose = resident_pose(ctx, frame, visit, r, seed);
     if (!pose.drawn) {
       continue;
+    }
+    const float down_for = fallen_for - (roll(seed, 31U) * k_resident_fall_stagger);
+    if (fallen_for >= 0.0F && down_for >= 0.0F) {
+      static constexpr std::array<std::uint16_t, 3> k_falls{
+          Animation::k_humanoid_die_infantry_clip,
+          Animation::k_humanoid_die_infantry_side_clip,
+          Animation::k_humanoid_die_infantry_face_clip};
+      pose.clip = k_falls[seed % k_falls.size()];
+      pose.phase = std::clamp(down_for / k_resident_fall_seconds, 0.0F, 1.0F);
+      pose.held = true;
+      pose.blend_clip = 0xFFFFU;
+      pose.blend_weight = 0.0F;
+      pose.position.setY(pose.position.y() -
+                         (k_resident_body_sink_depth *
+                          resident_smooth((down_for - k_resident_body_linger) /
+                                          k_resident_body_sink_seconds)));
     }
     QMatrix4x4 world;
     world.translate(pose.position);
@@ -910,10 +934,27 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
     return;
   }
   const auto id = ctx.entity->get_id();
+  const auto& anchor = home_smoke_anchor(carthage);
   if (!activity->inhabited(id)) {
+
+    if (!anchor.valid() || resolve_building_state(ctx) != BuildingState::Destroyed) {
+      return;
+    }
+    const float fallen_for = building_state_transition_age(
+        static_cast<std::uint32_t>(id), ctx.animation_time);
+    if (fallen_for < 0.0F || fallen_for > k_resident_fall_stagger +
+                                              k_resident_body_linger +
+                                              k_resident_body_sink_seconds) {
+      return;
+    }
+    DrawContext struck = ctx;
+    struck.animation_time = ctx.animation_time - fallen_for;
+    auto placed = ctx.model;
+    placed.translate(anchor.doorstep);
+    submit_doorstep_residents(
+        struck, out, carthage, anchor, id, placed.column(3).toVector3D(), fallen_for);
     return;
   }
-  const auto& anchor = home_smoke_anchor(carthage);
   if (!anchor.valid()) {
     return;
   }

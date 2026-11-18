@@ -1,4 +1,5 @@
 #version 330 core
+#include "environment_lighting.glsl"
 #include "noise.glsl"
 in vec2 v_uv;
 out vec4 frag_color;
@@ -35,13 +36,17 @@ void main() {
   alpha *= mix(mottle, 1.0, smoothstep(0.55, 0.15, dist));
   alpha *= u_alpha_scale;
 
-  vec3 wet = vec3(0.22, 0.012, 0.010);
+  vec3 wet = vec3(0.19, 0.012, 0.010);
   vec3 dry = vec3(0.095, 0.018, 0.014);
   float grain = noise(seeded * 13.0) * 0.16 + noise(seeded * 27.0) * 0.05;
   float dry_ring = smoothstep(0.52, 0.98, dist);
   vec3 color = mix(wet, dry, dry_ring * 0.75);
   color += vec3(grain * 0.45, grain * 0.10, grain * 0.08);
   color *= 1.0 - smoothstep(0.72, 1.0, dist) * 0.22;
+
+  float scene_light =
+      dot(soi_surface_lighting(vec3(0.0, 1.0, 0.0)), vec3(0.2126, 0.7152, 0.0722));
+  color *= clamp(scene_light, 0.10, 1.0);
 
   if (alpha < 0.01)
     discard;

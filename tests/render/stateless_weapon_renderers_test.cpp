@@ -996,7 +996,8 @@ TEST(StatelessWeaponRenderers, RomanScutumUsesArchetypePath) {
 
   EXPECT_TRUE(via_submit.meshes.empty());
   EXPECT_EQ(via_submit.archetypes.size(), 1U);
-  EXPECT_EQ(draw_count_of(via_submit), 7);
+
+  EXPECT_EQ(draw_count_of(via_submit), 7 + 18);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 

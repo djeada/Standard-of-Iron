@@ -19,10 +19,13 @@ enum class FaceFeatureTone : std::uint8_t {
   Pupil,
   Catchlight,
   Mouth,
+  Lid,
 };
 
 [[nodiscard]] auto build_humanoid_face_mesh(const QVector3D& cranium_centre,
-                                            const QVector3D& cranium_radii)
+                                            const QVector3D& cranium_radii,
+                                            const QVector3D& jaw_centre,
+                                            const QVector3D& jaw_radii)
     -> std::unique_ptr<Render::GL::Mesh>;
 
 } // namespace Render::Humanoid
