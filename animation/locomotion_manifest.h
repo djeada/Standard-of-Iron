@@ -60,6 +60,8 @@ struct HumanoidLocomotionInputs {
   float cadence_scale{1.0F};
 
   float body_scale{1.0F};
+
+  float stride_presence{1.0F};
   HumanoidLocomotionTuning tuning{};
   bool has_persistent_state{false};
   HumanoidLocomotionPersistentState previous{};

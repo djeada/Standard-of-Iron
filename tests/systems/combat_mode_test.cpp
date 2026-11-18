@@ -1554,6 +1554,47 @@ TEST_F(CombatModeTest, RtsMeleeDamageComesFromVisibleActionContact) {
   EXPECT_EQ(action->last_hit_target_id, enemy->get_id());
 }
 
+TEST_F(CombatModeTest, SiegeEnginesDealDamageOnlyThroughWhatTheyLoose) {
+  for (auto const siege_type :
+       {Game::Units::SpawnType::Catapult, Game::Units::SpawnType::Ballista}) {
+    auto* siege = world->create_entity();
+    siege->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+    auto* siege_unit = siege->add_component<UnitComponent>(150, 150, 0.0F, 40.0F);
+    siege_unit->owner_id = 1;
+    siege_unit->spawn_type = siege_type;
+    auto* attack = siege->add_component<AttackComponent>();
+    attack->can_melee = false;
+    attack->can_ranged = true;
+    attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+    attack->current_mode = AttackComponent::CombatMode::Ranged;
+    attack->range = 40.0F;
+    attack->damage = 60;
+    attack->cooldown = 1.0F;
+    attack->time_since_last = 5.0F;
+
+    auto* enemy = world->create_entity();
+    enemy->add_component<TransformComponent>(12.0F, 0.0F, 0.0F);
+    auto* enemy_unit = enemy->add_component<UnitComponent>(500, 500, 1.0F, 12.0F);
+    enemy_unit->owner_id = 2;
+    enemy_unit->spawn_type = Game::Units::SpawnType::Swordsman;
+    use_single_body_combat_geometry({siege, enemy});
+
+    auto* attack_target = siege->add_component<AttackTargetComponent>();
+    attack_target->target_id = enemy->get_id();
+    attack_target->should_chase = false;
+
+    for (int tick = 0; tick < 5; ++tick) {
+      Game::Systems::Combat::process_attacks(
+          world.get(),
+          Game::Systems::Combat::build_combat_query_context(world.get()),
+          0.1F);
+    }
+    EXPECT_EQ(enemy_unit->health, 500)
+        << "a siege engine's stone or bolt deals its damage where it lands, never on "
+           "the attack tick";
+  }
+}
+
 TEST_F(CombatModeTest, InfantryMeleeQuicklyDestroysExposedSiegeEngines) {
   for (auto const siege_type :
        {Game::Units::SpawnType::Catapult, Game::Units::SpawnType::Ballista}) {

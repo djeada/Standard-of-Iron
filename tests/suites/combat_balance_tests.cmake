@@ -73,6 +73,7 @@ add_executable(
     headless/formation_ux_lab_test.cpp
     headless/army_command_test.cpp
     headless/hill_containment_test.cpp
+    headless/enclosure_entry_test.cpp
     headless/formation_prop_clearance_test.cpp
     headless/structure_melee_clearance_test.cpp
     headless/hill_traversal_test.cpp

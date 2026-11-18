@@ -1308,9 +1308,21 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
     return prep.bodies.requests().front();
   };
 
-  auto const first = request_for_time(0.10F);
-  Render::GL::begin_humanoid_frame();
-  auto const second = request_for_time(0.70F);
+  // The legs follow the ground the body is drawn to cover, so the unit has to
+  // actually travel at its declared 1 m/s between the two sampled frames.
+  constexpr float k_step = 1.0F / 60.0F;
+  Render::Creature::CreatureRenderRequest first{};
+  Render::Creature::CreatureRenderRequest second{};
+  for (int frame = 0; frame <= 36; ++frame) {
+    float const time = 0.10F + (k_step * static_cast<float>(frame));
+    transform->position = {time, 0.0F, 0.0F};
+    auto const request = request_for_time(time);
+    Render::GL::begin_humanoid_frame();
+    if (frame == 6) {
+      first = request;
+    }
+    second = request;
+  }
 
   EXPECT_EQ(first.state, Render::Creature::AnimationStateId::Walk);
   EXPECT_EQ(second.state, Render::Creature::AnimationStateId::Walk);
@@ -1417,6 +1429,7 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   Render::Creature::CreatureRenderRequest settled{};
   for (int frame = 0; frame < 90; ++frame) {
     time += k_step;
+    transform->position.z += 2.2F * k_step;
     settled = request_for_time(time);
   }
   ASSERT_EQ(settled.state, Render::Creature::AnimationStateId::Walk);
@@ -1426,7 +1439,9 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   stand();
   std::vector<float> stand_weights;
   std::vector<float> phases;
-  for (int frame = 0; frame < 12; ++frame) {
+  // The legs wind down with the measured ground speed, so the stand takes about
+  // 0.7 s to take over completely; watch a whole second of it.
+  for (int frame = 0; frame < 60; ++frame) {
     time += k_step;
     auto const request = request_for_time(time);
     if (request.full_body_blend.active() &&
@@ -6340,6 +6355,84 @@ TEST(HumanoidPrepare, FormationMeleeKeepsLowerBodyOnRootedBaseLayer) {
   EXPECT_FALSE(selection.full_body_blend.active());
 }
 
+TEST(HumanoidPrepare, AStrikingSoldierWhoIsShovedWalksUnderHisSwing) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::CombatVisualTransactionPhase;
+  using Render::Creature::PlaybackLayerMode;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/stepping_formation_melee";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.visual_movement.measured_from_ground = true;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.is_in_melee_lock = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.prioritize_action_over_locomotion = true;
+  anim.inputs.combat_visual.is_melee = true;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Spear;
+  anim.gait.locomotion_presence = 0.3F;
+
+  for (auto const phase :
+       {CombatVisualTransactionPhase::Strike, CombatVisualTransactionPhase::Recover}) {
+    anim.inputs.combat_visual.phase = phase;
+    anim.inputs.combat_visual.phase_progress = 0.5F;
+    auto const selection = resolve_humanoid_animation_selection(spec, anim, 41U);
+
+    EXPECT_EQ(selection.state, AnimationStateId::Walk)
+        << "the legs follow the ground whatever the arms are doing";
+    ASSERT_TRUE(selection.upper_body_overlay.active());
+    EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
+    EXPECT_EQ(selection.upper_body_overlay.state, AnimationStateId::AttackSpear);
+    ASSERT_TRUE(selection.full_body_blend.active())
+        << "a shuffle is a short stride: the walk is blended with the stance";
+    EXPECT_NEAR(selection.full_body_blend.weight, 0.7F, 0.01F);
+    EXPECT_EQ(selection.full_body_blend.clip_id,
+              Animation::k_humanoid_combat_ready_clip);
+  }
+}
+
+TEST(HumanoidPrepare, AReadySoldierWhoIsShovedStepsWithHisWeaponUp) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::PlaybackLayerMode;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/stepping_formation_ready";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.visual_movement.measured_from_ground = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.is_in_melee_lock = true;
+  anim.gait.locomotion_presence = 1.0F;
+
+  auto const selection = resolve_humanoid_animation_selection(spec, anim, 41U);
+  EXPECT_EQ(selection.state, AnimationStateId::Walk);
+  ASSERT_TRUE(selection.upper_body_overlay.active());
+  EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
+  EXPECT_EQ(selection.upper_body_overlay.clip_id,
+            Animation::k_humanoid_combat_ready_clip);
+
+  anim.inputs.visual_movement.measured_from_ground = false;
+  auto const unmeasured = resolve_humanoid_animation_selection(spec, anim, 41U);
+  EXPECT_FALSE(unmeasured.upper_body_overlay.active())
+      << "only a measured step is trusted inside a melee lock";
+}
+
 class MotionProbeSubmitter : public CountingSubmitter {
 public:
   std::vector<QMatrix4x4> bones;
@@ -6371,6 +6464,11 @@ struct MotionMeasurements {
 
 auto measure_motion(const std::vector<QMatrix4x4>& track,
                     float dt) -> MotionMeasurements {
+  // A turn under 0.01 (about half a degree) a frame is not counted toward a
+  // reversal: the palette cache rounds clip blends to 1/31 of a frame and layer
+  // weights to 1/255, and at 120 fps that rounding alone wobbles a hand by that
+  // much where its swing turns round. A visible shake is several times larger.
+  constexpr float k_turn_floor = 0.01F;
   MotionMeasurements result;
   std::vector<int> reversals;
   for (std::size_t i = 1; i < track.size(); ++i) {
@@ -6402,10 +6500,11 @@ auto measure_motion(const std::vector<QMatrix4x4>& track,
       auto const before = track[i - 2].column(axis).toVector3D().normalized();
       auto const turn = direction - previous;
       auto const previous_turn = previous - before;
-      reverses = reverses ||
-                 (turn.length() > 0.005F && previous_turn.length() > 0.005F &&
-                  QVector3D::dotProduct(turn.normalized(), previous_turn.normalized()) <
-                      -0.5F);
+      reverses =
+          reverses ||
+          (turn.length() > k_turn_floor && previous_turn.length() > k_turn_floor &&
+           QVector3D::dotProduct(turn.normalized(), previous_turn.normalized()) <
+               -0.5F);
     }
     if (reverses) {
       reversals.push_back(static_cast<int>(i));
@@ -6529,7 +6628,9 @@ TEST(HumanoidMotionQuality, MeleeHitsRecoveryAndRetargetingStayVisuallyContinuou
           auto const motion = measure_motion(tracks[b], dt);
           bool const hand = observed[b] == Bone::HandL || observed[b] == Bone::HandR;
 
-          EXPECT_LT(motion.max_speed, hand ? 15.0F : 4.0F);
+          // A soldier retargeted 90 degrees now steps round through the pivot; the
+          // swinging foot peaks near 4 m/s. A snap is several times that.
+          EXPECT_LT(motion.max_speed, hand ? 15.0F : 4.5F);
           EXPECT_LT(motion.max_angular_speed, hand ? 1440.0F : 360.0F);
           EXPECT_LT(motion.rapid_reversals, 3);
 

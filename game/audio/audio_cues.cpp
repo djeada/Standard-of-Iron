@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "audio_clock.h"
 #include "cue_trace.h"
 #include "spatial.h"
 
@@ -96,7 +97,7 @@ auto CueRegistry::is_variant_free_locked(const std::string& resource_id) const -
     return true;
   }
   const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                           std::chrono::steady_clock::now() - dispatched->second)
+                           Game::Audio::Clock::now() - dispatched->second)
                            .count();
   return elapsed >= cooldown_ms;
 }
@@ -239,7 +240,7 @@ auto CueRegistry::play(const std::string& cue_id,
       return false;
     }
 
-    const auto now = std::chrono::steady_clock::now();
+    const auto now = Game::Audio::Clock::now();
     if (binding.cooldown_ms > 0) {
       auto last_it = m_last_played.find(cue_id);
       if (last_it != m_last_played.end()) {

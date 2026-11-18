@@ -585,7 +585,8 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
 
   bool const has_locomotion = is_moving(inputs.movement_state);
 
-  sample.locomotion_presence = has_locomotion ? 1.0F : 0.0F;
+  sample.locomotion_presence =
+      has_locomotion ? std::clamp(inputs.stride_presence, 0.0F, 1.0F) : 0.0F;
   sample.run_presence =
       (has_locomotion && inputs.motion_state == HumanoidMotionState::Run) ? 1.0F : 0.0F;
   if (previous.initialized) {

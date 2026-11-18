@@ -120,6 +120,7 @@ add_executable(
     render/creature/transition_continuity_test.cpp
     render/creature/combat_root_motion_test.cpp
     render/creature/soldier_turn_smoothing_test.cpp
+    render/creature/soldier_ground_motion_test.cpp
     render/creature/humanoid_prepare_test.cpp
     render/creature/humanoid_golden_parity_test.cpp
     render/creature/humanoid_asset_key_test.cpp

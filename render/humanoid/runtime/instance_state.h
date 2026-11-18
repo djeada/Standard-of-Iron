@@ -12,6 +12,7 @@
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/entity/formation_instance_layout.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/humanoid/runtime/soldier_ground_motion.h"
 #include "render/humanoid/runtime/soldier_turn_smoothing.h"
 
 namespace Render::Humanoid {
@@ -58,6 +59,7 @@ struct HumanoidInstanceStateComponent {
   std::vector<SoldierGroundSample> ground_samples;
   std::vector<SoldierSelectionCache> selection_cache;
   std::vector<SoldierTurnSmoothingState> turn_states;
+  std::vector<SoldierGroundMotionState> ground_motion;
   float turn_time{0.0F};
   bool turn_time_valid{false};
   std::vector<SoldierOffsetState> displayed_offsets;

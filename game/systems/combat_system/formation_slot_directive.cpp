@@ -14,14 +14,15 @@
 #include "../../core/ambient_session.h"
 #include "../../map/terrain_service.h"
 #include "../../util/planar_math.h"
+#include "../navigation/nav_grid.h"
 #include "../navigation/wall_walk_path.h"
 #include "combat_utils.h"
 #include "core/wall_walk_geometry.h"
 #include "formation_combat_roles.h"
 #include "formation_local_frame.h"
 #include "formation_reform_walk.h"
-#include "formation_soldier_gait.h"
 #include "formation_soldier_walk.h"
+#include "raft_deck_fit.h"
 #include "structure_combat.h"
 #include "target_rules.h"
 
@@ -35,7 +36,17 @@ constexpr float k_contact_turn_degrees = 180.0F;
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
 constexpr float k_weapon_contact_distance = 0.72F;
+// Against another formation a soldier keeps to his slot (0.20 spacing of give) unless
+// his way to his foe is clear of his own comrades: then he steps into the gap, up to
+// this many spacings, so the men behind a fallen front rank and the files on a shrunken
+// enemy's flank close up and fight instead of standing in place. Close in, each side
+// covers half the gap (the foe steps too); further out he walks all but a stand-off.
+constexpr float k_blocked_press_spacings = 0.20F;
+constexpr float k_front_line_press_spacings = 1.0F;
+constexpr float k_mutual_press_share = 0.5F;
+constexpr float k_mutual_press_gap = 1.2F;
 constexpr float k_facade_body_gap_fraction = 0.5F;
+constexpr float k_contact_slot_range = 10.0F;
 
 struct SlotContext {
   const FormationCombat::SoldierSlot& original;
@@ -181,20 +192,86 @@ auto rank_against_structure(const EntityFrame& frame,
   return rank;
 }
 
-void press_toward_target(const EntityFrame& frame,
+auto front_line_is_clear(const FormationCombat::FormationLayout& layout,
+                         std::uint16_t own_index,
+                         float own_x,
+                         float own_z,
+                         const LocalContactVector& toward) -> bool {
+  if (toward.distance <= 0.0001F) {
+    return true;
+  }
+  float const dir_x = toward.x / toward.distance;
+  float const dir_z = toward.z / toward.distance;
+  float const shoulder = layout.spacing * 0.5F;
+  for (auto const& comrade : layout.live_slots) {
+    if (comrade.index == own_index) {
+      continue;
+    }
+    float const rel_x = comrade.local_x - own_x;
+    float const rel_z = comrade.local_z - own_z;
+    float const along = rel_x * dir_x + rel_z * dir_z;
+    if (along <= 0.15F || along >= toward.distance) {
+      continue;
+    }
+    if (std::abs(rel_x * dir_z - rel_z * dir_x) < shoulder) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// A step beyond a slot's give must not carry a man onto ground his unit cannot stand
+// on (a slope, a wall, a river bank): fighting at the foot of a hill, a front rank that
+// stepped into the gap left by the fallen walked up the slope.
+auto press_stays_walkable(const EntityFrame& frame,
+                          const Soldier& directive,
+                          const LocalContactVector& toward,
+                          float distance) -> bool {
+  if (frame.actor == nullptr || toward.distance <= 0.0001F || distance <= 0.0F) {
+    return true;
+  }
+  QVector3D const from =
+      local_to_world(*frame.actor, directive.local_x, directive.local_z);
+  QVector3D const to =
+      local_to_world(*frame.actor,
+                     directive.local_x + toward.x / toward.distance * distance,
+                     directive.local_z + toward.z / toward.distance * distance);
+  if (auto* pathfinder = NavGrid::get_pathfinder();
+      pathfinder != nullptr &&
+      !pathfinder->is_world_segment_walkable(from, to, frame.passability)) {
+    return false;
+  }
+  auto const* terrain = Game::Session::services_for(frame.world).terrain;
+  if (terrain == nullptr) {
+    return true;
+  }
+  constexpr float k_probe_step = 0.5F;
+  int const probes = std::max(1, static_cast<int>(std::ceil(distance / k_probe_step)));
+  for (int i = 1; i <= probes; ++i) {
+    QVector3D const at = from + (to - from) * (static_cast<float>(i) / probes);
+    auto const cell = NavGrid::world_to_grid(at.x(), at.z());
+    if (!terrain->is_walkable(cell.x, cell.y)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Returns how far the soldier stepped toward his foe this frame.
+auto press_toward_target(const EntityFrame& frame,
                          const SlotContext& slot,
                          Engine::Core::Entity* opponent,
                          const FormationCombat::FormationLayout& opponent_layout,
                          const RetainedTarget& retained,
                          const FacadeRank& rank,
-                         Soldier& directive) {
+                         Soldier& directive) -> float {
   auto const* target_slot = find_live_slot(opponent_layout, retained.slot);
   auto const* opponent_transform =
       opponent != nullptr
           ? frame.world.try_get<Engine::Core::TransformComponent>(opponent->get_id())
           : nullptr;
   if (frame.actor == nullptr || opponent_transform == nullptr) {
-    return;
+    return 0.0F;
   }
   auto const& layout = frame.layout;
   float const target_x = rank.ranked              ? rank.surface.point.x()
@@ -203,8 +280,45 @@ void press_toward_target(const EntityFrame& frame,
   float const target_z = rank.ranked              ? rank.surface.point.z()
                          : target_slot != nullptr ? target_slot->world_z
                                                   : opponent_transform->position.z;
-  auto const contact_vector = local_contact_vector(
+  auto contact_vector = local_contact_vector(
       *frame.actor, directive.local_x, directive.local_z, target_x, target_z);
+  bool const single_opponent = opponent != nullptr && !is_building(opponent) &&
+                               !FormationCombat::has_formation_slots(*opponent);
+  bool front_clear = rank.ranked || single_opponent ||
+                     front_line_is_clear(frame.layout,
+                                         slot.original.index,
+                                         directive.local_x,
+                                         directive.local_z,
+                                         contact_vector);
+  if (!front_clear) {
+    // His nearest foe is screened by his own comrades: go for the nearest foe he can
+    // reach with a clear path instead, which wraps the files round the enemy's flank.
+    float const reach_limit = frame.layout.spacing * k_front_line_press_spacings +
+                              k_weapon_contact_distance + frame.layout.spacing;
+    // Only a foe about as near as his own: in a full-strength clash the rear ranks keep
+    // formation instead of wrapping round the enemy's flanks.
+    float const near_enough = contact_vector.distance + frame.layout.spacing * 0.5F;
+    float best = std::numeric_limits<float>::max();
+    for (auto const& foe : opponent_layout.live_slots) {
+      auto const toward = local_contact_vector(
+          *frame.actor, directive.local_x, directive.local_z, foe.world_x, foe.world_z);
+      if (toward.distance >= best || toward.distance > reach_limit ||
+          toward.distance > near_enough ||
+          !front_line_is_clear(frame.layout,
+                               slot.original.index,
+                               directive.local_x,
+                               directive.local_z,
+                               toward)) {
+        continue;
+      }
+      best = toward.distance;
+      contact_vector = toward;
+      directive.target_slot = foe.index;
+      directive.engagement_surface_gap =
+          toward.distance - (frame.layout.body_radius + opponent_layout.body_radius);
+      front_clear = true;
+    }
+  }
   float const desired_yaw = contact_vector.yaw;
   float const prior_yaw =
       slot.previous != nullptr ? slot.previous->local_yaw : directive.local_yaw;
@@ -213,8 +327,6 @@ void press_toward_target(const EntityFrame& frame,
                       desired_yaw,
                       k_contact_turn_degrees * std::max(0.0F, frame.delta_time));
 
-  bool const single_opponent = opponent != nullptr && !is_building(opponent) &&
-                               !FormationCombat::has_formation_slots(*opponent);
   auto const* attack =
       frame.world.try_get<Engine::Core::AttackComponent>(frame.entity.get_id());
   float const weapon_reach = attack != nullptr ? attack->melee_range : 1.5F;
@@ -222,19 +334,38 @@ void press_toward_target(const EntityFrame& frame,
       single_opponent
           ? layout.body_radius + opponent_layout.body_radius + weapon_reach * 0.35F
           : k_weapon_contact_distance;
-  float const pull_distance =
-      rank.ranked
-          ? std::clamp(rank.surface.distance -
-                           structure_attack_profile(&frame.entity).contact_clearance,
-                       0.0F,
-                       layout.spacing * 1.6F)
-          : std::clamp(contact_vector.distance - contact_distance,
-                       0.0F,
-                       layout.spacing * (single_opponent ? 1.6F : 0.20F));
+  float const gap_to_close = std::max(0.0F, contact_vector.distance - contact_distance);
+  float pull_distance = 0.0F;
+  if (rank.ranked) {
+    pull_distance =
+        std::clamp(rank.surface.distance -
+                       structure_attack_profile(&frame.entity).contact_clearance,
+                   0.0F,
+                   layout.spacing * 1.6F);
+  } else if (single_opponent) {
+    pull_distance = std::min(gap_to_close, layout.spacing * 1.6F);
+  } else if (front_clear &&
+             press_stays_walkable(
+                 frame,
+                 directive,
+                 contact_vector,
+                 std::min(gap_to_close,
+                          layout.spacing * k_front_line_press_spacings))) {
+    // Half the gap, or all but the stand-off when that is more: a man walking up to a
+    // distant foe stops short enough that the foe can still step in without the two
+    // bodies meeting inside each other, and close enough to reach him.
+    float const own_share = std::max(gap_to_close * k_mutual_press_share,
+                                     gap_to_close - k_mutual_press_gap);
+    pull_distance = std::min(own_share, layout.spacing * k_front_line_press_spacings);
+  } else {
+    pull_distance = std::min(gap_to_close, layout.spacing * k_blocked_press_spacings);
+  }
   bool const waits_behind = slot.surround != nullptr && slot.surround->ring > 0U;
   if (contact_vector.distance > 0.0001F && !waits_behind) {
     directive.local_x += contact_vector.x / contact_vector.distance * pull_distance;
     directive.local_z += contact_vector.z / contact_vector.distance * pull_distance;
+  } else {
+    pull_distance = 0.0F;
   }
 
   float const yaw_rad = desired_yaw * std::numbers::pi_v<float> / 180.0F;
@@ -251,6 +382,7 @@ void press_toward_target(const EntityFrame& frame,
                       std::min(0.06F, layout.spacing * 0.06F);
   directive.local_x += right_x * lateral + forward_x * depth;
   directive.local_z += right_z * lateral + forward_z * depth;
+  return pull_distance;
 }
 
 void mark_damage_carrier(const EntityFrame& frame,
@@ -287,9 +419,13 @@ void apply_assigned_engagement(const EntityFrame& frame,
       frame.world.try_get<Engine::Core::AttackComponent>(frame.entity.get_id());
   float const weapon_reach =
       attack != nullptr ? attack->melee_range : frame.layout.spacing * 0.65F;
+  // Reach is judged from where the soldier stands after stepping toward his foe.
+  float const stepped = press_toward_target(
+      frame, slot, opponent, opponent_layout, retained, rank, directive);
   bool const opponent_within_reach =
-      opponent_is_structure ? rank.ranked
-                            : directive.engagement_surface_gap <= weapon_reach;
+      opponent_is_structure
+          ? rank.ranked
+          : directive.engagement_surface_gap - stepped <= weapon_reach;
   directive.combat_role =
       brawls_as_a_crowd(frame.world, frame.entity.get_id())
           ? crowd_brawl_role(slot.original.index)
@@ -298,9 +434,6 @@ void apply_assigned_engagement(const EntityFrame& frame,
                 frame.layout.seed, slot.original.index, true, frame.combat_motion_time)
           : Engine::Core::FormationSoldierCombatRole::Ready;
   directive.action = action_for_role(directive.combat_role);
-
-  press_toward_target(
-      frame, slot, opponent, opponent_layout, retained, rank, directive);
   mark_damage_carrier(frame, assignment, directive);
 }
 
@@ -442,18 +575,13 @@ void carry_fallen_soldier_offset(const EntityFrame& frame,
   }
   directive.contact_offset_x = previous->contact_offset_x;
   directive.contact_offset_z = previous->contact_offset_z;
-  directive.local_x = slot.anchor_local_x + previous->contact_offset_x;
-  directive.local_z = slot.anchor_local_z + previous->contact_offset_z;
   directive.local_yaw = previous->local_yaw;
-
   directive.crowd_offset_x = previous->crowd_offset_x;
   directive.crowd_offset_z = previous->crowd_offset_z;
-  if (frame.actor != nullptr) {
-    auto const [crowd_local_x, crowd_local_z] = world_vector_to_local(
-        *frame.actor, previous->crowd_offset_x, previous->crowd_offset_z);
-    directive.local_x += crowd_local_x;
-    directive.local_z += crowd_local_z;
-  }
+  // He falls where he stood: a man still stepping toward his foe had not reached the
+  // spot his slot and offsets describe.
+  directive.local_x = previous->local_x;
+  directive.local_z = previous->local_z;
 }
 
 void limit_contact_close_speed(const EntityFrame& frame,
@@ -513,6 +641,22 @@ auto works_a_site(const EntityFrame& frame) -> bool {
   return builder != nullptr && builder->in_progress && builder->at_construction_site;
 }
 
+auto closed_with_target(const EntityFrame& frame) -> bool {
+  if (frame.in_melee_contact) {
+    return true;
+  }
+  if (!frame.melee_ordered || frame.actor == nullptr ||
+      frame.display_opponent == nullptr) {
+    return false;
+  }
+  auto const* target = frame.world.try_get<Engine::Core::TransformComponent>(
+      frame.display_opponent->get_id());
+  return target != nullptr &&
+         std::hypot(target->position.x - frame.actor->position.x,
+                    target->position.z - frame.actor->position.z) <=
+             k_contact_slot_range;
+}
+
 void walk_slot(const EntityFrame& frame,
                const SlotContext& slot,
                const std::vector<Soldier>& previous_soldiers,
@@ -557,6 +701,7 @@ void walk_slot(const EntityFrame& frame,
        .seed = frame.layout.seed,
        .mounted = frame.mounted,
        .engaged = frame.melee_ordered,
+       .closed_with_target = closed_with_target(frame),
        .external_reform = frame.reform != nullptr,
        .position_is_authored =
            slot.traversal_slot != nullptr && !frame.mounted && slot.surround == nullptr,
@@ -970,8 +1115,6 @@ void pin_to_wall_walk(const EntityFrame& frame,
     directive.angular_speed =
         std::abs(signed_yaw_delta(previous->world_yaw, directive.world_yaw)) /
         step_time;
-    settle_soldier_gait(
-        previous, directive, step_time, gait_run_speed(k_wall_run_speed));
   }
 }
 
@@ -983,8 +1126,9 @@ void pin_to_raft(const EntityFrame& frame,
   if (rider == nullptr || frame.actor == nullptr || !directive.alive) {
     return;
   }
-  directive.local_x = slot.anchor_local_x;
-  directive.local_z = slot.anchor_local_z;
+  auto const fit = Game::Systems::raft_deck_fit(frame.layout);
+  directive.local_x = fit.fit_x(slot.anchor_local_x);
+  directive.local_z = fit.fit_z(slot.anchor_local_z);
   QVector3D const deck =
       local_to_world(*frame.actor, directive.local_x, directive.local_z);
   float const step_time = std::max(0.0F, frame.delta_time);
@@ -999,11 +1143,7 @@ void pin_to_raft(const EntityFrame& frame,
   directive.world_yaw = frame.actor->rotation.y + directive.local_yaw;
   directive.world_motion_valid = true;
   directive.climbing = false;
-  bool const stepping =
-      std::hypot(directive.world_velocity_x, directive.world_velocity_z) > 0.2F;
-  directive.gait = rider->afloat || !stepping
-                       ? Engine::Core::FormationSoldierGait::Idle
-                       : Engine::Core::FormationSoldierGait::Walk;
+  directive.carried = rider->afloat;
   auto const* terrain = Game::Session::services_for(frame.world).terrain;
   float const ground =
       terrain != nullptr

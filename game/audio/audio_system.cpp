@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "audio_clock.h"
 #include "audio_settings.h"
 #include "cue_trace.h"
 #include "miniaudio_backend.h"
@@ -93,6 +94,11 @@ void AudioSystem::render_offline(float* interleaved_stereo, unsigned frames) {
     return;
   }
   m_music_player->render_offline(interleaved_stereo, frames);
+  // Offline, cooldowns and holds run on the time the rendered audio has reached.
+  Game::Audio::Clock::use_rendered_time(true);
+  Game::Audio::Clock::advance_rendered(
+      static_cast<double>(frames) /
+      static_cast<double>(MiniaudioBackend::DEFAULT_SAMPLE_RATE));
 }
 
 void AudioSystem::shutdown() {
@@ -383,7 +389,7 @@ auto AudioSystem::is_resource_ready(const std::string& resource_id) const -> boo
   }
 
   const AudioResourceConfig config = get_resource_config_locked(resolved_id);
-  const auto now = std::chrono::steady_clock::now();
+  const auto now = Game::Audio::Clock::now();
   if (is_sound_on_cooldown_locked(resolved_id, config.cooldown_ms, now)) {
     return false;
   }
@@ -474,7 +480,7 @@ void AudioSystem::process_event(const AudioEvent& event) {
     const std::string resource_id = resolve_resource_id_locked(event.resource_id);
     auto it = sounds.find(resource_id);
     if (it != sounds.end()) {
-      auto const now = std::chrono::steady_clock::now();
+      auto const now = Game::Audio::Clock::now();
       AudioResourceConfig const config = get_resource_config_locked(resource_id);
       AudioCategory const category = config.category;
       int const effective_priority = std::max(event.priority, config.priority);
@@ -843,7 +849,7 @@ void AudioSystem::evict_lowest_priority_sound_locked() {
 void AudioSystem::cleanup_inactive_sounds_locked() {
   std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
 
-  const auto now = std::chrono::steady_clock::now();
+  const auto now = Game::Audio::Clock::now();
   active_sounds.erase(std::remove_if(active_sounds.begin(),
                                      active_sounds.end(),
                                      [this, now](const ActiveSound& as) {

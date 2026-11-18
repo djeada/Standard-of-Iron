@@ -21,6 +21,8 @@ public:
   static constexpr float UNIT_SELECTION_VOLUME = 1.0F;
   static constexpr int UNIT_SELECTION_PRIORITY = 5;
   static constexpr float COMBAT_HIT_VOLUME = 0.6F;
+  static constexpr std::chrono::milliseconds k_clash_gap_min{140};
+  static constexpr std::chrono::milliseconds k_clash_gap_max{420};
 
   AudioEventHandler(Engine::Core::World* world);
   ~AudioEventHandler();
@@ -91,6 +93,7 @@ private:
   static constexpr int k_distant_impacts_for_a_battle = 6;
   static constexpr std::chrono::seconds k_distant_battle_window{3};
   std::vector<std::chrono::steady_clock::time_point> m_distant_impacts;
+  std::chrono::steady_clock::time_point m_next_clash_at;
 
   std::chrono::steady_clock::time_point m_last_selection_sound_time;
   std::string m_last_selection_sound_id;

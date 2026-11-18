@@ -43,6 +43,8 @@ struct VisualMovementState {
   bool has_chase_intent{false};
   bool forced_displacement{false};
 
+  bool measured_from_ground{false};
+
   bool facing_independent_of_travel{false};
   bool attack_target_in_range{false};
   bool has_movement_target{false};

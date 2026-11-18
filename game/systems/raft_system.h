@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "game/core/system.h"
+#include "game/systems/combat_system/raft_deck_fit.h"
 #include "map/map_definition.h"
 
 namespace Engine::Core {
@@ -25,10 +26,6 @@ class TerrainService;
 namespace Game::Systems {
 
 inline constexpr float k_raft_min_river_width = 6.0F;
-
-inline constexpr float k_raft_deck_half_length = 1.9F;
-
-inline constexpr float k_raft_deck_half_width = 2.7F;
 
 inline constexpr float k_raft_call_radius = 16.0F;
 

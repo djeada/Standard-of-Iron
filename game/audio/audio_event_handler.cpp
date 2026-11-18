@@ -7,12 +7,14 @@
 #include <chrono>
 #include <random>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "audio_clock.h"
 #include "audio_cues.h"
 #include "audio_system.h"
 #include "core/event_manager.h"
@@ -27,6 +29,19 @@ thread_local std::mt19937 g_audio_rng(std::random_device{}());
 auto get_volume_variation() -> float {
   std::uniform_real_distribution<float> dist(0.85F, 1.0F);
   return dist(g_audio_rng);
+}
+
+auto shares_the_clash_clock(std::string_view cue) -> bool {
+  return cue == Cue::k_combat_hit_sword || cue == Cue::k_combat_hit_spear ||
+         cue == Cue::k_combat_hit_generic || cue == Cue::k_combat_hit_cavalry ||
+         cue == Cue::k_combat_hit_structure;
+}
+
+auto next_clash_gap() -> std::chrono::milliseconds {
+  std::uniform_int_distribution<int> dist(
+      static_cast<int>(AudioEventHandler::k_clash_gap_min.count()),
+      static_cast<int>(AudioEventHandler::k_clash_gap_max.count()));
+  return std::chrono::milliseconds{dist(g_audio_rng)};
 }
 
 auto nation_voice_prefix(Game::Systems::NationID nation_id) -> std::string {
@@ -403,7 +418,7 @@ void AudioEventHandler::on_unit_selected(const Engine::Core::UnitSelectedEvent& 
   const std::string sound_id =
       resolve_voice_id(*unit_component, unit_type_str, m_unit_voice_map);
   if (!sound_id.empty()) {
-    auto now = std::chrono::steady_clock::now();
+    auto now = Game::Audio::Clock::now();
     auto time_since_last_sound = std::chrono::duration_cast<std::chrono::milliseconds>(
                                      now - m_last_selection_sound_time)
                                      .count();
@@ -519,7 +534,7 @@ auto AudioEventHandler::play_final_assault_music() -> bool {
     return false;
   }
   if (!m_current_music_group.empty() && m_current_music_group != group_key) {
-    m_music_state_left_at[m_current_music_group] = std::chrono::steady_clock::now();
+    m_music_state_left_at[m_current_music_group] = Game::Audio::Clock::now();
   }
   AudioSystem::get_instance().play_music(music_id);
   m_last_sound_group_id[group_key] = music_id;
@@ -562,7 +577,7 @@ auto AudioEventHandler::rotate_ambient_music(Engine::Core::AmbientState state) -
 
   const std::string group_key = ambient_music_group_key(state);
 
-  const auto now = std::chrono::steady_clock::now();
+  const auto now = Game::Audio::Clock::now();
   const std::string& previous_for_state = m_last_sound_group_id[group_key];
   const auto left_at = m_music_state_left_at.find(group_key);
   const bool returning = !previous_for_state.empty() &&
@@ -619,7 +634,7 @@ void AudioEventHandler::on_ambient_state_changed(
 
 auto AudioEventHandler::should_play_sound_group(const std::string& group_id,
                                                 int cooldown_ms) -> bool {
-  auto now = std::chrono::steady_clock::now();
+  auto now = Game::Audio::Clock::now();
   auto it = m_last_sound_group_time.find(group_id);
   if (it != m_last_sound_group_time.end()) {
     auto elapsed =
@@ -632,7 +647,7 @@ auto AudioEventHandler::should_play_sound_group(const std::string& group_id,
 }
 
 void AudioEventHandler::mark_sound_group_played(const std::string& group_id) {
-  m_last_sound_group_time[group_id] = std::chrono::steady_clock::now();
+  m_last_sound_group_time[group_id] = Game::Audio::Clock::now();
 }
 
 void AudioEventHandler::play_sound_group(const std::string& group_id,
@@ -658,7 +673,7 @@ void AudioEventHandler::play_sound_group(const std::string& group_id,
 
 void AudioEventHandler::on_building_attacked(
     const Engine::Core::BuildingAttackedEvent& event) {
-  if (!m_audience.is_local(event.owner_id) && !m_audience.is_spectating()) {
+  if (!m_audience.is_local(event.owner_id)) {
     return;
   }
   play_cue(Cue::k_alert_base_under_attack);
@@ -674,7 +689,7 @@ void AudioEventHandler::note_distant_impact(const Game::Audio::WorldPoint& where
     return;
   }
 
-  const auto now = std::chrono::steady_clock::now();
+  const auto now = Game::Audio::Clock::now();
   const auto cutoff = now - k_distant_battle_window;
   m_distant_impacts.erase(
       std::remove_if(m_distant_impacts.begin(),
@@ -750,10 +765,22 @@ void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event)
   WorldPoint where;
   const bool located = entity_point(m_world, event.target_id, where);
   if (located) {
-    play_cue_at(impact, where, volume);
     note_distant_impact(where);
-  } else {
-    play_cue(impact, volume);
+  }
+
+  const bool clash = shares_the_clash_clock(impact);
+  const auto now = Game::Audio::Clock::now();
+  if (clash && now < m_next_clash_at &&
+      (!located ||
+       spatialize(AudioSystem::get_instance().listener(), where).volume_scale > 0.0F)) {
+    CueTrace::instance().record(impact, {}, CueOutcome::CueCooldown, cue_source_of());
+    return;
+  }
+
+  const bool played =
+      located ? play_cue_at(impact, where, volume) : play_cue(impact, volume);
+  if (clash && played) {
+    m_next_clash_at = now + next_clash_gap();
   }
 }
 
