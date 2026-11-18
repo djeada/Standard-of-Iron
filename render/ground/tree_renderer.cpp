@@ -73,7 +73,7 @@ auto canopy_height_factor(const Render::Ground::GroundEcologyField* ecology,
   constexpr std::uint32_t k_canopy_salt = 0x7F4A7C15U;
   float const canopy = step_between(
       0.30F, 0.72F, fbm(world_z * 0.034F, world_x * 0.034F, k_canopy_salt));
-  float factor = 0.80F + 0.20F * canopy;
+  float factor = 0.66F + 0.34F * canopy;
   if (ecology != nullptr && !ecology->empty() && !ecology->coverage.empty()) {
     float const gx = Render::Ground::ecology_grid_from_world(
         world_x, ecology->width, ecology->tile_size);

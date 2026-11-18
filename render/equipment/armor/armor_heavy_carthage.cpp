@@ -9,6 +9,7 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/gl/garment_shell.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/equipment_submit.h"
@@ -43,7 +44,7 @@ struct ArmorHeavyCarthageKey {
   }
 };
 
-auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 3>& torsos)
+auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 2>& torsos)
     -> const RenderArchetype& {
   ArmorHeavyCarthageKey key{"carthage_heavy_armor_"};
   for (const auto& m : torsos) {
@@ -61,8 +62,18 @@ auto armor_heavy_carthage_archetype(const std::array<QMatrix4x4, 3>& torsos)
       torso_mesh, torsos[0], k_carthage_heavy_chainmail_slot, nullptr, 1.0F, 1);
   builder.add_palette_mesh(
       torso_mesh, torsos[1], k_carthage_heavy_bronze_slot, nullptr, 1.0F, 1);
+  static const auto bronze_rim = make_garment_shell(
+      {
+          {0.36F, 0.938F, 0.913F},
+          {0.375F, 0.973F, 0.954F},
+          {0.47F, 0.985F, 0.963F},
+          {0.495F, 1.004F, 0.981F},
+          {0.51F, 0.96F, 0.92F},
+      },
+      32,
+      2);
   builder.add_palette_mesh(
-      torso_mesh, torsos[2], k_carthage_heavy_bronze_core_slot, nullptr, 1.0F, 1);
+      bronze_rim.get(), torsos[1], k_carthage_heavy_bronze_core_slot, nullptr, 1.0F, 1);
 
   static std::deque<
       GeneratedArchetypeCacheEntry<ArmorHeavyCarthageCacheTag, ArmorHeavyCarthageKey>>
@@ -151,14 +162,13 @@ void ArmorHeavyCarthageRenderer::submit(const ArmorHeavyCarthageConfig&,
     return m;
   };
 
-  std::array<QMatrix4x4, 3> const torso_layers{
+  std::array<QMatrix4x4, 2> const torso_layers{
       build_torso(top, chainmail_bottom, torso_r * 1.10F, 1.07F, 1.38F),
       build_torso(top + forward * (torso_r * 0.02F),
                   bottom + forward * (torso_r * 0.02F),
                   torso_r * 1.16F,
                   1.10F,
                   1.38F),
-      build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.30F),
   };
 
   std::array<QVector3D, 3> const palette_slots{
@@ -234,14 +244,13 @@ auto armor_heavy_carthage_make_static_attachment(std::uint16_t torso_socket_bone
     return m;
   };
 
-  std::array<QMatrix4x4, 3> const torso_layers{
+  std::array<QMatrix4x4, 2> const torso_layers{
       build_torso(top, chainmail_bottom, torso_r * 1.10F, 1.07F, 1.38F),
       build_torso(top + forward * (torso_r * 0.02F),
                   bottom + forward * (torso_r * 0.02F),
                   torso_r * 1.16F,
                   1.10F,
                   1.38F),
-      build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.30F),
   };
 
   auto spec = Render::Equipment::build_static_attachment({

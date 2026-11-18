@@ -32,7 +32,7 @@
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
-#include "render/equipment/armor/garment_shell.h"
+#include "render/gl/garment_shell.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/armor/work_apron_renderer.h"
@@ -79,8 +79,6 @@ void ensure_builder_styles_registered() {
   (void)registered;
 }
 
-constexpr float k_team_mix_weight = 0.65F;
-constexpr float k_style_mix_weight = 0.35F;
 constexpr std::uint32_t k_builder_work_tunic_role_count = 2;
 constexpr std::uint32_t k_builder_hammer_role_count = 1;
 constexpr std::uint32_t k_builder_saw_role_count = 1;
@@ -1007,14 +1005,7 @@ auto resolve_builder_style(const DrawContext& ctx) -> const BuilderStyleConfig& 
 void apply_builder_palette_overrides(const BuilderStyleConfig& style,
                                      const QVector3D& team_tint,
                                      HumanoidVariant& variant) {
-  auto apply = [&](const std::optional<QVector3D>& c, QVector3D& t) {
-    t = mix_palette_color(t, c, team_tint, k_team_mix_weight, k_style_mix_weight);
-  };
-  apply(style.cloth_color, variant.palette.cloth);
-  apply(style.leather_color, variant.palette.leather);
-  apply(style.leather_dark_color, variant.palette.leather_dark);
-  apply(style.metal_color, variant.palette.metal);
-  apply(style.wood_color, variant.palette.wood);
+  Humanoid::apply_uniform_palette(variant.palette, style, team_tint);
 }
 
 void apply_roman_civilian_palette(const QVector3D& team_tint,

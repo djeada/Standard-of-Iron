@@ -194,7 +194,7 @@ namespace {
 auto carthage_light_palette(const HumanoidPalette& palette)
     -> std::array<QVector3D, 4> {
   QVector3D const metal =
-      saturate_color(palette.metal * QVector3D(1.32F, 1.08F, 0.62F));
+      saturate_color(palette.metal * QVector3D(1.13F, 0.94F, 0.65F));
   QVector3D const metal_dark = metal * 0.78F;
   QVector3D const leather =
       saturate_color(palette.leather_dark * QVector3D(0.96F, 0.88F, 0.78F));

@@ -909,12 +909,14 @@ TEST(ShaderSource, AlpineSnowPatchesRenderAcrossTerrain) {
   const auto flat_plane = collapse_whitespace(plane);
   const auto flat_terrain = collapse_whitespace(terrain);
 
-  EXPECT_NE(flat_plane.find("if (u_ground_type == 3 && u_snow_coverage > 0.01)"),
-            std::string::npos);
+  EXPECT_NE(
+      flat_plane.find("if (u_ground_type == k_alpine_mix && u_snow_coverage > 0.01)"),
+      std::string::npos);
   EXPECT_NE(flat_plane.find("snow_accumulation * u_snow_coverage"), std::string::npos);
 
-  EXPECT_NE(flat_terrain.find("if (u_ground_type == 3 && u_snow_coverage > 0.01)"),
-            std::string::npos);
+  EXPECT_NE(
+      flat_terrain.find("if (u_ground_type == k_alpine_mix && u_snow_coverage > 0.01)"),
+      std::string::npos);
   EXPECT_NE(flat_terrain.find("alpine_snow_accumulation * alpine_snow_depth"),
             std::string::npos);
   EXPECT_NE(flat_terrain.find("0.66 - alpine_snow_shift, 0.72 - alpine_snow_shift"),

@@ -334,8 +334,6 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
   auto const& spec = humanoid_creature_spec();
 
   auto const* chest = find_primitive(spec.lod_full.primitives, "humanoid_full_chest");
-  auto const* abdomen =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_abdomen");
   auto const* pelvis =
       find_primitive(spec.lod_full.primitives, "humanoid_full_pelvis_block");
   auto const* neck = find_primitive(spec.lod_full.primitives, "humanoid_full_neck");
@@ -343,7 +341,7 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
       find_primitive(spec.lod_full.primitives, "humanoid_full_cranium");
 
   ASSERT_NE(chest, nullptr);
-  ASSERT_NE(abdomen, nullptr);
+  ASSERT_NE(chest->custom_mesh, nullptr);
   ASSERT_NE(pelvis, nullptr);
   ASSERT_NE(neck, nullptr);
   ASSERT_NE(cranium, nullptr);
@@ -363,10 +361,28 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
       waist = std::max(waist, half_width);
     }
   }
-  EXPECT_GT(chest->params.radius, abdomen->params.radius);
-  EXPECT_GT(chest->params.radius, waist);
-  EXPECT_GT(hips, abdomen->params.radius);
-  EXPECT_GT(chest->params.depth_radius, abdomen->params.depth_radius);
+  float rib_width = 0.0F;
+  float rib_depth = 0.0F;
+  float belly_width = 0.0F;
+  float belly_depth = 0.0F;
+  for (auto const& v : chest->custom_mesh->get_vertices()) {
+    auto const y = v.position[1];
+    auto const x = std::abs(v.position[0]);
+    auto const z = std::abs(v.position[2]);
+    if (y > 0.30F) {
+      rib_width = std::max(rib_width, x);
+      rib_depth = std::max(rib_depth, z);
+    } else if (y > 0.04F && y < 0.14F) {
+      belly_width = std::max(belly_width, x);
+      belly_depth = std::max(belly_depth, z);
+    }
+    EXPECT_NEAR(v.bone_weights[0] + v.bone_weights[1] + v.bone_weights[2], 1.0F, 1e-5F);
+  }
+  EXPECT_GT(belly_width, 0.0F);
+  EXPECT_GT(rib_width, belly_width);
+  EXPECT_GT(rib_width, waist);
+  EXPECT_GT(hips, belly_width);
+  EXPECT_GT(rib_depth, belly_depth);
   EXPECT_LT(neck->params.radius, cranium->params.half_extents.x());
 }
 

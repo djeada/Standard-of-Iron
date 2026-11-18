@@ -404,7 +404,7 @@ TEST_F(ArmorRendererTest, RomanHeavyArmorRendersThroughArchetypePath) {
 
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_EQ(batch.archetypes.size(), 1U);
-  EXPECT_EQ(draw_count_of(batch), 7);
+  EXPECT_EQ(draw_count_of(batch), 8);
 }
 
 TEST_F(ArmorRendererTest, RomanLightArmorRendersThroughArchetypePath) {

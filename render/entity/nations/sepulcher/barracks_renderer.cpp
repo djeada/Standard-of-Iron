@@ -8,6 +8,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nations/material_palette.h"
 #include "render/entity/registry.h"
 #include "render/gl/backend.h"
 #include "render/gl/primitives.h"
@@ -17,23 +18,16 @@
 namespace Render::GL::Sepulcher {
 namespace {
 
-struct SepulcherPalette {
-  QVector3D grave_iron{0.20F, 0.21F, 0.24F};
-  QVector3D grave_iron_light{0.32F, 0.33F, 0.37F};
-  QVector3D bone{0.78F, 0.75F, 0.66F};
-  QVector3D witchlight{0.42F, 0.86F, 0.62F};
-};
-
 void draw_grave_banner(const DrawContext& p,
                        ISubmitter& out,
                        Mesh* unit,
                        Texture* white,
                        const QVector3D& team,
                        const BarracksFlagRenderer::ClothBannerResources* cloth) {
-  const SepulcherPalette palette;
+  const auto& materials = Nation::k_sepulcher_materials;
   const BuildingState state = resolve_building_state(p);
 
-  const QVector3D team_trim = team * 0.55F + palette.grave_iron * 0.45F;
+  const QVector3D team_trim = team * 0.55F + materials.metal * 0.45F;
   const float wear = (state == BuildingState::Damaged)     ? 0.82F
                      : (state == BuildingState::Destroyed) ? 0.55F
                                                            : 1.0F;
@@ -51,19 +45,19 @@ void draw_grave_banner(const DrawContext& p,
        .banner_width = 0.95F * wear,
        .banner_height = 1.15F * wear,
        .connector_drop_ratio = 0.5F,
-       .pole_color = decayed_color(palette.grave_iron, state, 3),
-       .beam_color = decayed_color(palette.bone, state, 4),
-       .connector_color = decayed_color(palette.grave_iron_light, state, 5),
+       .pole_color = decayed_color(materials.metal, state, 3),
+       .beam_color = decayed_color(materials.accent, state, 4),
+       .connector_color = decayed_color(materials.metal * 1.16F, state, 5),
 
        .ornament_offset = QVector3D(0.0F, 3.34F * wear, 0.0F),
        .ornament_size = QVector3D(0.05F, 0.30F, 0.05F),
-       .ornament_color = decayed_color(palette.bone, state, 6),
+       .ornament_color = decayed_color(materials.accent, state, 6),
        .ring_count = (state == BuildingState::Destroyed) ? 1 : 3,
        .ring_y_start = 0.6F,
        .ring_spacing = 0.72F * wear,
        .ring_height = 0.03F,
        .ring_radius_scale = 1.8F,
-       .ring_color = decayed_color(palette.bone, state, 7)},
+       .ring_color = decayed_color(materials.accent, state, 7)},
       cloth);
 }
 

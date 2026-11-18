@@ -17,16 +17,17 @@ struct GarmentSection {
   float y;
   float width;
   float depth;
+  float center_z = 0.0F;
 };
 
-inline auto make_garment_shell(std::initializer_list<GarmentSection> sections)
-    -> std::unique_ptr<Mesh> {
+inline auto make_garment_shell(std::initializer_list<GarmentSection> sections,
+                               unsigned int radial = 32,
+                               unsigned int subdivisions = 6,
+                               bool capped = false) -> std::unique_ptr<Mesh> {
   std::vector<GarmentSection> const profile(sections);
-  if (profile.size() < 2U) {
+  if (profile.size() < 2U || radial < 3 || subdivisions == 0) {
     return nullptr;
   }
-  constexpr int radial = 32;
-  constexpr int subdivisions = 6;
   auto slope = [&](std::size_t i, float GarmentSection::*field) {
     if (i == 0U) {
       return (profile[1].*field - profile[0].*field) / (profile[1].y - profile[0].y);
@@ -65,10 +66,11 @@ inline auto make_garment_shell(std::initializer_list<GarmentSection> sections)
         profile[segment].y + t * (profile[segment + 1U].y - profile[segment].y);
     float const w = sample(segment, t, &GarmentSection::width);
     float const d = sample(segment, t, &GarmentSection::depth);
-    for (int j = 0; j < radial; ++j) {
+    float const center_z = sample(segment, t, &GarmentSection::center_z);
+    for (unsigned int j = 0; j < radial; ++j) {
       float const u = static_cast<float>(j) / radial;
       float const angle = u * 2.0F * std::numbers::pi_v<float>;
-      vertices.push_back({{w * std::cos(angle), y, d * std::sin(angle)},
+      vertices.push_back({{w * std::cos(angle), y, center_z + d * std::sin(angle)},
                           {},
                           {u, static_cast<float>(ring) / (rings - 1U)}});
     }
@@ -96,6 +98,27 @@ inline auto make_garment_shell(std::initializer_list<GarmentSection> sections)
   for (std::size_t i = 0; i < vertices.size(); ++i) {
     QVector3D const n = normals[i].normalized();
     vertices[i].normal = {n.x(), n.y(), n.z()};
+  }
+  if (capped) {
+    auto cap = [&](unsigned int ring, float normal_y) {
+      auto const& section = ring == 0 ? profile.front() : profile.back();
+      auto const center = static_cast<unsigned int>(vertices.size());
+      vertices.push_back(
+          {{0.0F, section.y, section.center_z}, {0.0F, normal_y, 0.0F}, {0.5F, 0.5F}});
+      for (unsigned int j = 0; j < radial; ++j) {
+        auto edge = vertices[ring * radial + j];
+        edge.normal = {0.0F, normal_y, 0.0F};
+        edge.tex_coord = {0.5F + 0.5F * edge.position[0] / section.width,
+                          0.5F + 0.5F * (edge.position[2] - section.center_z) /
+                                     section.depth};
+        vertices.push_back(edge);
+        auto const a = center + 1 + j;
+        auto const b = center + 1 + (j + 1) % radial;
+        indices.insert(indices.end(), {center, ring == 0 ? a : b, ring == 0 ? b : a});
+      }
+    };
+    cap(0, -1.0F);
+    cap(rings - 1, 1.0F);
   }
   return std::make_unique<Mesh>(vertices, indices);
 }

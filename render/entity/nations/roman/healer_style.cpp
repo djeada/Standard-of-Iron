@@ -3,17 +3,13 @@
 #include <QVector3D>
 
 #include "render/entity/healer_renderer_common.h"
+#include "render/entity/nations/material_palette.h"
 
 namespace {
 
 constexpr QVector3D k_roman_tunic{0.93F, 0.91F, 0.85F};
 
-constexpr QVector3D k_roman_leather{0.52F, 0.39F, 0.27F};
-constexpr QVector3D k_roman_leather_dark{0.33F, 0.25F, 0.18F};
-
 constexpr QVector3D k_roman_gold{0.82F, 0.66F, 0.32F};
-
-constexpr QVector3D k_roman_wood{0.52F, 0.42F, 0.28F};
 
 constexpr QVector3D k_roman_clavus{0.56F, 0.055F, 0.065F};
 } // namespace
@@ -23,10 +19,10 @@ namespace Render::GL::Roman {
 void register_roman_healer_style() {
   HealerStyleConfig style;
   style.cloth_color = k_roman_tunic;
-  style.leather_color = k_roman_leather;
-  style.leather_dark_color = k_roman_leather_dark;
+  style.leather_color = Nation::k_roman_materials.leather;
+  style.leather_dark_color = Nation::k_roman_materials.dark_leather;
   style.metal_color = k_roman_gold;
-  style.wood_color = k_roman_wood;
+  style.wood_color = Nation::k_roman_materials.timber;
   style.cape_color = k_roman_clavus;
 
   style.show_helmet = false;

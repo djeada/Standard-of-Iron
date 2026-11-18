@@ -29,10 +29,6 @@ namespace {
 
 constexpr auto k_profile = Render::GL::Humanoid::k_mounted_rider_proportion_profile;
 
-constexpr float k_rider_team_mix_weight = 0.6F;
-constexpr float k_rider_style_mix_weight = 0.4F;
-constexpr float k_rider_leather_team_mix_weight = 0.15F;
-
 } // namespace
 
 MountedSwordsmanRendererBase::MountedSwordsmanRendererBase(
@@ -120,23 +116,10 @@ void MountedSwordsmanRendererBase::get_variant(const DrawContext& ctx,
   if (m_config.rider_style.has_value()) {
     const SwordsmanStyleConfig& style = *m_config.rider_style;
     QVector3D const team_tint = resolve_team_tint(ctx);
-    auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target,
-                           float team_weight = k_rider_team_mix_weight,
-                           float style_weight = k_rider_style_mix_weight) {
-      target = Humanoid::mix_palette_color(
-          target, override_color, team_tint, team_weight, style_weight);
-    };
-    apply_color(style.cloth_color,
-                v.palette.cloth,
-                style.cloth_team_weight.value_or(k_rider_team_mix_weight),
-                style.cloth_style_weight.value_or(k_rider_style_mix_weight));
-    apply_color(
-        style.leather_color, v.palette.leather, k_rider_leather_team_mix_weight);
-    apply_color(style.leather_dark_color,
-                v.palette.leather_dark,
-                k_rider_leather_team_mix_weight);
-    apply_color(style.metal_color, v.palette.metal);
+    Humanoid::ClothBlend blend;
+    blend.team = style.cloth_team_weight.value_or(blend.team);
+    blend.style = style.cloth_style_weight.value_or(blend.style);
+    Humanoid::apply_uniform_palette(v.palette, style, team_tint, blend);
   }
   if (m_config.facial_hair.has_value()) {
     v.facial_hair = *m_config.facial_hair;

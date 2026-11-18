@@ -1,4 +1,5 @@
 #version 330 core
+#include "biome_palette.glsl"
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
@@ -60,11 +61,11 @@ float tactical_zoom() {
 void main() {
   float tactical = tactical_zoom();
   float moisture = max(u_moisture_level, environment_wetness());
-  float biome_forest = float(u_ground_type == 0);
-  float biome_dry = float(u_ground_type == 1);
-  float biome_rocky = float(u_ground_type == 2);
-  float biome_alpine = float(u_ground_type == 3);
-  float biome_fertile = float(u_ground_type == 4);
+  float biome_forest = float(u_ground_type == k_forest_mud);
+  float biome_dry = float(u_ground_type == k_grass_dry);
+  float biome_rocky = float(u_ground_type == k_soil_rocky);
+  float biome_alpine = float(u_ground_type == k_alpine_mix);
+  float biome_fertile = float(u_ground_type == k_soil_fertile);
 
   vec3 n = normalize(v_normal);
   float ts = max(u_tile_size, 1e-4);
@@ -104,6 +105,7 @@ void main() {
   dryness = clamp(dryness, 0.0, 1.0);
   vec3 grass_col = mix(lush_grass, u_grass_dry, dryness);
   grass_col = mix(grass_col, u_grass_secondary, lowland * 0.16);
+  grass_col = biome_grass_color(grass_col, u_ground_type, dryness, 1.0);
   float sw = max(0.01, 1.0 / max(u_soil_blend_sharpness, 1e-3));
   float s_n = (soi_noise21_cdf702(wuv * 4.0 + 9.7) - 0.5) * sw * 0.85;
   float soil_base = u_soil_blend_height + lowland * 0.08 - rise * 0.04;
@@ -154,7 +156,7 @@ void main() {
     base_col *= crack_darkening;
   }
 
-  if (u_ground_type == 3 && u_snow_coverage > 0.01) {
+  if (u_ground_type == k_alpine_mix && u_snow_coverage > 0.01) {
     float snow_large = fbm(wuv * 0.28 + vec2(123.0, 456.0));
     float snow_small = fbm(wuv * 0.72 + vec2(-89.0, 201.0));
     float snow_raw = snow_large * 0.65 + snow_small * 0.35;
@@ -169,13 +171,7 @@ void main() {
     base_col = mix(base_col, snow_tinted, snow_mask);
   }
 
-  vec3 gray_level = vec3(dot(base_col, vec3(0.299, 0.587, 0.114)));
-  float grounded_saturation = clamp(u_grass_saturation * 0.80, 0.0, 1.08);
-  base_col = mix(gray_level, base_col, grounded_saturation);
-  base_col *= vec3(1.025, 0.965, 0.985);
-
-  float ground_luma = dot(base_col, vec3(0.299, 0.587, 0.114));
-  base_col = mix(base_col, mix(vec3(ground_luma), base_col, 0.94), tactical);
+  base_col = biome_surface_saturation(base_col, u_grass_saturation, tactical);
 
   float puddle_mask = lowland * (0.15 + 0.85 * moisture) * (1.0 - gravel_mask * 0.55);
   puddle_mask = clamp(puddle_mask, 0.0, 1.0);

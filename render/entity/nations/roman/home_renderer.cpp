@@ -54,11 +54,11 @@ inline auto make_palette(const QVector3D& team) -> RomanPalette {
 constexpr std::uint8_t k_home_wall_slot = 1;
 
 constexpr std::array<QVector3D, 5> k_wall_washes{
-    QVector3D(0.80F, 0.78F, 0.71F),
-    QVector3D(0.84F, 0.77F, 0.64F),
-    QVector3D(0.85F, 0.76F, 0.70F),
-    QVector3D(0.86F, 0.85F, 0.80F),
-    QVector3D(0.78F, 0.73F, 0.62F),
+    QVector3D(0.91F, 0.86F, 0.73F),
+    QVector3D(0.90F, 0.69F, 0.43F),
+    QVector3D(0.88F, 0.62F, 0.49F),
+    QVector3D(0.94F, 0.92F, 0.85F),
+    QVector3D(0.79F, 0.71F, 0.54F),
 };
 
 auto home_palette_slots(const QVector3D& team, std::uint32_t seed, BuildingState state)

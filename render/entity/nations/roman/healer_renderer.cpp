@@ -31,7 +31,7 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
-#include "render/equipment/armor/garment_shell.h"
+#include "render/gl/garment_shell.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"

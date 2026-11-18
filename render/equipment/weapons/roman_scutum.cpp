@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/entity/nations/material_palette.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/transforms.h"
@@ -329,25 +330,9 @@ void RomanScutumRenderer::submit(const RomanScutumConfig&,
     pose_adjustment = bind_left_shield_pose_calibration();
   }
 
-  QVector3D const shield_red = saturate_color(QVector3D(0.72F, 0.13F, 0.10F));
-  QVector3D const wood_back = saturate_color(QVector3D(0.46F, 0.38F, 0.29F));
-  QVector3D const brass_dark = saturate_color(QVector3D(0.63F, 0.53F, 0.24F));
-  QVector3D const brass_light = saturate_color(QVector3D(0.74F, 0.63F, 0.32F));
-  QVector3D const iron_color = saturate_color(QVector3D(0.58F, 0.58F, 0.60F));
-  QVector3D const rawhide_color = saturate_color(QVector3D(0.64F, 0.57F, 0.44F));
-  QVector3D const grip_color =
-      saturate_color(palette.leather * QVector3D(0.92F, 0.72F, 0.54F));
-
-  std::array<QVector3D, k_roman_scutum_role_count> const palette_slots{
-      shield_red,
-      wood_back,
-      brass_dark,
-      brass_light,
-      iron_color,
-      rawhide_color,
-      grip_color,
-  };
-
+  std::array<QVector3D, k_roman_scutum_role_count> palette_slots;
+  (void)roman_scutum_fill_role_colors(
+      palette, palette_slots.data(), palette_slots.size());
   append_equipment_archetype(batch,
                              roman_scutum_archetype(),
                              shield_basis_transform(ctx.model, shield_frame) *
@@ -361,10 +346,10 @@ auto roman_scutum_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_roman_scutum_role_count) {
     return 0;
   }
-  QVector3D const shield_red = saturate_color(QVector3D(0.72F, 0.13F, 0.10F));
-  QVector3D const wood_back = saturate_color(QVector3D(0.46F, 0.38F, 0.29F));
+  QVector3D const shield_red = Nation::k_roman_materials.cloth;
+  QVector3D const wood_back = Nation::k_roman_materials.timber;
   QVector3D const brass_dark = saturate_color(QVector3D(0.63F, 0.53F, 0.24F));
-  QVector3D const brass_light = saturate_color(QVector3D(0.74F, 0.63F, 0.32F));
+  QVector3D const brass_light = Nation::k_roman_materials.accent;
   QVector3D const iron_color = saturate_color(QVector3D(0.58F, 0.58F, 0.60F));
   QVector3D const rawhide_color = saturate_color(QVector3D(0.64F, 0.57F, 0.44F));
   QVector3D const grip_color =

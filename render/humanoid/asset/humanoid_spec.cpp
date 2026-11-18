@@ -17,7 +17,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "render/bone_palette_arena.h"
 #include "render/creature/spec.h"
-#include "render/equipment/armor/garment_shell.h"
+#include "render/gl/garment_shell.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
@@ -62,7 +62,7 @@ void fill_humanoid_role_colors_impl(
   out[LeatherDark - 1] = v.palette.leather_dark;
   out[Wood - 1] = v.palette.wood;
   out[Metal - 1] = v.palette.metal;
-  out[ClothDark - 1] = v.palette.cloth * 0.84F;
+  out[ClothDark - 1] = v.palette.cloth * 0.48F + QVector3D(0.27F, 0.23F, 0.20F) * 0.36F;
   auto const& hair = v.facial_hair;
   QVector3D const grey(0.72F, 0.71F, 0.69F);
   out[Hair - 1] = (hair.color * (1.0F - hair.greyness)) + (grey * hair.greyness);
@@ -76,84 +76,10 @@ constexpr auto make_full_chest() noexcept -> Creature::PrimitiveInstance {
 
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_full_chest";
-  p.shape = Creature::PrimitiveShape::OrientedCylinder;
-  p.params.anchor_bone = bone(HumanoidBone::Chest);
-  p.params.tail_bone = bone(HumanoidBone::Chest);
-  p.params.tail_offset = QVector3D(0.0F, -0.17F, 0.0F);
-  p.params.radius = HP::TORSO_TOP_R * 1.02F;
-
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.60F;
-  p.color_role = Cloth;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto make_full_upper_chest() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_full_upper_chest";
-  p.shape = Creature::PrimitiveShape::OrientedCylinder;
-  p.params.anchor_bone = bone(HumanoidBone::Chest);
-  p.params.tail_bone = bone(HumanoidBone::Chest);
-  p.params.head_offset = QVector3D(0.0F, -0.03F, 0.0F);
-  p.params.tail_offset = QVector3D(0.0F, 0.21F, -0.012F);
-
-  p.params.radius = HP::TORSO_TOP_R * 1.12F;
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.62F;
-  p.color_role = Cloth;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto make_full_shoulder_yoke() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_full_shoulder_yoke";
-  p.shape = Creature::PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = bone(HumanoidBone::Chest);
-  p.params.head_offset = QVector3D(0.0F, 0.245F, -0.008F);
-  p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 1.04F, HP::TORSO_TOP_R * 0.26F, HP::TORSO_TOP_R * 0.44F);
-  p.color_role = Cloth;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto make_full_pectoral(bool left) noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_pectoral_l" : "humanoid_full_pectoral_r";
-  p.shape = Creature::PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = bone(HumanoidBone::Chest);
-  float const x = left ? -HP::TORSO_TOP_R * 0.48F : HP::TORSO_TOP_R * 0.48F;
-  p.params.head_offset = QVector3D(x, 0.11F, HP::TORSO_TOP_R * 0.50F);
-  p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.32F, HP::TORSO_TOP_R * 0.34F, HP::TORSO_TOP_R * 0.16F);
-  p.color_role = Cloth;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto make_full_upper_back() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_full_upper_back";
-  p.shape = Creature::PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = bone(HumanoidBone::Chest);
-
-  p.params.head_offset = QVector3D(0.0F, 0.16F, -HP::TORSO_TOP_R * 0.40F);
-  p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.84F, HP::TORSO_TOP_R * 0.38F, HP::TORSO_TOP_R * 0.22F);
-  p.color_role = Cloth;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto make_full_abdomen() noexcept -> Creature::PrimitiveInstance {
-
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_full_abdomen";
-  p.shape = Creature::PrimitiveShape::OrientedCylinder;
+  p.shape = Creature::PrimitiveShape::Mesh;
   p.params.anchor_bone = bone(HumanoidBone::Spine);
-  p.params.tail_bone = bone(HumanoidBone::Chest);
-  p.params.radius = HP::TORSO_BOT_R * 0.86F;
-  p.params.depth_radius = HP::TORSO_BOT_R * 0.60F;
+  p.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  p.mesh_skinning = Creature::MeshSkinning::Authored;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -330,7 +256,7 @@ constexpr auto make_full_hand(bool left) noexcept -> Creature::PrimitiveInstance
   p.params.anchor_bone = bone(left ? HumanoidBone::HandL : HumanoidBone::HandR);
   p.params.head_offset = QVector3D(0.0F, HP::HAND_RADIUS * 0.86F, 0.0F);
   p.params.half_extents = QVector3D(
-      HP::HAND_RADIUS * 1.48F, HP::HAND_RADIUS * 1.60F, HP::HAND_RADIUS * 0.92F);
+      HP::HAND_RADIUS * 1.22F, HP::HAND_RADIUS * 1.65F, HP::HAND_RADIUS * 0.83F);
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -368,7 +294,7 @@ constexpr auto make_full_jaw() noexcept -> Creature::PrimitiveInstance {
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Head);
   p.params.head_offset =
-      QVector3D(0.0F, -HP::HEAD_RADIUS * 0.40F, HP::HEAD_RADIUS * 0.22F);
+      QVector3D(0.0F, -HP::HEAD_RADIUS * 1.34F, HP::HEAD_RADIUS * 0.72F);
   p.params.half_extents = QVector3D(
       HP::HEAD_RADIUS * 0.56F, HP::HEAD_RADIUS * 0.30F, HP::HEAD_RADIUS * 0.38F);
   p.color_role = Skin;
@@ -382,7 +308,7 @@ constexpr auto make_full_brow() noexcept -> Creature::PrimitiveInstance {
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Head);
   p.params.head_offset =
-      QVector3D(0.0F, HP::HEAD_RADIUS * 0.30F, HP::HEAD_RADIUS * 0.60F);
+      QVector3D(0.0F, -HP::HEAD_RADIUS * 0.24F, HP::HEAD_RADIUS * 1.37F);
   p.params.half_extents = QVector3D(
       HP::HEAD_RADIUS * 0.60F, HP::HEAD_RADIUS * 0.12F, HP::HEAD_RADIUS * 0.22F);
   p.color_role = Skin;
@@ -527,10 +453,8 @@ constexpr auto make_minimal_calf(bool left) noexcept -> Creature::PrimitiveInsta
       Skin));
 }
 
-constexpr std::array<Creature::PrimitiveInstance, 18> k_minimal_parts = {
+constexpr std::array<Creature::PrimitiveInstance, 16> k_minimal_parts = {
     as_minimal(make_full_chest()),
-    as_minimal(make_full_upper_chest()),
-    as_minimal(make_full_abdomen()),
     as_minimal(make_full_pelvis_block()),
 
     as_minimal(make_full_neck()),
@@ -551,15 +475,9 @@ constexpr std::array<Creature::PrimitiveInstance, 18> k_minimal_parts = {
     as_minimal(make_full_foot(false)),
 };
 
-constexpr std::array<Creature::PrimitiveInstance, 42> k_full_parts = {
+constexpr std::array<Creature::PrimitiveInstance, 38> k_full_parts = {
 
     make_full_chest(),
-    make_full_upper_chest(),
-    make_full_shoulder_yoke(),
-    make_full_pectoral(true),
-    make_full_pectoral(false),
-    make_full_upper_back(),
-    make_full_abdomen(),
     make_full_pelvis_block(),
     make_full_buttock(true),
     make_full_buttock(false),
@@ -584,6 +502,8 @@ constexpr std::array<Creature::PrimitiveInstance, 42> k_full_parts = {
 
     make_full_neck(),
     make_full_cranium(),
+    make_full_jaw(),
+    make_full_brow(),
 
     make_full_thigh_proximal(true),
     make_full_thigh_proximal(false),
@@ -669,11 +589,42 @@ auto smooth_limb_mesh(float tail_radius,
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
+auto make_tunic_body(unsigned int radial,
+                     unsigned int subdivisions) -> std::unique_ptr<Render::GL::Mesh> {
+  float constexpr height = HP::NECK_BASE_Y - HP::WAIST_Y;
+  auto shell = Render::GL::make_garment_shell(
+      {
+          {-0.025F, 0.150F, 0.092F},
+          {height * 0.18F, 0.134F, 0.083F},
+          {height * 0.43F, 0.148F, 0.093F, 0.004F},
+          {height * 0.67F, 0.173F, 0.104F, 0.006F},
+          {height * 0.81F, 0.181F, 0.091F},
+          {height * 0.89F, 0.148F, 0.073F},
+          {height, HP::NECK_RADIUS, HP::NECK_RADIUS * 0.93F},
+      },
+      radial,
+      subdivisions,
+      true);
+  auto vertices = shell->get_vertices();
+  for (auto& vertex : vertices) {
+    float const h = vertex.position[1] / height;
+    float const pelvis = std::clamp(1.0F - h / 0.32F, 0.0F, 1.0F);
+    float const chest = std::clamp((h - 0.20F) / 0.40F, 0.0F, 1.0F);
+    vertex.bone_indices = {bone(HumanoidBone::Pelvis),
+                           bone(HumanoidBone::Spine),
+                           bone(HumanoidBone::Chest),
+                           0};
+    vertex.bone_weights = {pelvis, 1.0F - pelvis - chest, chest, 0.0F};
+  }
+  return std::make_unique<Render::GL::Mesh>(vertices, shell->get_indices());
+}
+
 auto tunic_hem_mesh() -> Render::GL::Mesh* {
   static auto mesh = []() {
     auto shell = Render::GL::make_garment_shell({
-        {-0.215F, 0.230F, 0.162F},
-        {-0.07F, 0.202F, 0.117F},
+        {-0.225F, 0.242F, 0.163F},
+        {-0.10F, 0.178F, 0.111F},
+        {-0.045F, 0.150F, 0.085F},
         {0.02F, 0.140F, 0.075F},
         {0.12F, 0.108F, 0.055F},
     });
@@ -724,6 +675,8 @@ struct SmoothBodyParts {
 
   SmoothBodyParts() {
     std::copy(k_full_parts.begin(), k_full_parts.end(), parts.begin());
+    meshes.push_back(make_tunic_body(28, 3));
+    parts.front().custom_mesh = meshes.back().get();
     constexpr auto cranium = make_full_cranium();
     meshes.push_back(build_humanoid_face_mesh(cranium.params.head_offset,
                                               cranium.params.half_extents * 2.0F));
@@ -795,6 +748,8 @@ struct SmoothBodyParts {
 
 auto smooth_minimal_parts() {
   auto parts = k_minimal_parts;
+  static const auto tunic = make_tunic_body(12, 1);
+  parts.front().custom_mesh = tunic.get();
 
   constexpr int k_radial_segments = 12;
   constexpr int k_latitude_segments = 8;

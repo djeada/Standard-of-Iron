@@ -399,7 +399,7 @@ auto historical_helmet_fill_role_colors(HistoricalHelmet helmet,
   }
   if (helmet == HistoricalHelmet::GallicMontefortino) {
     QVector3D const bronze =
-        saturate_color(palette.metal * QVector3D(1.20F, 1.02F, 0.60F));
+        saturate_color(palette.metal * QVector3D(1.03F, 0.90F, 0.64F));
     out[0] = bronze;
     out[1] = bronze * 0.62F;
     out[2] = saturate_color(palette.leather_dark);
@@ -409,8 +409,8 @@ auto historical_helmet_fill_role_colors(HistoricalHelmet helmet,
   bool const carthaginian = helmet == HistoricalHelmet::CarthagePunicConical ||
                             helmet == HistoricalHelmet::CarthageThracianCrested;
   QVector3D const metal =
-      carthaginian ? saturate_color(palette.metal * QVector3D(1.38F, 1.12F, 0.62F))
-                   : saturate_color(palette.metal * QVector3D(1.24F, 1.05F, 0.66F));
+      carthaginian ? saturate_color(palette.metal * QVector3D(1.16F, 0.97F, 0.65F))
+                   : saturate_color(palette.metal * QVector3D(1.07F, 0.94F, 0.68F));
   out[0] = metal;
   out[1] = metal * 0.70F;
   out[2] = saturate_color(palette.leather_dark);

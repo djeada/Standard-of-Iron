@@ -36,9 +36,9 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   variant.roles[Render::Wildlife::k_wolf_role_fur - 1U] = base;
 
   variant.roles[Render::Wildlife::k_wolf_role_saddle - 1U] =
-      mixed(base, QVector3D(0.18F, 0.17F, 0.17F), 0.62F);
+      mixed(base, QVector3D(0.14F, 0.13F, 0.12F), 0.80F);
   variant.roles[Render::Wildlife::k_wolf_role_pale - 1U] =
-      mixed(base, QVector3D(0.78F, 0.74F, 0.66F), 0.44F);
+      mixed(base, QVector3D(0.78F, 0.74F, 0.66F), 0.56F);
   variant.roles[Render::Wildlife::k_wolf_role_cream - 1U] =
       mixed(base, QVector3D(0.85F, 0.81F, 0.72F), 0.40F);
   variant.roles[Render::Wildlife::k_wolf_role_limb - 1U] =

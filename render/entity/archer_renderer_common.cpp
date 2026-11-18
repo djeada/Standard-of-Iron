@@ -19,12 +19,6 @@ namespace Render::GL {
 namespace {
 
 constexpr std::string_view k_default_style_key = "default";
-constexpr float k_team_mix_weight = 0.65F;
-constexpr float k_style_mix_weight = 0.35F;
-
-constexpr float k_leather_team_mix_weight = 0.15F;
-
-using Render::GL::Humanoid::mix_palette_color;
 
 using StyleRegistry = std::unordered_map<std::string, ArcherStyleConfig>;
 
@@ -204,25 +198,10 @@ private:
   void apply_palette_overrides(const ArcherStyleConfig& style,
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {
-    auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target,
-                           float team_weight = k_team_mix_weight,
-                           float style_weight = k_style_mix_weight) {
-      target = mix_palette_color(
-          target, override_color, team_tint, team_weight, style_weight);
-    };
-
-    if (m_profile.apply_skin_override) {
-      apply_color(style.skin_color, variant.palette.skin, 0.0F, 1.0F);
+    if (m_profile.apply_skin_override && style.skin_color) {
+      variant.palette.skin = Humanoid::saturate_color(*style.skin_color);
     }
-    apply_color(style.cloth_color, variant.palette.cloth);
-    apply_color(
-        style.leather_color, variant.palette.leather, k_leather_team_mix_weight);
-    apply_color(style.leather_dark_color,
-                variant.palette.leather_dark,
-                k_leather_team_mix_weight);
-    apply_color(style.metal_color, variant.palette.metal, 0.0F);
-    apply_color(style.wood_color, variant.palette.wood, 0.0F);
+    Humanoid::apply_uniform_palette(variant.palette, style, team_tint);
   }
 };
 

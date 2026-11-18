@@ -38,7 +38,8 @@ constexpr float k_plant_yard_clearance = 2.8F;
 constexpr float k_plant_type_shrub = 0.0F;
 constexpr float k_plant_type_rosette = 1.0F;
 constexpr float k_plant_type_frond = 2.0F;
-constexpr float k_plant_type_count = 3.0F;
+constexpr float k_upland_plant_type_count = 3.0F;
+constexpr float k_plant_type_reeds = 3.0F;
 
 auto bed_plant_base(const Game::Map::TerrainService& terrain,
                     float world_x,
@@ -114,7 +115,7 @@ void PlantRenderer::generate_plant_instances() {
       const QVector3D var_color = prop_profile.grass_secondary * 0.66F;
       const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
-      const float plant_type = std::floor(rand_01(var_state) * k_plant_type_count);
+      const float plant_type = std::floor(rand_01(var_state) * k_upland_plant_type_count);
 
       const float plant_scale = prop.scale * Game::Map::world_prop_render_scale(
                                                  Game::Map::WorldProp::Type::Plant);
@@ -193,14 +194,15 @@ void PlantRenderer::generate_plant_instances() {
                         (1.0F + scrub_growth(sgx, sgz));
 
     float plant_type = 0.0F;
-    if (scene.archetype == ScatterSceneArchetype::RiverFringe ||
-        scene.archetype == ScatterSceneArchetype::FertilePatch) {
+    if (scene.archetype == ScatterSceneArchetype::RiverFringe) {
+      plant_type = rand_01(state) < 0.72F ? k_plant_type_reeds : k_plant_type_frond;
+    } else if (scene.archetype == ScatterSceneArchetype::FertilePatch) {
       plant_type = rand_01(state) < 0.45F ? k_plant_type_shrub : k_plant_type_frond;
     } else if (scene.archetype == ScatterSceneArchetype::DryClearing ||
                scene.dryness > 0.65F) {
       plant_type = rand_01(state) < 0.55F ? k_plant_type_rosette : k_plant_type_shrub;
     } else {
-      plant_type = std::floor(rand_01(state) * k_plant_type_count);
+      plant_type = std::floor(rand_01(state) * k_upland_plant_type_count);
     }
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
