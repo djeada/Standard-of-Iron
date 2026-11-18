@@ -223,8 +223,6 @@ void CommanderInputPort::capture_tick() {
       m_tick_input.primary_pressed || m_carried_primary_press;
   m_carried_primary_press = false;
 
-  // A fresh press landing on a held one merges into a single edge, so one of
-  // the two requests is refused here to keep the counters balanced.
   if (m_carried_jump_press) {
     if (m_tick_input.jump_pressed) {
       ++m_edges.jump_refused_sequence;

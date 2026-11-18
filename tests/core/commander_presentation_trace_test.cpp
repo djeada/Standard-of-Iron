@@ -357,7 +357,6 @@ TEST_F(CommanderPresentationTraceTest, ADodgePressedDuringRecoveryChainsOneRoll)
   EXPECT_EQ(edges.dodge_refused_sequence, 1U)
       << "a press at the start of the roll is outside the buffer";
 
-  // 0.36 s roll + 0.16 s recovery: 26 ticks in leaves about 0.09 s to run.
   for (int tick = 0; tick < 24; ++tick) {
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
   }

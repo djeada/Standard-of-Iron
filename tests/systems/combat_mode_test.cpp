@@ -5619,7 +5619,6 @@ TEST_F(CombatModeTest, ARiposteMakesOneHitOnTheTurnedAttackerPunishing) {
   player_cmd->riposte_window_remaining = 0.6F;
   player_cmd->riposte_target_id = turned->get_id();
 
-  // Below 20 damage an ordinary hit does not flinch; the stagger is the riposte's.
   auto const ordinary = Game::Systems::RpgCombat::deal_commander_attack_damage(
       world.get(), bystander, 15, player->get_id());
   ASSERT_GT(ordinary.effective_damage, 0);

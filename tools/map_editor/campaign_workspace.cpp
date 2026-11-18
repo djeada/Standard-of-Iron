@@ -133,7 +133,7 @@ public:
   }
 
 protected:
-  void paintEvent(QPaintEvent* /*event*/) override {
+  void paintEvent(QPaintEvent*) override {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(rect(), QColor(28, 21, 15));

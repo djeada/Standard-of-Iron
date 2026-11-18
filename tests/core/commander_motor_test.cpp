@@ -557,8 +557,6 @@ TEST_F(CommanderMotorTest, CrowdSeparationIsBoundedAndRepeatable) {
       << (k_max_push_per_second * k_dt) << " m budget";
 }
 
-// Exercise the locomotion owner directly: these checks must not depend on camera
-// smoothing, renderer timing or AI target selection.
 auto locomotion_handles(Engine::Core::Entity& entity) -> App::Core::CommanderHandles {
   return {entity,
           *entity.get_component<Engine::Core::TransformComponent>(),
@@ -722,9 +720,6 @@ void block_row(float z) {
   }
 }
 
-// A 0.72 m jump clears no obstacle the navigation grid knows about (the
-// lowest, a boulder, stands 1.2 m). The airborne body therefore collides like
-// the grounded one, and an ordinary landing is never repaired by a snap-back.
 TEST_F(CommanderMotorTest, AJumpIntoAWallStaysOutsideItAndNeverSnapsBack) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
@@ -794,7 +789,6 @@ TEST_F(CommanderMotorTest, AirborneMomentumIsCommittedAtTakeoff) {
   }
   ASSERT_GT(takeoff.z(), 3.0F);
 
-  // Releasing the stick in the air keeps the jump's travel.
   controller.request_jump();
   static_cast<void>(step());
   ASSERT_TRUE(data->jump_active);
@@ -811,7 +805,6 @@ TEST_F(CommanderMotorTest, AirborneMomentumIsCommittedAtTakeoff) {
       << " m/s";
   land();
 
-  // Reversing in the air steers at the air limit; it cannot flip the jump.
   controller.input().forward = true;
   for (int tick = 0; tick < 60; ++tick) {
     takeoff = step();
@@ -868,7 +861,6 @@ TEST_F(CommanderMotorTest, WadingWalkAndSprintUseSharedWaterAndChillRules) {
       EXPECT_FALSE(stamina->run_requested)
           << "sprint input must not drain stamina in a ford";
 
-      // Leaving the water restores sprint, but retains the shared chill penalty.
       water->depth = 0.0F;
       for (int tick = 0; tick < static_cast<int>(hz); ++tick) {
         const float before = transform->position.z;
@@ -903,7 +895,7 @@ TEST_F(CommanderMotorTest, WadingScalesDodgeTravelWithoutChangingItsTimelineOrCo
     controller.input().forward = true;
     controller.request_dodge();
     int frames = 0;
-    // Sample the roll and recovery, before ordinary walking resumes.
+
     for (int tick = 0; tick < 30; ++tick) {
       EXPECT_TRUE(controller.update(world, entity->get_id(), 1, camera, 1.0F / 60.0F));
       EXPECT_FALSE(

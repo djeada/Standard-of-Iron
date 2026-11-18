@@ -1,8 +1,8 @@
 #version 330 core
+#include "biome_palette.glsl"
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "ground_readability.glsl"
-#include "biome_palette.glsl"
 #include "local_lighting.glsl"
 #include "visibility_mask.glsl"
 

@@ -933,8 +933,6 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
                        "cmd_comp->jump_height_offset = jump_height_offset;"));
   EXPECT_TRUE(contains(controller_source, "m_jump_timer <= 0.0F"));
 
-  // The handoff clear lives in one helper; its behaviour is asserted by
-  // AHandoffLeavesNoAirborneStateToCutTheNextJump rather than by its spelling.
   EXPECT_TRUE(
       contains(commander_mode_source, "settle_body_on_handoff(*commander_data);"));
 
@@ -1029,7 +1027,5 @@ TEST(CommanderControlRegressionTest, AirborneCommanderSkipsRtsMovementCorrection
       read_text(root / "game" / "systems" / "movement" / "movement_system_gates.cpp");
   ASSERT_FALSE(movement_source.empty());
 
-  // Airborne collision itself is covered behaviourally by
-  // CommanderMotorTest.AJumpIntoAWallStaysOutsideItAndNeverSnapsBack.
   EXPECT_TRUE(contains(movement_source, "commander->jump_active"));
 }

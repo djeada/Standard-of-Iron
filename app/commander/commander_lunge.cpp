@@ -76,8 +76,6 @@ auto resolve_strike_target(Engine::Core::World& world,
           .stop_distance = stop_distance};
 }
 
-// Where in the action the swing commits: from the first weapon-trace frame on,
-// the bend toward the target is frozen.
 auto strike_commit_time(
     const Game::Systems::CombatActions::CombatActionDefinition& definition) -> float {
   using Game::Systems::CombatActions::CombatActionEventType;
@@ -305,7 +303,7 @@ void CommanderLunge::advance(Engine::Core::World& world,
     float const step = assist.maximum_turn_degrees / windup_seconds * dt;
     m_aim_offset += std::clamp(desired - m_aim_offset, -step, step);
   }
-  // A target outside the swing's cone does not pull the body sideways onto it.
+
   if (target.valid && !inside_cone(*definition, transform.rotation.y, target)) {
     target.valid = false;
   }

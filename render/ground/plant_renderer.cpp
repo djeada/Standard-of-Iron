@@ -115,7 +115,8 @@ void PlantRenderer::generate_plant_instances() {
       const QVector3D var_color = prop_profile.grass_secondary * 0.66F;
       const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
-      const float plant_type = std::floor(rand_01(var_state) * k_upland_plant_type_count);
+      const float plant_type =
+          std::floor(rand_01(var_state) * k_upland_plant_type_count);
 
       const float plant_scale = prop.scale * Game::Map::world_prop_render_scale(
                                                  Game::Map::WorldProp::Type::Plant);

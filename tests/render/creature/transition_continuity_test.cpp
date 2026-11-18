@@ -258,8 +258,7 @@ TEST(HumanoidOverlayContinuity, BlendWeightDoesNotDependOnFrameRate) {
           memory,
           {.time = static_cast<float>(frame) / static_cast<float>(hz)});
     }
-    // The fade is rate-limited from the first frame, so every rate is at the
-    // same point of it after 0.2 s.
+
     EXPECT_NEAR(shown.weight, 0.2F * k_overlay_weight_rate_per_second, 1.0e-4F);
   }
 }

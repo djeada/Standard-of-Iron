@@ -14,7 +14,6 @@ vec3 environment_primary_direction() {
   return normalize(u_env_primary_direction_intensity.xyz);
 }
 
-// Classify the incoming light before applying the daylight color treatment.
 float environment_night_amount() {
   vec3 primary = u_env_primary_color_ambient_intensity.rgb;
   return smoothstep(0.05, 0.40, primary.b - primary.r);

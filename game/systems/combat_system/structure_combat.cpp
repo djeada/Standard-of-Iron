@@ -418,8 +418,7 @@ auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
       break;
     }
     if (!resolved) {
-      // A neighbouring wall can cut off the nearest corner of a gate. Try
-      // the other faces instead of continually requesting an unreachable point.
+
       auto const footprint = structure_footprint(structure);
       float best_distance = std::numeric_limits<float>::max();
       for (auto const [nx, nz] : std::array<std::pair<float, float>, 4>{

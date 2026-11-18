@@ -31,12 +31,6 @@ auto rpg_pool_for_commander(const Engine::Core::UnitComponent* unit) -> int {
   return std::clamp(scaled, k_rpg_pool_min, k_rpg_pool_max);
 }
 
-// The three helpers below are the one definition of what a control handoff
-// clears. Entry and exit used to carry their own copies, and the copies had
-// already drifted from the fields the controller writes.
-
-// Strike, jump and dodge flags the direct-control tick owns. A handoff with no
-// authored action running puts the body back on the ground, standing.
 void settle_body_on_handoff(Engine::Core::CommanderComponent& data) {
   data.power_strike_active = false;
   data.just_struck_enemy = false;
@@ -44,8 +38,7 @@ void settle_body_on_handoff(Engine::Core::CommanderComponent& data) {
   data.jump_active = false;
   data.jump_phase = 0.0F;
   data.jump_height_offset = 0.0F;
-  // Left set, these cut the next jump short: the jump timer reads a stale dive
-  // as one still in progress.
+
   data.airborne_velocity = 0.0F;
   data.dive_attack_active = false;
   data.dodge_active = false;
@@ -65,8 +58,6 @@ void clear_target_state(Engine::Core::RpgCommanderTargetComponent& targets) {
   targets.recent_hit_timer = 0.0F;
 }
 
-// Only for a body with no authored action running; a running one is preserved
-// whole so it finishes under its new owner.
 void clear_idle_action(Engine::Core::RpgCommanderActionComponent& action) {
   constexpr auto k_no_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
@@ -282,8 +273,7 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
               context.commander)) {
     constexpr float k_commander_stamina = 180.0F;
     constexpr float k_commander_stamina_regen = 30.0F;
-    // Changing control may raise capacity, but cannot refund spent stamina or
-    // skip the recovery delay established by a combat action.
+
     if (stamina->max_stamina < k_commander_stamina) {
       stamina->max_stamina = k_commander_stamina;
     }
@@ -595,8 +585,7 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     }
   }
   if (auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>()) {
-    // Release input-owned protection; simulation-owned guard-break recovery
-    // survives the handoff and continues to tick in CommanderSystem.
+
     guard->active = false;
     guard->perfect_guard_remaining = 0.0F;
     guard->rearm_requires_release = false;

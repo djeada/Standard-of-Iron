@@ -84,7 +84,7 @@ auto roman_heavy_armor_archetype(const QMatrix4x4& plates,
   RenderArchetypeBuilder builder{key};
   builder.add_palette_mesh(
       torso_mesh_for_armor(), plates, k_heavy_plate_slot, nullptr, 1.0F, 1);
-  // Overlapping lower lames share the plate transform and its waist skinning.
+
   static const auto lames = make_garment_shell(
       {
           {-0.08F, 1.083F, 1.093F},

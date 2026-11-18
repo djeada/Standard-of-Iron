@@ -78,8 +78,7 @@ auto shield_outward_hint(const Render::GL::HumanoidPose& pose,
   if (std::abs(turn) <= k_free_turn) {
     return {};
   }
-  // Ease the wrist into its outward turn. The old linear dead zone changed
-  // angular velocity abruptly whenever a walking hand crossed its edge.
+
   float const excess = std::abs(turn) - k_free_turn;
   constexpr float k_ease_angle = std::numbers::pi_v<float> / 9.0F;
   float const t = std::clamp(excess / k_ease_angle, 0.0F, 1.0F);

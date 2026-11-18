@@ -274,9 +274,7 @@ void ArenaScenarioRunner::Impl::check_commander_expectation(
     break;
   }
   case ArenaExpectationKind::CommanderJumpLandsClean: {
-    // threshold = landings required. A landing is an airborne run of at least
-    // 0.3 s followed by a grounded frame; no airborne or landing frame may
-    // leave the body somewhere it could not stand.
+
     int const required = std::max(1, static_cast<int>(expectation.threshold));
     int landings = 0;
     float airborne_seconds = 0.0F;

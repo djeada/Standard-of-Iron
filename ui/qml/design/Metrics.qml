@@ -45,9 +45,6 @@ QtObject {
     readonly property int rtsBottomBarMaxHeight: A11y.scaled(206)
     readonly property real rtsBottomBarShare: 0.18
 
-    // Extra height the RTS bar borrows while a production building is
-    // selected, so the recruit grid keeps two whole rows. HUDBottom reports
-    // when it needs this; HUD.qml adds it to bottomBarHeight().
     readonly property int rtsBottomBarProductionExtra: A11y.scaled(28)
     readonly property real bottomBarGrownViewportCeiling: 0.34
 

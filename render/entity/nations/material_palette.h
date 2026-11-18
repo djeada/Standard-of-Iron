@@ -6,8 +6,6 @@
 
 namespace Render::GL::Nation {
 
-// Material albedos before team identification, weathering and scene lighting.
-// Roles can choose a secondary dye (for example Punic spearmen wear saffron).
 struct MaterialPalette {
   QVector3D cloth;
   QVector3D accent;

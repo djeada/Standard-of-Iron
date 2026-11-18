@@ -382,7 +382,7 @@ auto site_controller(const WorldDefinition& def,
   return QString::fromLatin1(k_neutral_faction);
 }
 
-auto region_controller(const WorldDefinition& /*def*/,
+auto region_controller(const WorldDefinition&,
                        const WorldState& state,
                        const QString& region) -> QString {
   const auto it = state.regions.find(region);

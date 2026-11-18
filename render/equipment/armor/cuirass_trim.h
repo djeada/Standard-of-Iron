@@ -4,8 +4,6 @@
 
 namespace Render::GL {
 
-// Local Y runs down the fitted cuirass. Both trims use the cuirass transform
-// so their chest and pelvis weights follow its surface in motion.
 inline auto cuirass_shoulder_yoke() -> Mesh* {
   static const auto yoke = make_garment_shell(
       {

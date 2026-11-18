@@ -45,8 +45,6 @@ struct CommanderRefusal {
   const char* action{""};
 };
 
-// Cooldowns live on CommanderComponent and run down in CommanderSystem in
-// either control mode; this class only decides and starts abilities.
 class CommanderAbilities {
 public:
   auto activate(const CommanderAbilityRequest& request,

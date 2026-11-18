@@ -177,8 +177,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
       commander->posture_max > 0.0F
           ? static_cast<double>(commander->posture / commander->posture_max)
           : 0.0;
-  // "Punish" on the HUD is the player's opportunity after a perfect guard. Being
-  // open to punishment (guard broken) has its own callout.
+
   result["punish_window_remaining"] =
       static_cast<double>(commander->riposte_window_remaining);
   result["punish_active"] = commander->riposte_window_remaining > 0.0F;

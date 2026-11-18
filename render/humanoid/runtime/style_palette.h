@@ -30,7 +30,6 @@ struct ClothBlend {
   float style = 0.90F;
 };
 
-// Dye accepts the owner's color. Hardware and timber retain the material albedo.
 template <typename Style>
 void apply_uniform_palette(HumanoidPalette& palette,
                            const Style& style,

@@ -218,8 +218,7 @@ struct BatchState {
   bool finishing{false};
   int generation{0};
   int capture_index{0};
-  // Captures are taken on the scenario clock, not the wall clock, and the
-  // wall-clock watchdog is extended by the time they cost.
+
   float next_capture_time{0.0F};
   qint64 capture_spent_ms{0};
   bool capturing{false};
@@ -576,10 +575,7 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
     state->capture_spent_ms = 0;
     state->capturing = false;
     if (settings.capture_interval > 0.0F) {
-      // Sample the scenario every capture_interval seconds of simulated time,
-      // right after the frame that reached it. A wall-clock timer grabbing and
-      // encoding frames between fixed-step ticks slowed the simulation until
-      // the watchdog fired, and captured different moments on every run.
+
       float const interval = settings.capture_interval;
       state->next_capture_time = interval;
       state->capture_connection = QObject::connect(
@@ -628,7 +624,7 @@ void start_scenario_batch(ArenaViewport& viewport_ref,
       if (state->generation != generation || state->finishing) {
         return;
       }
-      // Time spent writing requested captures is not the scenario stalling.
+
       if (qint64 const owed = state->capture_spent_ms - credited_capture_ms; owed > 0) {
         qint64 const credited = state->capture_spent_ms;
         QTimer::singleShot(static_cast<int>(owed),

@@ -1,5 +1,5 @@
-// Matches Game::Map::GroundType. Swatches from the map supply the base albedo.
-// These multipliers describe how living and cured vegetation differ within it.
+
+
 const int k_forest_mud = 0;
 const int k_grass_dry = 1;
 const int k_soil_rocky = 2;
@@ -20,7 +20,7 @@ BiomeGrassPalette biome_grass_palette(int ground_type) {
     return BiomeGrassPalette(vec3(0.88, 1.13, 1.06), vec3(1.12, 1.06, 0.89));
   if (ground_type == k_soil_fertile)
     return BiomeGrassPalette(vec3(0.81, 1.29, 0.92), vec3(1.22, 1.13, 0.78));
-  // Alpine and unclassified ground retain their authored colors.
+
   return BiomeGrassPalette(vec3(1.0), vec3(1.0));
 }
 

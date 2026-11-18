@@ -65,7 +65,7 @@ const QVector3D k_straw{0.72F, 0.62F, 0.38F};
 void add_path_stones(BuildingArchetypeDesc& desc, const HomeYardStyle& style) {
   float const p = style.plinth_half;
   int const seed = style.seed;
-  // Worn soil under the stepping stones narrows toward the lane.
+
   for (int patch = 0; patch < 3; ++patch) {
     float const x = jitter(seed, patch) * 0.045F;
     float const z = p + 0.06F + 0.20F * patch;

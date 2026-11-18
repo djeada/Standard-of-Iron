@@ -46,7 +46,7 @@ constexpr float k_half_height = 0.55F;
 constexpr float k_corner_radius = 0.12F;
 constexpr float k_curve_depth = 0.082F;
 constexpr float k_board_thickness = 0.034F;
-// Leave room for the closed fist behind the board.
+
 constexpr float k_grip_standoff = 0.065F;
 constexpr float k_boss_plate_half_width = 0.105F;
 constexpr float k_boss_plate_half_height = 0.18F;
@@ -299,8 +299,7 @@ auto shield_basis_transform(const QMatrix4x4& parent,
 auto scutum_local_pose() -> QMatrix4x4 {
   QMatrix4x4 pose;
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  // Put the centre of the rear handle on the grip socket. An arbitrary
-  // clearance here leaves the fist visibly floating behind the handle.
+
   pose.translate(0.0F, 0.0F, k_board_thickness + k_grip_standoff);
   return pose;
 }

@@ -9,9 +9,6 @@
 
 namespace StrategicTest {
 
-// A deliberately small world: two factions, two mainland regions joined by a
-// mountain pass, and an island reached by a sea lane. Every rule the tests
-// exercise has exactly one place where it can bite.
 inline auto micro_world_json() -> QByteArray {
   return R"({
   "schema_version": 1,

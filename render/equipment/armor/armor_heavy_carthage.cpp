@@ -9,11 +9,11 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/gl/garment_shell.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/parts.h"
+#include "render/gl/garment_shell.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/asset/humanoid_derived_meshes.h"
 #include "render/humanoid/asset/humanoid_spec.h"

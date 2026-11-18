@@ -351,8 +351,7 @@ auto create_capsule_mesh(int radial_segments,
 
 auto create_unit_torso_mesh(int radial_segments,
                             int height_segments) -> std::unique_ptr<Mesh> {
-  // Armor attachments run from shoulder to waist along local +Y, and
-  // align_torso_mesh_forward maps the local Z diameter across the shoulders.
+
   return make_garment_shell({{-0.53F, 0.54F, 0.53F},
                              {-0.46F, 0.87F, 0.91F},
                              {-0.29F, 1.10F, 1.13F},

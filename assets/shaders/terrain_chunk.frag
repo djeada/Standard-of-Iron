@@ -1,6 +1,5 @@
 #version 330 core
 #include "biome_palette.glsl"
-
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
@@ -1252,10 +1251,10 @@ void main() {
                       (1.0 - u_snow_coverage) * clamp(1.0 - slope * 1.5, 0.0, 1.0);
   worn_ground *= 0.40 + 0.80 * smoothstep(-0.22, 0.22, worn_breakup);
   worn_ground *= mix(0.60, 1.0, clearing_dryness) * (1.0 - terrain_cavity * 0.25);
-  // Separate fresh pasture from sun-cured grass before adding roads and yards.
+
   float grass_cover = (1.0 - rock_mask) * (1.0 - soil_mix) * (1.0 - snow_cover);
-  float cured = smoothstep(0.47, 0.80, meadow_drift + biome_dry * 0.08 -
-                                        drainage_field * 0.18);
+  float cured =
+      smoothstep(0.47, 0.80, meadow_drift + biome_dry * 0.08 - drainage_field * 0.18);
   terrain_color = biome_grass_color(terrain_color, u_ground_type, cured, grass_cover);
 
   vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.48) * 0.94;
