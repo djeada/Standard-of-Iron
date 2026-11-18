@@ -188,6 +188,12 @@ public:
                            const std::string& building_type,
                            float facing_degrees);
 
+  void set_building_body(Engine::Core::EntityID entity_id,
+                         float min_x,
+                         float max_x,
+                         float min_z,
+                         float max_z);
+
   void update_building_position(Engine::Core::EntityID entity_id,
                                 float center_x,
                                 float center_z);

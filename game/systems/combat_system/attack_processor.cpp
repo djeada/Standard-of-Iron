@@ -396,6 +396,12 @@ void apply_attack_effect(const Attacker& attacker,
   bool const show_arrow_vfx =
       attacker.unit->spawn_type != Game::Units::SpawnType::Catapult &&
       attacker.unit->spawn_type != Game::Units::SpawnType::Ballista;
+  if (ranged_unit && !show_arrow_vfx) {
+    // Catapults and ballistas load and loose through the siege special processor,
+    // whose stone or bolt deals the damage where it lands; dealing it here as well
+    // hit the target instantly, with nothing in the air, before the real shot.
+    return;
+  }
 
   if (attacker_uses_bow_action(attacker, special_projectile)) {
     begin_rts_bow_action(*ctx.world, attacker.entity, choice.target, damage, cooldown);

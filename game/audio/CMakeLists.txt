@@ -10,6 +10,7 @@ add_library(
     audio_system
     STATIC
     audio_system.cpp
+    audio_clock.cpp
     audio_cues.cpp
     cue_trace.cpp
     loop_seam.cpp

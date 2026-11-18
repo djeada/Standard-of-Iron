@@ -811,6 +811,67 @@ never invent their own (they used to, whenever a map carried no runtime harvest
 props, which included every synthetic arena floor). The renderer's own stone
 scatter is kept to ankle-high pebbles.
 
+## Soldiers and buildings
+
+A troop's centre is routed through a gate or a gap in a wall, but the troop is
+several metres wide, so the slots of its flank files regularly fall inside or
+behind the wall it is passing. `walk_formation_slot` resolves each soldier
+against the solid bodies near his troop (walls, towers, gate towers, houses),
+gathered once per troop per tick by `buildings_around`. Three rules keep him
+moving with his squad:
+
+- **Slots stay on the troop's side of a body until the troop closes with its
+  target.** `keep_out_of_buildings` pulls a slot that lies in or beyond a body
+  back toward the troop's centre. It used to be switched off for every troop
+  with a melee order (`SlotWalk::engaged`), and a charge carries a melee order
+  from the moment it is issued, not from first contact. A squad charging into a
+  walled camp therefore aimed its flank files at slots inside the palisade. It
+  is now switched off by `SlotWalk::closed_with_target`: the troop is in melee
+  contact, or within `k_contact_slot_range` (10 m) of the target it was ordered
+  to fight. The range is deliberate. Two troops ordered at each other across an
+  intact wall used to stand with their front ranks in the wall, which is what
+  told the chase they were already within reach; with honest positions the
+  chase re-issues its move, and the sealed-unit rule then walks the troop on
+  the smaller side through the wall
+  (`WallSiegeTest.TroopsPressedAgainstOppositeFacesCannotFightThroughTheWall`).
+  That interplay between chase reach and `assign_escape_if_sealed` is unsolved;
+  the range keeps the old behaviour for troops already at their target.
+- **A step that meets a body slides along it.** `stop_step_at_buildings` used to
+  cut the whole step at the face, so a soldier whose heading had any component
+  into a wall lost his motion along it too and stood still while his squad ran
+  on. The part of the step the face refuses is now walked along whichever axis
+  is clear. A man brushing a wall keeps pace with his file, and a man at a gate
+  jamb walks round it.
+- **A straggler catches up at a run, not a dash.** A soldier on a traversal
+  (authored) slot may move by the troop's own travel plus the catch-up pace each
+  tick, which keeps him glued to a slot that is moving. For a man far from his
+  slot the two added up to about 10 m/s behind a running squad, which read as
+  being dragged back in. The troop-travel allowance now fades out between 0.5 m
+  and 2 m from the slot, so a straggler closes at the catch-up pace alone.
+
+Before these rules a soldier pinned at a wall was only released by the 12 m
+"lost" rule above, which is the stand-then-sprint the Rhone camp shot showed.
+`EnclosureEntryTest` storms a palisade camp with twelve squads and counts
+soldier-seconds pinned at a wall while the squad moved on (21 before, 0 after,
+with the map's authored obstacles kept as the Arena keeps them), soldier-seconds
+inside a wall body, and the furthest any soldier strayed from his squad (13.5 m
+before, 4 m after).
+
+**A wall segment's solid body follows the wall, not the segment's yaw.** Every
+segment is spawned with yaw 0 and the wall network then picks its drawn piece
+(straight, corner, tee, end) from its neighbours. The collision body stayed at
+the yaw-0 box, 2.02 m along x and 0.76 m along z, so a wall running north-south
+was a row of slivers lying across the wall with 1.24 m holes between them:
+soldiers, line-of-sight rays and the camera all passed through a palisade that
+is drawn solid. `WallNetworkService::refresh_world` now sets each connected
+segment's body from its connection mask (`sync_wall_body`): the post, plus an
+arm toward each neighbour, and the open span of an end piece. The navigation
+footprint (2 m square) is unchanged, so routes and the nav grid do not move.
+The Arena hid this defect because it never clears the map's authored obstacles
+after spawning the real walls (the game does, in `MapTransformer`), and those
+carry a 2 m square body and 1 m of navigation padding. Arena walls are
+therefore 2 m thick to a soldier and their gaps 2 m narrower than in the game.
+
 # Defence Mode
 
 Defence Mode is a unit-layout state, not an army formation.

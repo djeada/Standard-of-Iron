@@ -6340,6 +6340,83 @@ TEST(HumanoidPrepare, FormationMeleeKeepsLowerBodyOnRootedBaseLayer) {
   EXPECT_FALSE(selection.full_body_blend.active());
 }
 
+TEST(HumanoidPrepare, AStrikingSoldierWhoIsShovedWalksUnderHisSwing) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::CombatVisualTransactionPhase;
+  using Render::Creature::PlaybackLayerMode;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/stepping_formation_melee";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.visual_movement.measured_from_ground = true;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.is_in_melee_lock = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.prioritize_action_over_locomotion = true;
+  anim.inputs.combat_visual.is_melee = true;
+  anim.inputs.combat_visual.attack_family = Animation::CombatAttackFamily::Spear;
+  anim.gait.locomotion_presence = 0.3F;
+
+  for (auto const phase : {CombatVisualTransactionPhase::Strike,
+                           CombatVisualTransactionPhase::Recover}) {
+    anim.inputs.combat_visual.phase = phase;
+    anim.inputs.combat_visual.phase_progress = 0.5F;
+    auto const selection = resolve_humanoid_animation_selection(spec, anim, 41U);
+
+    EXPECT_EQ(selection.state, AnimationStateId::Walk)
+        << "the legs follow the ground whatever the arms are doing";
+    ASSERT_TRUE(selection.upper_body_overlay.active());
+    EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
+    EXPECT_EQ(selection.upper_body_overlay.state, AnimationStateId::AttackSpear);
+    ASSERT_TRUE(selection.full_body_blend.active())
+        << "a shuffle is a short stride: the walk is blended with the stance";
+    EXPECT_NEAR(selection.full_body_blend.weight, 0.7F, 0.01F);
+    EXPECT_EQ(selection.full_body_blend.clip_id, Animation::k_humanoid_combat_ready_clip);
+  }
+}
+
+TEST(HumanoidPrepare, AReadySoldierWhoIsShovedStepsWithHisWeaponUp) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::PlaybackLayerMode;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/stepping_formation_ready";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.visual_movement.measured_from_ground = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.is_in_melee_lock = true;
+  anim.gait.locomotion_presence = 1.0F;
+
+  auto const selection = resolve_humanoid_animation_selection(spec, anim, 41U);
+  EXPECT_EQ(selection.state, AnimationStateId::Walk);
+  ASSERT_TRUE(selection.upper_body_overlay.active());
+  EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
+  EXPECT_EQ(selection.upper_body_overlay.clip_id,
+            Animation::k_humanoid_combat_ready_clip);
+
+  anim.inputs.visual_movement.measured_from_ground = false;
+  auto const unmeasured = resolve_humanoid_animation_selection(spec, anim, 41U);
+  EXPECT_FALSE(unmeasured.upper_body_overlay.active())
+      << "only a measured step is trusted inside a melee lock";
+}
+
 class MotionProbeSubmitter : public CountingSubmitter {
 public:
   std::vector<QMatrix4x4> bones;

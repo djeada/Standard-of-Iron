@@ -1766,6 +1766,71 @@ TEST_F(FormationCombatGeometry, SoldiersBesideABuildingNeverStandInsideOrBeyondI
       << "a man who appears beside a wall appears outside it";
 }
 
+TEST_F(FormationCombatGeometry, AChargingFileKeepsPaceAlongAWallItsSlotsLieBehind) {
+  std::vector<Game::Systems::Combat::SolidBody> const wall{
+      {.min_x = 1.0F, .max_x = 3.0F, .min_z = -20.0F, .max_z = 20.0F}};
+  constexpr float k_dt = 1.0F / 30.0F;
+  constexpr float k_speed = 1.5F;
+  std::vector<Game::Systems::Combat::ForeignSoldier> foreign;
+  for (bool const closed : {false, true}) {
+    Engine::Core::TransformComponent root;
+    root.position = {0.0F, 0.0F, -6.0F};
+    Engine::Core::FormationPresentationComponent formation;
+    formation.motion_root_valid = true;
+    std::vector<Engine::Core::FormationSoldierPresentation> soldiers;
+    for (int file = -3; file <= 3; ++file) {
+      Engine::Core::FormationSoldierPresentation soldier;
+      soldier.alive = true;
+      soldier.world_motion_valid = true;
+      soldier.slot_index = static_cast<std::uint16_t>(file + 3);
+      soldier.local_x = static_cast<float>(file) * 0.6F;
+      soldier.world_x = std::min(soldier.local_x, 0.5F);
+      soldier.world_z = root.position.z;
+      soldiers.push_back(soldier);
+    }
+    float deepest = -100.0F;
+    for (int tick = 0; tick < 240; ++tick) {
+      formation.motion_root_x = root.position.x;
+      formation.motion_root_z = root.position.z;
+      root.position.z += k_speed * k_dt;
+      auto const before = soldiers;
+      for (std::size_t i = 0; i < soldiers.size(); ++i) {
+        auto next = before[i];
+        next.relocation_blocked = false;
+        next.local_x = (static_cast<float>(i) - 3.0F) * 0.6F;
+        next.local_z = 0.0F;
+        Game::Systems::Combat::walk_formation_slot({.actor = root,
+                                                    .formation = formation,
+                                                    .neighbors = before,
+                                                    .foreign_neighbors = foreign,
+                                                    .squad_speed = k_speed,
+                                                    .march_speed = k_speed,
+                                                    .spacing = 0.6F,
+                                                    .engaged = true,
+                                                    .closed_with_target = closed,
+                                                    .solid_bodies = &wall,
+                                                    .delta_time = k_dt},
+                                                   &before[i],
+                                                   next);
+        deepest = std::max(deepest, next.world_x - 1.0F);
+        soldiers[i] = next;
+      }
+    }
+    EXPECT_LT(deepest, 0.0F) << "closed " << closed << ": nobody steps into the wall";
+    for (auto const& soldier : soldiers) {
+      if (closed && soldier.slot_index >= 5U) {
+        EXPECT_GT(soldier.world_z, -5.0F)
+            << "file " << soldier.slot_index
+            << " stood still against the wall his contact slot lies in";
+        continue;
+      }
+      EXPECT_GT(soldier.world_z, root.position.z - 1.0F)
+          << "closed " << closed << ": file " << soldier.slot_index
+          << " was left standing against the wall";
+    }
+  }
+}
+
 TEST_F(FormationCombatGeometry, RepairAndDismantlePostsSurroundTheTargetBuilding) {
   Engine::Core::World world;
   auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);

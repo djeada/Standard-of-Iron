@@ -35,6 +35,7 @@ struct HumanoidLocomotionInputs {
   Render::GL::VariationParams variation{};
   float move_speed{0.0F};
   float body_scale{1.0F};
+  float stride_presence{1.0F};
   QVector3D entity_forward{0.0F, 0.0F, 1.0F};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
   QVector3D movement_target{0.0F, 0.0F, 0.0F};

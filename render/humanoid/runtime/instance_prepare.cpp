@@ -40,6 +40,7 @@
 #include "render/humanoid/runtime/instance_state.h"
 #include "render/humanoid/runtime/runtime_context.h"
 #include "render/humanoid/runtime/runtime_stats.h"
+#include "render/humanoid/runtime/soldier_ground_motion.h"
 #include "render/humanoid/runtime/soldier_turn_smoothing.h"
 #include "render/humanoid/runtime/unit_layout_spacing.h"
 #include "render/profiling/combat_animation_diagnostics.h"
@@ -206,6 +207,7 @@ struct HumanoidUnitAnimationRuntime {
   float turn_smoothing_dt{0.0F};
   bool turn_smoothing_active{false};
   float turn_smoothing_cap{2.5F};
+  float ground_march_speed{2.0F};
   bool turn_smoothing_travel_yaw{true};
   bool turn_smoothing_stagger{true};
   bool turn_smoothing_pivot_wheel{true};
@@ -719,6 +721,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   float turn_smoothing_dt = 0.0F;
   bool turn_smoothing_active = false;
   float turn_smoothing_cap = 2.5F;
+  float const ground_march_speed = unit_comp != nullptr ? unit_comp->speed : 2.0F;
   bool turn_smoothing_travel_yaw = true;
   bool turn_smoothing_stagger = true;
   bool turn_smoothing_pivot_wheel = true;
@@ -730,6 +733,11 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
     if (turn_cache.turn_states.size() != static_cast<std::size_t>(total_layout_count)) {
       turn_cache.turn_states.assign(static_cast<std::size_t>(total_layout_count),
                                     SoldierTurnSmoothingState{});
+    }
+    if (turn_cache.ground_motion.size() !=
+        static_cast<std::size_t>(total_layout_count)) {
+      turn_cache.ground_motion.assign(static_cast<std::size_t>(total_layout_count),
+                                      SoldierGroundMotionState{});
     }
     if (turn_cache.turn_time_valid) {
       constexpr float k_turn_smoothing_max_dt = 0.1F;
@@ -795,6 +803,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   result.turn_smoothing_dt = turn_smoothing_dt;
   result.turn_smoothing_active = turn_smoothing_active;
   result.turn_smoothing_cap = turn_smoothing_cap;
+  result.ground_march_speed = ground_march_speed;
   result.turn_smoothing_travel_yaw = turn_smoothing_travel_yaw;
   result.turn_smoothing_stagger = turn_smoothing_stagger;
   result.turn_smoothing_pivot_wheel = turn_smoothing_pivot_wheel;
@@ -869,6 +878,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const float turn_smoothing_dt = u.turn_smoothing_dt;
   const bool turn_smoothing_active = u.turn_smoothing_active;
   const float turn_smoothing_cap = u.turn_smoothing_cap;
+  const float ground_march_speed = u.ground_march_speed;
   const bool turn_smoothing_travel_yaw = u.turn_smoothing_travel_yaw;
   const bool turn_smoothing_stagger = u.turn_smoothing_stagger;
   const bool turn_smoothing_pivot_wheel = u.turn_smoothing_pivot_wheel;
@@ -1061,8 +1071,19 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                   180.0F / std::numbers::pi_v<float>
             : shared_footing->world_yaw;
     turn_smoothing.relocating = shared_footing->reforming;
-    turn_slot_world =
-        QVector3D(shared_footing->world_x, root_position.y(), shared_footing->world_z);
+    if (turn_smoothing_active &&
+        static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size()) {
+      auto const eased = ease_melee_footing(
+          layout_cache_comp->turn_states[static_cast<std::size_t>(idx)],
+          shared_footing->world_x,
+          shared_footing->world_z,
+          turn_smoothing_dt,
+          shared_footing->opponent_id != 0U,
+          frame_index + 1U);
+      turn_smoothing.x = eased.x;
+      turn_smoothing.z = eased.z;
+    }
+    turn_slot_world = QVector3D(turn_smoothing.x, root_position.y(), turn_smoothing.z);
     soldier_turn_smoothed = true;
   } else if (turn_smoothing_active && !soldier_is_casualty_body &&
              !soldier_render_anim.simulation_owns_root_motion &&
@@ -1093,45 +1114,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         layout_cache_comp->turn_states[static_cast<std::size_t>(idx)],
         smoothing_inputs);
     soldier_turn_smoothed = true;
-    if (turn_smoothing.relocating && !soldier_render_anim.is_attacking &&
-        !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing &&
-        !Render::Creature::is_moving_animation(soldier_render_anim.movement_state)) {
-      soldier_render_anim.movement_state = Animation::MovementState::Walk;
-    }
   }
-  if (has_shared_footsteps && soldier_render_anim.is_constructing &&
-      shared_footing->gait != Engine::Core::FormationSoldierGait::Idle) {
-    soldier_render_anim.is_constructing = false;
-  }
-  if (has_shared_footsteps && !soldier_render_anim.is_attacking &&
-      !soldier_render_anim.is_in_melee_lock && !soldier_render_anim.is_constructing) {
-    switch (shared_footing->gait) {
-    case Engine::Core::FormationSoldierGait::Idle:
-      soldier_render_anim.movement_state = Animation::MovementState::Idle;
-      break;
-    case Engine::Core::FormationSoldierGait::Walk:
-      soldier_render_anim.movement_state = Animation::MovementState::Walk;
-      break;
-    case Engine::Core::FormationSoldierGait::Run:
-      soldier_render_anim.movement_state = Animation::MovementState::Run;
-      break;
-    }
-  }
-
-  if (has_shared_footsteps && shared_footing->climbing) {
-    soldier_render_anim.is_constructing = true;
-    soldier_render_anim.construction_job =
-        static_cast<std::uint8_t>(Animation::HumanoidWorkJob::Climb);
-    soldier_render_anim.construction_progress =
-        shared_footing->elevation / Animation::k_humanoid_climb_rise_per_cycle;
-    soldier_render_anim.is_attacking = false;
-    soldier_render_anim.movement_state = Animation::MovementState::Idle;
-  }
-
-  bool const soldier_has_locomotion =
-      Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
-  bool const soldier_is_running =
-      Render::Creature::is_running_animation(soldier_render_anim.movement_state);
 
   QMatrix4x4 inst_model;
   float applied_yaw = applied_yaw_offset;
@@ -1177,6 +1160,62 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     }
   }
   const QVector3D early_world_pos = inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
+
+  SoldierGroundMotion ground_motion{};
+  bool const legs_follow_ground = soldier_turn_smoothed;
+  if (legs_follow_ground) {
+    SoldierGroundMotionInputs ground_inputs{};
+    ground_inputs.x = early_world_pos.x();
+    ground_inputs.z = early_world_pos.z();
+    ground_inputs.yaw_degrees = applied_yaw;
+    ground_inputs.time = anim.time;
+    ground_inputs.march_speed = ground_march_speed;
+    float const declared_rad = qDegreesToRadians(turn_smoothing.travel_yaw_degrees);
+    ground_inputs.seed_velocity_x =
+        std::sin(declared_rad) * turn_smoothing.travel_speed;
+    ground_inputs.seed_velocity_z =
+        std::cos(declared_rad) * turn_smoothing.travel_speed;
+    ground_inputs.carried =
+        has_shared_footsteps && (shared_footing->carried || shared_footing->climbing);
+    SoldierGroundMotionState* ground_state = nullptr;
+    if (layout_cache_comp != nullptr &&
+        static_cast<std::size_t>(idx) < layout_cache_comp->ground_motion.size()) {
+      ground_state = &layout_cache_comp->ground_motion[static_cast<std::size_t>(idx)];
+    }
+    if (ground_state != nullptr && allow_animation_persistence) {
+      ground_motion = observe_soldier_ground_motion(*ground_state, ground_inputs);
+    } else {
+      ground_motion = peek_soldier_ground_motion(
+          ground_state != nullptr ? *ground_state : SoldierGroundMotionState{},
+          ground_inputs);
+    }
+    if (has_shared_footsteps && ground_motion.stepping) {
+      soldier_render_anim.is_constructing = false;
+    }
+    if (!soldier_render_anim.is_constructing) {
+      soldier_render_anim.movement_state =
+          ground_motion.running    ? Animation::MovementState::Run
+          : ground_motion.stepping ? Animation::MovementState::Walk
+                                   : Animation::MovementState::Idle;
+      soldier_render_anim.visual_movement.measured_from_ground = true;
+    }
+  }
+
+  if (has_shared_footsteps && shared_footing->climbing) {
+    soldier_render_anim.is_constructing = true;
+    soldier_render_anim.construction_job =
+        static_cast<std::uint8_t>(Animation::HumanoidWorkJob::Climb);
+    soldier_render_anim.construction_progress =
+        shared_footing->elevation / Animation::k_humanoid_climb_rise_per_cycle;
+    soldier_render_anim.is_attacking = false;
+    soldier_render_anim.movement_state = Animation::MovementState::Idle;
+    soldier_render_anim.visual_movement.measured_from_ground = false;
+  }
+
+  bool const soldier_has_locomotion =
+      Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
+  bool const soldier_is_running =
+      Render::Creature::is_running_animation(soldier_render_anim.movement_state);
 
   constexpr float k_soldier_cull_center_y = 0.9F;
   constexpr float k_soldier_cull_radius = 1.4F;
@@ -1514,7 +1553,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       soldier_render_anim.is_guarding = true;
       soldier_render_anim.guard_pose_progress =
           std::clamp(soldier_directive->target_held_seconds / 0.18F, 0.0F, 1.0F);
-    } else if (!Render::Creature::is_moving_animation(
+    } else if (soldier_render_anim.visual_movement.measured_from_ground ||
+               !Render::Creature::is_moving_animation(
                    soldier_render_anim.movement_state)) {
       soldier_render_anim.is_in_melee_lock = true;
     }
@@ -1541,24 +1581,19 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   locomotion_inputs.individuality = individuality;
   locomotion_inputs.persistent_state = locomotion_persistent_state;
   locomotion_inputs.allow_persistent_update = allow_animation_persistence;
-  if (has_shared_footsteps) {
+  if (soldier_render_anim.visual_movement.measured_from_ground) {
 
-    const float pivot_stride =
-        0.38F * std::clamp(shared_footing->angular_speed / 140.0F, 0.0F, 1.0F);
-    locomotion_inputs.move_speed = std::max(turn_smoothing.travel_speed, pivot_stride);
-    const float travel_rad = qDegreesToRadians(turn_smoothing.travel_yaw_degrees);
+    locomotion_inputs.move_speed = ground_motion.stride_speed;
+    locomotion_inputs.stride_presence = ground_motion_stride_presence(
+        ground_motion.stride_speed / locomotion_inputs.body_scale,
+        ground_motion.running);
     locomotion_inputs.locomotion_direction =
-        QVector3D(std::sin(travel_rad), 0.0F, std::cos(travel_rad));
-    locomotion_inputs.has_movement_target = false;
-  } else if (soldier_turn_smoothed && turn_smoothing.relocating) {
-
-    locomotion_inputs.move_speed =
-        std::max(locomotion_inputs.move_speed, turn_smoothing.travel_speed);
-    float const travel_rad = qDegreesToRadians(turn_smoothing.travel_yaw_degrees);
-    locomotion_inputs.locomotion_direction =
-        QVector3D(std::sin(travel_rad), 0.0F, std::cos(travel_rad));
+        ground_motion.travelling
+            ? QVector3D(ground_motion.travel_x, 0.0F, ground_motion.travel_z)
+            : forward;
     locomotion_inputs.movement_target = turn_slot_world;
-    locomotion_inputs.has_movement_target = true;
+    locomotion_inputs.has_movement_target =
+        !has_shared_footsteps && turn_smoothing.relocating;
   }
   HumanoidLocomotionState locomotion_state =
       build_humanoid_locomotion_state(locomotion_inputs);

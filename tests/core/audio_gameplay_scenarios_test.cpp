@@ -2,22 +2,27 @@
 #include <QString>
 #include <QVector3D>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <thread>
 #include <vector>
 
 #include "app/audio/audio_resource_loader.h"
 #include "app/audio/audio_system_proxy.h"
+#include "game/audio/audio_clock.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/cue_trace.h"
 #include "game/audio/spatial.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
+#include "game/core/local_audience.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -300,6 +305,106 @@ TEST_F(AudioGameplayScenarioTest, TheAttackersWeaponPicksTheImpactSound) {
       << "a spear thrust played the sword impact";
 }
 
+TEST_F(AudioGameplayScenarioTest, ADenseMeleeIsScatteredBlowsNotABeat) {
+  auto* swordsman = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
+  auto* spearman = add_soldier(k_enemy_owner, Game::Units::SpawnType::Spearman, 0.5F);
+  auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
+  auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+
+  struct RenderedClock {
+    RenderedClock() { Game::Audio::Clock::use_rendered_time(true); }
+    ~RenderedClock() { Game::Audio::Clock::use_rendered_time(false); }
+    RenderedClock(const RenderedClock&) = delete;
+    auto operator=(const RenderedClock&) -> RenderedClock& = delete;
+  } const rendered_clock;
+
+  const auto held_back = [] {
+    std::uint64_t total = 0;
+    for (const char* cue :
+         {Game::Audio::Cue::k_combat_hit_sword, Game::Audio::Cue::k_combat_hit_spear}) {
+      total += CueTrace::instance().record_for(cue).outcomes.at(
+          static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown));
+    }
+    return total;
+  };
+
+  constexpr double k_step = 0.03;
+  constexpr int k_blows = 300;
+  std::vector<double> played_at;
+  for (int blow = 0; blow < k_blows; ++blow) {
+    const auto before = held_back();
+    auto* attacker = blow % 2 == 0 ? swordsman : spearman;
+    Game::Systems::Combat::apply_unit_damage(&m_world, target, 1, attacker->get_id());
+    target_unit->health = target_unit->max_health;
+    if (held_back() == before) {
+      played_at.push_back(blow * k_step);
+    }
+    Game::Audio::Clock::advance_rendered(k_step);
+  }
+
+  const double seconds = k_blows * k_step;
+  ASSERT_GE(played_at.size(), 4U) << "the melee was silent";
+  const double per_second = static_cast<double>(played_at.size()) / seconds;
+  EXPECT_GE(per_second, 2.0) << "a melee this dense should still be heard as one";
+  EXPECT_LE(per_second, 6.0)
+      << "thirty-three blows a second each played a clash: a buzz, not a fight";
+
+  std::vector<double> gaps;
+  for (std::size_t index = 1; index < played_at.size(); ++index) {
+    gaps.push_back(played_at[index] - played_at[index - 1]);
+  }
+  const double shortest = *std::min_element(gaps.begin(), gaps.end());
+  EXPECT_GE(shortest + 1e-6,
+            std::chrono::duration<double>(
+                Game::Audio::AudioEventHandler::k_clash_gap_min)
+                .count())
+      << "two clashes played closer together than the clash gap";
+
+  const double mean =
+      std::accumulate(gaps.begin(), gaps.end(), 0.0) / static_cast<double>(gaps.size());
+  double variance = 0.0;
+  for (const double gap : gaps) {
+    variance += (gap - mean) * (gap - mean);
+  }
+  variance /= static_cast<double>(gaps.size());
+  EXPECT_GT(std::sqrt(variance) / mean, 0.15)
+      << "the clashes fell on a steady beat (mean gap " << mean
+      << " s): a metronome, not a melee";
+}
+
+TEST_F(AudioGameplayScenarioTest, BlowsOnABuildingKeepTheMeleeRhythm) {
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
+  auto* barracks = add_barracks(k_local_owner, 3.0F);
+  auto* building = barracks->get_component<Engine::Core::UnitComponent>();
+
+  struct RenderedClock {
+    RenderedClock() { Game::Audio::Clock::use_rendered_time(true); }
+    ~RenderedClock() { Game::Audio::Clock::use_rendered_time(false); }
+    RenderedClock(const RenderedClock&) = delete;
+    auto operator=(const RenderedClock&) -> RenderedClock& = delete;
+  } const rendered_clock;
+
+  constexpr double k_step = 0.03;
+  constexpr int k_blows = 200;
+  for (int blow = 0; blow < k_blows; ++blow) {
+    Game::Systems::Combat::apply_unit_damage(&m_world, barracks, 1, attacker->get_id());
+    building->health = building->max_health;
+    Game::Audio::Clock::advance_rendered(k_step);
+  }
+
+  const auto record =
+      CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_structure);
+  const auto held_back = record.outcomes.at(
+      static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown));
+  ASSERT_EQ(record.requests, static_cast<std::uint64_t>(k_blows))
+      << "not every blow on the barracks reached the audio system";
+  const double per_second =
+      static_cast<double>(record.requests - held_back) / (k_blows * k_step);
+  EXPECT_GE(per_second, 2.0) << "a building under the axe went quiet";
+  EXPECT_LE(per_second, 6.0)
+      << "every blow on the barracks played: the stone-impact cue became a drum roll";
+}
+
 TEST_F(AudioGameplayScenarioTest, ADyingSoldierIsHeardAndReportedLost) {
   auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
   auto* target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 2.0F);
@@ -346,6 +451,20 @@ TEST_F(AudioGameplayScenarioTest, AnAttackOnThePlayersBuildingRaisesTheAlarm) {
 
   EXPECT_TRUE(heard(Game::Audio::Cue::k_alert_base_under_attack))
       << "the player's barracks was struck and no alarm was raised";
+}
+
+TEST_F(AudioGameplayScenarioTest, ASpectatorHasNoBaseToRaiseTheAlarmFor) {
+  m_handler->set_local_owner_id(Engine::Core::k_owner_everyone);
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
+  auto* barracks = add_barracks(k_local_owner, 3.0F);
+
+  Game::Systems::Combat::apply_unit_damage(&m_world, barracks, 25, attacker->get_id());
+
+  EXPECT_EQ(requests(Game::Audio::Cue::k_alert_base_under_attack), 0U)
+      << "a spectator owns no base, yet every building struck anywhere blew the "
+         "alarm horn";
+  EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_hit_structure))
+      << "the blow itself should still be heard";
 }
 
 TEST_F(AudioGameplayScenarioTest, AGateOpeningAndClosingIsHeard) {

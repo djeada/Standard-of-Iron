@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <tuple>
 
@@ -397,3 +399,37 @@ TEST(SoldierTurnSmoothing, AlternatingGroundCorrectionsDoNotChangeFacing) {
 }
 
 } // namespace
+
+// A soldier in melee whose published spot flips a hand's breadth every frame (his pull
+// toward his foe against the push off the bodies round him) is drawn steady, not
+// zig-zagging 10 cm a frame; out of melee, and for a jump beyond a stride, the drawn spot
+// is the published one.
+TEST(SoldierMeleeFootingEaseTest, AFrameToFrameFlipIsDrawnSteady) {
+  Render::Humanoid::SoldierTurnSmoothingState state;
+  constexpr float dt = 1.0F / 30.0F;
+  float widest = 0.0F;
+  for (std::uint32_t frame = 1; frame <= 90; ++frame) {
+    float const target_x = (frame % 2U == 0U) ? 0.10F : -0.10F;
+    auto const drawn =
+        Render::Humanoid::ease_melee_footing(state, target_x, 0.0F, dt, true, frame);
+    if (frame > 30U) {
+      widest = std::max(widest, std::abs(drawn.x));
+    }
+  }
+  EXPECT_LT(widest, 0.03F) << "a +/-10 cm flip should be drawn within 3 cm";
+}
+
+TEST(SoldierMeleeFootingEaseTest, OutOfMeleeOrBeyondAStrideTheSpotIsExact) {
+  Render::Humanoid::SoldierTurnSmoothingState state;
+  constexpr float dt = 1.0F / 30.0F;
+  auto drawn = Render::Humanoid::ease_melee_footing(state, 1.0F, 2.0F, dt, false, 1U);
+  EXPECT_FLOAT_EQ(drawn.x, 1.0F);
+  EXPECT_FLOAT_EQ(drawn.z, 2.0F);
+  drawn = Render::Humanoid::ease_melee_footing(state, 1.2F, 2.0F, dt, false, 2U);
+  EXPECT_FLOAT_EQ(drawn.x, 1.2F) << "not in melee: drawn where published";
+  drawn = Render::Humanoid::ease_melee_footing(state, 3.0F, 2.0F, dt, true, 3U);
+  EXPECT_FLOAT_EQ(drawn.x, 3.0F) << "a jump beyond a stride is taken at once";
+  drawn = Render::Humanoid::ease_melee_footing(state, 3.1F, 2.0F, dt, true, 4U);
+  EXPECT_GT(drawn.x, 3.0F);
+  EXPECT_LT(drawn.x, 3.1F) << "a small step in melee is eased";
+}

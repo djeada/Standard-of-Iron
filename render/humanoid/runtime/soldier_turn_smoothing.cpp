@@ -307,4 +307,26 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   return result;
 }
 
+auto ease_melee_footing(SoldierTurnSmoothingState& state,
+                        float target_x,
+                        float target_z,
+                        float dt,
+                        bool in_melee,
+                        std::uint32_t frame_index) -> MeleeFootingEase {
+  constexpr float k_ease_seconds = 0.09F;
+  constexpr float k_snap_distance = 0.75F;
+  float const distance = std::hypot(target_x - state.world_x, target_z - state.world_z);
+  if (!in_melee || !state.valid || distance > k_snap_distance) {
+    state.world_x = target_x;
+    state.world_z = target_z;
+  } else if (dt > 0.0F) {
+    float const follow = 1.0F - std::exp(-dt / k_ease_seconds);
+    state.world_x += (target_x - state.world_x) * follow;
+    state.world_z += (target_z - state.world_z) * follow;
+  }
+  state.valid = true;
+  state.updated_frame = frame_index;
+  return {state.world_x, state.world_z};
+}
+
 } // namespace Render::Humanoid

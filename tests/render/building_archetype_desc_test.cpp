@@ -8,12 +8,15 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "game/systems/nation_id.h"
+#include "game/visuals/building_asset_key.h"
 #include "render/entity/building_archetype_catalog.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/home_renderer_common.h"
+#include "render/entity/nations/iberians/wall_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/gl/primitives.h"
 #include "render/material_classification.h"
@@ -347,5 +350,25 @@ TEST(BuildingArchetypeDesc, DamageDoesNotTurnMasonryIntoMetalOrCloth) {
     EXPECT_EQ(Render::resolve_material_id(damage_material_id(draw.material_id, 20),
                                           draw.color),
               25);
+  }
+}
+
+TEST(BuildingArchetypeDesc, IberianWallsAreStoneAndTheirTownStaysPunic) {
+  using Game::Systems::NationID;
+  EXPECT_EQ(Game::Visuals::building_asset_key(NationID::Iberians, "wall_segment"),
+            "troops/iberians/wall_segment");
+  EXPECT_EQ(Game::Visuals::building_asset_key(NationID::Iberians, "wall_gate"),
+            "troops/iberians/wall_gate");
+  EXPECT_EQ(Game::Visuals::building_asset_key(NationID::Iberians, "home"),
+            "troops/carthage/home");
+  EXPECT_TRUE(Render::GL::Iberians::wall_geometry().solid_masonry);
+
+  const auto& catalog = Render::GL::building_archetype_catalog();
+  for (const char* name : {"iberians_wall_variant_0", "iberians_wall_variant_gate"}) {
+    const auto found = std::find_if(
+        catalog.begin(), catalog.end(), [&](const auto& e) { return e.name == name; });
+    ASSERT_NE(found, catalog.end()) << name;
+    EXPECT_FALSE(found->build(Render::GL::BuildingState::Normal).parts().empty())
+        << name;
   }
 }

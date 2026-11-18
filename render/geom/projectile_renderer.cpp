@@ -155,8 +155,10 @@ void add_night_projectile_light(Renderer* renderer,
 
 constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
 constexpr float k_streak_xy_scale = 0.62F;
-constexpr float k_bolt_z_scale = Geom::Arrow::k_arrow_z_scale * 2.05F;
-constexpr float k_bolt_xy_scale = Geom::Arrow::k_arrow_xy_scale * 1.55F;
+constexpr float k_bolt_z_scale = Geom::Arrow::k_arrow_z_scale * 3.0F;
+constexpr float k_bolt_xy_scale = Geom::Arrow::k_arrow_xy_scale * 3.0F;
+constexpr int k_bolt_trail_segments = 5;
+constexpr float k_bolt_trail_step = 0.02F;
 
 [[nodiscard]] auto scaled_color(const QVector3D& color, float scale) -> QVector3D {
   return {std::clamp(color.x() * scale, 0.0F, 1.0F),
@@ -698,8 +700,8 @@ void render_arrow_projectile(Renderer* renderer,
                     Geom::Arrow::glow_color(base_color),
                     1.15F);
 
-    for (int trail_idx = 1; trail_idx <= 2; trail_idx++) {
-      float const trail_t = projectile.progress - (trail_idx * 0.055F);
+    for (int trail_idx = 1; trail_idx <= k_bolt_trail_segments; trail_idx++) {
+      float const trail_t = projectile.progress - (trail_idx * k_bolt_trail_step);
       if (trail_t <= 0.0F) {
         continue;
       }
@@ -721,7 +723,7 @@ void render_arrow_projectile(Renderer* renderer,
                      trail_model,
                      wood_color,
                      nullptr,
-                     0.34F - (0.12F * static_cast<float>(trail_idx)));
+                     0.40F - (0.07F * static_cast<float>(trail_idx)));
     }
 
     if (float const night = projectile_night_amount(renderer); night > 0.02F) {

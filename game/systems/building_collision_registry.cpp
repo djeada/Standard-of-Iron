@@ -340,6 +340,31 @@ void BuildingCollisionRegistry::apply_building_body(Engine::Core::EntityID entit
   invalidate_blockers();
 }
 
+void BuildingCollisionRegistry::set_building_body(Engine::Core::EntityID entity_id,
+                                                  float min_x,
+                                                  float max_x,
+                                                  float min_z,
+                                                  float max_z) {
+  auto it = m_entity_to_index.find(entity_id);
+  if (it == m_entity_to_index.end()) {
+    return;
+  }
+  auto& footprint = m_buildings[it->second];
+  float const center_x = (min_x + max_x) * 0.5F;
+  float const center_z = (min_z + max_z) * 0.5F;
+  float const width = max_x - min_x;
+  float const depth = max_z - min_z;
+  if (footprint.body_center_x == center_x && footprint.body_center_z == center_z &&
+      footprint.body_width == width && footprint.body_depth == depth) {
+    return;
+  }
+  footprint.body_center_x = center_x;
+  footprint.body_center_z = center_z;
+  footprint.body_width = width;
+  footprint.body_depth = depth;
+  invalidate_blockers();
+}
+
 void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entity_id) {
   auto it = m_entity_to_index.find(entity_id);
   if (it == m_entity_to_index.end()) {

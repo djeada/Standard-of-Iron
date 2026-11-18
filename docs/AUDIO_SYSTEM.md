@@ -67,6 +67,8 @@ device callback on_audio                            no locks
 
 `AudioEventHandler` also drops a request as `audience_filtered` before it reaches the registry when the event belongs to another player (you do not hear an AI opening its own gate). Every request ends in exactly one outcome, so requests always equal accepted plus drops.
 
+A spectator (local owner 0: an observed AI match, an arena capture) hears every side's events, but owns no base, so `alert.base_under_attack` is never raised for one. Before Nov 2026 it was: any building struck anywhere blew the horn at the 15 s cue cooldown, the loudest repeating sound in every documentary capture.
+
 The source location is captured with `std::source_location`, so no call site passes it. An `AudioCueEvent` records where it was _published_, not where the handler dispatched it.
 
 ## The two catalogues
@@ -214,6 +216,8 @@ Pan is the source's offset along the camera's right vector divided by 26 m, clam
 A spatial request that distance would silence is dropped as `muted` _before_ it spends the cue cooldown, so a fight at the far edge of the map cannot starve the same cue under the camera.
 
 Distant fighting is not simply lost: `AudioEventHandler` counts impacts that distance silenced, and six inside three seconds become one `combat.distant_battle` cue. `tests/core/audio_battle_load_test.cpp` measures this against a paced melee.
+
+Close fighting is thinned the other way. A melee lands far more blows than the ear can follow, and the cue cooldowns alone (90 ms for `combat.hit.sword`, 100 ms for `combat.hit.spear`) let one clash through the moment each cooldown lapsed: a fight became a steady ten-a-second clatter, twice that with swords and spears together. Sword, spear, generic, cavalry and structure impacts therefore share one clash clock in `AudioEventHandler`: after a clash plays, the next waits a random 140 to 420 ms (`k_clash_gap_min`, `k_clash_gap_max`), so a melee is about three scattered blows a second, with the ambience still heard between them. A blow held back this way is traced as `cue_cooldown`; one that distance would silence is still traced as `muted`. Elephant, siege and arrow impacts keep their own cooldowns: they are rarer or heavier, and a volley of arrows landing together is meant to sound like one. `AudioGameplayScenarioTest.ADenseMeleeIsScatteredBlowsNotABeat` checks the rate, the shortest gap and that the gaps are irregular.
 
 ## The mix
 

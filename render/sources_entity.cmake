@@ -88,6 +88,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/wall_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/iberians/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/catapult_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/catapult_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/catapult_renderer.cpp

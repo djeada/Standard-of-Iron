@@ -40,6 +40,7 @@ struct SlotWalk {
   std::uint32_t seed{0U};
   bool mounted{false};
   bool engaged{false};
+  bool closed_with_target{false};
   bool external_reform{false};
   bool position_is_authored{false};
   bool walking_to_work_posts{false};

@@ -390,7 +390,6 @@ add_library(
     systems/combat_system/formation_soldier_walk.cpp
     systems/combat_system/formation_foreign_grid.cpp
     systems/combat_system/formation_surround.cpp
-    systems/combat_system/formation_soldier_gait.cpp
     systems/combat_system/formation_reform_walk.cpp
     systems/combat_system/formation_slot_directive.cpp
     systems/combat_system/formation_terrain_constraint.cpp

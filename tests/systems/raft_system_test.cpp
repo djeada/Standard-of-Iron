@@ -16,6 +16,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/navigation/pathfinding.h"
+#include "game/systems/raft_deck_fit.h"
 #include "game/systems/raft_system.h"
 #include "game/systems/unit_activity.h"
 #include "units/spawn_type.h"
@@ -444,4 +445,52 @@ TEST_F(RaftSystemTest, TheHudIsToldOnlyWhenSomeoneComesWithinReach) {
     system.update(&world, k_tick);
   }
   EXPECT_EQ(changes, 1) << "one push when the troop walks into reach, not one a tick";
+}
+
+namespace {
+
+auto grid_layout(int files, int ranks, float file_gap, float rank_gap)
+    -> Game::Systems::FormationCombat::FormationLayout {
+  Game::Systems::FormationCombat::FormationLayout layout;
+  layout.body_radius = 0.3F;
+  std::uint16_t index = 0;
+  for (int rank = 0; rank < ranks; ++rank) {
+    for (int file = 0; file < files; ++file) {
+      Game::Systems::FormationCombat::SoldierSlot slot;
+      slot.index = index++;
+      slot.local_x = (static_cast<float>(file) - (files - 1) * 0.5F) * file_gap;
+      // Ranks stand behind the front, as a real layout puts them.
+      slot.local_z = -static_cast<float>(rank) * rank_gap;
+      layout.live_slots.push_back(slot);
+    }
+  }
+  layout.all_slots = layout.live_slots;
+  return layout;
+}
+
+} // namespace
+
+// A 24-man company narrowed to six files still stood twice as deep and wide as the
+// deck, so its outer men floated over the water at deck height.
+TEST(RaftDeckFitTest, EveryPassengerStandsOnThePlanks) {
+  auto const layout = grid_layout(6, 4, 1.4F, 1.6F);
+  auto const fit = Game::Systems::raft_deck_fit(layout);
+  for (auto const& slot : layout.live_slots) {
+    float const x = fit.fit_x(slot.local_x);
+    float const z = fit.fit_z(slot.local_z);
+    EXPECT_LE(std::abs(x) + layout.body_radius, Game::Systems::k_raft_deck_half_width + 1e-4F)
+        << "file " << slot.index;
+    EXPECT_LE(std::abs(z) + layout.body_radius,
+              Game::Systems::k_raft_deck_half_length + 1e-4F)
+        << "rank " << slot.index;
+  }
+}
+
+TEST(RaftDeckFitTest, AUnitThatFitsIsOnlyCentred) {
+  auto const layout = grid_layout(3, 2, 1.0F, 1.0F);
+  auto const fit = Game::Systems::raft_deck_fit(layout);
+  EXPECT_FLOAT_EQ(fit.scale_x, 1.0F);
+  EXPECT_FLOAT_EQ(fit.scale_z, 1.0F);
+  EXPECT_FLOAT_EQ(fit.fit_z(0.0F), 0.5F) << "the two ranks straddle the deck centre";
+  EXPECT_FLOAT_EQ(fit.fit_z(-1.0F), -0.5F);
 }

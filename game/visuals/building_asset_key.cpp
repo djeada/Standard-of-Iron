@@ -23,6 +23,10 @@ auto nation_asset_slug(Game::Systems::NationID nation_id) -> std::string_view {
 
 auto building_asset_key(Game::Systems::NationID nation_id,
                         std::string_view building_type) -> std::string {
+  if (nation_id == Game::Systems::NationID::Iberians &&
+      building_type.starts_with("wall")) {
+    return building_asset_key("iberians", building_type);
+  }
   return building_asset_key(nation_asset_slug(nation_id), building_type);
 }
 

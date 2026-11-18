@@ -12,6 +12,7 @@
 #include "nations/carthage/marketplace_renderer.h"
 #include "nations/carthage/temple_renderer.h"
 #include "nations/carthage/wall_renderer.h"
+#include "nations/iberians/wall_renderer.h"
 #include "nations/roman/barracks_renderer.h"
 #include "nations/roman/defense_tower_renderer.h"
 #include "nations/roman/farm_renderer.h"
@@ -113,6 +114,8 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
   add_nation_walls(out, "roman", Roman::wall_palette(), Roman::wall_geometry());
   add_nation_walls(
       out, "carthage", Carthage::wall_palette(), Carthage::wall_geometry());
+  add_nation_walls(
+      out, "iberians", Iberians::wall_palette(), Iberians::wall_geometry());
 
   return out;
 }

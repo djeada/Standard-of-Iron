@@ -24,6 +24,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/runtime_stats_access.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/instance_prepare.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/soldier_turn_smoothing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/soldier_ground_motion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/poser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/facial_hair_catalog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_beard_mesh.cpp

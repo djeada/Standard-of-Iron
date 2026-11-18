@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "app/audio/audio_resource_loader.h"
+#include "game/audio/audio_clock.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_settings.h"
 #include "game/audio/cue_trace.h"
@@ -405,6 +406,32 @@ TEST_F(ShippedAudioTest, ABurstOfImpactsKeepsSoundingInsteadOfGoingQuiet) {
       << "blows landed in a burst and the pool sent them to a variant that was still "
          "on cooldown while other variants were free";
   EXPECT_GE(record.accepted, 4U);
+}
+
+// A promo capture renders a few frames a second; with cooldowns on the wall clock
+// every one had lapsed between two frames and a fight played the same clash on a
+// half-second metronome. Offline, cooldowns run on the time the audio has reached.
+TEST_F(ShippedAudioTest, OfflineCooldownsRunOnRenderedTimeNotTheWallClock) {
+  Game::Audio::CueBinding binding;
+  binding.resource_ids = sword_pool();
+  binding.cooldown_ms = 500;
+  Game::Audio::CueRegistry::instance().bind("test.cue.rendered_cooldown", binding);
+  Game::Audio::CueTrace::instance().reset();
+  Game::Audio::Clock::use_rendered_time(true);
+
+  EXPECT_TRUE(Game::Audio::play_cue("test.cue.rendered_cooldown"));
+  std::this_thread::sleep_for(std::chrono::milliseconds(600));
+  EXPECT_FALSE(Game::Audio::play_cue("test.cue.rendered_cooldown"))
+      << "wall-clock time passed but no audio was rendered";
+  Game::Audio::Clock::advance_rendered(0.6);
+  EXPECT_TRUE(Game::Audio::play_cue("test.cue.rendered_cooldown"))
+      << "0.6 s of rendered audio is past the 500 ms cooldown";
+
+  Game::Audio::Clock::use_rendered_time(false);
+  const auto record =
+      Game::Audio::CueTrace::instance().record_for("test.cue.rendered_cooldown");
+  EXPECT_EQ(record.outcomes.at(static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown)),
+            1U);
 }
 
 TEST(AudioVariantSelectionTest, OnlyPoolsBigEnoughToBenefitKeepAHistory) {

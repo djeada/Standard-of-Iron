@@ -30,6 +30,12 @@ auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noex
              : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 }
 
+auto steps_over_ground(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> bool {
+  return anim.inputs.visual_movement.measured_from_ground && !anim.inputs.is_mounted &&
+         Render::Creature::is_moving_animation(anim.inputs.movement_state);
+}
+
 void update_clip_id(HumanoidAnimationSelection& selection) noexcept {
   auto const clip_id =
       Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
@@ -110,7 +116,8 @@ void apply_combat_ready_clip(HumanoidAnimationSelection& selection,
   if (!anim.inputs.is_in_melee_lock) {
     return;
   }
-  if (Render::Creature::is_moving_animation(anim.inputs.movement_state)) {
+  if (Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
+      !steps_over_ground(anim)) {
     return;
   }
   selection.clip_id = Animation::k_humanoid_combat_ready_clip;
@@ -487,7 +494,8 @@ auto locomotion_only_context(const Render::GL::HumanoidAnimationContext& anim) n
   base_inputs.combat_visual = {};
   base_inputs.has_authored_action_clip = false;
   base_inputs.authored_action_clip = Animation::k_unmapped_clip;
-  if (anim.inputs.is_in_melee_lock) {
+  if (anim.inputs.is_in_melee_lock &&
+      !anim.inputs.visual_movement.measured_from_ground) {
 
     base_inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
   }
@@ -627,11 +635,13 @@ auto apply_locomotion_crossfade(HumanoidAnimationSelection& selection,
                                 const Render::GL::HumanoidVariant* variant) noexcept
     -> bool {
 
+  bool const guard_stance_held =
+      (anim.inputs.is_guarding || anim.inputs.is_exiting_guard) &&
+      !steps_over_ground(anim);
   if (!is_locomotion_state(selection.state) || anim.inputs.is_attacking ||
       anim.inputs.is_casting || anim.inputs.is_mounted ||
       anim.inputs.has_showcase_clip || anim.inputs.is_in_hold_mode ||
-      anim.inputs.is_exiting_hold || anim.inputs.is_guarding ||
-      anim.inputs.is_exiting_guard || anim.inputs.is_hit_reacting ||
+      anim.inputs.is_exiting_hold || guard_stance_held || anim.inputs.is_hit_reacting ||
       anim.inputs.is_healing || anim.inputs.is_constructing || anim.inputs.is_dying ||
       anim.inputs.is_dead) {
     return false;
@@ -825,10 +835,50 @@ auto resolve_humanoid_animation_selection(
 
 namespace {
 
+void keep_weapon_ready_while_stepping(HumanoidAnimationSelection& selection,
+                                      const Render::GL::HumanoidAnimationContext& anim,
+                                      std::uint32_t seed) noexcept {
+  bool const strides = selection.state == Render::Creature::AnimationStateId::Walk ||
+                       selection.state == Render::Creature::AnimationStateId::Run;
+  if (!steps_over_ground(anim) || !anim.inputs.is_in_melee_lock || !strides ||
+      selection.upper_body_overlay.active() || anim.inputs.is_hit_reacting ||
+      anim.inputs.is_dying || anim.inputs.is_dead || anim.inputs.is_constructing ||
+      anim.inputs.is_healing || anim.inputs.is_casting ||
+      anim.inputs.has_showcase_clip || anim.inputs.is_in_hold_mode ||
+      anim.inputs.is_exiting_hold || anim.inputs.is_defensive_layout_locked) {
+    return;
+  }
+  HumanoidAnimationSelection ready = selection;
+  ready.clip_id = Animation::k_humanoid_combat_ready_clip;
+  ready.clip_variant = 0U;
+  ready.phase = Animation::wrap_locomotion_phase(
+      anim.inputs.time / Animation::k_humanoid_combat_ready_cycle_time +
+      Animation::humanoid_idle_breath_offset(seed));
+  selection.upper_body_overlay = playback_layer_from_selection(
+      ready, 1.0F, Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
+}
+
+auto resolve_action_layers(const UnitVisualSpec& spec,
+                           const Render::GL::HumanoidAnimationContext& anim,
+                           std::uint32_t seed,
+                           const Render::GL::HumanoidVariant* variant) noexcept
+    -> HumanoidAnimationSelection;
+
 auto resolve_selection_layers(const UnitVisualSpec& spec,
                               const Render::GL::HumanoidAnimationContext& anim,
                               std::uint32_t seed,
                               const Render::GL::HumanoidVariant* variant) noexcept
+    -> HumanoidAnimationSelection {
+  HumanoidAnimationSelection selection =
+      resolve_action_layers(spec, anim, seed, variant);
+  keep_weapon_ready_while_stepping(selection, anim, seed);
+  return selection;
+}
+
+auto resolve_action_layers(const UnitVisualSpec& spec,
+                           const Render::GL::HumanoidAnimationContext& anim,
+                           std::uint32_t seed,
+                           const Render::GL::HumanoidVariant* variant) noexcept
     -> HumanoidAnimationSelection {
   HumanoidAnimationSelection selection = build_selection_for_pose(
       spec, anim, Render::Creature::resolve_pose(anim.inputs), seed, variant);
@@ -975,7 +1025,7 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
       .moving = moving,
       .forced_displacement = anim.inputs.visual_movement.forced_displacement,
       .preserve_base_stance = anim.inputs.is_in_hold_mode && !action_keeps_hold_stance,
-      .rooted_action = anim.inputs.is_in_melee_lock,
+      .rooted_action = anim.inputs.is_in_melee_lock || steps_over_ground(anim),
       .action_state_differs_from_base = action_selection.state != base_selection.state,
       .selection_state_differs_from_base = selection.state != base_selection.state,
       .action_state_differs_from_selection = action_selection.state != selection.state,
@@ -983,6 +1033,10 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
 
   if (policy.use_base_selection) {
     selection = base_selection;
+    if (steps_over_ground(anim) &&
+        policy.full_body_source == Animation::PlaybackLayerSource::None) {
+      (void)apply_locomotion_crossfade(selection, base_anim, spec, seed, variant);
+    }
   }
 
   if (auto const* full_body = selection_from_layer_source(

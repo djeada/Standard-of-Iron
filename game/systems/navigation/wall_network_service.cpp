@@ -239,6 +239,45 @@ auto preserved_isolated_rotation(float current_rotation_y) -> float {
   return (quarter_turns % 2) == 0 ? 0.0F : 90.0F;
 }
 
+void sync_wall_body(Engine::Core::World& world,
+                    Engine::Core::EntityID entity_id,
+                    std::uint8_t connection_mask,
+                    float yaw) {
+  using Service = WallNetworkService;
+  auto* registry = Game::Session::services_for(world).building_collision;
+  auto const* footprint =
+      registry != nullptr ? registry->find_building(entity_id) : nullptr;
+  if (footprint == nullptr || footprint->wall_gate) {
+    return;
+  }
+  if (connection_mask == 0U) {
+    registry->apply_building_body(entity_id, "wall_segment", yaw);
+    return;
+  }
+  auto const body = BuildingCollisionRegistry::get_building_body("wall_segment");
+  float const reach = body.width * 0.5F;
+  float const thickness = std::min(body.width, body.depth) * 0.5F;
+  auto const joined = [connection_mask](std::uint8_t bit) {
+    return (connection_mask & bit) != 0U;
+  };
+  bool east = joined(Service::k_connection_east);
+  bool west = joined(Service::k_connection_west);
+  bool north = joined(Service::k_connection_north);
+  bool south = joined(Service::k_connection_south);
+  if (!north && !south) {
+    east = true;
+    west = true;
+  } else if (!east && !west) {
+    north = true;
+    south = true;
+  }
+  registry->set_building_body(entity_id,
+                              footprint->center_x - (west ? reach : thickness),
+                              footprint->center_x + (east ? reach : thickness),
+                              footprint->center_z - (north ? reach : thickness),
+                              footprint->center_z + (south ? reach : thickness));
+}
+
 void update_wall_entity_visuals(Engine::Core::World& world,
                                 Engine::Core::Entity* entity,
                                 WallSegmentComponent* wall,
@@ -281,6 +320,9 @@ void update_wall_entity_visuals(Engine::Core::World& world,
   }
   renderable->renderer_id = appearance.renderer_id;
   wall->connection_mask = connection_mask;
+  if (!is_gate) {
+    sync_wall_body(world, entity->get_id(), connection_mask, transform->rotation.y);
+  }
 
   if (is_gate && entity->has_component<GateComponent>()) {
     GateService::sync_gate_footprint(world, entity->get_id(), transform->rotation.y);
