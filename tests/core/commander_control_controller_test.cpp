@@ -1735,8 +1735,7 @@ TEST_F(CommanderControlControllerTest,
 }
 
 TEST_F(CommanderControlControllerTest, ARallyHandoffDoesNotCutTheCamera) {
-  // Two identical runs: one only lets go of the keys, the other hands the body
-  // over for a rally. The view must not tell them apart.
+
   QVector3D eyes[2];
   for (int run = 0; run < 2; ++run) {
     Engine::Core::World world;

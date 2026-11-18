@@ -314,7 +314,7 @@ void fill_head(RigPose& pose, const WolfDrive& drive) {
     QVector3D const pinned =
         ((head_up * 0.30F) + (side * (sign * 0.52F)) - (facing * 0.80F)).normalized();
     QVector3D const dir = lerp(erect, pinned, drive.ear_pin).normalized();
-    QVector3D const tip = base + (dir * (0.106F - (drive.ear_pin * 0.020F)));
+    QVector3D const tip = base + (dir * (0.118F - (drive.ear_pin * 0.032F)));
     if (sign_index == 0) {
       pose.ear_base_l = base;
       pose.ear_tip_l = tip;
@@ -906,7 +906,7 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     data.start = bind.poll + (facing * 0.074F) - (head_up * 0.008F);
     data.end = bind.muzzle;
     data.base_radius = 0.062F;
-    data.tip_radius = 0.038F;
+    data.tip_radius = 0.034F;
     if (!g_minimal_tessellation) {
       data.ring_vertices = 8U;
     }
@@ -1105,7 +1105,7 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                        Bone::TailTip,
                        k_wolf_role_saddle,
                        bind.tail_tip - (tail_axis * 0.010F),
-                       bind.tail_tip + (tail_axis * 0.085F),
+                       bind.tail_tip + (tail_axis * 0.105F),
                        0.045F));
 
   std::erase_if(nodes, [wanted_lod](const MeshNode& node) {

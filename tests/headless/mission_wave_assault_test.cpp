@@ -386,8 +386,7 @@ TEST_F(MissionWaveAssaultTest, WaveCannotWalkThroughAnIntactRampart) {
   auto& clock = session.clock();
   while (clock.now_seconds() < 240.0) {
     run_for(session, clock.tick_seconds());
-    // Read the wall and the units from the same tick. A wave can breach and
-    // enter the camp within one second.
+
     if (!rampart_is_intact()) {
       break;
     }

@@ -2,20 +2,18 @@
 
 #include <array>
 
+#include "render/entity/nations/material_palette.h"
 #include "render/entity/nations/sepulcher/palette.h"
 
 namespace Render::GL::Carthage {
 
 void register_carthage_archer_style() {
   ArcherStyleConfig carthage;
-  carthage.cloth_color = QVector3D(0.12F, 0.36F, 0.52F);
-  carthage.leather_color = QVector3D(0.36F, 0.24F, 0.12F);
-  carthage.leather_dark_color = QVector3D(0.33F, 0.23F, 0.15F);
-  carthage.metal_color = QVector3D(0.75F, 0.66F, 0.42F);
-  carthage.wood_color = QVector3D(0.38F, 0.28F, 0.18F);
+  Nation::apply_materials(carthage, Nation::k_carthage_materials);
+  carthage.wood_color = Nation::k_carthage_materials.timber;
   carthage.fletching_color = QVector3D(0.90F, 0.82F, 0.28F);
   carthage.bow_string_color = QVector3D(0.32F, 0.30F, 0.26F);
-  carthage.cape_color = QVector3D(0.14F, 0.38F, 0.54F);
+  carthage.cape_color = Nation::k_carthage_materials.cloth;
   carthage.show_helmet = true;
   carthage.show_armor = true;
   carthage.show_shoulder_decor = false;
@@ -26,10 +24,7 @@ void register_carthage_archer_style() {
 
   ArcherStyleConfig sepulcher = carthage;
   sepulcher.skin_color = Sepulcher::k_bone;
-  sepulcher.cloth_color = Sepulcher::k_grave_cloth;
-  sepulcher.leather_color = Sepulcher::k_grave_leather;
-  sepulcher.leather_dark_color = Sepulcher::k_grave_leather_dark;
-  sepulcher.metal_color = Sepulcher::k_grave_iron;
+  Nation::apply_materials(sepulcher, Nation::k_sepulcher_materials);
   sepulcher.wood_color = Sepulcher::k_grave_wood;
   sepulcher.fletching_color = QVector3D(0.43F, 0.41F, 0.36F);
   sepulcher.bow_string_color = QVector3D(0.24F, 0.23F, 0.21F);

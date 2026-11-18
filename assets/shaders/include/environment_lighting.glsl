@@ -14,8 +14,20 @@ vec3 environment_primary_direction() {
   return normalize(u_env_primary_direction_intensity.xyz);
 }
 
+float environment_night_amount() {
+  vec3 primary = u_env_primary_color_ambient_intensity.rgb;
+  return smoothstep(0.05, 0.40, primary.b - primary.r);
+}
+
+float environment_clear_daylight() {
+  return (1.0 - environment_night_amount()) *
+         smoothstep(0.30, 0.85, u_env_primary_direction_intensity.w) *
+         (1.0 - clamp(u_env_fog_color_cloud_cover.w, 0.0, 1.0));
+}
+
 vec3 environment_primary_color() {
-  return u_env_primary_color_ambient_intensity.rgb;
+  vec3 sunlight = mix(vec3(1.0), vec3(1.20, 1.065, 0.90), environment_clear_daylight());
+  return u_env_primary_color_ambient_intensity.rgb * sunlight;
 }
 
 float environment_primary_intensity() {
@@ -27,7 +39,8 @@ float environment_ambient_intensity() {
 }
 
 vec3 environment_sky_color() {
-  return u_env_sky_color_exposure.rgb;
+  vec3 sky_fill = mix(vec3(1.0), vec3(0.75, 1.02, 1.32), environment_clear_daylight());
+  return u_env_sky_color_exposure.rgb * sky_fill;
 }
 
 vec3 environment_ground_bounce_color() {
@@ -52,9 +65,8 @@ float environment_cloud_cover() {
 
 vec3 environment_shadow_tint() {
 
-  vec3 primary = environment_primary_color();
-  float daylight = 1.0 - smoothstep(0.05, 0.40, primary.b - primary.r);
-  return mix(u_env_shadow_tint_strength.rgb, vec3(1.0), 0.20 * daylight);
+  vec3 shade = mix(vec3(1.0), vec3(0.87, 0.98, 1.14), environment_clear_daylight());
+  return u_env_shadow_tint_strength.rgb * shade;
 }
 
 float environment_shadow_strength() {
@@ -67,11 +79,6 @@ float environment_shadow_softness() {
 
 float environment_wetness() {
   return u_env_shadow_softness_wetness.y;
-}
-
-float environment_night_amount() {
-  vec3 primary = environment_primary_color();
-  return smoothstep(0.05, 0.40, primary.b - primary.r);
 }
 
 float environment_darkness_amount() {

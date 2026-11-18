@@ -11,10 +11,12 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "cuirass_trim.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/parts.h"
 #include "render/geom/transforms.h"
+#include "render/gl/garment_shell.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/asset/humanoid_derived_meshes.h"
 #include "render/humanoid/asset/humanoid_spec.h"
@@ -82,6 +84,27 @@ auto roman_heavy_armor_archetype(const QMatrix4x4& plates,
   RenderArchetypeBuilder builder{key};
   builder.add_palette_mesh(
       torso_mesh_for_armor(), plates, k_heavy_plate_slot, nullptr, 1.0F, 1);
+
+  static const auto lames = make_garment_shell(
+      {
+          {-0.08F, 1.083F, 1.093F},
+          {-0.045F, 1.135F, 1.14F},
+          {0.07F, 1.105F, 1.115F},
+          {0.085F, 1.045F, 1.055F},
+          {0.10F, 1.105F, 1.115F},
+          {0.22F, 1.065F, 1.065F},
+          {0.235F, 1.005F, 1.005F},
+          {0.25F, 1.065F, 1.065F},
+          {0.37F, 1.035F, 1.015F},
+          {0.385F, 0.975F, 0.955F},
+          {0.40F, 1.035F, 1.015F},
+          {0.49F, 1.025F, 1.005F},
+          {0.505F, 0.957F, 0.922F},
+      },
+      32,
+      1);
+  builder.add_palette_mesh(
+      lames.get(), plates, k_heavy_lower_guard_slot, nullptr, 1.0F, 1);
   for (const auto& m : upper_guards) {
     builder.add_palette_mesh(
         get_unit_sphere(), m, k_heavy_upper_guard_slot, nullptr, 1.0F, 1);
@@ -99,9 +122,7 @@ auto roman_heavy_armor_archetype(const QMatrix4x4& plates,
 }
 
 auto roman_light_armor_archetype(const QMatrix4x4& cuirass,
-                                 const std::array<QMatrix4x4, 2>& straps,
-                                 const QMatrix4x4& front_panel,
-                                 const QMatrix4x4& back_panel)
+                                 const std::array<QMatrix4x4, 2>& straps)
     -> const RenderArchetype& {
   struct CachedArchetype {
     std::string key;
@@ -114,8 +135,6 @@ auto roman_light_armor_archetype(const QMatrix4x4& cuirass,
   for (const auto& m : straps) {
     append_exact_key(key, m);
   }
-  append_exact_key(key, front_panel);
-  append_exact_key(key, back_panel);
 
   for (const auto& entry : cache) {
     if (entry.key == key) {
@@ -131,9 +150,9 @@ auto roman_light_armor_archetype(const QMatrix4x4& cuirass,
         get_unit_cylinder(), m, k_light_strap_slot, nullptr, 1.0F, 1);
   }
   builder.add_palette_mesh(
-      torso_mesh_for_armor(), front_panel, k_light_cuirass_slot, nullptr, 1.0F, 1);
+      cuirass_shoulder_yoke(), cuirass, k_light_shadow_slot, nullptr, 1.0F, 1);
   builder.add_palette_mesh(
-      torso_mesh_for_armor(), back_panel, k_light_shadow_slot, nullptr, 1.0F, 1);
+      cuirass_waist_binding(), cuirass, k_light_strap_slot, nullptr, 1.0F, 1);
 
   cache.push_back({key, std::move(builder).build()});
   return cache.back().archetype;
@@ -269,11 +288,6 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
     return;
   }
 
-  QVector3D const leather_color =
-      saturate_color(palette.metal * QVector3D(0.78F, 0.84F, 0.94F));
-  QVector3D const leather_shadow = leather_color * 0.66F;
-  QVector3D const leather_highlight = saturate_color(leather_color * 1.12F);
-
   QVector3D up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D right = safe_attachment_axis(torso.right, QVector3D(1.0F, 0.0F, 0.0F));
   QVector3D forward = safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
@@ -325,39 +339,13 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig&,
   straps[0] = strap(1.0F);
   straps[1] = strap(-1.0F);
 
-  QVector3D const front_panel_top =
-      top + forward * (torso_depth * 0.35F) - up * (torso_r * 0.06F);
-  QVector3D const front_panel_bottom =
-      bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
-  float const front_radius = torso_r * 0.48F;
-  QMatrix4x4 front_panel = oriented_cylinder(
-      torso_local.point(front_panel_top),
-      torso_local.point(front_panel_bottom),
-      torso_local.direction(right),
-      front_radius * 1.18F,
-      front_radius * std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
-  align_torso_mesh_forward(front_panel);
-
-  QVector3D const back_panel_top =
-      top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
-  QVector3D const back_panel_bottom =
-      bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
-  float const back_radius = torso_r * 0.50F;
-  QMatrix4x4 back_panel = oriented_cylinder(
-      torso_local.point(back_panel_top),
-      torso_local.point(back_panel_bottom),
-      torso_local.direction(right),
-      back_radius * 1.18F,
-      back_radius * std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
-  align_torso_mesh_forward(back_panel);
-
-  std::array<QVector3D, 3> const palette_slots{
-      leather_highlight, leather_highlight * 0.95F, leather_shadow};
-  append_equipment_archetype(
-      batch,
-      roman_light_armor_archetype(cuirass, straps, front_panel, back_panel),
-      torso_local.world,
-      palette_slots);
+  std::array<QVector3D, k_roman_light_armor_role_count> palette_slots{};
+  roman_light_armor_fill_role_colors(
+      palette, palette_slots.data(), palette_slots.size());
+  append_equipment_archetype(batch,
+                             roman_light_armor_archetype(cuirass, straps),
+                             torso_local.world,
+                             palette_slots);
 }
 
 auto roman_heavy_armor_fill_role_colors(const HumanoidPalette& palette,
@@ -531,35 +519,8 @@ auto roman_light_armor_make_static_attachment(std::uint16_t torso_socket_bone_in
   straps[0] = strap(1.0F);
   straps[1] = strap(-1.0F);
 
-  QVector3D const front_panel_top =
-      top + forward * (torso_depth * 0.35F) - up * (torso_r * 0.06F);
-  QVector3D const front_panel_bottom =
-      bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
-  float const front_radius = torso_r * 0.48F;
-  QMatrix4x4 front_panel = oriented_cylinder(
-      torso_local.point(front_panel_top),
-      torso_local.point(front_panel_bottom),
-      torso_local.direction(right),
-      front_radius * 1.18F,
-      front_radius * std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
-  align_torso_mesh_forward(front_panel);
-
-  QVector3D const back_panel_top =
-      top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
-  QVector3D const back_panel_bottom =
-      bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
-  float const back_radius = torso_r * 0.50F;
-  QMatrix4x4 back_panel = oriented_cylinder(
-      torso_local.point(back_panel_top),
-      torso_local.point(back_panel_bottom),
-      torso_local.direction(right),
-      back_radius * 1.18F,
-      back_radius * std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
-  align_torso_mesh_forward(back_panel);
-
   auto spec = Render::Equipment::build_static_attachment({
-      .archetype =
-          &roman_light_armor_archetype(cuirass, straps, front_panel, back_panel),
+      .archetype = &roman_light_armor_archetype(cuirass, straps),
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });

@@ -9,12 +9,10 @@ namespace App::Core {
 
 namespace {
 
-// Steering a committed strike toward the view, scaled by its authority.
 constexpr float k_strike_redirect_turn_rate_degrees = 900.0F;
-// Turning to run where the player points: half a turn in a quarter second, so a
-// reversal reads as a plant and pivot rather than a flip.
+
 constexpr float k_travel_turn_rate_degrees = 720.0F;
-// Squaring up to the view for a fight.
+
 constexpr float k_face_view_turn_rate_degrees = 1080.0F;
 
 auto turn_toward(float& body_yaw, float view_yaw, float step) -> bool {

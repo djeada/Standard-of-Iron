@@ -883,8 +883,7 @@ auto resolve_selection_layers(const UnitVisualSpec& spec,
     HumanoidAnimationSelection wade = target;
     wade.clip_id = Animation::k_humanoid_wade_clip;
     wade.clip_variant = 0U;
-    // Match the accepted stride, including starts/stops, instead of waving the
-    // arms on a wall-clock loop unrelated to the legs underneath the water.
+
     wade.phase = anim.gait.cycle_phase;
     target.upper_body_overlay = playback_layer_from_selection(
         wade,

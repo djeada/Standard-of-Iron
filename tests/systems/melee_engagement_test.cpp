@@ -1046,8 +1046,7 @@ TEST_F(MeleeEngagementTest, ChaseEntersABreachWhenNoStandoffFitsBehindTheWall) {
   auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
-  // The defender is reachable through a corridor with a turn just inside its
-  // entrance. None of the normal standoff positions has a clear line to him.
+
   for (int x = -8; x <= 8; ++x) {
     for (int z = -8; z <= 8; ++z) {
       bool const corridor = (x == 0 && z == 0) || (x >= 0 && z == 1);

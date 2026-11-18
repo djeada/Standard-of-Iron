@@ -18,11 +18,9 @@ enum class DodgeState {
 
 inline constexpr float k_commander_ground_acceleration_mps2 = 30.0F;
 inline constexpr float k_commander_ground_deceleration_mps2 = 36.0F;
-// Airborne steering. A jump commits to its takeoff momentum: releasing input
-// keeps it, and steering can bend it by at most 3.8 m/s over a full jump.
+
 inline constexpr float k_commander_air_acceleration_mps2 = 4.0F;
-// A jump or dodge pressed this close to the end of a jump or roll is held and
-// resolved on the first free tick. Earlier presses are still refused at once.
+
 inline constexpr float k_commander_movement_buffer_seconds = 0.20F;
 
 namespace Engine::Core {
@@ -51,7 +49,7 @@ struct JumpTickInput {
   bool primary_held{false};
   bool guard_held{false};
   bool ability_requested{false};
-  // Reeling from a hit: the body is not his to command until it recovers.
+
   bool staggered{false};
   float dt{0.0F};
 };
@@ -77,10 +75,9 @@ struct MotionTickInput {
   bool run_held{false};
   bool drawing_bow{false};
   bool jump_active{false};
-  // Facing the view for a fight. Only then is he stepping back or sideways;
-  // moving freely he turns and runs, at full speed in every direction.
+
   bool squared_up{false};
-  // Shared ford state for this tick (FordSystem owns it); null on dry ground.
+
   const Engine::Core::WadingComponent* wading{nullptr};
   float dt{0.0F};
 };
@@ -117,7 +114,7 @@ public:
     return m_jump_followup_pending;
   }
   void clear_jump_followup() { m_jump_followup_pending = false; }
-  // True while a jump or dodge is running and ends within `seconds`.
+
   [[nodiscard]] auto frees_within(float seconds) const -> bool;
 
   void decay_dodge_kick(float dt);

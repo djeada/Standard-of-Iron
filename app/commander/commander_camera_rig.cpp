@@ -309,8 +309,6 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   QVector3D const flat_forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   QVector3D const flat_right(-flat_forward.z(), 0.0F, flat_forward.x());
 
-  // Orbit the boom with pitch, preserving the authored framing at rest.
-  // Tilting only the look direction strands the body at the screen edges.
   float const orbit_pitch = (inputs.view_pitch_degrees + 6.0F) * k_deg2rad;
   QVector3D const orbit_back = -flat_forward * std::cos(orbit_pitch) -
                                QVector3D(0.0F, std::sin(orbit_pitch), 0.0F);
@@ -589,12 +587,12 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     terrain_lift = std::min(required_lift, k_camera_terrain_max_lift);
     terrain_sight_clear = required_lift <= k_camera_terrain_max_lift;
   }
-  // Clear rising terrain immediately; ease the release to avoid a downward snap.
+
   m_terrain_lift =
       std::max(terrain_lift, m_terrain_lift * std::exp(-6.0F * std::max(dt, 0.0F)));
   eye_desired.setY(eye_desired.y() + m_terrain_lift);
   terrain_lift = m_terrain_lift;
-  // Collision translates the rig, rather than steering the player's view.
+
   target_desired += eye_desired - eye_unconstrained;
 
   m_trace.valid = true;
@@ -632,7 +630,6 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_target_smooth = target_desired;
   m_smooth_valid = true;
 
-  // Keep a stable horizon: character strafing and rolls must not roll the lens.
   camera.look_at(m_eye_smooth, m_target_smooth, QVector3D(0.0F, 1.0F, 0.0F));
 
   float const impulse_degrees =

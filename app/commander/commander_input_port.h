@@ -87,8 +87,7 @@ public:
   void settle_primary_press();
   void clear_jump_edge();
   void clear_dodge_edge();
-  // Hold this tick's press for the next tick instead of resolving it now. The
-  // edge stays owed: it is consumed or refused later, or refused on release.
+
   void carry_jump_edge();
   void carry_dodge_edge();
   void clear_ability_edges();

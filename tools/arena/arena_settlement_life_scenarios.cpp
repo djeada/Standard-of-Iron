@@ -32,6 +32,79 @@ auto build_settlement_life_definitions() -> std::vector<ArenaScenarioDefinition>
   std::vector<ArenaScenarioDefinition> result;
 
   {
+    auto s = definition(QStringLiteral("roman_pasture_gate"),
+                        QStringLiteral("Roman Pasture Gate"),
+                        QStringLiteral("A patrol comes home through the pasture gate "
+                                       "beside a flock and a stone-lined doorway."),
+                        16.0F,
+                        {26.0F, 44.0F, 24.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.ground_type = QStringLiteral("soil_fertile");
+    s.suppress_procedural_props = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.select_spawned_units = false;
+    s.environment.start_time = 10.5F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.roads = {
+        street({0.0F, 0.0F, -17.0F}, {0.0F, 0.0F, 16.0F}, 3.0F, "rough"),
+        street({0.0F, 0.0F, 6.0F}, {-6.0F, 0.0F, 6.0F}, 1.4F, "rough"),
+    };
+    s.groups = {
+        building(QStringLiteral("gate"),
+                 Game::Units::SpawnType::WallGate,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {}),
+        building(QStringLiteral("west_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {-8.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("east_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {8.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("gate_house"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-7.5F, 0.0F, 6.0F},
+                 {},
+                 90.0F),
+        group(QStringLiteral("patrol"), Troop::Swordsman, 1, 1, {0.0F, 0.0F, -8.0F}, 4),
+    };
+    s.resource_patches = {
+        patch("pine_tree", 3, {9.0F, 0.0F, -8.0F}, {1.9F, 0.0F, 2.7F}, 1.12F),
+        patch("pine_tree", 2, {8.0F, 0.0F, -5.0F}, {2.2F, 0.0F, 3.1F}, 0.68F),
+    };
+    s.wildlife.enabled = true;
+    s.wildlife.seed = 817U;
+    s.wildlife.sheep = Game::Wildlife::default_sheep_config();
+    s.wildlife.sheep.enabled = true;
+    s.wildlife.sheep.group_count = 1;
+    s.wildlife.sheep.group_size_min = 5;
+    s.wildlife.sheep.group_size_max = 5;
+    s.wildlife.sheep.roam_radius = 3.5F;
+    s.wildlife.sheep.spawn_areas = {{3.5F, -4.0F, 1.5F}};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("patrol"));
+    move.destination = {0.0F, 0.0F, 8.0F};
+    s.steps = {move};
+    s.expectations = {
+        expectation(Expect::GateOpenedObserved, QStringLiteral("gate")),
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("patrol")),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s = definition(
         QString::fromLatin1(k_rival_economies_id),
         QStringLiteral("Rival Economies"),

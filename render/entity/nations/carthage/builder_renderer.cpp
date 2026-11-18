@@ -32,7 +32,6 @@
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
-#include "render/equipment/armor/garment_shell.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/armor/work_apron_renderer.h"
@@ -45,6 +44,7 @@
 #include "render/equipment/render_archetype_registry.h"
 #include "render/geom/transforms.h"
 #include "render/gl/backend.h"
+#include "render/gl/garment_shell.h"
 #include "render/gl/primitives.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
@@ -81,8 +81,6 @@ void ensure_builder_styles_registered() {
   (void)registered;
 }
 
-constexpr float k_team_mix_weight = 0.65F;
-constexpr float k_style_mix_weight = 0.35F;
 constexpr auto k_builder_profile =
     Render::GL::Humanoid::k_laborer_proportion_profile.with_offset(
         {.x = -0.02F, .y = 0.01F, .z = -0.02F});
@@ -1054,23 +1052,10 @@ auto resolve_builder_style(const DrawContext& ctx) -> const BuilderStyleConfig& 
 void apply_builder_palette_overrides(const BuilderStyleConfig& style,
                                      const QVector3D& team_tint,
                                      HumanoidVariant& variant) {
-  auto apply =
-      [&](const std::optional<QVector3D>& c, QVector3D& t, float tw, float sw) {
-        t = mix_palette_color(t, c, team_tint, tw, sw);
-      };
-  apply(style.skin_color, variant.palette.skin, 0.0F, 1.0F);
-  apply(style.cloth_color, variant.palette.cloth, 0.0F, 1.0F);
-  apply(style.leather_color,
-        variant.palette.leather,
-        k_team_mix_weight,
-        k_style_mix_weight);
-  apply(style.leather_dark_color,
-        variant.palette.leather_dark,
-        k_team_mix_weight,
-        k_style_mix_weight);
-  apply(
-      style.metal_color, variant.palette.metal, k_team_mix_weight, k_style_mix_weight);
-  apply(style.wood_color, variant.palette.wood, k_team_mix_weight, k_style_mix_weight);
+  if (style.skin_color) {
+    variant.palette.skin = Humanoid::saturate_color(*style.skin_color);
+  }
+  Humanoid::apply_uniform_palette(variant.palette, style, team_tint, {0.0F, 1.0F});
 }
 
 void apply_carthage_beard(std::uint32_t seed,

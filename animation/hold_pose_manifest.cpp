@@ -233,8 +233,7 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
       sample.right_hand.y -= 0.012F * sway + 0.008F * settle;
       sample.left_hand.z += 0.022F * sway;
       sample.left_hand.y -= 0.008F * settle;
-      // The loaded wrist yields slightly after each step; the shield does not
-      // pump as freely as the sword arm.
+
       sample.offhand_axis.z += 0.025F * sway;
       sample.offhand_axis.x += 0.012F * settle;
       break;

@@ -1,4 +1,5 @@
 #version 330 core
+#include "biome_palette.glsl"
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "ground_readability.glsl"
@@ -12,6 +13,9 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform float u_alpha;
 uniform int u_surface_kind;
+uniform int u_ground_type;
+uniform vec3 u_verge_grass;
+uniform vec3 u_verge_soil;
 uniform vec3 u_camera_pos;
 uniform float u_snow_coverage;
 uniform vec3 u_snow_color;
@@ -126,9 +130,9 @@ void main() {
   float edge_noise = fbm_2d(uv * 0.42 + vec2(19.0, -7.0)) - 0.5;
   float edge_tufts = noise_2d(uv * 2.3 + vec2(-5.0, 9.0)) - 0.5;
   float edge_threshold =
-      clamp(0.40 + edge_noise * 0.62 + edge_tufts * 0.26, 0.10, 0.82);
+      clamp(0.40 + edge_noise * 0.94 + edge_tufts * 0.32, 0.10, 0.82);
   float edge_alpha =
-      smoothstep(edge_threshold - 0.20, edge_threshold + 0.16, boundary) *
+      smoothstep(edge_threshold - 0.29, edge_threshold + 0.24, boundary) *
       smoothstep(0.0, 0.14, boundary);
   float edge_distance = boundary * 0.5;
 
@@ -214,7 +218,8 @@ void main() {
     float crown = 1.0 - smoothstep(0.05, 0.14, abs(across - 0.5 - rut_wander));
     float crown_grass =
         crown * smoothstep(0.52, 0.80, medium) * (1.0 - traveled * 0.65);
-    base_color = mix(base_color, vec3(0.38, 0.40, 0.23), crown_grass * 0.34);
+    vec3 verge = biome_grass_color(u_verge_grass, u_ground_type, broad, 1.0);
+    base_color = mix(base_color, verge, crown_grass * 0.34);
     float dust_patch = smoothstep(0.50, 0.78, broad * 0.6 + road_age * 0.4);
     base_color *= 0.94 + dust_patch * 0.12;
     h = (medium - 0.5) * 0.025 + aggregate * 0.006;
@@ -232,8 +237,8 @@ void main() {
 
   float shoulder_grit =
       1.0 - smoothstep(0.045, 0.19, edge_distance + edge_noise * 0.025);
-  vec3 shoulder_color = mix(base_color * 1.04, vec3(0.44, 0.42, 0.27), 0.30);
-  base_color = mix(base_color, shoulder_color, shoulder_grit * 0.40);
+  vec3 shoulder_color = mix(base_color * 1.04, u_verge_soil, 0.42);
+  base_color = mix(base_color, shoulder_color, shoulder_grit * (0.55 + 0.35 * medium));
   base_color *= 0.93 + (road_age - 0.5) * 0.20;
   base_color *= 1.0 - ruts * mix(0.025, 0.075, environment_wetness());
 

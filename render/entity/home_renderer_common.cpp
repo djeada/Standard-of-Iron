@@ -65,6 +65,17 @@ const QVector3D k_straw{0.72F, 0.62F, 0.38F};
 void add_path_stones(BuildingArchetypeDesc& desc, const HomeYardStyle& style) {
   float const p = style.plinth_half;
   int const seed = style.seed;
+
+  for (int patch = 0; patch < 3; ++patch) {
+    float const x = jitter(seed, patch) * 0.045F;
+    float const z = p + 0.06F + 0.20F * patch;
+    desc.add_cylinder({x, -0.015F, z},
+                      {x, 0.009F - 0.002F * patch, z},
+                      style.door_half_width * 0.60F - 0.045F * patch,
+                      QVector3D(0.43F, 0.35F, 0.24F),
+                      k_building_state_mask_intact);
+  }
+
   for (int stone = 0; stone < 2; ++stone) {
     int const stone_seed = seed * 17 + stone;
     float const z = p + 0.46F + 0.20F * static_cast<float>(stone);

@@ -1,91 +1,20 @@
 #include "horse_swordsman_renderer.h"
 
 #include <memory>
-#include <optional>
 
-#include "render/creature/pipeline/creature_asset.h"
 #include "render/entity/mounted_swordsman_renderer_base.h"
-#include "render/entity/nations/equipment_loadout_catalog.h"
-#include "render/humanoid/runtime/style_palette.h"
+#include "render/entity/nations/material_palette.h"
 #include "render/submitter.h"
-#include "swordsman_style.h"
 
 namespace Render::GL::Carthage {
 namespace {
 
-constexpr float k_team_mix_weight = 0.6F;
-constexpr float k_style_mix_weight = 0.4F;
-
-constexpr float k_leather_team_mix_weight = 0.15F;
-
-auto carthage_style() -> SwordsmanStyleConfig {
-  SwordsmanStyleConfig style;
-  style.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
-  style.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
-  style.leather_dark_color = QVector3D(0.32F, 0.22F, 0.15F);
-  style.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
-  return style;
-}
-
-class CarthageMountedSwordsmanRenderer : public MountedSwordsmanRendererBase {
-public:
-  using MountedSwordsmanRendererBase::MountedSwordsmanRendererBase;
-
-  void get_variant(const DrawContext& ctx,
-                   uint32_t seed,
-                   HumanoidVariant& v) const override {
-    MountedSwordsmanRendererBase::get_variant(ctx, seed, v);
-    const SwordsmanStyleConfig style = carthage_style();
-    QVector3D const team_tint = resolve_team_tint(ctx);
-
-    auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target,
-                           float team_weight = k_team_mix_weight) {
-      target = Render::GL::Humanoid::mix_palette_color(
-          target, override_color, team_tint, team_weight, k_style_mix_weight);
-    };
-
-    apply_color(style.cloth_color, v.palette.cloth);
-    apply_color(style.leather_color, v.palette.leather, k_leather_team_mix_weight);
-    apply_color(
-        style.leather_dark_color, v.palette.leather_dark, k_leather_team_mix_weight);
-    apply_color(style.metal_color, v.palette.metal);
-  }
-};
-
 auto make_mounted_swordsman_config() -> MountedSwordsmanRendererConfig {
-  MountedSwordsmanRendererConfig config;
-  const auto loadout =
-      Render::GL::Nation::resolve_equipment_loadout("troops/carthage/horse_swordsman");
-  config.sword_equipment_id = loadout.ids.sword;
-  config.shield_equipment_id = loadout.ids.shield;
-  config.helmet_equipment_id = loadout.ids.helmet;
-  config.armor_equipment_id = loadout.ids.armor;
-  config.shoulder_equipment_id = loadout.ids.shoulder;
-  config.horse_saddle_equipment_id = loadout.ids.horse_saddle;
-  config.horse_bridle_equipment_id = loadout.ids.horse_bridle;
-  config.horse_reins_equipment_id = loadout.ids.horse_reins;
-  config.horse_blanket_equipment_id = loadout.ids.horse_blanket;
-  config.horse_barding_equipment_id = loadout.ids.horse_barding;
-  config.horse_crupper_equipment_id = loadout.ids.horse_crupper;
-  config.horse_decoration_equipment_id = loadout.ids.horse_decoration;
-  config.sword_handle = loadout.sword_handle;
-  config.shield_handle = loadout.shield_handle;
-  config.helmet_handle = loadout.helmet_handle;
-  config.armor_handle = loadout.armor_handle;
-  config.shoulder_handle = loadout.shoulder_handle;
-  config.horse_saddle_handle = loadout.horse_saddle_handle;
-  config.horse_bridle_handle = loadout.horse_bridle_handle;
-  config.horse_reins_handle = loadout.horse_reins_handle;
-  config.horse_blanket_handle = loadout.horse_blanket_handle;
-  config.horse_barding_handle = loadout.horse_barding_handle;
-  config.horse_crupper_handle = loadout.horse_crupper_handle;
-  config.horse_decoration_handle = loadout.horse_decoration_handle;
-  config.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
-  config.has_shoulder = loadout.shoulder_handle != k_invalid_equipment_handle;
-  config.rider_debug_name = "troops/carthage/horse_swordsman/rider";
-  config.mount_debug_name = "troops/carthage/horse_swordsman/mount";
-  config.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  auto config =
+      make_mounted_swordsman_config_from_loadout("troops/carthage/horse_swordsman");
+  const auto& materials = Nation::k_carthage_materials;
+  Nation::apply_materials(config.rider_style.emplace(), materials);
+  config.metal_color = materials.metal;
   return config;
 }
 
@@ -94,7 +23,7 @@ auto make_mounted_swordsman_config() -> MountedSwordsmanRendererConfig {
 void register_mounted_swordsman_renderer(EntityRendererRegistry& registry) {
   register_humanoid_renderer(registry,
                              "troops/carthage/horse_swordsman",
-                             std::make_shared<CarthageMountedSwordsmanRenderer const>(
+                             std::make_shared<MountedSwordsmanRendererBase const>(
                                  make_mounted_swordsman_config()));
 }
 

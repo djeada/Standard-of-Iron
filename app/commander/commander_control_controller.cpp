@@ -440,7 +440,6 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
   App::Core::CommanderDefence::advance_upkeep(body.entity, tick.guard_held, dt);
   auto const basis = start_dodge_stage(world, body, facts, out);
 
-  // A staggered body takes no steering: it brakes where it was hit.
   out.report = m_locomotion.advance_motion(
       body,
       m_motor,
@@ -488,9 +487,6 @@ void CommanderControlController::face_body(const App::Core::CommanderHandles& bo
     }
   }
 
-  // The renderer rolls about the requested travel axis. Turning the body at
-  // the same time twists a backward roll through a half turn mid-somersault.
-  // Keep takeoff facing during the roll, as during an unsteered jump.
   bool const dodging = m_locomotion.dodge_state() != DodgeState::None;
   std::optional<float> travel_yaw;
   if (!dodging && !motion.jump_active && motion.report.move.lengthSquared() > 1.0e-4F) {

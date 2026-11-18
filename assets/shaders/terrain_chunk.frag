@@ -1,5 +1,5 @@
 #version 330 core
-
+#include "biome_palette.glsl"
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
@@ -49,7 +49,6 @@ const float k_soi_wall_foot_amount = 0.68;
 const float k_soi_yard_amount = 0.78;
 const float k_soi_road_verge_amount = 0.52;
 const float k_soi_talus_amount = 0.50;
-const float k_soi_terrain_saturation = 0.90;
 const vec3 k_soi_terrain_hue_warm = vec3(1.075, 1.018, 0.900);
 const vec3 k_soi_terrain_hue_cool = vec3(0.925, 1.010, 1.065);
 
@@ -282,6 +281,7 @@ vec3 unseen_terrain_color() {
 
   vec3 ground = mix(u_grass_primary, u_grass_secondary, macro_field.r);
   ground = mix(ground, u_grass_dry, smoothstep(0.46, 0.90, macro_field.a) * 0.62);
+  ground = biome_grass_color(ground, u_ground_type, macro_field.a, 1.0);
   ground = mix(ground, u_soil_color, smoothstep(0.60, 0.96, macro_field.g) * 0.70);
   ground = mix(ground,
                mix(u_rock_low, u_rock_high, detail_field.g),
@@ -300,10 +300,7 @@ vec3 unseen_terrain_color() {
   ground = mix(ground, worn_color, worn_ground * k_soi_terrain_earth_amount);
   ground *= 0.94 + 0.12 * detail_field.r;
 
-  vec3 gray_level = vec3(dot(ground, vec3(0.299, 0.587, 0.114)));
-  float grounded_saturation =
-      clamp(u_grass_saturation * k_soi_terrain_saturation, 0.0, 1.16);
-  ground = mix(gray_level, ground, grounded_saturation);
+  ground = biome_surface_saturation(ground, u_grass_saturation, 0.0);
   ground *= vec3(1.012, 0.992, 0.965) * u_tint;
 
   return unseen_surface_color(ground * soi_surface_lighting(normal) *
@@ -430,11 +427,11 @@ void main() {
   float view_distance = max(length(to_camera), 1e-4);
   vec3 view_dir = to_camera / view_distance;
   float tactical = ground_tactical_distance(view_distance);
-  float biome_forest = float(u_ground_type == 0);
-  float biome_dry = float(u_ground_type == 1);
-  float biome_rocky = float(u_ground_type == 2);
-  float biome_alpine = float(u_ground_type == 3);
-  float biome_fertile = float(u_ground_type == 4);
+  float biome_forest = float(u_ground_type == k_forest_mud);
+  float biome_dry = float(u_ground_type == k_grass_dry);
+  float biome_rocky = float(u_ground_type == k_soil_rocky);
+  float biome_alpine = float(u_ground_type == k_alpine_mix);
+  float biome_fertile = float(u_ground_type == k_soil_fertile);
   float hill_surface = float(u_terrain_type == 1);
   float mountain_surface = float(u_terrain_type == 2);
 
@@ -1132,7 +1129,7 @@ void main() {
   }
 
   float snow_cover = 0.0;
-  if (u_ground_type == 3 && u_snow_coverage > 0.01) {
+  if (u_ground_type == k_alpine_mix && u_snow_coverage > 0.01) {
     vec2 alpine_large_coord =
         world_coord * 0.10 + domain_warp * 0.35 + vec2(123.0, 456.0);
     vec2 alpine_small_coord =
@@ -1184,6 +1181,8 @@ void main() {
     alpine_snow_color = mix(alpine_snow_color * vec3(0.86, 0.85, 0.82),
                             alpine_snow_color,
                             alpine_snow_core);
+    float exposed_face = alpine_cover * (1.0 - alpine_snow_slope_retention);
+    terrain_color *= mix(vec3(1.0), vec3(0.72, 0.75, 0.79), exposed_face);
     terrain_color = mix(terrain_color, alpine_snow_color, alpine_snow_mask);
     snow_cover = max(snow_cover, alpine_snow_mask);
   }
@@ -1252,6 +1251,12 @@ void main() {
                       (1.0 - u_snow_coverage) * clamp(1.0 - slope * 1.5, 0.0, 1.0);
   worn_ground *= 0.40 + 0.80 * smoothstep(-0.22, 0.22, worn_breakup);
   worn_ground *= mix(0.60, 1.0, clearing_dryness) * (1.0 - terrain_cavity * 0.25);
+
+  float grass_cover = (1.0 - rock_mask) * (1.0 - soil_mix) * (1.0 - snow_cover);
+  float cured =
+      smoothstep(0.47, 0.80, meadow_drift + biome_dry * 0.08 - drainage_field * 0.18);
+  terrain_color = biome_grass_color(terrain_color, u_ground_type, cured, grass_cover);
+
   vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.48) * 0.94;
   terrain_color =
       mix(terrain_color, worn_color, worn_ground * k_soi_terrain_earth_amount);
@@ -1328,16 +1333,9 @@ void main() {
           terrain_color * k_soi_terrain_shade_moss,
           shade_slope * k_soi_terrain_shade_amount * (1.0 - rock_mask * 0.5));
 
-  vec3 gray_level = vec3(dot(terrain_color, vec3(0.299, 0.587, 0.114)));
-  float grounded_saturation =
-      clamp(u_grass_saturation * k_soi_terrain_saturation, 0.0, 1.16);
-  terrain_color = mix(gray_level, terrain_color, grounded_saturation);
+  terrain_color = biome_surface_saturation(terrain_color, u_grass_saturation, tactical);
   terrain_color *= vec3(1.012, 0.992, 0.965);
   terrain_color = ground_vegetation_chroma(terrain_color);
-
-  float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
-  terrain_color =
-      mix(terrain_color, mix(vec3(terrain_luma), terrain_color, 0.94), tactical);
 
   float wet_surface =
       damp_patch * soil_mix * max(u_moisture_level, environment_wetness());

@@ -6,6 +6,14 @@ That ownership model is the central rendering invariant. The renderer can cache 
 
 `render_gl` links the simulation kernel (`game_sim`) so it can consume production simulation data. The simulation layer does not link renderer implementation.
 
+## Color ownership
+
+A nation’s repeating materials live in `render/entity/nations/material_palette.h`. Infantry, riders and shields draw from the same swatches. In the humanoid renderer, `apply_uniform_palette` blends owner color into dyed cloth, gives leather a small tint, and keeps metal and wood independent of the owner. A unit can select a different dye for its job. Punic spearmen use saffron, while the archer tunic shares its indigo with Punic architecture. Stone, roof construction, heraldry and specialist clothing stay with the nation or role that owns them.
+
+Maps supply grass, soil, rock and snow colors through `BiomeSettings`. The ground, riverbank and road shaders use `biome_palette.glsl` to vary the map’s vegetation color from fresh to cured. Each surface supplies its own coverage and dryness. Apply this treatment to vegetation before laying down exposed soil, paving or snow.
+
+`environment_lighting.glsl` supplies sunlight, sky fill and shadow tint to world materials. It derives daylight from the incoming light and cloud cover. `tonemap.glsl` handles the final display grade. To review a palette change, Arena’s `allied_identity_lineup` groups allied infantry and riders under common lighting, and `lighting_sepulcher_readability` stages the night comparison. Map previews with `--map-preview-content` show authored terrain and settlements together.
+
 ## Production frame flow
 
 The normal frame path is:

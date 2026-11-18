@@ -102,6 +102,9 @@ public:
   };
 
   struct RoadUniforms {
+    GL::Shader::UniformHandle verge_grass{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle verge_soil{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};

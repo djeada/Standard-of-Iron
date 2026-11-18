@@ -94,7 +94,6 @@ TestCase {
             });
         verify(overlay !== null, "overlay was not created");
         host.overlay = overlay;
-        // Nested layouts need a rendered frame before their geometry is measured.
         verify(waitForRendering(overlay), "the overlay did not finish its first frame");
         verify(waitForPolish(overlay.Window.window), "the overlay layouts did not settle");
         return host;

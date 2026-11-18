@@ -610,7 +610,7 @@ auto WorldCanvas::describe(const QString& id) const -> QString {
   return id;
 }
 
-void WorldCanvas::paintEvent(QPaintEvent* /*event*/) {
+void WorldCanvas::paintEvent(QPaintEvent*) {
   if (!m_fitted && width() > 0) {
     fit_all();
   }
@@ -1649,7 +1649,7 @@ void WorldCanvas::mouseMoveEvent(QMouseEvent* event) {
                         .arg(ll.lon >= 0 ? QStringLiteral("E") : QStringLiteral("W")));
 }
 
-void WorldCanvas::mouseReleaseEvent(QMouseEvent* /*event*/) {
+void WorldCanvas::mouseReleaseEvent(QMouseEvent*) {
   if (m_panning) {
     m_panning = false;
     setCursor(m_tool == Tool::Select ? Qt::ArrowCursor : Qt::CrossCursor);
@@ -1713,13 +1713,13 @@ void WorldCanvas::zoom_by(double factor, QPointF around) {
   update();
 }
 
-void WorldCanvas::resizeEvent(QResizeEvent* /*event*/) {
+void WorldCanvas::resizeEvent(QResizeEvent*) {
   if (!m_user_view) {
     fit_all();
   }
 }
 
-void WorldCanvas::leaveEvent(QEvent* /*event*/) {
+void WorldCanvas::leaveEvent(QEvent*) {
   m_hover.clear();
   update();
 }

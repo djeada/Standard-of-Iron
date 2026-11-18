@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "render/entity/nations/material_palette.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
@@ -223,9 +224,9 @@ auto carthage_shield_local_pose(float scale_multiplier) -> QMatrix4x4 {
 CarthageShieldRenderer::CarthageShieldRenderer(float scale_multiplier)
     : ShieldRenderer([]() {
       ShieldRenderConfig config;
-      config.shield_color = {0.20F, 0.46F, 0.62F};
-      config.trim_color = {0.76F, 0.68F, 0.42F};
-      config.metal_color = {0.70F, 0.68F, 0.52F};
+      config.shield_color = Nation::k_carthage_materials.cloth;
+      config.trim_color = Nation::k_carthage_materials.accent;
+      config.metal_color = Nation::k_carthage_materials.metal;
       config.shield_radius = k_base_shield_diameter * 0.5F;
       config.shield_aspect = 1.0F;
       config.has_cross_decal = false;
@@ -253,10 +254,9 @@ void CarthageShieldRenderer::submit(const CarthageShieldConfig& config,
   if (frames.shield_l.radius > 0.0F) {
     pose_adjustment = bind_left_shield_pose_calibration();
   }
-  std::array<QVector3D, 4> const palette_slots{QVector3D(0.20F, 0.46F, 0.62F),
-                                               QVector3D(0.76F, 0.68F, 0.42F),
-                                               QVector3D(0.70F, 0.68F, 0.52F),
-                                               palette.leather};
+  std::array<QVector3D, k_carthage_shield_role_count> palette_slots;
+  (void)carthage_shield_fill_role_colors(
+      palette, palette_slots.data(), palette_slots.size());
   append_equipment_archetype(batch,
                              carthage_shield_archetype(config.scale_multiplier),
                              shield_basis_transform(ctx.model, shield_frame) *
@@ -271,9 +271,9 @@ auto carthage_shield_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_carthage_shield_role_count) {
     return 0;
   }
-  out[k_shield_slot] = QVector3D(0.20F, 0.46F, 0.62F);
-  out[k_trim_slot] = QVector3D(0.76F, 0.68F, 0.42F);
-  out[k_metal_slot] = QVector3D(0.70F, 0.68F, 0.52F);
+  out[k_shield_slot] = Nation::k_carthage_materials.cloth;
+  out[k_trim_slot] = Nation::k_carthage_materials.accent;
+  out[k_metal_slot] = Nation::k_carthage_materials.metal;
   out[k_grip_slot] = palette.leather;
   return k_carthage_shield_role_count;
 }

@@ -1,4 +1,5 @@
 #version 330 core
+#include "biome_palette.glsl"
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
@@ -133,11 +134,11 @@ void main() {
   float visibility_factor = calculate_visibility();
 
   float river = u_water_surface_kind == 0 ? 1.0 : 0.0;
-  float biome_forest = float(u_ground_type == 0);
-  float biome_dry = float(u_ground_type == 1);
-  float biome_rocky = float(u_ground_type == 2);
-  float biome_alpine = float(u_ground_type == 3);
-  float biome_fertile = float(u_ground_type == 4);
+  float biome_forest = float(u_ground_type == k_forest_mud);
+  float biome_dry = float(u_ground_type == k_grass_dry);
+  float biome_rocky = float(u_ground_type == k_soil_rocky);
+  float biome_alpine = float(u_ground_type == k_alpine_mix);
+  float biome_fertile = float(u_ground_type == k_soil_fertile);
 
   float wash_speed = mix(0.018, 0.052, river);
   vec2 world_uv = world_pos.xz * 0.22;
@@ -191,6 +192,7 @@ void main() {
       mix(grass_primary, grass_secondary, smoothstep(0.24, 0.76, macro));
   float terrain_dryness = saturate((1.0 - moisture) * 0.44 + (detail - 0.42) * 0.25);
   terrain_grass = mix(terrain_grass, grass_dry, terrain_dryness);
+  terrain_grass = biome_grass_color(terrain_grass, u_ground_type, terrain_dryness, 1.0);
   float terrain_soil_mask =
       smoothstep(0.58, 0.82, macro * 0.55 + detail * 0.30 + deposit_field * 0.15);
   vec3 terrain_soil = mix(soil, grass_dry, 0.12 + (1.0 - moisture) * 0.18);
@@ -323,7 +325,7 @@ void main() {
   vec3 contact_color = color * vec3(0.68, 0.73, 0.70);
 
   color = mix(color, contact_color, contact * 0.16);
-  float wet_reach = k_wet_band_reach * (0.55 + 0.90 * edge_macro) *
+  float wet_reach = k_wet_band_reach * (0.40 + 1.35 * edge_macro) *
                     (0.80 + 0.40 * max(moisture, environment_wetness()));
   float wet_soil = 1.0 - smoothstep(0.03, max(wet_reach, 0.08), shore_t);
   wet_soil *= 0.70 + 0.30 * smoothstep(0.30, 0.70, deposit_field);

@@ -27,7 +27,7 @@ auto roman_heavy_palette(const HumanoidPalette& palette) -> std::array<QVector3D
       saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
   QVector3D const steel_light = saturate_color(steel * 1.06F);
   QVector3D const brass =
-      saturate_color(palette.metal * QVector3D(1.40F, 1.15F, 0.65F));
+      saturate_color(palette.metal * QVector3D(1.18F, 0.99F, 0.68F));
   return {steel, steel_light, brass, QVector3D(0.96F, 0.12F, 0.12F)};
 }
 

@@ -281,8 +281,7 @@ TEST_F(CommanderModeResourcesTest, CombatTimersHaveOneSimulationOwnerInBothModes
     data->posture = 60.0F;
     guard->active = false;
     if (controlled) {
-      // The controller's own upkeep runs every direct-control tick; it must not
-      // advance world-owned timers a second time.
+
       App::Core::CommanderDefence::advance_upkeep(*commander, true, 0.25F);
       EXPECT_FLOAT_EQ(data->posture, 60.0F);
       EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.75F);
@@ -304,9 +303,7 @@ TEST_F(CommanderModeResourcesTest, CombatTimersHaveOneSimulationOwnerInBothModes
 }
 
 TEST_F(CommanderModeResourcesTest, AnUncontrolledCommandersOpeningCloses) {
-  // Vanguard rush and shield bash open punish windows on enemy commanders.
-  // Only the player's controller used to run them down, so an AI commander
-  // stayed punishable for the rest of the battle.
+
   Game::Systems::CommanderSystem system;
   auto* data = commander->get_component<Engine::Core::CommanderComponent>();
   data->fpv_controlled = false;
@@ -343,7 +340,7 @@ TEST_F(CommanderModeResourcesTest, GuardBreakRecoveryHasOneSimulationOwnerInBoth
     if (controlled) {
       App::Core::CommanderDefence::advance_upkeep(*commander, false, 0.1F);
     }
-    // Controller upkeep cannot advance combat recovery independently of the world.
+
     EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.5F);
     system.update(&session.world(), 0.1F);
     EXPECT_NEAR(guard->guard_break_remaining, 0.4F, 1.0e-6F);

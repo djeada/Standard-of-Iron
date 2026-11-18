@@ -232,8 +232,7 @@ void route_around_separating_structure(const ChaseInputs& in,
             pathfinder->world_to_grid(geo.target_pos.x(), geo.target_pos.z()))) {
       return;
     }
-    // The usual formation standoff can lie outside a fort even after a breach.
-    // Route closer to the target when no unobstructed standoff fits inside it.
+
     plan.desired_pos = geo.target_pos;
   }
   plan.hold_position = false;

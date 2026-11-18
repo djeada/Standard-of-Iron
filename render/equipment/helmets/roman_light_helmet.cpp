@@ -24,7 +24,7 @@ enum RomanLightPaletteSlot : std::uint8_t {
 
 auto roman_light_palette(const HumanoidPalette& palette) -> std::array<QVector3D, 3> {
   QVector3D const steel =
-      saturate_color(palette.metal * QVector3D(1.18F, 1.02F, 0.72F));
+      saturate_color(palette.metal * QVector3D(1.04F, 0.93F, 0.70F));
   QVector3D const shadow =
       saturate_color(steel * QVector3D(0.44F, 0.48F, 0.62F) +
                      palette.leather_dark * QVector3D(0.18F, 0.14F, 0.10F));

@@ -204,6 +204,9 @@ void WaterPipeline::cache_road_uniforms() {
     return;
   }
 
+  m_road_uniforms.verge_grass = m_road_shader->uniform_handle("u_verge_grass");
+  m_road_uniforms.verge_soil = m_road_shader->uniform_handle("u_verge_soil");
+  m_road_uniforms.ground_type = m_road_shader->uniform_handle("u_ground_type");
   m_road_uniforms.mvp = m_road_shader->uniform_handle("u_mvp");
   m_road_uniforms.model = m_road_shader->uniform_handle("u_model");
   m_road_uniforms.color = m_road_shader->uniform_handle("u_color");

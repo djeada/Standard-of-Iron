@@ -79,7 +79,7 @@ auto advance_humanoid_overlay(const Render::Creature::PlaybackLayerRequest& requ
   PlaybackLayerRequest next = memory.shown;
   float velocity = memory.weight_velocity;
   if (!continuous) {
-    // First visibility, a seek, or a long cull gap starts at the current pose.
+
     next = frame.full_body_takeover ? PlaybackLayerRequest{} : target;
     velocity = 0.0F;
   } else if (elapsed > 0.0F) {
@@ -90,7 +90,7 @@ auto advance_humanoid_overlay(const Render::Creature::PlaybackLayerRequest& requ
         next.clip_variant == target.clip_variant && next.mode == target.mode;
     float phase_delta = std::abs(target.phase - next.phase);
     if (same_clip && humanoid_clip_loops(target.clip_id)) {
-      // A looping cycle crossing 0.99 -> 0.01 has not jumped.
+
       phase_delta = std::fmod(phase_delta, 1.0F);
       phase_delta = std::min(phase_delta, 1.0F - phase_delta);
     }
@@ -116,8 +116,7 @@ auto advance_humanoid_overlay(const Render::Creature::PlaybackLayerRequest& requ
                             k_overlay_weight_rate_per_second);
       next.weight = std::clamp(weight + velocity * elapsed, 0.0F, 1.0F);
     } else {
-      // A different pose, or a jump in this one: the shown pose fades where it
-      // stands before the new one starts.
+
       next.weight = std::max(0.0F, next.weight - max_step);
       velocity = 0.0F;
     }

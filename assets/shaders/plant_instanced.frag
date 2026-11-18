@@ -94,9 +94,20 @@ float frond_sdf(vec2 uv, float seed) {
 }
 
 float plant_sdf(vec2 uv, float type_val, float seed) {
-  if (type_val < 0.34)
+  if (type_val > 2.5) {
+    float reeds = 1e9;
+    for (int i = 0; i < 5; ++i) {
+      float stalk = float(i);
+      float spread = (stalk - 2.0) * 0.12;
+      vec2 root = vec2(0.5 + spread * 0.35, 0.01);
+      vec2 tip = vec2(0.5 + spread, 0.66 + 0.30 * h11(seed * 8.7 + stalk));
+      reeds = min(reeds, blade_sdf(uv, root, tip, 0.034, 0.009));
+    }
+    return reeds;
+  }
+  if (type_val < 0.5)
     return shrub_sdf(uv, seed);
-  if (type_val < 0.67)
+  if (type_val < 1.5)
     return rosette_sdf(uv, seed);
   return frond_sdf(uv, seed);
 }
@@ -122,7 +133,7 @@ void main() {
     discard;
   }
 
-  float type_val = (mod(floor(v_type + 0.5), 3.0) + 0.5) / 3.0;
+  float type_val = v_type;
   float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
 
   float sdf_aa = clamp(fwidth(sdf) * 0.85, 0.0015, 0.025);

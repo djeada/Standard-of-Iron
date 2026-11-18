@@ -74,6 +74,10 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
           shader->set_uniform(alpha_uniform, single.alpha);
         }
         if (road_surface_uniform != Shader::InvalidUniform) {
+          const auto& uniforms = m_water_pipeline->m_road_uniforms;
+          shader->set_uniform(uniforms.verge_grass, single.biome_grass_secondary);
+          shader->set_uniform(uniforms.verge_soil, single.biome_soil_color);
+          shader->set_uniform(uniforms.ground_type, single.biome_ground_type);
           shader->set_uniform(road_surface_uniform,
                               static_cast<int>(single.road_surface_kind));
         }

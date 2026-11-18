@@ -1,4 +1,5 @@
 #include "register_equipment_internal.h"
+#include "render/entity/nations/material_palette.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
@@ -299,7 +300,7 @@ auto falcata_config() -> const SwordRenderConfig& {
 auto gallic_shield_config() -> const ShieldRenderConfig& {
   static const ShieldRenderConfig config = []() {
     ShieldRenderConfig cfg;
-    cfg.shield_color = QVector3D(0.24F, 0.38F, 0.32F);
+    cfg.shield_color = Nation::k_gallic_materials.accent;
     cfg.trim_color = QVector3D(0.84F, 0.73F, 0.46F);
     cfg.metal_color = QVector3D(0.58F, 0.58F, 0.56F);
     cfg.shield_radius = 0.098F;
@@ -315,7 +316,7 @@ auto gallic_shield_config() -> const ShieldRenderConfig& {
 auto caetra_config() -> const ShieldRenderConfig& {
   static const ShieldRenderConfig config = []() {
     ShieldRenderConfig cfg;
-    cfg.shield_color = QVector3D(0.42F, 0.16F, 0.11F);
+    cfg.shield_color = Nation::k_iberian_materials.accent;
     cfg.trim_color = QVector3D(0.72F, 0.56F, 0.30F);
     cfg.metal_color = QVector3D(0.80F, 0.62F, 0.34F);
     cfg.shield_radius = 0.084F;

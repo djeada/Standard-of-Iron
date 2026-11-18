@@ -2,18 +2,16 @@
 
 #include <array>
 
+#include "render/entity/nations/material_palette.h"
 #include "render/entity/nations/sepulcher/palette.h"
 
 namespace Render::GL::Carthage {
 
 void register_carthage_swordsman_style() {
   SwordsmanStyleConfig carthage;
-  carthage.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
-  carthage.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
-  carthage.leather_dark_color = QVector3D(0.32F, 0.22F, 0.15F);
-  carthage.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
+  Nation::apply_materials(carthage, Nation::k_carthage_materials);
   carthage.shield_color = QVector3D(0.20F, 0.46F, 0.62F);
-  carthage.shield_trim_color = QVector3D(0.76F, 0.68F, 0.42F);
+  carthage.shield_trim_color = Nation::k_carthage_materials.accent;
   carthage.shield_radius_scale = 0.9F;
   carthage.shield_aspect_ratio = 0.85F;
   carthage.has_scabbard = false;
@@ -21,10 +19,7 @@ void register_carthage_swordsman_style() {
 
   SwordsmanStyleConfig sepulcher = carthage;
   sepulcher.skin_color = Sepulcher::k_bone;
-  sepulcher.cloth_color = Sepulcher::k_grave_cloth;
-  sepulcher.leather_color = Sepulcher::k_grave_leather;
-  sepulcher.leather_dark_color = Sepulcher::k_grave_leather_dark;
-  sepulcher.metal_color = Sepulcher::k_grave_iron;
+  Nation::apply_materials(sepulcher, Nation::k_sepulcher_materials);
   sepulcher.shield_color = QVector3D(0.165F, 0.175F, 0.195F);
   sepulcher.shield_trim_color = QVector3D(0.44F, 0.42F, 0.36F);
   sepulcher.shield_cross_decal = false;

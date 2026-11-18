@@ -13,7 +13,6 @@ class World;
 
 namespace Game::Systems::RpgCombat {
 
-// How long a perfect guard leaves the defender to punish the attacker it turned.
 inline constexpr float k_riposte_window_seconds = 1.0F;
 
 struct CommanderDamageResult {

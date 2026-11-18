@@ -146,11 +146,11 @@ vec3 soi_wood_grain(
 
   float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
   vec3 silver = vec3(luma) * vec3(1.00, 0.98, 0.94);
-  vec3 warm = base_color * vec3(1.04, 0.99, 0.90);
+  vec3 warm = base_color * vec3(1.16, 0.99, 0.80);
 
   float chroma = max(base_color.r, max(base_color.g, base_color.b)) -
                  min(base_color.r, min(base_color.g, base_color.b));
-  float weathering = (0.16 + 0.36 * seed_b + 0.22 * max(normal.y, 0.0)) *
+  float weathering = (0.05 + 0.20 * seed_b + 0.18 * max(normal.y, 0.0)) *
                      (1.0 - smoothstep(0.25, 0.36, chroma));
   vec3 tone = mix(warm, silver, weathering) * (0.80 + 0.30 * seed);
 
@@ -281,7 +281,7 @@ vec3 soi_material_variation(
   if (material_id == k_material_mineral || material_id == 0 ||
       material_id == k_material_wood || material_id == k_material_ceramic) {
     float luma = dot(base_color, vec3(0.299, 0.587, 0.114));
-    float saturation = material_id == k_material_wood ? 0.94 : 0.93;
+    float saturation = material_id == k_material_wood ? 1.18 : 1.08;
     base_color = mix(vec3(luma), base_color, mix(1.0, saturation, tactical));
   }
   if (!u_has_material_detail) {

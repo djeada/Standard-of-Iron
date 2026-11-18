@@ -22,12 +22,9 @@ constexpr float k_dive_fall_velocity = -11.0F;
 constexpr float k_fov_kick_decay = 22.0F;
 constexpr float k_dodge_fov_kick = 14.0F;
 constexpr float k_dodge_speed = 6.5F;
-// The roll covers k_dodge_speed * roll_seconds, front-loaded: it leaves at
-// (1 + k) times that mean speed and arrives at (1 - k), so the body bursts out
-// of danger and settles into the recovery instead of stopping dead from full speed.
+
 constexpr float k_dodge_front_load = 0.6F;
 
-// Fraction of the roll's distance covered by normalized time `phase`.
 auto dodge_travel_fraction(float phase) -> float {
   float const p = std::clamp(phase, 0.0F, 1.0F);
   return p * (1.0F + k_dodge_front_load * (1.0F - p));
@@ -112,8 +109,7 @@ auto CommanderLocomotion::move_basis(
       forward = to_target.normalized();
     }
   }
-  // Both modes use the same handedness. Deriving the tangent from an
-  // away-from-target vector inverted A/D when acquiring a lock.
+
   const QVector3D right(-forward.z(), 0.0F, forward.x());
   return {.forward = forward,
           .move = forward * static_cast<float>(forward_axis) +
@@ -309,7 +305,6 @@ void CommanderLocomotion::roll(const CommanderHandles& body,
   report.dodge_pose_active = true;
   report.dodge_pose_phase = 1.0F - std::clamp(m_dodge_timer / roll_seconds, 0.0F, 1.0F);
 
-  // Integrated over the tick, so the distance is the same at any tick rate.
   float const travel = k_dodge_speed * roll_seconds *
                        Game::Systems::FordRules::speed_multiplier(input.wading) *
                        (dodge_travel_fraction(report.dodge_pose_phase) -
@@ -328,14 +323,13 @@ void CommanderLocomotion::roll(const CommanderHandles& body,
   report.requested_speed = speed;
   report.blocked = step.blocked;
   report.slid = step.slid;
-  // Keep the authored roll pose/timeline, but publish only displacement that
-  // collision actually accepted. A wall must not leave stored roll velocity.
+
   m_planar_velocity = QVector3D(step.velocity.x(), 0.0F, step.velocity.z());
   if (body.movement != nullptr) {
     body.movement->set_manual_velocity(m_planar_velocity.x(), m_planar_velocity.z());
   }
   report.actual_speed = m_planar_velocity.length();
-  // The dodge pays its action cost; it is not a stamina-draining sprint.
+
   report.running = false;
 
   if (m_dodge_timer <= 0.0F) {
@@ -419,7 +413,7 @@ void CommanderLocomotion::accelerate_toward(const QVector3D& desired_velocity,
 void CommanderLocomotion::steer_airborne(const QVector3D& desired_velocity,
                                          float target_speed,
                                          float dt) {
-  // Without input the jump keeps its takeoff momentum; steering only bends it.
+
   if (target_speed <= 0.0F) {
     return;
   }

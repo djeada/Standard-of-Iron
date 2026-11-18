@@ -2,17 +2,19 @@
 
 #include <array>
 
+#include "render/entity/nations/material_palette.h"
+
 namespace Render::GL::Carthage {
 namespace {
 
 const std::array<SpearmanStyleRegistration, 1> k_styles{{
     {"carthage",
      SpearmanStyleConfig{
-         .cloth_color = QVector3D(0.74F, 0.58F, 0.32F),
-         .leather_color = QVector3D(0.42F, 0.25F, 0.12F),
-         .leather_dark_color = QVector3D(0.32F, 0.21F, 0.14F),
-         .metal_color = QVector3D(0.78F, 0.64F, 0.32F),
-         .spear_shaft_color = QVector3D(0.42F, 0.24F, 0.13F),
+         .cloth_color = Nation::k_carthage_materials.accent,
+         .leather_color = Nation::k_carthage_materials.leather,
+         .leather_dark_color = Nation::k_carthage_materials.dark_leather,
+         .metal_color = Nation::k_carthage_materials.metal,
+         .spear_shaft_color = Nation::k_carthage_materials.timber,
          .spearhead_color = QVector3D(0.72F, 0.68F, 0.58F),
          .spear_length_scale = 1.08F,
          .spear_shaft_radius_scale = 1.04F,

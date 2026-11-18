@@ -13,7 +13,7 @@
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
 #include "render/elephant/elephant_spec.h"
-#include "render/equipment/armor/garment_shell.h"
+#include "render/gl/garment_shell.h"
 #include "render/gl/primitives.h"
 #include "render/horse/horse_spec.h"
 #include "render/rigged_mesh.h"

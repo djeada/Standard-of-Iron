@@ -47,12 +47,8 @@ class CommanderControlController {
 public:
   using InputState = App::Core::CommanderHeldInput;
 
-  // Full reset for entering or leaving direct control: view, camera and
-  // presentation start over.
   void reset();
-  // A rally hands the body to RTS movement and back while the commander view
-  // stays on screen: input and action state are dropped, but the camera rig,
-  // look and presented pose carry on, so neither handoff cuts the camera.
+
   void release_for_rally();
   void release_all_input();
   void set_view_yaw(float yaw);
@@ -161,12 +157,11 @@ private:
     const Engine::Core::RpgCommanderActionComponent* active_action{nullptr};
     bool attack_animation_active{false};
     bool drawing_bow{false};
-    // Seconds of hit stagger left. While it runs the player cannot move, roll,
-    // jump or guard; a hit has to cost more than health.
+
     float stagger_remaining{0.0F};
 
     [[nodiscard]] auto staggered() const -> bool { return stagger_remaining > 0.0F; }
-    // A roll or jump pressed this late in a stagger is held for the recovery.
+
     [[nodiscard]] auto recovering_soon() const -> bool {
       return staggered() && stagger_remaining <= k_commander_movement_buffer_seconds;
     }
@@ -206,7 +201,7 @@ private:
   [[nodiscard]] static auto
   read_tick_facts(const Engine::Core::World& world,
                   const Engine::Core::Entity& commander) -> TickFacts;
-  // True while the body faces the view for a fight rather than its own travel.
+
   [[nodiscard]] auto squared_up(const TickFacts& facts) const -> bool;
   [[nodiscard]] auto advance_jump_stage(const App::Core::CommanderHandles& body,
                                         const TickFacts& facts,

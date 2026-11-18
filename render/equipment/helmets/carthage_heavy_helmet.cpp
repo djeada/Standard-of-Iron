@@ -25,7 +25,7 @@ auto carthage_heavy_palette(const HumanoidPalette& palette,
                             const CarthageHeavyHelmetConfig& config)
     -> std::array<QVector3D, 4> {
   QVector3D const metal =
-      saturate_color(palette.metal * QVector3D(1.40F, 1.15F, 0.65F));
+      saturate_color(palette.metal * QVector3D(1.18F, 0.99F, 0.68F));
   QVector3D const metal_dark = metal * 0.78F;
   QVector3D const metal_light = saturate_color(metal * 1.08F);
   QVector3D const crest = config.crest_color.lengthSquared() > 0.01F

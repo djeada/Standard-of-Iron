@@ -46,6 +46,7 @@ add_executable(
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
     render/shader_source_test.cpp
+    render/nation_material_palette_test.cpp
     render/visibility_mask_encoder_test.cpp
     render/fog_renderer_test.cpp
     render/render_view_state_test.cpp

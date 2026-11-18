@@ -48,6 +48,9 @@ void main() {
   float final_scale = scale * SIZE_MULT * size_jitter;
 
   vec3 local_pos = a_pos * final_scale;
+  if (a_type_params.x > 2.5) {
+    local_pos.y *= 1.50;
+  }
   float h = clamp(a_pos.y, 0.0, 1.0);
   float root_taper = mix(0.38, 1.0, smoothstep(0.0, 0.22, h));
   float crown_taper = mix(1.0, 0.76, smoothstep(0.68, 1.0, h));

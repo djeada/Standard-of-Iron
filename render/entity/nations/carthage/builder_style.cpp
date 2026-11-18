@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include "render/entity/builder_renderer_common.h"
+#include "render/entity/nations/material_palette.h"
 
 namespace {
 
@@ -10,12 +11,7 @@ constexpr QVector3D k_carthage_tunic{0.68F, 0.54F, 0.38F};
 
 constexpr QVector3D k_carthage_skin{0.08F, 0.07F, 0.065F};
 
-constexpr QVector3D k_carthage_leather{0.48F, 0.35F, 0.22F};
-constexpr QVector3D k_carthage_leather_dark{0.32F, 0.24F, 0.16F};
-
 constexpr QVector3D k_carthage_bronze{0.70F, 0.52F, 0.32F};
-
-constexpr QVector3D k_carthage_wood{0.45F, 0.35F, 0.22F};
 
 constexpr QVector3D k_carthage_apron{0.42F, 0.35F, 0.25F};
 } // namespace
@@ -26,10 +22,10 @@ void register_carthage_builder_style() {
   BuilderStyleConfig style;
   style.cloth_color = k_carthage_tunic;
   style.skin_color = k_carthage_skin;
-  style.leather_color = k_carthage_leather;
-  style.leather_dark_color = k_carthage_leather_dark;
+  style.leather_color = Nation::k_carthage_materials.leather;
+  style.leather_dark_color = Nation::k_carthage_materials.dark_leather;
   style.metal_color = k_carthage_bronze;
-  style.wood_color = k_carthage_wood;
+  style.wood_color = Nation::k_carthage_materials.timber;
   style.apron_color = k_carthage_apron;
 
   style.show_helmet = false;

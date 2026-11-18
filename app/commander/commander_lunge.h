@@ -18,12 +18,6 @@ struct StrikeCarry {
   float delivered = 0.0F;
 };
 
-// Moves the body through a committed swing's authored travel. It never writes
-// the body's yaw: during the wind-up it works out how far the swing bends from
-// the view toward its target (aim_offset), within the action's authored cone
-// and turn limit, and CommanderBodyFacing turns the body by it. The lunge then
-// travels where the body faces, pulled onto the target only when the target
-// lies inside the swing's cone.
 class CommanderLunge {
 public:
   [[nodiscard]] auto apply(Engine::Core::World& world,
@@ -35,8 +29,6 @@ public:
                            float view_yaw,
                            float dt) -> float;
 
-  // Degrees the current swing bends from the view toward its target; zero
-  // outside a swing.
   [[nodiscard]] auto aim_offset() const -> float { return m_aim_offset; }
 
   void reset() {

@@ -347,9 +347,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     auto* unit = &unit_ref;
     auto* transform = &transform_ref;
 
-    // Combat timers belong to world time, not to the current input mode: one
-    // owner for every commander, player-driven or not, so nothing ticks twice
-    // and nothing freezes when control changes hands.
     auto* guard = world->try_get<Engine::Core::CommanderGuardComponent>(
         commander_entity->get_id());
     if (guard != nullptr) {
