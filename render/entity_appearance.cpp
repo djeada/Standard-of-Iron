@@ -17,7 +17,7 @@ auto coat_color(Game::Units::SpawnType spawn_type) -> QVector3D {
   case Game::Units::SpawnType::Sheep:
     return {0.88F, 0.86F, 0.80F};
   case Game::Units::SpawnType::Wolf:
-    return {0.47F, 0.43F, 0.39F};
+    return {0.47F, 0.46F, 0.45F};
   default:
     break;
   }

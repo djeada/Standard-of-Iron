@@ -23,6 +23,9 @@ namespace {
 
 constexpr float k_animal_navigation_radius = 0.0F;
 constexpr float k_move_reissue_epsilon = 0.75F;
+constexpr float k_calm_pace = 0.80F;
+constexpr float k_calm_pace_spread = 0.14F;
+constexpr float k_urgent_pace_spread = 0.06F;
 
 void issue_move(Engine::Core::World& world,
                 Engine::Core::EntityID entity_id,
@@ -123,7 +126,13 @@ void WildlifeNatureActions::set_travel_speed(const NatureContext& ctx, bool urge
   if (unit == nullptr) {
     return;
   }
-  unit->speed = urgent ? ctx.config->flee_speed : ctx.config->move_speed;
+  auto mixed = static_cast<std::uint32_t>(ctx.entity->get_id()) * 2654435761U;
+  mixed ^= mixed >> 15U;
+  float const roll = static_cast<float>(mixed & 0xFFFFU) / 65535.0F;
+  float const spread = urgent ? k_urgent_pace_spread : k_calm_pace_spread;
+  float const pace =
+      urgent ? ctx.config->flee_speed : ctx.config->move_speed * k_calm_pace;
+  unit->speed = pace * (1.0F + ((roll - 0.5F) * 2.0F * spread));
 }
 
 void WildlifeNatureActions::alert_herd(std::uint16_t group_id, float duration) {

@@ -59,13 +59,13 @@ struct Bounds {
 };
 
 auto wolf_role_colors() -> std::vector<QVector3D> {
-  QVector3D const base(0.42F, 0.37F, 0.32F);
+  QVector3D const base(0.47F, 0.46F, 0.45F);
   return {base,
-          QVector3D(0.25F, 0.23F, 0.22F),
-          QVector3D(0.63F, 0.58F, 0.51F),
-          QVector3D(0.70F, 0.66F, 0.58F),
-          QVector3D(0.33F, 0.29F, 0.26F),
-          QVector3D(0.29F, 0.26F, 0.24F),
+          QVector3D(0.30F, 0.30F, 0.30F),
+          QVector3D(0.67F, 0.66F, 0.62F),
+          QVector3D(0.72F, 0.71F, 0.67F),
+          QVector3D(0.56F, 0.54F, 0.51F),
+          QVector3D(0.39F, 0.38F, 0.36F),
           QVector3D(0.07F, 0.065F, 0.07F),
           QVector3D(0.09F, 0.07F, 0.05F),
           QVector3D(0.86F, 0.64F, 0.16F)};

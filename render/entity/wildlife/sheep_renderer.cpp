@@ -45,16 +45,16 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
                              ? mixed(QVector3D(0.19F, 0.16F, 0.15F),
                                      QVector3D(0.30F, 0.25F, 0.21F),
                                      hash_unit_float(state.seed, 29U))
-                             : mixed(wool, QVector3D(0.50F, 0.40F, 0.30F), 0.74F);
+                             : mixed(wool, QVector3D(0.40F, 0.33F, 0.27F), 0.82F);
 
   wool = mixed(wool,
                breed <= 0.70F ? QVector3D(0.83F, 0.83F, 0.82F)
                               : QVector3D(0.73F, 0.69F, 0.61F),
                0.36F);
   QVector3D const shade = mixed(tinted(wool, 0.66F),
-                                breed <= 0.70F ? QVector3D(0.36F, 0.36F, 0.35F)
+                                breed <= 0.70F ? QVector3D(0.44F, 0.40F, 0.35F)
                                                : QVector3D(0.32F, 0.28F, 0.24F),
-                                0.26F);
+                                0.34F);
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_sheep_role_wool - 1U] = wool;

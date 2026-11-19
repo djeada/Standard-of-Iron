@@ -79,10 +79,10 @@ constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {0.114F, k_hind_hip_z, 0.0F, -0.056F, 0.006F},
 }};
 
-constexpr float k_walk_bob = 0.010F;
-constexpr float k_walk_sway = 0.007F;
+constexpr float k_walk_bob = 0.013F;
+constexpr float k_walk_sway = 0.010F;
 constexpr float k_run_rock = 0.024F;
-constexpr float k_run_flight = 0.022F;
+constexpr float k_run_flight = 0.026F;
 
 constexpr std::array<float, k_leg_count> k_walk_leg_phase{{0.25F, 0.75F, 0.0F, 0.5F}};
 constexpr std::array<float, k_leg_count> k_run_leg_phase{{0.0F, 0.12F, 0.48F, 0.60F}};
@@ -626,8 +626,8 @@ auto ellipsoid(std::string_view name,
     data.ring_count = 3U;
     data.ring_vertices = 6U;
   } else {
-    data.ring_count = 6U;
-    data.ring_vertices = 9U;
+    data.ring_count = 7U;
+    data.ring_vertices = 12U;
   }
   node.data = data;
   return node;
@@ -889,9 +889,9 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     nodes.push_back(ellipsoid("sheep.eye",
                               Bone::Head,
                               k_sheep_role_eye,
-                              bind.poll + (facing * 0.036F) + (head_up * 0.018F) +
-                                  (side * (sign * 0.067F)),
-                              {0.012F, 0.013F, 0.016F},
+                              bind.poll + (facing * 0.052F) + (head_up * 0.020F) +
+                                  (side * (sign * 0.066F)),
+                              {0.016F, 0.017F, 0.018F},
                               k_full));
   }
 
@@ -1007,6 +1007,9 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   std::erase_if(nodes, [wanted_lod](const MeshNode& node) {
     return (node.lod_mask & wanted_lod) == 0U;
   });
+  for (MeshNode& node : nodes) {
+    node.smooth_shading = true;
+  }
   g_minimal_tessellation = false;
   return nodes;
 }
