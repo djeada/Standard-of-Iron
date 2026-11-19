@@ -481,6 +481,11 @@ void MapData::clear() {
                               {MapJsonKeys::lighting_profile, "mediterranean_summer"}};
   m_wildlife = QJsonObject();
   m_extra_root_fields = QJsonObject();
+  m_has_source = false;
+  m_source = JsonText::Node{};
+  m_canonical_root = QJsonObject();
+  m_legacy_firecamps = QJsonArray();
+  m_canonical_legacy_props = QJsonArray();
   m_next_spawn_order = 0;
   m_raw_spawns.clear();
 
@@ -622,7 +627,70 @@ bool MapData::replace_document(const QByteArray& data,
 }
 
 QByteArray MapData::to_json_bytes() const {
-  return QJsonDocument(build_root_json()).toJson(QJsonDocument::Indented);
+  const QJsonObject current = build_root_json();
+  if (!m_has_source) {
+    return JsonText::write(JsonText::from_value(current));
+  }
+  return JsonText::write(JsonText::merge(m_source,
+                                         with_legacy_sections(m_canonical_root),
+                                         with_legacy_sections(current)),
+                         m_source_style);
+}
+
+void MapData::remember_source(const QByteArray& data) {
+  m_has_source = false;
+  m_legacy_firecamps = QJsonArray();
+  m_canonical_legacy_props = QJsonArray();
+  m_canonical_root = QJsonObject();
+  if (!JsonText::parse(data, m_source, nullptr) ||
+      m_source.type != JsonText::Node::Type::Object) {
+    return;
+  }
+  m_source_style = JsonText::detect_style(data);
+  m_canonical_root = build_root_json();
+  if (const JsonText::Node* legacy = m_source.find(MapJsonKeys::firecamps)) {
+    m_legacy_firecamps = JsonText::to_value(*legacy).toArray();
+    const QJsonArray props = m_canonical_root.value(MapJsonKeys::world_props).toArray();
+    const qsizetype first = props.size() - m_legacy_firecamps.size();
+    for (qsizetype i = std::max<qsizetype>(first, 0); i < props.size(); ++i) {
+      m_canonical_legacy_props.append(props[i]);
+    }
+    if (m_canonical_legacy_props.size() != m_legacy_firecamps.size()) {
+      m_legacy_firecamps = QJsonArray();
+      m_canonical_legacy_props = QJsonArray();
+    }
+  }
+  m_has_source = true;
+}
+
+QJsonObject MapData::with_legacy_sections(QJsonObject root) const {
+  if (m_legacy_firecamps.isEmpty()) {
+    return root;
+  }
+  std::vector<bool> kept(static_cast<std::size_t>(m_legacy_firecamps.size()), false);
+  QJsonArray props;
+  for (const QJsonValue prop : root.value(MapJsonKeys::world_props).toArray()) {
+    bool legacy = false;
+    for (qsizetype j = 0; j < m_canonical_legacy_props.size(); ++j) {
+      if (!kept[static_cast<std::size_t>(j)] && m_canonical_legacy_props[j] == prop) {
+        kept[static_cast<std::size_t>(j)] = true;
+        legacy = true;
+        break;
+      }
+    }
+    if (!legacy) {
+      props.append(prop);
+    }
+  }
+  QJsonArray firecamps;
+  for (qsizetype j = 0; j < m_legacy_firecamps.size(); ++j) {
+    if (kept[static_cast<std::size_t>(j)]) {
+      firecamps.append(m_legacy_firecamps[j]);
+    }
+  }
+  root[MapJsonKeys::world_props] = props;
+  root[MapJsonKeys::firecamps] = firecamps;
+  return root;
 }
 
 bool MapData::apply_document(const QByteArray& data, QString* out_error) {
@@ -763,6 +831,7 @@ bool MapData::apply_document(const QByteArray& data, QString* out_error) {
   }
   parse_forests_array(root[MapJsonKeys::forests].toArray());
   parse_wildlife_object(root[MapJsonKeys::wildlife].toObject());
+  remember_source(data);
   return true;
 }
 
@@ -886,8 +955,7 @@ QJsonObject MapData::build_root_json() const {
 }
 
 QString MapData::to_json_string() const {
-  const QJsonDocument doc(build_root_json());
-  return QString::fromUtf8(doc.toJson(QJsonDocument::Indented));
+  return QString::fromUtf8(to_json_bytes());
 }
 
 bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
@@ -898,8 +966,7 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
     return false;
   }
 
-  const QJsonDocument doc(build_root_json());
-  const QByteArray json_data = doc.toJson(QJsonDocument::Indented);
+  const QByteArray json_data = to_json_bytes();
 
   QSaveFile file(file_path);
   if (!file.open(QIODevice::WriteOnly)) {

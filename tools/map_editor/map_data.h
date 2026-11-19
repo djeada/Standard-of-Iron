@@ -15,6 +15,8 @@
 #include <variant>
 #include <vector>
 
+#include "json_text.h"
+
 namespace MapEditor {
 
 struct TerrainElement {
@@ -355,6 +357,16 @@ private:
   [[nodiscard]] QJsonArray fog_zones_to_json() const;
   [[nodiscard]] QJsonArray forests_to_json() const;
   [[nodiscard]] QJsonObject wildlife_to_json() const;
+
+  void remember_source(const QByteArray& data);
+  [[nodiscard]] QJsonObject with_legacy_sections(QJsonObject root) const;
+
+  bool m_has_source = false;
+  JsonText::Node m_source;
+  JsonText::Style m_source_style;
+  QJsonObject m_canonical_root;
+  QJsonArray m_legacy_firecamps;
+  QJsonArray m_canonical_legacy_props;
 };
 
 } // namespace MapEditor

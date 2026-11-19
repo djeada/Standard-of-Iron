@@ -93,7 +93,8 @@ template <typename Segment>
 auto segment_component_count(const std::vector<Segment>& segments,
                              float join_distance,
                              std::size_t counted_segment_count =
-                                 std::numeric_limits<std::size_t>::max()) -> int {
+                                 std::numeric_limits<std::size_t>::max(),
+                             std::vector<std::size_t>* out_component = nullptr) -> int {
   if (segments.empty()) {
     return 0;
   }
@@ -126,6 +127,9 @@ auto segment_component_count(const std::vector<Segment>& segments,
   roots.reserve(count);
   for (std::size_t index = 0; index < count; ++index) {
     roots.push_back(sets.find(index));
+  }
+  if (out_component != nullptr) {
+    *out_component = roots;
   }
   std::sort(roots.begin(), roots.end());
   return static_cast<int>(std::unique(roots.begin(), roots.end()) - roots.begin());
@@ -223,11 +227,49 @@ auto audit_terrain_topology(const MapDefinition& map) -> TerrainTopologyAudit {
     navigable_roads.push_back(
         {bridge.start, bridge.end, bridge.width, QStringLiteral("paved")});
   }
-  audit.road_components =
-      segment_component_count(navigable_roads, join_distance, map.roads.size());
+  std::vector<std::size_t> road_component;
+  audit.road_components = segment_component_count(
+      navigable_roads, join_distance, map.roads.size(), &road_component);
   if (audit.road_components > 1) {
     audit.issues.push_back(QStringLiteral("road network has %1 disconnected components")
                                .arg(audit.road_components));
+
+    std::vector<std::size_t> ordered = road_component;
+    std::sort(ordered.begin(), ordered.end());
+    std::size_t main_root = ordered.front();
+    std::size_t main_size = 0;
+    for (std::size_t begin = 0; begin < ordered.size();) {
+      std::size_t end = begin;
+      while (end < ordered.size() && ordered[end] == ordered[begin]) {
+        ++end;
+      }
+      if (end - begin > main_size) {
+        main_size = end - begin;
+        main_root = ordered[begin];
+      }
+      begin = end;
+    }
+    std::vector<std::size_t> reported;
+    for (std::size_t index = 0; index < road_component.size(); ++index) {
+      const std::size_t root = road_component[index];
+      if (root == main_root ||
+          std::find(reported.begin(), reported.end(), root) != reported.end()) {
+        continue;
+      }
+      reported.push_back(root);
+      const auto size = static_cast<int>(
+          std::count(road_component.begin(), road_component.end(), root));
+      const auto& road = map.roads[index];
+      audit.details.push_back(
+          QStringLiteral("road %1 starts a detached network of %2 segment(s) at "
+                         "(%3, %4) -> (%5, %6)")
+              .arg(index)
+              .arg(size)
+              .arg(static_cast<double>(road.start.x()), 0, 'f', 1)
+              .arg(static_cast<double>(road.start.z()), 0, 'f', 1)
+              .arg(static_cast<double>(road.end.x()), 0, 'f', 1)
+              .arg(static_cast<double>(road.end.z()), 0, 'f', 1));
+    }
   }
 
   audit.river_components = river_component_count(map.rivers, join_distance);
@@ -253,6 +295,11 @@ auto audit_terrain_topology(const MapDefinition& map) -> TerrainTopologyAudit {
       if (!joined && !touches_map_boundary(*endpoint, map, water_tolerance) &&
           !touches_lake(*endpoint, map.lakes, water_tolerance)) {
         ++audit.invalid_river_endpoints;
+        audit.details.push_back(
+            QStringLiteral("river %1 ends inside the map at (%2, %3)")
+                .arg(segment_index)
+                .arg(static_cast<double>(endpoint->x()), 0, 'f', 1)
+                .arg(static_cast<double>(endpoint->z()), 0, 'f', 1));
       }
     }
   }
@@ -261,10 +308,22 @@ auto audit_terrain_topology(const MapDefinition& map) -> TerrainTopologyAudit {
                                .arg(audit.invalid_river_endpoints));
   }
 
-  for (const auto& feature : map.terrain) {
-    if (feature.type == TerrainType::Hill &&
-        entrance_cluster_count(feature, tile_size) < 2) {
+  for (std::size_t index = 0; index < map.terrain.size(); ++index) {
+    const auto& feature = map.terrain[index];
+    if (feature.type != TerrainType::Hill) {
+      continue;
+    }
+    const int approaches = entrance_cluster_count(feature, tile_size);
+    if (approaches < 2) {
       ++audit.hills_without_two_approaches;
+      audit.details.push_back(
+          QStringLiteral("terrain %1: hill at (%2, %3), %4 x %5, has %6 approach(es)")
+              .arg(index)
+              .arg(static_cast<double>(feature.center_x), 0, 'f', 1)
+              .arg(static_cast<double>(feature.center_z), 0, 'f', 1)
+              .arg(static_cast<double>(feature.width), 0, 'f', 0)
+              .arg(static_cast<double>(feature.depth), 0, 'f', 0)
+              .arg(approaches));
     }
   }
   if (audit.hills_without_two_approaches > 0) {
@@ -288,6 +347,10 @@ auto audit_terrain_topology(const MapDefinition& map) -> TerrainTopologyAudit {
     }
     if (!anchored) {
       ++audit.tactically_unanchored_lakes;
+      audit.details.push_back(
+          QStringLiteral("lake at (%1, %2) constrains no route and touches no edge")
+              .arg(static_cast<double>(lake.center.x()), 0, 'f', 1)
+              .arg(static_cast<double>(lake.center.z()), 0, 'f', 1));
     }
   }
   if (audit.tactically_unanchored_lakes > 0) {
