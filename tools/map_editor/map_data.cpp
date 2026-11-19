@@ -958,15 +958,17 @@ QString MapData::to_json_string() const {
   return QString::fromUtf8(to_json_bytes());
 }
 
-bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
+namespace {
+
+auto write_bytes(const QString& file_path,
+                 const QByteArray& json_data,
+                 QString* out_error) -> bool {
   if (file_path.trimmed().isEmpty()) {
     if (out_error != nullptr) {
       *out_error = "No output path was provided.";
     }
     return false;
   }
-
-  const QByteArray json_data = to_json_bytes();
 
   QSaveFile file(file_path);
   if (!file.open(QIODevice::WriteOnly)) {
@@ -995,6 +997,20 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
   }
 
   return true;
+}
+
+} // namespace
+
+bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
+  return write_bytes(file_path, to_json_bytes(), out_error);
+}
+
+QByteArray MapData::to_canonical_json_bytes() const {
+  return JsonText::write(JsonText::from_value(build_root_json()), m_source_style);
+}
+
+bool MapData::save_canonical_json(const QString& file_path, QString* out_error) const {
+  return write_bytes(file_path, to_canonical_json_bytes(), out_error);
 }
 
 void MapData::parse_terrain_array(const QJsonArray& arr) {

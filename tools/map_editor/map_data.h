@@ -181,6 +181,9 @@ public:
   [[nodiscard]] QString to_json_string() const;
   [[nodiscard]] QByteArray to_json_bytes() const;
 
+  [[nodiscard]] QByteArray to_canonical_json_bytes() const;
+  bool save_canonical_json(const QString& file_path, QString* out_error = nullptr) const;
+
   bool replace_document(const QByteArray& data,
                         const QString& description,
                         QString* out_error = nullptr);

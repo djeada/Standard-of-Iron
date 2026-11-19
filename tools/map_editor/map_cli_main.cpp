@@ -28,6 +28,7 @@ auto usage() -> int {
            "  map_cli list <map.json> [kind] [--json]\n"
            "  map_cli audit <map.json>\n"
            "  map_cli roundtrip <map.json> <out.json>\n"
+           "  map_cli normalize <map.json> <out.json>   rewrite in the editor's schema\n"
            "  map_cli apply <map.json> <ops.json> [--out <path>] [--dry-run]\n"
            "\n"
            "kinds: terrain prop linear structure spawn undead_zone wildlife forest\n"
@@ -194,6 +195,17 @@ auto main(int argc, char** argv) -> int {
     }
     QString error;
     if (!data.save_to_json(args[1], &error)) {
+      err() << "cannot write " << args[1] << ": " << error << "\n";
+      return 1;
+    }
+    status = 0;
+  } else if (command == QLatin1String("normalize") && args.size() == 2) {
+    MapEditor::MapData data;
+    if (!load(args[0], data)) {
+      return 1;
+    }
+    QString error;
+    if (!data.save_canonical_json(args[1], &error)) {
       err() << "cannot write " << args[1] << ": " << error << "\n";
       return 1;
     }
