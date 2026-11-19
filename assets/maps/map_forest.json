@@ -65,9 +65,7 @@
     "moisture_level": 0.92,
     "grass_saturation": 0.86,
     "soil_roughness": 0.72,
-    "tree_mix": {
-      "pine": 6
-    }
+    "forest_density": 2.4
   },
   "rain": {
     "enabled": true,
