@@ -24,6 +24,20 @@ constexpr auto legacy_coord_system_key = "coordSystem";
 constexpr auto max_troops_key = MapJsonKeys::max_troops_per_player;
 constexpr auto legacy_max_troops_key = "maxTroopsPerPlayer";
 
+auto modelled_root_keys() -> const QStringList& {
+  static const QStringList keys = {
+      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
+      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
+      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
+      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
+      MapJsonKeys::rain,       MapJsonKeys::environment, MapJsonKeys::time_of_day,
+      MapJsonKeys::terrain,    MapJsonKeys::world_props, MapJsonKeys::firecamps,
+      MapJsonKeys::rivers,     MapJsonKeys::lakes,       MapJsonKeys::roads,
+      MapJsonKeys::bridges,    MapJsonKeys::fords,       MapJsonKeys::undead_zones,
+      MapJsonKeys::fog_zones,  MapJsonKeys::forests,     MapJsonKeys::wildlife};
+  return keys;
+}
+
 auto round_to_two_decimals(double value) -> double {
   constexpr double scale = 100.0;
   return std::round(value * scale) / scale;
@@ -511,6 +525,32 @@ void MapData::set_grid(const GridSettings& grid) {
   emit data_changed();
 }
 
+auto MapData::is_modelled_root_key(const QString& key) -> bool {
+  return modelled_root_keys().contains(key);
+}
+
+auto MapData::extra_root_field(const QString& key) const -> QJsonValue {
+  return m_extra_root_fields.value(key);
+}
+
+auto MapData::set_extra_root_field(const QString& key, const QJsonValue& value) -> bool {
+  if (key.isEmpty() || is_modelled_root_key(key)) {
+    return false;
+  }
+  if (m_extra_root_fields.value(key) == value &&
+      m_extra_root_fields.contains(key) == !value.isUndefined()) {
+    return true;
+  }
+  if (value.isUndefined() || value.isNull()) {
+    m_extra_root_fields.remove(key);
+  } else {
+    m_extra_root_fields.insert(key, value);
+  }
+  set_modified(true);
+  emit data_changed();
+  return true;
+}
+
 void MapData::set_biome(const QJsonObject& biome) {
   if (m_biome != biome) {
     m_biome = normalize_json_object(biome);
@@ -730,17 +770,7 @@ bool MapData::apply_document(const QByteArray& data, QString* out_error) {
       return false;
     }
   }
-  const QStringList known_root_keys = {
-      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
-      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
-      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
-      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
-      MapJsonKeys::rain,       MapJsonKeys::environment, MapJsonKeys::time_of_day,
-      MapJsonKeys::terrain,    MapJsonKeys::world_props, MapJsonKeys::firecamps,
-      MapJsonKeys::rivers,     MapJsonKeys::lakes,       MapJsonKeys::roads,
-      MapJsonKeys::bridges,    MapJsonKeys::fords,       MapJsonKeys::undead_zones,
-      MapJsonKeys::fog_zones,  MapJsonKeys::forests,     MapJsonKeys::wildlife};
-  m_extra_root_fields = copyExtraFields(root, known_root_keys);
+  m_extra_root_fields = copyExtraFields(root, modelled_root_keys());
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
   m_description = root[MapJsonKeys::description].toString();

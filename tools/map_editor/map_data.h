@@ -192,6 +192,10 @@ public:
     return m_extra_root_fields.value(QStringLiteral("generation")).toObject();
   }
 
+  [[nodiscard]] static auto is_modelled_root_key(const QString& key) -> bool;
+  [[nodiscard]] auto extra_root_field(const QString& key) const -> QJsonValue;
+  auto set_extra_root_field(const QString& key, const QJsonValue& value) -> bool;
+
   [[nodiscard]] QString name() const { return m_name; }
   void set_name(const QString& name);
 

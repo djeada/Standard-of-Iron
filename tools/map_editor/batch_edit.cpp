@@ -139,6 +139,74 @@ void apply_map_settings(MapData& data, const QJsonObject& op, Report& report) {
   report.log.append(QStringLiteral("map settings updated"));
 }
 
+auto apply_root_field(MapData& data, const QJsonObject& op, QString& error) -> bool {
+  const QString key = op.value(QStringLiteral("key")).toString();
+  if (key.isEmpty()) {
+    error = QStringLiteral("a root operation needs a key");
+    return false;
+  }
+  if (MapData::is_modelled_root_key(key)) {
+    error = QStringLiteral("'%1' is edited through its own kind, not as a root field")
+                .arg(key);
+    return false;
+  }
+  const bool has_value = op.contains(QStringLiteral("value"));
+  const bool has_append = op.contains(QStringLiteral("append"));
+  const bool has_remove = op.contains(QStringLiteral("remove_ids"));
+  if (int(has_value) + int(has_append) + int(has_remove) != 1) {
+    error = QStringLiteral("give exactly one of value, append or remove_ids");
+    return false;
+  }
+  if (has_value) {
+    return data.set_extra_root_field(key, op.value(QStringLiteral("value")));
+  }
+
+  const QJsonValue current = data.extra_root_field(key);
+  if (!current.isUndefined() && !current.isArray()) {
+    error = QStringLiteral("'%1' is not an array").arg(key);
+    return false;
+  }
+  QJsonArray entries = current.toArray();
+  const auto id_of = [](const QJsonValue& entry) {
+    return entry.toObject().value(QStringLiteral("id")).toString();
+  };
+
+  if (has_remove) {
+    QStringList wanted;
+    for (const QJsonValue id : op.value(QStringLiteral("remove_ids")).toArray()) {
+      wanted.append(id.toString());
+    }
+    QJsonArray kept;
+    for (const QJsonValue entry : std::as_const(entries)) {
+      if (!wanted.removeOne(id_of(entry))) {
+        kept.append(entry);
+      }
+    }
+    if (!wanted.isEmpty()) {
+      error =
+          QStringLiteral("'%1' has no entry with id %2").arg(key, wanted.join(QLatin1String(", ")));
+      return false;
+    }
+    return data.set_extra_root_field(key, kept);
+  }
+
+  const QJsonValue addition = op.value(QStringLiteral("append"));
+  const QJsonArray additions = addition.isArray() ? addition.toArray() : QJsonArray{addition};
+  for (const QJsonValue entry : additions) {
+    const QString id = id_of(entry);
+    if (!id.isEmpty()) {
+      for (const QJsonValue existing : std::as_const(entries)) {
+        if (id_of(existing) == id) {
+          error = QStringLiteral("'%1' already has an entry with id %2").arg(key, id);
+          return false;
+        }
+      }
+    }
+    entries.append(entry);
+  }
+  return data.set_extra_root_field(key, entries);
+}
+
 } // namespace
 
 auto kind_name(int kind) -> QString {
@@ -247,6 +315,18 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
 
     if (verb == QLatin1String("map")) {
       apply_map_settings(data, op, report);
+      continue;
+    }
+
+    if (verb == QLatin1String("root")) {
+      QString error;
+      if (apply_root_field(data, op, error)) {
+        ++report.applied;
+        report.log.append(QStringLiteral("root field %1 updated")
+                              .arg(op.value(QStringLiteral("key")).toString()));
+      } else {
+        fail(error);
+      }
       continue;
     }
 

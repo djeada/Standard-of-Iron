@@ -1583,6 +1583,346 @@
       "z": 128,
       "scale": 1.0,
       "rotation": 3.26
+    },
+    {
+      "type": "boulder",
+      "x": 74.9,
+      "z": 28.22,
+      "scale": 1.2,
+      "rotation": 4.78,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 89.01,
+      "z": 43.71,
+      "scale": 1.06,
+      "rotation": 3.169,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 90.15,
+      "z": 47.36,
+      "scale": 1.36,
+      "rotation": 3.056,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 76.69,
+      "z": 66.53,
+      "scale": 0.82,
+      "rotation": 3.61,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 91.3,
+      "z": 77.2,
+      "scale": 1.1,
+      "rotation": 4.572,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 82.88,
+      "z": 97.32,
+      "scale": 1.24,
+      "rotation": 4.51,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 97.98,
+      "z": 110.21,
+      "scale": 1.0,
+      "rotation": 5.206,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 86.95,
+      "z": 130.81,
+      "scale": 1.14,
+      "rotation": 1.19,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 85.03,
+      "z": 134.68,
+      "scale": 0.91,
+      "rotation": 4.317,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 100.23,
+      "z": 146.24,
+      "scale": 0.91,
+      "rotation": 2.209,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "statue",
+      "x": 13.76,
+      "z": 84.19,
+      "scale": 1.0,
+      "rotation": 0.733,
+      "dressing": "rivers_junction_1"
+    },
+    {
+      "type": "statue",
+      "x": 109.48,
+      "z": 66.08,
+      "scale": 1.0,
+      "rotation": -1.485,
+      "dressing": "rivers_junction_2"
+    },
+    {
+      "type": "statue",
+      "x": 162.24,
+      "z": 91.81,
+      "scale": 1.0,
+      "rotation": -2.409,
+      "dressing": "rivers_junction_3"
+    },
+    {
+      "type": "firecamp",
+      "x": 167.96,
+      "z": 92.72,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "rivers_junction_3",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 160.45,
+      "z": 98.28,
+      "scale": 0.8,
+      "rotation": 5.748,
+      "dressing": "rivers_junction_3"
+    },
+    {
+      "type": "statue",
+      "x": 66.52,
+      "z": 109.92,
+      "scale": 1.0,
+      "rotation": 1.657,
+      "dressing": "rivers_junction_4"
+    },
+    {
+      "type": "firecamp",
+      "x": 62.15,
+      "z": 108.62,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "rivers_junction_4",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 72.76,
+      "z": 107.45,
+      "scale": 0.8,
+      "rotation": 1.898,
+      "dressing": "rivers_junction_4"
+    },
+    {
+      "type": "boulder",
+      "x": 41.81,
+      "z": 147.17,
+      "scale": 1.06,
+      "rotation": 2.263,
+      "dressing": "rivers_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 24.33,
+      "z": 138.57,
+      "scale": 0.95,
+      "rotation": 2.385,
+      "dressing": "rivers_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 24.49,
+      "z": 144.04,
+      "scale": 1.03,
+      "rotation": 2.855,
+      "dressing": "rivers_ramp_1"
+    },
+    {
+      "type": "statue",
+      "x": 27.06,
+      "z": 142.98,
+      "scale": 1.0,
+      "rotation": -1.453,
+      "dressing": "rivers_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 134.19,
+      "z": 28.83,
+      "scale": 1.1,
+      "rotation": 0.309,
+      "dressing": "rivers_ramp_2"
+    },
+    {
+      "type": "dead_tree",
+      "x": 128.37,
+      "z": 43.22,
+      "scale": 1.0,
+      "rotation": 3.422,
+      "dressing": "rivers_ramp_2"
+    },
+    {
+      "type": "boulder",
+      "x": 150.78,
+      "z": 34.15,
+      "scale": 0.91,
+      "rotation": 1.794,
+      "dressing": "rivers_ramp_2"
+    },
+    {
+      "type": "boulder",
+      "x": 149.96,
+      "z": 31.27,
+      "scale": 1.05,
+      "rotation": 2.132,
+      "dressing": "rivers_ramp_2"
+    },
+    {
+      "type": "firecamp",
+      "x": 152.78,
+      "z": 25.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "rivers_ramp_2",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 26.91,
+      "z": 23.78,
+      "scale": 1.0,
+      "rotation": 3.426,
+      "dressing": "rivers_ramp_3"
+    },
+    {
+      "type": "boulder",
+      "x": 144.78,
+      "z": 160.06,
+      "scale": 1.33,
+      "rotation": 6.072,
+      "dressing": "rivers_ramp_4"
+    },
+    {
+      "type": "dead_tree",
+      "x": 148.91,
+      "z": 151.12,
+      "scale": 1.0,
+      "rotation": 1.37,
+      "dressing": "rivers_ramp_4"
+    },
+    {
+      "type": "boulder",
+      "x": 44.95,
+      "z": 101.77,
+      "scale": 1.43,
+      "rotation": 3.34,
+      "dressing": "rivers_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 41.68,
+      "z": 107.18,
+      "scale": 1.14,
+      "rotation": 2.692,
+      "dressing": "rivers_ramp_5"
+    },
+    {
+      "type": "dead_tree",
+      "x": 53.63,
+      "z": 99.62,
+      "scale": 1.0,
+      "rotation": 2.493,
+      "dressing": "rivers_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 33.51,
+      "z": 88.82,
+      "scale": 1.17,
+      "rotation": 4.896,
+      "dressing": "rivers_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 29.79,
+      "z": 93.84,
+      "scale": 1.46,
+      "rotation": 5.238,
+      "dressing": "rivers_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 131.05,
+      "z": 74.23,
+      "scale": 1.1,
+      "rotation": 3.103,
+      "dressing": "rivers_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 134.32,
+      "z": 68.82,
+      "scale": 1.38,
+      "rotation": 0.713,
+      "dressing": "rivers_ramp_6"
+    },
+    {
+      "type": "dead_tree",
+      "x": 122.37,
+      "z": 76.38,
+      "scale": 1.0,
+      "rotation": 1.818,
+      "dressing": "rivers_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 142.49,
+      "z": 87.18,
+      "scale": 1.24,
+      "rotation": 3.268,
+      "dressing": "rivers_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 146.82,
+      "z": 82.09,
+      "scale": 1.2,
+      "rotation": 2.875,
+      "dressing": "rivers_ramp_6"
+    },
+    {
+      "type": "firecamp",
+      "x": 149.93,
+      "z": 82.31,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "rivers_ramp_6",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
     }
   ],
   "firecamps": [
@@ -1690,5 +2030,100 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "from": [
+        84.2,
+        21
+      ],
+      "id": "rivers_riverbank_1",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        91.9,
+        154
+      ]
+    },
+    {
+      "id": "rivers_junction_1",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 18,
+      "z": 88
+    },
+    {
+      "id": "rivers_junction_2",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 110,
+      "z": 60
+    },
+    {
+      "id": "rivers_junction_3",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 158,
+      "z": 88
+    },
+    {
+      "id": "rivers_junction_4",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 66,
+      "z": 116
+    },
+    {
+      "fire": false,
+      "id": "rivers_ramp_1",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 34.3,
+      "z": 138.2
+    },
+    {
+      "fire": true,
+      "id": "rivers_ramp_2",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 141.7,
+      "z": 37.8
+    },
+    {
+      "fire": false,
+      "id": "rivers_ramp_3",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 36.8,
+      "z": 18
+    },
+    {
+      "fire": true,
+      "id": "rivers_ramp_4",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 139.2,
+      "z": 158
+    },
+    {
+      "fire": false,
+      "id": "rivers_ramp_5",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 41,
+      "z": 94
+    },
+    {
+      "fire": true,
+      "id": "rivers_ramp_6",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 135,
+      "z": 82
+    }
+  ]
 }

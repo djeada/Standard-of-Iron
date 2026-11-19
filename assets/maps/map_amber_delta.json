@@ -2946,6 +2946,990 @@
       "z": 224,
       "scale": 1.0,
       "rotation": 0.14
+    },
+    {
+      "type": "boulder",
+      "x": 131.53,
+      "z": 65.77,
+      "scale": 0.84,
+      "rotation": 5.928,
+      "dressing": "amber_delta_bridgehead_1"
+    },
+    {
+      "type": "firecamp",
+      "x": 127.18,
+      "z": 68.08,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_bridgehead_1",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 124.97,
+      "z": 44.91,
+      "scale": 1.0,
+      "rotation": 3.038,
+      "dressing": "amber_delta_bridgehead_1"
+    },
+    {
+      "type": "supply_cart",
+      "x": 122.1,
+      "z": 68.4,
+      "scale": 1.0,
+      "rotation": -2.875,
+      "dressing": "amber_delta_bridgehead_1"
+    },
+    {
+      "type": "boulder",
+      "x": 150.26,
+      "z": 69.05,
+      "scale": 1.13,
+      "rotation": 6.271,
+      "dressing": "amber_delta_bridgehead_1"
+    },
+    {
+      "type": "firecamp",
+      "x": 158.13,
+      "z": 48.46,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_bridgehead_1",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 156.98,
+      "z": 71.59,
+      "scale": 1.0,
+      "rotation": 5.296,
+      "dressing": "amber_delta_bridgehead_1"
+    },
+    {
+      "type": "boulder",
+      "x": 150.48,
+      "z": 144.37,
+      "scale": 1.17,
+      "rotation": 3.831,
+      "dressing": "amber_delta_bridgehead_2"
+    },
+    {
+      "type": "firecamp",
+      "x": 148.95,
+      "z": 163.93,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_bridgehead_2",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 143.09,
+      "z": 144.03,
+      "scale": 1.0,
+      "rotation": 0.31,
+      "dressing": "amber_delta_bridgehead_2"
+    },
+    {
+      "type": "supply_cart",
+      "x": 147.53,
+      "z": 168.34,
+      "scale": 1.0,
+      "rotation": 3.013,
+      "dressing": "amber_delta_bridgehead_2"
+    },
+    {
+      "type": "boulder",
+      "x": 168.64,
+      "z": 138.79,
+      "scale": 1.16,
+      "rotation": 5.121,
+      "dressing": "amber_delta_bridgehead_2"
+    },
+    {
+      "type": "boulder",
+      "x": 173.66,
+      "z": 156.12,
+      "scale": 0.99,
+      "rotation": 0.939,
+      "dressing": "amber_delta_bridgehead_2"
+    },
+    {
+      "type": "firecamp",
+      "x": 171.76,
+      "z": 135.2,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_bridgehead_2",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 180.91,
+      "z": 155.97,
+      "scale": 1.0,
+      "rotation": 2.887,
+      "dressing": "amber_delta_bridgehead_2"
+    },
+    {
+      "type": "boulder",
+      "x": 131.45,
+      "z": 233.59,
+      "scale": 0.86,
+      "rotation": 5.708,
+      "dressing": "amber_delta_bridgehead_3"
+    },
+    {
+      "type": "dead_tree",
+      "x": 124.28,
+      "z": 232.84,
+      "scale": 1.0,
+      "rotation": 0.41,
+      "dressing": "amber_delta_bridgehead_3"
+    },
+    {
+      "type": "supply_cart",
+      "x": 125.3,
+      "z": 257.58,
+      "scale": 1.0,
+      "rotation": 3.194,
+      "dressing": "amber_delta_bridgehead_3"
+    },
+    {
+      "type": "boulder",
+      "x": 150.31,
+      "z": 231.29,
+      "scale": 0.9,
+      "rotation": 2.552,
+      "dressing": "amber_delta_bridgehead_3"
+    },
+    {
+      "type": "firecamp",
+      "x": 153.94,
+      "z": 228.28,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_bridgehead_3",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 159.96,
+      "z": 250.17,
+      "scale": 1.0,
+      "rotation": 1.723,
+      "dressing": "amber_delta_bridgehead_3"
+    },
+    {
+      "type": "plant",
+      "x": 159.25,
+      "z": 38.52,
+      "scale": 0.81,
+      "rotation": 1.066,
+      "dressing": "amber_delta_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 148.96,
+      "z": 72.75,
+      "scale": 0.89,
+      "rotation": 0.905,
+      "dressing": "amber_delta_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 151.97,
+      "z": 75.75,
+      "scale": 1.03,
+      "rotation": 0.716,
+      "dressing": "amber_delta_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 133.83,
+      "z": 91.12,
+      "scale": 1.27,
+      "rotation": 6.212,
+      "dressing": "amber_delta_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 142.87,
+      "z": 123.37,
+      "scale": 1.14,
+      "rotation": 5.438,
+      "dressing": "amber_delta_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 167.63,
+      "z": 132.95,
+      "scale": 1.02,
+      "rotation": 4.298,
+      "dressing": "amber_delta_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 165.27,
+      "z": 170.47,
+      "scale": 0.94,
+      "rotation": 4.461,
+      "dressing": "amber_delta_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 166.1,
+      "z": 175.3,
+      "scale": 0.94,
+      "rotation": 1.023,
+      "dressing": "amber_delta_riverbank_2"
+    },
+    {
+      "type": "boulder",
+      "x": 141.19,
+      "z": 182.74,
+      "scale": 1.2,
+      "rotation": 0.507,
+      "dressing": "amber_delta_riverbank_2"
+    },
+    {
+      "type": "boulder",
+      "x": 134.07,
+      "z": 217.11,
+      "scale": 1.01,
+      "rotation": 6.07,
+      "dressing": "amber_delta_riverbank_3"
+    },
+    {
+      "type": "plant",
+      "x": 152.46,
+      "z": 232.87,
+      "scale": 0.94,
+      "rotation": 2.64,
+      "dressing": "amber_delta_riverbank_3"
+    },
+    {
+      "type": "plant",
+      "x": 153.3,
+      "z": 235.38,
+      "scale": 1.0,
+      "rotation": 5.878,
+      "dressing": "amber_delta_riverbank_3"
+    },
+    {
+      "type": "boulder",
+      "x": 140.02,
+      "z": 284.89,
+      "scale": 1.03,
+      "rotation": 5.136,
+      "dressing": "amber_delta_riverbank_3"
+    },
+    {
+      "type": "statue",
+      "x": 126.0,
+      "z": 64.2,
+      "scale": 1.0,
+      "rotation": -1.571,
+      "dressing": "amber_delta_junction_1"
+    },
+    {
+      "type": "statue",
+      "x": 174.57,
+      "z": 64.17,
+      "scale": 1.0,
+      "rotation": -1.663,
+      "dressing": "amber_delta_junction_2"
+    },
+    {
+      "type": "statue",
+      "x": 124.47,
+      "z": 249.92,
+      "scale": 1.0,
+      "rotation": -1.571,
+      "dressing": "amber_delta_junction_3"
+    },
+    {
+      "type": "ruins",
+      "x": 120.0,
+      "z": 251.2,
+      "scale": 0.8,
+      "rotation": 1.678,
+      "dressing": "amber_delta_junction_3"
+    },
+    {
+      "type": "statue",
+      "x": 175.67,
+      "z": 248.64,
+      "scale": 1.0,
+      "rotation": -1.477,
+      "dressing": "amber_delta_junction_4"
+    },
+    {
+      "type": "firecamp",
+      "x": 178.21,
+      "z": 250.63,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_junction_4",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 165.45,
+      "z": 249.06,
+      "scale": 0.8,
+      "rotation": 0.866,
+      "dressing": "amber_delta_junction_4"
+    },
+    {
+      "type": "boulder",
+      "x": 52.17,
+      "z": 73.86,
+      "scale": 1.12,
+      "rotation": 6.165,
+      "dressing": "amber_delta_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 49.23,
+      "z": 81.32,
+      "scale": 0.93,
+      "rotation": 4.282,
+      "dressing": "amber_delta_ramp_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 60.11,
+      "z": 73.92,
+      "scale": 1.0,
+      "rotation": 2.482,
+      "dressing": "amber_delta_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 37.71,
+      "z": 65.19,
+      "scale": 1.18,
+      "rotation": 3.446,
+      "dressing": "amber_delta_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 37.83,
+      "z": 68.71,
+      "scale": 0.92,
+      "rotation": 1.861,
+      "dressing": "amber_delta_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 39.11,
+      "z": 187.11,
+      "scale": 1.0,
+      "rotation": 3.504,
+      "dressing": "amber_delta_ramp_2"
+    },
+    {
+      "type": "dead_tree",
+      "x": 49.74,
+      "z": 175.85,
+      "scale": 1.0,
+      "rotation": 1.026,
+      "dressing": "amber_delta_ramp_2"
+    },
+    {
+      "type": "boulder",
+      "x": 16.75,
+      "z": 163.54,
+      "scale": 0.95,
+      "rotation": 6.163,
+      "dressing": "amber_delta_ramp_2"
+    },
+    {
+      "type": "boulder",
+      "x": 11.4,
+      "z": 166.91,
+      "scale": 1.32,
+      "rotation": 3.871,
+      "dressing": "amber_delta_ramp_2"
+    },
+    {
+      "type": "firecamp",
+      "x": 5.55,
+      "z": 172.46,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_ramp_2",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 48.79,
+      "z": 264.21,
+      "scale": 1.26,
+      "rotation": 6.035,
+      "dressing": "amber_delta_ramp_3"
+    },
+    {
+      "type": "boulder",
+      "x": 37.71,
+      "z": 249.19,
+      "scale": 1.14,
+      "rotation": 0.22,
+      "dressing": "amber_delta_ramp_3"
+    },
+    {
+      "type": "boulder",
+      "x": 37.83,
+      "z": 252.71,
+      "scale": 1.34,
+      "rotation": 1.432,
+      "dressing": "amber_delta_ramp_3"
+    },
+    {
+      "type": "boulder",
+      "x": 251.21,
+      "z": 35.79,
+      "scale": 1.4,
+      "rotation": 5.528,
+      "dressing": "amber_delta_ramp_4"
+    },
+    {
+      "type": "boulder",
+      "x": 262.29,
+      "z": 49.05,
+      "scale": 1.09,
+      "rotation": 3.83,
+      "dressing": "amber_delta_ramp_4"
+    },
+    {
+      "type": "statue",
+      "x": 267.65,
+      "z": 41.13,
+      "scale": 1.0,
+      "rotation": 2.257,
+      "dressing": "amber_delta_ramp_4"
+    },
+    {
+      "type": "firecamp",
+      "x": 270.63,
+      "z": 42.13,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "amber_delta_ramp_4",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 249.37,
+      "z": 125.77,
+      "scale": 1.37,
+      "rotation": 2.053,
+      "dressing": "amber_delta_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 249.04,
+      "z": 121.94,
+      "scale": 1.35,
+      "rotation": 5.377,
+      "dressing": "amber_delta_ramp_5"
+    },
+    {
+      "type": "dead_tree",
+      "x": 242.14,
+      "z": 127.3,
+      "scale": 1.0,
+      "rotation": 0.342,
+      "dressing": "amber_delta_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 273.4,
+      "z": 139.53,
+      "scale": 1.13,
+      "rotation": 0.304,
+      "dressing": "amber_delta_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 280.75,
+      "z": 137.62,
+      "scale": 1.37,
+      "rotation": 3.256,
+      "dressing": "amber_delta_ramp_5"
+    },
+    {
+      "type": "boulder",
+      "x": 257.96,
+      "z": 199.09,
+      "scale": 1.39,
+      "rotation": 2.593,
+      "dressing": "amber_delta_ramp_6"
+    },
+    {
+      "type": "dead_tree",
+      "x": 245.07,
+      "z": 209.61,
+      "scale": 1.0,
+      "rotation": 3.99,
+      "dressing": "amber_delta_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 272.67,
+      "z": 220.49,
+      "scale": 0.95,
+      "rotation": 4.008,
+      "dressing": "amber_delta_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 276.2,
+      "z": 217.76,
+      "scale": 1.06,
+      "rotation": 0.637,
+      "dressing": "amber_delta_ramp_6"
+    },
+    {
+      "type": "pine_tree",
+      "x": 129.91,
+      "z": 138.07,
+      "scale": 0.98,
+      "rotation": 4.488,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 126.25,
+      "z": 128.21,
+      "scale": 0.83,
+      "rotation": 2.923,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 144.55,
+      "z": 130.54,
+      "scale": 1.13,
+      "rotation": 0.96,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 137.4,
+      "z": 138.32,
+      "scale": 1.21,
+      "rotation": 5.034,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 135.07,
+      "z": 128.91,
+      "scale": 0.97,
+      "rotation": 4.205,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 136.52,
+      "z": 133.28,
+      "scale": 1.21,
+      "rotation": 1.775,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 133.56,
+      "z": 136.66,
+      "scale": 1.12,
+      "rotation": 4.248,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 131.31,
+      "z": 131.21,
+      "scale": 1.09,
+      "rotation": 1.09,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 133.37,
+      "z": 124.64,
+      "scale": 0.93,
+      "rotation": 3.36,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 136.81,
+      "z": 125.39,
+      "scale": 1.04,
+      "rotation": 3.592,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 130.19,
+      "z": 127.53,
+      "scale": 1.07,
+      "rotation": 1.573,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 126.99,
+      "z": 125.11,
+      "scale": 0.88,
+      "rotation": 4.273,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 141.07,
+      "z": 131.88,
+      "scale": 0.81,
+      "rotation": 6.034,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 127.52,
+      "z": 132.4,
+      "scale": 1.02,
+      "rotation": 4.873,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "plant",
+      "x": 131.52,
+      "z": 119.04,
+      "scale": 1.32,
+      "rotation": 0.103,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "plant",
+      "x": 133.39,
+      "z": 118.24,
+      "scale": 1.23,
+      "rotation": 0.146,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "plant",
+      "x": 135.43,
+      "z": 118.22,
+      "scale": 1.19,
+      "rotation": 0.409,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "boulder",
+      "x": 145.86,
+      "z": 123.29,
+      "scale": 0.64,
+      "rotation": 2.048,
+      "dressing": "amber_delta_copse_1"
+    },
+    {
+      "type": "pine_tree",
+      "x": 179.66,
+      "z": 176.29,
+      "scale": 1.09,
+      "rotation": 3.89,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 170.6,
+      "z": 164.68,
+      "scale": 1.17,
+      "rotation": 1.328,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 180.37,
+      "z": 179.85,
+      "scale": 1.13,
+      "rotation": 3.494,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 175.82,
+      "z": 182.07,
+      "scale": 1.16,
+      "rotation": 4.806,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 171.59,
+      "z": 172.31,
+      "scale": 0.99,
+      "rotation": 2.18,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 175.64,
+      "z": 177.31,
+      "scale": 1.2,
+      "rotation": 3.267,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 181.67,
+      "z": 173.32,
+      "scale": 0.89,
+      "rotation": 2.261,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 169.86,
+      "z": 179.74,
+      "scale": 0.84,
+      "rotation": 4.921,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 183.7,
+      "z": 170.58,
+      "scale": 1.01,
+      "rotation": 1.345,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 176.12,
+      "z": 173.15,
+      "scale": 1.08,
+      "rotation": 1.198,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 179.44,
+      "z": 171.03,
+      "scale": 1.14,
+      "rotation": 6.149,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 185.57,
+      "z": 176.26,
+      "scale": 1.07,
+      "rotation": 5.564,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 179.84,
+      "z": 162.71,
+      "scale": 1.33,
+      "rotation": 0.368,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 164.84,
+      "z": 183.35,
+      "scale": 0.92,
+      "rotation": 1.6,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 178.48,
+      "z": 164.37,
+      "scale": 1.13,
+      "rotation": 4.467,
+      "dressing": "amber_delta_copse_2"
+    },
+    {
+      "type": "pine_tree",
+      "x": 134.94,
+      "z": 165.62,
+      "scale": 0.93,
+      "rotation": 3.66,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 139.92,
+      "z": 171.85,
+      "scale": 1.19,
+      "rotation": 5.231,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "pine_tree",
+      "x": 144.17,
+      "z": 175.55,
+      "scale": 1.04,
+      "rotation": 4.534,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 141.01,
+      "z": 168.65,
+      "scale": 0.81,
+      "rotation": 3.696,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 136.39,
+      "z": 169.87,
+      "scale": 1.19,
+      "rotation": 3.933,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "pine_tree",
+      "x": 140.44,
+      "z": 165.15,
+      "scale": 0.93,
+      "rotation": 0.641,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 139.84,
+      "z": 161.81,
+      "scale": 1.09,
+      "rotation": 1.942,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "pine_tree",
+      "x": 136.21,
+      "z": 162.61,
+      "scale": 0.94,
+      "rotation": 4.303,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 138.59,
+      "z": 176.9,
+      "scale": 0.82,
+      "rotation": 6.077,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 128.37,
+      "z": 171.79,
+      "scale": 1.34,
+      "rotation": 0.185,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 147.21,
+      "z": 161.59,
+      "scale": 1.13,
+      "rotation": 3.631,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "dead_tree",
+      "x": 127.32,
+      "z": 167.89,
+      "scale": 1.0,
+      "rotation": 5.361,
+      "dressing": "amber_delta_copse_3"
+    },
+    {
+      "type": "pine_tree",
+      "x": 167.27,
+      "z": 126.3,
+      "scale": 1.03,
+      "rotation": 0.213,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "pine_tree",
+      "x": 164.14,
+      "z": 124.29,
+      "scale": 1.09,
+      "rotation": 2.906,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 164.26,
+      "z": 128.59,
+      "scale": 0.85,
+      "rotation": 5.475,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "plant",
+      "x": 165.09,
+      "z": 133.65,
+      "scale": 0.95,
+      "rotation": 1.679,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "plant",
+      "x": 167.04,
+      "z": 118.15,
+      "scale": 1.25,
+      "rotation": 1.913,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "plant",
+      "x": 166.25,
+      "z": 135.44,
+      "scale": 1.26,
+      "rotation": 1.21,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "boulder",
+      "x": 171.27,
+      "z": 132.1,
+      "scale": 0.98,
+      "rotation": 0.535,
+      "dressing": "amber_delta_copse_4"
+    },
+    {
+      "type": "boulder",
+      "x": 168.79,
+      "z": 134.92,
+      "scale": 0.99,
+      "rotation": 3.621,
+      "dressing": "amber_delta_copse_4"
     }
   ],
   "firecamps": [
@@ -3246,5 +4230,192 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "id": "amber_delta_bridgehead_1",
+      "kind": "bridgehead",
+      "x": 142.1,
+      "z": 58.5
+    },
+    {
+      "id": "amber_delta_bridgehead_2",
+      "kind": "bridgehead",
+      "x": 162,
+      "z": 150
+    },
+    {
+      "id": "amber_delta_bridgehead_3",
+      "kind": "bridgehead",
+      "x": 142.1,
+      "z": 241.5
+    },
+    {
+      "from": [
+        148.4,
+        12.2
+      ],
+      "id": "amber_delta_riverbank_1",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        144.2,
+        88.7
+      ]
+    },
+    {
+      "from": [
+        151.1,
+        112.2
+      ],
+      "id": "amber_delta_riverbank_2",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        151.3,
+        186.8
+      ]
+    },
+    {
+      "from": [
+        144.5,
+        210.4
+      ],
+      "id": "amber_delta_riverbank_3",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        148.3,
+        286.8
+      ]
+    },
+    {
+      "id": "amber_delta_junction_1",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 126,
+      "z": 58
+    },
+    {
+      "id": "amber_delta_junction_2",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 174,
+      "z": 58
+    },
+    {
+      "id": "amber_delta_junction_3",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 126,
+      "z": 242
+    },
+    {
+      "id": "amber_delta_junction_4",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 174,
+      "z": 242
+    },
+    {
+      "fire": false,
+      "id": "amber_delta_ramp_1",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 47.3,
+      "z": 68.6
+    },
+    {
+      "fire": true,
+      "id": "amber_delta_ramp_2",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 35.3,
+      "z": 160.6
+    },
+    {
+      "fire": false,
+      "id": "amber_delta_ramp_3",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 47.3,
+      "z": 252.6
+    },
+    {
+      "fire": true,
+      "id": "amber_delta_ramp_4",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 252.7,
+      "z": 47.4
+    },
+    {
+      "fire": false,
+      "id": "amber_delta_ramp_5",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 264.7,
+      "z": 139.4
+    },
+    {
+      "fire": true,
+      "id": "amber_delta_ramp_6",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 252.7,
+      "z": 231.4
+    },
+    {
+      "count": 18,
+      "id": "amber_delta_copse_1",
+      "kind": "copse",
+      "radius": 12,
+      "trees": [
+        "pine_tree",
+        "olive_tree"
+      ],
+      "x": 134.5,
+      "z": 130.5
+    },
+    {
+      "count": 18,
+      "id": "amber_delta_copse_2",
+      "kind": "copse",
+      "radius": 12,
+      "trees": [
+        "pine_tree",
+        "olive_tree"
+      ],
+      "x": 175.5,
+      "z": 172.5
+    },
+    {
+      "count": 17,
+      "id": "amber_delta_copse_3",
+      "kind": "copse",
+      "radius": 11.3,
+      "trees": [
+        "pine_tree",
+        "olive_tree"
+      ],
+      "x": 138.5,
+      "z": 169.5
+    },
+    {
+      "count": 13,
+      "id": "amber_delta_copse_4",
+      "kind": "copse",
+      "radius": 7.7,
+      "trees": [
+        "pine_tree",
+        "olive_tree"
+      ],
+      "x": 170.5,
+      "z": 128.5
+    }
+  ]
 }

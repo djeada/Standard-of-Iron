@@ -42,6 +42,9 @@ auto usage() -> int {
            "  {\"op\":\"add\",\"kind\":K,\"json\":{...}}\n"
            "  {\"op\":\"map\",\"name\":S,\"biome\":{...},\"rain\":{...},\"environment\":{"
            "...}}\n"
+           "  {\"op\":\"root\",\"key\":S,\"value\":V | \"append\":[...] | "
+           "\"remove_ids\":[...]}\n"
+           "     for root data the editor does not model: dressing, landmarks, settlements\n"
            "An index refers to the map as it stands when that step runs.\n";
   return 2;
 }
