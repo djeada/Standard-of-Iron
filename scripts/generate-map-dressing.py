@@ -445,7 +445,9 @@ class Placer:
         self.keep_out: list[tuple[float, float, float]] = []
 
     def kept_out(self, x: float, z: float) -> bool:
-        return any(math.hypot(x - kx, z - kz) < reach for kx, kz, reach in self.keep_out)
+        return any(
+            math.hypot(x - kx, z - kz) < reach for kx, kz, reach in self.keep_out
+        )
 
     def jitter(self, amount: float) -> float:
         return self.rng.uniform(-amount, amount)
