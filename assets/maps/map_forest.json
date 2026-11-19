@@ -64,7 +64,10 @@
     "irregularity_amplitude": 0.075,
     "moisture_level": 0.92,
     "grass_saturation": 0.86,
-    "soil_roughness": 0.72
+    "soil_roughness": 0.72,
+    "tree_mix": {
+      "pine": 6
+    }
   },
   "rain": {
     "enabled": true,
@@ -497,6 +500,66 @@
       "x": 66.6,
       "z": 36.3,
       "radius": 10.0
+    },
+    {
+      "id": "east_strip_wood",
+      "radius": 8.5,
+      "x": 163.5,
+      "z": 75.5
+    },
+    {
+      "id": "west_strip_wood",
+      "radius": 8.5,
+      "x": 12.5,
+      "z": 100.5
+    },
+    {
+      "id": "north_gap_wood",
+      "radius": 7,
+      "x": 112,
+      "z": 28
+    },
+    {
+      "id": "south_gap_wood",
+      "radius": 7,
+      "x": 64,
+      "z": 148
+    },
+    {
+      "id": "inner_east_wood",
+      "radius": 5.5,
+      "x": 131,
+      "z": 66
+    },
+    {
+      "id": "inner_west_wood",
+      "radius": 5.5,
+      "x": 45,
+      "z": 110
+    },
+    {
+      "id": "hollow_east_copse",
+      "radius": 5,
+      "x": 107,
+      "z": 76
+    },
+    {
+      "id": "hollow_west_copse",
+      "radius": 5,
+      "x": 69,
+      "z": 100
+    },
+    {
+      "id": "hollow_south_copse",
+      "radius": 5,
+      "x": 98,
+      "z": 106
+    },
+    {
+      "id": "hollow_north_copse",
+      "radius": 5,
+      "x": 78,
+      "z": 70
     }
   ],
   "rivers": [],
