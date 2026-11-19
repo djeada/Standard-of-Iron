@@ -1075,9 +1075,9 @@ TEST(MapLoaderTest, ForestDensityThickensTheWoodsAndLeavesOpenGroundAlone) {
         {"grid", QJsonObject{{"width", 161}, {"height", 161}, {"tile_size", 1.0}}},
         {"biome", QJsonObject{{"forest_density", forest_density}}}};
     if (with_forest) {
-      root.insert(
-          "forests",
-          QJsonArray{QJsonObject{{"id", "big"}, {"x", 80}, {"z", 80}, {"radius", 50.0}}});
+      root.insert("forests",
+                  QJsonArray{QJsonObject{
+                      {"id", "big"}, {"x", 80}, {"z", 80}, {"radius", 50.0}}});
     }
     temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
     temp_file.flush();
@@ -1102,8 +1102,8 @@ TEST(MapLoaderTest, ForestDensityThickensTheWoodsAndLeavesOpenGroundAlone) {
   const auto thin_wood = count_trees(load(1.0, true));
   const auto thick_wood = count_trees(load(3.0, true));
   EXPECT_GT(thick_wood, thin_wood + thin_wood / 2)
-      << "forest_density 3 must stand clearly more trees in the wood; thin=" << thin_wood
-      << " thick=" << thick_wood;
+      << "forest_density 3 must stand clearly more trees in the wood; thin="
+      << thin_wood << " thick=" << thick_wood;
 
   EXPECT_EQ(count_trees(load(1.0, false)), count_trees(load(3.0, false)))
       << "forest_density must not seed a single extra tree on open ground";

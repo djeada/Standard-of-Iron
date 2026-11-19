@@ -398,38 +398,6 @@
       "x": 51.0,
       "z": 15.0,
       "scale": 1.0
-    },
-    {
-      "type": "boulder",
-      "x": 32.18,
-      "z": 5.0,
-      "scale": 1.35,
-      "rotation": 4.413,
-      "dressing": "spur_head_scree"
-    },
-    {
-      "type": "boulder",
-      "x": 37.2,
-      "z": 5.12,
-      "scale": 1.91,
-      "rotation": 4.702,
-      "dressing": "spur_head_scree"
-    },
-    {
-      "type": "boulder",
-      "x": 42.23,
-      "z": 5.19,
-      "scale": 1.34,
-      "rotation": 0.474,
-      "dressing": "spur_head_scree"
-    },
-    {
-      "type": "dead_tree",
-      "x": 40.27,
-      "z": 10.07,
-      "scale": 1.03,
-      "rotation": 5.245,
-      "dressing": "spur_head_scree"
     }
   ],
   "landmarks": [
@@ -495,18 +463,5 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  },
-  "dressing": [
-    {
-      "boulders": 8,
-      "dead_trees": 2,
-      "depth": 5,
-      "id": "spur_head_scree",
-      "kind": "scree",
-      "rotation": 0,
-      "width": 10,
-      "x": 36,
-      "z": 5
-    }
-  ]
+  }
 }

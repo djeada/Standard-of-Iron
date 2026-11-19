@@ -132,8 +132,8 @@ TEST(MapEditorLosslessSave, LegacyFirecampsAreNeitherLostNorDuplicated) {
   const QJsonObject root = QJsonDocument::fromJson(data.to_json_bytes()).object();
   EXPECT_EQ(root.value("firecamps").toArray().size(), 1);
   EXPECT_EQ(root.value("world_props").toArray().size(), 1);
-  EXPECT_DOUBLE_EQ(root.value("firecamps").toArray()[0].toObject().value("x").toDouble(),
-                   10.25);
+  EXPECT_DOUBLE_EQ(
+      root.value("firecamps").toArray()[0].toObject().value("x").toDouble(), 10.25);
 }
 
 TEST(MapEditorLosslessSave, ReloadingASavedEditKeepsItStable) {
@@ -164,17 +164,21 @@ TEST(MapEditorBatchEdit, RootOperationsEditDataTheEditorDoesNotModel) {
                         {"id":"mill_copse","kind":"copse","x":20,"z":22},
                         {"id":"ford_cairn","kind":"cairn","x":40,"z":12}]}])")
                   .ok());
-  ASSERT_TRUE(run(R"([{"op":"root","key":"dressing","remove_ids":["mill_copse"]}])").ok());
-  ASSERT_TRUE(run(R"([{"op":"root","key":"scouted_areas","value":[{"x":1,"z":2}]}])").ok());
+  ASSERT_TRUE(
+      run(R"([{"op":"root","key":"dressing","remove_ids":["mill_copse"]}])").ok());
+  ASSERT_TRUE(
+      run(R"([{"op":"root","key":"scouted_areas","value":[{"x":1,"z":2}]}])").ok());
 
   MapEditor::MapData reloaded;
   ASSERT_TRUE(reloaded.load_from_bytes(data.to_json_bytes()));
   const QJsonArray dressing = reloaded.extra_root_field("dressing").toArray();
   ASSERT_EQ(dressing.size(), 1);
-  EXPECT_EQ(dressing[0].toObject().value("id").toString(), QStringLiteral("ford_cairn"));
+  EXPECT_EQ(dressing[0].toObject().value("id").toString(),
+            QStringLiteral("ford_cairn"));
   EXPECT_EQ(reloaded.extra_root_field("scouted_areas").toArray().size(), 1);
 
-  EXPECT_FALSE(run(R"([{"op":"root","key":"dressing","append":[{"id":"ford_cairn"}]}])").ok())
+  EXPECT_FALSE(
+      run(R"([{"op":"root","key":"dressing","append":[{"id":"ford_cairn"}]}])").ok())
       << "a second piece with the same id would be composed twice";
   EXPECT_FALSE(run(R"([{"op":"root","key":"dressing","remove_ids":["nope"]}])").ok());
   EXPECT_FALSE(run(R"([{"op":"root","key":"forests","value":[]}])").ok())

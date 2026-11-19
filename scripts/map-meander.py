@@ -39,7 +39,9 @@ EDGE_MARGIN = 3.0
 
 
 def load_plan_module():
-    spec = importlib.util.spec_from_file_location("map_plan", REPO_ROOT / "scripts" / "map-plan.py")
+    spec = importlib.util.spec_from_file_location(
+        "map_plan", REPO_ROOT / "scripts" / "map-plan.py"
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -64,7 +66,10 @@ def resample(points, spacing):
     out, travelled, segment = [], 0.0, 0
     for i in range(count):
         target = total * i / (count - 1)
-        while segment < len(points) - 2 and travelled + math.dist(points[segment], points[segment + 1]) < target:
+        while (
+            segment < len(points) - 2
+            and travelled + math.dist(points[segment], points[segment + 1]) < target
+        ):
             travelled += math.dist(points[segment], points[segment + 1])
             segment += 1
         a, b = points[segment], points[segment + 1]
@@ -79,7 +84,11 @@ def point_segment_distance(p, a, b):
     bx, bz = b
     dx, dz = bx - ax, bz - az
     span = dx * dx + dz * dz
-    t = 0.0 if span < 1e-9 else min(max(((p[0] - ax) * dx + (p[1] - az) * dz) / span, 0.0), 1.0)
+    t = (
+        0.0
+        if span < 1e-9
+        else min(max(((p[0] - ax) * dx + (p[1] - az) * dz) / span, 0.0), 1.0)
+    )
     return math.hypot(p[0] - (ax + dx * t), p[1] - (az + dz * t))
 
 
@@ -98,9 +107,17 @@ class Obstacles:
         self.height = terrain["height"]
         self.types = terrain["types"]
         self.plan = plan
-        self.structures = [(s["x"], s["z"]) for s in map_json.get("structures", []) if "x" in s]
-        self.walls = [polyline(s) for s in map_json.get("structures", []) if "start" in s]
-        self.bodies = [(s["x"], s["z"], SPAWN_CLEARANCE) for s in map_json.get("spawns", []) if "x" in s]
+        self.structures = [
+            (s["x"], s["z"]) for s in map_json.get("structures", []) if "x" in s
+        ]
+        self.walls = [
+            polyline(s) for s in map_json.get("structures", []) if "start" in s
+        ]
+        self.bodies = [
+            (s["x"], s["z"], SPAWN_CLEARANCE)
+            for s in map_json.get("spawns", [])
+            if "x" in s
+        ]
         self.bodies += [
             (p["x"], p["z"], PROP_CLEARANCE)
             for p in map_json.get("world_props", []) + map_json.get("firecamps", [])
@@ -120,7 +137,11 @@ class Obstacles:
                 p = tuple(ford["position"])
                 self.crossings.append([p, p])
         self.lakes = [
-            (lake["x"], lake["z"], max(lake.get("width", 0), lake.get("depth", 0)) * 0.5)
+            (
+                lake["x"],
+                lake["z"],
+                max(lake.get("width", 0), lake.get("depth", 0)) * 0.5,
+            )
             for lake in map_json.get("lakes", [])
             if "x" in lake
         ]
@@ -132,7 +153,12 @@ class Obstacles:
 
     def blocked(self, p, half_width, near_crossing):
         x, z = p
-        if x < EDGE_MARGIN or z < EDGE_MARGIN or x > self.width - EDGE_MARGIN or z > self.height - EDGE_MARGIN:
+        if (
+            x < EDGE_MARGIN
+            or z < EDGE_MARGIN
+            or x > self.width - EDGE_MARGIN
+            or z > self.height - EDGE_MARGIN
+        ):
             return True
         reach = int(half_width) + 2
         for dz in (-reach, 0, reach):
@@ -149,17 +175,26 @@ class Obstacles:
             if math.hypot(x - bx, z - bz) < half_width + clearance:
                 return True
         for wall in self.walls:
-            if len(wall) >= 2 and distance_to_polyline(p, wall) < half_width + STRUCTURE_CLEARANCE:
+            if (
+                len(wall) >= 2
+                and distance_to_polyline(p, wall) < half_width + STRUCTURE_CLEARANCE
+            ):
                 return True
         if not near_crossing:
             for road in self.roads:
-                if len(road) >= 2 and distance_to_polyline(p, road) < half_width + ROAD_CLEARANCE:
+                if (
+                    len(road) >= 2
+                    and distance_to_polyline(p, road) < half_width + ROAD_CLEARANCE
+                ):
                     return True
         for lx, lz, radius in self.lakes:
             if math.hypot(x - lx, z - lz) < radius + half_width + WATER_CLEARANCE:
                 return True
         for other, other_width in self.other_rivers:
-            if distance_to_polyline(p, other) < half_width + other_width * 0.5 + WATER_CLEARANCE:
+            if (
+                distance_to_polyline(p, other)
+                < half_width + other_width * 0.5 + WATER_CLEARANCE
+            ):
                 return True
         return False
 
@@ -188,7 +223,9 @@ def pin_distances(samples, river_points, obstacles, half_width):
             if math.hypot(p[0] - lx, p[1] - lz) < radius + half_width + 14.0:
                 pinned.add(i)
     ordered = sorted(pinned)
-    return [min(abs(arc[i] - arc[j]) for j in ordered) for i in range(len(samples))], pinned
+    return [
+        min(abs(arc[i] - arc[j]) for j in ordered) for i in range(len(samples))
+    ], pinned
 
 
 def meander(river, obstacles, seed, amplitude_scale):
@@ -212,9 +249,9 @@ def meander(river, obstacles, seed, amplitude_scale):
     offsets = []
     for i in range(len(samples)):
         envelope = smoothstep(distances[i] / PIN_EASE)
-        wave = 0.68 * math.sin(arc[i] / wave_long * math.tau + phase_long) + 0.32 * math.sin(
-            arc[i] / wave_short * math.tau + phase_short
-        )
+        wave = 0.68 * math.sin(
+            arc[i] / wave_long * math.tau + phase_long
+        ) + 0.32 * math.sin(arc[i] / wave_short * math.tau + phase_short)
         offsets.append(amplitude * envelope * wave)
 
     def displaced(i, offset):
@@ -234,9 +271,9 @@ def meander(river, obstacles, seed, amplitude_scale):
                 here = displaced(i, offsets[i])
                 before = displaced(i - 1, offsets[i - 1]) if i > 0 else here
                 midway = ((here[0] + before[0]) * 0.5, (here[1] + before[1]) * 0.5)
-                if not obstacles.blocked(here, half_width, near_crossing) and not obstacles.blocked(
-                    midway, half_width, near_crossing
-                ):
+                if not obstacles.blocked(
+                    here, half_width, near_crossing
+                ) and not obstacles.blocked(midway, half_width, near_crossing):
                     break
                 offsets[i] *= 0.55
             else:
@@ -253,18 +290,35 @@ def meander(river, obstacles, seed, amplitude_scale):
         offsets[:] = relaxed
         enforce()
 
-    return [displaced(i, offsets[i]) for i in range(len(samples))], max(abs(o) for o in offsets)
+    return [displaced(i, offsets[i]) for i in range(len(samples))], max(
+        abs(o) for o in offsets
+    )
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("map", type=Path)
-    parser.add_argument("--ops", type=Path, required=True, help="write map_cli operations here")
-    parser.add_argument("--skip-above", type=float, default=1.10, help="leave rivers at least this sinuous alone")
+    parser.add_argument(
+        "--ops", type=Path, required=True, help="write map_cli operations here"
+    )
+    parser.add_argument(
+        "--skip-above",
+        type=float,
+        default=1.10,
+        help="leave rivers at least this sinuous alone",
+    )
     parser.add_argument("--min-length", type=float, default=160.0)
-    parser.add_argument("--amplitude", type=float, default=1.0, help="scale the bend size")
-    parser.add_argument("--only", type=int, action="append", help="river index to bend (repeatable)")
-    parser.add_argument("--map-cli", type=Path, default=REPO_ROOT / "build" / "bin" / "map_cli")
+    parser.add_argument(
+        "--amplitude", type=float, default=1.0, help="scale the bend size"
+    )
+    parser.add_argument(
+        "--only", type=int, action="append", help="river index to bend (repeatable)"
+    )
+    parser.add_argument(
+        "--map-cli", type=Path, default=REPO_ROOT / "build" / "bin" / "map_cli"
+    )
     args = parser.parse_args()
 
     plan = load_plan_module()
@@ -278,7 +332,9 @@ def main() -> int:
         check=True,
         env={"QT_QPA_PLATFORM": "offscreen", "LC_ALL": "C"},
     )
-    linear_rivers = [row["index"] for row in json.loads(listing.stdout) if row["type"] == "river"]
+    linear_rivers = [
+        row["index"] for row in json.loads(listing.stdout) if row["type"] == "river"
+    ]
     rivers = map_json.get("rivers", [])
     with_lines = [i for i, r in enumerate(rivers) if polyline(r)]
     if len(linear_rivers) == len(rivers):
@@ -298,7 +354,9 @@ def main() -> int:
         if args.only and river_index not in args.only:
             continue
         if sinuosity >= args.skip_above or total < args.min_length:
-            print(f"{label}: left alone (length {total:.0f}, sinuosity {sinuosity:.2f})")
+            print(
+                f"{label}: left alone (length {total:.0f}, sinuosity {sinuosity:.2f})"
+            )
             continue
         obstacles = Obstacles(terrain, map_json, plan, river_index)
         seed = sum(ord(c) for c in str(label)) + river_index * 17 + len(points)
@@ -314,10 +372,16 @@ def main() -> int:
                 "op": "set",
                 "kind": "linear",
                 "index": linear_rivers[order],
-                "fields": {"start": waypoints[0], "end": waypoints[-1], "waypoints": waypoints},
+                "fields": {
+                    "start": waypoints[0],
+                    "end": waypoints[-1],
+                    "waypoints": waypoints,
+                },
             }
         )
-        print(f"{label}: sinuosity {sinuosity:.2f} -> {new_sinuosity:.2f}, peak offset {peak:.1f}")
+        print(
+            f"{label}: sinuosity {sinuosity:.2f} -> {new_sinuosity:.2f}, peak offset {peak:.1f}"
+        )
 
     args.ops.write_text(json.dumps(ops, indent=1) + "\n", encoding="utf-8")
     print(f"{len(ops)} river(s) bent, operations in {args.ops}", file=sys.stderr)

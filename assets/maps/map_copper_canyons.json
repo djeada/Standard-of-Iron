@@ -5122,14 +5122,6 @@
       "persistent": true
     },
     {
-      "type": "dead_tree",
-      "x": 205.79,
-      "z": 168.68,
-      "scale": 1.0,
-      "rotation": 0.882,
-      "dressing": "copper_canyons_bridgehead_1"
-    },
-    {
       "type": "supply_cart",
       "x": 189.7,
       "z": 153.29,
@@ -5162,25 +5154,6 @@
       "dressing": "copper_canyons_bridgehead_2"
     },
     {
-      "type": "boulder",
-      "x": 250.85,
-      "z": 199.0,
-      "scale": 0.83,
-      "rotation": 2.258,
-      "dressing": "copper_canyons_bridgehead_2"
-    },
-    {
-      "type": "firecamp",
-      "x": 250.81,
-      "z": 194.35,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_bridgehead_2",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
       "type": "dead_tree",
       "x": 270.06,
       "z": 202.0,
@@ -5189,27 +5162,11 @@
       "dressing": "copper_canyons_bridgehead_2"
     },
     {
-      "type": "supply_cart",
-      "x": 252.87,
-      "z": 190.64,
-      "scale": 1.0,
-      "rotation": -1.245,
-      "dressing": "copper_canyons_bridgehead_2"
-    },
-    {
       "type": "boulder",
       "x": 256.89,
       "z": 220.96,
       "scale": 1.15,
       "rotation": 4.376,
-      "dressing": "copper_canyons_bridgehead_2"
-    },
-    {
-      "type": "boulder",
-      "x": 243.06,
-      "z": 212.98,
-      "scale": 1.21,
-      "rotation": 2.363,
       "dressing": "copper_canyons_bridgehead_2"
     },
     {
@@ -5222,14 +5179,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 237.74,
-      "z": 217.99,
-      "scale": 1.0,
-      "rotation": 0.495,
-      "dressing": "copper_canyons_bridgehead_2"
     },
     {
       "type": "boulder",
@@ -5257,14 +5206,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 161.71,
-      "z": 207.63,
-      "scale": 1.0,
-      "rotation": 0.975,
-      "dressing": "copper_canyons_bridgehead_3"
     },
     {
       "type": "supply_cart",
@@ -5307,46 +5248,11 @@
       "dressing": "copper_canyons_bridgehead_4"
     },
     {
-      "type": "boulder",
-      "x": 158.0,
-      "z": 261.56,
-      "scale": 0.93,
-      "rotation": 5.548,
-      "dressing": "copper_canyons_bridgehead_4"
-    },
-    {
-      "type": "firecamp",
-      "x": 162.0,
-      "z": 259.5,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_bridgehead_4",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
       "type": "dead_tree",
       "x": 165.0,
       "z": 280.0,
       "scale": 1.0,
       "rotation": 5.685,
-      "dressing": "copper_canyons_bridgehead_4"
-    },
-    {
-      "type": "supply_cart",
-      "x": 167.0,
-      "z": 258.5,
-      "scale": 1.0,
-      "rotation": 0.036,
-      "dressing": "copper_canyons_bridgehead_4"
-    },
-    {
-      "type": "boulder",
-      "x": 142.0,
-      "z": 262.42,
-      "scale": 1.01,
-      "rotation": 3.065,
       "dressing": "copper_canyons_bridgehead_4"
     },
     {
@@ -5359,14 +5265,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 135.0,
-      "z": 260.0,
-      "scale": 1.0,
-      "rotation": 4.609,
-      "dressing": "copper_canyons_bridgehead_4"
     },
     {
       "type": "boulder",
@@ -5394,14 +5292,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 104.4,
-      "z": 189.86,
-      "scale": 1.0,
-      "rotation": 1.235,
-      "dressing": "copper_canyons_bridgehead_5"
     },
     {
       "type": "supply_cart",
@@ -5455,25 +5345,6 @@
       "dressing": "copper_canyons_bridgehead_6"
     },
     {
-      "type": "boulder",
-      "x": 57.28,
-      "z": 212.78,
-      "scale": 0.91,
-      "rotation": 4.887,
-      "dressing": "copper_canyons_bridgehead_6"
-    },
-    {
-      "type": "firecamp",
-      "x": 61.19,
-      "z": 215.14,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_bridgehead_6",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
       "type": "dead_tree",
       "x": 44.94,
       "z": 227.99,
@@ -5482,27 +5353,11 @@
       "dressing": "copper_canyons_bridgehead_6"
     },
     {
-      "type": "supply_cart",
-      "x": 63.37,
-      "z": 218.79,
-      "scale": 1.0,
-      "rotation": 0.89,
-      "dressing": "copper_canyons_bridgehead_6"
-    },
-    {
       "type": "boulder",
       "x": 35.55,
       "z": 206.84,
       "scale": 0.82,
       "rotation": 0.193,
-      "dressing": "copper_canyons_bridgehead_6"
-    },
-    {
-      "type": "boulder",
-      "x": 49.26,
-      "z": 198.93,
-      "scale": 1.01,
-      "rotation": 0.226,
       "dressing": "copper_canyons_bridgehead_6"
     },
     {
@@ -5515,14 +5370,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 47.26,
-      "z": 192.0,
-      "scale": 1.0,
-      "rotation": 4.642,
-      "dressing": "copper_canyons_bridgehead_6"
     },
     {
       "type": "boulder",
@@ -5550,14 +5397,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 92.69,
-      "z": 130.44,
-      "scale": 1.0,
-      "rotation": 6.098,
-      "dressing": "copper_canyons_bridgehead_7"
     },
     {
       "type": "supply_cart",
@@ -5592,25 +5431,6 @@
       "dressing": "copper_canyons_bridgehead_8"
     },
     {
-      "type": "boulder",
-      "x": 49.22,
-      "z": 101.04,
-      "scale": 1.06,
-      "rotation": 4.969,
-      "dressing": "copper_canyons_bridgehead_8"
-    },
-    {
-      "type": "firecamp",
-      "x": 49.19,
-      "z": 105.65,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_bridgehead_8",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
       "type": "dead_tree",
       "x": 29.94,
       "z": 98.0,
@@ -5619,27 +5439,11 @@
       "dressing": "copper_canyons_bridgehead_8"
     },
     {
-      "type": "supply_cart",
-      "x": 47.13,
-      "z": 109.36,
-      "scale": 1.0,
-      "rotation": 2.36,
-      "dressing": "copper_canyons_bridgehead_8"
-    },
-    {
       "type": "boulder",
       "x": 42.86,
       "z": 78.9,
       "scale": 1.17,
       "rotation": 4.014,
-      "dressing": "copper_canyons_bridgehead_8"
-    },
-    {
-      "type": "boulder",
-      "x": 57.19,
-      "z": 87.17,
-      "scale": 1.25,
-      "rotation": 5.55,
       "dressing": "copper_canyons_bridgehead_8"
     },
     {
@@ -5652,14 +5456,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 62.26,
-      "z": 82.01,
-      "scale": 1.0,
-      "rotation": 0.384,
-      "dressing": "copper_canyons_bridgehead_8"
     },
     {
       "type": "boulder",
@@ -5724,25 +5520,6 @@
       "dressing": "copper_canyons_bridgehead_9"
     },
     {
-      "type": "boulder",
-      "x": 142.0,
-      "z": 37.68,
-      "scale": 1.11,
-      "rotation": 2.67,
-      "dressing": "copper_canyons_bridgehead_10"
-    },
-    {
-      "type": "firecamp",
-      "x": 138.0,
-      "z": 40.5,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_bridgehead_10",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
       "type": "dead_tree",
       "x": 135.0,
       "z": 20.0,
@@ -5751,27 +5528,11 @@
       "dressing": "copper_canyons_bridgehead_10"
     },
     {
-      "type": "supply_cart",
-      "x": 133.0,
-      "z": 41.5,
-      "scale": 1.0,
-      "rotation": -3.091,
-      "dressing": "copper_canyons_bridgehead_10"
-    },
-    {
       "type": "boulder",
       "x": 158.0,
       "z": 21.96,
       "scale": 0.81,
       "rotation": 3.253,
-      "dressing": "copper_canyons_bridgehead_10"
-    },
-    {
-      "type": "boulder",
-      "x": 158.0,
-      "z": 38.09,
-      "scale": 0.82,
-      "rotation": 5.101,
       "dressing": "copper_canyons_bridgehead_10"
     },
     {
@@ -5784,14 +5545,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 165.0,
-      "z": 40.0,
-      "scale": 1.0,
-      "rotation": 3.559,
-      "dressing": "copper_canyons_bridgehead_10"
     },
     {
       "type": "boulder",
@@ -5819,14 +5572,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 195.6,
-      "z": 110.14,
-      "scale": 1.0,
-      "rotation": 5.367,
-      "dressing": "copper_canyons_bridgehead_11"
     },
     {
       "type": "supply_cart",
@@ -5872,25 +5617,6 @@
       "dressing": "copper_canyons_bridgehead_12"
     },
     {
-      "type": "boulder",
-      "x": 242.63,
-      "z": 87.27,
-      "scale": 0.87,
-      "rotation": 6.243,
-      "dressing": "copper_canyons_bridgehead_12"
-    },
-    {
-      "type": "firecamp",
-      "x": 238.81,
-      "z": 84.86,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_bridgehead_12",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
       "type": "dead_tree",
       "x": 255.06,
       "z": 72.01,
@@ -5899,27 +5625,11 @@
       "dressing": "copper_canyons_bridgehead_12"
     },
     {
-      "type": "supply_cart",
-      "x": 235.26,
-      "z": 82.22,
-      "scale": 1.0,
-      "rotation": -1.888,
-      "dressing": "copper_canyons_bridgehead_12"
-    },
-    {
       "type": "boulder",
       "x": 264.69,
       "z": 93.02,
       "scale": 1.18,
       "rotation": 1.923,
-      "dressing": "copper_canyons_bridgehead_12"
-    },
-    {
-      "type": "boulder",
-      "x": 251.38,
-      "z": 100.7,
-      "scale": 1.04,
-      "rotation": 0.938,
       "dressing": "copper_canyons_bridgehead_12"
     },
     {
@@ -5932,14 +5642,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "dead_tree",
-      "x": 252.74,
-      "z": 108.0,
-      "scale": 1.0,
-      "rotation": 4.866,
-      "dressing": "copper_canyons_bridgehead_12"
     },
     {
       "type": "boulder",
@@ -5955,22 +5657,6 @@
       "z": 78.21,
       "scale": 0.87,
       "rotation": 3.77,
-      "dressing": "copper_canyons_riverbank_1"
-    },
-    {
-      "type": "plant",
-      "x": 68.69,
-      "z": 95.2,
-      "scale": 1.11,
-      "rotation": 5.756,
-      "dressing": "copper_canyons_riverbank_1"
-    },
-    {
-      "type": "plant",
-      "x": 73.53,
-      "z": 95.29,
-      "scale": 1.37,
-      "rotation": 0.509,
       "dressing": "copper_canyons_riverbank_1"
     },
     {
@@ -6022,30 +5708,6 @@
       "dressing": "copper_canyons_riverbank_2"
     },
     {
-      "type": "boulder",
-      "x": 214.31,
-      "z": 192.84,
-      "scale": 0.92,
-      "rotation": 2.189,
-      "dressing": "copper_canyons_riverbank_3"
-    },
-    {
-      "type": "plant",
-      "x": 235.91,
-      "z": 190.08,
-      "scale": 1.13,
-      "rotation": 5.985,
-      "dressing": "copper_canyons_riverbank_3"
-    },
-    {
-      "type": "dead_tree",
-      "x": 239.36,
-      "z": 210.76,
-      "scale": 1.09,
-      "rotation": 4.838,
-      "dressing": "copper_canyons_riverbank_3"
-    },
-    {
       "type": "plant",
       "x": 263.46,
       "z": 204.86,
@@ -6071,30 +5733,6 @@
     },
     {
       "type": "plant",
-      "x": 157.63,
-      "z": 40.57,
-      "scale": 1.08,
-      "rotation": 4.859,
-      "dressing": "copper_canyons_riverbank_4"
-    },
-    {
-      "type": "plant",
-      "x": 160.43,
-      "z": 42.32,
-      "scale": 1.04,
-      "rotation": 5.742,
-      "dressing": "copper_canyons_riverbank_4"
-    },
-    {
-      "type": "dead_tree",
-      "x": 136.88,
-      "z": 57.52,
-      "scale": 1.04,
-      "rotation": 2.202,
-      "dressing": "copper_canyons_riverbank_4"
-    },
-    {
-      "type": "plant",
       "x": 153.7,
       "z": 73.34,
       "scale": 0.82,
@@ -6102,17 +5740,9 @@
       "dressing": "copper_canyons_riverbank_4"
     },
     {
-      "type": "plant",
-      "x": 157.51,
-      "z": 75.94,
-      "scale": 1.1,
-      "rotation": 3.613,
-      "dressing": "copper_canyons_riverbank_4"
-    },
-    {
       "type": "boulder",
-      "x": 141.15,
-      "z": 87.79,
+      "x": 140.68,
+      "z": 90.04,
       "scale": 0.96,
       "rotation": 1.89,
       "dressing": "copper_canyons_riverbank_4"
@@ -6167,24 +5797,8 @@
     },
     {
       "type": "plant",
-      "x": 159.69,
-      "z": 233.66,
-      "scale": 1.25,
-      "rotation": 1.094,
-      "dressing": "copper_canyons_riverbank_6"
-    },
-    {
-      "type": "dead_tree",
-      "x": 142.22,
-      "z": 247.96,
-      "scale": 0.85,
-      "rotation": 1.0,
-      "dressing": "copper_canyons_riverbank_6"
-    },
-    {
-      "type": "plant",
-      "x": 159.26,
-      "z": 265.76,
+      "x": 157.62,
+      "z": 263.41,
       "scale": 0.86,
       "rotation": 2.427,
       "dressing": "copper_canyons_riverbank_6"
@@ -6211,30 +5825,6 @@
       "z": 94.97,
       "scale": 1.08,
       "rotation": 0.489,
-      "dressing": "copper_canyons_riverbank_7"
-    },
-    {
-      "type": "dead_tree",
-      "x": 242.54,
-      "z": 82.56,
-      "scale": 1.08,
-      "rotation": 2.238,
-      "dressing": "copper_canyons_riverbank_7"
-    },
-    {
-      "type": "plant",
-      "x": 237.89,
-      "z": 108.37,
-      "scale": 1.18,
-      "rotation": 3.439,
-      "dressing": "copper_canyons_riverbank_7"
-    },
-    {
-      "type": "plant",
-      "x": 235.83,
-      "z": 111.69,
-      "scale": 1.21,
-      "rotation": 3.415,
       "dressing": "copper_canyons_riverbank_7"
     },
     {
@@ -6287,30 +5877,6 @@
     },
     {
       "type": "plant",
-      "x": 74.58,
-      "z": 207.29,
-      "scale": 0.88,
-      "rotation": 3.273,
-      "dressing": "copper_canyons_riverbank_9"
-    },
-    {
-      "type": "plant",
-      "x": 71.95,
-      "z": 209.55,
-      "scale": 1.06,
-      "rotation": 2.388,
-      "dressing": "copper_canyons_riverbank_9"
-    },
-    {
-      "type": "dead_tree",
-      "x": 53.08,
-      "z": 195.39,
-      "scale": 1.19,
-      "rotation": 1.234,
-      "dressing": "copper_canyons_riverbank_9"
-    },
-    {
-      "type": "plant",
       "x": 45.31,
       "z": 221.16,
       "scale": 1.09,
@@ -6332,191 +5898,6 @@
       "scale": 0.91,
       "rotation": 2.075,
       "dressing": "copper_canyons_riverbank_9"
-    },
-    {
-      "type": "boulder",
-      "x": 261.69,
-      "z": 129.37,
-      "scale": 0.97,
-      "rotation": 1.322,
-      "dressing": "copper_canyons_ramp_1"
-    },
-    {
-      "type": "boulder",
-      "x": 272.35,
-      "z": 142.85,
-      "scale": 1.46,
-      "rotation": 0.362,
-      "dressing": "copper_canyons_ramp_1"
-    },
-    {
-      "type": "statue",
-      "x": 277.47,
-      "z": 135.95,
-      "scale": 1.0,
-      "rotation": 2.287,
-      "dressing": "copper_canyons_ramp_1"
-    },
-    {
-      "type": "boulder",
-      "x": 223.71,
-      "z": 236.38,
-      "scale": 1.47,
-      "rotation": 5.064,
-      "dressing": "copper_canyons_ramp_2"
-    },
-    {
-      "type": "boulder",
-      "x": 216.66,
-      "z": 251.49,
-      "scale": 1.44,
-      "rotation": 4.13,
-      "dressing": "copper_canyons_ramp_2"
-    },
-    {
-      "type": "boulder",
-      "x": 223.47,
-      "z": 256.4,
-      "scale": 1.45,
-      "rotation": 2.192,
-      "dressing": "copper_canyons_ramp_2"
-    },
-    {
-      "type": "firecamp",
-      "x": 226.33,
-      "z": 254.01,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_ramp_2",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
-      "type": "boulder",
-      "x": 112.02,
-      "z": 257.02,
-      "scale": 1.18,
-      "rotation": 3.339,
-      "dressing": "copper_canyons_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 94.35,
-      "z": 257.93,
-      "scale": 1.15,
-      "rotation": 5.606,
-      "dressing": "copper_canyons_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 96.12,
-      "z": 261.35,
-      "scale": 0.94,
-      "rotation": 1.592,
-      "dressing": "copper_canyons_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 40.56,
-      "z": 171.1,
-      "scale": 1.43,
-      "rotation": 3.847,
-      "dressing": "copper_canyons_ramp_4"
-    },
-    {
-      "type": "boulder",
-      "x": 28.68,
-      "z": 155.79,
-      "scale": 0.92,
-      "rotation": 2.581,
-      "dressing": "copper_canyons_ramp_4"
-    },
-    {
-      "type": "boulder",
-      "x": 27.02,
-      "z": 157.76,
-      "scale": 1.08,
-      "rotation": 3.645,
-      "dressing": "copper_canyons_ramp_4"
-    },
-    {
-      "type": "statue",
-      "x": 22.53,
-      "z": 164.05,
-      "scale": 1.0,
-      "rotation": -0.855,
-      "dressing": "copper_canyons_ramp_4"
-    },
-    {
-      "type": "firecamp",
-      "x": 19.67,
-      "z": 163.78,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_ramp_4",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
-      "type": "boulder",
-      "x": 76.29,
-      "z": 63.62,
-      "scale": 0.97,
-      "rotation": 3.452,
-      "dressing": "copper_canyons_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 83.34,
-      "z": 48.51,
-      "scale": 1.42,
-      "rotation": 0.727,
-      "dressing": "copper_canyons_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 80.27,
-      "z": 49.12,
-      "scale": 1.1,
-      "rotation": 0.448,
-      "dressing": "copper_canyons_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 187.98,
-      "z": 42.98,
-      "scale": 1.36,
-      "rotation": 3.007,
-      "dressing": "copper_canyons_ramp_6"
-    },
-    {
-      "type": "boulder",
-      "x": 203.23,
-      "z": 40.51,
-      "scale": 1.2,
-      "rotation": 4.728,
-      "dressing": "copper_canyons_ramp_6"
-    },
-    {
-      "type": "boulder",
-      "x": 206.48,
-      "z": 39.86,
-      "scale": 0.92,
-      "rotation": 5.091,
-      "dressing": "copper_canyons_ramp_6"
-    },
-    {
-      "type": "firecamp",
-      "x": 202.78,
-      "z": 32.61,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "copper_canyons_ramp_6",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
     },
     {
       "type": "olive_tree",
@@ -7761,73 +7142,85 @@
       "id": "copper_canyons_bridgehead_1",
       "kind": "bridgehead",
       "x": 191.6,
-      "z": 174
+      "z": 174,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_2",
       "kind": "bridgehead",
       "x": 253.9,
-      "z": 210
+      "z": 210,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_3",
       "kind": "bridgehead",
       "x": 150,
-      "z": 198
+      "z": 198,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_4",
       "kind": "bridgehead",
       "x": 150,
-      "z": 270
+      "z": 270,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_5",
       "kind": "bridgehead",
       "x": 108.4,
-      "z": 174
+      "z": 174,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_6",
       "kind": "bridgehead",
       "x": 46.1,
-      "z": 210
+      "z": 210,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_7",
       "kind": "bridgehead",
       "x": 108.4,
-      "z": 126
+      "z": 126,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_8",
       "kind": "bridgehead",
       "x": 46.1,
-      "z": 90
+      "z": 90,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_9",
       "kind": "bridgehead",
       "x": 150,
-      "z": 102
+      "z": 102,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_10",
       "kind": "bridgehead",
       "x": 150,
-      "z": 30
+      "z": 30,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_11",
       "kind": "bridgehead",
       "x": 191.6,
-      "z": 126
+      "z": 126,
+      "clear_of_bases": true
     },
     {
       "id": "copper_canyons_bridgehead_12",
       "kind": "bridgehead",
       "x": 253.9,
-      "z": 90
+      "z": 90,
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7840,7 +7233,8 @@
       "to": [
         90.9,
         117.2
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7853,7 +7247,8 @@
       "to": [
         183.7,
         170
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7866,7 +7261,8 @@
       "to": [
         286.6,
         228.9
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7879,7 +7275,8 @@
       "to": [
         149.9,
         91.9
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7892,7 +7289,8 @@
       "to": [
         146.5,
         184.2
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7905,7 +7303,8 @@
       "to": [
         150,
         286.6
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7918,7 +7317,8 @@
       "to": [
         207.9,
         115.2
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7931,7 +7331,8 @@
       "to": [
         115.8,
         169.2
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "from": [
@@ -7944,7 +7345,8 @@
       "to": [
         13.4,
         228.9
-      ]
+      ],
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -7952,7 +7354,8 @@
       "kind": "ramp_mouth",
       "statue": true,
       "x": 262.9,
-      "z": 141
+      "z": 141,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -7960,7 +7363,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 214.2,
-      "z": 243.2
+      "z": 243.2,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -7968,7 +7372,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 101.4,
-      "z": 252.2
+      "z": 252.2,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -7976,7 +7381,8 @@
       "kind": "ramp_mouth",
       "statue": true,
       "x": 37.1,
-      "z": 159
+      "z": 159,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -7984,7 +7390,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 85.8,
-      "z": 56.8
+      "z": 56.8,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -7992,7 +7399,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 198.6,
-      "z": 47.8
+      "z": 47.8,
+      "clear_of_bases": true
     },
     {
       "count": 18,
@@ -8004,7 +7412,8 @@
         "cypress_tree"
       ],
       "x": 28.5,
-      "z": 253.5
+      "z": 253.5,
+      "clear_of_bases": true
     },
     {
       "count": 18,
@@ -8016,7 +7425,8 @@
         "cypress_tree"
       ],
       "x": 280.5,
-      "z": 245.5
+      "z": 245.5,
+      "clear_of_bases": true
     },
     {
       "count": 17,
@@ -8028,7 +7438,8 @@
         "cypress_tree"
       ],
       "x": 16.5,
-      "z": 16.5
+      "z": 16.5,
+      "clear_of_bases": true
     },
     {
       "count": 17,
@@ -8040,7 +7451,8 @@
         "cypress_tree"
       ],
       "x": 283.5,
-      "z": 15.5
+      "z": 15.5,
+      "clear_of_bases": true
     },
     {
       "count": 16,
@@ -8052,7 +7464,8 @@
         "cypress_tree"
       ],
       "x": 15.5,
-      "z": 53.5
+      "z": 53.5,
+      "clear_of_bases": true
     },
     {
       "count": 15,
@@ -8064,7 +7477,8 @@
         "cypress_tree"
       ],
       "x": 285.5,
-      "z": 285.5
+      "z": 285.5,
+      "clear_of_bases": true
     }
   ]
 }

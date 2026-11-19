@@ -90,11 +90,11 @@ auto segments_intersect(const QVector3D& a0,
 }
 
 template <typename Segment>
-auto segment_component_count(const std::vector<Segment>& segments,
-                             float join_distance,
-                             std::size_t counted_segment_count =
-                                 std::numeric_limits<std::size_t>::max(),
-                             std::vector<std::size_t>* out_component = nullptr) -> int {
+auto segment_component_count(
+    const std::vector<Segment>& segments,
+    float join_distance,
+    std::size_t counted_segment_count = std::numeric_limits<std::size_t>::max(),
+    std::vector<std::size_t>* out_component = nullptr) -> int {
   if (segments.empty()) {
     return 0;
   }

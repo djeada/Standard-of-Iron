@@ -2772,22 +2772,6 @@
       "dressing": "spanish_grove_junction_4"
     },
     {
-      "type": "ruins",
-      "x": 97.98,
-      "z": 157.55,
-      "scale": 0.8,
-      "rotation": 4.467,
-      "dressing": "spanish_grove_junction_4"
-    },
-    {
-      "type": "boulder",
-      "x": 184.59,
-      "z": 142.62,
-      "scale": 1.3,
-      "rotation": 0.975,
-      "dressing": "spanish_grove_ramp_1"
-    },
-    {
       "type": "boulder",
       "x": 168.08,
       "z": 170.9,
@@ -2802,175 +2786,6 @@
       "scale": 1.0,
       "rotation": -2.57,
       "dressing": "spanish_grove_ramp_1"
-    },
-    {
-      "type": "boulder",
-      "x": 105.36,
-      "z": 32.07,
-      "scale": 1.08,
-      "rotation": 0.305,
-      "dressing": "spanish_grove_ramp_2"
-    },
-    {
-      "type": "boulder",
-      "x": 100.06,
-      "z": 28.63,
-      "scale": 1.45,
-      "rotation": 3.725,
-      "dressing": "spanish_grove_ramp_2"
-    },
-    {
-      "type": "boulder",
-      "x": 114.58,
-      "z": 19.56,
-      "scale": 1.28,
-      "rotation": 0.764,
-      "dressing": "spanish_grove_ramp_2"
-    },
-    {
-      "type": "firecamp",
-      "x": 111.5,
-      "z": 20.12,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "spanish_grove_ramp_2",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
-      "type": "boulder",
-      "x": 207.93,
-      "z": 105.36,
-      "scale": 1.0,
-      "rotation": 4.101,
-      "dressing": "spanish_grove_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 211.37,
-      "z": 100.06,
-      "scale": 1.4,
-      "rotation": 0.281,
-      "dressing": "spanish_grove_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 219.32,
-      "z": 114.63,
-      "scale": 0.95,
-      "rotation": 2.009,
-      "dressing": "spanish_grove_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 221.54,
-      "z": 112.23,
-      "scale": 1.4,
-      "rotation": 0.99,
-      "dressing": "spanish_grove_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 134.64,
-      "z": 207.93,
-      "scale": 1.45,
-      "rotation": 0.199,
-      "dressing": "spanish_grove_ramp_4"
-    },
-    {
-      "type": "boulder",
-      "x": 139.94,
-      "z": 211.37,
-      "scale": 1.05,
-      "rotation": 3.67,
-      "dressing": "spanish_grove_ramp_4"
-    },
-    {
-      "type": "boulder",
-      "x": 125.37,
-      "z": 219.32,
-      "scale": 0.98,
-      "rotation": 5.671,
-      "dressing": "spanish_grove_ramp_4"
-    },
-    {
-      "type": "boulder",
-      "x": 128.19,
-      "z": 220.26,
-      "scale": 1.21,
-      "rotation": 6.14,
-      "dressing": "spanish_grove_ramp_4"
-    },
-    {
-      "type": "statue",
-      "x": 125.72,
-      "z": 222.04,
-      "scale": 1.0,
-      "rotation": -2.244,
-      "dressing": "spanish_grove_ramp_4"
-    },
-    {
-      "type": "firecamp",
-      "x": 128.07,
-      "z": 228.56,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "spanish_grove_ramp_4",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
-      "type": "boulder",
-      "x": 32.07,
-      "z": 134.64,
-      "scale": 0.93,
-      "rotation": 0.819,
-      "dressing": "spanish_grove_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 28.63,
-      "z": 139.94,
-      "scale": 1.47,
-      "rotation": 4.588,
-      "dressing": "spanish_grove_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 20.68,
-      "z": 123.61,
-      "scale": 1.06,
-      "rotation": 2.756,
-      "dressing": "spanish_grove_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 18.21,
-      "z": 125.47,
-      "scale": 1.2,
-      "rotation": 2.002,
-      "dressing": "spanish_grove_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 138.28,
-      "z": 53.51,
-      "scale": 1.09,
-      "rotation": 3.759,
-      "dressing": "spanish_grove_ramp_6"
-    },
-    {
-      "type": "firecamp",
-      "x": 137.39,
-      "z": 47.19,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "spanish_grove_ramp_6",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
     },
     {
       "type": "olive_tree",
@@ -3737,7 +3552,8 @@
       "snap": 6,
       "style": "milestone",
       "x": 84,
-      "z": 80
+      "z": 80,
+      "clear_of_bases": true
     },
     {
       "id": "spanish_grove_junction_2",
@@ -3745,7 +3561,8 @@
       "snap": 6,
       "style": "milestone",
       "x": 160,
-      "z": 84
+      "z": 84,
+      "clear_of_bases": true
     },
     {
       "id": "spanish_grove_junction_3",
@@ -3753,7 +3570,8 @@
       "snap": 6,
       "style": "shrine",
       "x": 156,
-      "z": 160
+      "z": 160,
+      "clear_of_bases": true
     },
     {
       "id": "spanish_grove_junction_4",
@@ -3761,7 +3579,8 @@
       "snap": 6,
       "style": "shrine",
       "x": 80,
-      "z": 156
+      "z": 156,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -3769,7 +3588,8 @@
       "kind": "ramp_mouth",
       "statue": true,
       "x": 155.6,
-      "z": 142.9
+      "z": 142.9,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -3777,7 +3597,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 111.7,
-      "z": 29.6
+      "z": 29.6,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -3785,7 +3606,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 210.4,
-      "z": 111.7
+      "z": 111.7,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -3793,7 +3615,8 @@
       "kind": "ramp_mouth",
       "statue": true,
       "x": 128.3,
-      "z": 210.4
+      "z": 210.4,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -3801,7 +3624,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 29.6,
-      "z": 128.3
+      "z": 128.3,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -3809,7 +3633,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 119.1,
-      "z": 76
+      "z": 76,
+      "clear_of_bases": true
     },
     {
       "count": 15,
@@ -3822,7 +3647,8 @@
         "cypress_tree"
       ],
       "x": 219.5,
-      "z": 39.5
+      "z": 39.5,
+      "clear_of_bases": true
     },
     {
       "count": 15,
@@ -3835,7 +3661,8 @@
         "cypress_tree"
       ],
       "x": 20.5,
-      "z": 200.5
+      "z": 200.5,
+      "clear_of_bases": true
     },
     {
       "count": 15,
@@ -3848,7 +3675,8 @@
         "cypress_tree"
       ],
       "x": 199.5,
-      "z": 219.5
+      "z": 219.5,
+      "clear_of_bases": true
     },
     {
       "count": 14,
@@ -3861,7 +3689,8 @@
         "cypress_tree"
       ],
       "x": 38.5,
-      "z": 19.5
+      "z": 19.5,
+      "clear_of_bases": true
     }
   ]
 }

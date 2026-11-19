@@ -81,7 +81,9 @@ def polyline(element: dict) -> list[tuple[float, float]]:
     return [tuple(map(float, element["start"])), tuple(map(float, element["end"]))]
 
 
-def stamp_disc(mask: bytearray, width: int, height: int, cx: float, cz: float, r: float):
+def stamp_disc(
+    mask: bytearray, width: int, height: int, cx: float, cz: float, r: float
+):
     x0, x1 = max(0, int(cx - r)), min(width - 1, int(cx + r) + 1)
     z0, z1 = max(0, int(cz - r)), min(height - 1, int(cz + r) + 1)
     r_sq = r * r
@@ -100,7 +102,9 @@ def stamp_line(mask, width, height, points, radius):
         steps = max(1, int(length))
         for i in range(steps + 1):
             t = i / steps
-            stamp_disc(mask, width, height, ax + (bx - ax) * t, az + (bz - az) * t, radius)
+            stamp_disc(
+                mask, width, height, ax + (bx - ax) * t, az + (bz - az) * t, radius
+            )
 
 
 def blocked_mask(terrain: dict, map_json: dict, flat_only: bool = False) -> bytearray:
@@ -122,26 +126,36 @@ def blocked_mask(terrain: dict, map_json: dict, flat_only: bool = False) -> byte
                 mask[z * width + x] = 1
     for road in map_json.get("roads", []):
         stamp_line(
-            mask, width, height, polyline(road), road.get("width", 3.0) / 2 + ROAD_CLEARANCE
+            mask,
+            width,
+            height,
+            polyline(road),
+            road.get("width", 3.0) / 2 + ROAD_CLEARANCE,
         )
     for bridge in map_json.get("bridges", []):
         stamp_line(mask, width, height, polyline(bridge), bridge.get("width", 8.0))
     for structure in map_json.get("structures", []):
         if "x" in structure:
-            stamp_disc(mask, width, height, structure["x"], structure["z"], STRUCTURE_CLEARANCE)
+            stamp_disc(
+                mask, width, height, structure["x"], structure["z"], STRUCTURE_CLEARANCE
+            )
         elif "start" in structure:
             stamp_line(mask, width, height, polyline(structure), 3.0)
     for spawn in map_json.get("spawns", []):
         if "x" in spawn:
             stamp_disc(mask, width, height, spawn["x"], spawn["z"], 4.0)
     for forest in map_json.get("forests", []):
-        stamp_disc(mask, width, height, forest["x"], forest["z"], forest.get("radius", 8.0))
+        stamp_disc(
+            mask, width, height, forest["x"], forest["z"], forest.get("radius", 8.0)
+        )
     for prop in map_json.get("world_props", []) + map_json.get("firecamps", []):
         if "x" in prop:
             stamp_disc(mask, width, height, prop["x"], prop["z"], PROP_CLEARANCE)
     for zone in map_json.get("undead_zones", []):
         if "x" in zone:
-            stamp_disc(mask, width, height, zone["x"], zone["z"], zone.get("radius", 8.0))
+            stamp_disc(
+                mask, width, height, zone["x"], zone["z"], zone.get("radius", 8.0)
+            )
     return mask
 
 
@@ -206,9 +220,15 @@ def render_plan(terrain, map_json, out_path, open_discs):
     width, height = terrain["width"], terrain["height"]
     scale = max(1, min(8, 1400 // max(width, height)))
     margin = 26
-    image = Image.new("RGB", (width * scale + margin * 2, height * scale + margin * 2), (16, 16, 16))
+    image = Image.new(
+        "RGB", (width * scale + margin * 2, height * scale + margin * 2), (16, 16, 16)
+    )
     pixels = image.load()
-    types, walkable, entrances = terrain["types"], terrain["walkable"], terrain["entrances"]
+    types, walkable, entrances = (
+        terrain["types"],
+        terrain["walkable"],
+        terrain["entrances"],
+    )
     heights = terrain["heights"]
     low, high = min(heights), max(heights)
     span = max(high - low, 1e-3)
@@ -228,7 +248,11 @@ def render_plan(terrain, map_json, out_path, open_discs):
                     colour = (215, 190, 110)
             else:
                 shade = int(28 * lift)
-                colour = (46 + shade, 86 + shade, 52 + shade) if walkable[index] else (60, 52, 44)
+                colour = (
+                    (46 + shade, 86 + shade, 52 + shade)
+                    if walkable[index]
+                    else (60, 52, 44)
+                )
             for dz in range(scale):
                 for dx in range(scale):
                     pixels[margin + x * scale + dx, margin + z * scale + dz] = colour
@@ -242,19 +266,37 @@ def render_plan(terrain, map_json, out_path, open_discs):
         r = forest.get("radius", 8.0) * scale
         cx, cz = at(forest["x"], forest["z"])
         draw.ellipse((cx - r, cz - r, cx + r, cz + r), outline=(60, 220, 90), width=2)
-        draw.text((cx - r + 3, cz - 6), str(forest.get("id", "forest"))[:18], fill=(150, 255, 170))
+        draw.text(
+            (cx - r + 3, cz - 6),
+            str(forest.get("id", "forest"))[:18],
+            fill=(150, 255, 170),
+        )
     for road in map_json.get("roads", []):
-        draw.line([at(*p) for p in polyline(road)], fill=(205, 175, 125), width=max(2, int(road.get("width", 3) * scale * 0.6)))
+        draw.line(
+            [at(*p) for p in polyline(road)],
+            fill=(205, 175, 125),
+            width=max(2, int(road.get("width", 3) * scale * 0.6)),
+        )
     for river in map_json.get("rivers", []):
         draw.line([at(*p) for p in polyline(river)], fill=(90, 160, 235), width=2)
     for bridge in map_json.get("bridges", []):
-        draw.line([at(*p) for p in polyline(bridge)], fill=(245, 245, 245), width=max(3, scale * 3))
+        draw.line(
+            [at(*p) for p in polyline(bridge)],
+            fill=(245, 245, 245),
+            width=max(3, scale * 3),
+        )
     for ford in map_json.get("fords", []):
         if "start" in ford:
-            draw.line([at(*ford["start"]), at(*ford["end"])], fill=(160, 235, 235), width=max(3, scale * 3))
+            draw.line(
+                [at(*ford["start"]), at(*ford["end"])],
+                fill=(160, 235, 235),
+                width=max(3, scale * 3),
+            )
         elif "position" in ford:
             cx, cz = at(*ford["position"])
-            draw.ellipse((cx - 5, cz - 5, cx + 5, cz + 5), outline=(160, 235, 235), width=2)
+            draw.ellipse(
+                (cx - 5, cz - 5, cx + 5, cz + 5), outline=(160, 235, 235), width=2
+            )
     for prop in map_json.get("world_props", []) + map_json.get("firecamps", []):
         if "x" in prop:
             cx, cz = at(prop["x"], prop["z"])
@@ -264,7 +306,9 @@ def render_plan(terrain, map_json, out_path, open_discs):
         if "x" in structure:
             cx, cz = at(structure["x"], structure["z"])
             half = max(3, scale * 2)
-            draw.rectangle((cx - half, cz - half, cx + half, cz + half), outline=colour, width=2)
+            draw.rectangle(
+                (cx - half, cz - half, cx + half, cz + half), outline=colour, width=2
+            )
         elif "start" in structure:
             draw.line([at(*p) for p in polyline(structure)], fill=colour, width=2)
     for spawn in map_json.get("spawns", []):
@@ -286,25 +330,50 @@ def render_plan(terrain, map_json, out_path, open_discs):
     step = 20 if max(width, height) <= 300 else 50
     for tick in range(0, width + 1, step):
         draw.text((margin + tick * scale - 8, 6), str(tick), fill=(210, 210, 210))
-        draw.line((margin + tick * scale, margin - 4, margin + tick * scale, margin), fill=(210, 210, 210))
+        draw.line(
+            (margin + tick * scale, margin - 4, margin + tick * scale, margin),
+            fill=(210, 210, 210),
+        )
     for tick in range(0, height + 1, step):
         draw.text((2, margin + tick * scale - 5), str(tick), fill=(210, 210, 210))
-        draw.line((margin - 4, margin + tick * scale, margin, margin + tick * scale), fill=(210, 210, 210))
+        draw.line(
+            (margin - 4, margin + tick * scale, margin, margin + tick * scale),
+            fill=(210, 210, 210),
+        )
     image.save(out_path)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("map", type=Path)
     parser.add_argument("--png", type=Path, help="write a plan view here")
-    parser.add_argument("--open", type=int, default=0, metavar="N", help="report the N largest free discs")
+    parser.add_argument(
+        "--open",
+        type=int,
+        default=0,
+        metavar="N",
+        help="report the N largest free discs",
+    )
     parser.add_argument("--min-radius", type=float, default=6.0)
-    parser.add_argument("--flat-only", action="store_true", help="ignore hill crowns when looking for free ground")
-    parser.add_argument("--terrain-probe", type=Path, default=REPO_ROOT / "build" / "bin" / "terrain_probe")
+    parser.add_argument(
+        "--flat-only",
+        action="store_true",
+        help="ignore hill crowns when looking for free ground",
+    )
+    parser.add_argument(
+        "--terrain-probe",
+        type=Path,
+        default=REPO_ROOT / "build" / "bin" / "terrain_probe",
+    )
     args = parser.parse_args()
 
     map_json = json.loads(args.map.read_text(encoding="utf-8"))
-    if str(map_json.get("coord_system", map_json.get("coordSystem", "grid"))).lower() != "grid":
+    if (
+        str(map_json.get("coord_system", map_json.get("coordSystem", "grid"))).lower()
+        != "grid"
+    ):
         raise SystemExit("map-plan.py reads grid-coordinate maps only")
     terrain = probe(args.map, args.terrain_probe)
     discs = (
@@ -318,7 +387,10 @@ def main() -> int:
         render_plan(terrain, map_json, args.png, discs)
     total = terrain["width"] * terrain["height"]
     walkable = sum(terrain["walkable"])
-    print(f"walkable {100.0 * walkable / total:.0f}% of {terrain['width']}x{terrain['height']}", file=sys.stderr)
+    print(
+        f"walkable {100.0 * walkable / total:.0f}% of {terrain['width']}x{terrain['height']}",
+        file=sys.stderr,
+    )
     return 0
 
 

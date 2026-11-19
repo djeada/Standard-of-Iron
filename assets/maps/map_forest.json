@@ -1622,30 +1622,6 @@
       "rotation": 5.28
     },
     {
-      "type": "statue",
-      "x": 145.22,
-      "z": 87.01,
-      "scale": 1.0,
-      "rotation": 0.476,
-      "dressing": "forest_junction_1"
-    },
-    {
-      "type": "statue",
-      "x": 85.03,
-      "z": 144.36,
-      "scale": 1.0,
-      "rotation": 1.179,
-      "dressing": "forest_junction_2"
-    },
-    {
-      "type": "statue",
-      "x": 29.89,
-      "z": 85.36,
-      "scale": 1.0,
-      "rotation": 2.356,
-      "dressing": "forest_junction_3"
-    },
-    {
       "type": "firecamp",
       "x": 23.8,
       "z": 78.41,
@@ -1655,41 +1631,6 @@
       "radius": 3.2,
       "intensity": 1.15,
       "persistent": true
-    },
-    {
-      "type": "firecamp",
-      "x": 97.01,
-      "z": 25.11,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "forest_junction_4",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
-      "type": "boulder",
-      "x": 32.47,
-      "z": 89.21,
-      "scale": 1.03,
-      "rotation": 1.206,
-      "dressing": "forest_ramp_1"
-    },
-    {
-      "type": "boulder",
-      "x": 22.92,
-      "z": 93.42,
-      "scale": 0.94,
-      "rotation": 1.442,
-      "dressing": "forest_ramp_1"
-    },
-    {
-      "type": "dead_tree",
-      "x": 39.12,
-      "z": 95.16,
-      "scale": 1.0,
-      "rotation": 4.088,
-      "dressing": "forest_ramp_1"
     },
     {
       "type": "boulder",
@@ -1714,97 +1655,6 @@
       "scale": 1.0,
       "rotation": 0.132,
       "dressing": "forest_ramp_1"
-    },
-    {
-      "type": "boulder",
-      "x": 43.83,
-      "z": 162.24,
-      "scale": 1.35,
-      "rotation": 4.276,
-      "dressing": "forest_ramp_2"
-    },
-    {
-      "type": "dead_tree",
-      "x": 45.07,
-      "z": 148.15,
-      "scale": 1.0,
-      "rotation": 1.867,
-      "dressing": "forest_ramp_2"
-    },
-    {
-      "type": "boulder",
-      "x": 26.13,
-      "z": 159.47,
-      "scale": 1.39,
-      "rotation": 4.699,
-      "dressing": "forest_ramp_2"
-    },
-    {
-      "type": "boulder",
-      "x": 25.92,
-      "z": 162.41,
-      "scale": 0.99,
-      "rotation": 3.458,
-      "dressing": "forest_ramp_2"
-    },
-    {
-      "type": "firecamp",
-      "x": 29.14,
-      "z": 162.32,
-      "scale": 1.0,
-      "rotation": 0.0,
-      "dressing": "forest_ramp_2",
-      "radius": 3.2,
-      "intensity": 1.15,
-      "persistent": true
-    },
-    {
-      "type": "boulder",
-      "x": 132.17,
-      "z": 13.76,
-      "scale": 1.45,
-      "rotation": 3.093,
-      "dressing": "forest_ramp_3"
-    },
-    {
-      "type": "dead_tree",
-      "x": 129.4,
-      "z": 29.56,
-      "scale": 1.0,
-      "rotation": 2.893,
-      "dressing": "forest_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 150.81,
-      "z": 15.92,
-      "scale": 1.42,
-      "rotation": 1.188,
-      "dressing": "forest_ramp_3"
-    },
-    {
-      "type": "boulder",
-      "x": 120.1,
-      "z": 52.05,
-      "scale": 1.1,
-      "rotation": 2.523,
-      "dressing": "forest_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 121.47,
-      "z": 56.78,
-      "scale": 1.02,
-      "rotation": 2.026,
-      "dressing": "forest_ramp_5"
-    },
-    {
-      "type": "boulder",
-      "x": 97.29,
-      "z": 53.8,
-      "scale": 1.03,
-      "rotation": 3.204,
-      "dressing": "forest_ramp_5"
     },
     {
       "type": "boulder",
@@ -2030,7 +1880,8 @@
       "snap": 6,
       "style": "milestone",
       "x": 152,
-      "z": 88
+      "z": 88,
+      "clear_of_bases": true
     },
     {
       "id": "forest_junction_2",
@@ -2038,7 +1889,8 @@
       "snap": 6,
       "style": "milestone",
       "x": 88,
-      "z": 152
+      "z": 152,
+      "clear_of_bases": true
     },
     {
       "id": "forest_junction_3",
@@ -2046,7 +1898,8 @@
       "snap": 6,
       "style": "shrine",
       "x": 24,
-      "z": 88
+      "z": 88,
+      "clear_of_bases": true
     },
     {
       "id": "forest_junction_4",
@@ -2054,7 +1907,8 @@
       "snap": 6,
       "style": "shrine",
       "x": 88,
-      "z": 24
+      "z": 24,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -2062,7 +1916,8 @@
       "kind": "ramp_mouth",
       "statue": true,
       "x": 59.4,
-      "z": 84.2
+      "z": 84.2,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -2070,7 +1925,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 34.9,
-      "z": 154.7
+      "z": 154.7,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -2078,7 +1934,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 141.1,
-      "z": 21.3
+      "z": 21.3,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -2086,7 +1943,8 @@
       "kind": "ramp_mouth",
       "statue": true,
       "x": 52.7,
-      "z": 183.5
+      "z": 183.5,
+      "clear_of_bases": true
     },
     {
       "fire": false,
@@ -2094,7 +1952,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 113.9,
-      "z": 35.7
+      "z": 35.7,
+      "clear_of_bases": true
     },
     {
       "fire": true,
@@ -2102,7 +1961,8 @@
       "kind": "ramp_mouth",
       "statue": false,
       "x": 155.3,
-      "z": 134.3
+      "z": 134.3,
+      "clear_of_bases": true
     }
   ]
 }

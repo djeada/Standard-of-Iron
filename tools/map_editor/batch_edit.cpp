@@ -183,15 +183,16 @@ auto apply_root_field(MapData& data, const QJsonObject& op, QString& error) -> b
       }
     }
     if (!wanted.isEmpty()) {
-      error =
-          QStringLiteral("'%1' has no entry with id %2").arg(key, wanted.join(QLatin1String(", ")));
+      error = QStringLiteral("'%1' has no entry with id %2")
+                  .arg(key, wanted.join(QLatin1String(", ")));
       return false;
     }
     return data.set_extra_root_field(key, kept);
   }
 
   const QJsonValue addition = op.value(QStringLiteral("append"));
-  const QJsonArray additions = addition.isArray() ? addition.toArray() : QJsonArray{addition};
+  const QJsonArray additions =
+      addition.isArray() ? addition.toArray() : QJsonArray{addition};
   for (const QJsonValue entry : additions) {
     const QString id = id_of(entry);
     if (!id.isEmpty()) {
@@ -337,8 +338,10 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
         continue;
       }
       QStringList notes;
-      const ElementSnapshot made = rebuilt(
-          data, blank_snapshot(kind), op.value(QStringLiteral("json")).toObject(), notes);
+      const ElementSnapshot made = rebuilt(data,
+                                           blank_snapshot(kind),
+                                           op.value(QStringLiteral("json")).toObject(),
+                                           notes);
       if (ElementOps::kind_of(made) != kind) {
         fail(QStringLiteral("the JSON does not describe a %1").arg(kind_name(kind)));
         continue;
@@ -363,7 +366,8 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
     if (verb == QLatin1String("remove")) {
       data.execute_command(ElementOps::make_remove(data, kind, index));
       ++report.applied;
-      report.log.append(QStringLiteral("removed %1").arg(label_of(kind, index, before)));
+      report.log.append(
+          QStringLiteral("removed %1").arg(label_of(kind, index, before)));
       continue;
     }
 
@@ -396,15 +400,14 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
       fail(QStringLiteral("the edit did not produce a %1").arg(kind_name(kind)));
       continue;
     }
-    data.execute_command(
-        ElementOps::make_update(data, index, before, after, verb + QLatin1Char(' ') +
-                                                                kind_name(kind)));
+    data.execute_command(ElementOps::make_update(
+        data, index, before, after, verb + QLatin1Char(' ') + kind_name(kind)));
     ++report.applied;
     report.log.append(QStringLiteral("%1 %2%3")
                           .arg(verb, label_of(kind, index, after))
                           .arg(notes.isEmpty() ? QString()
-                                               : QStringLiteral(" (%1)").arg(
-                                                     notes.join(QStringLiteral("; ")))));
+                                               : QStringLiteral(" (%1)").arg(notes.join(
+                                                     QStringLiteral("; ")))));
   }
   return report;
 }

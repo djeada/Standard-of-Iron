@@ -533,7 +533,8 @@ auto MapData::extra_root_field(const QString& key) const -> QJsonValue {
   return m_extra_root_fields.value(key);
 }
 
-auto MapData::set_extra_root_field(const QString& key, const QJsonValue& value) -> bool {
+auto MapData::set_extra_root_field(const QString& key,
+                                   const QJsonValue& value) -> bool {
   if (key.isEmpty() || is_modelled_root_key(key)) {
     return false;
   }

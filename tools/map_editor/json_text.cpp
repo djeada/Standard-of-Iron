@@ -245,8 +245,7 @@ auto encode_string(const QString& value) -> QString {
       break;
     default:
       if (ch.unicode() < 0x20) {
-        out.append(
-            QStringLiteral("\\u%1").arg(ch.unicode(), 4, 16, QLatin1Char('0')));
+        out.append(QStringLiteral("\\u%1").arg(ch.unicode(), 4, 16, QLatin1Char('0')));
       } else {
         out.append(ch);
       }

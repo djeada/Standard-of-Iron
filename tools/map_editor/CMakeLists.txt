@@ -87,9 +87,7 @@ set_target_properties(
 # The editor's document model driven from the command line: list, audit and
 # batch-edit a map without opening a window.
 add_executable(map_cli map_cli_main.cpp)
-target_link_libraries(
-    map_cli PRIVATE Qt${QT_VERSION_MAJOR}::Core map_editor_core game_sim
-)
+target_link_libraries(map_cli PRIVATE Qt${QT_VERSION_MAJOR}::Core map_editor_core game_sim)
 set_target_properties(
     map_cli
     PROPERTIES
