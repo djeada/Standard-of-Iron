@@ -357,6 +357,182 @@
       "x": 55.0,
       "z": 35.0,
       "scale": 1.0
+    },
+    {
+      "type": "statue",
+      "x": 36.5,
+      "z": 7.5,
+      "scale": 1.15,
+      "rotation": 0.0,
+      "dressing": "haul_road_cairn"
+    },
+    {
+      "type": "boulder",
+      "x": 39.93,
+      "z": 8.4,
+      "scale": 1.61,
+      "rotation": 3.566,
+      "dressing": "haul_road_cairn"
+    },
+    {
+      "type": "boulder",
+      "x": 36.52,
+      "z": 10.71,
+      "scale": 1.19,
+      "rotation": 3.524,
+      "dressing": "haul_road_cairn"
+    },
+    {
+      "type": "boulder",
+      "x": 33.8,
+      "z": 8.81,
+      "scale": 1.31,
+      "rotation": 5.296,
+      "dressing": "haul_road_cairn"
+    },
+    {
+      "type": "boulder",
+      "x": 34.14,
+      "z": 5.65,
+      "scale": 1.23,
+      "rotation": 4.718,
+      "dressing": "haul_road_cairn"
+    },
+    {
+      "type": "pine_tree",
+      "x": 33.55,
+      "z": 55.59,
+      "scale": 1.18,
+      "rotation": 2.024,
+      "dressing": "south_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 33.13,
+      "z": 50.86,
+      "scale": 1.1,
+      "rotation": 1.643,
+      "dressing": "south_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 30.71,
+      "z": 47.77,
+      "scale": 1.18,
+      "rotation": 0.547,
+      "dressing": "south_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 30.1,
+      "z": 57.24,
+      "scale": 0.9,
+      "rotation": 6.266,
+      "dressing": "south_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 37.14,
+      "z": 50.85,
+      "scale": 1.13,
+      "rotation": 2.07,
+      "dressing": "south_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 48.79,
+      "z": 52.59,
+      "scale": 1.13,
+      "rotation": 4.601,
+      "dressing": "east_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 51.33,
+      "z": 48.06,
+      "scale": 1.08,
+      "rotation": 4.715,
+      "dressing": "east_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 45.73,
+      "z": 55.04,
+      "scale": 0.97,
+      "rotation": 3.767,
+      "dressing": "east_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 53.55,
+      "z": 53.73,
+      "scale": 1.06,
+      "rotation": 2.333,
+      "dressing": "east_stand"
+    },
+    {
+      "type": "pine_tree",
+      "x": 48.61,
+      "z": 56.8,
+      "scale": 0.89,
+      "rotation": 3.625,
+      "dressing": "east_stand"
+    },
+    {
+      "type": "boulder",
+      "x": 10.74,
+      "z": 27.72,
+      "scale": 1.77,
+      "rotation": 0.317,
+      "dressing": "west_scree"
+    },
+    {
+      "type": "boulder",
+      "x": 7.31,
+      "z": 26.69,
+      "scale": 1.24,
+      "rotation": 3.288,
+      "dressing": "west_scree"
+    },
+    {
+      "type": "boulder",
+      "x": 13.06,
+      "z": 25.27,
+      "scale": 0.95,
+      "rotation": 0.47,
+      "dressing": "west_scree"
+    },
+    {
+      "type": "boulder",
+      "x": 13.83,
+      "z": 31.14,
+      "scale": 1.44,
+      "rotation": 4.719,
+      "dressing": "west_scree"
+    },
+    {
+      "type": "boulder",
+      "x": 6.76,
+      "z": 29.69,
+      "scale": 1.22,
+      "rotation": 3.066,
+      "dressing": "west_scree"
+    },
+    {
+      "type": "dead_tree",
+      "x": 9.1,
+      "z": 22.0,
+      "scale": 1.05,
+      "rotation": 5.339,
+      "dressing": "west_scree"
+    },
+    {
+      "type": "supply_cart",
+      "x": 9.93,
+      "z": 32.85,
+      "scale": 1.0,
+      "rotation": 1.06,
+      "dressing": "west_scree"
     }
   ],
   "landmarks": [
@@ -434,5 +610,50 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "boulders": 5,
+      "fire": false,
+      "id": "haul_road_cairn",
+      "kind": "cairn",
+      "radius": 3,
+      "x": 36.5,
+      "z": 7.5
+    },
+    {
+      "count": 8,
+      "dead_trees": 2,
+      "id": "south_stand",
+      "kind": "copse",
+      "radius": 6,
+      "trees": [
+        "pine_tree"
+      ],
+      "x": 30.5,
+      "z": 52.5
+    },
+    {
+      "count": 7,
+      "id": "east_stand",
+      "kind": "copse",
+      "radius": 5.5,
+      "trees": [
+        "pine_tree"
+      ],
+      "x": 48.5,
+      "z": 53.5
+    },
+    {
+      "boulders": 9,
+      "cart": true,
+      "dead_trees": 1,
+      "depth": 7,
+      "id": "west_scree",
+      "kind": "scree",
+      "width": 10,
+      "x": 9.5,
+      "z": 28.5
+    }
+  ]
 }

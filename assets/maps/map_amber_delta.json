@@ -2792,8 +2792,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 233.91,
-      "z": 24.7,
+      "x": 234,
+      "z": 25.25,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_east_hamlet"
