@@ -565,25 +565,67 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
   case SpawnType::HorseSpearman:
     return 300.0F;
   case SpawnType::Sheep:
-    return 210.0F;
+    return 200.0F;
   case SpawnType::Wolf:
-    return 340.0F;
+    return 300.0F;
   default:
     return 450.0F;
   }
 }
 
 [[nodiscard]] inline auto heading_locked_locomotion(SpawnType type) noexcept -> bool {
-  return type == SpawnType::Elephant;
+  return type == SpawnType::Elephant || type == SpawnType::Sheep ||
+         type == SpawnType::Wolf;
 }
 
 [[nodiscard]] inline auto min_turn_radius(SpawnType type) noexcept -> float {
-  return type == SpawnType::Elephant ? 2.6F : 0.0F;
+  switch (type) {
+  case SpawnType::Elephant:
+    return 2.6F;
+  case SpawnType::Sheep:
+    return 0.45F;
+  case SpawnType::Wolf:
+    return 0.60F;
+  default:
+    return 0.0F;
+  }
 }
 
 [[nodiscard]] inline auto
 turn_in_place_speed_degrees(SpawnType type) noexcept -> float {
-  return type == SpawnType::Elephant ? 60.0F : 0.0F;
+  switch (type) {
+  case SpawnType::Elephant:
+    return 60.0F;
+  case SpawnType::Sheep:
+    return 150.0F;
+  case SpawnType::Wolf:
+    return 220.0F;
+  default:
+    return 0.0F;
+  }
+}
+
+[[nodiscard]] inline auto heading_pivot_degrees(SpawnType type) noexcept -> float {
+  return (type == SpawnType::Sheep || type == SpawnType::Wolf) ? 115.0F : 65.0F;
+}
+
+[[nodiscard]] inline auto heading_turn_carry(SpawnType type) noexcept -> float {
+  return (type == SpawnType::Sheep || type == SpawnType::Wolf) ? 0.32F : 0.0F;
+}
+
+[[nodiscard]] inline auto heading_speed_scale(SpawnType type) noexcept -> float {
+  return (type == SpawnType::Sheep || type == SpawnType::Wolf) ? 0.82F : 1.0F;
+}
+
+[[nodiscard]] inline auto body_deceleration(SpawnType type) noexcept -> float {
+  switch (type) {
+  case SpawnType::Sheep:
+    return 6.5F;
+  case SpawnType::Wolf:
+    return 9.0F;
+  default:
+    return 2.6F;
+  }
 }
 
 [[nodiscard]] inline auto body_acceleration(SpawnType type) noexcept -> float {
@@ -595,9 +637,9 @@ turn_in_place_speed_degrees(SpawnType type) noexcept -> float {
   case SpawnType::HorseSpearman:
     return 8.0F;
   case SpawnType::Sheep:
-    return 6.0F;
+    return 4.5F;
   case SpawnType::Wolf:
-    return 8.0F;
+    return 7.0F;
   default:
     return 0.0F;
   }

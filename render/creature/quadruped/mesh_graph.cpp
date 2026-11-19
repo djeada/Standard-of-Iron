@@ -3,7 +3,9 @@
 #include <QVector4D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <numbers>
 #include <type_traits>
 #include <utility>
@@ -523,6 +525,71 @@ auto compile_node_mesh(const MeshNodeData& data) -> std::unique_ptr<Render::GL::
       data);
 }
 
+auto smooth_normals(const Render::GL::Mesh& mesh) -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices = mesh.get_vertices();
+  auto const& indices = mesh.get_indices();
+  constexpr float k_weld_cells = 20000.0F;
+  struct Welded {
+    std::array<std::int64_t, 3> cell;
+    QVector3D normal;
+  };
+  auto cell_of = [](const Render::GL::Vertex& v) {
+    return std::array<std::int64_t, 3>{
+        static_cast<std::int64_t>(std::llround(v.position[0] * k_weld_cells)),
+        static_cast<std::int64_t>(std::llround(v.position[1] * k_weld_cells)),
+        static_cast<std::int64_t>(std::llround(v.position[2] * k_weld_cells))};
+  };
+  std::vector<Welded> welded;
+  welded.reserve(vertices.size());
+  std::vector<std::size_t> slot(vertices.size(), 0U);
+  std::vector<std::size_t> order(vertices.size());
+  for (std::size_t i = 0; i < order.size(); ++i) {
+    order[i] = i;
+  }
+  std::vector<std::array<std::int64_t, 3>> cells(vertices.size());
+  for (std::size_t i = 0; i < vertices.size(); ++i) {
+    cells[i] = cell_of(vertices[i]);
+  }
+  std::sort(order.begin(), order.end(), [&cells](std::size_t a, std::size_t b) {
+    return cells[a] < cells[b];
+  });
+  for (std::size_t k = 0; k < order.size(); ++k) {
+    if (k == 0U || cells[order[k]] != cells[order[k - 1U]]) {
+      welded.push_back({cells[order[k]], QVector3D()});
+    }
+    slot[order[k]] = welded.size() - 1U;
+  }
+  auto position = [&vertices](unsigned int index) {
+    auto const& p = vertices[index].position;
+    return QVector3D(p[0], p[1], p[2]);
+  };
+  for (std::size_t i = 0; i + 2U < indices.size(); i += 3U) {
+    QVector3D const face =
+        QVector3D::crossProduct(position(indices[i + 1U]) - position(indices[i]),
+                                position(indices[i + 2U]) - position(indices[i]));
+    for (std::size_t corner = 0; corner < 3U; ++corner) {
+      welded[slot[indices[i + corner]]].normal += face;
+    }
+  }
+  for (std::size_t i = 0; i < vertices.size(); ++i) {
+    QVector3D normal = welded[slot[i]].normal;
+    if (normal.lengthSquared() <= 1.0e-16F) {
+      continue;
+    }
+    normal.normalize();
+    vertices[i].normal = {normal.x(), normal.y(), normal.z()};
+  }
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto compile_node(const MeshNode& node) -> std::unique_ptr<Render::GL::Mesh> {
+  std::unique_ptr<Render::GL::Mesh> mesh = compile_node_mesh(node.data);
+  if (mesh != nullptr && node.smooth_shading && !mesh->get_indices().empty()) {
+    return smooth_normals(*mesh);
+  }
+  return mesh;
+}
+
 } // namespace
 
 auto compile_mesh_graph(std::span<const MeshNode> nodes) -> CompiledMeshGraph {
@@ -531,7 +598,7 @@ auto compile_mesh_graph(std::span<const MeshNode> nodes) -> CompiledMeshGraph {
   compiled.primitives.reserve(nodes.size());
 
   for (const MeshNode& node : nodes) {
-    std::unique_ptr<Render::GL::Mesh> mesh = compile_node_mesh(node.data);
+    std::unique_ptr<Render::GL::Mesh> mesh = compile_node(node);
     if (mesh == nullptr || mesh->get_indices().empty()) {
       continue;
     }
@@ -598,7 +665,7 @@ auto compile_combined_mesh_graph(std::span<const MeshNode> nodes)
   std::vector<unsigned int> indices;
 
   for (const MeshNode& node : nodes) {
-    std::unique_ptr<Render::GL::Mesh> mesh = compile_node_mesh(node.data);
+    std::unique_ptr<Render::GL::Mesh> mesh = compile_node(node);
     if (mesh == nullptr) {
       continue;
     }

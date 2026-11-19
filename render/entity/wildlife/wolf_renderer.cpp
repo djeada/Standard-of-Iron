@@ -27,24 +27,24 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   float const morph = hash_unit_float(state.seed, 31U);
   QVector3D base = state.coat;
   if (morph < 0.30F) {
-    base = mixed(base, QVector3D(0.36F, 0.28F, 0.19F), 0.55F);
+    base = mixed(base, QVector3D(0.42F, 0.36F, 0.30F), 0.50F);
   } else if (morph > 0.86F) {
-    base = mixed(base, QVector3D(0.22F, 0.20F, 0.20F), 0.55F);
+    base = mixed(base, QVector3D(0.21F, 0.21F, 0.22F), 0.60F);
   }
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_wolf_role_fur - 1U] = base;
 
   variant.roles[Render::Wildlife::k_wolf_role_saddle - 1U] =
-      mixed(base, QVector3D(0.14F, 0.13F, 0.12F), 0.80F);
+      mixed(base, QVector3D(0.15F, 0.15F, 0.16F), 0.40F);
   variant.roles[Render::Wildlife::k_wolf_role_pale - 1U] =
-      mixed(base, QVector3D(0.78F, 0.74F, 0.66F), 0.56F);
+      mixed(base, QVector3D(0.80F, 0.78F, 0.73F), 0.62F);
   variant.roles[Render::Wildlife::k_wolf_role_cream - 1U] =
-      mixed(base, QVector3D(0.85F, 0.81F, 0.72F), 0.40F);
+      mixed(base, QVector3D(0.88F, 0.86F, 0.80F), 0.62F);
   variant.roles[Render::Wildlife::k_wolf_role_limb - 1U] =
-      mixed(base, QVector3D(0.24F, 0.21F, 0.19F), 0.42F);
+      mixed(base, QVector3D(0.74F, 0.72F, 0.67F), 0.22F);
   variant.roles[Render::Wildlife::k_wolf_role_paw - 1U] =
-      mixed(base, QVector3D(0.22F, 0.20F, 0.18F), 0.58F);
+      mixed(base, QVector3D(0.26F, 0.25F, 0.24F), 0.40F);
   variant.roles[Render::Wildlife::k_wolf_role_nose - 1U] = {0.07F, 0.065F, 0.07F};
   variant.roles[Render::Wildlife::k_wolf_role_eye - 1U] = {0.09F, 0.07F, 0.05F};
   variant.roles[Render::Wildlife::k_wolf_role_iris - 1U] = {0.86F, 0.64F, 0.16F};

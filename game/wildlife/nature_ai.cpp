@@ -23,6 +23,9 @@ constexpr float k_graze_chance = 0.55F;
 constexpr float k_graze_dwell_min = 3.0F;
 constexpr float k_graze_dwell_max = 8.5F;
 constexpr float k_alarm_duration = 3.5F;
+constexpr float k_prowl_pause_min = 2.0F;
+constexpr float k_prowl_pause_max = 5.5F;
+constexpr float k_wolf_prowl_pause_chance = 0.55F;
 constexpr float k_wolf_defend_leash_multiplier = 2.2F;
 constexpr float k_livestock_preference = 0.7F;
 constexpr float k_pack_slot_arc = 0.95F;
@@ -165,6 +168,10 @@ void close_and_bite(const NatureContext& ctx,
                     NatureActions& actions,
                     const PreyRef& prey) {
   auto& wildlife = *ctx.wildlife;
+  if (wildlife.behavior == Behavior::Roam) {
+
+    wildlife.state_timer = 0.0F;
+  }
   wildlife.behavior = Behavior::Stalk;
   wildlife.focus_id = prey.id;
   actions.set_travel_speed(ctx, true);
@@ -386,10 +393,14 @@ public:
 
 class DriftBehavior : public NatureBehavior {
 public:
-  DriftBehavior(std::string_view name, float min_radius, float max_radius)
+  DriftBehavior(std::string_view name,
+                float min_radius,
+                float max_radius,
+                float pause_chance = 0.0F)
       : m_name(name)
       , m_min_radius(min_radius)
-      , m_max_radius(max_radius) {}
+      , m_max_radius(max_radius)
+      , m_pause_chance(pause_chance) {}
 
   [[nodiscard]] auto name() const noexcept -> std::string_view override {
     return m_name;
@@ -405,6 +416,15 @@ public:
     actions.set_travel_speed(ctx, false);
 
     if (still_walking(ctx)) {
+      return true;
+    }
+    if (m_pause_chance > 0.0F && wildlife.state_timer > 0.0F) {
+      return true;
+    }
+    if (m_pause_chance > 0.0F && next_random(wildlife.rng_state) < m_pause_chance) {
+      wildlife.state_timer =
+          random_range(wildlife.rng_state, k_prowl_pause_min, k_prowl_pause_max);
+      actions.halt(ctx);
       return true;
     }
 
@@ -438,6 +458,7 @@ private:
   std::string_view m_name;
   float m_min_radius;
   float m_max_radius;
+  float m_pause_chance;
 };
 
 class WolfRetreatBehavior : public NatureBehavior {
@@ -700,8 +721,8 @@ auto make_wolf_brain() -> NatureBrain {
   brain.add(std::make_unique<WolfRetreatBehavior>());
   brain.add(std::make_unique<StalkPreyBehavior>());
   brain.add(std::make_unique<MenaceBehavior>());
-  brain.add(
-      std::make_unique<DriftBehavior>("wolf.prowl", 1.5F, k_pack_cohesion_radius));
+  brain.add(std::make_unique<DriftBehavior>(
+      "wolf.prowl", 1.5F, k_pack_cohesion_radius, k_wolf_prowl_pause_chance));
   return brain;
 }
 

@@ -105,6 +105,8 @@ struct MeshNode {
   int material_id{0};
   MeshNodeData data{};
 
+  bool smooth_shading{false};
+
   BoneIndex blend_bone{k_invalid_bone};
   QVector3D blend_from{};
   QVector3D blend_to{};

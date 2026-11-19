@@ -22,6 +22,7 @@ const float k_wildlife_belly_y = 0.26;
 const float k_wildlife_back_span = 0.40;
 const float k_wildlife_rim = 0.030;
 const float k_wildlife_shadow_floor = 0.42;
+const float k_wildlife_coat_saturation = 0.58;
 const int k_elephant_material = 8;
 const int k_elephant_role_tusk = 6;
 const int k_elephant_role_eye = 7;

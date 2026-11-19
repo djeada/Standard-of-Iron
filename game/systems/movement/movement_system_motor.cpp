@@ -22,8 +22,6 @@ using MovementCollision::SweepResult;
 namespace {
 
 constexpr float k_motor_ramp_seconds = 0.12F;
-constexpr float k_heading_locked_deceleration = 2.6F;
-constexpr float k_heading_locked_pivot_degrees = 65.0F;
 constexpr float k_heading_locked_idle_speed = 0.05F;
 
 } // namespace
@@ -68,10 +66,10 @@ void MovementSystem::Motor::drive_along_heading(
     yaw = Game::Systems::turn_yaw_toward(yaw, desired_yaw, yaw_rate * dt);
     transform.rotation.y = yaw;
     float const error = std::abs(Game::Systems::signed_yaw_delta(yaw, desired_yaw));
-    if (error < k_heading_locked_pivot_degrees) {
-      target_speed =
-          wanted_speed *
-          std::max(0.0F, std::cos(error * std::numbers::pi_v<float> / 180.0F));
+    if (error < Game::Units::heading_pivot_degrees(unit.spawn_type)) {
+      target_speed = wanted_speed * Game::Units::heading_speed_scale(unit.spawn_type) *
+                     std::max(Game::Units::heading_turn_carry(unit.spawn_type),
+                              std::cos(error * std::numbers::pi_v<float> / 180.0F));
     }
   }
 
@@ -80,7 +78,8 @@ void MovementSystem::Motor::drive_along_heading(
   if (speed < target_speed) {
     speed = std::min(target_speed, speed + accelerate * dt);
   } else {
-    speed = std::max(target_speed, speed - k_heading_locked_deceleration * dt);
+    speed = std::max(target_speed,
+                     speed - Game::Units::body_deceleration(unit.spawn_type) * dt);
   }
   float const yaw_radians = yaw * std::numbers::pi_v<float> / 180.0F;
   movement.set_manual_velocity(std::sin(yaw_radians) * speed,

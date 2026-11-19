@@ -303,8 +303,10 @@ vec3 soi_finish_character(vec3 color,
     color += sun_color * sheen * 0.09;
     color -= sky_color * edge * mix(k_readable_rim_near, k_readable_rim_far, zoom);
     color += sun_color * edge * k_wildlife_rim;
-    color = mix(color * vec3(1.07, 1.00, 0.85), color, skylight);
+    color = mix(color * vec3(1.03, 1.00, 0.93), color, skylight);
     color = max(color, vec3(0.0));
+    float coat_luma = dot(color, vec3(0.299, 0.587, 0.114));
+    color = mix(vec3(coat_luma), color, k_wildlife_coat_saturation);
   }
 #endif
 #if SOI_CHARACTER_WANTS(SOI_CHARACTER_HORSE)
