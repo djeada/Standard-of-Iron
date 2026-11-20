@@ -9,6 +9,7 @@
 #include "game/audio/audio_system.h"
 #undef private
 
+#include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
@@ -261,6 +262,34 @@ TEST_F(SettingsPersistenceTest, PartiallySavedVolumesAreNotTreatedAsAFirstRun) {
   EXPECT_FLOAT_EQ(loaded.sound, defaults.sound);
   EXPECT_FLOAT_EQ(loaded.voice, defaults.voice);
   EXPECT_FLOAT_EQ(loaded.ambience, defaults.ambience);
+}
+
+TEST_F(SettingsPersistenceTest,
+       RendererInitFailureLatchesTerminalStateAndStopsReopeningErrorDialog) {
+  GameEngine engine;
+  int error_signals = 0;
+  QObject::connect(&engine, &GameEngine::last_error_changed, [&]() {
+    if (!engine.last_error().isEmpty()) {
+      ++error_signals;
+    }
+  });
+
+  engine.report_renderer_failure(QStringLiteral("OpenGL 3.3 Core required"));
+  EXPECT_TRUE(engine.renderer_init_failed());
+  EXPECT_FALSE(engine.renderer_initialized());
+  EXPECT_EQ(error_signals, 1);
+
+  engine.clear_error();
+  EXPECT_TRUE(engine.last_error().isEmpty());
+  EXPECT_TRUE(engine.renderer_init_failed());
+
+  engine.ensure_initialized();
+  engine.report_renderer_failure(QStringLiteral("OpenGL 3.3 Core required"));
+  EXPECT_EQ(error_signals, 1);
+  EXPECT_TRUE(engine.last_error().isEmpty());
+
+  engine.retry_renderer_initialization();
+  EXPECT_FALSE(engine.renderer_init_failed());
 }
 
 } // namespace
