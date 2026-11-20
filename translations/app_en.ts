@@ -5573,38 +5573,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>COMBAT CONTROLS</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[LMB] Strike  [RMB] Guard</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Space] Dodge  [Alt] Jump</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Move  [Shift] Sprint</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Cycle Target  [3] Aura  [C] Camera</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Rally Orders  [Enter] Return to RTS</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Bash  [1] Rush  [2] Second Wind</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Place Rally  [C] Camera  [Enter] Return to RTS</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>Rally autopilot engaged until the flag is planted</translation>
     </message>
@@ -5627,6 +5595,38 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
         <translation>Use your weapon technique, or hold guard for a shield-bash stagger burst.</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] Strike  [%2] Guard</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] Dodge  [%2] Jump</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] Move  [%2] Sprint</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] Lock On  [%2] Aura  [%3] Camera</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] Rally Orders  [%2] Return to RTS</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] Bash  [%2] Rush  [%3] Second Wind</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</translation>
     </message>
 </context>
 <context>
@@ -7275,6 +7275,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Roman field commander</source>
         <translation>Roman field commander</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>%1 for the army view</translation>
     </message>
 </context>
 <context>
@@ -11923,10 +11927,6 @@ Right-click to cancel.</translation>
         <translation>Block</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>Cycle locked target</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>Vanguard rush</translation>
     </message>
@@ -12118,6 +12118,22 @@ Right-click to cancel.</translation>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>While a target is locked, moves the lock to the next enemy on the left instead.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>While a target is locked, moves the lock to the next enemy on the right instead.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>Lock on to a target, or release it</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12170,6 +12186,48 @@ Right-click to cancel.</translation>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Enemies are climbing below your stones. Roll them!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>Enemy commander</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>Your army</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>Rally flag</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Enemy</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>The field is yours</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>%1 has fallen</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>Your commander has fallen</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>The day is lost</translation>
     </message>
 </context>
 <context>
@@ -13109,6 +13167,50 @@ Right-click to cancel.</translation>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>Leading the commander</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>Mouse look and camera while you fight as the commander yourself.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>Look speed, sideways:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>Look speed, up and down:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>Invert vertical look</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>Pushing the mouse away from you tilts the view down, as on a flight stick.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>Field of view:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>Camera distance:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>How far the camera stands behind the commander. The mouse wheel changes it while you play.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>Guard stays up until pressed again</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</translation>
     </message>
 </context>
 <context>

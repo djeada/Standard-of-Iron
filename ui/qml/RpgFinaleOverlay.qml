@@ -72,6 +72,30 @@ Item {
         color: "black"
     }
 
+    // A soft band behind the line: it has to read over a field of pale
+    // helmets as surely as over grass.
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: titleBlock.verticalCenter
+        height: titleBlock.height * 2.6
+        opacity: 0.62 * titleBlock.titleReveal
+        gradient: Gradient {
+            GradientStop {
+                position: 0.0
+                color: "transparent"
+            }
+            GradientStop {
+                position: 0.5
+                color: Qt.rgba(0, 0, 0, 0.78)
+            }
+            GradientStop {
+                position: 1.0
+                color: "transparent"
+            }
+        }
+    }
+
     Column {
         id: titleBlock
 

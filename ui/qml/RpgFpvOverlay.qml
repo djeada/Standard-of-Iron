@@ -864,13 +864,29 @@ Item {
         }
     }
 
+    RpgBearingStrip {
+        id: bearingStrip
+        objectName: "rpgBearingStrip"
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.topInset + root.scaled(26)
+        width: Math.min(root.width * 0.46, root.scaled(760))
+        height: root.scaled(36)
+        unit: root.uiScale
+        fontPixels: root.fontSize(Design.Typography.caption)
+        bearings: root.status_value("bearings", [])
+        viewYaw: Number(root.status_value("view_yaw", 0))
+        visible: root.status_value("has_commander", false) === true
+    }
+
     Item {
         id: controlsStrip
         objectName: "rpgControlsStrip"
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: root.topInset + root.scaled(12)
+        anchors.top: bearingStrip.bottom
+        anchors.topMargin: root.scaled(40)
         width: controlsFlow.childrenRect.width + root.scaled(24)
         height: controlsFlow.childrenRect.height + root.scaled(12)
         opacity: 0.0

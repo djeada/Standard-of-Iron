@@ -5587,38 +5587,6 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>STEROWANIE W WALCE</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[LPM] Cios  [PPM] Garda</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Spacja] Unik  [Alt] Skok</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Ruch  [Shift] Sprint</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Zmiana celu  [3] Aura  [C] Kamera</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Rozkazy zbiórki  [Enter] Powrót do RTS</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Tarcza  [1] Skok  [2] Drugi oddech</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Cel  [1] Skok  [2] Drugi oddech  [3] Aura  [F] Tarcza</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Ustaw zbiórkę  [C] Kamera  [Enter] Powrót do RTS</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>Autopilot zbiórki włączony do chwili wbicia sztandaru</translation>
     </message>
@@ -5629,6 +5597,38 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>First-person command engaged</source>
         <translation>Dowodzenie z perspektywy pierwszej osoby włączone</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] Cios  [%2] Garda</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] Unik  [%2] Skok</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] Ruch  [%2] Sprint</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] Namierz  [%2] Aura  [%3] Kamera</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] Rozkazy zbiórki  [%2] Powrót do RTS</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] Tarcza  [%2] Skok  [%3] Drugi oddech</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] Namierz  [%2] Skok  [%3] Drugi oddech  [%4] Aura  [%5] Tarcza</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] Ustaw zbiórkę  [%2] Kamera  [%3] Powrót do RTS</translation>
     </message>
 </context>
 <context>
@@ -7279,6 +7279,10 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>Roman field commander</source>
         <translation>Rzymski dowódca polowy</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>%1 – widok armii</translation>
     </message>
 </context>
 <context>
@@ -12031,10 +12035,6 @@ Prawy przycisk anuluje.</translation>
         <translation>Blok</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>Zmień namierzony cel</translation>
-    </message>
-    <message>
         <source>Weapon special</source>
         <translation>Sztuka broni</translation>
     </message>
@@ -12122,6 +12122,22 @@ Prawy przycisk anuluje.</translation>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>Zaznacza grupę. Przytrzymaj Ctrl, aby zapisać w niej bieżące zaznaczenie, przytrzymaj Shift, aby dodać grupę do zaznaczenia, i naciśnij szybko dwa razy, aby wyśrodkować na niej kamerę.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>Gdy cel jest namierzony, przenosi namiar na następnego wroga po lewej.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>Gdy cel jest namierzony, przenosi namiar na następnego wroga po prawej.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>Namierz cel lub zwolnij namiar</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>Namierza wroga najbliżej środka widoku; naciśnij ponownie, aby zwolnić. Obrót w lewo i w prawo przenosi namiar na sąsiedniego wroga.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12174,6 +12190,48 @@ Prawy przycisk anuluje.</translation>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Wrogowie wspinają się pod twoimi kamieniami. Tocz je!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>Dowódca wroga</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>Twoja armia</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>Chorągiew zbiórki</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Wróg</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>Pole jest twoje</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>%1 poległ</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>Twój dowódca poległ</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>Dzień jest stracony</translation>
     </message>
 </context>
 <context>
@@ -13114,6 +13172,50 @@ Prawy przycisk anuluje.</translation>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>Trzy prędkości poniżej skalują przesuwanie, przybliżanie i obracanie klawiaturą. Przeciąganie myszą i ruch po minimapie pozostają bez zmian.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>Prowadzenie dowódcy</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>Rozglądanie myszą i kamera, gdy sam walczysz jako dowódca.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>Szybkość rozglądania, na boki:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>Szybkość rozglądania, góra–dół:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>Odwróć oś pionową</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>Pchnięcie myszy od siebie pochyla widok w dół, jak drążek sterowy.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>Pole widzenia:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>Odległość kamery:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>Jak daleko za dowódcą stoi kamera. Podczas gry zmienia ją kółko myszy.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>Garda trzyma się do ponownego naciśnięcia</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>Naciśnij przycisk gardy raz, by unieść tarczę, i jeszcze raz, by ją opuścić, zamiast go przytrzymywać.</translation>
     </message>
 </context>
 <context>

@@ -1,13 +1,16 @@
 #include "app/commander/commander_status_builder.h"
 
 #include <QString>
+#include <QVariantList>
 #include <QVariantMap>
 
 #include <algorithm>
 
+#include "app/commander/commander_bearings.h"
 #include "app/world/unit_queries.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
+#include "game/session/session_context.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/util/asset_text.h"
 
@@ -18,6 +21,8 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   auto* world = const_cast<Engine::Core::World*>(input.world);
   QVariantMap result;
   result["has_commander"] = false;
+  result["bearings"] = QVariantList{};
+  result["view_yaw"] = static_cast<double>(input.view_yaw);
   result["id"] = 0;
   result["name"] = QString();
   result["nation"] = QString();
@@ -122,6 +127,25 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   }
 
   result["has_commander"] = true;
+  {
+    auto& session = Game::Session::session_for(*world);
+    QVariantList bearings;
+    for (auto const& bearing :
+         collect_commander_bearings({.world = world,
+                                     .commander_id = input.controlled_commander_id,
+                                     .local_owner_id = unit->owner_id,
+                                     .view_yaw_degrees = input.view_yaw,
+                                     .owners = &session.owners(),
+                                     .visibility = &session.visibility()})) {
+      bearings.push_back(QVariantMap{
+          {QStringLiteral("kind"),
+           QString::fromLatin1(commander_bearing_kind_name(bearing.kind))},
+          {QStringLiteral("bearing"), static_cast<double>(bearing.right_degrees)},
+          {QStringLiteral("distance"), static_cast<double>(bearing.distance)},
+          {QStringLiteral("label"), bearing.label}});
+    }
+    result["bearings"] = bearings;
+  }
   result["id"] = static_cast<int>(input.controlled_commander_id);
   result["name"] = name;
   result["nation"] = described.nation;

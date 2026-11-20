@@ -1245,6 +1245,7 @@ void CommanderViewModel::publish_frame() {
   input.controlled_commander_id = m_controlled_commander_id;
   input.dodge_active = m_control.is_dodge_rolling();
   input.locked_target_id = m_control.locked_target_id();
+  input.view_yaw = m_control.view_yaw();
   input.rally_placing = is_placing_rally();
   input.refusal_sequence = m_control.last_refusal().sequence;
   input.refusal_action = m_control.last_refusal().action;

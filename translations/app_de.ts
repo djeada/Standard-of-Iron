@@ -5573,38 +5573,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>KAMPFSTEUERUNG</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[LMT] Schlagen  [RMT] Decken</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Leertaste] Ausweichen  [Alt] Springen</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Bewegen  [Umschalt] Sprinten</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Ziel wechseln  [3] Aura  [C] Kamera</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Sammelbefehle  [Enter] Zurück zur RTS-Sicht</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Stoß  [1] Ansturm  [2] Zweiter Atem</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Ziel  [1] Ansturm  [2] Zweiter Atem  [3] Aura  [F] Stoß</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Sammelpunkt setzen  [C] Kamera  [Enter] Zurück zur RTS-Sicht</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>Sammel-Autopilot aktiv, bis die Flagge steht</translation>
     </message>
@@ -5627,6 +5595,38 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
         <translation>Setze deine Waffentechnik ein oder halte die Deckung für einen betäubenden Schildstoß.</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] Schlagen  [%2] Decken</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] Ausweichen  [%2] Springen</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] Bewegen  [%2] Sprinten</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] Anvisieren  [%2] Aura  [%3] Kamera</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] Sammelbefehle  [%2] Zurück zur RTS-Sicht</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] Stoß  [%2] Ansturm  [%3] Zweiter Atem</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] Anvisieren  [%2] Ansturm  [%3] Zweiter Atem  [%4] Aura  [%5] Stoß</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] Sammelpunkt setzen  [%2] Kamera  [%3] Zurück zur RTS-Sicht</translation>
     </message>
 </context>
 <context>
@@ -7275,6 +7275,10 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>Roman field commander</source>
         <translation>Römischer Feldherr</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>%1 für die Heeresansicht</translation>
     </message>
 </context>
 <context>
@@ -11923,10 +11927,6 @@ Rechtsklick zum Abbrechen.</translation>
         <translation>Blocken</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>Anvisiertes Ziel wechseln</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>Vorhutsturm</translation>
     </message>
@@ -12118,6 +12118,22 @@ Rechtsklick zum Abbrechen.</translation>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>Wählt die Gruppe aus. Halte Strg, um die aktuelle Auswahl darin zu speichern, halte Umschalt, um die Gruppe zur Auswahl hinzuzufügen, und drücke zweimal schnell, um die Kamera auf sie zu zentrieren.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>Ist ein Ziel anvisiert, wechselt die Zielerfassung stattdessen zum nächsten Feind links.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>Ist ein Ziel anvisiert, wechselt die Zielerfassung stattdessen zum nächsten Feind rechts.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>Ziel anvisieren oder freigeben</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>Visiert den Feind an, der der Bildmitte am nächsten ist; erneutes Drücken gibt ihn frei. Links- und Rechtsdrehen wechseln zum jeweils nächsten Feind.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12170,6 +12186,48 @@ Rechtsklick zum Abbrechen.</translation>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Feinde steigen unter deinen Steinen hinauf. Lass sie rollen!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>Feindlicher Befehlshaber</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>Dein Heer</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>Sammelfahne</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Feind</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>Das Feld gehört dir</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>%1 ist gefallen</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>Dein Befehlshaber ist gefallen</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>Der Tag ist verloren</translation>
     </message>
 </context>
 <context>
@@ -13109,6 +13167,50 @@ Rechtsklick zum Abbrechen.</translation>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>Die drei Geschwindigkeiten unten skalieren Schwenken, Zoomen und Drehen über die Tastatur. Ziehen mit der Maus und Bewegungen auf der Minikarte bleiben unverändert.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>Den Befehlshaber selbst führen</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>Mausblick und Kamera, wenn du selbst als Befehlshaber kämpfst.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>Blickgeschwindigkeit, seitlich:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>Blickgeschwindigkeit, auf und ab:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>Vertikalen Blick umkehren</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>Die Maus von dir wegzuschieben neigt den Blick nach unten, wie bei einem Steuerknüppel.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>Sichtfeld:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>Kameraabstand:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>Wie weit die Kamera hinter dem Befehlshaber steht. Im Spiel lässt sich das mit dem Mausrad ändern.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>Deckung bleibt oben, bis erneut gedrückt wird</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>Die Deckungstaste einmal drücken, um den Schild zu heben, und noch einmal, um ihn zu senken, statt sie gedrückt zu halten.</translation>
     </message>
 </context>
 <context>

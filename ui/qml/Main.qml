@@ -469,6 +469,15 @@ ApplicationWindow {
         maxHeight: hud.visible && hud.commander_rpg_mode ? Math.max(0, hud.height - hud.bottom_reserved_height - anchors.topMargin - Design.Metrics.space8) : -1
         z: 12
         visible: mainWindow.game_started && !mainWindow.menu_visible
+        // The closing beat of a battle fought as the commander has the frame
+        // to itself; whatever is still on the stack is there again after it.
+        opacity: hud.visible && hud.commander_finale ? 0.0 : 1.0
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.normal
+            }
+        }
     }
 
     Rectangle {

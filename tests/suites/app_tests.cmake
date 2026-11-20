@@ -45,6 +45,7 @@ add_executable(
     core/commander_defense_windows_test.cpp
     core/commander_accessibility_test.cpp
     core/commander_lifecycle_soak_test.cpp
+    core/commander_bearings_test.cpp
     core/commander_finale_test.cpp
     core/commander_lock_on_test.cpp
     core/commander_status_builder_test.cpp
