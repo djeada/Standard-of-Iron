@@ -240,8 +240,8 @@ public:
   void set_replay_record_path(const QString& path);
   auto start_replay(const QString& path) -> bool;
   [[nodiscard]] auto replay_playing() const -> bool;
-  [[nodiscard]] auto replay_view_pointer() const
-      -> std::optional<App::Session::ReplayViewPointer>;
+  [[nodiscard]] auto
+  replay_view_pointer() const -> std::optional<App::Session::ReplayViewPointer>;
 
   void set_replay_verify_exit(bool enabled);
   Q_INVOKABLE void open_settings();
@@ -298,8 +298,8 @@ public:
   [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex> override {
     return m_lifecycle.lock_frame();
   }
-  [[nodiscard]] auto try_lock_frame()
-      -> std::unique_lock<std::recursive_mutex> override {
+  [[nodiscard]] auto
+  try_lock_frame() -> std::unique_lock<std::recursive_mutex> override {
     return m_lifecycle.try_lock_frame();
   }
   [[nodiscard]] auto deferred_presentation_jobs() const -> std::uint64_t {
@@ -316,7 +316,7 @@ public:
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
   [[nodiscard]] bool renderer_init_failed() const { return m_renderer_init_failed; }
   void report_renderer_failure(const QString& error_message);
-  Q_INVOKABLE void retry_renderer_initialization();
+  void retry_renderer_initialization();
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
@@ -469,10 +469,10 @@ private:
   void configure_mission_victory_conditions();
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
-  [[nodiscard]] auto current_mission_definition() const
-      -> const Game::Mission::MissionDefinition*;
-  [[nodiscard]] auto authored_mission_definition() const
-      -> const Game::Mission::MissionDefinition*;
+  [[nodiscard]] auto
+  current_mission_definition() const -> const Game::Mission::MissionDefinition*;
+  [[nodiscard]] auto
+  authored_mission_definition() const -> const Game::Mission::MissionDefinition*;
 
   [[nodiscard]] auto mission_binding() -> App::Mission::MissionBinding;
   [[nodiscard]] auto commander_binding() -> App::Mission::CommanderMessageBinding;
@@ -492,10 +492,10 @@ private:
   void update_loading_overlay();
   void update_cursor_position();
 
-  [[nodiscard]] auto capture_save_to_slot(const QString& slot_name,
-                                          Game::Systems::Save::SlotKind kind,
-                                          int autosave_retention)
-      -> App::Core::SaveToSlotEffects;
+  [[nodiscard]] auto
+  capture_save_to_slot(const QString& slot_name,
+                       Game::Systems::Save::SlotKind kind,
+                       int autosave_retention) -> App::Core::SaveToSlotEffects;
   void load_game_from_slot(const QString& slot_name);
   [[nodiscard]] auto load_request(const QString& slot_name,
                                   Game::Systems::RuntimeSnapshot& runtime_snapshot)

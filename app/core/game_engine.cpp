@@ -641,7 +641,9 @@ void GameEngine::advance_frame_orchestrator(float dt) {
       .on_minimap_image_changed =
           [this]() { m_minimap_view_model->notify_image_changed(); },
       .on_selected_units_data_changed =
-          [this]() { emit selected_units_data_changed(); }};
+          [this]() {
+            emit selected_units_data_changed();
+          }};
 
   m_frame_orchestrator.update(
       scene_context(),
@@ -943,8 +945,8 @@ void GameEngine::update_cursor_position() {
   }
 }
 
-auto GameEngine::screen_to_ground(const QPointF& screen_pt, QVector3D& out_world)
-    -> bool {
+auto GameEngine::screen_to_ground(const QPointF& screen_pt,
+                                  QVector3D& out_world) -> bool {
   return App::Utils::screen_to_ground(m_picking_service.get(),
                                       m_camera,
                                       m_window,
@@ -1261,7 +1263,9 @@ auto GameEngine::load_match_world(const QString& map_path,
                                            allow_default_player_barracks,
                                            is_campaign_mission,
                                            m_loading_progress_tracker.get(),
-                                           [this]() { emit owner_info_changed(); }});
+                                           [this]() {
+                                             emit owner_info_changed();
+                                           }});
 }
 
 void GameEngine::configure_loaded_match(const QString& map_path,
@@ -1795,7 +1799,9 @@ auto GameEngine::load_request(const QString& slot_name,
             restore_tutorial_state(tutorial_state);
           },
       .restore_battle_stats =
-          [this](const QJsonObject& stats) { restore_battle_stats(stats); }};
+          [this](const QJsonObject& stats) {
+            restore_battle_stats(stats);
+          }};
 }
 
 void GameEngine::restore_environment_after_load() {
