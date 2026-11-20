@@ -66,7 +66,10 @@ enum class CommanderAction : std::uint8_t {
   CycleLockOn,
   ToggleCameraMode,
   ToggleWeaponStance,
-  ReleaseForRally
+  ReleaseForRally,
+  ToggleLockOn,
+  SwitchLockLeft,
+  SwitchLockRight
 };
 
 struct CommanderActionRecord {

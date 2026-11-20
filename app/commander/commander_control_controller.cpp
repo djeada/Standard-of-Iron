@@ -236,6 +236,26 @@ void CommanderControlController::cycle_lock_on_target(
   }
 }
 
+void CommanderControlController::toggle_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) {
+  if (m_targeting.toggle_lock(world, commander_id, local_owner_id, m_look.yaw()) ==
+      App::Core::CommanderTargeting::LockToggle::NoTarget) {
+    m_abilities.refuse("commander.cycle_lock_on");
+  }
+}
+
+void CommanderControlController::switch_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id,
+    int direction) {
+  if (!m_targeting.switch_lock(world, commander_id, local_owner_id, direction)) {
+    m_abilities.refuse("commander.cycle_lock_on");
+  }
+}
+
 void CommanderControlController::note_refusal(const char* action) {
   m_abilities.refuse(action);
 }

@@ -58,6 +58,7 @@ inline constexpr char kCommanderCameraImpulseKey[] = "commander/camera_impulse";
 inline constexpr char kCommanderHeadBobKey[] = "commander/head_bob";
 inline constexpr char kCommanderFieldOfViewScaleKey[] = "commander/fov_scale";
 inline constexpr char kCommanderGuardToggleKey[] = "commander/guard_is_toggle";
+inline constexpr char kCommanderCameraDistanceKey[] = "commander/camera_distance";
 
 inline constexpr int kDefaultAutosaveSlotCount = 3;
 inline constexpr int kMinAutosaveSlotCount = 1;
@@ -81,6 +82,9 @@ inline constexpr double kMaxCommanderLookSensitivity = 4.0;
 inline constexpr double kDefaultCommanderFieldOfViewScale = 1.0;
 inline constexpr double kMinCommanderFieldOfViewScale = 0.75;
 inline constexpr double kMaxCommanderFieldOfViewScale = 1.35;
+inline constexpr double kDefaultCommanderCameraDistance = 1.0;
+inline constexpr double kMinCommanderCameraDistance = 0.7;
+inline constexpr double kMaxCommanderCameraDistance = 2.4;
 inline constexpr double kDefaultScreenEffectIntensity = 1.0;
 
 inline constexpr char kDefaultDisplayWindowMode[] = "fullscreen";
@@ -504,6 +508,20 @@ inline void save_commander_field_of_view_scale(double scale) {
                               scale,
                               kMinCommanderFieldOfViewScale,
                               kMaxCommanderFieldOfViewScale);
+}
+
+inline auto load_commander_camera_distance() -> double {
+  return Detail::load_bounded_double(kCommanderCameraDistanceKey,
+                                     kDefaultCommanderCameraDistance,
+                                     kMinCommanderCameraDistance,
+                                     kMaxCommanderCameraDistance);
+}
+
+inline void save_commander_camera_distance(double scale) {
+  Detail::save_bounded_double(kCommanderCameraDistanceKey,
+                              scale,
+                              kMinCommanderCameraDistance,
+                              kMaxCommanderCameraDistance);
 }
 
 inline auto load_commander_guard_is_toggle() -> bool {

@@ -77,25 +77,33 @@ void CommanderLook::center_mouse(double center_sx,
                             static_cast<int>(std::round(center_sy)));
   m_mouse_center = local_center;
   m_mouse_center_valid = true;
-  const QPoint global_center = window->mapToGlobal(local_center);
-  const QPoint current_global = QCursor::pos();
-  if (current_global == global_center) {
-    m_last_mouse_global = global_center;
-    m_last_mouse_valid = true;
-    m_mouse_warp_supported = true;
-    m_mouse_recentering = false;
-    return;
+  warp_to_centre(window->mapToGlobal(local_center));
+  m_mouse_recentering = false;
+}
+
+void CommanderLook::warp_to_centre(const QPoint& global_center) {
+  if (QCursor::pos() != global_center) {
+    QCursor::setPos(global_center);
   }
 
-  QCursor::setPos(global_center);
-  m_mouse_warp_supported = (QCursor::pos() == global_center);
-  m_last_mouse_global = m_mouse_warp_supported ? global_center : current_global;
+  // The pointer is read back rather than assumed: a platform that refuses the
+  // warp (Wayland), clamps it (a window reaching past the screen edge) or
+  // rounds it (fractional display scaling) leaves it somewhere else, and the
+  // next delta must be measured from where it really is. Measuring from the
+  // requested centre turned the whole offset into one look delta, which threw
+  // the view to the pitch limit the moment control was taken.
+  const QPoint landed = QCursor::pos();
+  m_mouse_warp_supported =
+      (landed - global_center).manhattanLength() <= k_warp_tolerance_pixels;
+  m_last_mouse_global = landed;
   m_last_mouse_valid = true;
-  m_mouse_recentering = false;
 }
 
 void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
   if (window == nullptr || !window->isActive()) {
+    // Deltas are never measured across a spell without focus: the pointer was
+    // somebody else's while the window was inactive.
+    m_last_mouse_valid = false;
     return;
   }
 
@@ -103,6 +111,9 @@ void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
   if (!m_last_mouse_valid) {
     m_last_mouse_global = current_global;
     m_last_mouse_valid = true;
+    if (m_mouse_center_valid) {
+      warp_to_centre(window->mapToGlobal(m_mouse_center));
+    }
     return;
   }
 
@@ -111,16 +122,10 @@ void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
     apply_mouse_delta(delta.x(), delta.y(), sensitivity_scale);
   }
 
-  if (m_mouse_warp_supported && m_mouse_center_valid) {
-    const QPoint global_center = window->mapToGlobal(m_mouse_center);
-    if (current_global != global_center) {
-      QCursor::setPos(global_center);
-      m_last_mouse_global = global_center;
-      return;
-    }
-  }
-
   m_last_mouse_global = current_global;
+  if (!delta.isNull() && m_mouse_warp_supported && m_mouse_center_valid) {
+    warp_to_centre(window->mapToGlobal(m_mouse_center));
+  }
 }
 
 auto CommanderLook::sample_frame_intent(const CommanderHeldInput& held)

@@ -325,6 +325,13 @@ Item {
 
     function perform_commander_action(actionId, event) {
         var canonical = InputBindings.canonical_key_for(actionId);
+        if ((actionId === "commander.turn_left" || actionId === "commander.turn_right") && pressed_keys[event.key] === undefined && game.commander.lock_active && game.commander.lock_active()) {
+            // While a target is locked the view is already held on it, so the
+            // turn keys step the lock to the next enemy on that side instead.
+            if (!event.isAutoRepeat)
+                game.commander.switch_lock_target(actionId === "commander.turn_left" ? -1 : 1);
+            return true;
+        }
         if (canonical !== 0 && game.commander.key_down) {
             switch (actionId) {
             case "commander.move_forward":
@@ -351,8 +358,8 @@ Item {
                 game.commander.jump();
             return true;
         case "commander.cycle_lock_on":
-            if (game.commander.cycle_lock_on)
-                game.commander.cycle_lock_on();
+            if (game.commander.toggle_lock_on)
+                game.commander.toggle_lock_on();
             return true;
         case "commander.ability_vanguard_rush":
             if (game.commander.vanguard_rush)

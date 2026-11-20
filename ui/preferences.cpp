@@ -52,6 +52,7 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_commander_field_of_view_scale(
           UserSettings::load_commander_field_of_view_scale())
     , m_commander_guard_is_toggle(UserSettings::load_commander_guard_is_toggle())
+    , m_commander_camera_distance(UserSettings::load_commander_camera_distance())
     , m_damage_numbers(UserSettings::load_ui_damage_numbers())
     , m_damage_number_mode(UserSettings::load_ui_damage_number_mode())
     , m_economy_numbers(UserSettings::load_ui_economy_numbers())
@@ -86,6 +87,8 @@ void UiPreferences::publish_commander_input_settings() const {
   CommanderInput::set_field_of_view_scale(
       static_cast<float>(m_commander_field_of_view_scale));
   CommanderInput::set_guard_is_toggle(m_commander_guard_is_toggle);
+  CommanderInput::set_camera_distance_scale(
+      static_cast<float>(m_commander_camera_distance));
 }
 
 void UiPreferences::publish_camera_speeds() const {
@@ -155,6 +158,46 @@ void UiPreferences::set_commander_head_bob(bool enabled) {
   UserSettings::save_commander_head_bob(enabled);
   publish_commander_input_settings();
   emit commander_input_changed();
+}
+
+void UiPreferences::set_commander_camera_distance(qreal scale) {
+  if (!is_finite_scale(scale)) {
+    return;
+  }
+  const qreal clamped = std::clamp<qreal>(scale,
+                                          UserSettings::kMinCommanderCameraDistance,
+                                          UserSettings::kMaxCommanderCameraDistance);
+  if (qFuzzyCompare(clamped, m_commander_camera_distance)) {
+    return;
+  }
+  m_commander_camera_distance = clamped;
+  UserSettings::save_commander_camera_distance(clamped);
+  publish_commander_input_settings();
+  emit commander_input_changed();
+}
+
+auto UiPreferences::min_commander_look_sensitivity() -> qreal {
+  return UserSettings::kMinCommanderLookSensitivity;
+}
+
+auto UiPreferences::max_commander_look_sensitivity() -> qreal {
+  return UserSettings::kMaxCommanderLookSensitivity;
+}
+
+auto UiPreferences::min_commander_field_of_view_scale() -> qreal {
+  return UserSettings::kMinCommanderFieldOfViewScale;
+}
+
+auto UiPreferences::max_commander_field_of_view_scale() -> qreal {
+  return UserSettings::kMaxCommanderFieldOfViewScale;
+}
+
+auto UiPreferences::min_commander_camera_distance() -> qreal {
+  return UserSettings::kMinCommanderCameraDistance;
+}
+
+auto UiPreferences::max_commander_camera_distance() -> qreal {
+  return UserSettings::kMaxCommanderCameraDistance;
 }
 
 void UiPreferences::set_commander_field_of_view_scale(qreal scale) {
@@ -507,6 +550,7 @@ void UiPreferences::reset_to_defaults() {
   set_commander_head_bob(true);
   set_commander_field_of_view_scale(UserSettings::kDefaultCommanderFieldOfViewScale);
   set_commander_guard_is_toggle(false);
+  set_commander_camera_distance(UserSettings::kDefaultCommanderCameraDistance);
   set_display_window_mode(QString::fromLatin1(UserSettings::kDefaultDisplayWindowMode));
   set_display_vsync(UserSettings::kDefaultDisplayVsync);
   set_show_fps(UserSettings::kDefaultUiShowFps);

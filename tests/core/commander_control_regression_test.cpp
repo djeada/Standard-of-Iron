@@ -582,9 +582,15 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
   EXPECT_TRUE(contains(commander_hud_source,
                        "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
                        "qsTr(\"ABILITIES\")"));
-  EXPECT_TRUE(contains(commander_hud_source, "qsTr(\"[Space] Dodge  [Alt] Jump\")"));
+  // The panel names the keys that are bound, never a fixed set: a hint that
+  // said "[Alt] Jump" stayed wrong for everyone who had rebound it.
   EXPECT_TRUE(contains(commander_hud_source,
-                       "qsTr(\"[Tab] Cycle Target  [3] Aura  [C] Camera\")"));
+                       "qsTr(\"[%1] Dodge  [%2] Jump\")"
+                       ".arg(bottomRoot.key_for(\"commander.dodge\"))"
+                       ".arg(bottomRoot.key_for(\"commander.jump\"))"));
+  EXPECT_TRUE(contains(commander_hud_source,
+                       "qsTr(\"[%1] Lock On  [%2] Aura  [%3] Camera\")"));
+  EXPECT_FALSE(contains(commander_hud_source, "[Alt]"));
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
 

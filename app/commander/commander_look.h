@@ -43,7 +43,15 @@ public:
   void release_mouse();
   void reset();
 
+  [[nodiscard]] auto mouse_warp_supported() const -> bool {
+    return m_mouse_warp_supported;
+  }
+
 private:
+  static constexpr int k_warp_tolerance_pixels = 2;
+
+  void warp_to_centre(const QPoint& global_center);
+
   CommanderLatencyProbe* m_latency_probe = nullptr;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;

@@ -118,6 +118,126 @@ TEST_F(CommanderLockOnTest, CyclingWalksTargetsAcrossTheScreen) {
       << "cycling past the rightmost target wraps to the leftmost";
 }
 
+TEST_F(CommanderLockOnTest, TheLockKeyReleasesTheTargetItTook) {
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  auto* enemy = make_unit(world, 0.0F, 4.0F, 2);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  make_enemies_hostile(world);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+
+  controller.toggle_lock_on_target(world, commander->get_id(), 1);
+  ASSERT_EQ(controller.locked_target_id(), enemy->get_id());
+
+  controller.toggle_lock_on_target(world, commander->get_id(), 1);
+  EXPECT_EQ(controller.locked_target_id(), 0U)
+      << "with one enemy in reach, cycling re-locked him for ever; the second "
+         "press has to let him go";
+  auto const* targets =
+      commander->get_component<Engine::Core::RpgCommanderTargetComponent>();
+  ASSERT_NE(targets, nullptr);
+  EXPECT_EQ(targets->explicit_lock_target_id, 0U)
+      << "the simulation must stop steering strikes at a released target";
+
+  controller.toggle_lock_on_target(world, commander->get_id(), 1);
+  EXPECT_EQ(controller.locked_target_id(), enemy->get_id());
+}
+
+TEST_F(CommanderLockOnTest, LockingWithNobodyInViewIsRefusedOutLoud) {
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  auto* behind = make_unit(world, 0.0F, -6.0F, 2);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(behind, nullptr);
+  make_enemies_hostile(world);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  auto const refusals_before = controller.last_refusal().sequence;
+
+  controller.toggle_lock_on_target(world, commander->get_id(), 1);
+  EXPECT_EQ(controller.locked_target_id(), 0U);
+  EXPECT_NE(controller.last_refusal().sequence, refusals_before)
+      << "a press that locks nothing must reach the HUD as a refusal";
+}
+
+TEST_F(CommanderLockOnTest, SwitchingStepsToTheNeighbourOnThatSide) {
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  auto* left = make_unit(world, -3.0F, 5.0F, 2);
+  auto* centre = make_unit(world, 0.0F, 5.0F, 2);
+  auto* right = make_unit(world, 3.0F, 5.0F, 2);
+  auto* far_right = make_unit(world, 6.0F, 5.0F, 2);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(centre, nullptr);
+  ASSERT_NE(right, nullptr);
+  ASSERT_NE(far_right, nullptr);
+  make_enemies_hostile(world);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.toggle_lock_on_target(world, commander->get_id(), 1);
+  ASSERT_EQ(controller.locked_target_id(), centre->get_id());
+
+  controller.switch_lock_on_target(world, commander->get_id(), 1, 1);
+  EXPECT_EQ(controller.locked_target_id(), right->get_id())
+      << "one step right is the neighbour, not the far end of the line";
+
+  controller.switch_lock_on_target(world, commander->get_id(), 1, -1);
+  EXPECT_EQ(controller.locked_target_id(), centre->get_id());
+
+  controller.switch_lock_on_target(world, commander->get_id(), 1, -1);
+  EXPECT_EQ(controller.locked_target_id(), left->get_id());
+
+  auto const refusals_before = controller.last_refusal().sequence;
+  controller.switch_lock_on_target(world, commander->get_id(), 1, -1);
+  EXPECT_EQ(controller.locked_target_id(), left->get_id())
+      << "with nobody further left the lock stays where it is";
+  EXPECT_NE(controller.last_refusal().sequence, refusals_before);
+}
+
+TEST_F(CommanderLockOnTest, SwitchingTakesTheFrontRankBeforeTheManBehind) {
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  auto* locked = make_unit(world, 0.0F, 5.0F, 2);
+  // Almost dead ahead but a rank back, against a front-rank neighbour.
+  auto* behind = make_unit(world, 0.25F, 7.0F, 2);
+  auto* neighbour = make_unit(world, 1.2F, 5.0F, 2);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(locked, nullptr);
+  ASSERT_NE(behind, nullptr);
+  ASSERT_NE(neighbour, nullptr);
+  make_enemies_hostile(world);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.toggle_lock_on_target(world, commander->get_id(), 1);
+  ASSERT_EQ(controller.locked_target_id(), locked->get_id());
+
+  controller.switch_lock_on_target(world, commander->get_id(), 1, 1);
+  EXPECT_EQ(controller.locked_target_id(), neighbour->get_id())
+      << "bearing alone would pick the man two metres behind the locked one";
+}
+
+TEST_F(CommanderLockOnTest, SwitchingWithoutALockDoesNothing) {
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  auto* enemy = make_unit(world, 2.0F, 5.0F, 2);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  make_enemies_hostile(world);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.switch_lock_on_target(world, commander->get_id(), 1, 1);
+  EXPECT_EQ(controller.locked_target_id(), 0U)
+      << "the switch keys never take a lock by themselves";
+}
+
 TEST_F(CommanderLockOnTest, AnOverlappingTargetDoesNotSpinTheView) {
   constexpr float k_dt = 1.0F / 60.0F;
   Engine::Core::World world;

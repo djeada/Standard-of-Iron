@@ -74,11 +74,20 @@ public:
   Q_INVOKABLE void mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy);
   Q_INVOKABLE void center_mouse(qreal center_sx, qreal center_sy);
 
+  // Scripted play (film and benchmark fixtures): turn the view the way a
+  // player would with the mouse, toward a world point or the nearest hostile
+  // soldier, so a fixture can fight an enemy whose position it cannot know.
+  void aim_view_at_world(float x, float z);
+  auto aim_view_at_nearest_enemy(float max_range, bool commanders_only) -> bool;
+
   Q_INVOKABLE void trigger_aura();
   Q_INVOKABLE void trigger_rally();
   Q_INVOKABLE void dodge();
   Q_INVOKABLE void jump();
   Q_INVOKABLE void cycle_lock_on();
+  Q_INVOKABLE void toggle_lock_on();
+  Q_INVOKABLE void switch_lock_target(int direction);
+  Q_INVOKABLE [[nodiscard]] bool lock_active() const;
   Q_INVOKABLE void special_action();
   Q_INVOKABLE void vanguard_rush();
   Q_INVOKABLE void second_wind();

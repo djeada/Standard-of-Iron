@@ -3,6 +3,8 @@
 #include <QQuickWindow>
 
 #include <algorithm>
+#include <cmath>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -26,8 +28,10 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
+#include "game/systems/combat_system/target_rules.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/navigation/nav_grid.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -411,6 +415,88 @@ void CommanderViewModel::mouse_look_at(qreal sx,
   m_control.mouse_look_at(sx, sy, center_sx, center_sy, m_context.window);
 }
 
+void CommanderViewModel::aim_view_at_world(float x, float z) {
+  if (ignores_player_input() || !active() || m_context.world == nullptr) {
+    return;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto const* transform =
+      m_context.world->try_get<Engine::Core::TransformComponent>(
+          m_controlled_commander_id);
+  if (transform == nullptr) {
+    return;
+  }
+  const float dx = x - transform->position.x;
+  const float dz = z - transform->position.z;
+  if ((dx * dx) + (dz * dz) < 1.0e-4F) {
+    return;
+  }
+  constexpr float k_radians_to_degrees = 57.29577951308232F;
+  m_control.set_view_yaw(std::atan2(dx, dz) * k_radians_to_degrees);
+}
+
+auto CommanderViewModel::aim_view_at_nearest_enemy(float max_range,
+                                                   bool commanders_only) -> bool {
+  if (ignores_player_input() || !active() || m_context.world == nullptr) {
+    return false;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto& world = *m_context.world;
+  auto const* transform =
+      world.try_get<Engine::Core::TransformComponent>(m_controlled_commander_id);
+  if (transform == nullptr) {
+    return false;
+  }
+  // A troop is indexed at its centre and its soldiers stand around it.
+  constexpr float k_formation_reach = 14.0F;
+  std::vector<Engine::Core::EntityID> nearby;
+  world.spatial_index().refresh(world);
+  world.spatial_index().for_each_in_radius(
+      transform->position.x,
+      transform->position.z,
+      max_range + k_formation_reach,
+      [&nearby, this](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        if (entry.id != m_controlled_commander_id) {
+          nearby.push_back(entry.id);
+        }
+      });
+
+  auto& owners = Game::Session::session_for(world).owners();
+  float best_sq = max_range * max_range;
+  std::optional<QVector3D> best;
+  for (Engine::Core::EntityID const candidate_id : nearby) {
+    auto* candidate = world.get_entity(candidate_id);
+    if (candidate == nullptr ||
+        (commanders_only &&
+         world.try_get<Engine::Core::CommanderComponent>(candidate_id) == nullptr)) {
+      continue;
+    }
+    if (Game::Systems::Combat::evaluate_target(
+            owners,
+            m_context.local_owner_id,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = false}) != Game::Systems::Combat::TargetRefusal::None) {
+      continue;
+    }
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      const float dx = soldier.position.x() - transform->position.x;
+      const float dz = soldier.position.z() - transform->position.z;
+      const float distance_sq = (dx * dx) + (dz * dz);
+      if (distance_sq < best_sq) {
+        best_sq = distance_sq;
+        best = soldier.position;
+      }
+    }
+  }
+  if (!best.has_value()) {
+    return false;
+  }
+  aim_view_at_world(best->x(), best->z());
+  return true;
+}
+
 void CommanderViewModel::center_mouse(qreal center_sx, qreal center_sy) {
   if (ignores_player_input()) {
     return;
@@ -524,6 +610,40 @@ void CommanderViewModel::cycle_lock_on() {
   record_action(Game::Command::CommanderAction::CycleLockOn);
   m_control.cycle_lock_on_target(
       *world, m_controlled_commander_id, m_context.local_owner_id);
+}
+
+void CommanderViewModel::toggle_lock_on() {
+  if (ignores_player_input()) {
+    return;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto* world = m_context.world;
+  if (!active() || world == nullptr) {
+    return;
+  }
+  record_action(Game::Command::CommanderAction::ToggleLockOn);
+  m_control.toggle_lock_on_target(
+      *world, m_controlled_commander_id, m_context.local_owner_id);
+}
+
+void CommanderViewModel::switch_lock_target(int direction) {
+  if (ignores_player_input() || direction == 0) {
+    return;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto* world = m_context.world;
+  if (!active() || world == nullptr) {
+    return;
+  }
+  record_action(direction < 0 ? Game::Command::CommanderAction::SwitchLockLeft
+                              : Game::Command::CommanderAction::SwitchLockRight);
+  m_control.switch_lock_on_target(
+      *world, m_controlled_commander_id, m_context.local_owner_id, direction);
+}
+
+auto CommanderViewModel::lock_active() const -> bool {
+  const auto frame_lock = m_host.lock_frame();
+  return active() && m_control.locked_target_id() != 0;
 }
 
 void CommanderViewModel::special_action() {
@@ -882,6 +1002,17 @@ void CommanderViewModel::apply_replayed_action(
     m_control.set_view_yaw(record.view_yaw);
     m_control.set_view_pitch(record.view_pitch);
     cycle_lock_on();
+    break;
+  case CommanderAction::ToggleLockOn:
+    m_control.set_view_yaw(record.view_yaw);
+    m_control.set_view_pitch(record.view_pitch);
+    toggle_lock_on();
+    break;
+  case CommanderAction::SwitchLockLeft:
+    switch_lock_target(-1);
+    break;
+  case CommanderAction::SwitchLockRight:
+    switch_lock_target(1);
     break;
   case CommanderAction::ToggleCameraMode:
     toggle_camera_mode();

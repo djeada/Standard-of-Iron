@@ -11,6 +11,7 @@ Item {
     property bool active: false
 
     property var held_keys: ({})
+    readonly property real zoom_step: 0.1
 
     signal inputCaptured
 
@@ -61,6 +62,11 @@ Item {
         }
         if (root.commander === null)
             return false;
+        if ((actionId === "commander.turn_left" || actionId === "commander.turn_right") && root.held_keys[event.key] === undefined && root.commander.lock_active && root.commander.lock_active()) {
+            if (!event.isAutoRepeat)
+                root.commander.switch_lock_target(actionId === "commander.turn_left" ? -1 : 1);
+            return true;
+        }
         if (is_locomotion(actionId)) {
             var canonical = InputBindings.canonical_key_for(actionId);
             if (canonical !== 0 && root.commander.key_down) {
@@ -82,8 +88,8 @@ Item {
                 root.commander.jump();
             return true;
         case "commander.cycle_lock_on":
-            if (root.commander.cycle_lock_on)
-                root.commander.cycle_lock_on();
+            if (root.commander.toggle_lock_on)
+                root.commander.toggle_lock_on();
             return true;
         case "commander.ability_vanguard_rush":
             if (root.commander.vanguard_rush)
@@ -217,6 +223,12 @@ Item {
             mouse.accepted = true;
         }
         onWheel: function (w) {
+            // The wheel sets how far the chase camera stands off; it is kept
+            // with the other preferences, so the next battle starts where
+            // this one left it.
+            var notches = w.angleDelta.y / 120;
+            if (notches !== 0)
+                UiPreferences.commanderCameraDistance = UiPreferences.commanderCameraDistance - notches * root.zoom_step;
             w.accepted = true;
         }
         onPressed: function (mouse) {

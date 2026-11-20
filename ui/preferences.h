@@ -57,6 +57,20 @@ class UiPreferences : public QObject {
                  set_commander_field_of_view_scale NOTIFY commander_input_changed)
   Q_PROPERTY(bool commanderGuardIsToggle READ commander_guard_is_toggle WRITE
                  set_commander_guard_is_toggle NOTIFY commander_input_changed)
+  Q_PROPERTY(qreal commanderCameraDistance READ commander_camera_distance WRITE
+                 set_commander_camera_distance NOTIFY commander_input_changed)
+  Q_PROPERTY(qreal minCommanderLookSensitivity READ min_commander_look_sensitivity
+                 CONSTANT)
+  Q_PROPERTY(qreal maxCommanderLookSensitivity READ max_commander_look_sensitivity
+                 CONSTANT)
+  Q_PROPERTY(qreal minCommanderFieldOfViewScale READ
+                 min_commander_field_of_view_scale CONSTANT)
+  Q_PROPERTY(qreal maxCommanderFieldOfViewScale READ
+                 max_commander_field_of_view_scale CONSTANT)
+  Q_PROPERTY(
+      qreal minCommanderCameraDistance READ min_commander_camera_distance CONSTANT)
+  Q_PROPERTY(
+      qreal maxCommanderCameraDistance READ max_commander_camera_distance CONSTANT)
   Q_PROPERTY(QStringList colorVisionModes READ color_vision_modes CONSTANT)
   Q_PROPERTY(QString displayWindowMode READ display_window_mode WRITE
                  set_display_window_mode NOTIFY display_window_mode_changed)
@@ -130,6 +144,15 @@ public:
   [[nodiscard]] auto commander_guard_is_toggle() const -> bool {
     return m_commander_guard_is_toggle;
   }
+  [[nodiscard]] auto commander_camera_distance() const -> qreal {
+    return m_commander_camera_distance;
+  }
+  [[nodiscard]] static auto min_commander_look_sensitivity() -> qreal;
+  [[nodiscard]] static auto max_commander_look_sensitivity() -> qreal;
+  [[nodiscard]] static auto min_commander_field_of_view_scale() -> qreal;
+  [[nodiscard]] static auto max_commander_field_of_view_scale() -> qreal;
+  [[nodiscard]] static auto min_commander_camera_distance() -> qreal;
+  [[nodiscard]] static auto max_commander_camera_distance() -> qreal;
 
   [[nodiscard]] auto display_window_mode() const -> QString {
     return m_display_window_mode;
@@ -182,6 +205,7 @@ public:
   void set_commander_head_bob(bool enabled);
   void set_commander_field_of_view_scale(qreal scale);
   void set_commander_guard_is_toggle(bool enabled);
+  void set_commander_camera_distance(qreal scale);
   void set_display_window_mode(const QString& mode);
   void set_display_vsync(bool enabled);
   void set_show_fps(bool enabled);
@@ -235,6 +259,7 @@ private:
   bool m_commander_head_bob;
   qreal m_commander_field_of_view_scale;
   bool m_commander_guard_is_toggle;
+  qreal m_commander_camera_distance;
   bool m_damage_numbers;
   bool m_economy_numbers;
   QString m_damage_number_mode;
