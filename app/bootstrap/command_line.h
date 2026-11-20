@@ -2,6 +2,7 @@
 
 #include <QSize>
 #include <QString>
+#include <QStringList>
 
 #include <optional>
 
@@ -30,6 +31,7 @@ struct CommandLineOptions {
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
   QString runtime_action_fixture_path;
+  QString language_override;
   std::optional<App::Core::BenchmarkActionFixture> runtime_action_fixture;
   std::optional<App::Core::FilmConfig> film_config;
 };
@@ -37,5 +39,11 @@ struct CommandLineOptions {
 auto parse_command_line(QCoreApplication& app,
                         bool release_self_test,
                         CommandLineOptions& opts) -> int;
+
+auto parse_command_line(const QStringList& arguments,
+                        bool release_self_test,
+                        CommandLineOptions& opts) -> int;
+
+[[nodiscard]] auto command_line_help_text() -> QString;
 
 } // namespace App::Bootstrap

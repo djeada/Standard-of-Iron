@@ -275,7 +275,7 @@ auto main(int argc, char* argv[]) -> int {
   std::unique_ptr<QQmlApplicationEngine> engine;
 
   qInfo() << "Creating LanguageManager...";
-  language_manager = std::make_unique<LanguageManager>(&app);
+  language_manager = std::make_unique<LanguageManager>(opts.language_override, &app);
   qInfo() << "LanguageManager created";
 
   qInfo() << "Creating GameEngine...";

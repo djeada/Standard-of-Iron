@@ -1,7 +1,9 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QSettings>
+#include <QStringList>
 #include <QTemporaryDir>
+#include <QtGlobal>
 
 #include <gtest/gtest.h>
 
@@ -9,12 +11,54 @@
 #include "game/audio/audio_system.h"
 #undef private
 
+#include "app/bootstrap/command_line.h"
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
 #include "render/graphics_settings.h"
 
 namespace {
+
+struct ScopedWarningCapture {
+  inline static ScopedWarningCapture* active = nullptr;
+  QtMessageHandler previous = nullptr;
+  QStringList warnings;
+
+  ScopedWarningCapture() {
+    active = this;
+    previous = qInstallMessageHandler(&ScopedWarningCapture::handle);
+  }
+
+  ~ScopedWarningCapture() {
+    qInstallMessageHandler(previous);
+    active = nullptr;
+  }
+
+  ScopedWarningCapture(const ScopedWarningCapture&) = delete;
+  auto operator=(const ScopedWarningCapture&) -> ScopedWarningCapture& = delete;
+  ScopedWarningCapture(ScopedWarningCapture&&) = delete;
+  auto operator=(ScopedWarningCapture&&) -> ScopedWarningCapture& = delete;
+
+  [[nodiscard]] auto contains(const QString& needle) const -> bool {
+    for (const QString& message : warnings) {
+      if (message.contains(needle)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static void handle(QtMsgType type,
+                     const QMessageLogContext& context,
+                     const QString& message) {
+    if (active != nullptr && type == QtWarningMsg) {
+      active->warnings.push_back(message);
+    }
+    if (active != nullptr && active->previous != nullptr) {
+      active->previous(type, context, message);
+    }
+  }
+};
 
 class SettingsPersistenceTest : public ::testing::Test {
 protected:
@@ -151,6 +195,93 @@ TEST_F(SettingsPersistenceTest, LanguageChangesArePersisted) {
   const auto saved_language = App::Core::UserSettings::load_language();
   ASSERT_TRUE(saved_language.has_value());
   EXPECT_EQ(*saved_language, QStringLiteral("pt_br"));
+}
+
+TEST_F(SettingsPersistenceTest,
+       TemporaryLanguageOverrideAppliesWithoutPersistingToSettings) {
+  App::Core::UserSettings::save_language(QStringLiteral("en"));
+
+  LanguageManager language_manager(QStringLiteral("de"));
+
+  EXPECT_EQ(language_manager.current_language(), QStringLiteral("de"));
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QStringLiteral("Kriegselefant"));
+
+  const auto saved_language = App::Core::UserSettings::load_language();
+  ASSERT_TRUE(saved_language.has_value());
+  EXPECT_EQ(*saved_language, QStringLiteral("en"));
+
+  App::Core::UserSettings::clear();
+  LanguageManager fresh_override(QStringLiteral("de"));
+  EXPECT_EQ(fresh_override.current_language(), QStringLiteral("de"));
+  EXPECT_FALSE(App::Core::UserSettings::load_language().has_value());
+}
+
+TEST_F(SettingsPersistenceTest,
+       TemporaryLanguageOverrideSupportsPtBrAndAllIncludedLocales) {
+  App::Core::UserSettings::save_language(QStringLiteral("en"));
+
+  LanguageManager pt_override(QStringLiteral("pt_BR"));
+  EXPECT_EQ(pt_override.current_language(), QStringLiteral("pt_br"));
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QString::fromUtf8("Elefante de guerra"));
+
+  for (const QString& locale : pt_override.available_languages()) {
+    LanguageManager locale_override(locale);
+    EXPECT_EQ(locale_override.current_language(), locale);
+    const Qt::LayoutDirection expected_direction =
+        locale == QStringLiteral("ar") ? Qt::RightToLeft : Qt::LeftToRight;
+    EXPECT_EQ(QGuiApplication::layoutDirection(), expected_direction);
+
+    const auto saved_language = App::Core::UserSettings::load_language();
+    ASSERT_TRUE(saved_language.has_value());
+    EXPECT_EQ(*saved_language, QStringLiteral("en"));
+  }
+
+  LanguageManager reset_en(QStringLiteral("en"));
+  EXPECT_EQ(QGuiApplication::layoutDirection(), Qt::LeftToRight);
+}
+
+TEST_F(SettingsPersistenceTest,
+       UnsupportedLanguageOverrideWarnsAndFallsBackToSavedOrDefaultLanguage) {
+  App::Core::UserSettings::save_language(QStringLiteral("de"));
+  {
+    ScopedWarningCapture capture;
+    LanguageManager language_manager(QStringLiteral("fr"));
+    EXPECT_EQ(language_manager.current_language(), QStringLiteral("de"));
+    EXPECT_TRUE(capture.contains(QStringLiteral("Unsupported --language locale")));
+  }
+
+  const auto saved_language = App::Core::UserSettings::load_language();
+  ASSERT_TRUE(saved_language.has_value());
+  EXPECT_EQ(*saved_language, QStringLiteral("de"));
+
+  App::Core::UserSettings::clear();
+  {
+    ScopedWarningCapture capture;
+    LanguageManager language_manager(QStringLiteral("xx_YY"));
+    EXPECT_EQ(language_manager.current_language(), QStringLiteral("en"));
+    EXPECT_TRUE(capture.contains(QStringLiteral("Unsupported --language locale")));
+  }
+  EXPECT_FALSE(App::Core::UserSettings::load_language().has_value());
+}
+
+TEST_F(SettingsPersistenceTest,
+       CommandLineParserAcceptsLanguageOverrideAndIncludesItInHelp) {
+  App::Bootstrap::CommandLineOptions opts;
+  const int exit_code = App::Bootstrap::parse_command_line(
+      QStringList{QStringLiteral("standard_of_iron"),
+                  QStringLiteral("--language"),
+                  QStringLiteral("pt_BR")},
+      false,
+      opts);
+
+  EXPECT_EQ(exit_code, -1);
+  EXPECT_EQ(opts.language_override, QStringLiteral("pt_BR"));
+
+  const QString help_text = App::Bootstrap::command_line_help_text();
+  EXPECT_TRUE(help_text.contains(QStringLiteral("--language")));
+  EXPECT_TRUE(help_text.contains(QStringLiteral("locale")));
 }
 
 TEST_F(SettingsPersistenceTest, AudioVolumesAreSavedAndRestored) {

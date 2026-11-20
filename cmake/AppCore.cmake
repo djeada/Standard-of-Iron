@@ -7,6 +7,8 @@
 add_library(
     app_core
     STATIC
+    # app/bootstrap -- command-line parsing.
+    app/bootstrap/command_line.cpp
     # app/core -- the composition root and the frame it drives.
     app/core/benchmark_action_fixture.cpp
     app/core/audio_services.cpp

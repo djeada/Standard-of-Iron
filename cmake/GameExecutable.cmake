@@ -2,7 +2,6 @@
 qt6_add_executable(standard_of_iron
     main.cpp
     app/bootstrap/campaign_mission_list.cpp
-    app/bootstrap/command_line.cpp
     app/bootstrap/data_paths.cpp
     app/bootstrap/log_handler.cpp
     app/bootstrap/screenshot_capture.cpp

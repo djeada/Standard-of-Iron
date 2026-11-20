@@ -2,6 +2,8 @@
 #define LANGUAGE_MANAGER_H
 
 #include <QObject>
+#include <QString>
+#include <QStringList>
 #include <QTranslator>
 
 class LanguageManager : public QObject {
@@ -12,12 +14,15 @@ class LanguageManager : public QObject {
 
 public:
   explicit LanguageManager(QObject* parent = nullptr);
+  explicit LanguageManager(const QString& language_override, QObject* parent = nullptr);
   ~LanguageManager() override;
 
   [[nodiscard]] QString current_language() const;
   [[nodiscard]] QStringList available_languages() const;
 
   Q_INVOKABLE void set_language(const QString& language);
+  auto apply_language_override(const QString& language) -> bool;
+  [[nodiscard]] static auto normalize_language_code(const QString& language) -> QString;
   Q_INVOKABLE [[nodiscard]] static QString
   language_display_name(const QString& language);
 
@@ -29,7 +34,8 @@ private:
   QTranslator* m_translator;
   QStringList m_available_languages;
 
-  void load_language(const QString& language);
+  [[nodiscard]] auto resolve_startup_language() const -> QString;
+  void load_language(const QString& language, bool persist = true);
 };
 
 #endif

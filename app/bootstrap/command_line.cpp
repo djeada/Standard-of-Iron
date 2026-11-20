@@ -15,9 +15,12 @@
 
 namespace App::Bootstrap {
 
-auto parse_command_line(QCoreApplication& app,
-                        bool release_self_test,
-                        CommandLineOptions& opts) -> int {
+namespace {
+
+auto parse_command_line_impl(const QStringList& arguments,
+                             bool release_self_test,
+                             CommandLineOptions& opts,
+                             QString* help_text_out) -> int {
   QCommandLineParser parser;
   parser.setApplicationDescription("Standard of Iron");
   parser.addHelpOption();
@@ -39,6 +42,11 @@ auto parse_command_line(QCoreApplication& app,
       "graphics-preset",
       "Override the complete graphics preset: low | medium | high | ultra.",
       "preset");
+  QCommandLineOption const language_opt(
+      "language",
+      "Start the game in a selected language without changing the saved "
+      "preference (en | de | es | pt_br | ar | tr | pl | ru).",
+      "locale");
   QCommandLineOption const campaign_mission_opt(
       "campaign-mission",
       "Start a campaign mission directly (campaign_id/mission_id).",
@@ -139,6 +147,7 @@ auto parse_command_line(QCoreApplication& app,
   parser.addOption(release_self_test_opt);
   parser.addOption(print_data_paths_opt);
   parser.addOption(graphics_preset_opt);
+  parser.addOption(language_opt);
   parser.addOption(campaign_mission_opt);
   parser.addOption(list_campaign_missions_opt);
   parser.addOption(mission_file_opt);
@@ -171,9 +180,16 @@ auto parse_command_line(QCoreApplication& app,
       "Mix the game's own sound offline in step with the film and write it to "
       "audio.wav beside the frames (no sound reaches the speakers).");
   parser.addOption(film_audio_opt);
-  parser.process(app);
+  if (help_text_out != nullptr) {
+    *help_text_out = parser.helpText();
+    return 0;
+  }
+  parser.process(arguments);
 
   opts.component_gallery_requested = parser.isSet(component_gallery_opt);
+  if (parser.isSet(language_opt)) {
+    opts.language_override = parser.value(language_opt).trimmed();
+  }
   if (parser.isSet(screenshot_opt)) {
     opts.screenshot_path = parser.value(screenshot_opt).trimmed();
     opts.screenshot_view = parser.value(screenshot_view_opt).trimmed().toLower();
@@ -335,6 +351,28 @@ auto parse_command_line(QCoreApplication& app,
     gfx.set_backend_kind(*requested);
   }
   return -1;
+}
+
+} // namespace
+
+auto parse_command_line(QCoreApplication& /*app*/,
+                        bool release_self_test,
+                        CommandLineOptions& opts) -> int {
+  return parse_command_line_impl(
+      QCoreApplication::arguments(), release_self_test, opts, nullptr);
+}
+
+auto parse_command_line(const QStringList& arguments,
+                        bool release_self_test,
+                        CommandLineOptions& opts) -> int {
+  return parse_command_line_impl(arguments, release_self_test, opts, nullptr);
+}
+
+auto command_line_help_text() -> QString {
+  CommandLineOptions opts;
+  QString help_text;
+  parse_command_line_impl(QStringList{}, false, opts, &help_text);
+  return help_text;
 }
 
 } // namespace App::Bootstrap
