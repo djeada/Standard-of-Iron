@@ -24,6 +24,7 @@ import json
 import math
 import subprocess
 import sys
+from itertools import pairwise
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -57,7 +58,7 @@ def polyline(element):
 
 
 def length_of(points):
-    return sum(math.dist(a, b) for a, b in zip(points, points[1:]))
+    return sum(math.dist(a, b) for a, b in pairwise(points))
 
 
 def resample(points, spacing):
@@ -93,7 +94,7 @@ def point_segment_distance(p, a, b):
 
 
 def distance_to_polyline(p, points):
-    return min(point_segment_distance(p, a, b) for a, b in zip(points, points[1:]))
+    return min(point_segment_distance(p, a, b) for a, b in pairwise(points))
 
 
 def smoothstep(t):
@@ -202,7 +203,7 @@ class Obstacles:
 def pin_distances(samples, river_points, obstacles, half_width):
     """Arc distance from each sample to the nearest point that must not move."""
     arc = [0.0]
-    for a, b in zip(samples, samples[1:]):
+    for a, b in pairwise(samples):
         arc.append(arc[-1] + math.dist(a, b))
     pinned = {0, len(samples) - 1}
     for i, p in enumerate(samples):
@@ -243,7 +244,7 @@ def meander(river, obstacles, seed, amplitude_scale):
     phase_short = (seed * 0.4142135623) % 1.0 * math.tau
 
     arc = [0.0]
-    for a, b in zip(samples, samples[1:]):
+    for a, b in pairwise(samples):
         arc.append(arc[-1] + math.dist(a, b))
 
     offsets = []

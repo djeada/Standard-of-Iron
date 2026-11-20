@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QImage>
 #include <QPainter>
+#include <QSize>
 
 #include <algorithm>
 #include <gtest/gtest.h>
@@ -89,14 +90,23 @@ TEST(MapEditorWorldBackdrop, TheSameMapPaintsTheSamePicture) {
       << "a repaint after an unrelated edit must not make the ground shimmer";
 }
 
-TEST(MapEditorWorldBackdrop, ALargeMapIsPaintedWithinTheSizeBudget) {
+TEST(MapEditorWorldBackdrop, SizeBudgetUsesTheLongestSideAndRespectsMinimumScale) {
+  const QByteArray map = R"({
+    "name": "Backdrop Size Test",
+    "coord_system": "grid",
+    "grid": {"width": 64, "height": 128, "tile_size": 1.0}
+  })";
   MapEditor::WorldBackdropOptions options;
-  options.max_dimension_px = 600;
-  const auto backdrop =
-      MapEditor::render_world_backdrop(shipped_map("map_aurelia_magna.json"), options);
-  ASSERT_TRUE(backdrop.ok()) << backdrop.error.toStdString();
-  EXPECT_LE(backdrop.image.width(), 769 * 2 + 2);
-  EXPECT_FLOAT_EQ(backdrop.pixels_per_cell, options.min_pixels_per_cell);
+  options.max_dimension_px = 384;
+  const auto budgeted = MapEditor::render_world_backdrop(map, options);
+  ASSERT_TRUE(budgeted.ok()) << budgeted.error.toStdString();
+  EXPECT_EQ(budgeted.image.size(), QSize(192, 384));
+
+  options.max_dimension_px = 192;
+  const auto minimum = MapEditor::render_world_backdrop(map, options);
+  ASSERT_TRUE(minimum.ok()) << minimum.error.toStdString();
+  EXPECT_EQ(minimum.image.size(), QSize(128, 256));
+  EXPECT_FLOAT_EQ(minimum.pixels_per_cell, options.min_pixels_per_cell);
 }
 
 TEST(MapEditorWorldBackdrop, ANightMapIsPaintedDarkAndSaysSo) {

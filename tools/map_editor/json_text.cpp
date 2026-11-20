@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <deque>
 
 namespace MapEditor::JsonText {

@@ -22,6 +22,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+from itertools import pairwise
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -97,7 +98,7 @@ def stamp_disc(
 
 
 def stamp_line(mask, width, height, points, radius):
-    for (ax, az), (bx, bz) in zip(points, points[1:]):
+    for (ax, az), (bx, bz) in pairwise(points):
         length = math.hypot(bx - ax, bz - az)
         steps = max(1, int(length))
         for i in range(steps + 1):
