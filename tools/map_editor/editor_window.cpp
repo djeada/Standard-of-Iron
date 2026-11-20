@@ -162,6 +162,8 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
 
   layout->addWidget(
       createGuideSection("View",
+                         "The canvas paints the land the map becomes: real relief,\n"
+                         "water, woods and buildings. F6 switches to the blueprint.\n"
                          "View ▸ Layers hides categories you are not editing;\n"
                          "hidden layers cannot be selected or deleted by accident.\n"
                          "Markers shrink as you zoom out and labels fade below 60%\n"
@@ -865,6 +867,24 @@ void EditorWindow::setup_menus() {
   connect(
       reset_order_action, &QAction::triggered, m_canvas, &MapCanvas::reset_draw_order);
   view_menu->addAction(reset_order_action);
+
+  view_menu->addSeparator();
+
+  auto* world_view_action = new QAction("&Painted World", this);
+  world_view_action->setCheckable(true);
+  world_view_action->setChecked(m_canvas->world_view());
+  world_view_action->setShortcut(QKeySequence(Qt::Key_F6));
+  world_view_action->setToolTip("Paint the map as the land it becomes in the game; "
+                                "turn off for the blueprint (F6)");
+  connect(world_view_action, &QAction::toggled, m_canvas, &MapCanvas::set_world_view);
+  view_menu->addAction(world_view_action);
+
+  auto* living_world_action = new QAction("Drifting &Cloud Shadows", this);
+  living_world_action->setCheckable(true);
+  living_world_action->setChecked(m_canvas->living_world());
+  connect(
+      living_world_action, &QAction::toggled, m_canvas, &MapCanvas::set_living_world);
+  view_menu->addAction(living_world_action);
 
   view_menu->addSeparator();
 

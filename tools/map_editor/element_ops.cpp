@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <type_traits>
 #include <utility>
 
@@ -207,6 +208,27 @@ auto position(const ElementSnapshot& snap) -> std::optional<QPointF> {
             const QVector2D centre = (e.start + e.end) * 0.5F;
             return std::optional<QPointF>(QPointF(static_cast<double>(centre.x()),
                                                   static_cast<double>(centre.y())));
+          },
+          [](const TerrainElement& e) {
+            if (e.x == 0.0F && e.z == 0.0F && !e.points.isEmpty()) {
+              double min_x = std::numeric_limits<double>::max();
+              double max_x = std::numeric_limits<double>::lowest();
+              double min_z = std::numeric_limits<double>::max();
+              double max_z = std::numeric_limits<double>::lowest();
+              for (const QJsonValue point : e.points) {
+                const QJsonObject at = point.toObject();
+                const double px = at.value(QStringLiteral("x")).toDouble();
+                const double pz = at.value(QStringLiteral("z")).toDouble();
+                min_x = std::min(min_x, px);
+                max_x = std::max(max_x, px);
+                min_z = std::min(min_z, pz);
+                max_z = std::max(max_z, pz);
+              }
+              return std::optional<QPointF>(
+                  QPointF((min_x + max_x) * 0.5, (min_z + max_z) * 0.5));
+            }
+            return std::optional<QPointF>(
+                QPointF(static_cast<double>(e.x), static_cast<double>(e.z)));
           },
           [](const auto& e) {
             return std::optional<QPointF>(

@@ -22,6 +22,8 @@ add_library(
     road_network.cpp
     batch_edit.cpp
     json_text.cpp
+    world_backdrop.cpp
+    world_sprites.cpp
 )
 target_include_directories(
     map_editor_core
@@ -29,7 +31,7 @@ target_include_directories(
 )
 target_link_libraries(
     map_editor_core
-    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui soi_strategic
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui soi_strategic game_sim
 )
 
 # The widget sources. game/map/environment_lighting.cpp and ui/widget_shell.cpp

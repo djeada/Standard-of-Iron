@@ -137,3 +137,35 @@ scripts/fix-map-prop-overlaps.py --check --surface require <map>
 `--only` matters: a full rerun re-rolls dressing that has since been nudged.
 On mission maps keep pieces off the scripted spawn points, lanes and the
 player's starting positions in `assets/missions/*.json`.
+
+## The painted canvas
+
+The editor's main area used to be a blueprint: ellipses for hills, a blue stroke
+for a river, lettered discs for buildings. It now paints the land the map
+becomes (`tools/map_editor/world_backdrop.cpp`, `world_sprites.cpp`):
+
+- The ground is the engine's own height map, built in a private game session
+  from the open document, lit from the top left with cast shadows, coloured from
+  the map's biome (grass, dry grass, soil, rock, snow) and tinted for a night map.
+- Rivers and lakes come from the terrain types, with a shoreline, shallows and
+  depth. Roads and bridges are painted over them.
+- Woods are the game's actual scattered trees, boulders and ore - the same
+  procedural pass the game runs - so thickening a forest shows as more trees.
+- Buildings, camps, palisades, gates, ruins, fires and shrines are drawn at
+  their real footprint in place of lettered badges; an owner's colour sits under
+  each building. Troops stay as tokens.
+- Editing shapes appear when you need them: a hill's outline and ramps on hover
+  or selection, a river's centre line when selected, a forest's dashed edge.
+- Cloud shadows drift across the map (View > Drifting Cloud Shadows) and pause
+  themselves when a paint takes longer than 14 ms.
+
+The backdrop is repainted in the background 160 ms after an edit; the canvas
+keeps the last picture until the new one is ready. `F6` (View > Painted World)
+switches to the blueprint. `SOI_EDITOR_PAINT_STATS=1` logs each paint's time.
+
+A map in world coordinates (Aurelia Magna) is framed where its content is; the
+blueprint used to draw half of it outside the grid.
+
+A ridge authored as a spine has no centre of its own. Dragging one used to
+measure from (0, 0) and throw it off the map; it now moves by the distance the
+cursor travelled.

@@ -9,6 +9,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_topology_audit.h"
 #include "map_data.h"
+#include "world_backdrop.h"
 
 namespace {
 
@@ -28,6 +29,7 @@ auto usage() -> int {
          "  map_cli summary <map.json>\n"
          "  map_cli list <map.json> [kind] [--json]\n"
          "  map_cli audit <map.json>\n"
+         "  map_cli backdrop <map.json> <out.png>     the editor's painted world\n"
          "  map_cli roundtrip <map.json> <out.json>\n"
          "  map_cli normalize <map.json> <out.json>   rewrite in the editor's schema\n"
          "  map_cli apply <map.json> <ops.json> [--out <path>] [--dry-run]\n"
@@ -195,6 +197,20 @@ auto main(int argc, char** argv) -> int {
     status = run_list(args);
   } else if (command == QLatin1String("audit") && args.size() == 1) {
     status = run_audit(args[0]);
+  } else if (command == QLatin1String("backdrop") && args.size() == 2) {
+    MapEditor::MapData data;
+    if (!load(args[0], data)) {
+      return 1;
+    }
+    const auto backdrop =
+        MapEditor::render_world_backdrop(data.to_canonical_json_bytes());
+    if (!backdrop.ok() || !backdrop.image.save(args[1])) {
+      err() << "cannot paint " << args[1] << ": " << backdrop.error << "\n";
+      return 1;
+    }
+    out() << "painted " << backdrop.image.width() << "x" << backdrop.image.height()
+          << " at " << backdrop.pixels_per_cell << " px per cell\n";
+    status = 0;
   } else if (command == QLatin1String("roundtrip") && args.size() == 2) {
     MapEditor::MapData data;
     if (!load(args[0], data)) {

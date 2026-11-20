@@ -69,6 +69,26 @@ TEST(MapEditorElementOpsTest, LinearElementAnchorIsItsCentre) {
   EXPECT_TRUE(Ops::has_moved(snap, moved));
 }
 
+TEST(MapEditorElementOpsTest, ARidgeDrawnAsASpineIsAnchoredAtItsMiddle) {
+  MapEditor::TerrainElement ridge;
+  ridge.type = QStringLiteral("hill");
+  ridge.shape = QStringLiteral("path");
+  ridge.points = QJsonArray{QJsonObject{{"x", 10.0}, {"z", 40.0}},
+                            QJsonObject{{"x", 20.0}, {"z", 44.0}},
+                            QJsonObject{{"x", 30.0}, {"z", 50.0}}};
+  const ElementSnapshot snap{ridge};
+
+  ASSERT_TRUE(Ops::position(snap).has_value());
+  EXPECT_DOUBLE_EQ(Ops::position(snap)->x(), 20.0)
+      << "a spine has no centre of its own; dragging from (0, 0) threw it off the map";
+  EXPECT_DOUBLE_EQ(Ops::position(snap)->y(), 45.0);
+
+  const auto moved =
+      std::get<MapEditor::TerrainElement>(Ops::translated(snap, QPointF(2.0, -3.0)));
+  EXPECT_DOUBLE_EQ(moved.points[0].toObject().value("x").toDouble(), 12.0);
+  EXPECT_DOUBLE_EQ(moved.points[2].toObject().value("z").toDouble(), 47.0);
+}
+
 TEST(MapEditorElementOpsTest, SnapToGridRoundsEveryCoordinate) {
   const ElementSnapshot snap =
       ElementSnapshot{make_linear(QVector2D(1.4F, 2.6F), QVector2D(8.5F, 3.2F))};

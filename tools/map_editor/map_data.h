@@ -197,6 +197,10 @@ public:
   [[nodiscard]] auto extra_root_field(const QString& key) const -> QJsonValue;
   auto set_extra_root_field(const QString& key, const QJsonValue& value) -> bool;
 
+  [[nodiscard]] bool uses_world_coordinates() const {
+    return m_coord_system.compare(QLatin1String("world"), Qt::CaseInsensitive) == 0;
+  }
+
   [[nodiscard]] QString name() const { return m_name; }
   void set_name(const QString& name);
 
