@@ -6,12 +6,14 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
 
 #include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_finale.h"
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "app/core/frame_snapshot.h"
@@ -41,6 +43,7 @@ class CommanderViewModel : public QObject {
   Q_PROPERTY(QString game_mode READ game_mode NOTIFY game_mode_changed)
   Q_PROPERTY(bool available READ available NOTIFY available_changed)
   Q_PROPERTY(QString mode_state READ mode_state NOTIFY mode_state_changed)
+  Q_PROPERTY(QString finale READ finale NOTIFY finale_changed)
 
 public:
   CommanderViewModel(const App::Core::ClientContext& context,
@@ -61,6 +64,23 @@ public:
     return m_control_mode == PlayerControlMode::Commander;
   }
   [[nodiscard]] auto rpg_mode() const -> bool { return m_game_mode == GameMode::Rpg; }
+
+  // The closing beat of a battle fought as the commander: "" while there is
+  // none, otherwise "fallen", "victory" or "defeat". While it runs the
+  // commander's camera turns about him, input is ignored and the result
+  // screen waits.
+  [[nodiscard]] auto finale() const -> QString;
+  [[nodiscard]] auto finale_active() const -> bool {
+    return m_finale_kind.load(std::memory_order_acquire) != 0;
+  }
+  // The match was decided (victory_state is "victory" or "defeat"). Starts the
+  // closing beat, or leaves commander control at once when it cannot run.
+  void conclude_for_outcome(const QString& victory_state);
+  // The controlled commander was killed.
+  void controlled_commander_fell();
+  // Ends the closing beat and returns to the army view. Safe to call when
+  // none is running.
+  void finish_finale();
 
   Q_INVOKABLE void key_down(int key, int modifiers = 0);
   Q_INVOKABLE void key_up(int key, int modifiers = 0);
@@ -153,6 +173,7 @@ signals:
   void game_mode_changed();
   void mode_state_changed();
   void available_changed();
+  void finale_changed();
 
   void active_camera_requested(Render::GL::Camera* camera);
 
@@ -174,6 +195,10 @@ private:
     QString mode_state;
   };
   [[nodiscard]] auto capture_mode_signals() const -> ModeSignalBatch;
+
+  auto begin_finale(App::Core::CommanderFinale::Kind kind) -> bool;
+  void clear_finale();
+  void announce_finale_change();
   void bookmark_rts_camera();
   void restore_rts_camera();
   void emit_mode_signal_changes(const ModeSignalBatch& before);
@@ -215,6 +240,12 @@ private:
 
   bool m_status_published_empty = false;
   bool m_applying_replay = false;
+
+  // The sequence itself belongs to whoever holds the frame lock; the kind is
+  // mirrored in an atomic so QML and the input handlers can ask without it.
+  App::Core::CommanderFinale m_finale;
+  std::atomic<int> m_finale_kind{0};
+  bool m_finale_body_live = false;
 };
 
 } // namespace App::ViewModels

@@ -49,6 +49,12 @@ auto commander_key(const QString& name) -> int {
   if (key == QLatin1String("d")) {
     return Qt::Key_D;
   }
+  if (key == QLatin1String("q")) {
+    return Qt::Key_Q;
+  }
+  if (key == QLatin1String("e")) {
+    return Qt::Key_E;
+  }
   if (key == QLatin1String("shift")) {
     return Qt::Key_Shift;
   }

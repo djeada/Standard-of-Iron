@@ -207,9 +207,10 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
       if (!slot.pressing) {
         continue;
       }
-      if (slot.signed_angle_degrees < -20.0F) {
+      // The slot angle grows toward +yaw, which is the commander's left.
+      if (slot.signed_angle_degrees > 20.0F) {
         threat_left = true;
-      } else if (slot.signed_angle_degrees > 20.0F) {
+      } else if (slot.signed_angle_degrees < -20.0F) {
         threat_right = true;
       }
     }

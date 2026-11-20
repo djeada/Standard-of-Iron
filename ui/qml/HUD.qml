@@ -57,6 +57,10 @@ Item {
     property int selection_settle_polls: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
+    // The closing beat of a battle fought as the commander: the HUD stands
+    // down while the camera makes its last turn.
+    readonly property string commander_finale_kind: typeof game !== 'undefined' && game.commander.finale !== undefined ? game.commander.finale : ""
+    readonly property bool commander_finale: commander_finale_kind !== ""
     property var commander_status: ({})
     readonly property var economy: typeof game !== 'undefined' && game && game.economy ? game.economy : null
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
@@ -236,6 +240,14 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         height: Math.max(50, parent.height * 0.08)
+        opacity: hud.commander_finale ? 0.0 : 1.0
+        enabled: !hud.commander_finale
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.reducedMotion ? 0 : Design.Motion.normal
+            }
+        }
 
         HUDTop {
             id: hudTop
@@ -350,7 +362,10 @@ Item {
         width: Math.min(Design.A11y.scaled(320), Math.max(Design.A11y.scaled(200), objectiveCardContent.implicitWidth + Design.Metrics.space24))
         implicitHeight: objectiveCardContent.implicitHeight + Design.Metrics.space16
         raised: true
-        visible: !hudTop.objectiveShownInline && hudTop.primaryObjectiveText !== "" && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.is_spectator_mode)
+        // Shown while leading the commander too: the objective is the same
+        // from the ground as from above, and it was the one thing the commander
+        // view took away.
+        visible: !hudTop.objectiveShownInline && hudTop.primaryObjectiveText !== "" && !hud.commander_finale && !(typeof game !== 'undefined' && game.is_spectator_mode)
 
         RowLayout {
             id: objectiveCardContent
@@ -426,7 +441,7 @@ Item {
         anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0)
         anchors.leftMargin: Design.Metrics.hudZoneMargin
 
-        visible: has_waves && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
+        visible: has_waves && !hud.commander_finale && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
     }
 
     MissionDeadline {
@@ -437,7 +452,7 @@ Item {
         anchors.leftMargin: Design.Metrics.hudZoneMargin
         anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
 
-        visible: has_deadline && !hud.commander_rpg_mode
+        visible: has_deadline && !hud.commander_finale
     }
 
     EconomyCoach {
@@ -690,7 +705,15 @@ Item {
         topInset: topPanel.height
         status: hud.commander_status
         projector: worldProjector
-        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
+        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && !hud.commander_finale
+    }
+
+    RpgFinaleOverlay {
+        id: rpgFinaleOverlay
+
+        kind: hud.commander_finale_kind
+        commanderName: hud.commander_status && hud.commander_status["name"] !== undefined ? String(hud.commander_status["name"]) : ""
+        z: 2
     }
 
     TutorialFocusOverlay {

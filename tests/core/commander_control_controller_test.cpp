@@ -411,6 +411,44 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(anim.sword_attack_animation, Animation::SwordAttackAnimation::RpgThrust);
 }
 
+TEST_F(CommanderControlControllerTest, TheTurnKeysTurnTheWayTheyAreNamed) {
+  constexpr float k_dt = 1.0F / 60.0F;
+  // Signed turn of the view toward its own right-hand side, in degrees.
+  auto turn_to_the_right = [](float yaw_before, float yaw_after) {
+    float diff = yaw_before - yaw_after;
+    while (diff > 180.0F) {
+      diff -= 360.0F;
+    }
+    while (diff < -180.0F) {
+      diff += 360.0F;
+    }
+    return diff;
+  };
+  for (int const key : {Qt::Key_E, Qt::Key_Q}) {
+    Engine::Core::World world;
+    auto* commander = create_commander(world, 0.0F, 0.0F);
+    ASSERT_NE(commander, nullptr);
+    CommanderControlController controller;
+    controller.set_view_yaw(120.0F);
+    controller.key_down(key);
+    for (int tick = 0; tick < 30; ++tick) {
+      ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+    }
+    float const turned = turn_to_the_right(120.0F, controller.view_yaw());
+    if (key == Qt::Key_E) {
+      EXPECT_GT(turned, 30.0F) << "the turn-right key swung the view left";
+    } else {
+      EXPECT_LT(turned, -30.0F) << "the turn-left key swung the view right";
+    }
+
+    // And the mouse agrees with the keys about which way right is.
+    CommanderControlController mouse;
+    mouse.set_view_yaw(120.0F);
+    mouse.mouse_move(key == Qt::Key_E ? 40.0 : -40.0, 0.0);
+    EXPECT_GT(turned * turn_to_the_right(120.0F, mouse.view_yaw()), 0.0F);
+  }
+}
+
 TEST_F(CommanderControlControllerTest, LockOnDropsAfterSustainedBuildingOcclusion) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
@@ -1923,10 +1961,13 @@ TEST_F(CommanderControlControllerTest, FrameIntentReportsMouseLookDeltaForTheFra
 
 TEST_F(CommanderControlControllerTest, FrameIntentWrapsAroundTheYawSeam) {
   CommanderControlController controller;
-  controller.set_view_yaw(359.0F);
+  // A look to the right takes yaw down, so the seam is crossed from just above
+  // zero.
+  controller.set_view_yaw(1.0F);
   static_cast<void>(controller.sample_frame_intent(nullptr));
 
   controller.mouse_move(20.0, 0.0);
+  EXPECT_GT(controller.view_yaw(), 300.0F) << "the look must have crossed the seam";
   const auto wrapped = controller.sample_frame_intent(nullptr);
   EXPECT_GT(wrapped.look_delta.x(), 0.0F);
   EXPECT_LT(wrapped.look_delta.x(), 90.0F);

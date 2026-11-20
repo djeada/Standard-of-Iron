@@ -51,30 +51,33 @@ protected:
 };
 
 TEST_F(CommanderAccessibilityTest, LookSensitivityScalesEachAxisIndependently) {
+  // Starts mid-circle so a turn either way stays clear of the 0/360 seam.
+  constexpr float k_start_yaw = 180.0F;
   CommanderControlController baseline;
-  baseline.set_view_yaw(0.0F);
+  baseline.set_view_yaw(k_start_yaw);
   baseline.set_view_pitch(0.0F);
   baseline.mouse_move(10.0, 10.0);
-  float const base_yaw = baseline.view_yaw();
+  float const base_turn = baseline.view_yaw() - k_start_yaw;
   float const base_pitch = baseline.view_pitch();
-  ASSERT_GT(base_yaw, 0.0F);
+  ASSERT_LT(base_turn, 0.0F)
+      << "a mouse pushed right turns the view right, which is toward smaller yaw";
   ASSERT_LT(base_pitch, 0.0F);
 
   CommanderInput::set_look_sensitivity_x(2.0F);
   CommanderControlController faster_x;
-  faster_x.set_view_yaw(0.0F);
+  faster_x.set_view_yaw(k_start_yaw);
   faster_x.set_view_pitch(0.0F);
   faster_x.mouse_move(10.0, 10.0);
-  EXPECT_NEAR(faster_x.view_yaw(), base_yaw * 2.0F, 1.0e-3F);
+  EXPECT_NEAR(faster_x.view_yaw() - k_start_yaw, base_turn * 2.0F, 1.0e-3F);
   EXPECT_NEAR(faster_x.view_pitch(), base_pitch, 1.0e-3F);
 
   CommanderInput::set_look_sensitivity_x(1.0F);
   CommanderInput::set_look_sensitivity_y(0.5F);
   CommanderControlController slower_y;
-  slower_y.set_view_yaw(0.0F);
+  slower_y.set_view_yaw(k_start_yaw);
   slower_y.set_view_pitch(0.0F);
   slower_y.mouse_move(10.0, 10.0);
-  EXPECT_NEAR(slower_y.view_yaw(), base_yaw, 1.0e-3F);
+  EXPECT_NEAR(slower_y.view_yaw() - k_start_yaw, base_turn, 1.0e-3F);
   EXPECT_NEAR(slower_y.view_pitch(), base_pitch * 0.5F, 1.0e-3F);
 }
 

@@ -16,6 +16,7 @@
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
 #include "app/world/unit_queries.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
 #include "game/command/command.h"
@@ -237,6 +238,7 @@ void CommanderViewModel::enter_mode() {
 void CommanderViewModel::exit_mode() {
   const auto frame_lock = m_host.lock_frame();
   const bool was_active = active();
+  clear_finale();
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
       [this, signals_before]() { emit_mode_signal_changes(signals_before); });
@@ -894,6 +896,9 @@ void CommanderViewModel::seed_flag_rally_preview_from_view_center() {
 }
 
 void CommanderViewModel::update_control_mode(float dt) {
+  if (m_finale.active() && !m_finale_body_live) {
+    return;
+  }
   const auto effects = m_mode->update_commander_control_mode(
       {.world = m_context.world,
        .commander_camera = m_context.commander_camera,
@@ -902,6 +907,11 @@ void CommanderViewModel::update_control_mode(float dt) {
        .local_owner_id = m_context.local_owner_id,
        .dt = dt});
   if (effects.should_exit_commander_mode) {
+    if (m_finale.active()) {
+      // The body has gone; the lens finishes its turn without it.
+      m_finale_body_live = false;
+      return;
+    }
     exit_mode();
     return;
   }
@@ -917,6 +927,24 @@ void CommanderViewModel::sample_frame_intent() {
 void CommanderViewModel::update_camera_presentation(float dt) {
   if (!active() || m_context.world == nullptr ||
       m_context.commander_camera == nullptr) {
+    return;
+  }
+  if (m_finale.active()) {
+    m_finale.advance(dt);
+    auto pose = m_finale.pose();
+    // The turn is authored on flat ground; on a slope the lens is kept clear
+    // of the hillside it would otherwise sink into.
+    constexpr float k_ground_clearance = 0.9F;
+    pose.eye.setY(std::max(pose.eye.y(),
+                           Game::Systems::PickingService::surface_height_at(
+                               pose.eye.x(), pose.eye.z()) +
+                               k_ground_clearance));
+    m_context.commander_camera->look_at(
+        pose.eye, pose.target, QVector3D(0.0F, 1.0F, 0.0F));
+    if (m_finale.take_hand_back()) {
+      QMetaObject::invokeMethod(
+          this, [this]() { finish_finale(); }, Qt::QueuedConnection);
+    }
     return;
   }
   m_control.update_camera_presentation(
@@ -944,7 +972,115 @@ auto CommanderViewModel::follows_replay() const -> bool {
 }
 
 auto CommanderViewModel::ignores_player_input() const -> bool {
-  return !m_applying_replay && follows_replay();
+  return finale_active() || (!m_applying_replay && follows_replay());
+}
+
+auto CommanderViewModel::finale() const -> QString {
+  switch (static_cast<App::Core::CommanderFinale::Kind>(
+      m_finale_kind.load(std::memory_order_acquire))) {
+  case App::Core::CommanderFinale::Kind::Fallen:
+    return QStringLiteral("fallen");
+  case App::Core::CommanderFinale::Kind::Victory:
+    return QStringLiteral("victory");
+  case App::Core::CommanderFinale::Kind::Defeat:
+    return QStringLiteral("defeat");
+  case App::Core::CommanderFinale::Kind::None:
+    break;
+  }
+  return {};
+}
+
+void CommanderViewModel::announce_finale_change() {
+  // The beat can begin on the simulation thread (a death) and end on the
+  // render thread (the lens has finished turning); QML hears about it on its
+  // own.
+  QMetaObject::invokeMethod(
+      this, [this]() { emit finale_changed(); }, Qt::QueuedConnection);
+}
+
+auto CommanderViewModel::begin_finale(App::Core::CommanderFinale::Kind kind) -> bool {
+  const auto frame_lock = m_host.lock_frame();
+  auto* camera = m_context.commander_camera;
+  if (!active() || camera == nullptr || m_context.world == nullptr ||
+      kind == App::Core::CommanderFinale::Kind::None ||
+      Game::Accessibility::MotionSettings::reduced_motion()) {
+    return false;
+  }
+  if (m_finale.active()) {
+    return true;
+  }
+  auto const* transform = m_context.world->try_get<Engine::Core::TransformComponent>(
+      m_controlled_commander_id);
+  QVector3D ground = camera->get_target();
+  if (transform != nullptr) {
+    ground = QVector3D(transform->position.x,
+                       Game::Systems::PickingService::surface_height_at(
+                           transform->position.x, transform->position.z),
+                       transform->position.z);
+  }
+  m_control.release_all_input();
+  m_finale.begin(kind, ground, camera->get_position(), camera->get_target());
+  m_finale_body_live = kind != App::Core::CommanderFinale::Kind::Fallen;
+  m_finale_kind.store(static_cast<int>(kind), std::memory_order_release);
+  announce_finale_change();
+  return true;
+}
+
+void CommanderViewModel::clear_finale() {
+  if (!m_finale.active() && !finale_active()) {
+    return;
+  }
+  m_finale.end();
+  m_finale_body_live = false;
+  m_finale_kind.store(0, std::memory_order_release);
+  announce_finale_change();
+}
+
+void CommanderViewModel::conclude_for_outcome(const QString& victory_state) {
+  const auto frame_lock = m_host.lock_frame();
+  if (!active() || follows_replay()) {
+    return;
+  }
+  if (m_finale.active()) {
+    // The commander's fall is already playing; the verdict waits for it.
+    return;
+  }
+  using Kind = App::Core::CommanderFinale::Kind;
+  Kind kind = Kind::None;
+  if (victory_state == QLatin1String("victory")) {
+    kind = Kind::Victory;
+  } else if (victory_state == QLatin1String("defeat")) {
+    auto const* unit = m_context.world != nullptr
+                           ? m_context.world->try_get<Engine::Core::UnitComponent>(
+                                 m_controlled_commander_id)
+                           : nullptr;
+    kind = unit != nullptr && unit->health > 0 ? Kind::Defeat : Kind::Fallen;
+  }
+  if (!begin_finale(kind)) {
+    exit_mode();
+  }
+}
+
+void CommanderViewModel::controlled_commander_fell() {
+  const auto frame_lock = m_host.lock_frame();
+  if (!active()) {
+    return;
+  }
+  if (follows_replay() || !begin_finale(App::Core::CommanderFinale::Kind::Fallen)) {
+    exit_mode();
+  }
+}
+
+void CommanderViewModel::finish_finale() {
+  const auto frame_lock = m_host.lock_frame();
+  if (!m_finale.active()) {
+    return;
+  }
+  if (active()) {
+    exit_mode();
+  } else {
+    clear_finale();
+  }
 }
 
 void CommanderViewModel::record_action(Game::Command::CommanderAction action) {
@@ -1045,7 +1181,9 @@ auto CommanderViewModel::time_effect_scale(float scaled_dt, bool paused) -> floa
 
   static_cast<void>(scaled_dt);
   static_cast<void>(paused);
-  return 1.0F;
+  // A landed hit never slows the clock; the closing beat does, so the last
+  // blow and the fall can be watched.
+  return finale_active() ? App::Core::CommanderFinale::k_time_scale : 1.0F;
 }
 
 auto CommanderViewModel::should_render_selected_entity(Engine::Core::EntityID id) const
@@ -1080,6 +1218,7 @@ void CommanderViewModel::reset_for_new_match() {
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
       [this, signals_before]() { emit_mode_signal_changes(signals_before); });
+  clear_finale();
   m_mode->force_inactive();
   enter_rts_runtime_mode();
   m_saved_rts_selection_ids.clear();

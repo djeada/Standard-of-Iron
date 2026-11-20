@@ -1178,10 +1178,13 @@ ApplicationWindow {
                 return;
             Design.Notifications.urgent(text, {
                     "channel": "home-attacked",
-                    "detail": qsTr("Click to look"),
+                    // The pointer belongs to the commander's view while he is
+                    // led in person: there is nothing to click, so the card
+                    // names the key that goes back to the army instead.
+                    "detail": hud.commander_rpg_mode ? qsTr("%1 for the army view").arg(InputBindings.display_shortcut_for("global.toggle_control_mode")) : qsTr("Click to look"),
                     "icon": Design.Icons.warning,
                     "activate": function () {
-                        if (typeof game !== 'undefined' && game.camera && game.camera.look_at_world)
+                        if (typeof game !== 'undefined' && game.camera && game.camera.look_at_world && !hud.commander_rpg_mode)
                             game.camera.look_at_world(world_x, world_z);
                     }
                 });

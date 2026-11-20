@@ -33,7 +33,11 @@ void CommanderLook::apply_mouse_delta(double dx, double dy, float sensitivity_sc
   const float user_y = Game::Accessibility::CommanderInput::look_sensitivity_y();
   const float pitch_sign =
       Game::Accessibility::CommanderInput::invert_look_y() ? 1.0F : -1.0F;
-  m_view_yaw +=
+  // The view looks along (sin yaw, cos yaw) in a right-handed world, so its
+  // right-hand side is (-cos yaw, sin yaw) and a growing yaw swings the view
+  // to the LEFT. A mouse pushed right therefore has to take yaw down. Adding
+  // it, as this did, turned the camera the opposite way to the hand.
+  m_view_yaw -=
       static_cast<float>(dx) * k_mouse_yaw_sensitivity * sensitivity_scale * user_x;
   m_view_pitch += pitch_sign * static_cast<float>(dy) * k_mouse_pitch_sensitivity *
                   sensitivity_scale * user_y;
@@ -137,7 +141,7 @@ auto CommanderLook::sample_frame_intent(const CommanderHeldInput& held)
   }
 
   m_frame_intent.look_delta =
-      QVector2D(signed_angle_delta(m_view_yaw, m_intent_sample_yaw),
+      QVector2D(rightward_look_delta(m_view_yaw, m_intent_sample_yaw),
                 m_view_pitch - m_intent_sample_pitch);
   m_intent_sample_yaw = m_view_yaw;
   m_intent_sample_pitch = m_view_pitch;

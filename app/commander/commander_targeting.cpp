@@ -343,8 +343,9 @@ auto CommanderTargeting::switch_lock(Engine::Core::World& world,
       }
       float const offset = signed_angle_delta(
           std::atan2(dx, dz) * k_radians_to_degrees, locked_bearing);
-      bool const on_side = direction > 0 ? offset > k_same_bearing_degrees
-                                         : offset < -k_same_bearing_degrees;
+      // A larger yaw is further to the left of the view.
+      bool const on_side = direction > 0 ? offset < -k_same_bearing_degrees
+                                         : offset > k_same_bearing_degrees;
       if (!on_side) {
         continue;
       }

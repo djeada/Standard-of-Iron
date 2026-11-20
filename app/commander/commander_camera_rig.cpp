@@ -76,6 +76,11 @@ constexpr float k_crowd_look_drop_share = 0.3F;
 constexpr float k_crowd_side_tuck = 0.55F;
 constexpr float k_threat_bias_side = 0.30F;
 
+// Lock framing is at full strength inside 50 degrees of the view axis and gone
+// by 85.
+constexpr float k_focus_full_cos = 0.6428F;
+constexpr float k_focus_release_cos = 0.0872F;
+
 constexpr float k_zoom_rise_share = 0.85F;
 constexpr float k_zoom_look_drop = 0.55F;
 
@@ -422,9 +427,28 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   float focus_side_nudge_target = 0.0F;
   if (inputs.lock_target_position.has_value()) {
     focus_world = reach_out(*inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F));
-    focus_weight_target = 0.60F * (1.0F - aim_blend);
+
+    // The lock only frames a target the player is still looking toward. The
+    // look point is a blend of "straight ahead" and the target, and with the
+    // target behind the lens that blend lands at the commander's feet: a
+    // player who looked away from a locked enemy was shown the ground from
+    // above. Past a right angle the framing lets go and the view is the
+    // player's own again; the lock itself is unchanged.
+    QVector3D const to_focus(
+        focus_world->x() - pivot.x(), 0.0F, focus_world->z() - pivot.z());
+    float facing = 1.0F;
+    if (to_focus.lengthSquared() > 1.0e-4F) {
+      float const alignment =
+          QVector3D::dotProduct(to_focus.normalized(), flat_forward);
+      float const t = std::clamp((alignment - k_focus_release_cos) /
+                                     (k_focus_full_cos - k_focus_release_cos),
+                                 0.0F,
+                                 1.0F);
+      facing = t * t * (3.0F - (2.0F * t));
+    }
+    focus_weight_target = 0.60F * (1.0F - aim_blend) * facing;
     focus_side_nudge_target =
-        (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend);
+        (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend) * facing;
   }
 
   if (focus_world.has_value()) {

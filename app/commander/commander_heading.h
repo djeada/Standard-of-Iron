@@ -27,4 +27,13 @@ inline constexpr float k_radians_to_degrees = 57.29577951308232F;
   return diff;
 }
 
+// Yaw is measured from +z toward +x, and the view's right-hand side is
+// (-cos yaw, sin yaw): a growing yaw turns the view to its LEFT. Anything that
+// means "how far did the player look to the right" goes through here rather
+// than reading a yaw difference as a screen direction.
+[[nodiscard]] inline auto rightward_look_delta(float yaw_degrees,
+                                               float previous_yaw_degrees) -> float {
+  return -signed_angle_delta(yaw_degrees, previous_yaw_degrees);
+}
+
 } // namespace App::Core

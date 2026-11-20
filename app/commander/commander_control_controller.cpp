@@ -376,11 +376,12 @@ void CommanderControlController::steer_view(Engine::Core::World& world,
                                           .dt = dt}));
 
   if (m_targeting.locked_id() == 0) {
+    // A growing yaw turns the view left (see CommanderLook::apply_mouse_delta).
     if (tick.turn_left) {
-      m_look.set_yaw(m_look.yaw() - k_turn_speed_degrees * dt);
+      m_look.set_yaw(m_look.yaw() + k_turn_speed_degrees * dt);
     }
     if (tick.turn_right) {
-      m_look.set_yaw(m_look.yaw() + k_turn_speed_degrees * dt);
+      m_look.set_yaw(m_look.yaw() - k_turn_speed_degrees * dt);
     }
   }
   m_look.set_yaw(App::Core::wrap_angle_degrees(m_look.yaw()));
@@ -629,7 +630,7 @@ void CommanderControlController::advance_swing(const App::Core::CommanderHandles
                                                float dt) {
   auto const& tick = m_input_port.tick();
   m_strike.advance_melee(body.entity,
-                         {.aim_delta_x = App::Core::signed_angle_delta(
+                         {.aim_delta_x = App::Core::rightward_look_delta(
                               m_look.yaw(), m_look.previous_yaw()),
                           .aim_delta_y = m_look.pitch() - m_look.previous_pitch(),
                           .view_pitch = m_look.pitch(),

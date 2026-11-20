@@ -983,7 +983,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: hudBand.edgeMargin
             anchors.bottom: parent.bottom
-            width: Math.min(root.scaled(330), root.width * 0.34)
+            width: Math.min(root.scaled(372), root.width * 0.36)
             height: vitalsColumn.implicitHeight + 2 * root.scaled(11)
 
             Rectangle {
@@ -1067,6 +1067,8 @@ Item {
                         text: String(root.status_value("name", ""))
                         color: root.shade(root.bone, 0.88)
                         elide: Text.ElideRight
+                        fontSizeMode: Text.HorizontalFit
+                        minimumPixelSize: Math.round(root.fontSize(Design.Typography.caption) * 0.78)
                         font.family: Design.Typography.titleFamily
                         font.pixelSize: root.fontSize(Design.Typography.caption)
                         font.letterSpacing: Design.Typography.trackingNormal
@@ -1239,6 +1241,8 @@ Item {
                         text: String(root.status_value("focus_target_name", ""))
                         color: root.shade(root.bone, 0.95)
                         elide: Text.ElideRight
+                        fontSizeMode: Text.HorizontalFit
+                        minimumPixelSize: Math.round(root.fontSize(Design.Typography.label) * 0.74)
                         horizontalAlignment: Text.AlignRight
                         font.family: Design.Typography.titleFamily
                         font.pixelSize: root.fontSize(Design.Typography.label)
