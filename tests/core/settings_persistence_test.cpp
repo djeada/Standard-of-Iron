@@ -48,9 +48,8 @@ struct ScopedWarningCapture {
     return false;
   }
 
-  static void handle(QtMsgType type,
-                     const QMessageLogContext& context,
-                     const QString& message) {
+  static void handle(
+      QtMsgType type, const QMessageLogContext& context, const QString& message) {
     if (active != nullptr && type == QtWarningMsg) {
       active->warnings.push_back(message);
     }
@@ -269,12 +268,10 @@ TEST_F(SettingsPersistenceTest,
 TEST_F(SettingsPersistenceTest,
        CommandLineParserAcceptsLanguageOverrideAndIncludesItInHelp) {
   App::Bootstrap::CommandLineOptions opts;
-  const int exit_code = App::Bootstrap::parse_command_line(
-      QStringList{QStringLiteral("standard_of_iron"),
-                  QStringLiteral("--language"),
-                  QStringLiteral("pt_BR")},
-      false,
-      opts);
+  const QStringList args{QStringLiteral("standard_of_iron"),
+                         QStringLiteral("--language"),
+                         QStringLiteral("pt_BR")};
+  const int exit_code = App::Bootstrap::parse_command_line(args, false, opts);
 
   EXPECT_EQ(exit_code, -1);
   EXPECT_EQ(opts.language_override, QStringLiteral("pt_BR"));

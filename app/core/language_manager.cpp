@@ -24,7 +24,8 @@ auto layout_direction_for(const QString& language) -> Qt::LayoutDirection {
 } // namespace
 
 LanguageManager::LanguageManager(QObject* parent)
-    : LanguageManager(QString(), parent) {}
+    : LanguageManager(QString(), parent) {
+}
 
 LanguageManager::LanguageManager(const QString& language_override, QObject* parent)
     : QObject(parent)
