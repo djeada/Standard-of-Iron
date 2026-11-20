@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <vector>
 
 namespace NinjaReader::CommandLine::Argument {
 
@@ -93,7 +94,8 @@ public:
     Exception(const std::string& msg);
   };
 
-  void parse_vector(const std::span<char*>& vector) const;
+  [[nodiscard]] std::vector<Argument>
+  parse_vector(const std::span<char*>& vector) const;
 };
 
 } // namespace NinjaReader::CommandLine::Argument
