@@ -68,6 +68,11 @@ Pieces
 Every piece takes ``id``, ``kind``, ``x``, ``z`` and optionally ``seed``,
 ``scale`` and ``rotation`` (degrees). Kinds document their own extras.
 
+``clear_of_bases`` keeps a piece's props out of the ground a player seat farms:
+``true`` for the default reach round every seat's barracks, or a distance in
+metres. Skirmish maps want it on every piece - a base needs room for its
+fields, and a rock one seat got and another did not is not a fair start.
+
 Placement is checked the way ``fix-map-prop-overlaps.py`` checks it: bodies
 keep out of water, roads and bridges, off other bodies and off walls, and -
 when ``tools/terrain_probe`` is built - off broken ground and hill ramps. A
@@ -161,6 +166,9 @@ CANOPY_CLEARANCE = 1.0
 GROUND_RELIEF = 0.30
 EDGE_MARGIN = 5.0
 NUDGE_SLACK = 4.5
+# The skirmish farmland rule gives a seat its fields within 42 m of the barracks;
+# a piece that asks to stay clear keeps a farm plot's width beyond that.
+BASE_FARMLAND_REACH = 50.0
 
 
 @dataclass
@@ -434,6 +442,12 @@ class Placer:
         self.placed: list[dict] = []
         self.structures: list[dict] = []
         self.dropped: list[str] = []
+        self.keep_out: list[tuple[float, float, float]] = []
+
+    def kept_out(self, x: float, z: float) -> bool:
+        return any(
+            math.hypot(x - kx, z - kz) < reach for kx, kz, reach in self.keep_out
+        )
 
     def jitter(self, amount: float) -> float:
         return self.rng.uniform(-amount, amount)
@@ -461,7 +475,12 @@ class Placer:
                     (x + math.cos(angle) * ring, z + math.sin(angle) * ring)
                 )
             ring += 1.1
+        if self.kept_out(x, z):
+            self.dropped.append(f"{kind} at ({x:.0f}, {z:.0f}): a base's farmland")
+            return None
         for cx, cz in candidates:
+            if self.kept_out(cx, cz):
+                continue
             if self.site.legal(kind, cx, cz, scale, rotation, allow_ramp, road_verge):
                 prop = {
                     "type": kind,
@@ -1642,6 +1661,16 @@ def run(
             continue
         seed = int(spec.get("seed", sum(ord(c) for c in piece_id) * 7919))
         placer = Placer(site, piece_id, seed)
+        clearance = spec.get("clear_of_bases")
+        if clearance:
+            reach = BASE_FARMLAND_REACH if clearance is True else float(clearance)
+            placer.keep_out = [
+                (float(entry["x"]), float(entry["z"]), reach)
+                for entry in definition.get("structures") or []
+                if entry.get("type") == "barracks"
+                and int(entry.get("player_id", 0) or 0) > 0
+                and "x" in entry
+            ]
         anchor = spec.get("from") or [spec.get("x", 0.0), spec.get("z", 0.0)]
         COMPOSERS[kind](
             placer,

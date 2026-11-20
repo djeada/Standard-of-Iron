@@ -1066,6 +1066,53 @@ TEST(MapLoaderTest, AForestOverAHillIsClippedRatherThanFlatteningIt) {
       << "and the forest still claims the flat ground beyond the hill";
 }
 
+TEST(MapLoaderTest, ForestDensityThickensTheWoodsAndLeavesOpenGroundAlone) {
+  const auto load = [](double forest_density, bool with_forest) {
+    QTemporaryFile temp_file;
+    EXPECT_TRUE(temp_file.open());
+    QJsonObject root{
+        {"name", "Forest Density Test"},
+        {"grid", QJsonObject{{"width", 161}, {"height", 161}, {"tile_size", 1.0}}},
+        {"biome", QJsonObject{{"forest_density", forest_density}}}};
+    if (with_forest) {
+      root.insert("forests",
+                  QJsonArray{QJsonObject{
+                      {"id", "big"}, {"x", 80}, {"z", 80}, {"radius", 50.0}}});
+    }
+    temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+    temp_file.flush();
+    Game::Map::MapDefinition map;
+    QString error;
+    EXPECT_TRUE(
+        Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+        << error.toStdString();
+    return map;
+  };
+  const auto count_trees = [](const Game::Map::MapDefinition& map) {
+    Game::Map::TerrainHeightMap height_map(
+        map.grid.width, map.grid.height, map.grid.tile_size);
+    height_map.build_from_features(map.terrain);
+    const auto props = Game::Map::generate_procedural_world_props(
+        height_map, map.biome, map.coordSystem, {});
+    return std::count_if(props.begin(), props.end(), [](const Game::Map::WorldProp& p) {
+      return Game::Map::is_tree_world_prop_type(p.type);
+    });
+  };
+
+  const auto thin_wood = count_trees(load(1.0, true));
+  const auto thick_wood = count_trees(load(3.0, true));
+  EXPECT_GT(thick_wood, thin_wood + thin_wood / 2)
+      << "forest_density 3 must stand clearly more trees in the wood; thin="
+      << thin_wood << " thick=" << thick_wood;
+
+  EXPECT_EQ(count_trees(load(1.0, false)), count_trees(load(3.0, false)))
+      << "forest_density must not seed a single extra tree on open ground";
+
+  EXPECT_FLOAT_EQ(load(50.0, false).biome.forest_density,
+                  Game::Map::k_max_forest_density);
+  EXPECT_FLOAT_EQ(load(-2.0, false).biome.forest_density, 0.0F);
+}
+
 TEST(MapLoaderTest, AForestIsWhereTheTreesActuallyThicken) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

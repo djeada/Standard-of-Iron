@@ -68,7 +68,10 @@ struct BiomeSettings {
   QVector3D snow_color{0.92F, 0.94F, 0.98F};
 
   std::array<float, k_tree_species_count> tree_density_scale{1.0F, 1.0F, 1.0F, 1.0F};
+  float forest_density = 1.0F;
 };
+
+inline constexpr float k_max_forest_density = 6.0F;
 
 struct TerrainSurfaceProfile {
   GroundType ground_type = GroundType::ForestMud;

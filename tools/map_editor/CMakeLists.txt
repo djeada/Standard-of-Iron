@@ -20,6 +20,10 @@ add_library(
     hill_projection_model.cpp
     world_document.cpp
     road_network.cpp
+    batch_edit.cpp
+    json_text.cpp
+    world_backdrop.cpp
+    world_sprites.cpp
 )
 target_include_directories(
     map_editor_core
@@ -27,7 +31,7 @@ target_include_directories(
 )
 target_link_libraries(
     map_editor_core
-    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui soi_strategic
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui soi_strategic game_sim
 )
 
 # The widget sources. game/map/environment_lighting.cpp and ui/widget_shell.cpp
@@ -74,6 +78,20 @@ target_link_libraries(
 # (Makefile expects executables under build/bin)
 set_target_properties(
     map_editor
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}/bin"
+)
+
+# The editor's document model driven from the command line: list, audit and
+# batch-edit a map without opening a window.
+add_executable(map_cli map_cli_main.cpp)
+target_link_libraries(map_cli PRIVATE Qt${QT_VERSION_MAJOR}::Core map_editor_core game_sim)
+set_target_properties(
+    map_cli
     PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"

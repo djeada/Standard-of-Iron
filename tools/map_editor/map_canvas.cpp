@@ -10,9 +10,11 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPainterPathStroker>
+#include <QPointer>
 #include <QPolygonF>
 #include <QSet>
 #include <QSizeF>
+#include <QThreadPool>
 #include <QToolTip>
 #include <QWheelEvent>
 
@@ -41,6 +43,10 @@ using CanvasDetail::default_wildlife_radius;
 
 namespace {
 
+constexpr int k_backdrop_debounce_ms = 160;
+constexpr int k_ambient_frame_ms = 66;
+constexpr qint64 k_ambient_paint_budget_ms = 14;
+
 QPointF snap_pos(const QPointF& gp) {
   return {std::round(gp.x()), std::round(gp.y())};
 }
@@ -68,6 +74,78 @@ MapCanvas::MapCanvas(QWidget* parent)
   QPalette pal = palette();
   pal.setColor(QPalette::Window, Theme::backgroundDeep());
   setPalette(pal);
+
+  m_backdrop_debounce.setSingleShot(true);
+  m_backdrop_debounce.setInterval(k_backdrop_debounce_ms);
+  connect(
+      &m_backdrop_debounce, &QTimer::timeout, this, &MapCanvas::start_world_backdrop);
+
+  m_world_clock.start();
+  m_ambient_timer.setInterval(k_ambient_frame_ms);
+  connect(&m_ambient_timer, &QTimer::timeout, this, [this]() {
+    if (m_world_view && m_living_world && m_backdrop.ok() && isVisible() &&
+        m_last_paint_ms <= k_ambient_paint_budget_ms) {
+      update();
+    }
+  });
+  m_ambient_timer.start();
+}
+
+void MapCanvas::set_world_view(bool enabled) {
+  if (m_world_view == enabled) {
+    return;
+  }
+  m_world_view = enabled;
+  if (enabled) {
+    schedule_world_backdrop();
+  }
+  update();
+}
+
+void MapCanvas::set_living_world(bool enabled) {
+  m_living_world = enabled;
+  update();
+}
+
+void MapCanvas::schedule_world_backdrop() {
+  if (m_map_data == nullptr || !m_world_view) {
+    return;
+  }
+  m_backdrop_debounce.start();
+}
+
+void MapCanvas::start_world_backdrop() {
+  if (m_map_data == nullptr || !m_world_view) {
+    return;
+  }
+  if (m_backdrop_running) {
+    m_backdrop_stale = true;
+    return;
+  }
+  m_backdrop_running = true;
+  m_backdrop_stale = false;
+  const quint64 generation = ++m_backdrop_generation;
+  const QByteArray document = m_map_data->to_canonical_json_bytes();
+  const QPointer<MapCanvas> guard(this);
+  QThreadPool::globalInstance()->start([guard, generation, document]() {
+    WorldBackdrop painted = render_world_backdrop(document);
+    QMetaObject::invokeMethod(
+        qApp,
+        [guard, generation, painted = std::move(painted)]() {
+          if (guard.isNull()) {
+            return;
+          }
+          guard->m_backdrop_running = false;
+          if (generation == guard->m_backdrop_generation && painted.ok()) {
+            guard->m_backdrop = painted;
+            guard->update();
+          }
+          if (guard->m_backdrop_stale) {
+            guard->start_world_backdrop();
+          }
+        },
+        Qt::QueuedConnection);
+  });
 }
 
 void MapCanvas::set_map_data(MapData* data) {
@@ -80,7 +158,11 @@ void MapCanvas::set_map_data(MapData* data) {
     connect(m_map_data, &MapData::data_changed, this, qOverload<>(&QWidget::update));
     connect(
         m_map_data, &MapData::data_changed, this, &MapCanvas::drop_stale_view_state);
+    connect(
+        m_map_data, &MapData::data_changed, this, &MapCanvas::schedule_world_backdrop);
     drop_stale_view_state();
+    m_backdrop = WorldBackdrop{};
+    start_world_backdrop();
   }
   update();
 }
@@ -363,6 +445,16 @@ void MapCanvas::zoom_to_fit() {
   const float span_x = static_cast<float>(grid.width) * grid_cell_size * m_zoom;
   const float span_y = static_cast<float>(grid.height) * grid_cell_size * m_zoom;
   m_pan_offset = QPointF((width() - span_x) * 0.5, (height() - span_y) * 0.5);
+  if (m_map_data->uses_world_coordinates()) {
+    const float tile = std::max(grid.tile_size, 0.0001F);
+    const float cell = grid_cell_size * m_zoom;
+    m_pan_offset -= QPointF((static_cast<float>(grid.width) -
+                             (static_cast<float>(grid.width) * 0.5F + 0.5F) * tile) *
+                                cell,
+                            (static_cast<float>(grid.height) -
+                             (static_cast<float>(grid.height) * 0.5F + 0.5F) * tile) *
+                                cell);
+  }
 
   emit zoom_changed(m_zoom);
   update();
@@ -883,6 +975,10 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
           const QPointF center((linear->start.x() + linear->end.x()) * 0.5F,
                                (linear->start.y() + linear->end.y()) * 0.5F);
           m_linear_drag_center_offset = grid_pos - center;
+        } else if (std::holds_alternative<TerrainElement>(m_drag_pre_elements.back())) {
+          if (const auto anchor = ElementOps::position(m_drag_pre_elements.back())) {
+            m_linear_drag_center_offset = snap_pos(grid_pos) - snap_pos(*anchor);
+          }
         }
       }
       update_canvas_cursor(event->pos());
@@ -1014,9 +1110,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
       }
       m_map_data->update_linear_element(m_drag_refs.back().index, elem);
     } else {
-      move_selection_to(dragged_linear != nullptr
-                            ? grid_pos - m_linear_drag_center_offset
-                            : grid_pos);
+      const QPointF target = grid_pos - m_linear_drag_center_offset;
+      if (const auto origin = ElementOps::position(primary_pre);
+          origin.has_value() && std::holds_alternative<TerrainElement>(primary_pre)) {
+        move_selection_to(*origin + (target - snap_pos(*origin)));
+      } else {
+        move_selection_to(target);
+      }
     }
   }
 

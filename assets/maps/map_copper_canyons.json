@@ -5093,6 +5093,1651 @@
       "z": 184,
       "scale": 1.0,
       "rotation": 2.97
+    },
+    {
+      "type": "boulder",
+      "x": 202.19,
+      "z": 171.4,
+      "scale": 1.14,
+      "rotation": 1.842,
+      "dressing": "copper_canyons_bridgehead_1"
+    },
+    {
+      "type": "boulder",
+      "x": 188.11,
+      "z": 162.77,
+      "scale": 1.28,
+      "rotation": 1.726,
+      "dressing": "copper_canyons_bridgehead_1"
+    },
+    {
+      "type": "firecamp",
+      "x": 188.06,
+      "z": 158.12,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_1",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "supply_cart",
+      "x": 189.7,
+      "z": 153.29,
+      "scale": 1.0,
+      "rotation": -1.05,
+      "dressing": "copper_canyons_bridgehead_1"
+    },
+    {
+      "type": "boulder",
+      "x": 180.07,
+      "z": 176.6,
+      "scale": 1.13,
+      "rotation": 2.056,
+      "dressing": "copper_canyons_bridgehead_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 175.0,
+      "z": 181.76,
+      "scale": 1.0,
+      "rotation": 0.137,
+      "dressing": "copper_canyons_bridgehead_1"
+    },
+    {
+      "type": "boulder",
+      "x": 264.86,
+      "z": 207.08,
+      "scale": 1.16,
+      "rotation": 2.301,
+      "dressing": "copper_canyons_bridgehead_2"
+    },
+    {
+      "type": "dead_tree",
+      "x": 270.06,
+      "z": 202.0,
+      "scale": 1.0,
+      "rotation": 0.798,
+      "dressing": "copper_canyons_bridgehead_2"
+    },
+    {
+      "type": "boulder",
+      "x": 256.89,
+      "z": 220.96,
+      "scale": 1.15,
+      "rotation": 4.376,
+      "dressing": "copper_canyons_bridgehead_2"
+    },
+    {
+      "type": "firecamp",
+      "x": 256.99,
+      "z": 225.64,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_2",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 158.0,
+      "z": 206.94,
+      "scale": 1.01,
+      "rotation": 1.055,
+      "dressing": "copper_canyons_bridgehead_3"
+    },
+    {
+      "type": "boulder",
+      "x": 158.0,
+      "z": 189.2,
+      "scale": 0.82,
+      "rotation": 5.905,
+      "dressing": "copper_canyons_bridgehead_3"
+    },
+    {
+      "type": "firecamp",
+      "x": 162.0,
+      "z": 187.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_3",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "supply_cart",
+      "x": 167.0,
+      "z": 186.0,
+      "scale": 1.0,
+      "rotation": -0.043,
+      "dressing": "copper_canyons_bridgehead_3"
+    },
+    {
+      "type": "boulder",
+      "x": 141.06,
+      "z": 205.41,
+      "scale": 0.88,
+      "rotation": 0.031,
+      "dressing": "copper_canyons_bridgehead_3"
+    },
+    {
+      "type": "boulder",
+      "x": 142.0,
+      "z": 189.35,
+      "scale": 0.95,
+      "rotation": 4.009,
+      "dressing": "copper_canyons_bridgehead_3"
+    },
+    {
+      "type": "dead_tree",
+      "x": 132.75,
+      "z": 187.03,
+      "scale": 1.0,
+      "rotation": 0.792,
+      "dressing": "copper_canyons_bridgehead_3"
+    },
+    {
+      "type": "boulder",
+      "x": 158.0,
+      "z": 278.11,
+      "scale": 0.82,
+      "rotation": 1.742,
+      "dressing": "copper_canyons_bridgehead_4"
+    },
+    {
+      "type": "dead_tree",
+      "x": 165.0,
+      "z": 280.0,
+      "scale": 1.0,
+      "rotation": 5.685,
+      "dressing": "copper_canyons_bridgehead_4"
+    },
+    {
+      "type": "firecamp",
+      "x": 136.88,
+      "z": 280.93,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_4",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 105.44,
+      "z": 184.97,
+      "scale": 1.24,
+      "rotation": 1.305,
+      "dressing": "copper_canyons_bridgehead_5"
+    },
+    {
+      "type": "boulder",
+      "x": 119.78,
+      "z": 176.69,
+      "scale": 1.19,
+      "rotation": 4.758,
+      "dressing": "copper_canyons_bridgehead_5"
+    },
+    {
+      "type": "firecamp",
+      "x": 123.94,
+      "z": 178.91,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_5",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "supply_cart",
+      "x": 127.3,
+      "z": 182.74,
+      "scale": 1.0,
+      "rotation": 0.81,
+      "dressing": "copper_canyons_bridgehead_5"
+    },
+    {
+      "type": "boulder",
+      "x": 97.46,
+      "z": 171.1,
+      "scale": 0.84,
+      "rotation": 0.939,
+      "dressing": "copper_canyons_bridgehead_5"
+    },
+    {
+      "type": "boulder",
+      "x": 112.14,
+      "z": 162.62,
+      "scale": 1.01,
+      "rotation": 4.283,
+      "dressing": "copper_canyons_bridgehead_5"
+    },
+    {
+      "type": "firecamp",
+      "x": 93.6,
+      "z": 171.3,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_5",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 110.0,
+      "z": 155.77,
+      "scale": 1.0,
+      "rotation": 1.384,
+      "dressing": "copper_canyons_bridgehead_5"
+    },
+    {
+      "type": "boulder",
+      "x": 43.1,
+      "z": 220.96,
+      "scale": 0.91,
+      "rotation": 2.462,
+      "dressing": "copper_canyons_bridgehead_6"
+    },
+    {
+      "type": "dead_tree",
+      "x": 44.94,
+      "z": 227.99,
+      "scale": 1.0,
+      "rotation": 1.034,
+      "dressing": "copper_canyons_bridgehead_6"
+    },
+    {
+      "type": "boulder",
+      "x": 35.55,
+      "z": 206.84,
+      "scale": 0.82,
+      "rotation": 0.193,
+      "dressing": "copper_canyons_bridgehead_6"
+    },
+    {
+      "type": "firecamp",
+      "x": 31.01,
+      "z": 204.85,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_6",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 97.35,
+      "z": 128.84,
+      "scale": 0.87,
+      "rotation": 2.553,
+      "dressing": "copper_canyons_bridgehead_7"
+    },
+    {
+      "type": "boulder",
+      "x": 111.85,
+      "z": 137.21,
+      "scale": 0.94,
+      "rotation": 5.742,
+      "dressing": "copper_canyons_bridgehead_7"
+    },
+    {
+      "type": "firecamp",
+      "x": 111.94,
+      "z": 141.88,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_7",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "supply_cart",
+      "x": 110.3,
+      "z": 146.71,
+      "scale": 1.0,
+      "rotation": 1.823,
+      "dressing": "copper_canyons_bridgehead_7"
+    },
+    {
+      "type": "boulder",
+      "x": 120.15,
+      "z": 123.52,
+      "scale": 1.14,
+      "rotation": 5.786,
+      "dressing": "copper_canyons_bridgehead_7"
+    },
+    {
+      "type": "dead_tree",
+      "x": 125.0,
+      "z": 118.24,
+      "scale": 1.0,
+      "rotation": 1.7,
+      "dressing": "copper_canyons_bridgehead_7"
+    },
+    {
+      "type": "boulder",
+      "x": 35.55,
+      "z": 93.15,
+      "scale": 0.83,
+      "rotation": 2.443,
+      "dressing": "copper_canyons_bridgehead_8"
+    },
+    {
+      "type": "dead_tree",
+      "x": 29.94,
+      "z": 98.0,
+      "scale": 1.0,
+      "rotation": 1.592,
+      "dressing": "copper_canyons_bridgehead_8"
+    },
+    {
+      "type": "boulder",
+      "x": 42.86,
+      "z": 78.9,
+      "scale": 1.17,
+      "rotation": 4.014,
+      "dressing": "copper_canyons_bridgehead_8"
+    },
+    {
+      "type": "firecamp",
+      "x": 43.01,
+      "z": 74.36,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_8",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 142.0,
+      "z": 93.42,
+      "scale": 1.23,
+      "rotation": 5.664,
+      "dressing": "copper_canyons_bridgehead_9"
+    },
+    {
+      "type": "boulder",
+      "x": 142.0,
+      "z": 110.22,
+      "scale": 1.0,
+      "rotation": 1.61,
+      "dressing": "copper_canyons_bridgehead_9"
+    },
+    {
+      "type": "firecamp",
+      "x": 138.0,
+      "z": 113.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_9",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "supply_cart",
+      "x": 133.0,
+      "z": 114.0,
+      "scale": 1.0,
+      "rotation": -3.288,
+      "dressing": "copper_canyons_bridgehead_9"
+    },
+    {
+      "type": "boulder",
+      "x": 158.0,
+      "z": 110.55,
+      "scale": 0.89,
+      "rotation": 3.722,
+      "dressing": "copper_canyons_bridgehead_9"
+    },
+    {
+      "type": "firecamp",
+      "x": 162.0,
+      "z": 91.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_9",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 165.0,
+      "z": 112.5,
+      "scale": 1.0,
+      "rotation": 2.419,
+      "dressing": "copper_canyons_bridgehead_9"
+    },
+    {
+      "type": "dead_tree",
+      "x": 135.0,
+      "z": 20.0,
+      "scale": 1.0,
+      "rotation": 4.132,
+      "dressing": "copper_canyons_bridgehead_10"
+    },
+    {
+      "type": "boulder",
+      "x": 158.0,
+      "z": 21.96,
+      "scale": 0.81,
+      "rotation": 3.253,
+      "dressing": "copper_canyons_bridgehead_10"
+    },
+    {
+      "type": "firecamp",
+      "x": 162.0,
+      "z": 19.5,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_10",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 195.04,
+      "z": 114.76,
+      "scale": 0.9,
+      "rotation": 1.05,
+      "dressing": "copper_canyons_bridgehead_11"
+    },
+    {
+      "type": "boulder",
+      "x": 180.43,
+      "z": 123.19,
+      "scale": 1.09,
+      "rotation": 3.645,
+      "dressing": "copper_canyons_bridgehead_11"
+    },
+    {
+      "type": "firecamp",
+      "x": 176.06,
+      "z": 121.09,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_11",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "supply_cart",
+      "x": 171.76,
+      "z": 116.51,
+      "scale": 1.0,
+      "rotation": -2.047,
+      "dressing": "copper_canyons_bridgehead_11"
+    },
+    {
+      "type": "boulder",
+      "x": 188.17,
+      "z": 137.2,
+      "scale": 0.8,
+      "rotation": 1.929,
+      "dressing": "copper_canyons_bridgehead_11"
+    },
+    {
+      "type": "firecamp",
+      "x": 206.65,
+      "z": 133.13,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_11",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "dead_tree",
+      "x": 190.0,
+      "z": 144.23,
+      "scale": 1.0,
+      "rotation": 3.524,
+      "dressing": "copper_canyons_bridgehead_11"
+    },
+    {
+      "type": "boulder",
+      "x": 256.95,
+      "z": 79.01,
+      "scale": 1.27,
+      "rotation": 3.211,
+      "dressing": "copper_canyons_bridgehead_12"
+    },
+    {
+      "type": "dead_tree",
+      "x": 255.06,
+      "z": 72.01,
+      "scale": 1.0,
+      "rotation": 1.908,
+      "dressing": "copper_canyons_bridgehead_12"
+    },
+    {
+      "type": "boulder",
+      "x": 264.69,
+      "z": 93.02,
+      "scale": 1.18,
+      "rotation": 1.923,
+      "dressing": "copper_canyons_bridgehead_12"
+    },
+    {
+      "type": "firecamp",
+      "x": 268.99,
+      "z": 95.15,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "copper_canyons_bridgehead_12",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 15.99,
+      "z": 81.71,
+      "scale": 0.94,
+      "rotation": 1.114,
+      "dressing": "copper_canyons_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 37.96,
+      "z": 78.21,
+      "scale": 0.87,
+      "rotation": 3.77,
+      "dressing": "copper_canyons_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 127.21,
+      "z": 138.79,
+      "scale": 0.8,
+      "rotation": 0.929,
+      "dressing": "copper_canyons_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 145.79,
+      "z": 132.6,
+      "scale": 1.01,
+      "rotation": 3.251,
+      "dressing": "copper_canyons_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 147.64,
+      "z": 134.3,
+      "scale": 1.01,
+      "rotation": 6.191,
+      "dressing": "copper_canyons_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 167.4,
+      "z": 157.47,
+      "scale": 1.26,
+      "rotation": 3.47,
+      "dressing": "copper_canyons_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 170.95,
+      "z": 158.83,
+      "scale": 1.05,
+      "rotation": 2.79,
+      "dressing": "copper_canyons_riverbank_2"
+    },
+    {
+      "type": "boulder",
+      "x": 167.23,
+      "z": 179.74,
+      "scale": 0.88,
+      "rotation": 3.307,
+      "dressing": "copper_canyons_riverbank_2"
+    },
+    {
+      "type": "plant",
+      "x": 263.46,
+      "z": 204.86,
+      "scale": 1.17,
+      "rotation": 1.811,
+      "dressing": "copper_canyons_riverbank_3"
+    },
+    {
+      "type": "plant",
+      "x": 267.58,
+      "z": 207.77,
+      "scale": 0.99,
+      "rotation": 5.822,
+      "dressing": "copper_canyons_riverbank_3"
+    },
+    {
+      "type": "boulder",
+      "x": 269.4,
+      "z": 228.94,
+      "scale": 0.81,
+      "rotation": 0.683,
+      "dressing": "copper_canyons_riverbank_3"
+    },
+    {
+      "type": "plant",
+      "x": 153.7,
+      "z": 73.34,
+      "scale": 0.82,
+      "rotation": 0.304,
+      "dressing": "copper_canyons_riverbank_4"
+    },
+    {
+      "type": "boulder",
+      "x": 140.68,
+      "z": 90.04,
+      "scale": 0.96,
+      "rotation": 1.89,
+      "dressing": "copper_canyons_riverbank_4"
+    },
+    {
+      "type": "boulder",
+      "x": 151.0,
+      "z": 123.75,
+      "scale": 1.17,
+      "rotation": 2.549,
+      "dressing": "copper_canyons_riverbank_5"
+    },
+    {
+      "type": "plant",
+      "x": 159.83,
+      "z": 139.6,
+      "scale": 0.95,
+      "rotation": 3.138,
+      "dressing": "copper_canyons_riverbank_5"
+    },
+    {
+      "type": "plant",
+      "x": 150.97,
+      "z": 172.65,
+      "scale": 0.86,
+      "rotation": 0.168,
+      "dressing": "copper_canyons_riverbank_5"
+    },
+    {
+      "type": "plant",
+      "x": 149.38,
+      "z": 176.77,
+      "scale": 1.24,
+      "rotation": 0.701,
+      "dressing": "copper_canyons_riverbank_5"
+    },
+    {
+      "type": "boulder",
+      "x": 139.76,
+      "z": 187.05,
+      "scale": 1.18,
+      "rotation": 4.342,
+      "dressing": "copper_canyons_riverbank_5"
+    },
+    {
+      "type": "boulder",
+      "x": 143.54,
+      "z": 218.05,
+      "scale": 0.95,
+      "rotation": 3.075,
+      "dressing": "copper_canyons_riverbank_6"
+    },
+    {
+      "type": "plant",
+      "x": 157.62,
+      "z": 263.41,
+      "scale": 0.86,
+      "rotation": 2.427,
+      "dressing": "copper_canyons_riverbank_6"
+    },
+    {
+      "type": "boulder",
+      "x": 275.75,
+      "z": 67.2,
+      "scale": 0.95,
+      "rotation": 6.238,
+      "dressing": "copper_canyons_riverbank_7"
+    },
+    {
+      "type": "plant",
+      "x": 269.52,
+      "z": 90.77,
+      "scale": 0.83,
+      "rotation": 4.141,
+      "dressing": "copper_canyons_riverbank_7"
+    },
+    {
+      "type": "plant",
+      "x": 266.19,
+      "z": 94.97,
+      "scale": 1.08,
+      "rotation": 0.489,
+      "dressing": "copper_canyons_riverbank_7"
+    },
+    {
+      "type": "boulder",
+      "x": 172.04,
+      "z": 136.17,
+      "scale": 0.88,
+      "rotation": 0.058,
+      "dressing": "copper_canyons_riverbank_8"
+    },
+    {
+      "type": "plant",
+      "x": 165.38,
+      "z": 156.34,
+      "scale": 1.15,
+      "rotation": 3.885,
+      "dressing": "copper_canyons_riverbank_8"
+    },
+    {
+      "type": "plant",
+      "x": 136.14,
+      "z": 162.68,
+      "scale": 1.0,
+      "rotation": 1.616,
+      "dressing": "copper_canyons_riverbank_8"
+    },
+    {
+      "type": "plant",
+      "x": 131.82,
+      "z": 164.2,
+      "scale": 1.33,
+      "rotation": 4.372,
+      "dressing": "copper_canyons_riverbank_8"
+    },
+    {
+      "type": "boulder",
+      "x": 116.98,
+      "z": 149.8,
+      "scale": 1.08,
+      "rotation": 2.644,
+      "dressing": "copper_canyons_riverbank_8"
+    },
+    {
+      "type": "boulder",
+      "x": 81.03,
+      "z": 184.91,
+      "scale": 1.16,
+      "rotation": 4.382,
+      "dressing": "copper_canyons_riverbank_9"
+    },
+    {
+      "type": "plant",
+      "x": 45.31,
+      "z": 221.16,
+      "scale": 1.09,
+      "rotation": 3.527,
+      "dressing": "copper_canyons_riverbank_9"
+    },
+    {
+      "type": "plant",
+      "x": 42.82,
+      "z": 223.82,
+      "scale": 1.16,
+      "rotation": 2.0,
+      "dressing": "copper_canyons_riverbank_9"
+    },
+    {
+      "type": "boulder",
+      "x": 22.54,
+      "z": 214.24,
+      "scale": 0.91,
+      "rotation": 2.075,
+      "dressing": "copper_canyons_riverbank_9"
+    },
+    {
+      "type": "olive_tree",
+      "x": 23.16,
+      "z": 247.87,
+      "scale": 0.91,
+      "rotation": 5.127,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 37.22,
+      "z": 252.34,
+      "scale": 0.8,
+      "rotation": 2.092,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 33.15,
+      "z": 247.79,
+      "scale": 1.18,
+      "rotation": 5.35,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 30.3,
+      "z": 249.21,
+      "scale": 0.94,
+      "rotation": 2.816,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 24.12,
+      "z": 253.02,
+      "scale": 1.2,
+      "rotation": 2.029,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 28.67,
+      "z": 259.78,
+      "scale": 1.13,
+      "rotation": 1.947,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 18.51,
+      "z": 255.46,
+      "scale": 1.03,
+      "rotation": 4.798,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 28.09,
+      "z": 247.2,
+      "scale": 0.97,
+      "rotation": 0.297,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 33.78,
+      "z": 255.48,
+      "scale": 0.98,
+      "rotation": 1.35,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 27.73,
+      "z": 256.35,
+      "scale": 0.9,
+      "rotation": 4.3,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 34.73,
+      "z": 258.54,
+      "scale": 1.08,
+      "rotation": 4.603,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 25.63,
+      "z": 250.12,
+      "scale": 1.03,
+      "rotation": 2.53,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 21.06,
+      "z": 257.07,
+      "scale": 0.9,
+      "rotation": 3.891,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 24.84,
+      "z": 259.49,
+      "scale": 0.84,
+      "rotation": 5.69,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 29.84,
+      "z": 245.0,
+      "scale": 0.87,
+      "rotation": 0.308,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 40.09,
+      "z": 251.86,
+      "scale": 1.08,
+      "rotation": 0.162,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 37.09,
+      "z": 256.31,
+      "scale": 0.9,
+      "rotation": 5.321,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "plant",
+      "x": 20.04,
+      "z": 262.47,
+      "scale": 1.02,
+      "rotation": 5.576,
+      "dressing": "copper_canyons_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 278.87,
+      "z": 236.3,
+      "scale": 0.93,
+      "rotation": 4.465,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 269.6,
+      "z": 242.3,
+      "scale": 1.05,
+      "rotation": 4.847,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 284.32,
+      "z": 237.59,
+      "scale": 0.99,
+      "rotation": 3.566,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 287.08,
+      "z": 243.76,
+      "scale": 1.19,
+      "rotation": 5.525,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 283.33,
+      "z": 242.62,
+      "scale": 1.12,
+      "rotation": 1.795,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 281.85,
+      "z": 236.1,
+      "scale": 0.92,
+      "rotation": 1.881,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 273.61,
+      "z": 250.7,
+      "scale": 0.98,
+      "rotation": 0.796,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 270.72,
+      "z": 245.46,
+      "scale": 1.09,
+      "rotation": 2.223,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 276.24,
+      "z": 252.57,
+      "scale": 1.05,
+      "rotation": 5.249,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 280.98,
+      "z": 247.94,
+      "scale": 1.05,
+      "rotation": 0.496,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 289.5,
+      "z": 250.0,
+      "scale": 1.19,
+      "rotation": 1.315,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 269.44,
+      "z": 239.39,
+      "scale": 0.94,
+      "rotation": 0.21,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 285.29,
+      "z": 246.83,
+      "scale": 1.0,
+      "rotation": 5.196,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 273.63,
+      "z": 243.76,
+      "scale": 1.12,
+      "rotation": 0.33,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 279.7,
+      "z": 245.15,
+      "scale": 0.89,
+      "rotation": 3.732,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 288.56,
+      "z": 246.77,
+      "scale": 1.06,
+      "rotation": 0.516,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 275.71,
+      "z": 240.74,
+      "scale": 0.86,
+      "rotation": 0.245,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 290.23,
+      "z": 244.33,
+      "scale": 0.9,
+      "rotation": 0.523,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 281.17,
+      "z": 256.38,
+      "scale": 1.1,
+      "rotation": 4.118,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 273.37,
+      "z": 235.7,
+      "scale": 1.3,
+      "rotation": 1.32,
+      "dressing": "copper_canyons_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 6.07,
+      "z": 14.61,
+      "scale": 0.87,
+      "rotation": 0.797,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 15.13,
+      "z": 22.76,
+      "scale": 1.04,
+      "rotation": 5.894,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 10.36,
+      "z": 10.62,
+      "scale": 1.2,
+      "rotation": 5.234,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 20.71,
+      "z": 19.59,
+      "scale": 1.02,
+      "rotation": 3.76,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 18.65,
+      "z": 25.32,
+      "scale": 1.14,
+      "rotation": 2.398,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 7.94,
+      "z": 22.41,
+      "scale": 1.12,
+      "rotation": 4.845,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 21.99,
+      "z": 22.41,
+      "scale": 0.87,
+      "rotation": 2.58,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 11.53,
+      "z": 14.76,
+      "scale": 1.18,
+      "rotation": 3.729,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 23.63,
+      "z": 19.94,
+      "scale": 0.97,
+      "rotation": 5.784,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 8.47,
+      "z": 17.48,
+      "scale": 1.0,
+      "rotation": 4.445,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 7.19,
+      "z": 11.86,
+      "scale": 0.93,
+      "rotation": 4.697,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 11.87,
+      "z": 22.79,
+      "scale": 1.24,
+      "rotation": 0.208,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 25.44,
+      "z": 17.07,
+      "scale": 0.94,
+      "rotation": 4.824,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 15.88,
+      "z": 8.94,
+      "scale": 0.92,
+      "rotation": 1.455,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 18.52,
+      "z": 22.0,
+      "scale": 0.94,
+      "rotation": 4.566,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 20.82,
+      "z": 7.35,
+      "scale": 1.14,
+      "rotation": 6.13,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 21.98,
+      "z": 12.72,
+      "scale": 1.2,
+      "rotation": 0.686,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 23.84,
+      "z": 11.59,
+      "scale": 1.13,
+      "rotation": 5.683,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "boulder",
+      "x": 18.54,
+      "z": 14.24,
+      "scale": 0.89,
+      "rotation": 0.169,
+      "dressing": "copper_canyons_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 276.8,
+      "z": 20.01,
+      "scale": 1.09,
+      "rotation": 3.891,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 278.54,
+      "z": 23.32,
+      "scale": 0.81,
+      "rotation": 1.024,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 275.28,
+      "z": 11.64,
+      "scale": 0.96,
+      "rotation": 4.402,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 280.06,
+      "z": 20.75,
+      "scale": 0.8,
+      "rotation": 2.391,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 289.31,
+      "z": 8.27,
+      "scale": 0.91,
+      "rotation": 3.359,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 283.17,
+      "z": 9.12,
+      "scale": 1.08,
+      "rotation": 2.671,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 284.44,
+      "z": 12.79,
+      "scale": 1.09,
+      "rotation": 3.192,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 292.46,
+      "z": 15.89,
+      "scale": 1.08,
+      "rotation": 3.756,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 287.95,
+      "z": 14.9,
+      "scale": 1.15,
+      "rotation": 1.899,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 288.57,
+      "z": 22.5,
+      "scale": 0.82,
+      "rotation": 3.301,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 280.82,
+      "z": 12.69,
+      "scale": 0.95,
+      "rotation": 3.69,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 279.73,
+      "z": 15.43,
+      "scale": 1.04,
+      "rotation": 4.834,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 286.13,
+      "z": 20.89,
+      "scale": 0.98,
+      "rotation": 4.57,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 276.59,
+      "z": 16.65,
+      "scale": 1.13,
+      "rotation": 2.015,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 290.56,
+      "z": 18.3,
+      "scale": 0.95,
+      "rotation": 3.046,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 283.98,
+      "z": 22.87,
+      "scale": 0.97,
+      "rotation": 2.971,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 289.76,
+      "z": 12.16,
+      "scale": 0.99,
+      "rotation": 2.986,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "plant",
+      "x": 270.36,
+      "z": 15.49,
+      "scale": 1.4,
+      "rotation": 4.64,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "boulder",
+      "x": 275.61,
+      "z": 5.16,
+      "scale": 0.93,
+      "rotation": 2.07,
+      "dressing": "copper_canyons_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 17.71,
+      "z": 46.07,
+      "scale": 0.83,
+      "rotation": 4.075,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 12.95,
+      "z": 45.36,
+      "scale": 0.91,
+      "rotation": 4.978,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 16.84,
+      "z": 59.78,
+      "scale": 0.97,
+      "rotation": 2.468,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 12.2,
+      "z": 62.59,
+      "scale": 0.92,
+      "rotation": 0.337,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 18.42,
+      "z": 56.06,
+      "scale": 1.09,
+      "rotation": 2.956,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 20.06,
+      "z": 53.22,
+      "scale": 0.87,
+      "rotation": 2.96,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 12.16,
+      "z": 54.54,
+      "scale": 0.95,
+      "rotation": 0.797,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 20.11,
+      "z": 61.66,
+      "scale": 1.01,
+      "rotation": 0.827,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 15.11,
+      "z": 55.66,
+      "scale": 1.02,
+      "rotation": 4.501,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 20.18,
+      "z": 49.02,
+      "scale": 1.04,
+      "rotation": 1.702,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 14.34,
+      "z": 52.09,
+      "scale": 1.14,
+      "rotation": 5.276,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 20.69,
+      "z": 58.68,
+      "scale": 0.92,
+      "rotation": 1.8,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 9.98,
+      "z": 57.96,
+      "scale": 1.14,
+      "rotation": 3.073,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "plant",
+      "x": 5.27,
+      "z": 49.4,
+      "scale": 1.17,
+      "rotation": 0.627,
+      "dressing": "copper_canyons_copse_5"
+    },
+    {
+      "type": "olive_tree",
+      "x": 280.02,
+      "z": 281.11,
+      "scale": 0.81,
+      "rotation": 5.314,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 281.0,
+      "z": 290.43,
+      "scale": 0.96,
+      "rotation": 1.171,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "olive_tree",
+      "x": 282.27,
+      "z": 278.24,
+      "scale": 1.2,
+      "rotation": 4.583,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 290.36,
+      "z": 282.99,
+      "scale": 1.21,
+      "rotation": 4.738,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "olive_tree",
+      "x": 284.58,
+      "z": 280.72,
+      "scale": 1.02,
+      "rotation": 2.792,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 290.85,
+      "z": 286.8,
+      "scale": 0.8,
+      "rotation": 5.084,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "olive_tree",
+      "x": 286.04,
+      "z": 284.31,
+      "scale": 1.23,
+      "rotation": 1.342,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 279.76,
+      "z": 286.23,
+      "scale": 1.11,
+      "rotation": 3.992,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 282.96,
+      "z": 286.61,
+      "scale": 0.97,
+      "rotation": 2.458,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "olive_tree",
+      "x": 278.03,
+      "z": 278.96,
+      "scale": 0.92,
+      "rotation": 0.491,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 287.27,
+      "z": 287.44,
+      "scale": 0.98,
+      "rotation": 0.559,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "olive_tree",
+      "x": 282.01,
+      "z": 283.14,
+      "scale": 0.86,
+      "rotation": 2.557,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 286.75,
+      "z": 290.89,
+      "scale": 1.11,
+      "rotation": 1.023,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "olive_tree",
+      "x": 292.49,
+      "z": 289.44,
+      "scale": 1.18,
+      "rotation": 6.021,
+      "dressing": "copper_canyons_copse_6"
+    },
+    {
+      "type": "plant",
+      "x": 291.5,
+      "z": 276.5,
+      "scale": 0.92,
+      "rotation": 2.963,
+      "dressing": "copper_canyons_copse_6"
     }
   ],
   "firecamps": [
@@ -5491,5 +7136,349 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "id": "copper_canyons_bridgehead_1",
+      "kind": "bridgehead",
+      "x": 191.6,
+      "z": 174,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_2",
+      "kind": "bridgehead",
+      "x": 253.9,
+      "z": 210,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_3",
+      "kind": "bridgehead",
+      "x": 150,
+      "z": 198,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_4",
+      "kind": "bridgehead",
+      "x": 150,
+      "z": 270,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_5",
+      "kind": "bridgehead",
+      "x": 108.4,
+      "z": 174,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_6",
+      "kind": "bridgehead",
+      "x": 46.1,
+      "z": 210,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_7",
+      "kind": "bridgehead",
+      "x": 108.4,
+      "z": 126,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_8",
+      "kind": "bridgehead",
+      "x": 46.1,
+      "z": 90,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_9",
+      "kind": "bridgehead",
+      "x": 150,
+      "z": 102,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_10",
+      "kind": "bridgehead",
+      "x": 150,
+      "z": 30,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_11",
+      "kind": "bridgehead",
+      "x": 191.6,
+      "z": 126,
+      "clear_of_bases": true
+    },
+    {
+      "id": "copper_canyons_bridgehead_12",
+      "kind": "bridgehead",
+      "x": 253.9,
+      "z": 90,
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        13.4,
+        71.1
+      ],
+      "id": "copper_canyons_riverbank_1",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        90.9,
+        117.2
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        116.3,
+        130
+      ],
+      "id": "copper_canyons_riverbank_2",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        183.7,
+        170
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        209.1,
+        182.8
+      ],
+      "id": "copper_canyons_riverbank_3",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        286.6,
+        228.9
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        150,
+        13.4
+      ],
+      "id": "copper_canyons_riverbank_4",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        149.9,
+        91.9
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        153.5,
+        115.8
+      ],
+      "id": "copper_canyons_riverbank_5",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        146.5,
+        184.2
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        150.1,
+        208.1
+      ],
+      "id": "copper_canyons_riverbank_6",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        150,
+        286.6
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        286.6,
+        71.1
+      ],
+      "id": "copper_canyons_riverbank_7",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        207.9,
+        115.2
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        184.2,
+        130.8
+      ],
+      "id": "copper_canyons_riverbank_8",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        115.8,
+        169.2
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "from": [
+        92.1,
+        184.8
+      ],
+      "id": "copper_canyons_riverbank_9",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        13.4,
+        228.9
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "copper_canyons_ramp_1",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 262.9,
+      "z": 141,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "copper_canyons_ramp_2",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 214.2,
+      "z": 243.2,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "copper_canyons_ramp_3",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 101.4,
+      "z": 252.2,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "copper_canyons_ramp_4",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 37.1,
+      "z": 159,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "copper_canyons_ramp_5",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 85.8,
+      "z": 56.8,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "copper_canyons_ramp_6",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 198.6,
+      "z": 47.8,
+      "clear_of_bases": true
+    },
+    {
+      "count": 18,
+      "id": "copper_canyons_copse_1",
+      "kind": "copse",
+      "radius": 12,
+      "trees": [
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 28.5,
+      "z": 253.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 18,
+      "id": "copper_canyons_copse_2",
+      "kind": "copse",
+      "radius": 12,
+      "trees": [
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 280.5,
+      "z": 245.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 17,
+      "id": "copper_canyons_copse_3",
+      "kind": "copse",
+      "radius": 11.3,
+      "trees": [
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 16.5,
+      "z": 16.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 17,
+      "id": "copper_canyons_copse_4",
+      "kind": "copse",
+      "radius": 11,
+      "trees": [
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 283.5,
+      "z": 15.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 16,
+      "id": "copper_canyons_copse_5",
+      "kind": "copse",
+      "radius": 10.5,
+      "trees": [
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 15.5,
+      "z": 53.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 15,
+      "id": "copper_canyons_copse_6",
+      "kind": "copse",
+      "radius": 9.9,
+      "trees": [
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 285.5,
+      "z": 285.5,
+      "clear_of_bases": true
+    }
+  ]
 }
