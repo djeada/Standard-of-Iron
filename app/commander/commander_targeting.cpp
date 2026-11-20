@@ -285,18 +285,13 @@ auto CommanderTargeting::switch_lock(Engine::Core::World& world,
   }
   const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
 
-  // Bearings are measured against the target that is locked now, not against
-  // the view: the view is still easing toward that target, and a switch has to
-  // mean "the next one over from him" whatever the lens is doing. Every
-  // soldier is a candidate, not one per formation: the man beside the locked
-  // one usually stands in the same troop.
   float const locked_bearing =
       std::atan2(locked->x() - origin.x(), locked->z() - origin.z()) *
       k_radians_to_degrees;
   constexpr float k_same_bearing_degrees = 1.0F;
   constexpr float k_switch_arc_degrees = 110.0F;
   constexpr float k_switch_degrees_per_metre = 8.0F;
-  // A troop is indexed at its centre and its soldiers stand around it.
+
   constexpr float k_formation_reach = 14.0F;
   float const locked_distance =
       std::hypot(locked->x() - origin.x(), locked->z() - origin.z());
@@ -341,9 +336,9 @@ auto CommanderTargeting::switch_lock(Engine::Core::World& world,
       if (distance_sq > k_lock_range_sq) {
         continue;
       }
-      float const offset = signed_angle_delta(
-          std::atan2(dx, dz) * k_radians_to_degrees, locked_bearing);
-      // A larger yaw is further to the left of the view.
+      float const offset =
+          signed_angle_delta(std::atan2(dx, dz) * k_radians_to_degrees, locked_bearing);
+
       bool const on_side = direction > 0 ? offset < -k_same_bearing_degrees
                                          : offset > k_same_bearing_degrees;
       if (!on_side) {
@@ -353,12 +348,8 @@ auto CommanderTargeting::switch_lock(Engine::Core::World& world,
       if (magnitude > k_switch_arc_degrees) {
         continue;
       }
-      // The next man over, not the next bearing over: the front-rank
-      // neighbour a few degrees round beats the man standing just behind the
-      // locked one. Depth only counts against a candidate further away than
-      // the current target; anything nearer is judged on bearing alone.
-      float const deeper =
-          std::max(0.0F, std::sqrt(distance_sq) - locked_distance);
+
+      float const deeper = std::max(0.0F, std::sqrt(distance_sq) - locked_distance);
       float const score = magnitude + (deeper * k_switch_degrees_per_metre);
       if (score >= best_score) {
         continue;

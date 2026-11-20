@@ -454,9 +454,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   {},
                   QStringLiteral("Space"),
                   false});
-  // Not Alt: held with the neighbouring defaults it makes Alt+Tab (lock on),
-  // Alt+Space (dodge) and Alt+click (attack), which belong to the desktop on
-  // Windows and on most Linux window managers.
+
   catalog.append({QStringLiteral("commander.jump"),
                   commander,
                   movement,

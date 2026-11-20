@@ -26,10 +26,10 @@ auto make_commander(Engine::Core::World& world) -> Engine::Core::Entity* {
   return entity;
 }
 
-// The engagement ring's own measure of where an attacker stands: the angle
-// from the commander's facing to the attacker, growing toward +yaw.
-auto ring_angle_degrees(float facing_x, float facing_z, float to_x, float to_z)
-    -> float {
+auto ring_angle_degrees(float facing_x,
+                        float facing_z,
+                        float to_x,
+                        float to_z) -> float {
   float const length = std::hypot(to_x, to_z);
   to_x /= length;
   to_z /= length;
@@ -42,14 +42,13 @@ auto status_with_attacker_at(float x, float z) -> QVariantMap {
   Engine::Core::World world;
   auto* commander = make_commander(world);
   EXPECT_NE(commander, nullptr);
-  auto* engagement =
-      commander->add_component<Engine::Core::RpgEngagementComponent>();
+  auto* engagement = commander->add_component<Engine::Core::RpgEngagementComponent>();
   EXPECT_NE(engagement, nullptr);
   engagement->fight_context = Engine::Core::FightContext::Skirmish;
   Engine::Core::RpgEngagementComponent::Slot slot;
   slot.entity_id = 99;
   slot.distance = std::hypot(x, z);
-  // The commander faces +z.
+
   slot.signed_angle_degrees = ring_angle_degrees(0.0F, 1.0F, x, z);
   slot.pressing = true;
   engagement->engagement_slots.push_back(slot);
@@ -62,9 +61,6 @@ auto status_with_attacker_at(float x, float z) -> QVariantMap {
 
 } // namespace
 
-// Facing +z in a right-handed world, the commander's right hand points at -x.
-// The warning pips used to be wired the other way round: an attacker closing
-// from the right lit the left edge of the screen.
 TEST(CommanderStatusBuilder, AnAttackerOnTheRightLightsTheRightHandPip) {
   auto const status = status_with_attacker_at(-3.0F, 1.5F);
   ASSERT_TRUE(status.value("has_commander").toBool());

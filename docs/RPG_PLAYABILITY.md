@@ -193,12 +193,12 @@ The game does not use raw mouse input: deltas are pointer deltas, so the operati
 
 Sensitivity for each axis, invert-vertical, field of view, guard as a toggle and the camera stand-off had been stored and honoured since the commander view was written but had no control anywhere in the game. They are in **Settings → Controls → Leading the commander**.
 
-| Input | Does | Notes |
-| --- | --- | --- |
-| `Tab` | Lock the enemy nearest the centre of the view, or release the lock | It used to cycle only. With one enemy in reach the lock could never be dropped until he died or walked 26 m away. `CommanderTargeting::toggle_lock`. |
-| `Q` / `E` | Turn left / right; while locked, move the lock to the next enemy on that side | `CommanderTargeting::switch_lock`. Every soldier is a candidate, not one per troop. A candidate further away than the locked target is charged 8° per metre of extra depth, so the front-rank neighbour wins over the man standing behind the current target. |
-| Mouse wheel | Camera stand-off, 0.7× to 2.4× of the authored boom | Stored as `commander/camera_distance`. The boom lengthens and climbs together and the look point drops with it, so the commander stays where he was on screen. The bow's aiming view ignores it. |
-| `V` | Jump | Was `Alt`. Held with its neighbours `Alt` makes `Alt+Tab` (lock on), `Alt+Space` (dodge) and `Alt+click` (attack): the window switcher, the window menu and, on most Linux window managers, a window drag. Existing bindings a player has changed are kept. |
+| Input       | Does                                                                          | Notes                                                                                                                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tab`       | Lock the enemy nearest the centre of the view, or release the lock            | It used to cycle only. With one enemy in reach the lock could never be dropped until he died or walked 26 m away. `CommanderTargeting::toggle_lock`.                                                                                                          |
+| `Q` / `E`   | Turn left / right; while locked, move the lock to the next enemy on that side | `CommanderTargeting::switch_lock`. Every soldier is a candidate, not one per troop. A candidate further away than the locked target is charged 8° per metre of extra depth, so the front-rank neighbour wins over the man standing behind the current target. |
+| Mouse wheel | Camera stand-off, 0.7× to 2.4× of the authored boom                           | Stored as `commander/camera_distance`. The boom lengthens and climbs together and the look point drops with it, so the commander stays where he was on screen. The bow's aiming view ignores it.                                                              |
+| `V`         | Jump                                                                          | Was `Alt`. Held with its neighbours `Alt` makes `Alt+Tab` (lock on), `Alt+Space` (dodge) and `Alt+click` (attack): the window switcher, the window menu and, on most Linux window managers, a window drag. Existing bindings a player has changed are kept.   |
 
 `cycle_lock` is kept for recorded replays and the arena's `RpgCycleLockOn` step. Replays record the new inputs as `toggle_lock_on`, `switch_lock_left` and `switch_lock_right`.
 
@@ -212,7 +212,13 @@ The army view's objective card, wave tracker and mission clock stayed hidden whi
 
 `RpgBearingStrip.qml` is a strip of bearings across the top of the commander's view, fed by `collect_commander_bearings` (`app/commander/commander_bearings.*`) through the `bearings` list of the commander status. Its centre is the centre of the view, its ends are abeam, and anything behind the commander waits at the nearer end with an arrowhead. It marks every enemy commander, the nearest enemy troop, the middle of the player's own troops once he is more than 14 m from it, and a planted rally flag. Enemies count only on ground the player can currently see, so the strip reveals nothing the minimap would not. Positions come from the world's spatial index as the last tick left it; nothing is scanned for it. `CommanderBearingsTest`.
 
+In a fight a small marker hangs over the commander's own head (`rpgSelfMarker`, placed from `self_x/y/z` in the commander status through the same world projector as the lock brackets). In a press of several hundred soldiers he was easy to lose behind the shields nearest the lens; the marker is the one thing in the frame that is always him. It is hidden when no fight is on.
+
 The "your troops are under attack" card says which key returns to the army view while the commander is led, in place of "Click to look": the pointer belongs to the view there.
+
+## Taking control
+
+Entering commander control used to be a cut from the army view, fifty metres up, to the commander's shoulder. `App::Core::CommanderEntryDive` makes the drop instead: it starts on the frame the player was looking at and eases onto the chase camera over 0.55 s, most of it in the first half so the lens is already close when the player starts to steer. Control is the player's from the first tick; only the picture travels. The chase rig runs unchanged underneath and the view model blends its result toward the captured army view, so nothing the rig or the aim ray reads is affected. It is skipped with reduced motion on. `CommanderEntryDive` tests and `CommanderViewModelInputTest.TakingControlDropsTheCameraInsteadOfCuttingToIt`.
 
 ## The closing beat
 

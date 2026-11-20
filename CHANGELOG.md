@@ -35,6 +35,10 @@ may change in any release — see [Save compatibility](#save-compatibility).
   the commander for a few seconds in slow motion, turning and drawing back,
   under a single line - then the result. It is skipped when Reduce motion is
   on.
+- **Taking control of the commander drops the camera down to him** instead of
+  cutting from the army view to his shoulder.
+- **A marker over your own commander in a fight**, so he can be found in a
+  press of several hundred soldiers.
 - **A bearing strip across the top of the commander's view** points to the
   enemy commander, the nearest enemy in sight, your own army and your rally
   flag, with the distance to whichever you are facing.

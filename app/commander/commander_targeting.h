@@ -57,9 +57,6 @@ public:
                   int local_owner_id,
                   float view_yaw) -> bool;
 
-  // Lock-on as the player drives it: one press takes the target nearest the
-  // centre of the view, the next press lets it go. A lock that could only be
-  // cycled left a lone enemy locked until it died or walked out of range.
   enum class LockToggle : std::uint8_t {
     Locked,
     Released,
@@ -70,9 +67,6 @@ public:
                    int local_owner_id,
                    float view_yaw) -> LockToggle;
 
-  // Moves an existing lock to the next candidate on that side of the current
-  // target (direction < 0 is left, > 0 is right). False when nothing is
-  // locked or nothing stands on that side.
   auto switch_lock(Engine::Core::World& world,
                    Engine::Core::EntityID commander_id,
                    int local_owner_id,

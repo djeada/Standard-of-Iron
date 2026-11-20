@@ -413,7 +413,7 @@ TEST_F(CommanderControlControllerTest,
 
 TEST_F(CommanderControlControllerTest, TheTurnKeysTurnTheWayTheyAreNamed) {
   constexpr float k_dt = 1.0F / 60.0F;
-  // Signed turn of the view toward its own right-hand side, in degrees.
+
   auto turn_to_the_right = [](float yaw_before, float yaw_after) {
     float diff = yaw_before - yaw_after;
     while (diff > 180.0F) {
@@ -441,7 +441,6 @@ TEST_F(CommanderControlControllerTest, TheTurnKeysTurnTheWayTheyAreNamed) {
       EXPECT_LT(turned, -30.0F) << "the turn-left key swung the view right";
     }
 
-    // And the mouse agrees with the keys about which way right is.
     CommanderControlController mouse;
     mouse.set_view_yaw(120.0F);
     mouse.mouse_move(key == Qt::Key_E ? 40.0 : -40.0, 0.0);
@@ -1961,8 +1960,7 @@ TEST_F(CommanderControlControllerTest, FrameIntentReportsMouseLookDeltaForTheFra
 
 TEST_F(CommanderControlControllerTest, FrameIntentWrapsAroundTheYawSeam) {
   CommanderControlController controller;
-  // A look to the right takes yaw down, so the seam is crossed from just above
-  // zero.
+
   controller.set_view_yaw(1.0F);
   static_cast<void>(controller.sample_frame_intent(nullptr));
 

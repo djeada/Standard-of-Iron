@@ -229,8 +229,6 @@ TEST(CommanderLookTest, FrameIntentReportsLookDeltaSinceTheLastSample) {
   EXPECT_FLOAT_EQ(first.move.x(), 1.0F);
   EXPECT_FLOAT_EQ(first.move.y(), 1.0F);
 
-  // The delta is how far the player looked to the right, and yaw grows to the
-  // left of the view: fifteen degrees more yaw is fifteen degrees to the left.
   look.set_yaw(25.0F);
   auto second = look.sample_frame_intent(held);
   EXPECT_FLOAT_EQ(second.look_delta.x(), -15.0F);

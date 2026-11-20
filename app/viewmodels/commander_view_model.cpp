@@ -223,6 +223,14 @@ void CommanderViewModel::enter_mode() {
                            *commander_camera,
                            0.0F);
   }
+  if (m_context.rts_camera != nullptr && m_rts_camera_bookmark.valid &&
+      !Game::Accessibility::MotionSettings::reduced_motion()) {
+    m_entry_dive.begin(m_context.rts_camera->get_position(),
+                       m_context.rts_camera->get_target());
+    show_entry_dive();
+  } else {
+    m_entry_dive.end();
+  }
   select_controlled_commander();
   m_mode->complete_transition();
   record_action(Game::Command::CommanderAction::EnterControl);
@@ -239,6 +247,7 @@ void CommanderViewModel::exit_mode() {
   const auto frame_lock = m_host.lock_frame();
   const bool was_active = active();
   clear_finale();
+  m_entry_dive.end();
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
       [this, signals_before]() { emit_mode_signal_changes(signals_before); });
@@ -422,9 +431,8 @@ void CommanderViewModel::aim_view_at_world(float x, float z) {
     return;
   }
   const auto frame_lock = m_host.lock_frame();
-  auto const* transform =
-      m_context.world->try_get<Engine::Core::TransformComponent>(
-          m_controlled_commander_id);
+  auto const* transform = m_context.world->try_get<Engine::Core::TransformComponent>(
+      m_controlled_commander_id);
   if (transform == nullptr) {
     return;
   }
@@ -449,7 +457,7 @@ auto CommanderViewModel::aim_view_at_nearest_enemy(float max_range,
   if (transform == nullptr) {
     return false;
   }
-  // A troop is indexed at its centre and its soldiers stand around it.
+
   constexpr float k_formation_reach = 14.0F;
   std::vector<Engine::Core::EntityID> nearby;
   world.spatial_index().refresh(world);
@@ -908,7 +916,7 @@ void CommanderViewModel::update_control_mode(float dt) {
        .dt = dt});
   if (effects.should_exit_commander_mode) {
     if (m_finale.active()) {
-      // The body has gone; the lens finishes its turn without it.
+
       m_finale_body_live = false;
       return;
     }
@@ -932,13 +940,12 @@ void CommanderViewModel::update_camera_presentation(float dt) {
   if (m_finale.active()) {
     m_finale.advance(dt);
     auto pose = m_finale.pose();
-    // The turn is authored on flat ground; on a slope the lens is kept clear
-    // of the hillside it would otherwise sink into.
+
     constexpr float k_ground_clearance = 0.9F;
-    pose.eye.setY(std::max(pose.eye.y(),
-                           Game::Systems::PickingService::surface_height_at(
-                               pose.eye.x(), pose.eye.z()) +
-                               k_ground_clearance));
+    pose.eye.setY(std::max(
+        pose.eye.y(),
+        Game::Systems::PickingService::surface_height_at(pose.eye.x(), pose.eye.z()) +
+            k_ground_clearance));
     m_context.commander_camera->look_at(
         pose.eye, pose.target, QVector3D(0.0F, 1.0F, 0.0F));
     if (m_finale.take_hand_back()) {
@@ -949,6 +956,20 @@ void CommanderViewModel::update_camera_presentation(float dt) {
   }
   m_control.update_camera_presentation(
       *m_context.world, m_controlled_commander_id, *m_context.commander_camera, dt);
+  if (m_entry_dive.active()) {
+    m_entry_dive.advance(dt);
+    show_entry_dive();
+  }
+}
+
+void CommanderViewModel::show_entry_dive() {
+  auto* camera = m_context.commander_camera;
+  if (camera == nullptr || !m_entry_dive.active()) {
+    return;
+  }
+  auto const shown = m_entry_dive.blend(
+      {.eye = camera->get_position(), .target = camera->get_target()});
+  camera->look_at(shown.eye, shown.target, QVector3D(0.0F, 1.0F, 0.0F));
 }
 
 void CommanderViewModel::restore_direct_control_if_ready() {
@@ -991,9 +1012,7 @@ auto CommanderViewModel::finale() const -> QString {
 }
 
 void CommanderViewModel::announce_finale_change() {
-  // The beat can begin on the simulation thread (a death) and end on the
-  // render thread (the lens has finished turning); QML hears about it on its
-  // own.
+
   QMetaObject::invokeMethod(
       this, [this]() { emit finale_changed(); }, Qt::QueuedConnection);
 }
@@ -1042,7 +1061,7 @@ void CommanderViewModel::conclude_for_outcome(const QString& victory_state) {
     return;
   }
   if (m_finale.active()) {
-    // The commander's fall is already playing; the verdict waits for it.
+
     return;
   }
   using Kind = App::Core::CommanderFinale::Kind;
@@ -1181,8 +1200,7 @@ auto CommanderViewModel::time_effect_scale(float scaled_dt, bool paused) -> floa
 
   static_cast<void>(scaled_dt);
   static_cast<void>(paused);
-  // A landed hit never slows the clock; the closing beat does, so the last
-  // blow and the fall can be watched.
+
   return finale_active() ? App::Core::CommanderFinale::k_time_scale : 1.0F;
 }
 

@@ -65,21 +65,15 @@ public:
   }
   [[nodiscard]] auto rpg_mode() const -> bool { return m_game_mode == GameMode::Rpg; }
 
-  // The closing beat of a battle fought as the commander: "" while there is
-  // none, otherwise "fallen", "victory" or "defeat". While it runs the
-  // commander's camera turns about him, input is ignored and the result
-  // screen waits.
   [[nodiscard]] auto finale() const -> QString;
   [[nodiscard]] auto finale_active() const -> bool {
     return m_finale_kind.load(std::memory_order_acquire) != 0;
   }
-  // The match was decided (victory_state is "victory" or "defeat"). Starts the
-  // closing beat, or leaves commander control at once when it cannot run.
+
   void conclude_for_outcome(const QString& victory_state);
-  // The controlled commander was killed.
+
   void controlled_commander_fell();
-  // Ends the closing beat and returns to the army view. Safe to call when
-  // none is running.
+
   void finish_finale();
 
   Q_INVOKABLE void key_down(int key, int modifiers = 0);
@@ -94,9 +88,6 @@ public:
   Q_INVOKABLE void mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy);
   Q_INVOKABLE void center_mouse(qreal center_sx, qreal center_sy);
 
-  // Scripted play (film and benchmark fixtures): turn the view the way a
-  // player would with the mouse, toward a world point or the nearest hostile
-  // soldier, so a fixture can fight an enemy whose position it cannot know.
   void aim_view_at_world(float x, float z);
   auto aim_view_at_nearest_enemy(float max_range, bool commanders_only) -> bool;
 
@@ -241,11 +232,12 @@ private:
   bool m_status_published_empty = false;
   bool m_applying_replay = false;
 
-  // The sequence itself belongs to whoever holds the frame lock; the kind is
-  // mirrored in an atomic so QML and the input handlers can ask without it.
   App::Core::CommanderFinale m_finale;
   std::atomic<int> m_finale_kind{0};
   bool m_finale_body_live = false;
+  App::Core::CommanderEntryDive m_entry_dive;
+
+  void show_entry_dive();
 };
 
 } // namespace App::ViewModels

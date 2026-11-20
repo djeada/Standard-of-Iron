@@ -223,9 +223,6 @@ Item {
             mouse.accepted = true;
         }
         onWheel: function (w) {
-            // The wheel sets how far the chase camera stands off; it is kept
-            // with the other preferences, so the next battle starts where
-            // this one left it.
             var notches = w.angleDelta.y / 120;
             if (notches !== 0)
                 UiPreferences.commanderCameraDistance = UiPreferences.commanderCameraDistance - notches * root.zoom_step;

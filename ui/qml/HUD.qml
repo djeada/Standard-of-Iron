@@ -57,8 +57,7 @@ Item {
     property int selection_settle_polls: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
-    // The closing beat of a battle fought as the commander: the HUD stands
-    // down while the camera makes its last turn.
+
     readonly property string commander_finale_kind: typeof game !== 'undefined' && game.commander.finale !== undefined ? game.commander.finale : ""
     readonly property bool commander_finale: commander_finale_kind !== ""
     property var commander_status: ({})
@@ -362,9 +361,7 @@ Item {
         width: Math.min(Design.A11y.scaled(320), Math.max(Design.A11y.scaled(200), objectiveCardContent.implicitWidth + Design.Metrics.space24))
         implicitHeight: objectiveCardContent.implicitHeight + Design.Metrics.space16
         raised: true
-        // Shown while leading the commander too: the objective is the same
-        // from the ground as from above, and it was the one thing the commander
-        // view took away.
+
         visible: !hudTop.objectiveShownInline && hudTop.primaryObjectiveText !== "" && !hud.commander_finale && !(typeof game !== 'undefined' && game.is_spectator_mode)
 
         RowLayout {

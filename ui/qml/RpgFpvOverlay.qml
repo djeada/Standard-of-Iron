@@ -135,6 +135,25 @@ Item {
     property real focusScreenY: 0
     property real focusScreenHeight: 0
 
+    property bool selfProjected: false
+    property real selfScreenX: 0
+    property real selfScreenY: 0
+
+    function refresh_self_projection() {
+        if (root.projector === null || !root.projector.ready || root.status_value("self_valid", false) !== true || String(root.status_value("fight_context", "none")) === "none") {
+            root.selfProjected = false;
+            return;
+        }
+        var head = root.projector.project(Number(root.status_value("self_x", 0)), Number(root.status_value("self_y", 0)) + 2.25, Number(root.status_value("self_z", 0)));
+        if (head === null) {
+            root.selfProjected = false;
+            return;
+        }
+        root.selfProjected = true;
+        root.selfScreenX = head.x;
+        root.selfScreenY = head.y;
+    }
+
     function refresh_focus_projection() {
         if (root.projector === null || !root.projector.ready || root.status_value("focus_marker_valid", false) !== true) {
             root.focusProjected = false;
@@ -160,6 +179,7 @@ Item {
 
         function onTickChanged() {
             root.refresh_focus_projection();
+            root.refresh_self_projection();
         }
     }
 
@@ -493,6 +513,42 @@ Item {
                     ctx.fillStyle = pipColor;
                     ctx.fill();
                 }
+            }
+        }
+    }
+
+    Canvas {
+        id: selfMarker
+        objectName: "rpgSelfMarker"
+
+        readonly property color fill: root.bronzeBright
+
+        width: root.scaled(22)
+        height: root.scaled(15)
+        x: root.selfScreenX - width / 2
+        y: root.selfScreenY - height
+        visible: opacity > 0.0
+        opacity: root.selfProjected ? 0.92 : 0.0
+
+        onFillChanged: requestPaint()
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.moveTo(1, 1);
+            ctx.lineTo(width - 1, 1);
+            ctx.lineTo(width / 2, height - 1);
+            ctx.closePath();
+            ctx.fillStyle = fill;
+            ctx.fill();
+            ctx.lineWidth = Math.max(1.5, width * 0.09);
+            ctx.strokeStyle = Qt.rgba(0, 0, 0, 0.8);
+            ctx.stroke();
+        }
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.normal
             }
         }
     }

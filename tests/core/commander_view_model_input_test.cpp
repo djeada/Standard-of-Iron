@@ -8,11 +8,11 @@
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
-#include "game/accessibility/motion_settings.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "scene/camera.h"
@@ -264,6 +264,37 @@ TEST_F(CommanderViewModelInputTest, FocusLossClearsEveryHeldCommanderAction) {
       << "input released on focus loss must not leave the commander walking";
 }
 
+TEST_F(CommanderViewModelInputTest, TakingControlDropsTheCameraInsteadOfCuttingToIt) {
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  Render::GL::Camera army_camera;
+  const QVector3D army_eye(30.0F, 48.0F, -26.0F);
+  army_camera.look_at(
+      army_eye, QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F));
+  m_context.rts_camera = &army_camera;
+
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+  EXPECT_LT((m_commander_camera.get_position() - army_eye).length(), 0.5F)
+      << "the first frame of commander control is still the army view";
+
+  float seconds = 0.0F;
+  float previous_height = m_commander_camera.get_position().y();
+  while (seconds < 1.0F) {
+    m_commander->update_camera_presentation(k_tick);
+    float const height = m_commander_camera.get_position().y();
+    EXPECT_LE(height, previous_height + 0.05F);
+    previous_height = height;
+    seconds += k_tick;
+  }
+  EXPECT_LT(m_commander_camera.get_position().y(), 6.0F)
+      << "a second later the lens is at the commander's shoulder";
+  EXPECT_LT(std::hypot(m_commander_camera.get_position().x(),
+                       m_commander_camera.get_position().z()),
+            8.0F);
+  m_context.rts_camera = nullptr;
+}
+
 TEST_F(CommanderViewModelInputTest, AWonBattleHoldsTheCommandersViewBeforeTheVerdict) {
   auto* commander = spawn_commander(0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -281,7 +312,6 @@ TEST_F(CommanderViewModelInputTest, AWonBattleHoldsTheCommandersViewBeforeTheVer
   EXPECT_LT(m_commander->time_effect_scale(k_tick, false), 1.0F)
       << "the closing beat plays in slow motion";
 
-  // Input means nothing while the lens turns.
   m_commander->key_down(Qt::Key_W);
   m_commander->update_control_mode(k_tick);
   auto const* transform = commander->get_component<Engine::Core::TransformComponent>();
@@ -298,7 +328,6 @@ TEST_F(CommanderViewModelInputTest, AWonBattleHoldsTheCommandersViewBeforeTheVer
   EXPECT_GT((m_commander_camera.get_position() - eye_before).length(), 1.0F)
       << "the camera has to have made its turn";
 
-  // The hand-back is queued to the interface thread; the test stands in for it.
   m_commander->finish_finale();
   EXPECT_FALSE(m_commander->active());
   EXPECT_TRUE(m_commander->finale().isEmpty());
@@ -321,15 +350,12 @@ TEST_F(CommanderViewModelInputTest, TheCommandersDeathIsWatchedNotCutAwayFrom) {
   EXPECT_TRUE(m_commander->active());
   EXPECT_EQ(m_commander->finale(), QStringLiteral("fallen"));
 
-  // The simulation keeps ticking with a dead commander under control; that
-  // must not end the beat early.
   for (int tick = 0; tick < 30; ++tick) {
     m_commander->update_control_mode(k_tick);
     m_commander->update_camera_presentation(k_tick);
   }
   EXPECT_TRUE(m_commander->active());
 
-  // The defeat that follows a death does not restart or replace the beat.
   m_commander->conclude_for_outcome(QStringLiteral("defeat"));
   EXPECT_EQ(m_commander->finale(), QStringLiteral("fallen"));
 
@@ -348,7 +374,6 @@ TEST_F(CommanderViewModelInputTest, LeavingByAnyOtherRouteEndsTheClosingBeat) {
   m_commander->conclude_for_outcome(QStringLiteral("defeat"));
   ASSERT_EQ(m_commander->finale(), QStringLiteral("defeat"));
 
-  // A load, a restart or the menu leave commander mode directly.
   m_commander->exit_mode();
   EXPECT_TRUE(m_commander->finale().isEmpty());
   EXPECT_FALSE(m_commander->active());

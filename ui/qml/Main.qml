@@ -469,8 +469,7 @@ ApplicationWindow {
         maxHeight: hud.visible && hud.commander_rpg_mode ? Math.max(0, hud.height - hud.bottom_reserved_height - anchors.topMargin - Design.Metrics.space8) : -1
         z: 12
         visible: mainWindow.game_started && !mainWindow.menu_visible
-        // The closing beat of a battle fought as the commander has the frame
-        // to itself; whatever is still on the stack is there again after it.
+
         opacity: hud.visible && hud.commander_finale ? 0.0 : 1.0
 
         Behavior on opacity  {
@@ -1187,9 +1186,6 @@ ApplicationWindow {
                 return;
             Design.Notifications.urgent(text, {
                     "channel": "home-attacked",
-                    // The pointer belongs to the commander's view while he is
-                    // led in person: there is nothing to click, so the card
-                    // names the key that goes back to the army instead.
                     "detail": hud.commander_rpg_mode ? qsTr("%1 for the army view").arg(InputBindings.display_shortcut_for("global.toggle_control_mode")) : qsTr("Click to look"),
                     "icon": Design.Icons.warning,
                     "activate": function () {

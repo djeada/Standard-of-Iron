@@ -1,19 +1,11 @@
 import QtQuick 2.15
 import StandardOfIron.Design 1.0 as Design
 
-// A strip of bearings across the top of the commander's view. From the ground
-// a battle is a wall of backs; this carries down what the army view's map
-// would have told him: which way the enemy general is, where the nearest
-// enemy stands, where his own line is and where he planted the rally flag.
-// The centre of the strip is the centre of the view, the ends are abeam, and
-// anything behind him waits at the nearer end.
 Item {
     id: root
 
-    // [{kind, bearing, distance, label}] with bearing in degrees to the right
-    // of the view.
     property var bearings: []
-    // Degrees; only used to make the graduations travel as the view turns.
+
     property real viewYaw: 0
     property real unit: 1.0
     property real fontPixels: 12
@@ -26,8 +18,6 @@ Item {
     readonly property color bone: Design.Theme.parchment
     readonly property color ember: Design.Theme.danger
 
-    // The mark the caption speaks for: the one nearest the centre, if it is
-    // close enough to be "the thing I am looking at".
     readonly property int captionIndex: {
         var best = -1;
         var bestOff = 9.0;
@@ -109,8 +99,7 @@ Item {
         clip: true
 
         Repeater {
-            // A graduation every fifteen degrees of the world, so the strip
-            // visibly travels when the view turns.
+
             model: 24
 
             delegate: Rectangle {
@@ -130,7 +119,6 @@ Item {
         }
     }
 
-    // The lubber line: the centre of the view.
     Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
@@ -152,6 +140,8 @@ Item {
             readonly property bool beyond: Math.abs(off) > root.halfSpanDegrees
             readonly property real shown: Math.max(-root.halfSpanDegrees, Math.min(root.halfSpanDegrees, off))
             readonly property bool chief: modelData.kind === "enemy_commander"
+
+            objectName: "rpgBearingMark"
 
             x: root.width * 0.5 + shown * root.pixelsPerDegree - width * 0.5
             anchors.verticalCenter: parent.verticalCenter
@@ -186,7 +176,6 @@ Item {
                 font.pixelSize: Math.round(parent.width * 0.62)
             }
 
-            // Behind the commander: an arrowhead says which way round is nearer.
             Text {
                 visible: beyond
                 anchors.verticalCenter: parent.verticalCenter
@@ -229,6 +218,8 @@ Item {
 
         Text {
             id: captionLabel
+
+            objectName: "rpgBearingCaptionLabel"
 
             anchors.centerIn: parent
             text: caption.entry !== null ? root.caption_for(caption.entry) : ""

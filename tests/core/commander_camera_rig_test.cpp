@@ -544,7 +544,7 @@ TEST(CommanderCameraRig, LookingAwayFromALockedTargetKeepsTheHorizon) {
     settle(rig, camera, inputs);
     return rig.forward().y();
   };
-  // The view faces +z throughout; only the locked enemy moves around it.
+
   float const ahead = forward_y_with_lock_at(QVector3D(0.0F, 0.0F, 6.0F));
   float const abeam = forward_y_with_lock_at(QVector3D(6.0F, 0.0F, 0.0F));
   float const behind = forward_y_with_lock_at(QVector3D(0.0F, 0.0F, -6.0F));
@@ -581,15 +581,12 @@ TEST(CommanderCameraRig, TheWheelStandsTheCameraOffWithoutLosingTheCommander) {
   EXPECT_GT(far.eye_unconstrained.y(), rest.eye_unconstrained.y())
       << "pulling back also climbs, or the heads in front fill the frame";
 
-  // The commander must stay inside the picture at every stand-off: his chest
-  // is below the view axis but well above the bottom edge of a 68 degree lens.
   for (auto const* trace : {&near, &rest, &far}) {
     QVector3D const forward =
         (trace->target_unconstrained - trace->eye_unconstrained).normalized();
-    QVector3D const to_chest =
-        (trace->commander_position + QVector3D(0.0F, 1.1F, 0.0F) -
-         trace->eye_unconstrained)
-            .normalized();
+    QVector3D const to_chest = (trace->commander_position +
+                                QVector3D(0.0F, 1.1F, 0.0F) - trace->eye_unconstrained)
+                                   .normalized();
     float const off_axis_degrees =
         std::acos(std::clamp(QVector3D::dotProduct(forward, to_chest), -1.0F, 1.0F)) *
         57.29577951308232F;
@@ -646,11 +643,7 @@ auto rig_inputs_at(float yaw,
 } // namespace
 
 TEST(CommanderCameraRigFeelTest, AMousePushedRightTurnsTheLensToItsOwnRight) {
-  // The whole chain, hand to lens: a mouse delta through the controller's look,
-  // the resulting yaw through the rig, and the real camera's right-hand vector
-  // as the judge. Yaw runs from +z toward +x in a right-handed world, so it
-  // grows to the LEFT of the view; for months the mouse added to it and the
-  // camera turned against the hand.
+
   Game::Accessibility::CommanderInput::reset_to_defaults();
   App::Core::CommanderCameraRig rig;
   Render::GL::Camera camera;
@@ -673,7 +666,8 @@ TEST(CommanderCameraRigFeelTest, AMousePushedRightTurnsTheLensToItsOwnRight) {
         rig.update(camera, rig_inputs_at(controller.view_yaw(), anchor, 1.0F / 60.0F)));
     const QVector3D forward_after = camera.get_forward_vector();
 
-    EXPECT_GT(QVector3D::dotProduct(forward_after - forward_before, right_before), 0.05F)
+    EXPECT_GT(QVector3D::dotProduct(forward_after - forward_before, right_before),
+              0.05F)
         << "from yaw " << start_yaw
         << " a mouse moved right swung the view to the left";
   }

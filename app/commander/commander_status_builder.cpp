@@ -22,6 +22,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   QVariantMap result;
   result["has_commander"] = false;
   result["bearings"] = QVariantList{};
+  result["self_valid"] = false;
   result["view_yaw"] = static_cast<double>(input.view_yaw);
   result["id"] = 0;
   result["name"] = QString();
@@ -147,6 +148,13 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
     result["bearings"] = bearings;
   }
   result["id"] = static_cast<int>(input.controlled_commander_id);
+  if (auto const* own_transform = world->try_get<Engine::Core::TransformComponent>(
+          input.controlled_commander_id)) {
+    result["self_valid"] = true;
+    result["self_x"] = static_cast<double>(own_transform->position.x);
+    result["self_y"] = static_cast<double>(own_transform->position.y);
+    result["self_z"] = static_cast<double>(own_transform->position.z);
+  }
   result["name"] = name;
   result["nation"] = described.nation;
   result["alive"] = described.alive;
@@ -231,7 +239,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
       if (!slot.pressing) {
         continue;
       }
-      // The slot angle grows toward +yaw, which is the commander's left.
+
       if (slot.signed_angle_degrees > 20.0F) {
         threat_left = true;
       } else if (slot.signed_angle_degrees < -20.0F) {

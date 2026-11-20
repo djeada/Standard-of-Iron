@@ -59,14 +59,14 @@ class UiPreferences : public QObject {
                  set_commander_guard_is_toggle NOTIFY commander_input_changed)
   Q_PROPERTY(qreal commanderCameraDistance READ commander_camera_distance WRITE
                  set_commander_camera_distance NOTIFY commander_input_changed)
-  Q_PROPERTY(qreal minCommanderLookSensitivity READ min_commander_look_sensitivity
+  Q_PROPERTY(
+      qreal minCommanderLookSensitivity READ min_commander_look_sensitivity CONSTANT)
+  Q_PROPERTY(
+      qreal maxCommanderLookSensitivity READ max_commander_look_sensitivity CONSTANT)
+  Q_PROPERTY(qreal minCommanderFieldOfViewScale READ min_commander_field_of_view_scale
                  CONSTANT)
-  Q_PROPERTY(qreal maxCommanderLookSensitivity READ max_commander_look_sensitivity
+  Q_PROPERTY(qreal maxCommanderFieldOfViewScale READ max_commander_field_of_view_scale
                  CONSTANT)
-  Q_PROPERTY(qreal minCommanderFieldOfViewScale READ
-                 min_commander_field_of_view_scale CONSTANT)
-  Q_PROPERTY(qreal maxCommanderFieldOfViewScale READ
-                 max_commander_field_of_view_scale CONSTANT)
   Q_PROPERTY(
       qreal minCommanderCameraDistance READ min_commander_camera_distance CONSTANT)
   Q_PROPERTY(

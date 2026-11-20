@@ -392,8 +392,14 @@ TEST_F(AudioGameplayScenarioTest, BlowsOnABuildingKeepTheMeleeRhythm) {
     Game::Audio::Clock::advance_rendered(k_step);
   }
 
-  const auto record =
+  auto record =
       CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_structure);
+  for (int settle = 0;
+       settle < 400 && record.requests < static_cast<std::uint64_t>(k_blows);
+       ++settle) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    record = CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_structure);
+  }
   const auto held_back = record.outcomes.at(
       static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown));
   ASSERT_EQ(record.requests, static_cast<std::uint64_t>(k_blows))

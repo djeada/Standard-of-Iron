@@ -376,7 +376,7 @@ void CommanderControlController::steer_view(Engine::Core::World& world,
                                           .dt = dt}));
 
   if (m_targeting.locked_id() == 0) {
-    // A growing yaw turns the view left (see CommanderLook::apply_mouse_delta).
+
     if (tick.turn_left) {
       m_look.set_yaw(m_look.yaw() + k_turn_speed_degrees * dt);
     }

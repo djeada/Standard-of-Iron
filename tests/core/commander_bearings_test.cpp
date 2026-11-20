@@ -38,9 +38,8 @@ protected:
     return entity;
   }
 
-  // The view looks along +z unless a test says otherwise.
-  auto bearings(Engine::Core::EntityID commander, float view_yaw = 0.0F)
-      -> std::vector<CommanderBearing> {
+  auto bearings(Engine::Core::EntityID commander,
+                float view_yaw = 0.0F) -> std::vector<CommanderBearing> {
     m_world.spatial_index().rebuild(m_world);
     return App::Core::collect_commander_bearings({.world = &m_world,
                                                   .commander_id = commander,
@@ -52,8 +51,8 @@ protected:
 
   static auto find(const std::vector<CommanderBearing>& all,
                    CommanderBearing::Kind kind) -> const CommanderBearing* {
-    auto const it = std::find_if(
-        all.begin(), all.end(), [kind](const CommanderBearing& bearing) {
+    auto const it =
+        std::find_if(all.begin(), all.end(), [kind](const CommanderBearing& bearing) {
           return bearing.kind == kind;
         });
     return it != all.end() ? &*it : nullptr;
@@ -67,7 +66,7 @@ protected:
 
 TEST_F(CommanderBearingsTest, AnEnemyOnThePlayersRightReadsToTheRight) {
   auto* commander = make_commander(0.0F, 0.0F, 1);
-  // Facing +z in a right-handed world the right hand points at -x.
+
   make_unit(-10.0F, 10.0F, 2);
 
   auto const all = bearings(commander->get_id());
@@ -85,8 +84,6 @@ TEST_F(CommanderBearingsTest, TheBearingFollowsTheViewNotTheMap) {
   ASSERT_NE(find(ahead, CommanderBearing::Kind::Enemy), nullptr);
   EXPECT_NEAR(find(ahead, CommanderBearing::Kind::Enemy)->right_degrees, 0.0F, 0.5F);
 
-  // The player has turned a quarter turn to the right (yaw falls): what was
-  // ahead is now abeam on his left.
   auto turned = bearings(commander->get_id(), 270.0F);
   ASSERT_NE(find(turned, CommanderBearing::Kind::Enemy), nullptr);
   EXPECT_NEAR(find(turned, CommanderBearing::Kind::Enemy)->right_degrees, -90.0F, 0.5F);

@@ -76,8 +76,6 @@ constexpr float k_crowd_look_drop_share = 0.3F;
 constexpr float k_crowd_side_tuck = 0.55F;
 constexpr float k_threat_bias_side = 0.30F;
 
-// Lock framing is at full strength inside 50 degrees of the view axis and gone
-// by 85.
 constexpr float k_focus_full_cos = 0.6428F;
 constexpr float k_focus_release_cos = 0.0872F;
 
@@ -222,10 +220,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       inputs.aiming_bow, inputs.lock_target_active, inputs.fight_context);
   Framing framing_target = framing_for(m_framing_state, inputs.close_camera_mode);
   if (m_framing_state != CommanderFramingState::BowAim) {
-    // The player's own stand-off, set on the mouse wheel. The boom lengthens
-    // and climbs together, and the look point drops a little with it, so the
-    // commander stays where he was on screen while more of the field around
-    // him comes into view. The bow keeps its authored aiming view.
+
     float const zoom = Game::Accessibility::CommanderInput::camera_distance_scale();
     framing_target.back *= zoom;
     framing_target.up *= 1.0F + ((zoom - 1.0F) * k_zoom_rise_share);
@@ -428,12 +423,6 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   if (inputs.lock_target_position.has_value()) {
     focus_world = reach_out(*inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F));
 
-    // The lock only frames a target the player is still looking toward. The
-    // look point is a blend of "straight ahead" and the target, and with the
-    // target behind the lens that blend lands at the commander's feet: a
-    // player who looked away from a locked enemy was shown the ground from
-    // above. Past a right angle the framing lets go and the view is the
-    // player's own again; the lock itself is unchanged.
     QVector3D const to_focus(
         focus_world->x() - pivot.x(), 0.0F, focus_world->z() - pivot.z());
     float facing = 1.0F;

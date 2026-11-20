@@ -1,13 +1,9 @@
 import QtQuick 2.15
 import StandardOfIron.Design 1.0 as Design
 
-// The closing beat of a battle fought as the commander. While the camera makes
-// its last turn about him the HUD is put away, the frame closes to a letterbox
-// and one line says what happened; the result panel follows when it is over.
 Item {
     id: root
 
-    // "" | "fallen" | "victory" | "defeat"
     property string kind: ""
     property string commanderName: ""
 
@@ -16,8 +12,6 @@ Item {
     readonly property color toneColor: kind === "victory" ? Design.Theme.focus : Design.Theme.danger
     readonly property real barHeight: Math.round(root.height * 0.105)
 
-    // The line is kept while the overlay fades out, so it does not blank a
-    // frame before the bars have gone.
     property string shownKind: ""
     property string shownName: ""
 
@@ -72,8 +66,6 @@ Item {
         color: "black"
     }
 
-    // A soft band behind the line: it has to read over a field of pale
-    // helmets as surely as over grass.
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right

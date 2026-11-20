@@ -51,7 +51,7 @@ protected:
 };
 
 TEST_F(CommanderAccessibilityTest, LookSensitivityScalesEachAxisIndependently) {
-  // Starts mid-circle so a turn either way stays clear of the 0/360 seam.
+
   constexpr float k_start_yaw = 180.0F;
   CommanderControlController baseline;
   baseline.set_view_yaw(k_start_yaw);

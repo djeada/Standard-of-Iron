@@ -164,8 +164,6 @@ TEST_F(CommanderLockOnTest, LockingWithNobodyInViewIsRefusedOutLoud) {
       << "a press that locks nothing must reach the HUD as a refusal";
 }
 
-// The view in these tests looks along +z. The world is right-handed, so the
-// player's right-hand side is -x and an enemy at +x stands on his left.
 TEST_F(CommanderLockOnTest, SwitchingStepsToTheNeighbourOnThatSide) {
   Engine::Core::World world;
   auto* commander = make_commander(world);
@@ -206,8 +204,7 @@ TEST_F(CommanderLockOnTest, SwitchingTakesTheFrontRankBeforeTheManBehind) {
   Engine::Core::World world;
   auto* commander = make_commander(world);
   auto* locked = make_unit(world, 0.0F, 5.0F, 2);
-  // Almost dead ahead but a rank back, against a front-rank neighbour; both
-  // on the player's right.
+
   auto* behind = make_unit(world, -0.25F, 7.0F, 2);
   auto* neighbour = make_unit(world, -1.2F, 5.0F, 2);
   ASSERT_NE(commander, nullptr);

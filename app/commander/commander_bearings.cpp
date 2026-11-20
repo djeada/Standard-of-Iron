@@ -15,15 +15,13 @@ namespace App::Core {
 
 namespace {
 
-// Troops closer than this are in the commander's own fight; pointing at them
-// tells him nothing.
 constexpr float k_own_army_minimum_distance = 14.0F;
 constexpr float k_rally_flag_minimum_distance = 6.0F;
 
 auto bearing_to(float from_x, float from_z, float to_x, float to_z, float view_yaw)
     -> float {
   float const yaw_to = std::atan2(to_x - from_x, to_z - from_z) * k_radians_to_degrees;
-  // Yaw grows to the left of the view; the strip reads left to right.
+
   return -signed_angle_delta(yaw_to, view_yaw);
 }
 
