@@ -94,6 +94,20 @@ public:
     Exception(const std::string& msg);
   };
 
+  // Parses the provided argument vector (a `vector` parameter).
+  //
+  // Command-line arguments separate their name and value. For example, one of them
+  // shall break its name and value into two argument strings, like:
+  //
+  // `{ "--<name>", "<value>" }
+  //
+  // Discards argument argument strings that are empty and do not start with `--`.
+  //
+  // Throws `VectorParser::Exception` if:
+  // - `vector` is empty;
+  // - one of the arguments string from `vector` is null;
+  // - a name of one of the arguments is empty;
+  // - iteration ends, but one of the arguments has no value.
   [[nodiscard]] std::vector<Argument>
   parse_vector(const std::span<char*>& vector) const;
 };
