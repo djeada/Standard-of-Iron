@@ -65,6 +65,7 @@
 #include "app/models/loading_tips.h"
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
+#include "app/session/loading_overlay.h"
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/match_setup_view_model.h"
 #include "app/viewmodels/minimap_view_model.h"
@@ -440,9 +441,18 @@ auto main(int argc, char* argv[]) -> int {
     game_engine->set_replay_verify_exit(true);
   }
 
-  if (!opts.direct_campaign_mission.isEmpty() || !opts.direct_mission_file.isEmpty() ||
-      !opts.observe_map_file.isEmpty() || !opts.replay_path.isEmpty()) {
+  const bool direct_match_requested =
+      !opts.direct_campaign_mission.isEmpty() || !opts.direct_mission_file.isEmpty() ||
+      !opts.observe_map_file.isEmpty() || !opts.replay_path.isEmpty();
+  if (direct_match_requested || renderer_self_test || release_self_test ||
+      !opts.screenshot_path.isEmpty()) {
+    QObject::connect(game_engine.get(),
+                     &GameEngine::renderer_failed,
+                     game_engine.get(),
+                     &GameEngine::exit_game);
+  }
 
+  if (direct_match_requested) {
     QTimer::singleShot(
         0, &app, [root_obj, &app, game_engine_ptr = game_engine.get(), opts] {
           auto* gl_view = root_obj->findChild<GLView*>();
@@ -453,7 +463,7 @@ auto main(int argc, char* argv[]) -> int {
           }
           auto mission_started = std::make_shared<bool>(false);
           auto start_direct_mission = [game_engine_ptr, opts, mission_started]() {
-            if (*mission_started) {
+            if (*mission_started || game_engine_ptr->renderer_has_failed()) {
               return;
             }
             *mission_started = true;
@@ -495,6 +505,15 @@ auto main(int argc, char* argv[]) -> int {
                            &app,
                            start_direct_mission,
                            Qt::QueuedConnection);
+          QTimer::singleShot(App::Session::LoadingOverlay::k_first_frames_timeout,
+                             &app,
+                             [game_engine_ptr, mission_started]() {
+                               if (!*mission_started) {
+                                 game_engine_ptr->report_renderer_failure(
+                                     QStringLiteral("Timed out waiting for the OpenGL "
+                                                    "gameplay renderer to start."));
+                               }
+                             });
           if (opts.skip_briefing) {
 
             root_obj->setProperty("suppress_modals", true);

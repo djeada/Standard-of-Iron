@@ -40,6 +40,9 @@ public:
     return m_renderer_ready;
   }
 
+protected:
+  auto updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNode* override;
+
 signals:
   void engine_changed();
   void renderer_ready();

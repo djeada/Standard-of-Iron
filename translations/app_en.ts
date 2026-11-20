@@ -4244,6 +4244,25 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>The battlefield needs a working OpenGL 3.3 Core graphics context.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>The OpenGL graphics context was lost.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>The OpenGL battlefield framebuffer could not be created.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer could not start.</source>
+        <translation>The OpenGL battlefield renderer could not start.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4577,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 heard no answer and withdraws the request.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Timed out waiting for the battlefield to render. The last loading stage was %1.</translation>
     </message>
 </context>
 <context>
@@ -7275,6 +7298,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Roman field commander</source>
         <translation>Roman field commander</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Quit</translation>
     </message>
 </context>
 <context>

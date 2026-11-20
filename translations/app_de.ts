@@ -4244,6 +4244,25 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>Für das Schlachtfeld wird ein funktionierender OpenGL-3.3-Core-Kontext benötigt.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>Der OpenGL-Grafikkontext ist verloren gegangen.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>Der OpenGL-Framebuffer für das Schlachtfeld konnte nicht erstellt werden.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer could not start.</source>
+        <translation>Der OpenGL-Renderer für das Schlachtfeld konnte nicht gestartet werden.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4577,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 erhielt keine Antwort und zieht die Bitte zurück.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Das Schlachtfeld konnte nicht rechtzeitig dargestellt werden. Die letzte Ladephase war %1.</translation>
     </message>
 </context>
 <context>
@@ -7275,6 +7298,10 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>Roman field commander</source>
         <translation>Römischer Feldherr</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Beenden</translation>
     </message>
 </context>
 <context>

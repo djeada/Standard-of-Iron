@@ -178,6 +178,7 @@ public:
   Q_PROPERTY(int selected_player_id READ selected_player_id WRITE set_selected_player_id
                  NOTIFY selected_player_id_changed)
   Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
+  Q_PROPERTY(QString renderer_error READ renderer_error NOTIFY renderer_failed)
   Q_PROPERTY(QObject* audio_system READ audio_system CONSTANT)
   Q_PROPERTY(
       bool is_spectator_mode READ is_spectator_mode NOTIFY spectator_mode_changed)
@@ -230,6 +231,7 @@ public:
   [[nodiscard]] int selected_player_id() const { return m_selected_player_id; }
   void set_selected_player_id(int id);
   [[nodiscard]] QString last_error() const { return m_runtime.last_error; }
+  [[nodiscard]] QString renderer_error() const { return m_renderer_error; }
   Q_INVOKABLE void clear_error() {
     if (!m_runtime.last_error.isEmpty()) {
       m_runtime.last_error = "";
@@ -274,7 +276,7 @@ public:
   [[nodiscard]] bool is_spectator_mode() const { return m_level.is_spectator_mode; }
 
   [[nodiscard]] bool is_loading() const {
-    return m_runtime.loading || m_loading_overlay.active();
+    return !renderer_has_failed() && (m_runtime.loading || m_loading_overlay.active());
   }
 
   [[nodiscard]] float loading_progress() const;
@@ -286,10 +288,7 @@ public:
 
   QObject* audio_system();
 
-  void setWindow(QQuickWindow* w) {
-    m_window = w;
-    publish_client_context();
-  }
+  void setWindow(QQuickWindow* w);
 
   [[nodiscard]] bool consume_screenshot_request();
   void submit_frame_image(const QImage& image);
@@ -313,7 +312,13 @@ public:
   [[nodiscard]] auto frame_lock_stats() const -> const FrameLockStats& {
     return m_lifecycle.stats();
   }
-  [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
+  [[nodiscard]] bool renderer_initialized() const {
+    return !renderer_has_failed() && m_runtime.initialized;
+  }
+  [[nodiscard]] bool renderer_has_failed() const {
+    return m_renderer_failed.load(std::memory_order_acquire);
+  }
+  void report_renderer_failure(QString error);
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
@@ -486,7 +491,7 @@ private:
   void restore_tutorial_state(const QJsonObject& state);
   void restore_battle_stats(const QJsonObject& state);
 
-  void update_loading_overlay();
+  void update_loading_overlay(quint64 rendered_load);
   void update_cursor_position();
 
   [[nodiscard]] auto
@@ -601,6 +606,8 @@ private:
   int m_selected_player_id = 1;
 
   App::Session::LoadingOverlay m_loading_overlay;
+  std::atomic_bool m_renderer_failed{false};
+  QString m_renderer_error;
   App::Core::SimulationLifecycle m_lifecycle;
   mutable App::Core::DeferredPresentationQueue m_deferred_presentation;
   std::atomic<float> m_simulation_time_scale{0.0F};
@@ -624,6 +631,7 @@ private:
 
 signals:
   void renderer_initialized_changed();
+  void renderer_failed();
   void selected_units_changed();
   void selected_units_data_changed();
   void enemy_troops_defeated_changed();

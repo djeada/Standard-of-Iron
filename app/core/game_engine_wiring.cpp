@@ -168,8 +168,9 @@ void GameEngine::wire_loading_and_saves() {
               },
           .autosave_allowed =
               [this]() {
-                return m_runtime.initialized && !m_runtime.loading &&
-                       !m_level.map_path.isEmpty() && m_runtime.victory_state.isEmpty();
+                return !renderer_has_failed() && m_runtime.initialized &&
+                       !m_runtime.loading && !m_level.map_path.isEmpty() &&
+                       m_runtime.victory_state.isEmpty();
               },
           .commander_mode_active =
               [this]() {
