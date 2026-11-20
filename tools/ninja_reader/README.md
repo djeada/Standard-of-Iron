@@ -11,7 +11,7 @@ source files taking the longest to compile.
 ## License
 
 ```
-Copyright 2026 dywoq - MIT License 2.0
+Copyright 2026 dywoq - MIT License
 https://github.com/djeada/Standard-of-Iron
 ```
 
