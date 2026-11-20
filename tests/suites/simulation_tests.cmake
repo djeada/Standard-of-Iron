@@ -15,6 +15,8 @@ add_executable(
     core/system_schedule_test.cpp
     core/world_teardown_ownership_test.cpp
     core/percentile_test.cpp
+    core/resource_utils_test.cpp
+    core/resource_utils_test.qrc
     core/nav_profile_test.cpp
     core/movement_trace_test.cpp
     core/ground_type_test.cpp
