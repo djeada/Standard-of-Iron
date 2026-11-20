@@ -6,6 +6,7 @@ project(ninja_reader LANGUAGES CXX)
 
 add_executable(ninja_reader
     main.cpp
+    commandline_argument.cpp
 )
 target_compile_options(ninja_reader
     PUBLIC -std=c++20
