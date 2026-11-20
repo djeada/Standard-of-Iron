@@ -121,7 +121,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
           is_boolean = true;
         } else if (argument_value == "false") {
           boolean = false;
-          is_boolean = false;
+          is_boolean = true;
         }
 
         if (is_boolean) {
