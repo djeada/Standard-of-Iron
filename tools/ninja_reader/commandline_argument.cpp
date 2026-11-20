@@ -2,6 +2,7 @@
 // https://github.com/djeada/Standard-of-Iron
 
 #include <algorithm>
+#include <cctype>
 #include <format>
 #include <ranges>
 #include <string>
@@ -102,11 +103,34 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
       // to the next check. A caught exception tells the parser that this value is not
       // an integer.
       try {
-        auto argument =
-            Argument(argument_name, ArgumentValue::from(std::stoi(argument_value)));
-        parsed_arguments.push_back(argument);
-        parsing_argument_value = false;
-        continue;
+        // This check addresses the bug, where an argument value could start with digits
+        // and still can be accepted as an integer despite containing non-digit
+        // characters:
+        //
+        //    12345  -> INTEGER
+        //    12cats -> INTEGER
+        //
+        // To fix this, iterate over characters to ensure this is an integer.
+        bool has_digits = true;
+        for (char ch : argument_value) {
+          if (ch < 0) {
+            break;
+          }
+          // static_cast<bool> is required to calm down clang-tidy, because it reports
+          // "implicit conversion: int -> bool"
+          if (!static_cast<bool>(std::isdigit(ch))) {
+            has_digits = false;
+            break;
+          }
+        }
+
+        if (has_digits) {
+          auto argument =
+              Argument(argument_name, ArgumentValue::from(std::stoi(argument_value)));
+          parsed_arguments.push_back(argument);
+          parsing_argument_value = false;
+          continue;
+        }
       } catch (const std::exception&) {
         // .clang-tidy generates a warning about an empty catch block, therefore, we
         // declare this variable to prevent this warning.
