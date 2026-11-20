@@ -799,6 +799,7 @@ add_library(
     soi_mission_runtime
     STATIC
     mission/campaign_manager.cpp
+    mission/campaign_mission_index.cpp
     mission/commander_message_director.cpp
     mission/commander_speaker_roster.cpp
     mission/commander_voice_observer.cpp
