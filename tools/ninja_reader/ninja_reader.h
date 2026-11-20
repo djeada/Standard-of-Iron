@@ -4,6 +4,7 @@
 #ifndef NINJA_READER_H
 #define NINJA_READER_H
 
+#include <concepts>
 #include <cstdint>
 #include <span>
 #include <stdexcept>
@@ -47,6 +48,25 @@ public:
   // Provides the underlying boolean value. See the "std::get<T>" ("std::variant"
   // overload) C++ standard library for thrown exceptions.
   [[nodiscard]] bool boolean() const;
+
+  // Constructs an ArgumentValue instance with the provided integer. Causes a
+  // compilation error if `IntegralT` is not integral. Use it to convert integral
+  // types that are incompatible with `ArgumentValue::Integer`.
+  template <std::integral IntegralT>
+  static auto from(IntegralT integer) noexcept -> ArgumentValue {
+    return ArgumentValue(static_cast<Integer>(integer));
+  }
+
+  // Constructs an ArgumentValue instance with the provided string.
+  static auto from(const std::string& string) noexcept { return ArgumentValue(string); }
+
+  // Constructs an ArgumentValue instance with the provided readonly string.
+  static auto from(const char* string) noexcept {
+    return ArgumentValue(std::string(string));
+  }
+
+  // Constructs an ArgumentValue instance with the provided boolean.
+  static auto from(bool boolean) noexcept { return ArgumentValue(boolean); }
 };
 
 class Argument {
