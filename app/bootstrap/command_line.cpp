@@ -43,6 +43,10 @@ auto parse_command_line(QCoreApplication& app,
       "campaign-mission",
       "Start a campaign mission directly (campaign_id/mission_id).",
       "path");
+  QCommandLineOption const list_campaign_missions_opt(
+      "list-campaign-missions",
+      "Print every campaign_id/mission_id --campaign-mission accepts, one per "
+      "line, then exit.");
   QCommandLineOption const mission_file_opt(
       "mission-file",
       "Start a mission definition file directly for editor testing.",
@@ -136,6 +140,7 @@ auto parse_command_line(QCoreApplication& app,
   parser.addOption(print_data_paths_opt);
   parser.addOption(graphics_preset_opt);
   parser.addOption(campaign_mission_opt);
+  parser.addOption(list_campaign_missions_opt);
   parser.addOption(mission_file_opt);
   parser.addOption(observe_opt);
   parser.addOption(record_replay_opt);

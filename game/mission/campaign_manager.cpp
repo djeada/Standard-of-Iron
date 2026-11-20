@@ -119,6 +119,10 @@ void CampaignManager::set_available_campaigns(const QVariantList& campaigns) {
   emit available_campaigns_changed();
 }
 
+auto CampaignManager::resolve_mission_file(const QString& mission_id) -> QString {
+  return find_mission_file(mission_id);
+}
+
 void CampaignManager::start_campaign_mission(const QString& mission_path,
                                              int&,
                                              const QString& difficulty) {
@@ -131,7 +135,7 @@ void CampaignManager::start_campaign_mission(const QString& mission_path,
   const QString& campaign_id = parts[0];
   const QString& mission_id = parts[1];
 
-  const QString mission_file_path = find_mission_file(mission_id);
+  const QString mission_file_path = resolve_mission_file(mission_id);
   qInfo() << "Loading mission from" << mission_file_path;
 
   Game::Mission::MissionDefinition mission;

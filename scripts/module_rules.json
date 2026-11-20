@@ -459,6 +459,8 @@
       "excluded_files": [
         "game/mission/campaign_manager.cpp",
         "game/mission/campaign_manager.h",
+        "game/mission/campaign_mission_index.cpp",
+        "game/mission/campaign_mission_index.h",
         "game/mission/commander_message_director.cpp",
         "game/mission/commander_message_director.h",
         "game/mission/mission_setup_coordinator.cpp",
@@ -574,6 +576,7 @@
       ],
       "files": [
         "game/mission/campaign_manager",
+        "game/mission/campaign_mission_index",
         "game/mission/difficulty_forces",
         "game/mission/commander_message_director",
         "game/mission/mission_setup_coordinator",
