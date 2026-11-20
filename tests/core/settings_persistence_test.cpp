@@ -53,7 +53,7 @@ struct ScopedWarningCapture {
       active->warnings.push_back(msg);
     }
     if (active != nullptr && active->previous != nullptr) {
-      active->previous(type, ctx, msg);
+      active->previous(t, ctx, msg);
     }
   }
 };
