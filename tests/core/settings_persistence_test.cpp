@@ -48,8 +48,8 @@ struct ScopedWarningCapture {
     return false;
   }
 
-  static void handle(QtMsgType type, const QMessageLogContext& ctx, const QString& msg) {
-    if (active != nullptr && type == QtWarningMsg) {
+  static void handle(QtMsgType t, const QMessageLogContext& ctx, const QString& msg) {
+    if (active != nullptr && t == QtWarningMsg) {
       active->warnings.push_back(msg);
     }
     if (active != nullptr && active->previous != nullptr) {
