@@ -32,19 +32,18 @@ auto WorldBootstrap::initialize(Render::GL::Renderer& renderer,
                 .arg(profile);
       }
       *out_error =
+          detail + QStringLiteral("\n\n") +
           QCoreApplication::translate(
               "WorldBootstrap",
-              "Failed to initialize OpenGL renderer.\n%1\n\n"
+              "Failed to initialize OpenGL renderer.\n\n"
               "This usually means:\n"
               "1. Graphics drivers don't support required OpenGL 3.3 Core Profile\n"
               "2. Running in a VM with incomplete OpenGL support\n"
-              "3. Qt software OpenGL fallback is unavailable or failed to "
-              "initialize\n\n"
+              "3. Qt software OpenGL fallback is unavailable or failed to initialize\n\n"
               "To fix:\n"
               "- Run run_debug_softwaregl.cmd or set QT_OPENGL=software\n"
               "- Update graphics drivers\n"
-              "- On VMs: Enable 3D acceleration in VM settings")
-              .arg(detail);
+              "- On VMs: Enable 3D acceleration in VM settings");
     }
     return false;
   }
