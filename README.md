@@ -200,6 +200,15 @@ for the incremental-build guarantees and regression checks.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for platform setup, formatting, tests, and pull-request requirements.
 
+## Command-line options
+
+`standard_of_iron --help` lists every option the game accepts. These two print information and exit without starting a match:
+
+| Option            | Purpose                                                                    |
+| ----------------- | -------------------------------------------------------------------------- |
+| `-h`, `--help`    | List every command-line option, then exit                                  |
+| `-v`, `--version` | Print the game version, build commit, build type and Qt version, then exit |
+
 ## Default controls
 
 All gameplay bindings can be changed under **Settings → Controls**.

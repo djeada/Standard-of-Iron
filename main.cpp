@@ -51,6 +51,7 @@
 #include "app/bootstrap/screenshot_capture.h"
 #include "app/bootstrap/self_test_driver.h"
 #include "app/bootstrap/startup_self_test.h"
+#include "app/bootstrap/version_info.h"
 #include "app/bootstrap/windows_gl_probe.h"
 #include "app/core/app_identity.h"
 #include "app/core/benchmark_action_fixture.h"
@@ -94,6 +95,10 @@ constexpr int k_depth_buffer_bits = 24;
 constexpr int k_stencil_buffer_bits = 8;
 
 auto main(int argc, char* argv[]) -> int {
+
+  if (App::Bootstrap::version_requested_from_argv(argc, argv)) {
+    return App::Bootstrap::print_version();
+  }
 
   if (App::Bootstrap::data_paths_requested_from_argv(argc, argv)) {
     return App::Bootstrap::print_data_paths(argc, argv);
