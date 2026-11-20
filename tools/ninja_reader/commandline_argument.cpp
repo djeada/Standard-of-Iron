@@ -88,7 +88,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
   bool parsing_argument_value = false;
   for (char* str : vector) {
     if (str == nullptr) {
-      throw VectorParser::Exception("argument string cannot be null");
+      throw VectorParser::Exception("argument cannot be null");
     }
 
     // As the argument value is parsed, "parsing_argument_value" must be set to false,
@@ -99,7 +99,8 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
 
       // Since the std::stoi function throws an exception if a conversion failure
       // occurs, we can use a try/catch block to catch an exception and immediately go
-      // to the next check. It stell the parser that this value is not an integer.
+      // to the next check. A caught exception tells the parser that this value is not
+      // an integer.
       try {
         auto argument =
             Argument(argument_name, ArgumentValue::from(std::stoi(argument_value)));
