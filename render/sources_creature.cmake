@@ -68,6 +68,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pose_intent.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_render_state.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_submission_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_visual_definition.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_asset.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/prepared_submit.cpp

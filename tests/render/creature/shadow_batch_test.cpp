@@ -7,11 +7,14 @@
 #include <vector>
 
 #include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/creature_submission_context.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/shadow_batch.h"
 #include "render/entity/unseen_submitter.h"
 #include "render/primitive_batch.h"
+#include "render/rigged_mesh_cache.h"
 #include "render/scene_renderer.h"
+#include "render/snapshot_mesh_cache.h"
 #include "render/submitter.h"
 
 namespace {
@@ -69,6 +72,29 @@ public:
     draws.push_back({mesh, get_current_shader(), model, alpha});
   }
 
+  std::vector<RecordedShadowDraw> draws;
+};
+
+class DetachedContextSubmitter final : public StubSubmitter {
+public:
+  [[nodiscard]] auto
+  creature_submission() noexcept -> CreatureSubmissionContext* override {
+    return &context;
+  }
+  void mesh(Render::GL::Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float alpha,
+            int) override {
+    ++mesh_calls;
+    draws.push_back({mesh, current_shader, model, alpha});
+  }
+
+  Render::GL::RiggedMeshCache rigged;
+  Render::GL::SnapshotMeshCache snapshots;
+  Render::GL::Shader* current_shader{nullptr};
+  CreatureSubmissionContext context{rigged, snapshots, current_shader};
   std::vector<RecordedShadowDraw> draws;
 };
 
@@ -287,6 +313,59 @@ TEST(SubmitPreparation, ShadowBatchReachesRendererThroughScenePassWrappers) {
   EXPECT_EQ(renderer.draws.front().shader, shadow);
   EXPECT_EQ(renderer.draws.front().model, shadow_model(4.0F));
   EXPECT_EQ(renderer.get_current_shader(), previous);
+}
+
+TEST(CreatureSubmissionContext, ResolvesTheRendererContextThroughWrappers) {
+  ShaderRecordingRenderer renderer;
+  Render::GL::PrimitiveBatcher batcher;
+  Render::GL::BatchingSubmitter batching(&renderer, &batcher);
+  Render::GL::UnseenSubmitter unseen(batching);
+  ScenePassProbeSubmitter probe(unseen);
+
+  CreatureSubmissionContext* const context = resolve_creature_submission(probe);
+  ASSERT_NE(context, nullptr);
+  EXPECT_EQ(context, renderer.creature_submission());
+  EXPECT_EQ(&context->rigged_meshes(), &renderer.rigged_mesh_cache());
+  EXPECT_EQ(&context->snapshot_meshes(), &renderer.snapshot_mesh_cache());
+
+  Render::GL::Shader* const shader = fake_shader(0x400);
+  context->set_current_shader(shader);
+  EXPECT_EQ(renderer.get_current_shader(), shader);
+  renderer.set_current_shader(nullptr);
+  EXPECT_EQ(context->current_shader(), nullptr);
+}
+
+TEST(CreatureSubmissionContext, PlainSinksHaveNoContext) {
+  StubSubmitter sink;
+  ScenePassProbeSubmitter probe(sink);
+  EXPECT_EQ(resolve_creature_submission(sink), nullptr);
+  EXPECT_EQ(resolve_creature_submission(probe), nullptr);
+}
+
+TEST(CreatureSubmissionContext, DetachedRiggedCacheIsStablePerThread) {
+  EXPECT_EQ(&detached_rigged_mesh_cache(), &detached_rigged_mesh_cache());
+}
+
+TEST(FlushShadowBatch, SinkWithItsOwnContextDrawsWithoutARenderer) {
+  Render::GL::Shader* const previous = fake_shader(0x100);
+  Render::GL::Shader* const shadow = fake_shader(0x200);
+  Render::GL::Mesh* const quad = fake_mesh(0x300);
+
+  HumanoidShadowBatch batch;
+  batch.init(shadow, quad, QVector2D(0.0F, 1.0F));
+  batch.add(shadow_model(5.0F), 0.25F);
+  batch.add(shadow_model(6.0F), 0.5F, RenderPassIntent::Shadow);
+
+  DetachedContextSubmitter sink;
+  sink.current_shader = previous;
+  ScenePassProbeSubmitter probe(sink);
+  flush_shadow_batch(batch, probe);
+
+  ASSERT_EQ(sink.draws.size(), 1U);
+  EXPECT_EQ(sink.draws.front().mesh, quad);
+  EXPECT_EQ(sink.draws.front().shader, shadow);
+  EXPECT_EQ(sink.draws.front().model, shadow_model(5.0F));
+  EXPECT_EQ(sink.current_shader, previous);
 }
 
 } // namespace

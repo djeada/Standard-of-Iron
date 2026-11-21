@@ -32,6 +32,7 @@
 #include "scene/environment_lighting.h"
 #include "shader.h"
 #include "shader_cache.h"
+#include "shadow_cascade_fit.h"
 
 namespace Render::GL::BackendPipelines {
 class CylinderPipeline;
@@ -248,22 +249,7 @@ private:
                              CommandExecutionContext& context);
   void execute_static_batch(const StaticBuildingBatch& batch,
                             CommandExecutionContext& context);
-  struct ShadowCascadeCull {
-    QVector3D center;
-    float radius = 0.0F;
-    QVector3D light_right;
-    QVector3D light_up;
-    QVector3D camera_position;
-    float receiver_near = 0.0F;
-    float receiver_far = 0.0F;
-    float receiver_margin = 0.0F;
-    float ground_height = 0.0F;
-    float shadow_throw = 1.0F;
-    float min_caster_radius = 0.0F;
-
-    [[nodiscard]] auto accepts(const QVector3D& caster_center,
-                               float caster_radius) const -> bool;
-  };
+  using ShadowCascadeCull = ::Render::GL::ShadowCascadeCull;
   void draw_static_batch_shadow(const StaticBuildingBatch& batch,
                                 const ShadowCascadeCull& cull);
   auto collect_static_batch_shadow(const StaticBuildingBatch& batch,
@@ -295,6 +281,74 @@ private:
   void release_directional_shadow_resources();
   void bind_directional_shadow_textures();
   auto directional_shadow_fallback_texture() -> GLuint;
+
+  struct ShadowStaticCaster {
+    Mesh* mesh = nullptr;
+    const QMatrix4x4* model = nullptr;
+    QVector3D world_center;
+    float world_radius = 0.0F;
+    bool terrain = false;
+  };
+  struct ShadowPassRestore {
+    GLint framebuffer{0};
+    std::array<GLint, 4> viewport{};
+    bool blend{false};
+    bool cull{false};
+  };
+  struct ShadowDepthBinding {
+    Shader* bound{nullptr};
+    QMatrix4x4 light_view_projection;
+  };
+  struct ShadowCascadeTarget {
+    int cascade{0};
+    bool far{false};
+    int resolution{0};
+    GLuint texture{0};
+    GLuint static_texture{0};
+    GLint layer{0};
+  };
+  struct ShadowCascadeRange {
+    float near_distance{0.0F};
+    float far_distance{0.0F};
+    float rigged_slack{0.0F};
+  };
+  void upload_directional_shadow_block(const DirectionalShadowBlock& block);
+  void publish_directional_shadow_block(
+      const Camera& cam,
+      int cascade_count,
+      const std::array<float, k_max_shadow_cascades>& cascade_texel_world,
+      const std::array<float, k_max_shadow_cascades>& cascade_depth_span);
+  auto measure_shadow_receiver_slab(const DrawQueue& queue) -> ShadowReceiverSlab;
+  void collect_shadow_static_casters(const DrawQueue& queue);
+  void park_directional_shadow_textures();
+  auto begin_directional_shadow_pass() -> ShadowPassRestore;
+  void end_directional_shadow_pass(const ShadowPassRestore& restore);
+  [[nodiscard]] auto shadow_cascade_target(int cascade) const -> ShadowCascadeTarget;
+  void partition_shadow_cascade_casters(const ShadowCascadeCull& cull);
+  void bind_shadow_depth_shader(ShadowDepthBinding& binding,
+                                Shader* shader,
+                                Shader::UniformHandle light_vp_handle);
+  void draw_shadow_casters(const std::vector<const ShadowStaticCaster*>& casters,
+                           ShadowDepthBinding& binding);
+  void render_shadow_cascade_static(const ShadowCascadeTarget& target,
+                                    const ShadowCascadeCull& cull,
+                                    const StaticBuildingBatch* static_batch,
+                                    ShadowDepthBinding& binding);
+  void render_shadow_cascade_rigged(const DrawQueue& queue,
+                                    const Camera& cam,
+                                    const ShadowCascadeTarget& target,
+                                    const QMatrix4x4& light_view_projection,
+                                    const ShadowCascadeRange& range);
+  void render_shadow_cascade_scatter(const DrawQueue& queue,
+                                     const Camera& cam,
+                                     const ShadowCascadeFrame& frame,
+                                     const ShadowCascadeCull& cull);
+  void render_shadow_cascade(const DrawQueue& queue,
+                             const Camera& cam,
+                             const ShadowCascadeTarget& target,
+                             const ShadowCascadeFrame& frame,
+                             const ShadowCascadeCull& cull,
+                             const ShadowCascadeRange& range);
 
   template <typename Visitor>
   void for_each_pipeline_slot(Visitor&& visit) {
@@ -404,13 +458,6 @@ private:
   std::vector<StaticBatchDraw> m_static_shadow_draws;
   std::size_t m_static_shadow_triangles{0};
 
-  struct ShadowStaticCaster {
-    Mesh* mesh = nullptr;
-    const QMatrix4x4* model = nullptr;
-    QVector3D world_center;
-    float world_radius = 0.0F;
-    bool terrain = false;
-  };
   std::vector<ShadowStaticCaster> m_shadow_static_casters;
   std::vector<const ShadowStaticCaster*> m_shadow_cascade_casters;
   std::vector<const ShadowStaticCaster*> m_shadow_cascade_terrain_casters;

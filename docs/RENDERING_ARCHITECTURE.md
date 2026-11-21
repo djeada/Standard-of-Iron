@@ -116,7 +116,14 @@ A `WorldFreeze` coordinates destructive world replacement or rebuild operations 
 
 ## Scene walk
 
-`render/scene_walk.cpp` is the main bridge between snapshot data and renderer submission.
+`render/scene_walk.cpp` is the main bridge between snapshot data and renderer submission. `Renderer::render_world` there orchestrates the frame; the stages it calls live beside it:
+
+- `render/scene_collect.cpp` - world collection: unit and non-unit render entries, frustum and fog classification, cull radii;
+- `render/scene_unit_submit.cpp` - planning and submission: per-unit LOD, batching and preparation plans, prepared and rigged creature submission, non-unit dispatch;
+- `render/scene_overlays.cpp` - selection rings, activity indicators and construction previews;
+- `render/scene_walk_internal.h` - the per-frame entry and plan types shared by those files.
+
+Creature submission reaches the renderer's mesh caches and shader state through `CreatureSubmissionContext` (`render/creature/pipeline/creature_submission_context.h`), which `ISubmitter::creature_submission()` exposes, rather than by downcasting the sink to `Renderer`. Sinks without a context (tests, capture tools) still submit rigged bodies from a per-thread, CPU-only `detached_rigged_mesh_cache()`; a sink that owns its caches can return its own context instead.
 
 The scene walk is responsible for consuming the published world state and deciding which renderer paths receive which entities/environment elements.
 
@@ -804,7 +811,7 @@ Inspect simulation publication and snapshot acquisition first.
 
 Symptoms: snapshot contains the entity but no renderer receives it, wrong culling/visibility class, wrong renderer dispatch.
 
-Inspect `render/scene_walk.cpp` and visibility inputs.
+Inspect `render/scene_collect.cpp` (collection and visibility class), `render/scene_unit_submit.cpp` (renderer dispatch) and the visibility inputs.
 
 ### Draw queue is wrong
 
@@ -876,17 +883,17 @@ The current renderer depends on these invariants:
 
 ## Source map
 
-| Concern                | Source                                               |
-| ---------------------- | ---------------------------------------------------- |
-| Graphics profiles      | `render/graphics_settings.h`                         |
-| Backend interface      | `render/i_render_backend.h`                          |
-| Backend selection      | `render/render_backend_factory.cpp`                  |
-| Scene traversal        | `render/scene_walk.cpp`                              |
-| OpenGL backend/passes  | `render/gl/`                                         |
-| Software backend       | `render/software_backend.*`, `render/software/`      |
-| Scene/environment data | `scene/`                                             |
-| Animation/BPAT         | `animation/`                                         |
-| Shaders                | `assets/shaders/`                                    |
-| Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py` |
+| Concern                | Source                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Graphics profiles      | `render/graphics_settings.h`                                                                                     |
+| Backend interface      | `render/i_render_backend.h`                                                                                      |
+| Backend selection      | `render/render_backend_factory.cpp`                                                                              |
+| Scene traversal        | `render/scene_walk.cpp`, `render/scene_collect.cpp`, `render/scene_unit_submit.cpp`, `render/scene_overlays.cpp` |
+| OpenGL backend/passes  | `render/gl/`                                                                                                     |
+| Software backend       | `render/software_backend.*`, `render/software/`                                                                  |
+| Scene/environment data | `scene/`                                                                                                         |
+| Animation/BPAT         | `animation/`                                                                                                     |
+| Shaders                | `assets/shaders/`                                                                                                |
+| Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py`                                                             |
 
 The current implementation is the source of truth for renderer capability and quality behavior. Historical refactor notes, old preset descriptions, and proposed follow-up work are not part of the runtime contract.
