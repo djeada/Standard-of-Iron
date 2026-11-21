@@ -895,6 +895,10 @@ void GameEngine::set_input_viewport_size(qreal width, qreal height) {
   }
 }
 
+auto GameEngine::last_software_frame() const -> const QImage* {
+  return m_renderer ? m_renderer->last_software_frame() : nullptr;
+}
+
 void GameEngine::update_loading_overlay() {
   if (!m_loading_overlay.waiting_for_first_frame()) {
     return;
@@ -906,7 +910,7 @@ void GameEngine::update_loading_overlay() {
     return;
   }
 
-  const bool renderer_ready = m_renderer && (m_renderer->resources() != nullptr);
+  const bool renderer_ready = m_renderer && m_renderer->is_ready();
   const auto release = m_loading_overlay.poll(
       renderer_ready, [this]() { return mission_startup_pending_components(); });
   if (!release.released) {

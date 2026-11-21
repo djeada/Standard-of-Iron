@@ -315,6 +315,7 @@ public:
   }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
   [[nodiscard]] bool renderer_init_failed() const { return m_renderer_init_failed; }
+  [[nodiscard]] auto last_software_frame() const -> const QImage*;
   void report_renderer_failure(const QString& error_message);
   void retry_renderer_initialization();
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;

@@ -33,6 +33,10 @@ public:
   void set_frame_budget(const Render::FrameBudgetConfig&) override {}
 
   [[nodiscard]] auto resources() const -> ResourceManager* override { return nullptr; }
+  [[nodiscard]] auto is_ready() const -> bool override { return true; }
+  [[nodiscard]] auto presented_frame() const -> const QImage* override {
+    return m_image.isNull() ? nullptr : &m_image;
+  }
   [[nodiscard]] auto shader(const QString&) const -> Shader* override {
     return nullptr;
   }
