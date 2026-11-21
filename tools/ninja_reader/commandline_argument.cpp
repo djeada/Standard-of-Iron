@@ -4,7 +4,9 @@
 #include <algorithm>
 #include <cctype>
 #include <format>
+#include <limits>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
@@ -151,6 +153,14 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
           parsing_argument_value = false;
           continue;
         }
+      } catch (const std::out_of_range&) {
+        auto min = std::numeric_limits<ArgumentValue::Integer>::min();
+        auto max = std::numeric_limits<ArgumentValue::Integer>::max();
+        throw VectorParser::Exception(
+            std::format("The integer is out of bounds (min: {}, max: {}): {}",
+                        min,
+                        max,
+                        argument_value));
       } catch (const std::exception&) {
         // .clang-tidy generates a warning about an empty catch block, therefore, we
         // declare this variable to prevent this warning.
