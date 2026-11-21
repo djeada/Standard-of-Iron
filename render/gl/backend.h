@@ -20,6 +20,7 @@
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
 #include "render/gl/frame_environment.h"
+#include "render/gl/gl_handle.h"
 #include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
@@ -303,8 +304,8 @@ private:
     int cascade{0};
     bool far{false};
     int resolution{0};
-    GLuint texture{0};
-    GLuint static_texture{0};
+    BorrowedGlName texture{0};
+    BorrowedGlName static_texture{0};
     GLint layer{0};
   };
   struct ShadowCascadeRange {

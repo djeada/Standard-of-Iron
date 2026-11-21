@@ -255,7 +255,8 @@ auto Shader::reload() -> bool {
   case SourceKind::Compute: {
     initializeOpenGLFunctions();
     constexpr GLenum k_compute_shader = 0x91B9;
-    const ShaderHandle compute_shader = compile_shader(m_compute_source, k_compute_shader);
+    const ShaderHandle compute_shader =
+        compile_shader(m_compute_source, k_compute_shader);
     if (!compute_shader) {
       return false;
     }
@@ -326,7 +327,8 @@ auto Shader::build_graphics_program(const QString& vertex_source,
                                     const QString& fragment_source) -> ProgramHandle {
   initializeOpenGLFunctions();
   const ShaderHandle vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
-  const ShaderHandle fragment_shader = compile_shader(fragment_source, GL_FRAGMENT_SHADER);
+  const ShaderHandle fragment_shader =
+      compile_shader(fragment_source, GL_FRAGMENT_SHADER);
   if (!vertex_shader || !fragment_shader) {
     return {};
   }

@@ -193,7 +193,9 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
 }
 
 void PostProcessPipeline::release_disabled_targets() {
-  auto drop = [](RenderTarget& target) { target = RenderTarget{}; };
+  auto drop = [](RenderTarget& target) {
+    target = RenderTarget{};
+  };
 
   if (!m_passes.bloom) {
     for (auto& target : m_bloom) {
@@ -209,7 +211,9 @@ void PostProcessPipeline::release_disabled_targets() {
 }
 
 void PostProcessPipeline::release_targets() {
-  auto drop = [](RenderTarget& target) { target = RenderTarget{}; };
+  auto drop = [](RenderTarget& target) {
+    target = RenderTarget{};
+  };
 
   drop(m_scene);
   drop(m_composite);

@@ -73,6 +73,9 @@ When creating a new rendering pipeline:
 
 1. Inherit from `IPipeline` interface
 2. Implement `initialize()`, `shutdown()`, `cacheUniforms()`, `is_initialized()`
+    - Own every GL object through a handle from `render/gl/gl_handle.h`
+      (`BufferHandle::create()`, `.id()`, `.reset()`); `shutdown()` only resets
+      them. `scripts/check-gl-ownership.py` rejects raw `glGen*`/`glDelete*`.
 3. Add validation to ensure uniform names match shader files
 4. Document any shader dependencies
 5. Update this README with the new pipeline

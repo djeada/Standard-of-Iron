@@ -83,7 +83,7 @@ public:
   [[nodiscard]] auto full_mesh_shader() -> Shader* { return m_full_mesh_shader; }
 
 private:
-  unsigned int m_wear_volume = 0U;
+  BorrowedGlName m_wear_volume = 0U;
 
   enum class Pass : std::uint8_t {
     Color,

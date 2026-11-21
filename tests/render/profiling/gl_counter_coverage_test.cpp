@@ -108,7 +108,10 @@ auto collect_sites(const std::filesystem::path& root,
       if (extension != ".cpp" && extension != ".h") {
         continue;
       }
-      if (entry.path().filename() == "gl_resource_tracking.h") {
+      // gl_handle.cpp generates every GL name and counts it once, after the
+      // switch that picks the call, through note_gl_object_created().
+      if (entry.path().filename() == "gl_resource_tracking.h" ||
+          entry.path().filename() == "gl_handle.cpp") {
         continue;
       }
       const auto lines = read_lines(entry.path());

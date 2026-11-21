@@ -29,8 +29,8 @@ public:
   auto operator=(const GlHandle&) -> GlHandle& = delete;
 
   GlHandle(GlHandle&& other) noexcept
-      : m_name(std::exchange(other.m_name, 0U)),
-        m_group(std::exchange(other.m_group, k_unknown_share_group)) {}
+      : m_name(std::exchange(other.m_name, 0U))
+      , m_group(std::exchange(other.m_group, k_unknown_share_group)) {}
 
   auto operator=(GlHandle&& other) noexcept -> GlHandle& {
     if (this != &other) {
@@ -77,6 +77,9 @@ private:
   GlShareGroup m_group = k_unknown_share_group;
 };
 
+// A GL name owned by some handle elsewhere, held only to bind or read it.
+using BorrowedGlName = unsigned int;
+
 using BufferHandle = GlHandle<DeferredGlObject::Buffer>;
 using VertexArrayHandle = GlHandle<DeferredGlObject::VertexArray>;
 using TextureHandle = GlHandle<DeferredGlObject::Texture>;
@@ -97,8 +100,8 @@ public:
   auto operator=(const FenceHandle&) -> FenceHandle& = delete;
 
   FenceHandle(FenceHandle&& other) noexcept
-      : m_sync(std::exchange(other.m_sync, nullptr)),
-        m_group(std::exchange(other.m_group, k_unknown_share_group)) {}
+      : m_sync(std::exchange(other.m_sync, nullptr))
+      , m_group(std::exchange(other.m_group, k_unknown_share_group)) {}
 
   auto operator=(FenceHandle&& other) noexcept -> FenceHandle& {
     if (this != &other) {

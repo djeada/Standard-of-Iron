@@ -22,7 +22,7 @@ public:
 
 [[nodiscard]] auto palette_ubo_available() -> bool;
 
-[[nodiscard]] auto create_palette_ubo(std::span<const float> palette_floats)
-    -> BufferHandle;
+[[nodiscard]] auto
+create_palette_ubo(std::span<const float> palette_floats) -> BufferHandle;
 
 } // namespace Render::GL

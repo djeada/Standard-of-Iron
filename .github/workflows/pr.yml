@@ -137,6 +137,20 @@ jobs:
           SOI_TEST_REPORT_DIR: artifacts/test-reports
         run: bash scripts/run-tests.sh build --gtest_brief=1
 
+      # The fast lane has no display, so every test that needs a GL context
+      # skips there. These run on Mesa's software rasteriser under Xvfb, and
+      # SOI_REQUIRE_GL turns a missing context into a failure: the GL-ownership
+      # leak test is only a guarantee while it actually runs.
+      - name: GL context tests (Mesa, Xvfb)
+        env:
+          SOI_REQUIRE_GL: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri
+          xvfb-run -a -s "-screen 0 640x480x24" \
+            build/bin/render_tests --gtest_brief=1 \
+            --gtest_filter='GlOwnership*:GlContextLifetime*:GlDeferredDelete*'
+
       # The split is only worth anything while it stays true. This fails if a
       # test that ran took longer than the per-test budget -- the way this lane
       # grew to ninety minutes in the first place -- and if a pattern in the

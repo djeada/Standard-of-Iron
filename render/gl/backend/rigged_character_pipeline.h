@@ -84,7 +84,7 @@ private:
   [[nodiscard]] static auto variant_for_material(int material_id) -> std::size_t;
 
   GL::Shader* m_last_bound_shader = nullptr;
-  unsigned int m_wear_volume = 0;
+  BorrowedGlName m_wear_volume = 0;
   static constexpr std::size_t k_palette_ring_slots = 1024;
 
   BufferHandle m_palette_ubo;

@@ -112,7 +112,8 @@ void VertexArray::bind() {
 #ifndef NDEBUG
   GLenum bind_err = glGetError();
   if (bind_err != GL_NO_ERROR) {
-    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao" << m_vao.id();
+    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao"
+               << m_vao.id();
   }
 #endif
 }

@@ -32,7 +32,8 @@ void note_profiling_counters(DeferredGlObject kind) noexcept {
 
 } // namespace
 
-auto generate_gl_object(DeferredGlObject kind, unsigned int shader_type) -> unsigned int {
+auto generate_gl_object(DeferredGlObject kind,
+                        unsigned int shader_type) -> unsigned int {
   QOpenGLContext* context = QOpenGLContext::currentContext();
   if (context == nullptr) {
     return 0U;
@@ -83,7 +84,8 @@ auto FenceHandle::insert() -> FenceHandle {
   if (context == nullptr) {
     return fence;
   }
-  GLsync sync = context->extraFunctions()->glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+  GLsync sync =
+      context->extraFunctions()->glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
   if (sync != nullptr) {
     fence.m_sync = sync;
     fence.m_group = current_gl_share_group();

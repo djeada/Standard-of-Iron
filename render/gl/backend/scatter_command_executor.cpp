@@ -113,7 +113,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.grass};
       if ((grass.instance_buffer == nullptr) || grass.instance_count == 0 ||
           (m_terrain_pipeline->m_grass_shader == nullptr) ||
-          (!m_terrain_pipeline->m_grass_vao) ||
+          !m_terrain_pipeline->m_grass_vao ||
           m_terrain_pipeline->m_grass_vertex_count == 0) {
         break;
       }
@@ -258,7 +258,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.stone};
       if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
           (m_vegetation_pipeline->stone_shader() == nullptr) ||
-          (!m_vegetation_pipeline->m_stone_mesh.vao) ||
+          !m_vegetation_pipeline->m_stone_mesh.vao ||
           m_vegetation_pipeline->m_stone_mesh.index_count == 0) {
         break;
       }
@@ -442,7 +442,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
 
       if ((firecamp.instance_buffer == nullptr) || firecamp.instance_count == 0 ||
           (m_vegetation_pipeline->firecamp_shader() == nullptr) ||
-          (!m_vegetation_pipeline->m_firecamp_mesh.vao) ||
+          !m_vegetation_pipeline->m_firecamp_mesh.vao ||
           m_vegetation_pipeline->m_firecamp_mesh.index_count == 0) {
         break;
       }

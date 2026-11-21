@@ -48,9 +48,8 @@ auto census() -> Census& {
 }
 
 void note_deleted(DeferredGlObject kind, std::size_t count = 1) noexcept {
-  census()
-      .deleted[static_cast<std::size_t>(kind)]
-      .fetch_add(count, std::memory_order_relaxed);
+  census().deleted[static_cast<std::size_t>(kind)].fetch_add(count,
+                                                             std::memory_order_relaxed);
 }
 
 auto deferred() -> DeferredDeletes& {
@@ -329,9 +328,8 @@ auto gl_object_census(DeferredGlObject kind) noexcept -> GlObjectCensus {
 }
 
 void note_gl_object_created(DeferredGlObject kind, std::size_t count) noexcept {
-  census()
-      .created[static_cast<std::size_t>(kind)]
-      .fetch_add(count, std::memory_order_relaxed);
+  census().created[static_cast<std::size_t>(kind)].fetch_add(count,
+                                                             std::memory_order_relaxed);
 }
 
 auto deferred_gl_delete_count() noexcept -> std::size_t {

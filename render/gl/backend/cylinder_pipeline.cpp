@@ -291,10 +291,7 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
 }
 
 void CylinderPipeline::shutdown_cylinder_pipeline() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    m_cylinder_persistent_buffer.destroy();
-  }
+  m_cylinder_persistent_buffer.destroy();
   m_cylinder_mesh.reset();
   m_cylinder_instance_capacity = 0;
   m_cylinder_scratch.clear();
@@ -355,7 +352,7 @@ void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
 
 void CylinderPipeline::draw_cylinders(std::size_t count) {
   count = m_cylinder_draw_guard.clamp(count, m_cylinder_instances_resident);
-  if ((!m_cylinder_mesh.vao) || m_cylinder_mesh.index_count == 0 || count == 0) {
+  if (!m_cylinder_mesh.vao || m_cylinder_mesh.index_count == 0 || count == 0) {
     return;
   }
 
@@ -449,10 +446,7 @@ void CylinderPipeline::initialize_fog_pipeline() {
 }
 
 void CylinderPipeline::shutdown_fog_pipeline() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    m_fog_persistent_buffer.destroy();
-  }
+  m_fog_persistent_buffer.destroy();
   m_fog_mesh.reset();
   m_fog_instance_capacity = 0;
   m_fog_scratch.clear();
@@ -461,7 +455,7 @@ void CylinderPipeline::shutdown_fog_pipeline() {
 void CylinderPipeline::upload_fog_instances(std::size_t count) {
   m_fog_instances_resident = 0;
   count = std::min(count, m_fog_scratch.size());
-  if ((!m_fog_mesh.instance_buffer) || count == 0) {
+  if (!m_fog_mesh.instance_buffer || count == 0) {
     return;
   }
 
@@ -508,7 +502,7 @@ void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer* instance_buffer) {
 
 void CylinderPipeline::draw_fog(std::size_t count) {
   count = m_fog_draw_guard.clamp(count, m_fog_instances_resident);
-  if ((!m_fog_mesh.vao) || m_fog_mesh.index_count == 0 || count == 0) {
+  if (!m_fog_mesh.vao || m_fog_mesh.index_count == 0 || count == 0) {
     return;
   }
 

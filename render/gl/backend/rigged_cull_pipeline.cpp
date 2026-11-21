@@ -75,9 +75,7 @@ auto load_shader_text(const QString& resource_path) -> QString {
 } // namespace
 
 RiggedCullPipeline::~RiggedCullPipeline() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    shutdown();
-  }
+  shutdown();
 }
 
 auto RiggedCullPipeline::minimum_instances() -> std::size_t {
@@ -188,14 +186,14 @@ auto RiggedCullPipeline::initialize() -> bool {
                       false);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-  const auto create_stream = [this](GLenum target, BufferHandle& buffer,
-                                    std::size_t bytes) {
-    buffer = BufferHandle::create();
-    glBindBuffer(target, buffer.id());
-    glBufferData(target, static_cast<GLsizeiptr>(bytes), nullptr, GL_STREAM_DRAW);
-    note_buffer_storage(bytes, false);
-    glBindBuffer(target, 0);
-  };
+  const auto create_stream =
+      [this](GLenum target, BufferHandle& buffer, std::size_t bytes) {
+        buffer = BufferHandle::create();
+        glBindBuffer(target, buffer.id());
+        glBufferData(target, static_cast<GLsizeiptr>(bytes), nullptr, GL_STREAM_DRAW);
+        note_buffer_storage(bytes, false);
+        glBindBuffer(target, 0);
+      };
   m_palette_capacity_bytes = k_initial_stream_bytes;
   m_instance_capacity_bytes = k_initial_stream_bytes;
   m_role_color_capacity_bytes =
@@ -624,7 +622,8 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
                    k_baked_palette_binding,
-                   baked_palette_buffer != 0U ? baked_palette_buffer : m_palette_ssbo.id());
+                   baked_palette_buffer != 0U ? baked_palette_buffer
+                                              : m_palette_ssbo.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo.id());
   if (!depth_only && !bind_role_color_texture()) {
     return false;
@@ -759,9 +758,11 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
                    k_baked_palette_binding,
-                   baked_palette_buffer != 0 ? baked_palette_buffer : m_palette_ssbo.id());
+                   baked_palette_buffer != 0 ? baked_palette_buffer
+                                             : m_palette_ssbo.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo.id());
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_out_index_binding, m_out_index_buffer.id());
+  glBindBufferBase(
+      GL_SHADER_STORAGE_BUFFER, k_out_index_binding, m_out_index_buffer.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_command_binding, m_command_buffer.id());
 
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);

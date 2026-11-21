@@ -193,12 +193,15 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
         m_directional_shadow_compare_sampler.id(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(
         m_directional_shadow_compare_sampler.id(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(
-        m_directional_shadow_compare_sampler.id(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glSamplerParameteri(
-        m_directional_shadow_compare_sampler.id(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glSamplerParameterfv(
-        m_directional_shadow_compare_sampler.id(), GL_TEXTURE_BORDER_COLOR, border.data());
+    glSamplerParameteri(m_directional_shadow_compare_sampler.id(),
+                        GL_TEXTURE_WRAP_S,
+                        GL_CLAMP_TO_BORDER);
+    glSamplerParameteri(m_directional_shadow_compare_sampler.id(),
+                        GL_TEXTURE_WRAP_T,
+                        GL_CLAMP_TO_BORDER);
+    glSamplerParameterfv(m_directional_shadow_compare_sampler.id(),
+                         GL_TEXTURE_BORDER_COLOR,
+                         border.data());
     glSamplerParameteri(m_directional_shadow_compare_sampler.id(),
                         GL_TEXTURE_COMPARE_MODE,
                         GL_COMPARE_REF_TO_TEXTURE);
@@ -215,8 +218,9 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
         m_directional_shadow_depth_sampler.id(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glSamplerParameteri(
         m_directional_shadow_depth_sampler.id(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glSamplerParameterfv(
-        m_directional_shadow_depth_sampler.id(), GL_TEXTURE_BORDER_COLOR, border.data());
+    glSamplerParameterfv(m_directional_shadow_depth_sampler.id(),
+                         GL_TEXTURE_BORDER_COLOR,
+                         border.data());
     glSamplerParameteri(
         m_directional_shadow_depth_sampler.id(), GL_TEXTURE_COMPARE_MODE, GL_NONE);
   }
@@ -247,8 +251,9 @@ void Backend::upload_directional_shadow_block(const DirectionalShadowBlock& bloc
                   static_cast<GLsizeiptr>(sizeof(float) * packed.size()),
                   packed.data());
   note_buffer_transfer(static_cast<std::size_t>(sizeof(float) * packed.size()));
-  glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo.id());
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_directional_shadow_binding_point,
+                   m_directional_shadow_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -294,8 +299,9 @@ void Backend::publish_directional_shadow_block(
                   static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
                   complete.data());
   note_buffer_transfer(static_cast<std::size_t>(sizeof(float) * complete.size()));
-  glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo.id());
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_directional_shadow_binding_point,
+                   m_directional_shadow_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -425,8 +431,8 @@ auto Backend::shadow_cascade_target(int cascade) const -> ShadowCascadeTarget {
   target.far = cascade >= m_directional_shadow_near_cascades;
   target.resolution = target.far ? m_directional_shadow_far_resolution
                                  : m_directional_shadow_resolution;
-  target.texture =
-      target.far ? m_directional_shadow_far_texture.id() : m_directional_shadow_texture.id();
+  target.texture = target.far ? m_directional_shadow_far_texture.id()
+                              : m_directional_shadow_texture.id();
   target.static_texture = target.far ? m_directional_shadow_static_far_texture.id()
                                      : m_directional_shadow_static_texture.id();
   target.layer = target.far ? cascade - m_directional_shadow_near_cascades : cascade;

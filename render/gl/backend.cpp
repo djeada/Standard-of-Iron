@@ -106,16 +106,10 @@ Backend::Backend(ShaderQuality quality)
 
 Backend::~Backend() {
   const bool last_backend = release_backend() == 0;
-  if (QOpenGLContext::currentContext() == nullptr) {
-    for_each_pipeline_slot([](auto& slot) { (void)slot.release(); });
-    if (last_backend) {
-      SharedGeometryCache::instance().release_all();
+  if (QOpenGLContext::currentContext() != nullptr) {
+    for (FrameGpuTiming& slot : m_frame_timings) {
+      wait_for_frame_slot(slot);
     }
-    return;
-  }
-
-  for (FrameGpuTiming& slot : m_frame_timings) {
-    wait_for_frame_slot(slot);
   }
 
   if (last_backend) {
@@ -173,8 +167,9 @@ auto Backend::initialize() -> bool {
   note_buffer_storage(
       static_cast<std::size_t>(sizeof(float) * DirectionalShadowBlock::k_float_count),
       false);
-  glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo.id());
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_directional_shadow_binding_point,
+                   m_directional_shadow_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
   glEnable(GL_DEPTH_TEST);
@@ -570,8 +565,8 @@ auto Backend::try_collect_frame_slot(FrameGpuTiming& slot) -> bool {
     return true;
   }
   auto const wait_start = std::chrono::steady_clock::now();
-  const GLenum polled =
-      glClientWaitSync(static_cast<GLsync>(slot.fence.get()), GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+  const GLenum polled = glClientWaitSync(
+      static_cast<GLsync>(slot.fence.get()), GL_SYNC_FLUSH_COMMANDS_BIT, 0);
   m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
                                           std::chrono::steady_clock::now() - wait_start)
                                           .count();
@@ -602,10 +597,9 @@ void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
   constexpr int k_max_wait_attempts = 4;
   bool signaled = false;
   for (int attempt = 0; attempt < k_max_wait_attempts && !signaled; ++attempt) {
-    const GLenum waited =
-        glClientWaitSync(static_cast<GLsync>(slot.fence.get()),
-                         GL_SYNC_FLUSH_COMMANDS_BIT,
-                         k_wait_timeout_ns);
+    const GLenum waited = glClientWaitSync(static_cast<GLsync>(slot.fence.get()),
+                                           GL_SYNC_FLUSH_COMMANDS_BIT,
+                                           k_wait_timeout_ns);
     if (waited == GL_ALREADY_SIGNALED || waited == GL_CONDITION_SATISFIED) {
       signaled = true;
     } else if (waited == GL_WAIT_FAILED) {

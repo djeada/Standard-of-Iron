@@ -671,8 +671,7 @@ void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* in
                                                  std::size_t count,
                                                  const QMatrix4x4& view_proj) {
   if (!is_initialized() || instances == nullptr || count == 0 ||
-      m_blood_shader == nullptr || !m_blood_mesh.vao ||
-      m_blood_mesh.index_count <= 0) {
+      m_blood_shader == nullptr || !m_blood_mesh.vao || m_blood_mesh.index_count <= 0) {
     return;
   }
 

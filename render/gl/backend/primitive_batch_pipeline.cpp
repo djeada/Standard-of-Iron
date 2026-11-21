@@ -223,7 +223,8 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
                                                sizeof(GL::PrimitiveInstanceGpu)),
                       false);
 
-  setup_instance_attributes(m_cylinder_mesh.vao.id(), m_cylinder_mesh.instance_buffer.id());
+  setup_instance_attributes(m_cylinder_mesh.vao.id(),
+                            m_cylinder_mesh.instance_buffer.id());
   glBindVertexArray(0);
 }
 
