@@ -154,7 +154,7 @@ NinjaLog NinjaLogParser::parse(const std::filesystem::path& log_path) const {
             std::format("Failed to get the starting tab character of output file {}",
                         element_parsing_stage_string(element_parsing_stage)));
       }
-      element.end_timestamp_unix = std::chrono::nanoseconds(
+      element.logged_mtime = std::chrono::nanoseconds(
           std::stoll(line.substr(start_index, next_tab_index - start_index)));
 
       element_parsing_stage = ElementParsingStage::OUTPUT_FILE;

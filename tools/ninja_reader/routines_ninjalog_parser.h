@@ -16,7 +16,7 @@ struct NinjaLog {
   struct Element {
     std::chrono::milliseconds start_time;
     std::chrono::milliseconds end_time;
-    std::chrono::nanoseconds end_timestamp_unix;
+    std::chrono::nanoseconds logged_mtime;
     std::filesystem::path output_file;
   };
   std::filesystem::path path;

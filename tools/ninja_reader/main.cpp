@@ -14,12 +14,12 @@ int main() {
   auto log = parser.parse(std::filesystem::path("build/.ninja_log"));
 
   for (auto& element : log.elements) {
-    std::cout << std::format(
-        "Element(Start time: {}, End time: {}, Timestamp: {}, Output File: {})\n",
-        element.start_time,
-        element.end_time,
-        element.end_timestamp_unix,
-        element.output_file.string());
+    std::cout << std::format("Element(Start time: {}, End time: {}, Logged "
+                             "modification time: {}, Output File: {})\n",
+                             element.start_time,
+                             element.end_time,
+                             element.logged_mtime,
+                             element.output_file.string());
   }
 
   return 0;
