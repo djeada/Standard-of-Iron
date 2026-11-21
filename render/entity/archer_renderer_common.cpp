@@ -6,14 +6,14 @@
 #include <unordered_map>
 
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/palette.h"
+#include "render/frame/palette.h"
 
 namespace Render::GL {
 namespace {

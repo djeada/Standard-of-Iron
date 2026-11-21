@@ -6,10 +6,10 @@
 #include <limits>
 #include <sstream>
 
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
 #include "render/equipment/equipment_submit.h"
-#include "render/gl/humanoid/humanoid_types.h"
 
 using namespace Render::GL;
 

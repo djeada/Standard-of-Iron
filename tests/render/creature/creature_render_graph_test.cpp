@@ -8,20 +8,20 @@
 
 #include "game/session/session_context.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/graphics_settings.h"
-#include "render/horse/horse_spec.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/submitter.h"
-#include "render/world_view.h"
+#include "render/frame/graphics_settings.h"
+#include "render/frame/submitter.h"
+#include "render/frame/world_view.h"
 
 namespace {
 

@@ -11,7 +11,7 @@
 #include "game/audio/audio_constants.h"
 #include "game/audio/audio_settings.h"
 #include "game/render_bridge/camera_speeds.h"
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 
 namespace App::Core::UserSettings {
 

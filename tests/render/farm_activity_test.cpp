@@ -12,7 +12,7 @@
 #include "render/creature/archetype_registry.h"
 #include "render/entity/farm_activity.h"
 #include "render/entity/registry.h"
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 
 namespace {
 using namespace Render::GL;

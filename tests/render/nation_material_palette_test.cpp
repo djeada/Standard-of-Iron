@@ -1,9 +1,9 @@
 #include <array>
 #include <gtest/gtest.h>
 
+#include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/entity/archer_renderer_common.h"
 #include "render/entity/nations/material_palette.h"
-#include "render/humanoid/runtime/style_palette.h"
 
 namespace Render::GL {
 namespace {

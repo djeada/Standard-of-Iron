@@ -30,7 +30,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace {

@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "game/map/terrain.h"
+#include "render/frame/i_render_pass.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/i_render_pass.h"
 
 namespace Render::GL {
 class FogRenderer;

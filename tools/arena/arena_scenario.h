@@ -21,7 +21,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "game/wildlife/wildlife_config.h"
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 
 namespace Engine::Core {
 class World;

@@ -11,7 +11,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/units/spawn_type.h"
-#include "render/mist_volume_builder.h"
+#include "render/ground/mist_volume_builder.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_weather.h"
 #include "tools/arena/battle_script.h"

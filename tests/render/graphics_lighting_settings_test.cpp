@@ -4,7 +4,7 @@
 #include <thread>
 #include <vector>
 
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 #include "scene/camera.h"
 
 TEST(GraphicsLightingSettingsTest, PresetsScaleDirectionalShadowCost) {

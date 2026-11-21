@@ -14,7 +14,7 @@
 #include "game/map/terrain_service.h"
 #include "game/map/terrain_surface.h"
 #include "render/entity/structure_foundation.h"
-#include "render/terrain_contact.h"
+#include "render/frame/terrain_contact.h"
 
 namespace {
 

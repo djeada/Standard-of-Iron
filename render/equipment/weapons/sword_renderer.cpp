@@ -12,6 +12,14 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/cache/render_archetype.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
@@ -20,15 +28,7 @@
 #include "render/equipment/primitive_archetype_utils.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_math.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/humanoid/runtime/style_palette.h"
 #include "render/math/math_utils.h"
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

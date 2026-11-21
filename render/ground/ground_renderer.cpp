@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <cmath>
 
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/world_chunk.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
-#include "render/world_chunk.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

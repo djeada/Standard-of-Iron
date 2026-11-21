@@ -1,18 +1,18 @@
 #include <gtest/gtest.h>
 
 #define private public
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #undef private
 
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
-#include "render/camera_visibility.h"
-#include "render/combat_dust_defaults.h"
-#include "render/draw_commands.h"
+#include "render/creature/combat_animation_diagnostics.h"
 #include "render/entity/combat_dust_renderer.h"
+#include "render/frame/camera_visibility.h"
+#include "render/frame/combat_dust_defaults.h"
+#include "render/frame/draw_commands.h"
 #include "render/geom/mode_indicator.h"
-#include "render/profiling/combat_animation_diagnostics.h"
 
 namespace {
 

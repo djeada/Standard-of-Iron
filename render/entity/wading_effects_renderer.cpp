@@ -14,10 +14,10 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/units/spawn_type.h"
-#include "render/camera_visibility.h"
-#include "render/draw_commands.h"
 #include "render/entity/formation_instance_layout.h"
-#include "render/scene_renderer.h"
+#include "render/frame/camera_visibility.h"
+#include "render/frame/draw_commands.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

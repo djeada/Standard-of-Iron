@@ -21,7 +21,7 @@
 #include "render/ground/linear_feature_geometry.h"
 #include "render/ground/linear_feature_submission.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

@@ -26,7 +26,7 @@
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/units/factory.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace {

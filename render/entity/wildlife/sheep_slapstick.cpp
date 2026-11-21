@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
-#include "render/submitter.h"
 
 namespace Render::GL::Wildlife {
 

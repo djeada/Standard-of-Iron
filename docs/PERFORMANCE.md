@@ -356,7 +356,7 @@ visible building into its parts (66k draw commands on Aurelia), sort them, and â
 shadow pass â€” gather, sort and re-upload them once per cascade. Now
 `submit_building_instance` hands one instance record per building to
 `ISubmitter::render_instance`, and the renderer places opaque buildings into
-`StaticBuildingBatch` (`render/static_building_batch.cpp`).
+`StaticBuildingBatch` (`render/frame/static_building_batch.cpp`).
 
 - Each archetype (nation, type, damage state, farm stage) is baked once, lazily, into
   one merged mesh (`build_merged_building_mesh`, cached on the archetype): every opaque

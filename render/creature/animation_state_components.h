@@ -10,13 +10,13 @@
 #include "animation/rig/horse_gait.h"
 #include "game/core/entity.h"
 #include "render/creature/combat_visual_state.h"
+#include "render/creature/elephant/dimensions.h"
+#include "render/creature/elephant/runtime/gait_state.h"
+#include "render/creature/horse/dimensions.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/runtime/combat_root_smoothing.h"
 #include "render/creature/pipeline/humanoid_transition_continuity.h"
 #include "render/creature/render_request.h"
-#include "render/elephant/dimensions.h"
-#include "render/elephant/runtime/gait_state.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/horse/dimensions.h"
-#include "render/humanoid/runtime/combat_root_smoothing.h"
 
 namespace Render::Creature {
 

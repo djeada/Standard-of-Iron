@@ -9,8 +9,8 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/i_render_pass.h"
-#include "render/terrain_scene_types.h"
+#include "render/frame/i_render_pass.h"
+#include "render/ground/terrain_scene_types.h"
 
 namespace Render::GL {
 class Mesh;

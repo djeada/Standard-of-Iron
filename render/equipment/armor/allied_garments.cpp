@@ -9,6 +9,11 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/creature/humanoid/asset/humanoid_derived_meshes.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/asset/mesh_helpers.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
+#include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
@@ -16,11 +21,6 @@
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/humanoid/asset/humanoid_derived_meshes.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/asset/mesh_helpers.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace Render::GL {
 

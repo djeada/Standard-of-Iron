@@ -2,9 +2,9 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
-#include "render/bone_palette_arena.h"
 #include "render/creature/archetype_registry.h"
-#include "render/rigged_mesh_cache.h"
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/frame/bone_palette_arena.h"
 
 namespace Render::Creature::Pipeline {
 

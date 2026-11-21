@@ -7,11 +7,11 @@
 #include <memory>
 #include <vector>
 
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/i_render_pass.h"
 #include "render/gl/buffer.h"
 #include "render/gl/texture.h"
 #include "render/ground/visibility_mask_encoder.h"
-#include "render/i_render_pass.h"
 
 namespace Render::GL {
 class Renderer;

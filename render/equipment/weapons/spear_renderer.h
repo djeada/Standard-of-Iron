@@ -7,10 +7,10 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/equipment/i_equipment_renderer.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/palette.h"
-#include "render/static_attachment_spec.h"
+#include "render/frame/palette.h"
 
 namespace Render::GL {
 

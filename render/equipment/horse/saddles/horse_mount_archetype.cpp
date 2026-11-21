@@ -3,12 +3,12 @@
 #include <array>
 #include <span>
 
+#include "render/creature/horse/dimensions.h"
+#include "render/creature/horse/horse_renderer_base.h"
+#include "render/creature/horse/horse_spec.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/equipment/horse/horse_attachment_archetype.h"
 #include "render/equipment/horse/tack/reins_renderer.h"
-#include "render/horse/dimensions.h"
-#include "render/horse/horse_renderer_base.h"
-#include "render/horse/horse_spec.h"
 
 namespace Render::GL {
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
@@ -10,9 +11,8 @@
 #include "render/equipment/helmets/historical_helmets.h"
 #include "render/equipment/helmets/roman_heavy_helmet.h"
 #include "render/equipment/helmets/roman_light_helmet.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/palette.h"
-#include "render/submitter.h"
+#include "render/frame/palette.h"
+#include "render/frame/submitter.h"
 
 using namespace Render::GL;
 

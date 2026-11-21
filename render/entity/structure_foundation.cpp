@@ -8,8 +8,8 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/units/building_body.h"
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 

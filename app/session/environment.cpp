@@ -4,7 +4,7 @@
 
 #include "game/game_config.h"
 #include "game/map/map_definition.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace App::Core {

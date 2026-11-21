@@ -4,7 +4,7 @@
 #include "game/core/world.h"
 #include "game/systems/healing_colors.h"
 #include "game/systems/nation_id.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

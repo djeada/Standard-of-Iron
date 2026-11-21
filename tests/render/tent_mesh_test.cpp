@@ -4,8 +4,8 @@
 #include <gtest/gtest.h>
 #include <map>
 
-#include "render/gl/backend/tent_mesh.h"
-#include "render/gl/backend/tent_parts.h"
+#include "render/backend/tent_mesh.h"
+#include "render/backend/tent_parts.h"
 
 namespace {
 

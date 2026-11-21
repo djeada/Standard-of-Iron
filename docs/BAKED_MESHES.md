@@ -26,7 +26,7 @@ Baking at build time removes all three: loading reads finished meshes, the loadi
 
 The packs are build outputs: gitignored, regenerated whenever the renderer changes, copied into the source tree so tests running from the repository root find them.
 
-Both packs share one container, `render/mesh_pack_format.h`: named entries of one vertex type, with indices, optional index ranges and a bounding sphere. Each family has its own magic number and the header records the vertex size, so a pack can never be read as the wrong kind of mesh or by a build with a different vertex layout.
+Both packs share one container, `render/cache/mesh_pack_format.h`: named entries of one vertex type, with indices, optional index ranges and a bounding sphere. Each family has its own magic number and the header records the vertex size, so a pack can never be read as the wrong kind of mesh or by a build with a different vertex layout.
 
 ## Buildings
 
@@ -42,7 +42,7 @@ Both packs share one container, `render/mesh_pack_format.h`: named entries of on
 
 ### Timber grain
 
-Parts authored as wood (`BuildingPartMaterial(desc, k_building_material_wood)` or `desc.set_material(...)`) carry a grain frame instead of their unit-mesh UVs. Baked buildings only ever sample a white texture, so the two texture coordinates are free. `RenderArchetypeBuilder::set_timber()` marks those draws, and `append_part()` in `render/static_building_batch.cpp` writes the frame at merge time:
+Parts authored as wood (`BuildingPartMaterial(desc, k_building_material_wood)` or `desc.set_material(...)`) carry a grain frame instead of their unit-mesh UVs. Baked buildings only ever sample a white texture, so the two texture coordinates are free. `RenderArchetypeBuilder::set_timber()` marks those draws, and `append_part()` in `render/frame/static_building_batch.cpp` writes the frame at merge time:
 
 - `tex_coord.y` = `k_grain_frame_offset` + member × `k_grain_member_stride` + metres along the grain. The grain runs along the part's longest axis, or along the axis of a cylinder or cone. The member is a hash of the part's centre, and gives every log and board its own tree: tone, silvering and grain phase.
 - `tex_coord.x` holds the surface kind:

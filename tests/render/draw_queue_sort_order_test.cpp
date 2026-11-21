@@ -5,8 +5,8 @@
 #include <type_traits>
 #include <variant>
 
-#include "render/draw_queue.h"
-#include "render/frame_budget.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/frame_budget.h"
 
 namespace {
 

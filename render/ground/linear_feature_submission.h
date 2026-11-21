@@ -10,8 +10,8 @@
 #include "game/map/visibility_service.h"
 #include "render/gl/mesh.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/scene_renderer.h"
-#include "render/terrain_scene_types.h"
+#include "render/ground/terrain_scene_types.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::Ground {
 

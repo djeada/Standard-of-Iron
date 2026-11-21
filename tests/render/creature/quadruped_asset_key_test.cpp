@@ -10,12 +10,12 @@
 
 #include "animation/bpat/bpat_reader.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_spec.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/quadruped/quadruped_asset_key.h"
 #include "render/creature/render_request.h"
 #include "render/creature/schema/skeleton_schema_hash.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/horse/horse_spec.h"
 
 namespace {
 

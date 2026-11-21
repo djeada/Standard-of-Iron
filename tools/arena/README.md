@@ -2063,7 +2063,7 @@ trigger and the event, and each action is a step triggered by
 ### Fog banks, lake mist and scripted weather
 
 The arena now builds the same mist the game does: `Render::build_mist_volumes`
-(render/mist_volume_builder.cpp, shared with `SkirmishLoader`) turns the
+(render/ground/mist_volume_builder.cpp, shared with `SkirmishLoader`) turns the
 terrain's rivers and lakes into water mist and fog zones / undead zones into
 miasma; `weather.water_mist: false` turns it off for a scenario. Fog banks are
 authored on top as capsules (`from`/`to`, or a round `center`) with `radius`,

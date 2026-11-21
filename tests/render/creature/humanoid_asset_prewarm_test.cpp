@@ -8,13 +8,13 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/assets/creature_asset_prewarmer.h"
 #include "render/creature/assets/creature_lod_geometry.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/asset/humanoid_asset_prewarmer.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_asset_init.h"
 #include "render/creature/runtime_bake_guard.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/horse/horse_spec.h"
-#include "render/humanoid/asset/humanoid_asset_prewarmer.h"
-#include "render/rigged_mesh_cache.h"
 
 namespace {
 

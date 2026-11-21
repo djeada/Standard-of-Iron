@@ -12,13 +12,13 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
-#include "render/attachment_mesh_library.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/gpu/attachment_mesh_library.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_asset_init.h"
 #include "render/creature/runtime_bake_guard.h"
-#include "render/scene_renderer.h"
-#include "render/world_view.h"
+#include "render/frame/world_view.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

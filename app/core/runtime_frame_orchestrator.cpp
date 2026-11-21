@@ -20,7 +20,7 @@
 #include "game/wildlife/wildlife_system.h"
 #include "render/ground/rain_renderer.h"
 #include "render/profiling/frame_profile.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace {

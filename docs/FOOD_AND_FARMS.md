@@ -120,7 +120,7 @@ Standard of Iron is a light-hearted game, so killing a sheep is played as a cart
 
 1. **Bonk.** The builder works the sheep with the overhead mallet clip. The sheep sways dizzily and five stars orbit its head (`render/entity/wildlife/sheep_slapstick.cpp`).
 2. **Poof.** On the last blow the fleece goes _poof_: a burst of wool tufts flies out, stalls and floats down over 2.4 s.
-3. **Keel over.** The sheep's `die` clip (`apply_collapse` in `render/wildlife/sheep_spec.cpp`) has it go rigid, hop on the spot, tip right over onto its back and land with all four legs in the air, where they boing a few times before settling. The stars move down to circle the upturned head and linger about four seconds. There is no blood and nothing bends the wrong way.
+3. **Keel over.** The sheep's `die` clip (`apply_collapse` in `render/creature/wildlife/sheep_spec.cpp`) has it go rigid, hop on the spot, tip right over onto its back and land with all four legs in the air, where they boing a few times before settling. The stars move down to circle the upturned head and linger about four seconds. There is no blood and nothing bends the wrong way.
 
 The die and dead clips are baked into `assets/creatures/sheep.bpat`; run `make bake-bpat` after changing the pose.
 

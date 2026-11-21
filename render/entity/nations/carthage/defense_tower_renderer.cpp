@@ -8,6 +8,7 @@
 #include <numbers>
 
 #include "game/core/component.h"
+#include "render/backend/backend.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
@@ -17,10 +18,9 @@
 #include "render/entity/defense_tower_renderer_common.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/entity/registry.h"
-#include "render/gl/backend.h"
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
 #include "render/math/math_utils.h"
-#include "render/submitter.h"
 
 namespace Render::GL::Carthage {
 namespace {

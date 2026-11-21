@@ -3,17 +3,17 @@
 #include <QVector3D>
 
 #include "game/core/component_core.h"
+#include "render/backend/backend.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
 #include "render/entity/nations/material_palette.h"
 #include "render/entity/registry.h"
-#include "render/entity_appearance.h"
-#include "render/gl/backend.h"
+#include "render/frame/entity_appearance.h"
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/submitter.h"
 
 namespace Render::GL::Sepulcher {
 namespace {

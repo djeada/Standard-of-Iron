@@ -19,8 +19,8 @@
 #include "render/entity/nations/roman/building_architecture.h"
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/registry.h"
+#include "render/frame/submitter.h"
 #include "render/math/math_utils.h"
-#include "render/submitter.h"
 
 namespace Render::GL::Roman {
 namespace {

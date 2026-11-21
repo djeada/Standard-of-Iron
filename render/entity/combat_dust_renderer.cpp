@@ -17,10 +17,10 @@
 #include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
-#include "render/camera_visibility.h"
-#include "render/combat_dust_defaults.h"
 #include "render/entity/building_collapse.h"
-#include "render/scene_renderer.h"
+#include "render/frame/camera_visibility.h"
+#include "render/frame/combat_dust_defaults.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

@@ -8,10 +8,10 @@
 #include <utility>
 #include <vector>
 
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/creature/humanoid/asset/humanoid_asset_key.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
-#include "render/humanoid/asset/humanoid_asset_key.h"
-#include "render/rigged_mesh_cache.h"
 
 namespace {
 

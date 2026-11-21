@@ -1,9 +1,9 @@
 #include "render/entity/humanoid_pose_policies.h"
 
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/entity/healer_renderer_common.h"
 #include "render/entity/nations/carthage/healer_renderer.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/asset/humanoid_spec.h"
 
 namespace Render::Entity {
 

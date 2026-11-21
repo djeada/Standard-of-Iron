@@ -7,8 +7,8 @@
 #include "game/systems/combat_system/formation_contact_processor.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/units/troop_config.h"
-#include "render/humanoid/runtime/soldier_turn_smoothing.h"
-#include "render/selection_ring_layout.h"
+#include "render/creature/humanoid/runtime/soldier_turn_smoothing.h"
+#include "render/entity/selection_ring_layout.h"
 
 namespace {
 

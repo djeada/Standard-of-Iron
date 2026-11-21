@@ -18,11 +18,11 @@
 #include <string>
 #include <vector>
 
+#include "render/backend/directional_shadow_block.h"
+#include "render/backend/ubo_bindings.h"
 #include "render/equipment/armor/cloak_renderer.h"
-#include "render/gl/directional_shadow_block.h"
+#include "render/frame/local_lighting.h"
 #include "render/gl/shader.h"
-#include "render/gl/ubo_bindings.h"
-#include "render/local_lighting.h"
 #include "scene/environment_lighting.h"
 
 namespace {

@@ -11,7 +11,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
 #include "render/ground/scatter_renderer_base.h"
 
 namespace Render::GL {

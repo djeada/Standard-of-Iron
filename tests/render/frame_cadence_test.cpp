@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/frame_cadence.h"
+#include "render/frame/frame_cadence.h"
 
 namespace {
 

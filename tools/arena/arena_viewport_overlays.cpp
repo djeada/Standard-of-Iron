@@ -21,8 +21,8 @@
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/session_context.h"
+#include "render/creature/combat_animation_diagnostics.h"
 #include "render/geom/arrow.h"
-#include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_profile.h"
 #include "scene/camera.h"
 

@@ -8,14 +8,14 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/cache/render_archetype.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/render_archetype.h"
 
 namespace Render::GL {
 

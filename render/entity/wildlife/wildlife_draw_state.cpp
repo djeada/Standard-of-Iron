@@ -7,7 +7,7 @@
 #include "game/core/component_economy.h"
 #include "game/core/death_sequence.h"
 #include "game/core/entity.h"
-#include "render/entity_appearance.h"
+#include "render/frame/entity_appearance.h"
 
 namespace Render::GL::Wildlife {
 

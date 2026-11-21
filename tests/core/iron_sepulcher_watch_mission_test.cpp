@@ -48,7 +48,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 #include "tests/support/ai_quiesce.h"
 

@@ -5,10 +5,10 @@
 #include <iostream>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/horse/dimensions.h"
-#include "render/horse/horse_motion.h"
-#include "render/horse/horse_profile_data.h"
-#include "render/horse/horse_source_asset.h"
+#include "render/creature/horse/dimensions.h"
+#include "render/creature/horse/horse_motion.h"
+#include "render/creature/horse/horse_profile_data.h"
+#include "render/creature/horse/horse_source_asset.h"
 
 namespace {
 

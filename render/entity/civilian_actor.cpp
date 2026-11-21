@@ -5,13 +5,13 @@
 #include <cstdlib>
 #include <string>
 
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/graphics_settings.h"
-#include "render/world_view.h"
+#include "render/frame/graphics_settings.h"
+#include "render/frame/world_view.h"
 
 namespace Render::GL {
 namespace {

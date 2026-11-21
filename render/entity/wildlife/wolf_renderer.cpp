@@ -8,10 +8,10 @@
 
 #include "render/creature/animation_state_components.h"
 #include "render/creature/pipeline/corpse_sink.h"
+#include "render/creature/wildlife/wildlife_prepare.h"
+#include "render/creature/wildlife/wolf_spec.h"
 #include "render/entity/registry.h"
 #include "render/entity/wildlife/wildlife_draw_state.h"
-#include "render/wildlife/wildlife_prepare.h"
-#include "render/wildlife/wolf_spec.h"
 
 namespace Render::GL::Wildlife {
 

@@ -5,10 +5,10 @@
 #include <gtest/gtest.h>
 
 #include "render/creature/archetype_registry.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/creature_render_graph.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/horse/horse_spec.h"
 
 namespace {
 

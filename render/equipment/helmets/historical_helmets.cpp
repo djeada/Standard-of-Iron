@@ -5,11 +5,11 @@
 #include <numbers>
 #include <vector>
 
+#include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/helmets/helmet_alignment.h"
-#include "render/humanoid/runtime/style_palette.h"
 
 namespace Render::GL {
 namespace {

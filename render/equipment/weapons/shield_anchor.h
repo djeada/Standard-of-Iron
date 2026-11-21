@@ -3,9 +3,9 @@
 #include <QMatrix4x4>
 #include <QVector4D>
 
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 
 namespace Render::GL {
 

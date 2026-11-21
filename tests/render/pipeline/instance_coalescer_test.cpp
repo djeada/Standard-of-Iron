@@ -4,10 +4,10 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 
-#include "render/draw_commands.h"
-#include "render/draw_part.h"
-#include "render/material.h"
-#include "render/pipeline/instance_coalescer.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/draw_part.h"
+#include "render/frame/material.h"
+#include "render/frame/pipeline/instance_coalescer.h"
 
 using Render::GL::DrawPartCmd;
 using Render::GL::Material;

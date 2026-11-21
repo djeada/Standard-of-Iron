@@ -12,6 +12,11 @@
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/asset/facial_hair_catalog.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
+#include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/armor/armor_light_carthage.h"
@@ -21,12 +26,7 @@
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/equipment/weapons/spear_renderer.h"
-#include "render/humanoid/asset/facial_hair_catalog.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/humanoid/schema/skeleton_schema.h"
-#include "render/palette.h"
+#include "render/frame/palette.h"
 
 namespace Render::GL {
 namespace {

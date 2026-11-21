@@ -9,7 +9,7 @@
 
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

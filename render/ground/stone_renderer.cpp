@@ -17,14 +17,14 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
 #include "render/gl/buffer.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/resources.h"
 #include "render/ground/ground_ecology.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_ground_fit.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

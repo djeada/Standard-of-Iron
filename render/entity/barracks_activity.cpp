@@ -15,10 +15,10 @@
 #include "render/entity/civilian_actor.h"
 #include "render/entity/home_activity.h"
 #include "render/entity/registry.h"
+#include "render/frame/local_lighting.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/local_lighting.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

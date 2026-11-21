@@ -5,9 +5,9 @@
 #include <gtest/gtest.h>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/humanoid/runtime/humanoid_math.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/pose_controller.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/pose_controller.h"
 
 using namespace Render::GL;
 

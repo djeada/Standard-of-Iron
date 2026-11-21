@@ -11,10 +11,10 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
 #include "render/gl/render_constants.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

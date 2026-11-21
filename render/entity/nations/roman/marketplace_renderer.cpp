@@ -11,6 +11,9 @@
 
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
+#include "render/backend/backend.h"
+#include "render/cache/render_archetype.h"
+#include "render/cache/template_cache.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
@@ -21,13 +24,10 @@
 #include "render/entity/nations/roman/building_architecture.h"
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/registry.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
-#include "render/gl/backend.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/render_archetype.h"
-#include "render/submitter.h"
-#include "render/template_cache.h"
 
 namespace Render::GL::Roman {
 namespace {

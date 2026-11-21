@@ -7,9 +7,9 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
-#include "render/draw_commands.h"
-#include "render/scene_renderer.h"
-#include "render/selection_ring_layout.h"
+#include "render/entity/selection_ring_layout.h"
+#include "render/frame/draw_commands.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

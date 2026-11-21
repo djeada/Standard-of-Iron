@@ -21,14 +21,14 @@
 #include "game/map/scatter/spawn_validator.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/graphics_settings.h"
 #include "render/gl/buffer.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/resources.h"
-#include "render/graphics_settings.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

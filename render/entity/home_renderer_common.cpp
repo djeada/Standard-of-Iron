@@ -10,7 +10,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/home_activity.h"
 #include "render/entity/home_props.h"
-#include "render/entity_appearance.h"
+#include "render/frame/entity_appearance.h"
 
 namespace Render::GL {
 namespace {

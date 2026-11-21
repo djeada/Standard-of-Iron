@@ -10,16 +10,16 @@
 
 #include "animation/clip_manifest.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/equipment/armor/allied_garments.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/weapons/shield_anchor.h"
 #include "render/equipment/weapons/shield_renderer.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 namespace Render::GL {
 namespace {

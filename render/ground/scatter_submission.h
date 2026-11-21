@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render/ground/scatter_renderer_state.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::Ground::Scatter {
 

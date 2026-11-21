@@ -6,6 +6,9 @@
 #include <deque>
 #include <string>
 
+#include "render/cache/render_archetype.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/entity/registry.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
@@ -13,9 +16,6 @@
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

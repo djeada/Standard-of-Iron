@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "animation/bpat/asset_compression.h"
+#include "render/cache/static_mesh_pack.h"
 #include "render/entity/building_archetype_catalog.h"
 #include "render/entity/building_archetype_library.h"
-#include "render/static_mesh_pack.h"
 
 namespace {
 

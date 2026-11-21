@@ -9,7 +9,7 @@
 
 #include "render/creature/runtime_bake_guard.h"
 #include "render/entity/building_archetype_catalog.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace Render::GL {
 namespace {

@@ -10,7 +10,7 @@
 #include "render/geom/selection_disc.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

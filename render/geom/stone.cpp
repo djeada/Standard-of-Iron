@@ -12,7 +12,7 @@
 #include "render/gl/mesh.h"
 #include "render/gl/resources.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render {
 namespace Geom {

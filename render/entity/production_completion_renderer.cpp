@@ -12,10 +12,10 @@
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
-#include "render/draw_commands.h"
-#include "render/local_lighting.h"
-#include "render/scene_renderer.h"
-#include "render/world_view.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/local_lighting.h"
+#include "render/frame/world_view.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

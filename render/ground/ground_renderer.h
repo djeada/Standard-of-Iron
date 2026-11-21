@@ -8,8 +8,8 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain_service.h"
-#include "render/i_render_pass.h"
-#include "render/world_chunk.h"
+#include "render/frame/i_render_pass.h"
+#include "render/frame/world_chunk.h"
 
 namespace Render::GL {
 class Renderer;

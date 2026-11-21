@@ -4,7 +4,7 @@
 
 #include "render/entity/mounted_swordsman_renderer_base.h"
 #include "render/entity/nations/iberians/palette.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace Render::GL::Iberians {
 namespace {

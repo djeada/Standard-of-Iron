@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "render/i_render_pass.h"
-#include "render/rain_gpu.h"
+#include "render/frame/i_render_pass.h"
+#include "render/frame/rain_gpu.h"
 
 namespace Game::Systems {
 class RainManager;

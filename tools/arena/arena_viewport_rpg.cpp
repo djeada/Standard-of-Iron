@@ -12,7 +12,7 @@
 #include "game/systems/combat_rules.h"
 #include "game/systems/run_stamina.h"
 #include "render/entity/combat_dust_renderer.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 using namespace arena_viewport_internal;
 

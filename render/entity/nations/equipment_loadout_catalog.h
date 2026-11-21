@@ -4,8 +4,8 @@
 #include <string>
 #include <string_view>
 
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/equipment/equipment_registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL::Nation {
 

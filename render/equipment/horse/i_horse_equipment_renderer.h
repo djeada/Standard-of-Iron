@@ -1,8 +1,8 @@
 #pragma once
 
+#include "render/creature/horse/horse_renderer_base.h"
 #include "render/creature/movement_state.h"
 #include "render/equipment/i_equipment_renderer.h"
-#include "render/horse/horse_renderer_base.h"
 
 namespace Render::GL {
 

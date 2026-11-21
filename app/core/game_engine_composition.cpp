@@ -43,8 +43,8 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
-#include "render/scene_renderer.h"
-#include "render/terrain_scene_proxy.h"
+#include "render/scene/scene_renderer.h"
+#include "render/scene/terrain_scene_proxy.h"
 #include "scene/camera.h"
 
 void GameEngine::build_client_and_view_models() {

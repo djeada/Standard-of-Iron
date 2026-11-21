@@ -20,8 +20,8 @@
 #include "game/systems/navigation/terrain_alignment_system.h"
 #include "game/systems/rpg_combat_system/rpg_damage_resolver.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/animation/animation_inputs.h"
 #include "scene/camera.h"
 #include "tests/support/movement_test_access.h"
 

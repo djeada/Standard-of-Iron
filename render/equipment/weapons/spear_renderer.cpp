@@ -8,6 +8,12 @@
 #include <span>
 #include <string>
 
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/humanoid/runtime/spear_pose_utils.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
@@ -16,12 +22,6 @@
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/humanoid/runtime/spear_pose_utils.h"
-#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

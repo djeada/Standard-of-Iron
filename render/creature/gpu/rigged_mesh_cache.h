@@ -1,0 +1,297 @@
+
+
+#pragma once
+
+#include <QMatrix4x4>
+
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <memory>
+#include <span>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
+
+#include "render/creature/gpu/rigged_mesh.h"
+#include "render/creature/gpu/rigged_mesh_bake.h"
+#include "render/creature/part_graph.h"
+#include "render/gl/gl_handle.h"
+
+namespace Render::Creature {
+struct CreatureSpec;
+}
+
+namespace Render::GL {
+
+struct RiggedSkinAtlas {
+  std::shared_ptr<const std::vector<QMatrix4x4>> palette_storage;
+  std::span<const QMatrix4x4> palettes;
+  std::uint32_t frame_total{0};
+  std::uint32_t bone_count{0};
+  BufferHandle palette_ubo;
+  std::size_t frame_stride_bytes{0};
+};
+
+struct RiggedMeshEntry {
+  std::shared_ptr<RiggedMesh> mesh;
+  std::vector<std::shared_ptr<RiggedMesh>> attachment_meshes;
+
+  std::shared_ptr<RiggedSkinAtlas> skin_atlas;
+  mutable std::uint64_t last_used_frame{0};
+};
+
+class RiggedMeshCache {
+public:
+  struct Key {
+    const Render::Creature::CreatureSpec* spec{nullptr};
+    Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
+    std::uint32_t skin_species_id{0};
+    std::uint32_t attachment_set_id{0};
+    std::uint64_t attachments_hash{0};
+
+    auto operator==(const Key& o) const noexcept -> bool {
+      return spec == o.spec && lod == o.lod && skin_species_id == o.skin_species_id &&
+             attachment_set_id == o.attachment_set_id &&
+             attachments_hash == o.attachments_hash;
+    }
+  };
+
+  struct KeyHash {
+    auto operator()(const Key& k) const noexcept -> std::size_t {
+      const auto spec_bits = reinterpret_cast<std::uintptr_t>(k.spec);
+      return (spec_bits * 0x9E3779B97F4A7C15ULL) ^
+             (static_cast<std::size_t>(k.lod) << 1U) ^
+             (static_cast<std::size_t>(k.skin_species_id) << 24U) ^
+             (static_cast<std::size_t>(k.attachment_set_id) * 0x9E3779B185EBCA87ULL) ^
+             static_cast<std::size_t>(k.attachments_hash);
+    }
+  };
+
+  struct FrameStats {
+    std::uint32_t hits{0};
+    std::uint32_t misses{0};
+    std::uint32_t bakes{0};
+    std::uint32_t skin_atlas_builds{0};
+    std::uint32_t skin_ubo_uploads{0};
+    std::uint64_t skin_ubo_bytes_uploaded{0};
+    std::uint32_t evictions{0};
+    std::uint64_t evicted_bytes{0};
+  };
+
+  struct Residency {
+    std::uint64_t mesh_bytes{0};
+    std::uint64_t attachment_bytes{0};
+    std::uint64_t atlas_bytes{0};
+    std::uint64_t budget_bytes{0};
+    std::uint64_t high_water_bytes{0};
+
+    [[nodiscard]] auto total_bytes() const noexcept -> std::uint64_t {
+      return mesh_bytes + attachment_bytes + atlas_bytes;
+    }
+  };
+
+  RiggedMeshCache() = default;
+  ~RiggedMeshCache();
+  RiggedMeshCache(const RiggedMeshCache&) = delete;
+  auto operator=(const RiggedMeshCache&) -> RiggedMeshCache& = delete;
+
+  void reset_frame_stats() noexcept { m_frame_stats = {}; }
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats& {
+    return m_frame_stats;
+  }
+  void reserve_for_frame(std::size_t expected_entries) {
+    m_entries.reserve(m_entries.size() + expected_entries);
+  }
+
+  void record_skin_atlas_build() noexcept { ++m_frame_stats.skin_atlas_builds; }
+  void record_skin_ubo_upload(std::uint64_t bytes) noexcept {
+    ++m_frame_stats.skin_ubo_uploads;
+    m_frame_stats.skin_ubo_bytes_uploaded += bytes;
+  }
+  void mark_skin_ubo_upload_pending() noexcept {
+    m_has_pending_skin_ubo_uploads = true;
+  }
+  [[nodiscard]] auto has_pending_skin_ubo_uploads() const noexcept -> bool {
+    return m_has_pending_skin_ubo_uploads;
+  }
+
+  void upload_pending_skin_ubos();
+
+  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+
+  auto get_or_bake(const Render::Creature::CreatureSpec& spec,
+                   Render::Creature::CreatureLOD lod,
+                   std::span<const QMatrix4x4> rest_palette,
+                   std::uint16_t variant_bucket = 0,
+                   std::span<const Render::Creature::StaticAttachmentSpec> attachments =
+                       {}) -> const RiggedMeshEntry*;
+
+  auto get_or_bake(const Render::Creature::CreatureSpec& spec,
+                   Render::Creature::CreatureLOD lod,
+                   std::span<const QMatrix4x4> rest_palette,
+                   std::uint16_t variant_bucket,
+                   std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+                   std::uint32_t skin_species_id) -> const RiggedMeshEntry*;
+
+  auto get_or_bake_prehashed(
+      const Render::Creature::CreatureSpec& spec,
+      Render::Creature::CreatureLOD lod,
+      std::span<const QMatrix4x4> rest_palette,
+      std::uint16_t variant_bucket,
+      std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+      std::uint64_t attachments_hash,
+      std::uint32_t attachment_set_id,
+      std::uint32_t skin_species_id) -> const RiggedMeshEntry*;
+
+  auto create_rigged_asset(
+      const Key& key,
+      std::span<const QMatrix4x4> rest_palette,
+      std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+      std::uint16_t variant_bucket,
+      std::string_view attachment_set_name = {}) -> const RiggedMeshEntry*;
+
+  [[nodiscard]] auto
+  find_rigged_asset(const Key& key) const noexcept -> const RiggedMeshEntry*;
+
+  [[nodiscard]] auto
+  require_rigged_asset(const Key& key) const -> const RiggedMeshEntry*;
+
+  void clear() {
+    release_skin_atlases();
+    m_entries.clear();
+    m_skin_atlases.clear();
+    m_base_meshes.clear();
+    m_attachment_meshes.clear();
+    m_has_pending_skin_ubo_uploads = false;
+    m_residency.mesh_bytes = 0;
+    m_residency.attachment_bytes = 0;
+    m_residency.atlas_bytes = 0;
+  }
+
+  [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
+
+  [[nodiscard]] auto runtime_attachment_bakes() const noexcept -> std::uint64_t {
+    return m_runtime_attachment_bakes;
+  }
+
+  void begin_frame();
+
+  void set_residency_budget_bytes(std::uint64_t bytes) noexcept {
+    m_residency.budget_bytes = bytes;
+  }
+
+  [[nodiscard]] auto residency() const noexcept -> const Residency& {
+    return m_residency;
+  }
+
+  auto evict_unused_over_budget() -> std::uint64_t;
+
+  template <typename Fn>
+  void for_each_named_attachment_mesh(Fn&& fn) const {
+    for (const auto& [pack_key, attachment_key] : m_attachment_pack_keys) {
+      const auto it = m_attachment_meshes.find(attachment_key);
+      if (it != m_attachment_meshes.end() && it->second != nullptr) {
+        fn(pack_key, *it->second);
+      }
+    }
+  }
+
+private:
+  struct SkinAtlasKey {
+    const Render::Creature::CreatureSpec* spec{nullptr};
+    std::uint32_t skin_species_id{0};
+
+    auto operator==(const SkinAtlasKey& other) const noexcept -> bool {
+      return spec == other.spec && skin_species_id == other.skin_species_id;
+    }
+  };
+
+  struct BaseMeshKey {
+    const Render::Creature::CreatureSpec* spec{nullptr};
+    Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
+    std::uint32_t skin_species_id{0};
+
+    auto operator==(const BaseMeshKey& other) const noexcept -> bool {
+      return spec == other.spec && lod == other.lod &&
+             skin_species_id == other.skin_species_id;
+    }
+  };
+
+  struct BaseMeshKeyHash {
+    auto operator()(const BaseMeshKey& key) const noexcept -> std::size_t {
+      const auto spec_bits = reinterpret_cast<std::uintptr_t>(key.spec);
+      return (spec_bits * 0x9E3779B97F4A7C15ULL) ^
+             (static_cast<std::size_t>(key.lod) << 1U) ^
+             (static_cast<std::size_t>(key.skin_species_id) * 0x85EBCA77ULL);
+    }
+  };
+
+  struct AttachmentMeshKey {
+    const Render::Creature::CreatureSpec* spec{nullptr};
+    Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
+    std::uint32_t skin_species_id{0};
+    std::uint64_t attachments_hash{0};
+
+    auto operator==(const AttachmentMeshKey& other) const noexcept -> bool {
+      return spec == other.spec && lod == other.lod &&
+             skin_species_id == other.skin_species_id &&
+             attachments_hash == other.attachments_hash;
+    }
+  };
+
+  struct AttachmentMeshKeyHash {
+    auto operator()(const AttachmentMeshKey& key) const noexcept -> std::size_t {
+      const auto spec_bits = reinterpret_cast<std::uintptr_t>(key.spec);
+      return (spec_bits * 0x9E3779B97F4A7C15ULL) ^
+             (static_cast<std::size_t>(key.lod) << 1U) ^
+             (static_cast<std::size_t>(key.skin_species_id) * 0x85EBCA77ULL) ^
+             static_cast<std::size_t>(key.attachments_hash);
+    }
+  };
+
+  struct SkinAtlasKeyHash {
+    auto operator()(const SkinAtlasKey& key) const noexcept -> std::size_t {
+      const auto spec_bits = reinterpret_cast<std::uintptr_t>(key.spec);
+      return (spec_bits * 0x9E3779B97F4A7C15ULL) ^
+             (static_cast<std::size_t>(key.skin_species_id) * 0x85EBCA77ULL);
+    }
+  };
+
+  void release_skin_atlases();
+  void recount_residency();
+
+  std::unordered_map<Key, RiggedMeshEntry, KeyHash> m_entries;
+  std::unordered_map<SkinAtlasKey, std::shared_ptr<RiggedSkinAtlas>, SkinAtlasKeyHash>
+      m_skin_atlases;
+  std::unordered_map<BaseMeshKey, std::shared_ptr<RiggedMesh>, BaseMeshKeyHash>
+      m_base_meshes;
+  std::unordered_map<AttachmentMeshKey,
+                     std::shared_ptr<RiggedMesh>,
+                     AttachmentMeshKeyHash>
+      m_attachment_meshes;
+
+  std::map<std::string, AttachmentMeshKey, std::less<>> m_attachment_pack_keys;
+
+  mutable FrameStats m_frame_stats;
+  bool m_has_pending_skin_ubo_uploads{false};
+  std::uint64_t m_runtime_attachment_bakes{0};
+  std::uint64_t m_frame_index{0};
+  Residency m_residency;
+};
+
+void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry);
+
+} // namespace Render::GL
+
+namespace Render::Creature::Bpat {
+class BpatBlob;
+}
+
+namespace Render::GL {
+
+void rigged_entry_ensure_skin_atlas_from_blob(
+    const RiggedMeshEntry& entry, const Render::Creature::Bpat::BpatBlob& blob);
+
+}

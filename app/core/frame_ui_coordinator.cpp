@@ -34,7 +34,7 @@
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
 #include "render/geom/target_focus_rings.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

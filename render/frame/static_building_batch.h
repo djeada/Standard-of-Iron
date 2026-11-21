@@ -1,0 +1,111 @@
+#pragma once
+
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <span>
+#include <vector>
+
+#include "render/cache/render_archetype.h"
+
+namespace Render::GL {
+
+inline constexpr float k_grain_frame_offset = 4096.0F;
+inline constexpr float k_grain_member_stride = 64.0F;
+inline constexpr int k_grain_member_count = 16;
+inline constexpr float k_grain_round_band = -1.0F;
+inline constexpr float k_grain_end_band = -3.0F;
+inline constexpr float k_grain_hewn_band = -5.0F;
+
+struct MergedBuildingVertex {
+  std::array<float, 3> position{};
+  std::array<float, 3> normal{};
+  std::array<float, 2> tex_coord{};
+  std::array<float, 4> color_alpha{};
+  std::array<float, 4> material{};
+};
+
+struct MergedBuildingRange {
+  Texture* texture = nullptr;
+  std::uint32_t first_index = 0;
+  std::uint32_t index_count = 0;
+};
+
+struct MergedBuildingMesh {
+  std::uint64_t id = 0;
+  std::vector<MergedBuildingVertex> vertices;
+  std::vector<std::uint32_t> indices;
+  std::vector<MergedBuildingRange> ranges;
+  std::vector<const RenderArchetypeDraw*> dynamic_draws;
+  QVector3D bounds_center;
+  float bounds_radius = 0.0F;
+};
+
+struct BuildingInstanceGpu {
+  float model_col0[4]{1, 0, 0, 0};
+  float model_col1[4]{0, 1, 0, 0};
+  float model_col2[4]{0, 0, 1, 0};
+  float palette0[4]{0, 0, 0, -1};
+  float palette1[4]{0, 0, 0, -1};
+  float state[4]{0, 0, 0, 0};
+};
+
+struct StaticBatchBounds {
+  QVector3D center;
+  float radius = 0.0F;
+};
+
+struct StaticBatchDraw {
+  const MergedBuildingMesh* mesh = nullptr;
+  Texture* default_texture = nullptr;
+  std::uint32_t first = 0;
+  std::uint32_t count = 0;
+  bool ghost = false;
+};
+
+inline constexpr std::size_t k_merged_building_palette_capacity = 2;
+
+[[nodiscard]] auto
+build_merged_building_mesh(const RenderArchetypeSlice& slice) -> MergedBuildingMesh;
+
+[[nodiscard]] auto pack_building_instance(const RenderInstance& instance,
+                                          float coverage = 0.0F) -> BuildingInstanceGpu;
+
+class StaticBuildingBatch {
+public:
+  void begin_frame();
+
+  auto place(const RenderInstance& instance, float coverage = 0.0F) -> bool;
+
+  void finish_frame();
+
+  [[nodiscard]] auto
+  instances() const noexcept -> const std::vector<BuildingInstanceGpu>& {
+    return m_instances;
+  }
+  [[nodiscard]] auto bounds() const noexcept -> const std::vector<StaticBatchBounds>& {
+    return m_bounds;
+  }
+  [[nodiscard]] auto draws() const noexcept -> const std::vector<StaticBatchDraw>& {
+    return m_draws;
+  }
+
+private:
+  struct Placed {
+    const MergedBuildingMesh* mesh = nullptr;
+    Texture* default_texture = nullptr;
+    BuildingInstanceGpu record;
+    StaticBatchBounds bounds;
+  };
+
+  std::vector<Placed> m_placed;
+  std::vector<BuildingInstanceGpu> m_instances;
+  std::vector<StaticBatchBounds> m_bounds;
+  std::vector<StaticBatchDraw> m_draws;
+};
+
+} // namespace Render::GL

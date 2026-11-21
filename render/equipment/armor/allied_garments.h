@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "render/palette.h"
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
+#include "render/cache/render_archetype.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/frame/palette.h"
 
 namespace Render::GL {
 

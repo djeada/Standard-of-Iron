@@ -10,14 +10,14 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/graphics_settings.h"
-#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/frame/graphics_settings.h"
 #include "render/profiling/frame_profile.h"
 
 namespace Render::Creature::Pipeline {

@@ -9,17 +9,17 @@
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/pose_controller.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
+#include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/civilian_actor.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/pose_controller.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/humanoid/schema/skeleton_schema.h"
-#include "render/palette.h"
+#include "render/frame/palette.h"
 
 namespace Render::GL {
 namespace {

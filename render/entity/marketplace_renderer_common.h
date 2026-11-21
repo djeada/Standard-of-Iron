@@ -6,13 +6,13 @@
 #include <span>
 #include <string_view>
 
+#include "render/cache/render_archetype.h"
 #include "render/entity/ambient_people.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
 #include "render/entity/building_torches.h"
 #include "render/entity/registry.h"
-#include "render/render_archetype.h"
 
 namespace Render::GL {
 

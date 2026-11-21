@@ -20,7 +20,7 @@
 #include "render/gl/resources.h"
 #include "render/ground/riverbank_asset_gpu.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

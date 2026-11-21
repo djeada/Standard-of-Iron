@@ -5,8 +5,8 @@
 
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "render/frame/world_view.h"
 #include "render/ground/map_boundary_fog_renderer.h"
-#include "render/world_view.h"
 
 using Render::GL::MapBoundaryFogRenderer;
 

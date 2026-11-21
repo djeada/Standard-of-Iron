@@ -5,6 +5,8 @@
 #include <deque>
 #include <string>
 
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/entity/registry.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
@@ -13,8 +15,6 @@
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/equipment/weapons/arrow_archetype_utils.h"
 #include "render/gl/render_constants.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_math.h"
 #include "render/math/creature_math_utils.h"
 #include "render/math/math_utils.h"
 

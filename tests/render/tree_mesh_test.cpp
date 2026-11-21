@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "game/map/map_definition.h"
-#include "render/gl/backend/tree_mesh.h"
+#include "render/backend/tree_mesh.h"
 
 namespace {
 using namespace Render::GL::BackendPipelines;

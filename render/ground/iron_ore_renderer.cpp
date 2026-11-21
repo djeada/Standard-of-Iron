@@ -13,10 +13,10 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/terrain_contact.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/scene_renderer.h"
-#include "render/terrain_contact.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

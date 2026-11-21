@@ -5,7 +5,7 @@
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/mounted_loadout.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace Render::GL::Roman {
 namespace {

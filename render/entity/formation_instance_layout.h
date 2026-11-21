@@ -9,7 +9,7 @@
 
 #include "animation/individuality_manifest.h"
 #include "game/formation/unit_layout.h"
-#include "render/gl/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/humanoid_types.h"
 
 namespace Engine::Core {
 class FormationPresentationComponent;

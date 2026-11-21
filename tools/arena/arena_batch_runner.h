@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "game/map/environment_lighting.h"
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 
 class ArenaViewport;
 

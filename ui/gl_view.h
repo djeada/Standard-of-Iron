@@ -19,10 +19,10 @@ class QOpenGLDebugLogger;
 #include <vector>
 
 #include "game/core/presentation_coverage.h"
-#include "render/adaptive_quality_governor.h"
-#include "render/frame_cadence.h"
+#include "render/frame/frame_cadence.h"
 #include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
+#include "render/scene/adaptive_quality_governor.h"
 
 class GameEngine;
 

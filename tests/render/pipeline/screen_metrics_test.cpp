@@ -1,7 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "render/pipeline/screen_metrics.h"
+#include "render/frame/pipeline/screen_metrics.h"
 
 using Render::Pipeline::compute_focal_length_px;
 using Render::Pipeline::k_max_apparent_size_scale;

@@ -22,9 +22,9 @@
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/units/troop_config.h"
+#include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/animation/animation_inputs.h"
-#include "render/gl/humanoid/humanoid_types.h"
 #include "tests/support/movement_test_access.h"
 
 namespace {

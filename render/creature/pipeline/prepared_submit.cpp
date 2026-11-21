@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "render/creature/pipeline/shadow_batch.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace Render::Creature::Pipeline {
 

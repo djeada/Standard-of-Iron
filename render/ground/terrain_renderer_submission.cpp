@@ -12,7 +12,7 @@
 #include "render/gl/texture_upload.h"
 #include "render/ground/ground_ecology.h"
 #include "render/ground/terrain_renderer.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

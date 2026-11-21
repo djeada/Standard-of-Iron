@@ -66,8 +66,8 @@ add_library(soi_render_gl ALIAS render_gl)
 add_library(
     creature_bake
     STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_bake_recipe.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/elephant/elephant_bake_recipe.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_bake_recipe.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/elephant/elephant_bake_recipe.cpp
 )
 target_include_directories(creature_bake PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(creature_bake PUBLIC render_gl)

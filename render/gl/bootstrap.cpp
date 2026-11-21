@@ -4,10 +4,10 @@
 #include <QOpenGLContext>
 #include <qglobal.h>
 
-#include "render/gl/adapter_class.h"
+#include "render/backend/adapter_class.h"
+#include "render/frame/graphics_settings.h"
 #include "render/gl/gl_capabilities.h"
-#include "render/graphics_settings.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

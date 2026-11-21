@@ -9,9 +9,9 @@
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/bake/creature_bake_recipe.h"
+#include "render/creature/humanoid/asset/humanoid_manifest.h"
+#include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
-#include "render/humanoid/asset/humanoid_manifest.h"
-#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace {
 

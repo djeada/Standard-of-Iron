@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "render/graphics_settings.h"
-#include "render/rain_gpu.h"
+#include "render/frame/graphics_settings.h"
+#include "render/frame/rain_gpu.h"
 
 namespace {
 

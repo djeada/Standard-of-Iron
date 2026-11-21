@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 
+#include "render/creature/humanoid/asset/humanoid_derived_meshes.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/humanoid_derived_meshes.h"
 
 namespace {
 

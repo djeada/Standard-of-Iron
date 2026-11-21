@@ -116,12 +116,12 @@ A `WorldFreeze` coordinates destructive world replacement or rebuild operations 
 
 ## Scene walk
 
-`render/scene_walk.cpp` is the main bridge between snapshot data and renderer submission. `Renderer::render_world` there orchestrates the frame; the stages it calls live beside it:
+`render/scene/scene_walk.cpp` is the main bridge between snapshot data and renderer submission. `Renderer::render_world` there orchestrates the frame; the stages it calls live beside it:
 
-- `render/scene_collect.cpp` - world collection: unit and non-unit render entries, frustum and fog classification, cull radii;
-- `render/scene_unit_submit.cpp` - planning and submission: per-unit LOD, batching and preparation plans, prepared and rigged creature submission, non-unit dispatch;
-- `render/scene_overlays.cpp` - selection rings, activity indicators and construction previews;
-- `render/scene_walk_internal.h` - the per-frame entry and plan types shared by those files.
+- `render/scene/scene_collect.cpp` - world collection: unit and non-unit render entries, frustum and fog classification, cull radii;
+- `render/scene/scene_unit_submit.cpp` - planning and submission: per-unit LOD, batching and preparation plans, prepared and rigged creature submission, non-unit dispatch;
+- `render/scene/scene_overlays.cpp` - selection rings, activity indicators and construction previews;
+- `render/scene/scene_walk_internal.h` - the per-frame entry and plan types shared by those files.
 
 Creature submission reaches the renderer's mesh caches and shader state through `CreatureSubmissionContext` (`render/creature/pipeline/creature_submission_context.h`), which `ISubmitter::creature_submission()` exposes, rather than by downcasting the sink to `Renderer`. Sinks without a context (tests, capture tools) still submit rigged bodies from a per-thread, CPU-only `detached_rigged_mesh_cache()`; a sink that owns its caches can return its own context instead.
 
@@ -197,7 +197,7 @@ Backend/shader capability uses:
 
 ### User-facing `GraphicsProfile`
 
-`render/graphics_settings.h` defines the user-facing presets:
+`render/frame/graphics_settings.h` defines the user-facing presets:
 
 - `Low`;
 - `Medium`;
@@ -250,8 +250,8 @@ Every frame renders the world into the post-process scene target, a single-sampl
 
 Low is the preset that has to run on a GL 3.3 Core driver with no 4.x features. That covers old Intel and AMD integrated GPUs, and Mesa llvmpipe.
 
-- **First run picks a preset for the adapter.** If no graphics preset has been saved, `RenderBootstrap::initialize` caps the default by `classify_adapter()` (`render/gl/adapter_class.h`): software renderers (llvmpipe, softpipe, swrast, SwiftShader, Microsoft Basic Render, GDI Generic, Apple Software Renderer) and Intel HD/UHD start on Low; Iris Xe, integrated Arc, AMD APUs and GeForce MX start on Medium; anything else keeps High. Except on macOS, a context below GL 4.3 also means Low. macOS caps OpenGL at 4.1 on every GPU, so the version says nothing about a Mac's speed. `GraphicsSettings::quality_chosen_by_user()` stops a saved choice, or an explicit `--graphics-preset`, from being overridden. `SOI_IGNORE_ADAPTER_CLASS=1` skips the cap for testing.
-- **Slow battles step down on their own.** While the player has not picked a preset, `AdaptiveQualityGovernor` (`render/adaptive_quality_governor.h`) watches presented frame intervals during play. After 6 s of warm-up it judges 6 s windows; a median slower than 24 fps lowers the preset one step, then it warms up again. Frames behind the loading screen, in a background window, or during film/benchmark capture do not count. `GraphicsSettingsProxy` saves the settled preset under `graphics/auto_quality_level`, so the next launch starts there, and Main.qml shows a notice. Picking any preset in Settings, including the automatic one, makes it the player's choice and stops the governor.
+- **First run picks a preset for the adapter.** If no graphics preset has been saved, `RenderBootstrap::initialize` caps the default by `classify_adapter()` (`render/backend/adapter_class.h`): software renderers (llvmpipe, softpipe, swrast, SwiftShader, Microsoft Basic Render, GDI Generic, Apple Software Renderer) and Intel HD/UHD start on Low; Iris Xe, integrated Arc, AMD APUs and GeForce MX start on Medium; anything else keeps High. Except on macOS, a context below GL 4.3 also means Low. macOS caps OpenGL at 4.1 on every GPU, so the version says nothing about a Mac's speed. `GraphicsSettings::quality_chosen_by_user()` stops a saved choice, or an explicit `--graphics-preset`, from being overridden. `SOI_IGNORE_ADAPTER_CLASS=1` skips the cap for testing.
+- **Slow battles step down on their own.** While the player has not picked a preset, `AdaptiveQualityGovernor` (`render/scene/adaptive_quality_governor.h`) watches presented frame intervals during play. After 6 s of warm-up it judges 6 s windows; a median slower than 24 fps lowers the preset one step, then it warms up again. Frames behind the loading screen, in a background window, or during film/benchmark capture do not count. `GraphicsSettingsProxy` saves the settled preset under `graphics/auto_quality_level`, so the next launch starts there, and Main.qml shows a notice. Picking any preset in Settings, including the automatic one, makes it the player's choice and stops the governor.
 - **Low and Medium draw fewer pixels.** `RenderScaleSettings` sizes the gameplay framebuffer below the view: Low draws at 0.8 per axis and at most about one megapixel, Medium at most about 2.1 megapixels (so a HiDPI laptop panel no longer shades 4K on an integrated GPU). Qt stretches it under the full-resolution HUD; input maps through `ViewportState::map_input`, as on HiDPI.
 - **Context.** The entry point still asks for 4.5 Core. On Linux, Qt falls back to what the driver grants, so a 3.3-only Mesa driver still gets a 3.3 Core context. Do not request 3.3 on Linux: the NVIDIA driver then returns exactly 3.3 and the GPU culling path turns off on capable hardware.
 - **4.x features stay behind probes.** The only callers of compute, indirect draw, immutable storage and SSBO entry points are `rigged_cull_pipeline.cpp` and `platform_gl.h`, and 4.30 GLSL includes are used only by the optional 4.30 shaders. `scripts/validate_opengl_requirements.py` check 5 enforces both.
@@ -316,7 +316,7 @@ Ultra keeps the full-detail High envelope and raises the expensive quality tier 
 - the full post-processing chain; and
 - full weather/grass density.
 
-The exact profile tables in `render/graphics_settings.h` are authoritative. Articles should not preserve older preset descriptions when the code table changes.
+The exact profile tables in `render/frame/graphics_settings.h` are authoritative. Articles should not preserve older preset descriptions when the code table changes.
 
 ## Creature rendering
 
@@ -330,7 +330,7 @@ High and Ultra currently disable creature LOD in their profile definition.
 
 Every creature kind takes its LOD distances from one function, `creature_lod_config(CreatureKind)` (`render/creature/pipeline/creature_render_graph.*`), which reads the active profile; a profile that turns creature LOD off therefore turns it off for humanoids, mounts, elephants and wildlife alike. `LodDistanceThresholds` defaults to never lowering detail, so a caller that forgets the settings draws full detail rather than a hidden cutoff. Wildlife used to evaluate a default-constructed config with a 12 m threshold, so on High and Ultra every sheep and wolf beyond 12 m dropped to the Minimal snapshot path and created a mesh for each new animation frame it showed, mid-battle.
 
-The template prewarm also builds every creature species' base body (`prewarm_creature_species`, `render/template_prewarm_runner.cpp`): each registered archetype that carries no equipment gets its rigged mesh and skin-palette buffer at every LOD the profile allows, whatever the match starts with. Ambient wildlife is not on any nation's roster and spawns during play, so without this a wolf at full detail built its mesh and palette buffer inside `render_world` and tripped the runtime-bake guard. The prewarm's troop rule is a single predicate, every troop type except the siege engines (which are not creatures), so a new species is warmed without editing a list. `CreatureSpeciesPrewarm.EverySpeciesBodyIsReadyBeforePlay` pins it.
+The template prewarm also builds every creature species' base body (`prewarm_creature_species`, `render/scene/template_prewarm_runner.cpp`): each registered archetype that carries no equipment gets its rigged mesh and skin-palette buffer at every LOD the profile allows, whatever the match starts with. Ambient wildlife is not on any nation's roster and spawns during play, so without this a wolf at full detail built its mesh and palette buffer inside `render_world` and tripped the runtime-bake guard. The prewarm's troop rule is a single predicate, every troop type except the siege engines (which are not creatures), so a new species is warmed without editing a list. `CreatureSpeciesPrewarm.EverySpeciesBodyIsReadyBeforePlay` pins it.
 
 ### Minimal LOD and the prebaked snapshot blob
 
@@ -439,7 +439,7 @@ top of the ground-plane change.
 
 ### Weapon rack carries a per-vertex surface stream
 
-Most instanced props pick their materials in the shader from the model-space position (bands keyed to where a part happens to sit) or from a length packed into the normal (the tent). The weapon rack (`render/gl/backend/weapon_rack_mesh.cpp`) has too many small, overlapping parts for that to work. Every vertex therefore carries a fourth attribute at location 4, `(material, u, v, seed)`, uploaded by `VegetationPipeline::upload_prop_mesh_with_surface_impl`. Location 4 is free on prop VAOs because the instance stream only binds locations 2 and 3.
+Most instanced props pick their materials in the shader from the model-space position (bands keyed to where a part happens to sit) or from a length packed into the normal (the tent). The weapon rack (`render/backend/weapon_rack_mesh.cpp`) has too many small, overlapping parts for that to work. Every vertex therefore carries a fourth attribute at location 4, `(material, u, v, seed)`, uploaded by `VegetationPipeline::upload_prop_mesh_with_surface_impl`. Location 4 is free on prop VAOs because the instance stream only binds locations 2 and 3.
 
 - `material` is one of the `WeaponRackMaterial` ids, which match the `k_mat_*` constants in `weapon_rack_instanced.frag`: oak, ash, steel, iron, bronze, leather, yew, linen, shield paint, shield back, bone and feather.
 - `u, v` depend on how the part was built:
@@ -817,7 +817,7 @@ Inspect simulation publication and snapshot acquisition first.
 
 Symptoms: snapshot contains the entity but no renderer receives it, wrong culling/visibility class, wrong renderer dispatch.
 
-Inspect `render/scene_collect.cpp` (collection and visibility class), `render/scene_unit_submit.cpp` (renderer dispatch) and the visibility inputs.
+Inspect `render/scene/scene_collect.cpp` (collection and visibility class), `render/scene/scene_unit_submit.cpp` (renderer dispatch) and the visibility inputs.
 
 ### Draw queue is wrong
 
@@ -889,17 +889,17 @@ The current renderer depends on these invariants:
 
 ## Source map
 
-| Concern                | Source                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Graphics profiles      | `render/graphics_settings.h`                                                                                     |
-| Backend interface      | `render/i_render_backend.h`                                                                                      |
-| Backend selection      | `render/render_backend_factory.cpp`                                                                              |
-| Scene traversal        | `render/scene_walk.cpp`, `render/scene_collect.cpp`, `render/scene_unit_submit.cpp`, `render/scene_overlays.cpp` |
-| OpenGL backend/passes  | `render/gl/`                                                                                                     |
-| Software backend       | `render/software_backend.*`, `render/software/`                                                                  |
-| Scene/environment data | `scene/`                                                                                                         |
-| Animation/BPAT         | `animation/`                                                                                                     |
-| Shaders                | `assets/shaders/`                                                                                                |
-| Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py`                                                             |
+| Concern                | Source                                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Graphics profiles      | `render/frame/graphics_settings.h`                                                                                                       |
+| Backend interface      | `render/frame/i_render_backend.h`                                                                                                        |
+| Backend selection      | `render/backend/render_backend_factory.cpp`                                                                                              |
+| Scene traversal        | `render/scene/scene_walk.cpp`, `render/scene/scene_collect.cpp`, `render/scene/scene_unit_submit.cpp`, `render/scene/scene_overlays.cpp` |
+| OpenGL backend/passes  | `render/gl/`                                                                                                                             |
+| Software backend       | `render/software_backend.*`, `render/software/`                                                                                          |
+| Scene/environment data | `scene/`                                                                                                                                 |
+| Animation/BPAT         | `animation/`                                                                                                                             |
+| Shaders                | `assets/shaders/`                                                                                                                        |
+| Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py`                                                                                     |
 
 The current implementation is the source of truth for renderer capability and quality behavior. Historical refactor notes, old preset descriptions, and proposed follow-up work are not part of the runtime contract.

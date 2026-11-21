@@ -10,7 +10,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/farm_activity.h"
 #include "render/entity/farm_worker_props.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace Render::GL {
 namespace {

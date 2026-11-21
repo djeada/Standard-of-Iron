@@ -12,13 +12,13 @@
 #include <string_view>
 #include <utility>
 
+#include "render/creature/gpu/rigged_mesh_bake.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/primitive_geometry.h"
 #include "render/creature/spec.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace {
 
@@ -163,11 +163,11 @@ TEST(HumanoidSpecTest, SpecReferenceIsStable) {
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/part_graph.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/runtime/humanoid_math.h"
 
 namespace {
 

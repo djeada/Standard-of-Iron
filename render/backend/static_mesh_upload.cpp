@@ -1,0 +1,132 @@
+#include "render/backend/static_mesh_upload.h"
+
+#include "render/backend/gl_error_check.h"
+#include "render/gl/gl_resource_tracking.h"
+
+namespace Render::GL::BackendPipelines {
+
+void upload_static_instanced_mesh(QOpenGLFunctions_3_3_Core& gl,
+                                  StaticMeshBuffers& mesh,
+                                  const void* vertex_data,
+                                  std::size_t vertex_count,
+                                  std::size_t vertex_stride,
+                                  std::span<const VertexAttributeLayout> attributes,
+                                  const void* index_data,
+                                  std::size_t index_count,
+                                  std::span<const GLuint> instance_locations) {
+
+  mesh.vao = VertexArrayHandle::create();
+  gl.glBindVertexArray(mesh.vao.id());
+
+  mesh.vertex_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
+  gl.glBufferData(GL_ARRAY_BUFFER,
+                  static_cast<GLsizeiptr>(vertex_count * vertex_stride),
+                  vertex_data,
+                  GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertex_count * vertex_stride),
+                      vertex_data != nullptr);
+  mesh.vertex_count = static_cast<GLsizei>(vertex_count);
+
+  for (const auto& attribute : attributes) {
+    gl.glEnableVertexAttribArray(attribute.location);
+    gl.glVertexAttribPointer(attribute.location,
+                             attribute.components,
+                             GL_FLOAT,
+                             GL_FALSE,
+                             static_cast<GLsizei>(vertex_stride),
+                             reinterpret_cast<void*>(attribute.offset));
+  }
+
+  mesh.index_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
+  gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                  static_cast<GLsizeiptr>(index_count * sizeof(std::uint16_t)),
+                  index_data,
+                  GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(index_count * sizeof(std::uint16_t)),
+                      index_data != nullptr);
+  mesh.index_count = static_cast<GLsizei>(index_count);
+
+  for (const GLuint location : instance_locations) {
+    gl.glEnableVertexAttribArray(location);
+    gl.glVertexAttribDivisor(location, 1);
+  }
+
+  gl.glBindVertexArray(0);
+  gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
+  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+auto upload_static_effect_mesh(QOpenGLFunctions_3_3_Core& gl,
+                               StaticMeshBuffers& mesh,
+                               const char* label,
+                               const void* vertex_data,
+                               std::size_t vertex_count,
+                               std::size_t vertex_stride,
+                               std::span<const VertexAttributeLayout> attributes,
+                               std::span<const unsigned int> indices) -> bool {
+  auto stage_ok = [label](const char* stage) {
+    return check_gl_error(label, stage);
+  };
+
+  mesh.vao = VertexArrayHandle::create();
+  if (!stage_ok("create vertex array") || !mesh.vao) {
+    return false;
+  }
+
+  gl.glBindVertexArray(mesh.vao.id());
+  if (!stage_ok("glBindVertexArray")) {
+    mesh.vao.reset();
+    return false;
+  }
+
+  mesh.vertex_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
+  gl.glBufferData(GL_ARRAY_BUFFER,
+                  static_cast<GLsizeiptr>(vertex_count * vertex_stride),
+                  vertex_data,
+                  GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(vertex_count * vertex_stride),
+                      vertex_data != nullptr);
+  if (!stage_ok("vertex buffer")) {
+    mesh.reset();
+    return false;
+  }
+  mesh.vertex_count = static_cast<GLsizei>(vertex_count);
+
+  mesh.index_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
+  gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                  static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+                  indices.data(),
+                  GL_STATIC_DRAW);
+  note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
+                      indices.data() != nullptr);
+  if (!stage_ok("index buffer")) {
+    mesh.reset();
+    return false;
+  }
+  mesh.index_count = static_cast<GLsizei>(indices.size());
+
+  for (const auto& attribute : attributes) {
+    gl.glEnableVertexAttribArray(attribute.location);
+    gl.glVertexAttribPointer(attribute.location,
+                             attribute.components,
+                             GL_FLOAT,
+                             GL_FALSE,
+                             static_cast<GLsizei>(vertex_stride),
+                             reinterpret_cast<void*>(attribute.offset));
+  }
+
+  gl.glBindVertexArray(0);
+
+  if (!stage_ok("vertex attributes")) {
+    mesh.reset();
+    return false;
+  }
+
+  return true;
+}
+
+} // namespace Render::GL::BackendPipelines

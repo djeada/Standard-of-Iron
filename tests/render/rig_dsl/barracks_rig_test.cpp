@@ -6,10 +6,10 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "render/frame/submitter.h"
 #include "render/rig_dsl/defs/barracks_rig.h"
 #include "render/rig_dsl/rig_interpreter.h"
 #include "render/rig_dsl/static_resolver.h"
-#include "render/submitter.h"
 
 namespace {
 

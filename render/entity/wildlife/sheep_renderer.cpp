@@ -8,11 +8,11 @@
 
 #include "render/creature/animation_state_components.h"
 #include "render/creature/pipeline/corpse_sink.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wildlife_prepare.h"
 #include "render/entity/registry.h"
 #include "render/entity/wildlife/sheep_slapstick.h"
 #include "render/entity/wildlife/wildlife_draw_state.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wildlife_prepare.h"
 
 namespace Render::GL::Wildlife {
 

@@ -3,7 +3,7 @@
 #include <QVector3D>
 
 #include "render/creature/pipeline/creature_submission_context.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace Render::Creature::Pipeline {
 

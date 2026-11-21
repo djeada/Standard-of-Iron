@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <optional>
 
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 
 namespace App::Bootstrap {
 

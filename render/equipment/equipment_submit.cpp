@@ -1,6 +1,6 @@
 #include "render/equipment/equipment_submit.h"
 
-#include "render/render_archetype.h"
+#include "render/cache/render_archetype.h"
 
 namespace Render::GL {
 

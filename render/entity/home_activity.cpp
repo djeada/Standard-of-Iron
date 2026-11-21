@@ -21,7 +21,7 @@
 #include "render/entity/home_props.h"
 #include "render/entity/registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 
 namespace Render::GL {
 namespace {

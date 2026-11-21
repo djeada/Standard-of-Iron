@@ -1,0 +1,457 @@
+#pragma once
+
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+
+#include "render/frame/i_render_backend.h"
+
+namespace Render {
+
+enum class GraphicsQuality : std::uint8_t {
+  Low = 0,
+  Medium = 1,
+  High = 2,
+  Ultra = 3
+};
+
+inline constexpr GraphicsQuality k_default_graphics_quality = GraphicsQuality::High;
+inline constexpr std::size_t k_graphics_quality_count = 4;
+
+[[nodiscard]] inline constexpr auto
+graphics_quality_key(GraphicsQuality q) noexcept -> const char* {
+  switch (q) {
+  case GraphicsQuality::Low:
+    return "low";
+  case GraphicsQuality::Medium:
+    return "medium";
+  case GraphicsQuality::High:
+    return "high";
+  case GraphicsQuality::Ultra:
+    return "ultra";
+  }
+  return "unknown";
+}
+
+enum class ShaderTier : std::uint8_t {
+  Low = 0,
+  Medium = 1,
+  High = 2,
+  Ultra = 3
+};
+
+inline constexpr float k_never_cull_distance = 1.0e9F;
+
+struct CreatureLodSettings {
+  bool enabled = true;
+  float full_distance_scale = 1.0F;
+  float cull_distance = 200.0F;
+
+  bool visibility_budget = true;
+  int max_full_detail_units = 300;
+
+  bool snapshot_meshes = true;
+};
+
+struct BatchingConfig {
+  bool force_batching = false;
+  bool never_batch = false;
+  int batching_unit_threshold = 50;
+  float batching_zoom_start = 80.0F;
+  float batching_zoom_full = 120.0F;
+};
+
+struct ContactShadowBudget {
+  int max_casters = 6000;
+
+  float max_distance = 140.0F;
+};
+
+struct DirectionalShadowSettings {
+  bool enabled = true;
+  int cascade_count = 3;
+  int resolution = 2048;
+  float distance = 80.0F;
+
+  float depth_bias = 0.030F;
+
+  float normal_bias = 1.40F;
+  float cascade_blend = 0.12F;
+
+  int max_rigged_casters_per_cascade = 160;
+};
+
+struct PostProcessSettings {
+  bool bloom = true;
+  bool godrays = true;
+  bool ambient_occlusion = true;
+  bool fxaa = true;
+};
+
+struct WeatherBudget {
+  float particle_scale = 1.0F;
+};
+
+// The 3D view can be drawn into a smaller framebuffer than the window and
+// stretched to fit; the HUD stays at full resolution. This is the cheapest
+// large saving on fill-rate-bound integrated GPUs, and it also stops a HiDPI
+// laptop panel from making a weak GPU shade every pixel of a 4K screen.
+struct RenderScaleSettings {
+  // Fraction of the window's pixel size per axis.
+  float scale = 1.0F;
+  // Upper bound on drawn pixels (width * height); 0 means no bound.
+  int max_pixels = 0;
+};
+
+struct TemplatePrewarmBudget {
+  std::size_t items_per_tick = 160;
+  std::uint32_t tick_budget_us = 2000;
+  std::size_t template_cache_budget = 512;
+};
+
+struct GraphicsProfile {
+  GraphicsQuality quality = GraphicsQuality::High;
+  ShaderTier shader_tier = ShaderTier::High;
+  CreatureLodSettings creature_lod{};
+  BatchingConfig batching{};
+  ContactShadowBudget contact_shadows{};
+  DirectionalShadowSettings directional_shadows{};
+  PostProcessSettings post_process{};
+  WeatherBudget weather{};
+  TemplatePrewarmBudget prewarm{};
+  RenderScaleSettings render_scale{};
+
+  float grass_density = 1.0F;
+};
+
+// Pixel size the 3D view should be drawn at for a window of `window_px`
+// pixels. Never smaller than 1x1, never larger than the window.
+[[nodiscard]] inline auto
+scaled_render_extent(const RenderScaleSettings& settings,
+                     int window_width,
+                     int window_height) noexcept -> std::array<int, 2> {
+  if (window_width <= 0 || window_height <= 0) {
+    return {std::max(window_width, 1), std::max(window_height, 1)};
+  }
+  float factor = std::clamp(settings.scale, 0.25F, 1.0F);
+  if (settings.max_pixels > 0) {
+    const float pixels =
+        static_cast<float>(window_width) * static_cast<float>(window_height);
+    const float cap = static_cast<float>(settings.max_pixels);
+    if (pixels * factor * factor > cap) {
+      factor = std::min(factor, std::sqrt(cap / pixels));
+    }
+  }
+  const int width =
+      std::clamp(static_cast<int>(static_cast<float>(window_width) * factor + 0.5F),
+                 1,
+                 window_width);
+  const int height =
+      std::clamp(static_cast<int>(static_cast<float>(window_height) * factor + 0.5F),
+                 1,
+                 window_height);
+  return {width, height};
+}
+
+namespace Detail {
+
+inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
+    k_graphics_profiles{{
+        GraphicsProfile{
+            .quality = GraphicsQuality::Low,
+            .shader_tier = ShaderTier::Low,
+            .creature_lod = {.enabled = true,
+                             .full_distance_scale = 0.6F,
+                             .cull_distance = 120.0F,
+                             .visibility_budget = true,
+                             .max_full_detail_units = 120,
+                             .snapshot_meshes = false},
+            .batching = {.force_batching = true,
+                         .never_batch = false,
+                         .batching_unit_threshold = 0,
+                         .batching_zoom_start = 0.0F,
+                         .batching_zoom_full = 0.0F},
+            .contact_shadows = {.max_casters = 900, .max_distance = 90.0F},
+            .directional_shadows = {.enabled = false,
+                                    .cascade_count = 1,
+                                    .resolution = 1024,
+                                    .distance = 25.0F,
+                                    .depth_bias = 0.040F,
+                                    .normal_bias = 1.80F,
+                                    .cascade_blend = 0.0F,
+                                    .max_rigged_casters_per_cascade = 60},
+            .post_process = {.bloom = false,
+                             .godrays = false,
+                             .ambient_occlusion = false,
+                             .fxaa = false},
+            .weather = {.particle_scale = 0.30F},
+            .prewarm = {.items_per_tick = 96,
+                        .tick_budget_us = 1200,
+                        .template_cache_budget = 256},
+            .render_scale = {.scale = 0.80F, .max_pixels = 1000000},
+            .grass_density = 0.30F,
+        },
+        GraphicsProfile{
+            .quality = GraphicsQuality::Medium,
+            .shader_tier = ShaderTier::Medium,
+            .creature_lod = {.enabled = true,
+                             .full_distance_scale = 1.0F,
+                             .cull_distance = 200.0F,
+                             .visibility_budget = true,
+                             .max_full_detail_units = 300,
+                             .snapshot_meshes = false},
+            .batching = {.force_batching = false,
+                         .never_batch = false,
+                         .batching_unit_threshold = 30,
+                         .batching_zoom_start = 60.0F,
+                         .batching_zoom_full = 90.0F},
+            .contact_shadows = {.max_casters = 2500, .max_distance = 140.0F},
+            .directional_shadows = {.enabled = true,
+                                    .cascade_count = 2,
+                                    .resolution = 1024,
+                                    .distance = 50.0F,
+                                    .depth_bias = 0.035F,
+                                    .normal_bias = 1.60F,
+                                    .cascade_blend = 0.08F,
+                                    .max_rigged_casters_per_cascade = 100},
+            .post_process = {.bloom = true,
+                             .godrays = false,
+                             .ambient_occlusion = true,
+                             .fxaa = true},
+            .weather = {.particle_scale = 0.60F},
+            .prewarm = {.items_per_tick = 160,
+                        .tick_budget_us = 2000,
+                        .template_cache_budget = 512},
+            .render_scale = {.scale = 1.0F, .max_pixels = 2100000},
+            .grass_density = 0.65F,
+        },
+        GraphicsProfile{
+            .quality = GraphicsQuality::High,
+            .shader_tier = ShaderTier::High,
+            .creature_lod = {.enabled = false,
+                             .full_distance_scale = 1.0F,
+                             .cull_distance = k_never_cull_distance,
+                             .visibility_budget = false,
+                             .max_full_detail_units = 5000},
+            .batching = {.force_batching = false,
+                         .never_batch = true,
+                         .batching_unit_threshold = 999999,
+                         .batching_zoom_start = 999999.0F,
+                         .batching_zoom_full = 999999.0F},
+            .contact_shadows = {.max_casters = 6000, .max_distance = 200.0F},
+            .directional_shadows = {.enabled = true,
+                                    .cascade_count = 4,
+                                    .resolution = 4096,
+                                    .distance = 200.0F,
+                                    .depth_bias = 0.025F,
+                                    .normal_bias = 1.20F,
+                                    .cascade_blend = 0.15F,
+                                    .max_rigged_casters_per_cascade = 160},
+            .post_process = {.bloom = true,
+                             .godrays = true,
+                             .ambient_occlusion = true,
+                             .fxaa = true},
+            .weather = {.particle_scale = 1.00F},
+            .prewarm = {.items_per_tick = 320,
+                        .tick_budget_us = 4000,
+                        .template_cache_budget = 2048},
+            .render_scale = {.scale = 1.0F, .max_pixels = 0},
+            .grass_density = 1.0F,
+        },
+        GraphicsProfile{
+            .quality = GraphicsQuality::Ultra,
+            .shader_tier = ShaderTier::Ultra,
+            .creature_lod = {.enabled = false,
+                             .full_distance_scale = 1.0F,
+                             .cull_distance = k_never_cull_distance,
+                             .visibility_budget = false,
+                             .max_full_detail_units = 5000},
+            .batching = {.force_batching = false,
+                         .never_batch = true,
+                         .batching_unit_threshold = 999999,
+                         .batching_zoom_start = 999999.0F,
+                         .batching_zoom_full = 999999.0F},
+            .contact_shadows = {.max_casters = 6000, .max_distance = 200.0F},
+            .directional_shadows = {.enabled = true,
+                                    .cascade_count = 4,
+                                    .resolution = 4096,
+                                    .distance = 200.0F,
+                                    .depth_bias = 0.025F,
+                                    .normal_bias = 1.20F,
+                                    .cascade_blend = 0.15F,
+                                    .max_rigged_casters_per_cascade = 240},
+            .post_process = {.bloom = true,
+                             .godrays = true,
+                             .ambient_occlusion = true,
+                             .fxaa = true},
+            .weather = {.particle_scale = 1.00F},
+            .prewarm = {.items_per_tick = 320,
+                        .tick_budget_us = 4000,
+                        .template_cache_budget = 2048},
+            .render_scale = {.scale = 1.0F, .max_pixels = 0},
+            .grass_density = 1.0F,
+        },
+    }};
+
+} // namespace Detail
+
+[[nodiscard]] constexpr auto
+graphics_profile_for(GraphicsQuality quality) noexcept -> const GraphicsProfile& {
+  return Detail::k_graphics_profiles[static_cast<std::size_t>(quality)];
+}
+
+class GraphicsSettings {
+public:
+  static auto instance() noexcept -> GraphicsSettings& {
+    static GraphicsSettings inst;
+    return inst;
+  }
+
+  [[nodiscard]] auto quality() const noexcept -> GraphicsQuality {
+    return m_quality.load(std::memory_order_acquire);
+  }
+
+  void set_quality(GraphicsQuality q) noexcept {
+    m_profile.store(&graphics_profile_for(q), std::memory_order_release);
+    m_quality.store(q, std::memory_order_release);
+    m_generation.fetch_add(1U, std::memory_order_release);
+  }
+
+  // Step down to `lower` because the game measured that it cannot keep up.
+  // Does nothing once the player has picked a preset themselves, or when
+  // `lower` is not actually lower. Safe to call from the render thread; the
+  // GUI picks the change up through auto_lowered_count().
+  auto lower_quality_automatically(GraphicsQuality lower) noexcept -> bool {
+    if (quality_chosen_by_user() || lower >= quality()) {
+      return false;
+    }
+    set_quality(lower);
+    m_auto_lowered_count.fetch_add(1U, std::memory_order_release);
+    return true;
+  }
+
+  [[nodiscard]] auto auto_lowered_count() const noexcept -> std::uint32_t {
+    return m_auto_lowered_count.load(std::memory_order_acquire);
+  }
+
+  [[nodiscard]] auto quality_chosen_by_user() const noexcept -> bool {
+    return m_quality_chosen_by_user.load(std::memory_order_acquire);
+  }
+  void set_quality_chosen_by_user(bool chosen) noexcept {
+    m_quality_chosen_by_user.store(chosen, std::memory_order_release);
+  }
+
+  [[nodiscard]] auto profile() const noexcept -> const GraphicsProfile& {
+    return *m_profile.load(std::memory_order_acquire);
+  }
+
+  [[nodiscard]] auto generation() const noexcept -> std::uint32_t {
+    return m_generation.load(std::memory_order_acquire);
+  }
+
+  [[nodiscard]] auto backend_kind() const noexcept -> ShaderQuality {
+    return m_backend_kind.load(std::memory_order_acquire);
+  }
+  void set_backend_kind(ShaderQuality kind) noexcept {
+    m_backend_kind.store(kind, std::memory_order_release);
+  }
+
+  [[nodiscard]] auto creature_lod() const noexcept -> const CreatureLodSettings& {
+    return profile().creature_lod;
+  }
+  [[nodiscard]] auto batching_config() const noexcept -> const BatchingConfig& {
+    return profile().batching;
+  }
+  [[nodiscard]] auto
+  contact_shadow_budget() const noexcept -> const ContactShadowBudget& {
+    return profile().contact_shadows;
+  }
+  [[nodiscard]] auto
+  directional_shadows() const noexcept -> const DirectionalShadowSettings& {
+    return profile().directional_shadows;
+  }
+  [[nodiscard]] auto weather_budget() const noexcept -> const WeatherBudget& {
+    return profile().weather;
+  }
+  [[nodiscard]] auto post_process() const noexcept -> const PostProcessSettings& {
+    return profile().post_process;
+  }
+  [[nodiscard]] auto prewarm_budget() const noexcept -> const TemplatePrewarmBudget& {
+    return profile().prewarm;
+  }
+  [[nodiscard]] auto render_scale() const noexcept -> const RenderScaleSettings& {
+    return profile().render_scale;
+  }
+
+  [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
+    return profile().creature_lod.enabled;
+  }
+
+  [[nodiscard]] auto
+  calculate_batching_ratio(int visible_units,
+                           float camera_height) const noexcept -> float {
+    const BatchingConfig& batching = profile().batching;
+    if (batching.never_batch) {
+      return 0.0F;
+    }
+    if (batching.force_batching) {
+      return 1.0F;
+    }
+
+    float unit_factor = 0.0F;
+    if (visible_units > batching.batching_unit_threshold) {
+      const int excess = visible_units - batching.batching_unit_threshold;
+      const int range = std::max(batching.batching_unit_threshold * 3, 1);
+      unit_factor = static_cast<float>(excess) / static_cast<float>(range);
+      unit_factor = std::clamp(unit_factor, 0.0F, 1.0F);
+    }
+
+    float zoom_factor = 0.0F;
+    if (camera_height > batching.batching_zoom_start) {
+      const float range = batching.batching_zoom_full - batching.batching_zoom_start;
+      if (range > 0.0F) {
+        zoom_factor = (camera_height - batching.batching_zoom_start) / range;
+        zoom_factor = std::clamp(zoom_factor, 0.0F, 1.0F);
+      }
+    }
+
+    return std::max(unit_factor, zoom_factor);
+  }
+
+  [[nodiscard]] auto humanoid_full_detail_distance() const noexcept -> float {
+    return k_base_humanoid_full * profile().creature_lod.full_distance_scale;
+  }
+  [[nodiscard]] auto horse_full_detail_distance() const noexcept -> float {
+    return k_base_horse_full * profile().creature_lod.full_distance_scale;
+  }
+  [[nodiscard]] auto elephant_full_detail_distance() const noexcept -> float {
+    return k_base_elephant_full * profile().creature_lod.full_distance_scale;
+  }
+  [[nodiscard]] auto creature_cull_distance() const noexcept -> float {
+    return profile().creature_lod.cull_distance;
+  }
+
+  [[nodiscard]] auto shadow_max_distance() const noexcept -> float {
+    return profile().contact_shadows.max_distance;
+  }
+
+private:
+  GraphicsSettings() { set_quality(k_default_graphics_quality); }
+
+  static constexpr float k_base_humanoid_full = 10.0F;
+  static constexpr float k_base_horse_full = 20.0F;
+  static constexpr float k_base_elephant_full = 35.0F;
+
+  std::atomic<GraphicsQuality> m_quality{k_default_graphics_quality};
+  std::atomic<const GraphicsProfile*> m_profile{
+      &graphics_profile_for(k_default_graphics_quality)};
+  std::atomic<ShaderQuality> m_backend_kind{ShaderQuality::Full};
+  std::atomic<std::uint32_t> m_generation{0U};
+  std::atomic<bool> m_quality_chosen_by_user{false};
+  std::atomic<std::uint32_t> m_auto_lowered_count{0U};
+};
+
+} // namespace Render

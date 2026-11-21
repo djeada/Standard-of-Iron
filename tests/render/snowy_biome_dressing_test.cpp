@@ -13,8 +13,8 @@
 #include "render/entity/building_render_common.h"
 #include "render/entity/nations/carthage/barracks_renderer.h"
 #include "render/entity/registry.h"
+#include "render/frame/world_view.h"
 #include "render/ground/biome_renderer.h"
-#include "render/world_view.h"
 
 namespace {
 

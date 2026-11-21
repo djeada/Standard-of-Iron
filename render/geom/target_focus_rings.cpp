@@ -9,7 +9,7 @@
 #include "game/accessibility/team_identity.h"
 #include "game/map/terrain_service.h"
 #include "render/geom/mode_indicator.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

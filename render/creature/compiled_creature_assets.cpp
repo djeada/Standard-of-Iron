@@ -30,13 +30,13 @@
 #include "animation/elephant_gait_manifest.h"
 #include "animation/elephant_motion_manifest.h"
 #include "animation/rig/horse_attachment_frames.h"
+#include "render/creature/elephant/elephant_source_asset.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/elephant/schema/attachment_schema.h"
+#include "render/creature/horse/horse_source_asset.h"
+#include "render/creature/horse/horse_spec.h"
+#include "render/creature/horse/schema/mounted_sockets.h"
 #include "render/creature/quadruped/attachment_resolver.h"
-#include "render/elephant/elephant_source_asset.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/elephant/schema/attachment_schema.h"
-#include "render/horse/horse_source_asset.h"
-#include "render/horse/horse_spec.h"
-#include "render/horse/schema/mounted_sockets.h"
 
 namespace {
 

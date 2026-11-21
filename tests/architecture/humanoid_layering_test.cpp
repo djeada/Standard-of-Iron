@@ -67,10 +67,10 @@ TEST(HumanoidLayering, SchemaStaysDependencyLight) {
       "game/core/entity.h",
       "game/core/world.h",
       "game/core/component.h",
-      "render/scene_renderer.h",
-      "render/gl/backend.h",
+      "render/scene/scene_renderer.h",
+      "render/backend/backend.h",
       "render/entity/registry.h",
-      "render/submitter.h",
+      "render/frame/submitter.h",
   };
 
   for (const auto& file : sources_under(schema)) {
@@ -96,7 +96,7 @@ TEST(HumanoidLayering, RuntimeDoesNotDependOnBaking) {
 
   for (const auto& file : sources_under(humanoid / "asset")) {
     const auto source = read_text(file);
-    EXPECT_FALSE(contains(source, "#include \"render/scene_renderer.h\""))
+    EXPECT_FALSE(contains(source, "#include \"render/scene/scene_renderer.h\""))
         << file.string() << " pulls the scene renderer into humanoid asset code";
   }
 }
@@ -128,7 +128,7 @@ TEST(HumanoidLayering, CreaturePipelineKnowsNothingAboutHumanoidBones) {
   EXPECT_FALSE(contains(source, "humanoid/asset/"))
       << "the generic creature pipeline includes humanoid asset code";
 
-  EXPECT_TRUE(contains(source, "render/humanoid/runtime/frame_control.h"))
+  EXPECT_TRUE(contains(source, "render/creature/humanoid/runtime/frame_control.h"))
       << "if this include is gone, drop the exception rather than widening it";
 }
 

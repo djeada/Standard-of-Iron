@@ -8,9 +8,9 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
+#include "render/frame/i_render_pass.h"
 #include "render/ground/riverbank_asset_gpu.h"
 #include "render/ground/scatter_renderer_state.h"
-#include "render/i_render_pass.h"
 
 namespace Render::GL {
 class Buffer;

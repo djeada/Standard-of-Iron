@@ -6,8 +6,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
+#include "render/cache/render_archetype.h"
+#include "render/cache/static_attachment_spec.h"
 
 namespace Render::GL {
 

@@ -8,7 +8,7 @@
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "render/creature/anatomy_bake.h"
-#include "render/elephant/dimensions.h"
+#include "render/creature/elephant/dimensions.h"
 #include "render/entity/nations/carthage/elephant_renderer.h"
 #include "render/math/creature_math_utils.h"
 
@@ -157,7 +157,7 @@ TEST(SceneWalkEntityHandleTest, CreatureSeedsDeriveFromTheUnitNotItsAddress) {
   ASSERT_FALSE(root.empty());
 
   for (const char* relative :
-       {"render/horse/prepare.cpp",
+       {"render/creature/horse/prepare.cpp",
         "render/entity/mounted_humanoid_renderer_base.cpp",
         "render/equipment/weapons/quiver_renderer.cpp",
         "render/entity/nations/carthage/elephant_renderer.cpp"}) {

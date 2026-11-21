@@ -11,14 +11,14 @@
 #include <utility>
 #include <vector>
 
-#include "render/bone_palette_arena.h"
+#include "render/creature/gpu/rigged_mesh.h"
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/creature/gpu/snapshot_mesh_cache.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/snapshot_mesh_asset.h"
-#include "render/rigged_mesh.h"
-#include "render/rigged_mesh_cache.h"
-#include "render/snapshot_mesh_cache.h"
+#include "render/frame/bone_palette_arena.h"
 
 namespace {
 

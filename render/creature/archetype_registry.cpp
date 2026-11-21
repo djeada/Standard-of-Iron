@@ -5,10 +5,10 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wolf_spec.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wolf_spec.h"
 
 namespace Render::Creature {
 

@@ -10,7 +10,7 @@
 #include "render/ground/supply_cart_renderer.h"
 #include "render/ground/tree_renderer.h"
 #include "render/ground/weapon_rack_renderer.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 TEST(RendererVisibilityPolicyTest, LandscapeScatterIsNeverCulledByFog) {

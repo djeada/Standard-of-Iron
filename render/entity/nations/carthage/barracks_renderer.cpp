@@ -9,6 +9,8 @@
 
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
+#include "render/backend/backend.h"
+#include "render/cache/render_archetype.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/barracks_renderer_common.h"
 #include "render/entity/barracks_stockpile.h"
@@ -20,12 +22,10 @@
 #include "render/entity/building_state.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/entity/registry.h"
-#include "render/gl/backend.h"
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/math/math_utils.h"
-#include "render/render_archetype.h"
-#include "render/submitter.h"
 
 namespace Render::GL::Carthage {
 namespace {

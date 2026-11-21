@@ -2,8 +2,8 @@
 
 #include <string>
 
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL::Carthage {
 

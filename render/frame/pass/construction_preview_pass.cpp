@@ -1,0 +1,17 @@
+#include "render/frame/pass/construction_preview_pass.h"
+
+#include "game/map/visibility_service.h"
+#include "render/frame/pass/frame_context.h"
+#include "render/scene/scene_renderer.h"
+
+namespace Render::Pass {
+
+void ConstructionPreviewPass::execute(FrameContext& ctx) {
+  if (ctx.renderer == nullptr || ctx.world == nullptr) {
+    return;
+  }
+  ctx.renderer->render_construction_previews_public(
+      ctx.world, ctx.visibility, ctx.visibility_enabled);
+}
+
+} // namespace Render::Pass

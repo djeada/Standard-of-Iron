@@ -10,7 +10,15 @@
 #include <utility>
 #include <vector>
 
+#include "render/cache/render_archetype.h"
+#include "render/cache/static_attachment_spec.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/gpu/rigged_mesh.h"
+#include "render/creature/gpu/rigged_mesh_bake.h"
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/creature/gpu/snapshot_mesh_cache.h"
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/runtime_bake_guard.h"
@@ -19,14 +27,6 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/render_archetype.h"
-#include "render/rigged_mesh.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/rigged_mesh_cache.h"
-#include "render/snapshot_mesh_cache.h"
-#include "render/static_attachment_spec.h"
 
 namespace {
 

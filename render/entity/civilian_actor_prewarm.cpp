@@ -4,10 +4,10 @@
 #include <initializer_list>
 
 #include "render/creature/archetype_variant_table.h"
+#include "render/creature/humanoid/asset/facial_hair_catalog.h"
 #include "render/entity/civilian_actor.h"
 #include "render/entity/farm_activity.h"
 #include "render/entity/home_activity.h"
-#include "render/humanoid/asset/facial_hair_catalog.h"
 
 namespace Render::GL {
 

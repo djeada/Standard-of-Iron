@@ -5,13 +5,13 @@
 #include <string_view>
 #include <vector>
 
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
 
 namespace Render::GL {
 namespace {

@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "animation/rig/mounted_seat.h"
+#include "render/creature/horse/dimensions.h"
+#include "render/creature/horse/horse_motion.h"
 #include "render/entity/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/spear_renderer.h"
-#include "render/horse/dimensions.h"
-#include "render/horse/horse_motion.h"
 
 namespace {
 

@@ -6,11 +6,11 @@
 #include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wildlife_rig.h"
+#include "render/creature/wildlife/wolf_spec.h"
 #include "render/entity/registry.h"
 #include "render/entity/wildlife/wildlife_draw_state.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wildlife_rig.h"
-#include "render/wildlife/wolf_spec.h"
 
 namespace {
 

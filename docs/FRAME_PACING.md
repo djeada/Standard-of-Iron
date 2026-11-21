@@ -430,7 +430,7 @@ Likely direction: the benchmark did not measure the intended battle. Correct the
 
 The pacing gate and graphics profile system describe different layers of the same performance contract.
 
-`render/graphics_settings.h` defines what Low/Medium/High/Ultra render. `frame_pacing.h` defines the timing/upload limits those presets must meet during the measured workload.
+`render/frame/graphics_settings.h` defines what Low/Medium/High/Ultra render. `frame_pacing.h` defines the timing/upload limits those presets must meet during the measured workload.
 
 A profile change that adds more expensive rendering work can therefore require either:
 

@@ -10,11 +10,11 @@
 #include <string_view>
 
 #include "render/creature/archetype_variant_table.h"
+#include "render/creature/humanoid/schema/pose_policy.h"
+#include "render/creature/humanoid/schema/visual_capabilities.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/render_request.h"
 #include "render/creature/skeleton.h"
-#include "render/humanoid/schema/pose_policy.h"
-#include "render/humanoid/schema/visual_capabilities.h"
 
 namespace Render::GL {
 struct DrawContext;

@@ -10,7 +10,7 @@
 #include "game/core/world.h"
 #include "game/session/selection_service.h"
 #include "game/units/unit.h"
-#include "render/profiling/combat_animation_diagnostics.h"
+#include "render/creature/combat_animation_diagnostics.h"
 
 namespace {
 

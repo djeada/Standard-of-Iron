@@ -1,38 +1,38 @@
 # Core render sources (scene_renderer, geom, caches, pipeline, passes, profiling).
 set(RENDER_CORE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/scene_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/scene_walk.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/scene_collect.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/scene_unit_submit.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/scene_overlays.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/entity_appearance.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/bird_flock_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_rig.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_gait.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/sheep_spec.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/sheep_manifest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wolf_spec.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wolf_manifest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_prepare.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/template_prewarm_runner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/effects_submitter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_backend_factory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/draw_queue.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_archetype.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/static_building_batch.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/static_mesh_pack.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/attachment_mesh_library.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/world_view.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/mist_volume_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/prepare_worker_pool.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/primitive_batch.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/template_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/template_prewarm_catalog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_walk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_collect.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_unit_submit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_overlays.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/entity_appearance.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/bird_flock_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_rig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_gait.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/sheep_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/sheep_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wolf_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wolf_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_prepare.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_runner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/effects_submitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/render_backend_factory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/draw_queue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cache/render_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/static_building_batch.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cache/static_mesh_pack.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/attachment_mesh_library.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/world_view.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/mist_volume_builder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/prepare_worker_pool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/primitive_batch.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cache/template_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_catalog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rig_dsl/rig_interpreter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pipeline/instance_coalescer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pass/frame_pass_runner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pass/primitive_flush_pass.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pass/construction_preview_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/pipeline/instance_coalescer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/pass/frame_pass_runner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/pass/primitive_flush_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/pass/construction_preview_pass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_disc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/arrow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/stone.cpp
@@ -50,20 +50,20 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/formation_arrow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/transforms.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/parts.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/palette.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rigged_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rigged_mesh_bake.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rigged_mesh_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/snapshot_mesh_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/snapshot_mesh_bake.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/static_attachment_spec.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bone_palette_arena.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/camera_visibility.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/unit_render_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/palette.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/rigged_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/rigged_mesh_bake.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/rigged_mesh_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/snapshot_mesh_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/snapshot_mesh_bake.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cache/static_attachment_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/bone_palette_arena.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frame/camera_visibility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/unit_render_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/software_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/allocation_tracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/asset_counters.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/combat_animation_diagnostics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/combat_animation_diagnostics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_continuity_analyzer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_profile.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/gl_creation_trace.cpp

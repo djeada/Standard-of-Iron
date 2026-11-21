@@ -11,9 +11,9 @@
 #include <array>
 #include <cstddef>
 
+#include "render/frame/graphics_settings.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader.h"
-#include "render/graphics_settings.h"
 
 namespace Render::GL {
 

@@ -7,16 +7,16 @@
 #include <vector>
 
 #include "game/map/map_definition.h"
-#include "render/gl/backend/abandoned_home_parts.h"
-#include "render/gl/backend/cursed_gold_vein_mesh.h"
-#include "render/gl/backend/dead_tree_mesh.h"
-#include "render/gl/backend/magic_shrine_parts.h"
-#include "render/gl/backend/prop_parts.h"
-#include "render/gl/backend/ruins_parts.h"
-#include "render/gl/backend/statue_parts.h"
-#include "render/gl/backend/supply_cart_parts.h"
-#include "render/gl/backend/tent_mesh.h"
-#include "render/gl/backend/weapon_rack_parts.h"
+#include "render/backend/abandoned_home_parts.h"
+#include "render/backend/cursed_gold_vein_mesh.h"
+#include "render/backend/dead_tree_mesh.h"
+#include "render/backend/magic_shrine_parts.h"
+#include "render/backend/prop_parts.h"
+#include "render/backend/ruins_parts.h"
+#include "render/backend/statue_parts.h"
+#include "render/backend/supply_cart_parts.h"
+#include "render/backend/tent_mesh.h"
+#include "render/backend/weapon_rack_parts.h"
 
 namespace {
 

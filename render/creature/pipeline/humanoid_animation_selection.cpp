@@ -12,12 +12,12 @@
 #include "animation/locomotion_manifest.h"
 #include "animation/selection_manifest.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/asset/facial_hair_catalog.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/runtime_bake_guard.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/asset/facial_hair_catalog.h"
-#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace Render::Creature::Pipeline {
 

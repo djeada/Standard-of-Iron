@@ -2,8 +2,8 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wildlife_rig.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wildlife_rig.h"
 
 namespace {
 

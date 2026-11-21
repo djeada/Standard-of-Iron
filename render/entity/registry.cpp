@@ -3,7 +3,10 @@
 #include <string>
 #include <utility>
 
-#include "render/elephant/elephant_spec.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_spec.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wolf_spec.h"
 #include "render/entity/ballista_renderer.h"
 #include "render/entity/barracks_renderer.h"
 #include "render/entity/catapult_renderer.h"
@@ -44,10 +47,7 @@
 #include "render/entity/wall_renderer.h"
 #include "render/entity/wildlife/sheep_renderer.h"
 #include "render/entity/wildlife/wolf_renderer.h"
-#include "render/horse/horse_spec.h"
-#include "render/scene_renderer.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wolf_spec.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

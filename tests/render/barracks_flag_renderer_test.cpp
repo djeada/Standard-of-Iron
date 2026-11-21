@@ -8,7 +8,7 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "render/entity/barracks_flag_renderer.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace {
 

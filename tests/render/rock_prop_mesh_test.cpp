@@ -8,8 +8,8 @@
 #include <string>
 
 #include "game/map/map_definition.h"
-#include "render/gl/backend/cursed_gold_vein_mesh.h"
-#include "render/gl/backend/iron_ore_mesh.h"
+#include "render/backend/cursed_gold_vein_mesh.h"
+#include "render/backend/iron_ore_mesh.h"
 
 namespace {
 

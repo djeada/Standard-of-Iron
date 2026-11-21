@@ -7,9 +7,9 @@
 #include <utility>
 
 #include "render/entity/building_decay.h"
+#include "render/frame/material_classification.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/material_classification.h"
 
 namespace Render::GL {
 namespace {

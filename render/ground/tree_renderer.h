@@ -9,7 +9,7 @@
 #include "game/map/biome_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
 #include "render/ground/ground_ecology.h"
 #include "render/ground/scatter_renderer_base.h"
 
