@@ -1,28 +1,24 @@
 // Copyright 2026 dywoq - MIT License
 // https://github.com/djeada/Standard-of-Iron
 
-#include "ninja_reader.h"
 #include <iostream>
 
-int main(int argc, char* argv[]) {
+#include "ninja_reader.h"
 
-  using namespace NinjaReader::CommandLine::Argument;
+int main() {
 
-  VectorParser parser;
-  auto arguments = parser.parse_vector(std::span(argv, argc));
+  using namespace NinjaReader::Routines;
 
-  for (auto& arg : arguments) {
-    std::cout << arg.name() << " = ";
-    auto value = arg.value();
-    if (value.is_string()) {
-      std::cout << value.string() << " (STRING)" << std::endl;
-    }
-    if (value.is_integer()) {
-      std::cout << value.integer() << " (INTEGER)"<< std::endl;
-    }
-    if (value.is_boolean()) {
-      std::cout << value.boolean() << " (BOOLEAN)"<< std::endl;
-    }
+  NinjaLogParser parser;
+  auto log = parser.parse(std::filesystem::path("build/.ninja_log"));
+
+  for (auto& element : log.elements) {
+    std::cout << std::format(
+        "Element(Start time: {}, End time: {}, Timestamp: {}, Output File: {})\n",
+        element.start_time,
+        element.end_time,
+        element.end_timestamp_unix,
+        element.output_file.string());
   }
 
   return 0;

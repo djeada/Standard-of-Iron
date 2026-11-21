@@ -6,7 +6,8 @@ project(ninja_reader LANGUAGES CXX)
 
 add_executable(ninja_reader
     src/main.cpp
-    src/commandline_argument.cpp
+    src/commandline/argument.cpp
+    src/routines/ninjalog_parser.cpp
 )
 target_compile_options(ninja_reader
     PUBLIC -std=c++20
