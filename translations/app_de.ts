@@ -4258,8 +4258,12 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Der OpenGL-Framebuffer für das Schlachtfeld konnte nicht erstellt werden.</translation>
     </message>
     <message>
-        <source>The OpenGL battlefield renderer could not start.</source>
-        <translation>Der OpenGL-Renderer für das Schlachtfeld konnte nicht gestartet werden.</translation>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Der OpenGL-Renderer für das Schlachtfeld ist ausgefallen.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Das Schlachtfeld benötigt OpenGL 3.3 Core. Erkannt wurde OpenGL %1.</translation>
     </message>
 </context>
 <context>

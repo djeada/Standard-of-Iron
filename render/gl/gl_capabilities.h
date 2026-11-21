@@ -102,22 +102,23 @@ public:
     return has_core_version(ContextRequirements::required);
   }
 
+  [[nodiscard]] static auto describe_version(const QSurfaceFormat& format) -> QString {
+    return QStringLiteral("%1.%2 %3")
+        .arg(format.majorVersion())
+        .arg(format.minorVersion())
+        .arg(format.profile() == QSurfaceFormat::CoreProfile ? QStringLiteral("Core")
+             : format.profile() == QSurfaceFormat::CompatibilityProfile
+                 ? QStringLiteral("Compatibility")
+                 : QStringLiteral("NoProfile"));
+  }
+
   static void report_minimum_version() {
     auto* ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       qCritical() << "SOI_GL_FLOOR: FAIL - no current OpenGL context";
       return;
     }
-    const auto format = ctx->format();
-    const QString found =
-        QStringLiteral("%1.%2 %3")
-            .arg(format.majorVersion())
-            .arg(format.minorVersion())
-            .arg(format.profile() == QSurfaceFormat::CoreProfile
-                     ? QStringLiteral("Core")
-                 : format.profile() == QSurfaceFormat::CompatibilityProfile
-                     ? QStringLiteral("Compatibility")
-                     : QStringLiteral("NoProfile"));
+    const QString found = describe_version(ctx->format());
 
     if (!meets_minimum_version()) {
       qCritical() << "SOI_GL_FLOOR: FAIL - need OpenGL" << k_required_major << "."

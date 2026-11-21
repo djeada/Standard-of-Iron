@@ -1117,13 +1117,12 @@ ApplicationWindow {
 
     Connections {
         function onLast_error_changed() {
-            if (game.last_error !== "" && !mainWindow.suppress_modals)
+            if (!error_dialog.renderer_failed && game.last_error !== "" && !mainWindow.suppress_modals)
                 error_dialog.open();
         }
         function onRenderer_failed(error) {
             error_dialog.renderer_error = error;
-            if (!mainWindow.suppress_modals)
-                error_dialog.open();
+            error_dialog.open();
         }
 
         target: game

@@ -4258,8 +4258,12 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
         <translation>Nie udało się utworzyć bufora ramki OpenGL dla pola bitwy.</translation>
     </message>
     <message>
-        <source>The OpenGL battlefield renderer could not start.</source>
-        <translation>Nie udało się uruchomić renderera OpenGL pola bitwy.</translation>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Renderer OpenGL pola bitwy uległ awarii.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Pole bitwy wymaga OpenGL 3.3 Core. Wykryto OpenGL %1.</translation>
     </message>
 </context>
 <context>

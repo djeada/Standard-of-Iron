@@ -12,8 +12,8 @@ constexpr qint64 k_pending_components_wait_ms = 15000;
 
 } // namespace
 
-LoadingOverlay::LoadingOverlay(std::chrono::milliseconds first_frames_timeout) {
-  m_first_frames_timer.setInterval(first_frames_timeout);
+LoadingOverlay::LoadingOverlay(std::chrono::milliseconds first_frames_timeout)
+    : m_first_frames_timeout(first_frames_timeout) {
   m_first_frames_timer.setSingleShot(true);
   m_first_frames_timer.setTimerType(Qt::PreciseTimer);
   connect(&m_first_frames_timer, &QTimer::timeout, this, [this]() {
@@ -33,9 +33,11 @@ auto LoadingOverlay::describe(bool renderer_up,
       .arg(waiting_for_first_frame() ? QStringLiteral("yes") : QStringLiteral("no"));
 }
 
-void LoadingOverlay::begin() {
+auto LoadingOverlay::begin() -> quint64 {
   abort();
+  ++m_load_sequence;
   m_active.store(true, std::memory_order_release);
+  return m_load_sequence;
 }
 
 void LoadingOverlay::abort() {
@@ -50,9 +52,10 @@ void LoadingOverlay::arm_after_load() {
   m_frames_remaining = k_frames_before_release;
   m_timer.restart();
   m_finalize_progress = true;
-  m_armed_load.store(++m_load_sequence, std::memory_order_release);
+  m_armed_load.store(m_load_sequence, std::memory_order_release);
+  m_first_frames_remaining = m_first_frames_timeout;
   if (!m_window_minimized) {
-    m_first_frames_timer.start();
+    m_first_frames_timer.start(m_first_frames_remaining);
   }
 }
 
@@ -61,10 +64,11 @@ void LoadingOverlay::set_window_minimized(bool minimized) {
     return;
   }
   m_window_minimized = minimized;
-  if (minimized) {
+  if (minimized && m_first_frames_timer.isActive()) {
+    m_first_frames_remaining = m_first_frames_timer.remainingTimeAsDuration();
     m_first_frames_timer.stop();
-  } else if (waiting_for_first_frame()) {
-    m_first_frames_timer.start();
+  } else if (!minimized && waiting_for_first_frame()) {
+    m_first_frames_timer.start(m_first_frames_remaining);
   }
 }
 

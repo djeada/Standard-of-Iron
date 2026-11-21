@@ -12,6 +12,8 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
+#include <QOpenGLTextureBlitter>
 #include <QQuickWindow>
 #include <QStringList>
 #include <QSurfaceFormat>
@@ -44,6 +46,7 @@
 #endif
 
 #include "../render/draw_cmd_traits.h"
+#include "../render/gl/gl_capabilities.h"
 #include "../render/graphics_settings.h"
 #include "../render/i_render_backend.h"
 #include "../render/profiling/frame_profile.h"
@@ -97,6 +100,13 @@ auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNod
   if (context == nullptr || !context->isValid()) {
     m_engine->report_renderer_failure(
         tr("The battlefield needs a working OpenGL 3.3 Core graphics context."));
+    return node;
+  }
+  if (!Render::GL::GLCapabilities::meets_minimum_version()) {
+    Render::GL::GLCapabilities::report_minimum_version();
+    m_engine->report_renderer_failure(
+        tr("The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.")
+            .arg(Render::GL::GLCapabilities::describe_version(context->format())));
     return node;
   }
   return QQuickFramebufferObject::updatePaintNode(node, data);
@@ -257,7 +267,7 @@ void GLView::GLRenderer::render() {
     m_engine->ensure_initialized();
     if (!m_engine->renderer_initialized()) {
       m_engine->report_renderer_failure(
-          GLView::tr("The OpenGL battlefield renderer could not start."));
+          GLView::tr("The OpenGL battlefield renderer failed."));
       return;
     }
     if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
@@ -295,7 +305,24 @@ void GLView::GLRenderer::render() {
       dt = std::min(dt, 0.1F);
     }
     m_last_frame_time = frame_work_start;
-    m_engine->render(m_size.width(), m_size.height());
+    const quint64 rendered_load = m_engine->render(m_size.width(), m_size.height());
+    if (const QImage* cpu_frame = m_engine->last_software_frame();
+        cpu_frame != nullptr) {
+      QOpenGLTexture texture(*cpu_frame, QOpenGLTexture::DontGenerateMipMaps);
+      if (!texture.isCreated() ||
+          (!m_software_blitter.isCreated() && !m_software_blitter.create())) {
+        m_engine->report_renderer_failure(
+            GLView::tr("The OpenGL battlefield renderer failed."));
+        return;
+      }
+      texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
+      ctx->functions()->glViewport(0, 0, m_size.width(), m_size.height());
+      m_software_blitter.bind();
+      m_software_blitter.blit(
+          texture.textureId(), QMatrix4x4(), QOpenGLTextureBlitter::OriginTopLeft);
+      m_software_blitter.release();
+    }
+    m_engine->notify_loading_frame_presented(rendered_load);
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;
     const double thread_cpu_end_ms = render_thread_cpu_ms();
@@ -320,9 +347,12 @@ void GLView::GLRenderer::render() {
 
   } catch (const std::exception& e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield renderer failed."));
     return;
   } catch (...) {
-    qCritical() << "GLRenderer::render() unknown exception";
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield renderer failed."));
     return;
   }
 
@@ -884,7 +914,18 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-  return new QOpenGLFramebufferObject(size, fmt);
+  auto framebuffer = std::make_unique<QOpenGLFramebufferObject>(size, fmt);
+  if (framebuffer->isValid()) {
+    return framebuffer.release();
+  }
+  if (m_engine != nullptr) {
+    qCritical() << "Could not allocate gameplay framebuffer of size" << size;
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield framebuffer could not be created."));
+  }
+  // Qt still needs a framebuffer texture for this scene graph node.
+  framebuffer.reset();
+  return new QOpenGLFramebufferObject(QSize(1, 1));
 }
 
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {

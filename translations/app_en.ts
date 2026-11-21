@@ -4258,8 +4258,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>The OpenGL battlefield framebuffer could not be created.</translation>
     </message>
     <message>
-        <source>The OpenGL battlefield renderer could not start.</source>
-        <translation>The OpenGL battlefield renderer could not start.</translation>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>The OpenGL battlefield renderer failed.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</translation>
     </message>
 </context>
 <context>

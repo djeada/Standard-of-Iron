@@ -133,6 +133,12 @@ public:
   auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
   }
+  [[nodiscard]] auto is_ready() const -> bool {
+    return m_backend && m_backend->is_ready();
+  }
+  [[nodiscard]] auto last_software_frame() const -> const QImage* {
+    return m_backend ? m_backend->presented_frame() : nullptr;
+  }
 
   [[nodiscard]] auto view() noexcept -> RenderViewState& { return m_view; }
   [[nodiscard]] auto view() const noexcept -> const RenderViewState& { return m_view; }

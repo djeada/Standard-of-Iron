@@ -138,12 +138,7 @@ GameEngine::GameEngine(QObject* parent)
   connect(&m_loading_overlay,
           &App::Session::LoadingOverlay::first_frames_timed_out,
           this,
-          [this]() {
-            report_renderer_failure(
-                tr("Timed out waiting for the battlefield to render. The last "
-                   "loading stage was %1.")
-                    .arg(loading_stage_text()));
-          });
+          &GameEngine::handle_first_frames_timeout);
 }
 
 GameEngine::~GameEngine() {
@@ -332,6 +327,9 @@ void GameEngine::report_renderer_failure(QString error) {
   if (m_renderer_failed.exchange(true, std::memory_order_acq_rel)) {
     return;
   }
+  if (error.isEmpty()) {
+    error = QStringLiteral("OpenGL renderer initialization failed.");
+  }
   QMetaObject::invokeMethod(
       this,
       [this, error = std::move(error)]() {
@@ -391,10 +389,11 @@ void GameEngine::ensure_initialized() {
                                                 m_surface ? m_surface->ground()
                                                           : nullptr,
                                                 &error);
-  if (!error.isEmpty()) {
+  if (!m_runtime.initialized) {
     report_renderer_failure(std::move(error));
+    return;
   }
-  if (!was_initialized && m_runtime.initialized) {
+  if (!was_initialized && !renderer_has_failed()) {
     emit renderer_initialized_changed();
   }
 }
@@ -787,11 +786,12 @@ void GameEngine::update(float dt) {
   (void)m_deferred_presentation.drain();
 }
 
-void GameEngine::render(int pixel_width, int pixel_height) {
-  if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading) {
-    return;
+auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
+  if (!m_renderer || !m_world || !renderer_initialized() || m_runtime.loading) {
+    return 0;
   }
 
+  const quint64 rendered_load = m_loading_overlay.armed_load();
   const auto frame_started = std::chrono::steady_clock::now();
 
   if (pixel_width > 0 && pixel_height > 0) {
@@ -802,7 +802,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   const auto presentation =
       std::atomic_load_explicit(&m_presentation_frame, std::memory_order_acquire);
   if (presentation == nullptr) {
-    return;
+    return 0;
   }
 
   apply_presentation_camera(*presentation);
@@ -838,14 +838,24 @@ void GameEngine::render(int pixel_width, int pixel_height) {
                                        std::chrono::steady_clock::now() - frame_started)
                                        .count());
   }
-  const quint64 rendered_load = m_loading_overlay.armed_load();
-  if (rendered_load != 0 && m_renderer->resources() != nullptr) {
-    QMetaObject::invokeMethod(
-        this,
-        [this, rendered_load]() { update_loading_overlay(rendered_load); },
-        Qt::QueuedConnection);
-  }
   update_cursor_position();
+  if (rendered_load == 0 || !m_renderer->is_ready()) {
+    return 0;
+  }
+  return m_renderer->backend() != nullptr ||
+                 m_renderer->last_software_frame() != nullptr
+             ? rendered_load
+             : 0;
+}
+
+void GameEngine::notify_loading_frame_presented(quint64 rendered_load) {
+  if (rendered_load == 0) {
+    return;
+  }
+  QMetaObject::invokeMethod(
+      this,
+      [this, rendered_load]() { update_loading_overlay(rendered_load); },
+      Qt::QueuedConnection);
 }
 
 void GameEngine::apply_presentation_camera(
@@ -921,6 +931,10 @@ void GameEngine::set_input_viewport_size(qreal width, qreal height) {
   }
 }
 
+auto GameEngine::last_software_frame() const -> const QImage* {
+  return m_renderer ? m_renderer->last_software_frame() : nullptr;
+}
+
 void GameEngine::update_loading_overlay(quint64 rendered_load) {
   if (renderer_has_failed()) {
     return;
@@ -944,6 +958,7 @@ void GameEngine::update_loading_overlay(quint64 rendered_load) {
         LoadingProgressTracker::LoadingStage::COMPLETED);
   }
   emit is_loading_changed();
+  emit match_load_completed();
 
   if (release.show_objectives) {
     m_match_setup_view_model->notify_current_mission_changed();
@@ -1178,9 +1193,11 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     return;
   }
 
-  begin_match_loading(map_path);
-  QTimer::singleShot(50, this, [this, map_path, player_configs, world_freeze]() {
-    complete_match_load(map_path, player_configs);
+  const quint64 load = begin_match_loading(map_path);
+  QTimer::singleShot(50, this, [this, map_path, player_configs, load, world_freeze]() {
+    if (load == m_loading_overlay.current_load()) {
+      complete_match_load(map_path, player_configs);
+    }
   });
 }
 
@@ -1198,8 +1215,8 @@ void GameEngine::reset_match_outcome() {
   }
 }
 
-void GameEngine::begin_match_loading(const QString& map_path) {
-  m_loading_overlay.begin();
+auto GameEngine::begin_match_loading(const QString& map_path) -> quint64 {
+  const quint64 load = m_loading_overlay.begin();
   m_runtime.loading = true;
   const auto hints = App::Core::SkirmishRuntimeCoordinator::loading_tip_hints(
       m_campaign_manager.get());
@@ -1215,6 +1232,9 @@ void GameEngine::begin_match_loading(const QString& map_path) {
   Game::Map::MapContextStore::reset_statistics();
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
+  if (renderer_has_failed() || load != m_loading_overlay.current_load()) {
+    return load;
+  }
   if (m_release_self_test_mode) {
 
     qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
@@ -1223,6 +1243,24 @@ void GameEngine::begin_match_loading(const QString& map_path) {
     const Engine::Core::ScopedStartupPhase phase("audio.mission_preload");
     AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   }
+  return load;
+}
+
+void GameEngine::handle_first_frames_timeout() {
+  if (renderer_has_failed()) {
+    return;
+  }
+  const QString error = tr("Timed out waiting for the battlefield to render. The last "
+                           "loading stage was %1.")
+                            .arg(loading_stage_text());
+  const WorldFreeze world_freeze(*this);
+  if (!world_freeze.acquired()) {
+    report_renderer_failure(error);
+    return;
+  }
+  reset_preload_interaction_state();
+  end_match_after_failed_load();
+  set_error(error);
 }
 
 void GameEngine::fail_loading(const QString& error) {
@@ -1239,7 +1277,8 @@ void GameEngine::complete_match_load(const QString& map_path,
     return;
   }
   if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
-    fail_loading(tr("Cannot start skirmish: renderer not initialized"));
+    end_match_after_failed_load();
+    set_error(tr("Cannot start skirmish: renderer not initialized"));
     return;
   }
 
@@ -1682,11 +1721,9 @@ void GameEngine::submit_frame_image(const QImage& image) {
 }
 
 void GameEngine::end_match_after_failed_load() {
-  if (is_loading()) {
-    m_runtime.loading = false;
-    m_loading_overlay.abort();
-    emit is_loading_changed();
-  }
+  m_runtime.loading = false;
+  m_loading_overlay.abort();
+  emit is_loading_changed();
 
   if (m_victory_service) {
     m_victory_service->reset();

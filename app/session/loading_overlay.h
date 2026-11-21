@@ -44,7 +44,11 @@ public:
 
   [[nodiscard]] auto describe(bool renderer_up, bool gpu_resources_up) const -> QString;
 
-  void begin();
+  // The GUI thread owns load preparation and the timer.
+  auto begin() -> quint64;
+  [[nodiscard]] auto current_load() const -> quint64 {
+    return active() ? m_load_sequence : 0;
+  }
   void abort();
   void arm_after_load();
   void set_window_minimized(bool minimized);
@@ -63,6 +67,8 @@ private:
   int m_frames_remaining = 0;
   QElapsedTimer m_timer;
   QTimer m_first_frames_timer;
+  const std::chrono::milliseconds m_first_frames_timeout;
+  std::chrono::milliseconds m_first_frames_remaining{0};
   bool m_window_minimized = false;
   bool m_finalize_progress = false;
   bool m_show_objectives = false;

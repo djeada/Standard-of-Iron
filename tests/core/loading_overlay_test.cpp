@@ -28,6 +28,20 @@ TEST(LoadingOverlayTest, BeginRaisesTheOverlayWithoutWaitingForAFrame) {
   EXPECT_FALSE(overlay.waiting_for_first_frame());
 }
 
+TEST(LoadingOverlayTest, AbortedPreparationCannotCompleteTheNextLoad) {
+  LoadingOverlay overlay;
+  const quint64 abandoned_load = overlay.begin();
+  EXPECT_EQ(overlay.current_load(), abandoned_load);
+  overlay.abort();
+  EXPECT_EQ(overlay.current_load(), 0U);
+
+  const quint64 next_load = overlay.begin();
+  EXPECT_NE(next_load, abandoned_load);
+  EXPECT_EQ(overlay.current_load(), next_load);
+  overlay.arm_after_load();
+  EXPECT_EQ(overlay.armed_load(), next_load);
+}
+
 TEST(LoadingOverlayTest, FramesFromAnEarlierLoadAreIgnored) {
   LoadingOverlay overlay;
   overlay.begin();

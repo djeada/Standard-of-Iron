@@ -317,6 +317,7 @@ public:
     return m_renderer_failed.load(std::memory_order_acquire);
   }
   void report_renderer_failure(QString error);
+  [[nodiscard]] auto last_software_frame() const -> const QImage*;
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
@@ -329,7 +330,8 @@ public:
   void publish_frame_snapshots();
   void capture_render_selection();
   void update(float dt);
-  void render(int pixel_width, int pixel_height);
+  [[nodiscard]] auto render(int pixel_width, int pixel_height) -> quint64;
+  void notify_loading_frame_presented(quint64 rendered_load);
   void set_input_viewport_size(qreal width, qreal height);
 
   [[nodiscard]] auto try_begin_render_frame() -> bool;
@@ -453,7 +455,7 @@ private:
                                const QVariantList& player_configs,
                                bool set_skirmish_context);
   void reset_match_outcome();
-  void begin_match_loading(const QString& map_path);
+  [[nodiscard]] auto begin_match_loading(const QString& map_path) -> quint64;
   void complete_match_load(const QString& map_path, const QVariantList& player_configs);
   [[nodiscard]] auto load_match_world(const QString& map_path,
                                       const QVariantList& player_configs)
@@ -463,6 +465,7 @@ private:
                               const QVariantList& resolved_player_configs);
   void finalize_match_load();
   void fail_loading(const QString& error);
+  void handle_first_frames_timeout();
   void apply_mission_setup();
   void apply_skirmish_commander_setup(const QVariantList& player_configs);
   [[nodiscard]] auto mission_startup_pending_components() const -> QStringList;
@@ -643,6 +646,7 @@ signals:
   void last_error_changed();
   void spectator_mode_changed();
   void is_loading_changed();
+  void match_load_completed();
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
   void control_mode_changed();

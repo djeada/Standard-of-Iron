@@ -263,12 +263,17 @@ can delay the reveal for up to 15 seconds after preparation. When that limit is
 reached, the engine logs the remaining components and reveals the battlefield
 once the frame requirement is met.
 
-A separate 60-second timer runs on the GUI thread, including when the gameplay
-renderer produces zero frames. The timer waits while the window is minimized
-and restarts when it is restored. If it expires with the overlay still active,
-the game ends the attempt and reports the last loading stage. A renderer that
-reports a failure ends the attempt immediately. Interactive launches show one
-error with a Quit button. Direct match launches return a failure exit code.
+A separate 60-second timer on the GUI thread bounds the wait when the renderer
+produces zero frames or too few frames. Minimizing the window pauses this timer.
+When the window is restored, the timer resumes with the remaining time. Frames
+from an abandoned load cannot advance the next load. In software rendering mode,
+a frame counts once the CPU image has been blitted into the gameplay framebuffer.
+
+If the timer expires, the game reports the last loading stage and returns to the
+menu after safely clearing the match. A renderer failure ends the attempt
+immediately. The interactive error offers a Quit action if graphics failed or
+the engine could not safely clear the stalled match. Direct mission and replay
+launches log the error and return a failure exit code.
 
 ## Minimum display time
 

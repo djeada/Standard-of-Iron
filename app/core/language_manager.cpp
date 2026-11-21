@@ -37,9 +37,9 @@ LanguageManager::LanguageManager(QObject* parent)
   }
 
   if (m_available_languages.contains(startup_language)) {
-    load_language(startup_language);
+    load_language(startup_language, false);
   } else {
-    load_language("en");
+    load_language("en", false);
   }
 }
 
@@ -54,14 +54,51 @@ auto LanguageManager::available_languages() const -> QStringList {
 }
 
 void LanguageManager::set_language(const QString& language) {
-  if (language == m_current_language || !m_available_languages.contains(language)) {
+  if (!m_available_languages.contains(language)) {
+    return;
+  }
+  if (language == m_current_language) {
+    if (m_language_is_temporary) {
+      App::Core::UserSettings::save_language(language);
+      m_language_is_temporary = false;
+    }
     return;
   }
 
-  load_language(language);
+  load_language(language, true);
 }
 
-void LanguageManager::load_language(const QString& language) {
+auto LanguageManager::apply_temporary_language(const QString& language) -> bool {
+  const QString code = normalize_language_code(language);
+  if (!m_available_languages.contains(code)) {
+    qWarning().noquote()
+        << QStringLiteral("Ignoring unsupported language override \"%1\" (available: "
+                          "%2); keeping \"%3\".")
+               .arg(language,
+                    m_available_languages.join(QStringLiteral(", ")),
+                    m_current_language);
+    return false;
+  }
+  if (code != m_current_language && !load_language(code, false)) {
+    return false;
+  }
+  m_language_is_temporary = true;
+  qInfo().noquote() << "Language" << code
+                    << "applied for this session only; the saved choice is kept.";
+  return true;
+}
+
+auto LanguageManager::is_language_temporary() const -> bool {
+  return m_language_is_temporary;
+}
+
+auto LanguageManager::normalize_language_code(const QString& language) -> QString {
+  QString code = language.trimmed().toLower();
+  code.replace(QLatin1Char('-'), QLatin1Char('_'));
+  return code;
+}
+
+auto LanguageManager::load_language(const QString& language, bool persist) -> bool {
   QCoreApplication::removeTranslator(m_translator);
 
   const QString qm_file = QString(":/translations/app_%1.qm").arg(language);
@@ -69,15 +106,19 @@ void LanguageManager::load_language(const QString& language) {
   if (!m_translator->load(qm_file)) {
     qWarning() << "Failed to load translation catalogue" << qm_file
                << "- is the build's lrelease step wired up?";
-    return;
+    return false;
   }
 
   QCoreApplication::installTranslator(m_translator);
   QGuiApplication::setLayoutDirection(layout_direction_for(language));
   m_current_language = language;
-  App::Core::UserSettings::save_language(language);
+  m_language_is_temporary = false;
+  if (persist) {
+    App::Core::UserSettings::save_language(language);
+  }
   qInfo() << "Language changed to:" << language;
   emit language_changed();
+  return true;
 }
 
 auto LanguageManager::language_display_name(const QString& language) -> QString {

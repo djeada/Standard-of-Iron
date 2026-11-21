@@ -4258,8 +4258,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>No se pudo crear el búfer de fotogramas OpenGL del campo de batalla.</translation>
     </message>
     <message>
-        <source>The OpenGL battlefield renderer could not start.</source>
-        <translation>No se pudo iniciar el renderizador OpenGL del campo de batalla.</translation>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Falló el renderizador OpenGL del campo de batalla.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>El campo de batalla requiere OpenGL 3.3 Core. Se detectó OpenGL %1.</translation>
     </message>
 </context>
 <context>

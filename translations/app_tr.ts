@@ -4258,8 +4258,12 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Savaş alanı için OpenGL kare arabelleği oluşturulamadı.</translation>
     </message>
     <message>
-        <source>The OpenGL battlefield renderer could not start.</source>
-        <translation>Savaş alanının OpenGL görüntüleyicisi başlatılamadı.</translation>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>OpenGL savaş alanı işleyicisi başarısız oldu.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Savaş alanı OpenGL 3.3 Core gerektirir. Algılanan sürüm OpenGL %1.</translation>
     </message>
 </context>
 <context>

@@ -52,6 +52,7 @@
 #include "app/bootstrap/screenshot_capture.h"
 #include "app/bootstrap/self_test_driver.h"
 #include "app/bootstrap/startup_self_test.h"
+#include "app/bootstrap/version_info.h"
 #include "app/bootstrap/windows_gl_probe.h"
 #include "app/core/app_identity.h"
 #include "app/core/benchmark_action_fixture.h"
@@ -96,6 +97,10 @@ constexpr int k_depth_buffer_bits = 24;
 constexpr int k_stencil_buffer_bits = 8;
 
 auto main(int argc, char* argv[]) -> int {
+
+  if (App::Bootstrap::version_requested_from_argv(argc, argv)) {
+    return App::Bootstrap::print_version();
+  }
 
   if (App::Bootstrap::data_paths_requested_from_argv(argc, argv)) {
     return App::Bootstrap::print_data_paths(argc, argv);
@@ -277,6 +282,9 @@ auto main(int argc, char* argv[]) -> int {
 
   qInfo() << "Creating LanguageManager...";
   language_manager = std::make_unique<LanguageManager>(&app);
+  if (!opts.language_override.isEmpty()) {
+    language_manager->apply_temporary_language(opts.language_override);
+  }
   qInfo() << "LanguageManager created";
 
   qInfo() << "Creating GameEngine...";
@@ -461,6 +469,27 @@ auto main(int argc, char* argv[]) -> int {
             QCoreApplication::exit(10);
             return;
           }
+          // A direct launch can fail while resolving the mission as well as
+          // while loading its battlefield. Stop treating UI errors as launch
+          // failures when the first playable frames arrive.
+          const auto startup_error =
+              QObject::connect(game_engine_ptr,
+                               &GameEngine::last_error_changed,
+                               &app,
+                               [game_engine_ptr]() {
+                                 if (!game_engine_ptr->last_error().isEmpty()) {
+                                   qCritical().noquote()
+                                       << "Direct match launch failed."
+                                       << game_engine_ptr->last_error();
+                                   QCoreApplication::exit(10);
+                                 }
+                               });
+          QObject::connect(
+              game_engine_ptr,
+              &GameEngine::match_load_completed,
+              &app,
+              [startup_error]() { QObject::disconnect(startup_error); },
+              Qt::SingleShotConnection);
           auto mission_started = std::make_shared<bool>(false);
           auto start_direct_mission = [game_engine_ptr, opts, mission_started]() {
             if (*mission_started || game_engine_ptr->renderer_has_failed()) {
@@ -529,8 +558,6 @@ auto main(int argc, char* argv[]) -> int {
             QTimer::singleShot(0, &app, start_direct_mission);
           }
         });
-    window->show();
-    window->update();
   }
 
   QObject::connect(window,
@@ -574,13 +601,20 @@ auto main(int argc, char* argv[]) -> int {
                      }
                    });
 
-  QObject::connect(window,
-                   &QQuickWindow::sceneGraphError,
-                   &app,
-                   [&](QQuickWindow::SceneGraphError, const QString& msg) {
-                     qCritical() << "Failed to initialize OpenGL scene graph:" << msg;
-                     QGuiApplication::exit(3);
-                   });
+  QObject::connect(
+      window,
+      &QQuickWindow::sceneGraphError,
+      &app,
+      [](QQuickWindow::SceneGraphError, const QString& msg) {
+        qCritical() << "Failed to initialize OpenGL scene graph:" << msg;
+        QGuiApplication::exit(3);
+      },
+      Qt::QueuedConnection);
+
+  if (direct_match_requested) {
+    window->show();
+    window->update();
+  }
 
   if (renderer_self_test) {
     if (const int code =

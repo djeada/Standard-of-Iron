@@ -4,6 +4,7 @@
 
 class QOpenGLDebugLogger;
 
+#include <QOpenGLTextureBlitter>
 #include <QPointer>
 #include <QQmlEngine>
 #include <QQuickFramebufferObject>
@@ -67,6 +68,7 @@ private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
     Render::FrameCadence m_cadence;
+    QOpenGLTextureBlitter m_software_blitter;
     bool m_ready_reported = false;
     QStringList m_pending_commander_speakers;
     QSize m_size;

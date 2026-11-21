@@ -4258,8 +4258,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Не удалось создать кадровый буфер OpenGL для поля боя.</translation>
     </message>
     <message>
-        <source>The OpenGL battlefield renderer could not start.</source>
-        <translation>Не удалось запустить отрисовщик OpenGL для поля боя.</translation>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Сбой отрисовщика OpenGL поля боя.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Для отрисовки поля боя требуется OpenGL 3.3 Core. Обнаружен OpenGL %1.</translation>
     </message>
 </context>
 <context>
