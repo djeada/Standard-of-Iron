@@ -1,15 +1,13 @@
 // Copyright 2026 dywoq - MIT License
 // https://github.com/djeada/Standard-of-Iron
 
+#include "routines_ninjalog_parser.h"
+
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <format>
 #include <fstream>
-#include <stdexcept>
-
-#include "ninja_reader.h"
 
 namespace NinjaReader::Routines {
 

@@ -5,14 +5,13 @@ cmake_minimum_required(VERSION 3.21.0)
 project(ninja_reader LANGUAGES CXX)
 
 add_executable(ninja_reader
-    src/main.cpp
-    src/commandline/argument.cpp
-    src/routines/ninjalog_parser.cpp
+    main.cpp
+    commandline_argument.cpp
+    routines_ninjalog_parser.cpp
 )
 target_compile_options(ninja_reader
     PUBLIC -std=c++20
 )
 target_include_directories(ninja_reader
-    PRIVATE ${CMAKE_SOURCE_DIR}/include
+    PUBLIC ${CMAKE_SOURCE_DIR}/include
 )
-

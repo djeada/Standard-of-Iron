@@ -1,9 +1,10 @@
 // Copyright 2026 dywoq - MIT License
 // https://github.com/djeada/Standard-of-Iron
 
+#include <format>
 #include <iostream>
 
-#include "ninja_reader.h"
+#include "routines_ninjalog_parser.h"
 
 int main() {
 

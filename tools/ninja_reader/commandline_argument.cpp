@@ -1,6 +1,8 @@
 // Copyright 2026 dywoq - MIT License
 // https://github.com/djeada/Standard-of-Iron
 
+#include "commandline_argument.h"
+
 #include <algorithm>
 #include <cctype>
 #include <format>
@@ -9,8 +11,6 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
-
-#include "ninja_reader.h"
 
 namespace NinjaReader::CommandLine::Argument {
 
