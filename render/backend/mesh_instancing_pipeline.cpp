@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "render/frame/static_building_batch.h"
+#include "render/cache/static_building_batch.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"

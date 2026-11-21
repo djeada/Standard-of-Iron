@@ -7,7 +7,7 @@
 #include <type_traits>
 
 #include "render/creature/elephant/elephant_spec.h"
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"

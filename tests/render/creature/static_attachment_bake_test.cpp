@@ -10,10 +10,10 @@
 #include <utility>
 #include <vector>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/archetype_registry.h"
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/gpu/snapshot_mesh_cache.h"

@@ -1,59 +1,16 @@
-# GL backend layer (Phase 1 owner). Edit ONLY this file for render/gl/* sources.
+# render/gl: GL handles and wrappers. See scripts/check-render-layers.py.
 set(RENDER_GL_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shared_geometry_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_handle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_lifetime.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh_gpu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture_upload.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/terrain_noise_atlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/scene/bootstrap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/backend.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/instance_draw_guard.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/cylinder_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/cursed_gold_vein_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/dead_tree_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/iron_ore_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/rock_outcrop_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/tent_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/weapon_rack_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/prop_mesh_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/prop_parts.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/ring_loft_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/tree_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/static_mesh_upload.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline_natural.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline_settlement.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/terrain_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/shader_uniform_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/water_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/effects_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/primitive_batch_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/banner_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/healing_beam_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/healer_aura_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/combat_dust_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/ground_marker_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/post_process_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/sky_box_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/mode_indicator_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/rain_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/mesh_instancing_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/rigged_character_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/rigged_cull_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/cylinder_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/scatter_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/terrain_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/water_linear_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/directional_shadow_pass.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/mesh_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/effects_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/backend/rigged_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/animation/animation_inputs.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh_gpu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shared_geometry_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/terrain_noise_atlas.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture_upload.cpp
 )

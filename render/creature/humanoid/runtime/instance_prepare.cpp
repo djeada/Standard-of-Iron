@@ -43,7 +43,7 @@
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pose_intent.h"
-#include "render/entity/formation_instance_layout.h"
+#include "render/creature/humanoid/runtime/formation_instance_layout.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/terrain_contact.h"

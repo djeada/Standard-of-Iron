@@ -740,9 +740,8 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "game" / "systems" / "movement" / "movement_orders.cpp");
   const auto command_service =
       read_text(root / "game" / "systems" / "movement" / "command_service.cpp");
-  const auto scene_walk = read_text(root / "render" / "scene_walk.cpp");
-  const auto animation_inputs = read_text(root / "render" / "gl" / "humanoid" /
-                                          "animation" / "animation_inputs.cpp");
+  const auto scene_walk = read_text(root / "render" / "scene" / "scene_walk.cpp");
+  const auto animation_inputs = read_text(root / "render" / "creature" / "humanoid" / "animation" / "animation_inputs.cpp");
   const auto prepared_state = read_text(root / "render" / "creature" / "pipeline" /
                                         "creature_prepared_state.cpp");
   const auto combat_dust_renderer =
@@ -917,7 +916,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   const auto controller_source = commander_control_source(root);
   const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
   const auto prepare_submission_source =
-      read_text(root / "render" / "humanoid" / "runtime" / "instance_prepare.cpp");
+      read_text(root / "render" / "creature" / "humanoid" / "runtime" / "instance_prepare.cpp");
   const auto locomotion_manifest_source =
       read_text(root / "animation" / "locomotion_manifest.cpp");
   const auto ambient_manifest_source =

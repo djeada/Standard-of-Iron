@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
 

@@ -1,0 +1,17 @@
+# render/scene: renderer orchestration. See scripts/check-render-layers.py.
+set(RENDER_SCENE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/bootstrap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/construction_preview_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/prepare_worker_pool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/primitive_flush_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_collect.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_effects.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_overlays.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_unit_submit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_walk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_catalog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_runner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_recorder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/unit_render_cache.cpp
+)

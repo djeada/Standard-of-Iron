@@ -42,7 +42,7 @@ Both packs share one container, `render/cache/mesh_pack_format.h`: named entries
 
 ### Timber grain
 
-Parts authored as wood (`BuildingPartMaterial(desc, k_building_material_wood)` or `desc.set_material(...)`) carry a grain frame instead of their unit-mesh UVs. Baked buildings only ever sample a white texture, so the two texture coordinates are free. `RenderArchetypeBuilder::set_timber()` marks those draws, and `append_part()` in `render/frame/static_building_batch.cpp` writes the frame at merge time:
+Parts authored as wood (`BuildingPartMaterial(desc, k_building_material_wood)` or `desc.set_material(...)`) carry a grain frame instead of their unit-mesh UVs. Baked buildings only ever sample a white texture, so the two texture coordinates are free. `RenderArchetypeBuilder::set_timber()` marks those draws, and `append_part()` in `render/cache/static_building_batch.cpp` writes the frame at merge time:
 
 - `tex_coord.y` = `k_grain_frame_offset` + member × `k_grain_member_stride` + metres along the grain. The grain runs along the part's longest axis, or along the axis of a cylinder or cone. The member is a hash of the part's centre, and gives every log and board its own tree: tone, silvering and grain phase.
 - `tex_coord.x` holds the surface kind:

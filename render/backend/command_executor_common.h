@@ -28,7 +28,7 @@
 #include "render/backend/terrain_pipeline.h"
 #include "render/backend/uniform_helpers.h"
 #include "render/backend/vegetation_pipeline.h"
-#include "render/backend/vertex_attrib_layout.h"
+#include "render/gl/vertex_attrib_layout.h"
 #include "render/backend/water_pipeline.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/draw_commands.h"

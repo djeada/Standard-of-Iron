@@ -1,18 +1,17 @@
-# render_gl static library.
-# Source lists are split into per-area fragments so that independent refactors
-# can edit disjoint files without merge conflicts:
-#   sources_gl.cmake        -> render/gl/*          (GL backend layer)
-#   sources_entity.cmake    -> render/entity/*      (entity & nation renderers)
-#   sources_equipment.cmake -> render/equipment/*   (equipment renderers)
-#   sources_creature.cmake  -> render/{humanoid,creature,horse,elephant}/*
-#   sources_ground.cmake    -> render/ground/*      (terrain & scatter)
-#   sources_core.cmake      -> everything else      (scene_renderer, geom, caches, ...)
+# render_gl static library. One source list per layer folder, lowest first;
+# the order is the one scripts/check-render-layers.py enforces.
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_profiling.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/sources_gl.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/sources_entity.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/sources_equipment.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/sources_creature.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_geom.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_frame.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_cache.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_backend.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/sources_ground.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/sources_core.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_creature.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_equipment.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_entity.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_overlay.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/sources_scene.cmake)
 
 # The CPU triangle rasteriser, on its own because it has no dependency on
 # anything -- not GL, not the scene, not the game. Three preview tools and the
@@ -32,15 +31,21 @@ target_link_libraries(
 add_library(
     render_gl
     STATIC
+    ${RENDER_PROFILING_SOURCES}
     ${RENDER_GL_SOURCES}
-    ${RENDER_ENTITY_SOURCES}
-    ${RENDER_EQUIPMENT_SOURCES}
-    ${RENDER_CREATURE_SOURCES}
+    ${RENDER_GEOM_SOURCES}
+    ${RENDER_FRAME_SOURCES}
+    ${RENDER_CACHE_SOURCES}
+    ${RENDER_BACKEND_SOURCES}
     ${RENDER_GROUND_SOURCES}
-    ${RENDER_CORE_SOURCES}
+    ${RENDER_CREATURE_SOURCES}
+    ${RENDER_EQUIPMENT_SOURCES}
+    ${RENDER_ENTITY_SOURCES}
+    ${RENDER_OVERLAY_SOURCES}
+    ${RENDER_SCENE_SOURCES}
 )
 
-target_include_directories(render_gl PUBLIC .)
+target_include_directories(render_gl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(
     render_gl
     PUBLIC

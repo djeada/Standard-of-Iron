@@ -1,66 +1,66 @@
-# Equipment renderers (Phase 3 owner). Edit ONLY this file for render/equipment/* sources.
+# render/equipment: armour, weapons, attachments. See scripts/check-render-layers.py.
 set(RENDER_EQUIPMENT_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_registry.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/generated_primitive_spec.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_archetype_resolver.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/humanoid_equipment_archetype.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse_equipment_archetype.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_submit.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/attachment_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/render_archetype_registry.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_common.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_ids.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_descriptors.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_archetypes.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_weapons.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_armor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_helmets.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_horse.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_historical_commanders.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_armor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_light_carthage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_heavy_carthage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_greaves.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/allied_garments.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_shoulder_cover.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/carthage_shoulder_cover.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/work_apron_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/tool_belt_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/arm_guards_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_heavy_carthage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/armor_light_carthage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/carthage_shoulder_cover.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/cloak_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/sheet_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/commander_pauldron.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/commander_regalia.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_armor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_greaves.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/roman_shoulder_cover.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/sheet_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/tool_belt_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/armor/work_apron_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/attachment_builder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_archetype_resolver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_registry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_submit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/generated_primitive_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_heavy_helmet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_light_helmet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/commander_helmets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/hair_bun.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/headwear_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/headwrap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/historical_helmets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_heavy_helmet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_light_helmet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/champion_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/crupper_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/leather_barding_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/scale_barding_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/decorations/saddle_bag_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/horse_attachment_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/carthage_saddle_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/horse_mount_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/light_cavalry_saddle_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/roman_saddle_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/tack/blanket_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/tack/bridle_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/tack/reins_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse_equipment_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/humanoid_equipment_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_archetypes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_armor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_descriptors.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_helmets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_historical_commanders.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_horse.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_ids.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/register_equipment_weapons.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/render_archetype_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/bow_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/quiver_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/roman_scutum.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_carthage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_roman.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/spear_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/shield_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/shield_carthage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/headwrap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/commander_helmets.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_heavy_helmet.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/roman_light_helmet.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/hair_bun.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/headwear_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_heavy_helmet.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/carthage_light_helmet.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/helmets/historical_helmets.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/roman_saddle_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/carthage_saddle_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/light_cavalry_saddle_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/saddles/horse_mount_archetype.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/horse_attachment_archetype.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/tack/bridle_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/tack/blanket_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/tack/reins_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/scale_barding_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/leather_barding_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/champion_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/armor/crupper_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse/decorations/saddle_bag_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/shield_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/spear_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_carthage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_roman.cpp
 )

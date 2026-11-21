@@ -6,7 +6,7 @@
 #include <string_view>
 
 #include "game/systems/nation_id.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/entity/building_state.h"
 #include "render/entity/registry.h"
 

@@ -14,7 +14,7 @@
 #include <sstream>
 #include <vector>
 
-#include "render/backend/vertex_attrib_layout.h"
+#include "render/gl/vertex_attrib_layout.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_lifetime.h"

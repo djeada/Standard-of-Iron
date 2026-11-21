@@ -14,7 +14,7 @@
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/creature_pipeline.h"

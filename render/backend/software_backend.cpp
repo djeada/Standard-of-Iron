@@ -4,7 +4,7 @@
 
 #include "render/frame/draw_part.h"
 #include "render/frame/draw_queue.h"
-#include "render/frame/static_building_batch.h"
+#include "render/cache/static_building_batch.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

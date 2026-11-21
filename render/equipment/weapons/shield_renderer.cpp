@@ -11,7 +11,7 @@
 #include <numbers>
 #include <string>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/creature/humanoid/asset/bind_skeleton.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"

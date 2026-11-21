@@ -44,7 +44,7 @@ auto component_headers() -> std::vector<fs::path> {
     headers.push_back(root / "game" / "core" / name);
   }
   headers.push_back(root / "render" / "creature" / "animation_state_components.h");
-  headers.push_back(root / "render" / "humanoid" / "runtime" / "instance_state.h");
+  headers.push_back(root / "render" / "creature" / "humanoid" / "runtime" / "instance_state.h");
   return headers;
 }
 

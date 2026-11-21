@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "render/entity/mounted_swordsman_renderer_base.h"
-#include "render/entity/nations/material_palette.h"
+#include "render/equipment/material_palette.h"
 #include "render/frame/submitter.h"
 
 namespace Render::GL::Carthage {

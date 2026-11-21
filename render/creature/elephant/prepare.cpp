@@ -14,7 +14,7 @@
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/elephant/elephant_motion.h"
 #include "render/creature/elephant/elephant_renderer_base.h"

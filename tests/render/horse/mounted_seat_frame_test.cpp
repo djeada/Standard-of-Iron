@@ -3,7 +3,7 @@
 #include "animation/rig/mounted_seat.h"
 #include "render/creature/horse/dimensions.h"
 #include "render/creature/horse/horse_motion.h"
-#include "render/entity/mounted_swordsman_pose.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/spear_renderer.h"
 
 namespace {

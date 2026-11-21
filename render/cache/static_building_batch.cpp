@@ -1,4 +1,4 @@
-#include "render/frame/static_building_batch.h"
+#include "render/cache/static_building_batch.h"
 
 #include <algorithm>
 #include <cmath>
@@ -6,7 +6,7 @@
 #include <limits>
 
 #include "render/cache/static_mesh_pack.h"
-#include "render/entity/unseen_submitter.h"
+#include "render/frame/unseen_submitter.h"
 #include "render/frame/draw_commands.h"
 #include "render/frame/material.h"
 #include "render/frame/material_classification.h"

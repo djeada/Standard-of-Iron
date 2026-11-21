@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/frame/draw_queue.h"
 #include "render/frame/material.h"
 #include "render/frame/primitive_batch.h"

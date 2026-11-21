@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "render/backend/vertex_attrib_layout.h"
+#include "render/gl/vertex_attrib_layout.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"

@@ -2,8 +2,8 @@
 
 #include <array>
 
-#include "render/entity/nations/material_palette.h"
-#include "render/entity/nations/sepulcher/palette.h"
+#include "render/equipment/material_palette.h"
+#include "render/equipment/sepulcher/palette.h"
 
 namespace Render::GL::Carthage {
 

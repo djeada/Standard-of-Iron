@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "render/entity/nations/sepulcher/palette.h"
+#include "render/equipment/sepulcher/palette.h"
 
 namespace Render::GL::Nation {
 

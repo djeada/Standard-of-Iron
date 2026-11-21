@@ -11,7 +11,7 @@
 #include <span>
 
 #include "render/creature/elephant/elephant_spec.h"
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/part_graph.h"

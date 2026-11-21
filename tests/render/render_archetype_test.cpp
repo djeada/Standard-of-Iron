@@ -13,7 +13,7 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/creature/horse/dimensions.h"
 #include "render/entity/home_renderer_common.h"
 #include "render/entity/nations/carthage/ballista_renderer.h"

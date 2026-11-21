@@ -9,7 +9,7 @@
 #include <string_view>
 #include <utility>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 

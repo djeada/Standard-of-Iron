@@ -15,6 +15,7 @@
 #include "game/map/terrain_service.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/frame/frame_submitter.h"
+#include "render/gl/resources.h"
 
 namespace Render::GL {
 

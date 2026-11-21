@@ -1,4 +1,4 @@
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 
 #include <QDebug>
 #include <QOpenGLContext>

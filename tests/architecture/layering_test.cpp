@@ -122,7 +122,7 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/entity/healing_beam_renderer.cpp",
       "render/entity/healing_waves_renderer.cpp",
 
-      "render/entity/formation_instance_layout.cpp",
+      "render/creature/humanoid/runtime/formation_instance_layout.cpp",
       "render/entity/nations/carthage/builder_renderer.cpp",
       "render/entity/nations/carthage/catapult_renderer.cpp",
       "render/entity/nations/carthage/healer_renderer.cpp",

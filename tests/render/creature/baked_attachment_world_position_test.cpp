@@ -11,7 +11,7 @@
 #include <limits>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"

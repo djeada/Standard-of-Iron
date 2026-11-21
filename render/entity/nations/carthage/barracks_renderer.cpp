@@ -10,7 +10,7 @@
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
 #include "render/backend/backend.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/barracks_renderer_common.h"
 #include "render/entity/barracks_stockpile.h"

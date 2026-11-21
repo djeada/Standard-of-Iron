@@ -6,7 +6,7 @@
 #include <cmath>
 #include <string>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"

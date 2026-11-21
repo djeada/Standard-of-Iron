@@ -8,7 +8,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
-#include "render/entity/nations/material_palette.h"
+#include "render/equipment/material_palette.h"
 #include "render/entity/registry.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/submitter.h"

@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/part_graph.h"

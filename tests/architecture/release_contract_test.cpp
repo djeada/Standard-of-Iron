@@ -138,7 +138,7 @@ TEST(ReleaseContract, CampaignMapRuntimeAssetsAreMandatory) {
 
 TEST(ReleaseContract, FreshProfileDefaultAndPackagedCreatureLookupAreExplicit) {
   const auto root = find_repo_root();
-  const auto graphics = read_text(root / "render" / "graphics_settings.h");
+  const auto graphics = read_text(root / "render" / "frame" / "graphics_settings.h");
   const auto creature_assets =
       read_text(root / "render" / "creature" / "compiled_creature_assets.cpp");
 

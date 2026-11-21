@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/part_graph.h"
 #include "render/gl/gl_handle.h"

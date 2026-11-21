@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/frame/palette.h"
 

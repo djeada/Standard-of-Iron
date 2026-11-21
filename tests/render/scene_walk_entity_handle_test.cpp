@@ -17,7 +17,7 @@ namespace {
 auto find_repo_root() -> std::filesystem::path {
   auto has_repo_markers = [](const std::filesystem::path& path) {
     return std::filesystem::exists(path / "CMakeLists.txt") &&
-           std::filesystem::exists(path / "render" / "scene_walk.cpp");
+           std::filesystem::exists(path / "render" / "scene" / "scene_walk.cpp");
   };
 
   auto walk_up = [&](std::filesystem::path path) -> std::filesystem::path {
@@ -122,7 +122,7 @@ TEST(SceneWalkEntityHandleTest, RenderEntriesCarryFullWidthEntityHandles) {
     EXPECT_LT(field, end) << entry << " has no full-width handle field of its own";
   }
 
-  const auto optimizer = read_text(root / "render" / "battle_render_optimizer.h");
+  const auto optimizer = read_text(root / "render" / "scene" / "battle_render_optimizer.h");
   ASSERT_FALSE(optimizer.empty());
   EXPECT_EQ(optimizer.find("should_update_animation(std::uint32_t entity_id"),
             std::string::npos)
@@ -141,7 +141,7 @@ TEST(SceneWalkEntityHandleTest, MissingBodyWarningsAreOwnedByTheRendererNotThePr
   EXPECT_NE(source.find("note_missing_body_warning"), std::string::npos)
       << "expected the renderer to own its warning suppression";
 
-  const auto header = read_text(root / "render" / "scene_renderer.h");
+  const auto header = read_text(root / "render" / "scene" / "scene_renderer.h");
   ASSERT_FALSE(header.empty());
   EXPECT_NE(header.find("clear_missing_body_warnings"), std::string::npos);
   const auto clear_at = header.find("void clear_entity_render_caches()");

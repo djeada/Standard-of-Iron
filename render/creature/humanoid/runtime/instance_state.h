@@ -13,7 +13,7 @@
 #include "render/creature/humanoid/runtime/soldier_ground_motion.h"
 #include "render/creature/humanoid/runtime/soldier_turn_smoothing.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
-#include "render/entity/formation_instance_layout.h"
+#include "render/creature/humanoid/runtime/formation_instance_layout.h"
 
 namespace Render::Humanoid {
 

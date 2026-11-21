@@ -18,7 +18,7 @@
 #include "game/map/ground_type.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
-#include "render/cache/template_cache.h"
+#include "render/scene/template_recorder.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/elephant/dimensions.h"

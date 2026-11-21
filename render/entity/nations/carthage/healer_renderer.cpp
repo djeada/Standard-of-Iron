@@ -37,7 +37,7 @@
 #include "render/entity/nations/carthage/healer_style.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
@@ -58,46 +58,6 @@ using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
 namespace Render::GL::Carthage {
-
-void apply_grave_priest_cast_pose(const Render::GL::HumanoidAnimationContext& anim,
-                                  HumanoidPose& io_pose) {
-  Render::Humanoid::apply_skeleton_proportion_pose(io_pose);
-
-  if (!anim.inputs.is_casting || anim.inputs.cast_kind != CastVisualKind::Fireball) {
-    return;
-  }
-
-  float const phase = std::clamp(anim.attack_phase, 0.0F, 1.0F);
-  auto ease = [](float t) {
-    t = std::clamp(t, 0.0F, 1.0F);
-    return t * t * (3.0F - 2.0F * t);
-  };
-  float const gather = ease(phase / 0.30F);
-  float const release = ease((phase - 0.30F) / 0.22F);
-  float const recover = 1.0F - ease((phase - 0.60F) / 0.40F);
-  float const intensity = gather * recover;
-  float const reach = release * recover;
-  if (intensity <= 0.0F) {
-    return;
-  }
-
-  HumanoidPoseController controller(io_pose, anim);
-  controller.tilt_torso(-0.13F * intensity, -0.18F * intensity);
-
-  QVector3D const forward = anim.heading_forward();
-  QVector3D const right = anim.heading_right();
-  QVector3D const up = anim.heading_up();
-
-  io_pose.hand_r += forward * (0.12F * intensity + 0.27F * reach) +
-                    up * (0.21F * intensity) - right * (0.09F * intensity);
-  io_pose.elbow_r += forward * (0.05F * intensity + 0.07F * reach) +
-                     up * (0.12F * intensity) + right * (0.05F * intensity);
-  io_pose.hand_l += forward * (0.12F * intensity + 0.10F * reach) +
-                    up * (0.18F * intensity) + right * (0.10F * intensity);
-  io_pose.elbow_l += forward * (0.01F * intensity + 0.04F * reach) +
-                     up * (0.09F * intensity) - right * (0.07F * intensity);
-  io_pose.head_pos += up * (0.015F * intensity) + forward * (0.025F * intensity);
-}
 
 namespace {
 

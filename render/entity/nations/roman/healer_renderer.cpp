@@ -36,7 +36,7 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/roman/healer_style.h"
 #include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"

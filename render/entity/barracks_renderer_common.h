@@ -5,7 +5,7 @@
 #include <span>
 #include <string_view>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/entity/ambient_people.h"
 #include "render/entity/barracks_activity.h"
 #include "render/entity/barracks_flag_renderer.h"

@@ -24,7 +24,7 @@
 #include "render/frame/i_render_backend.h"
 #include "render/frame/local_lighting.h"
 #include "render/frame/mist_volume.h"
-#include "render/frame/static_building_batch.h"
+#include "render/cache/static_building_batch.h"
 #include "render/frame/world_chunk.h"
 #include "render/frame/world_render_mode.h"
 #include "render/gl/gl_handle.h"

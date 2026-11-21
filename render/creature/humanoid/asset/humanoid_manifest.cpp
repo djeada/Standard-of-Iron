@@ -28,15 +28,14 @@
 #include "render/creature/humanoid/runtime/grip_axis.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/humanoid/runtime/mounted_pose_controller.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/creature/humanoid/runtime/pose_controller.h"
 #include "render/creature/humanoid/runtime/pose_primitives.h"
 #include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/creature/humanoid/runtime/spear_pose_utils.h"
+#include "render/creature/humanoid/runtime/sword_pose_utils.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/movement_state.h"
-#include "render/entity/mounted_swordsman_pose.h"
-#include "render/equipment/weapons/spear_renderer.h"
-#include "render/equipment/weapons/sword_renderer.h"
 
 namespace Render::Humanoid {
 

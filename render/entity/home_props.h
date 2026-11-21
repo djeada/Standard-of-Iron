@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/equipment/equipment_registry.h"
 
 namespace Render::GL {

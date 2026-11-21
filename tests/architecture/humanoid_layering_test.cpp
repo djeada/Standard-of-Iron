@@ -60,7 +60,7 @@ auto contains(const std::string& haystack, const std::string& needle) -> bool {
 
 TEST(HumanoidLayering, SchemaStaysDependencyLight) {
   const auto root = find_repo_root();
-  const auto schema = root / "render" / "humanoid" / "schema";
+  const auto schema = root / "render" / "creature" / "humanoid" / "schema";
   ASSERT_TRUE(fs::exists(schema)) << schema.string();
 
   static const std::vector<std::string> forbidden{
@@ -85,7 +85,7 @@ TEST(HumanoidLayering, SchemaStaysDependencyLight) {
 
 TEST(HumanoidLayering, RuntimeDoesNotDependOnBaking) {
   const auto root = find_repo_root();
-  const auto humanoid = root / "render" / "humanoid";
+  const auto humanoid = root / "render" / "creature" / "humanoid";
   ASSERT_TRUE(fs::exists(humanoid)) << humanoid.string();
 
   for (const auto& file : sources_under(humanoid / "runtime")) {
@@ -103,9 +103,9 @@ TEST(HumanoidLayering, RuntimeDoesNotDependOnBaking) {
 
 TEST(HumanoidLayering, ThereIsNoUmbrellaInternalHeader) {
   const auto root = find_repo_root();
-  EXPECT_FALSE(fs::exists(root / "render" / "humanoid" / "prepare_internal.h"));
+  EXPECT_FALSE(fs::exists(root / "render" / "creature" / "humanoid" / "prepare_internal.h"));
 
-  for (const auto& file : sources_under(root / "render" / "humanoid")) {
+  for (const auto& file : sources_under(root / "render" / "creature" / "humanoid")) {
     const auto source = read_text(file);
     EXPECT_FALSE(contains(source, "prepare_internal.h"))
         << file.string() << " still includes the retired umbrella header";
@@ -134,7 +134,7 @@ TEST(HumanoidLayering, CreaturePipelineKnowsNothingAboutHumanoidBones) {
 
 TEST(HumanoidLayering, RendererOwnsNoMutableRuntimeState) {
   const auto root = find_repo_root();
-  const auto header = root / "render" / "humanoid" / "runtime" / "humanoid_renderer.h";
+  const auto header = root / "render" / "creature" / "humanoid" / "runtime" / "humanoid_renderer.h";
   const auto source = read_text(header);
   ASSERT_FALSE(source.empty()) << header.string();
 
@@ -151,11 +151,11 @@ TEST(HumanoidLayering, RendererOwnsNoMutableRuntimeState) {
 
 TEST(CreatureBakeBoundary, NoRendererLazilyBakesItsVisualSpec) {
   const auto root = find_repo_root();
-  for (const auto& directory : {"render/horse",
-                                "render/elephant",
-                                "render/humanoid",
+  for (const auto& directory : {"render/creature/horse",
+                                "render/creature/elephant",
+                                "render/creature/humanoid",
                                 "render/entity",
-                                "render/wildlife"}) {
+                                "render/creature/wildlife"}) {
     for (const auto& file : sources_under(root / directory)) {
       const auto source = read_text(file);
       for (const auto& banned : {"m_visual_spec_baked", "m_visual_spec_cache"}) {
@@ -168,7 +168,7 @@ TEST(CreatureBakeBoundary, NoRendererLazilyBakesItsVisualSpec) {
 
 TEST(CreatureBakeBoundary, NoNamespaceScopeSpeciesStatistics) {
   const auto root = find_repo_root();
-  for (const auto& directory : {"render/horse", "render/elephant"}) {
+  for (const auto& directory : {"render/creature/horse", "render/creature/elephant"}) {
     for (const auto& file : sources_under(root / directory)) {
       const auto source = read_text(file);
       EXPECT_FALSE(contains(source, "static HorseRenderStats"))
@@ -181,7 +181,7 @@ TEST(CreatureBakeBoundary, NoNamespaceScopeSpeciesStatistics) {
 
 TEST(HumanoidLayering, NoProcessGlobalFrameOrStatistics) {
   const auto root = find_repo_root();
-  for (const auto& file : sources_under(root / "render" / "humanoid")) {
+  for (const auto& file : sources_under(root / "render" / "creature" / "humanoid")) {
     const auto source = read_text(file);
     EXPECT_FALSE(contains(source, "uint32_t s_current_frame"))
         << file.string() << " reintroduced a namespace-scope frame counter";
@@ -193,11 +193,7 @@ TEST(HumanoidLayering, NoProcessGlobalFrameOrStatistics) {
 TEST(CreatureBakeBoundary, RuntimeCodeDoesNotIncludeBakeRecipes) {
   const auto root = find_repo_root();
 
-  static const std::vector<std::string> runtime_roots{"render/horse",
-                                                      "render/elephant",
-                                                      "render/wildlife",
-                                                      "render/creature",
-                                                      "render/humanoid"};
+  static const std::vector<std::string> runtime_roots{"render/creature"};
 
   for (const auto& relative : runtime_roots) {
     for (const auto& file : sources_under(root / relative)) {

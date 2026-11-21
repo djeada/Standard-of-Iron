@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "render/cache/render_archetype.h"
-#include "render/cache/template_cache.h"
+#include "render/frame/render_archetype.h"
+#include "render/frame/recorded_mesh_cmd.h"
 #include "render/entity/building_state.h"
 
 namespace Render::GL {

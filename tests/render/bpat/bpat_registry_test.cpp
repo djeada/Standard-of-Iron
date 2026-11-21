@@ -15,7 +15,7 @@
 #include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/wildlife/wildlife_rig.h"
-#include "render/entity/mounted_swordsman_pose.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "tests/render/test_asset_paths.h"
 

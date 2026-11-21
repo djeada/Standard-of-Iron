@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "render/cache/static_attachment_spec.h"
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/part_graph.h"
 
 namespace Render::Creature {

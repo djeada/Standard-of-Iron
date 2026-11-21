@@ -38,7 +38,7 @@
 #include "render/backend/backend.h"
 #include "render/backend/render_backend_factory.h"
 #include "render/backend/software_backend.h"
-#include "render/cache/template_cache.h"
+#include "render/scene/template_recorder.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/assets/creature_asset_prewarmer.h"
 #include "render/creature/combat_animation_diagnostics.h"

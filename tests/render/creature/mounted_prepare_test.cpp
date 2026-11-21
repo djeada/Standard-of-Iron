@@ -16,7 +16,7 @@
 #include "game/core/entity.h"
 #include "game/session/session_context.h"
 #include "game/units/spawn_type.h"
-#include "render/cache/template_cache.h"
+#include "render/scene/template_recorder.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/horse/horse_spec.h"

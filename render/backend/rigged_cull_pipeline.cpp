@@ -14,7 +14,7 @@
 #include <limits>
 
 #include "render/backend/character_wear_binding.h"
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/frame/draw_commands.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"

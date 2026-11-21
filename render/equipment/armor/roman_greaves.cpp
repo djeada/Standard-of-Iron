@@ -8,7 +8,7 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/frame/draw_context.h"
 #include "render/equipment/armor/sheet_mesh.h"

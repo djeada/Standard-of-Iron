@@ -33,7 +33,7 @@
 #include "render/frame/i_render_backend.h"
 #include "render/frame/pipeline/screen_metrics.h"
 #include "render/frame/render_view_state.h"
-#include "render/frame/static_building_batch.h"
+#include "render/cache/static_building_batch.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_render_mode.h"

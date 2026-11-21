@@ -20,7 +20,7 @@
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
-#include "render/entity/humanoid_pose_policies.h"
+#include "render/creature/humanoid/runtime/humanoid_pose_policies.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/palette.h"

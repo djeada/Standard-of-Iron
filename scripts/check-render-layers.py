@@ -6,13 +6,15 @@ headers from its own folder or from any folder on a lower layer, never from a
 higher one, so no two folders include each other. The order, lowest first:
 
   math, profiling, software   plain values, counters, the CPU rasteriser
-  gl                          GL handles and wrappers: buffers, textures, shaders
-  frame                       what a frame is made of: draw commands, the draw
-                              queue, submitter interfaces, per-frame settings
+  gl                          GL handles and wrappers: buffers, meshes, textures,
+                              shaders
   geom                        procedural meshes and tessellation
+  frame                       what a frame is made of: draw commands, the draw
+                              queue, submitter interfaces, render archetypes,
+                              per-frame settings
+  cache                       baked static building meshes and attachment specs
   backend                     pipelines and command executors, the GL and
                               software backends
-  cache                       baked static meshes and render archetypes
   ground                      terrain, roads, water, scatter, fog
   creature                    skeletons, baking, animation, and the species
                               (humanoid, horse, elephant, wildlife)
@@ -36,10 +38,10 @@ from pathlib import Path
 LAYERS: tuple[tuple[str, ...], ...] = (
     ("math", "profiling", "software"),
     ("gl",),
-    ("frame",),
     ("geom",),
-    ("backend",),
+    ("frame",),
     ("cache",),
+    ("backend",),
     ("ground",),
     ("creature",),
     ("equipment",),

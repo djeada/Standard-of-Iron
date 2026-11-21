@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/equipment/i_equipment_renderer.h"

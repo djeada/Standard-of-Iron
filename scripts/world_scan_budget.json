@@ -14,8 +14,8 @@
   "game/systems": 11,
   "game/units": 1,
   "game/wildlife": 2,
-  "render": 3,
   "render/entity": 17,
-  "render/geom": 2,
+  "render/overlay": 2,
+  "render/scene": 3,
   "tools/arena": 11
 }

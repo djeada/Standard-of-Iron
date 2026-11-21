@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/equipment/horse/i_horse_equipment_renderer.h"
 

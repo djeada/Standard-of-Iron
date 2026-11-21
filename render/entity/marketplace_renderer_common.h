@@ -6,7 +6,7 @@
 #include <span>
 #include <string_view>
 
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/entity/ambient_people.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_render_common.h"

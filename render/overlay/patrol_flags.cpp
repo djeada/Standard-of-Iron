@@ -13,6 +13,7 @@
 #include "render/geom/transforms.h"
 #include "render/gl/resources.h"
 #include "render/frame/frame_submitter.h"
+#include "render/backend/backend.h"
 
 namespace Render::GL {
 

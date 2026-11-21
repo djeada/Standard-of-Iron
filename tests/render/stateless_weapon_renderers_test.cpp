@@ -12,7 +12,7 @@
 #include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"

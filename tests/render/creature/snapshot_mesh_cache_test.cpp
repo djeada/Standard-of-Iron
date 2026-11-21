@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "render/creature/gpu/rigged_mesh.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/gpu/snapshot_mesh_cache.h"
 #include "render/creature/pipeline/creature_asset.h"

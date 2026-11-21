@@ -6,9 +6,32 @@ That ownership model is the central rendering invariant. The renderer can cache 
 
 `render_gl` links the simulation kernel (`game_sim`) so it can consume production simulation data. The simulation layer does not link renderer implementation.
 
+## Source layout and layers
+
+`render/` is a stack of folders. A file may include its own folder or any folder below it, never one above, so no two folders include each other. `scripts/check-render-layers.py` enforces this as a PR source-policy gate, and it also fails if a source file appears in the `render/` root. From the bottom up:
+
+| Layer | Holds |
+| --- | --- |
+| `math`, `profiling`, `software` | plain math and hashing, frame and asset counters, the CPU triangle rasteriser |
+| `gl` | GL handles and wrappers: `Buffer`, `Mesh`, `RiggedMesh`, `Texture`, `Shader`, `ResourceManager`, unit primitives |
+| `geom` | procedural meshes and tessellation (arrow, stone, selection disc, ground-marker rings) |
+| `frame` | what a frame is made of: draw commands, `DrawQueue`, `ISubmitter`/`FrameSubmitter`, `DrawContext`, render archetypes, graphics settings, the pass framework |
+| `cache` | baked static building meshes, the static mesh pack, attachment specs |
+| `backend` | `Backend`, the pipelines and command executors, the software backend |
+| `ground` | terrain, roads, water, scatter, fog |
+| `creature` | skeletons, baking, animation, GPU creature assets, and the species (`humanoid`, `horse`, `elephant`, `wildlife`) |
+| `equipment` | armour, weapons, attachments, nation material palettes |
+| `entity` | buildings, units, siege and effects per nation, and the entity renderer registry |
+| `overlay` | projectiles, rafts, range rings, order and target markers drawn over the world |
+| `scene` | `Renderer`, the scene walk, template prewarm, render bootstrap |
+
+The domain layers (`ground` up to `overlay`) draw into a `FrameSubmitter` (`render/frame/frame_submitter.h`), not into the scene `Renderer`. That interface carries what a frame offers: per-entity commands, world surfaces and effects, the camera and visibility, and shared GPU resources. `Renderer` is its implementation, so the domain code does not depend on how the scene builds a frame. `DrawContext` (`render/frame/draw_context.h`) and the small value types it needs (`CreatureLOD`, `FacialHairStyle`) live in `frame` for the same reason.
+
+Includes into `render/` are always spelled from the repository root (`#include "render/frame/draw_queue.h"`). `render_gl` exports the repository root, not `render/`, as its include directory.
+
 ## Color ownership
 
-A nation’s repeating materials live in `render/entity/nations/material_palette.h`. Infantry, riders and shields draw from the same swatches. In the humanoid renderer, `apply_uniform_palette` blends owner color into dyed cloth, gives leather a small tint, and keeps metal and wood independent of the owner. A unit can select a different dye for its job. Punic spearmen use saffron, while the archer tunic shares its indigo with Punic architecture. Stone, roof construction, heraldry and specialist clothing stay with the nation or role that owns them.
+A nation’s repeating materials live in `render/equipment/material_palette.h`. Infantry, riders and shields draw from the same swatches. In the humanoid renderer, `apply_uniform_palette` blends owner color into dyed cloth, gives leather a small tint, and keeps metal and wood independent of the owner. A unit can select a different dye for its job. Punic spearmen use saffron, while the archer tunic shares its indigo with Punic architecture. Stone, roof construction, heraldry and specialist clothing stay with the nation or role that owns them.
 
 Maps supply grass, soil, rock and snow colors through `BiomeSettings`. The ground, riverbank and road shaders use `biome_palette.glsl` to vary the map’s vegetation color from fresh to cured. Each surface supplies its own coverage and dryness. Apply this treatment to vegetation before laying down exposed soil, paving or snow.
 

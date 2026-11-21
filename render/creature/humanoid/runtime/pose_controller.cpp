@@ -16,8 +16,8 @@
 #include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/humanoid/runtime/pose_primitives.h"
 #include "render/creature/humanoid/runtime/spear_pose_utils.h"
+#include "render/creature/humanoid/runtime/sword_pose_utils.h"
 #include "render/creature/movement_state.h"
-#include "render/equipment/weapons/sword_renderer.h"
 
 namespace Render::GL {
 

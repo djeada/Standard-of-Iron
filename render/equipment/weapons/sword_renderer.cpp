@@ -12,7 +12,7 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/humanoid/asset/bind_skeleton.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
@@ -20,7 +20,7 @@
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/creature/humanoid/runtime/style_palette.h"
-#include "render/entity/renderer_constants.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"

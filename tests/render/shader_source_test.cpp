@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "render/backend/directional_shadow_block.h"
-#include "render/backend/ubo_bindings.h"
+#include "render/gl/ubo_bindings.h"
 #include "render/equipment/armor/cloak_renderer.h"
 #include "render/frame/local_lighting.h"
 #include "render/gl/shader.h"
@@ -31,8 +31,7 @@ auto find_repo_root() -> std::filesystem::path {
   auto has_repo_markers = [](const std::filesystem::path& path) {
     return std::filesystem::exists(path / "CMakeLists.txt") &&
            std::filesystem::exists(path / "assets" / "shaders" / "combat_dust.frag") &&
-           std::filesystem::exists(path / "render" / "gl" / "backend" /
-                                   "combat_dust_pipeline.cpp");
+           std::filesystem::exists(path / "render" / "backend" / "combat_dust_pipeline.cpp");
   };
 
   auto path = std::filesystem::path(__FILE__).parent_path();
@@ -1203,7 +1202,7 @@ TEST(ShaderSource, EveryUnexploredSurfaceUsesTheSameShading) {
       read_text(root / "assets" / "shaders" / "include" / "visibility_mask.glsl");
   const auto reveal =
       read_text(root / "assets" / "shaders" / "include" / "fog_reveal.glsl");
-  const auto submitter = read_text(root / "render" / "entity" / "unseen_submitter.h");
+  const auto submitter = read_text(root / "render" / "frame" / "unseen_submitter.h");
   ASSERT_FALSE(mask.empty());
   ASSERT_FALSE(reveal.empty());
   ASSERT_FALSE(submitter.empty());

@@ -1,4 +1,4 @@
-#include "render/entity/nations/material_palette.h"
+#include "render/equipment/material_palette.h"
 #include "render/equipment/register_equipment_internal.h"
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"

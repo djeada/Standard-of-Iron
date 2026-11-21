@@ -6,8 +6,8 @@
 #include <cmath>
 #include <cstdint>
 
-#include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/math/math_utils.h"
+#include "render/math/hash.h"
 
 namespace Render::GL {
 

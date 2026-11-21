@@ -13,7 +13,7 @@
 #include "game/core/component.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/humanoid/runtime/unit_layout_spacing.h"
-#include "render/entity/formation_instance_layout.h"
+#include "render/creature/humanoid/runtime/formation_instance_layout.h"
 
 namespace Render::GL {
 

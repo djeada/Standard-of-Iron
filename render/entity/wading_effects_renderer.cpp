@@ -14,7 +14,7 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/units/spawn_type.h"
-#include "render/entity/formation_instance_layout.h"
+#include "render/creature/humanoid/runtime/formation_instance_layout.h"
 #include "render/frame/camera_visibility.h"
 #include "render/frame/draw_commands.h"
 #include "render/frame/frame_submitter.h"

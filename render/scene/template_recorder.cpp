@@ -1,4 +1,4 @@
-#include "render/cache/template_cache.h"
+#include "render/scene/template_recorder.h"
 
 #include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/frame/material_classification.h"

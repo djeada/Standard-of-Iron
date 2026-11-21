@@ -10,7 +10,7 @@
 
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
-#include "render/cache/render_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/entity/building_archetype_catalog.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"

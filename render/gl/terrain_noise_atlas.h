@@ -18,6 +18,7 @@ public:
     float tile_size = 1.0F;
     QVector2D noise_offset{0.0F, 0.0F};
     float macro_noise_scale = 1.0F;
+    bool low_detail = false;
   };
 
   TerrainNoiseAtlas();
@@ -26,7 +27,7 @@ public:
   TerrainNoiseAtlas(const TerrainNoiseAtlas&) = delete;
   auto operator=(const TerrainNoiseAtlas&) -> TerrainNoiseAtlas& = delete;
 
-  void bake_microdetail();
+  void bake_microdetail(bool low_detail);
 
   // Returns true once the attempt is settled (baked, or failed for good) and
   // false when it could not run at all (no context, empty terrain).

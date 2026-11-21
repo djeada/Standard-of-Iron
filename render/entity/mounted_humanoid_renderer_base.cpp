@@ -23,7 +23,7 @@
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/quadruped/mount_scale.h"
-#include "render/entity/mounted_swordsman_pose.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/palette.h"
 #include "render/frame/visibility_budget.h"
