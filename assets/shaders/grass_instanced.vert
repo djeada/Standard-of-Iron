@@ -51,10 +51,13 @@ void main() {
   float blade_width = a_color_width.w;
 
   if (u_has_cover_tex == 1) {
-    vec4 cover =
-        textureLod(u_cover_tex, base_pos.xz * u_cover_uv_scale + u_cover_uv_offset, 0.0);
-    float built_ground = max(clamp(cover.g - 1.0, 0.0, 1.0), clamp(cover.a - 1.0, 0.0, 1.0));
-    float keep = 1.0 - smoothstep(k_built_ground_clear_start, k_built_ground_clear_end, built_ground);
+    vec4 cover = textureLod(
+        u_cover_tex, base_pos.xz * u_cover_uv_scale + u_cover_uv_offset, 0.0);
+    float built_ground =
+        max(clamp(cover.g - 1.0, 0.0, 1.0), clamp(cover.a - 1.0, 0.0, 1.0));
+    float keep =
+        1.0 -
+        smoothstep(k_built_ground_clear_start, k_built_ground_clear_end, built_ground);
     if (keep <= 0.02) {
       gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
       v_color = vec3(0.0);
@@ -145,16 +148,18 @@ void main() {
                    ? k_flower_dark_eye
                    : k_flower_gold_eye;
     vec3 petal = blade_color * mix(0.90, 1.08, petal_tip);
-    surface_color =
-        mix(k_flower_stem_color, mix(eye, petal, smoothstep(0.0, 0.55, head)),
-            step(k_flower_stem_top - 0.01, ring));
+    surface_color = mix(k_flower_stem_color,
+                        mix(eye, petal, smoothstep(0.0, 0.55, head)),
+                        step(k_flower_stem_top - 0.01, ring));
     root_occlusion = mix(0.80, 1.0, tip);
   } else {
     plane = (blade_dir * along + blade_right * across * widen) * blade_width;
     lift = a_position.y * blade_height;
     taper = max(1.0 - 0.86 * pow(tip, 1.35), 0.06);
-    float blade_variation = hash11(sway_phase * 5.3 + 11.7 + dot(blade_dir, vec2(3.1, 7.7)));
-    vec3 varied_color = blade_color * k_blade_body_gain * mix(0.86, 1.10, blade_variation);
+    float blade_variation =
+        hash11(sway_phase * 5.3 + 11.7 + dot(blade_dir, vec2(3.1, 7.7)));
+    vec3 varied_color =
+        blade_color * k_blade_body_gain * mix(0.86, 1.10, blade_variation);
     vec3 root_color = mix(u_soil_color, varied_color, 0.62) * k_blade_root_shade;
     vec3 tip_color = varied_color * k_blade_tip_gain;
     surface_color = mix(root_color, varied_color, smoothstep(0.0, 0.50, tip));
@@ -169,9 +174,8 @@ void main() {
   vec2 out_dir = plane / max(length(plane), 1e-4);
   vec3 splay_normal = width_axis * out_dir.x + lean_axis * out_dir.y;
   float dome = smoothstep(0.0, 2.5 * blade_width, length(plane));
-  vec3 normal = is_flower
-                    ? vec3(0.0, 1.0, 0.0)
-                    : normalize(vec3(0.0, 1.0, 0.0) + splay_normal * dome * 0.85);
+  vec3 normal = is_flower ? vec3(0.0, 1.0, 0.0)
+                          : normalize(vec3(0.0, 1.0, 0.0) + splay_normal * dome * 0.85);
 
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_pos - world_pos);

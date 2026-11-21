@@ -244,10 +244,12 @@ PaintedSward soi_painted_sward(vec2 p, float softness, float sparsity) {
       float blade_length = mix(0.62, 1.0, blade_seed) * mix(0.78, 1.0, centre);
       float blade_t = t / blade_length;
       float blade_half = 0.5 * (1.0 - smoothstep(0.64, 1.0, blade_t)) + 0.05;
-      float blade_soft = clamp(softness * blade_count / max(2.0 * fan, 1e-4), 0.04, 0.5);
-      float inside =
-          (1.0 - smoothstep(blade_half - blade_soft, blade_half, abs(fract(blade_position) - 0.5))) *
-          smoothstep(-0.04, 0.04, t) * (1.0 - step(1.0, blade_t));
+      float blade_soft =
+          clamp(softness * blade_count / max(2.0 * fan, 1e-4), 0.04, 0.5);
+      float inside = (1.0 - smoothstep(blade_half - blade_soft,
+                                       blade_half,
+                                       abs(fract(blade_position) - 0.5))) *
+                     smoothstep(-0.04, 0.04, t) * (1.0 - step(1.0, blade_t));
       float rank = seed + 0.001;
       if (inside > 0.35 && rank > best_rank) {
         best_rank = rank;
@@ -1024,7 +1026,8 @@ void main() {
     float steppe =
         clamp(biome_dry * 0.70 + biome_rocky * 0.85 + biome_alpine * 0.45, 0.0, 1.0);
     steppe = clamp(steppe * (0.80 + 0.45 * sparse_cover - 0.30 * lush_patch), 0.0, 1.0);
-    float cured = clamp(dry_patch * 0.75 + sparse_cover * 0.25, 0.0, 1.0) * (1.0 - steppe);
+    float cured =
+        clamp(dry_patch * 0.75 + sparse_cover * 0.25, 0.0, 1.0) * (1.0 - steppe);
     float sward_scale = mix(1.0, 0.82, biome_dry) * mix(1.0, 0.88, biome_rocky);
     vec2 sward_coord =
         v_world_pos.xz * k_soi_sward_frequency * sward_scale + domain_warp * 0.30;
@@ -1054,26 +1057,28 @@ void main() {
                             smoothstep(-0.7, 0.8, tufts.tone));
       lush_tuft = mix(lush_tuft, cured_tuft, cured * 0.80);
       vec3 tuft_color = mix(lush_tuft, straw_tuft, steppe);
-      tuft_color = mix(tuft_color, grass_color, (0.35 + 0.30 * tufts.variety) * (1.0 - steppe));
+      tuft_color =
+          mix(tuft_color, grass_color, (0.35 + 0.30 * tufts.variety) * (1.0 - steppe));
       vec3 painted_tuft =
           mix(grass_color, tuft_color, mix(k_soi_sward_hue, 0.88, steppe)) * value;
-      vec3 painted_gap = mix(grass_color * (1.0 - k_soi_sward_gap * (1.0 - 0.5 * cured)),
-                             open_earth,
-                             steppe * 0.86);
+      vec3 painted_gap =
+          mix(grass_color * (1.0 - k_soi_sward_gap * (1.0 - 0.5 * cured)),
+              open_earth,
+              steppe * 0.86);
       vec3 painted = mix(painted_gap, painted_tuft, tufts.cover);
       grass_color = mix(grass_color, painted, strength);
       sward_height = mix(0.5, tufts.cover * (0.55 + 0.45 * lit), sward_fade);
     }
-    vec2 fine_coord =
-        v_world_pos.xz * k_soi_sward_fine_frequency * sward_scale - domain_warp * 0.45 +
-        vec2(17.0, 9.0);
+    vec2 fine_coord = v_world_pos.xz * k_soi_sward_fine_frequency * sward_scale -
+                      domain_warp * 0.45 + vec2(17.0, 9.0);
     float fine_footprint = max(length(fwidth(fine_coord)), 1e-5);
     float fine_fade = 1.0 - smoothstep(0.14, 0.50, fine_footprint);
     if (fine_fade > k_soi_band_epsilon) {
       PaintedSward blades = soi_painted_sward(
           fine_coord, clamp(fine_footprint * 0.9, 0.012, 0.20), steppe * 0.6);
       float value =
-          1.0 + blades.cover * blades.tone * 0.5 * (k_soi_sward_light + k_soi_sward_dark) -
+          1.0 +
+          blades.cover * blades.tone * 0.5 * (k_soi_sward_light + k_soi_sward_dark) -
           (1.0 - blades.cover) * k_soi_sward_gap * 0.6;
       grass_color *= mix(1.0, value, fine_fade * k_soi_sward_fine_amount);
     }
@@ -1273,18 +1278,20 @@ void main() {
     vec3 scree_color = mix(u_rock_low, u_soil_color, 0.24) * (0.90 + 0.14 * rock_value);
     rock_color = mix(rock_color, scree_color, mountain_scree * 0.42);
     {
-      float strata_wander = ecology_noise(world_coord * 0.07 + vec2(31.0, -12.0)) * 1.6 +
-                            ecology_noise(world_coord * 0.31 + vec2(-9.0, 44.0)) * 0.40;
+      float strata_wander =
+          ecology_noise(world_coord * 0.07 + vec2(31.0, -12.0)) * 1.6 +
+          ecology_noise(world_coord * 0.31 + vec2(-9.0, 44.0)) * 0.40;
       float strata_weight = smoothstep(0.14, 0.46, slope);
       vec3 warm_layer = vec3(1.10, 1.01, 0.88);
       vec3 cool_layer = vec3(0.90, 0.96, 1.04);
       for (int bed = 0; bed < 2; ++bed) {
-        float frequency = bed == 0 ? k_soi_strata_frequency : k_soi_strata_frequency * 3.3;
+        float frequency =
+            bed == 0 ? k_soi_strata_frequency : k_soi_strata_frequency * 3.3;
         float amount = bed == 0 ? 1.0 : 0.34;
-        float strata_coord =
-            v_world_pos.y * frequency + strata_wander * (bed == 0 ? 1.0 : 1.9) +
-            float(bed) * 3.7;
-        float strata_fade = 1.0 - smoothstep(0.22, 0.75, max(fwidth(strata_coord), 1e-5));
+        float strata_coord = v_world_pos.y * frequency +
+                             strata_wander * (bed == 0 ? 1.0 : 1.9) + float(bed) * 3.7;
+        float strata_fade =
+            1.0 - smoothstep(0.22, 0.75, max(fwidth(strata_coord), 1e-5));
         float layer = floor(strata_coord);
         float within = fract(strata_coord);
         float layer_tone = fract(sin(layer * 12.9898 + 4.1) * 43758.5453);

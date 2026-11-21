@@ -57,8 +57,8 @@ private:
     std::size_t cluster_count_per_chunk;
     std::size_t background_blades_per_cell;
     const std::function<bool(float, float, std::uint32_t&)>& add_grass_blade;
-    const std::function<bool(float, float, const QVector3D&, float, float, std::uint32_t&)>&
-        add_flower;
+    const std::function<bool(
+        float, float, const QVector3D&, float, float, std::uint32_t&)>& add_flower;
     float flower_density_scale;
     const std::function<int(Game::Map::TerrainType,
                             Game::Map::TerrainType,

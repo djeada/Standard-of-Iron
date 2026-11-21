@@ -86,7 +86,8 @@ void TerrainPipeline::cache_grass_uniforms() {
       m_grass_shader->optional_uniform_handle("u_ambient_boost");
   m_grass_uniforms.has_cover_texture =
       m_grass_shader->optional_uniform_handle("u_has_cover_tex");
-  m_grass_uniforms.cover_texture = m_grass_shader->optional_uniform_handle("u_cover_tex");
+  m_grass_uniforms.cover_texture =
+      m_grass_shader->optional_uniform_handle("u_cover_tex");
   m_grass_uniforms.cover_uv_scale =
       m_grass_shader->optional_uniform_handle("u_cover_uv_scale");
   m_grass_uniforms.cover_uv_offset =
