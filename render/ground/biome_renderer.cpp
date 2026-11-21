@@ -122,9 +122,9 @@ auto flower_palette_for(Game::Map::GroundType ground_type) -> FlowerPalette {
             0.60F};
   case GroundType::SoilFertile:
   default:
-    return {{{{{0.86F, 0.17F, 0.07F}, 0.18F, 0.32F, 0.058F, 0.084F, 1.6F},
-              {{0.97F, 0.96F, 0.91F}, 0.14F, 0.24F, 0.050F, 0.072F, 1.4F},
-              {{0.98F, 0.82F, 0.15F}, 0.14F, 0.26F, 0.048F, 0.070F, 1.3F},
+    return {{{{{0.86F, 0.19F, 0.08F}, 0.18F, 0.32F, 0.058F, 0.084F, 1.2F},
+              {{0.97F, 0.96F, 0.91F}, 0.14F, 0.24F, 0.052F, 0.076F, 1.7F},
+              {{0.98F, 0.82F, 0.15F}, 0.14F, 0.26F, 0.050F, 0.074F, 1.6F},
               {{0.44F, 0.42F, 0.88F}, 0.20F, 0.34F, 0.048F, 0.068F, 1.0F}}},
             4,
             1.0F};

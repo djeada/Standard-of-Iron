@@ -16,6 +16,10 @@ uniform vec3 u_soil_color;
 uniform vec2 u_viewport_size;
 uniform vec3 u_camera_pos;
 uniform float u_ambient_boost;
+uniform int u_has_cover_tex;
+uniform sampler2D u_cover_tex;
+uniform vec2 u_cover_uv_scale;
+uniform vec2 u_cover_uv_offset;
 
 out vec3 v_color;
 out vec3 v_world_pos;
@@ -28,6 +32,8 @@ float hash11(float x) {
 }
 
 const float k_kind_stride = 4.0;
+const float k_built_ground_clear_start = 0.06;
+const float k_built_ground_clear_end = 0.40;
 const float k_flower_stem_top = 0.40;
 const float k_flower_petal_mid = 0.74;
 const vec3 k_flower_stem_color = vec3(0.21, 0.34, 0.13);
@@ -43,6 +49,24 @@ void main() {
 
   vec3 blade_color = a_color_width.xyz;
   float blade_width = a_color_width.w;
+
+  if (u_has_cover_tex == 1) {
+    vec4 cover =
+        textureLod(u_cover_tex, base_pos.xz * u_cover_uv_scale + u_cover_uv_offset, 0.0);
+    float built_ground = max(clamp(cover.g - 1.0, 0.0, 1.0), clamp(cover.a - 1.0, 0.0, 1.0));
+    float keep = 1.0 - smoothstep(k_built_ground_clear_start, k_built_ground_clear_end, built_ground);
+    if (keep <= 0.02) {
+      gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+      v_color = vec3(0.0);
+      v_world_pos = base_pos;
+      v_alpha = 0.0;
+      v_edge = 0.0;
+      v_edge_softness = 1.0;
+      return;
+    }
+    blade_height *= keep;
+    blade_width *= mix(0.55, 1.0, keep);
+  }
 
   float kind = floor(a_sway_params.x / k_kind_stride + 0.01);
   bool is_flower = kind > 0.5;

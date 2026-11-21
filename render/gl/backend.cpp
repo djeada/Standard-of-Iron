@@ -485,6 +485,9 @@ void Backend::update_contact_shadow_uniforms() {
 void Backend::begin_frame() {
 
   drain_deferred_gl_deletes();
+  if (m_terrain_pipeline != nullptr) {
+    m_terrain_pipeline->m_frame_ground_cover = {};
+  }
 
   sync_graphics_profile();
   if (m_viewport_width > 0 && m_viewport_height > 0) {
