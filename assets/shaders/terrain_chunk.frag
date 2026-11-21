@@ -217,25 +217,44 @@ PaintedSward soi_painted_sward(vec2 p, float softness, float sparsity) {
       vec2 offset = vec2(float(x), float(y));
       vec2 jitter = hash22(cell + offset);
       float seed = fract(sin(dot(cell + offset, vec2(41.3, 289.1))) * 43758.5453);
-      float angle = k_soi_sward_lean + 0.62 * jitter.x;
+      if (seed < mix(0.05, 0.20, sparsity)) {
+        continue;
+      }
+      float angle = k_soi_sward_lean + 0.55 * jitter.x;
       vec2 up = vec2(cos(angle), sin(angle));
       vec2 side = vec2(-up.y, up.x);
-      float reach = 0.52 + 0.46 * fract(seed * 3.17);
-      vec2 q = local - (offset + 0.5 + 0.46 * jitter - up * reach * 0.40);
-      float along = dot(q, up) / reach;
+      float reach = 0.70 + 0.46 * fract(seed * 3.17);
+      vec2 q = local - (offset + 0.5 + 0.46 * jitter - up * reach * 0.42);
+      float t = dot(q, up) / reach;
+      if (t < -0.05 || t > 1.02) {
+        continue;
+      }
       float across = dot(q, side);
-      float spread = (0.22 + 0.20 * fract(seed * 7.31)) * mix(1.0, 0.78, sparsity) *
-                     step(mix(0.10, 0.34, sparsity), seed);
-      float crown = 1.0 - 0.30 * abs(sin(across * 15.0 + seed * 6.28));
-      float t = along / crown;
-      float half_width = spread * (0.30 + 0.70 * smoothstep(0.0, 0.30, t)) *
-                         (1.0 - smoothstep(0.55, 1.04, t));
-      float inside = (1.0 - smoothstep(half_width - softness, half_width, abs(across))) *
-                     smoothstep(-softness, softness, t);
+      float spread = (0.38 + 0.24 * fract(seed * 7.31)) * mix(1.0, 0.88, sparsity);
+      float fan = spread * (0.14 + 0.86 * pow(clamp(t, 0.0, 1.0), 0.72));
+      float u = across / max(fan, 1e-4);
+      if (abs(u) > 1.0) {
+        continue;
+      }
+      float blade_count = 4.0 + floor(fract(seed * 5.93) * 3.0);
+      float blade_position = (u * 0.5 + 0.5) * blade_count;
+      float blade_id = floor(blade_position);
+      float blade_seed = fract(sin(blade_id * 17.17 + seed * 91.7) * 43758.5453);
+      float centre = 1.0 - abs((blade_id + 0.5) / blade_count * 2.0 - 1.0);
+      float blade_length = mix(0.62, 1.0, blade_seed) * mix(0.78, 1.0, centre);
+      float blade_t = t / blade_length;
+      float blade_half = 0.5 * (1.0 - smoothstep(0.64, 1.0, blade_t)) + 0.05;
+      float blade_soft = clamp(softness * blade_count / max(2.0 * fan, 1e-4), 0.04, 0.5);
+      float inside =
+          (1.0 - smoothstep(blade_half - blade_soft, blade_half, abs(fract(blade_position) - 0.5))) *
+          smoothstep(-0.04, 0.04, t) * (1.0 - step(1.0, blade_t));
       float rank = seed + 0.001;
-      if (inside > 0.5 && rank > best_rank) {
+      if (inside > 0.35 && rank > best_rank) {
         best_rank = rank;
-        sward.tone = mix(-1.0, 1.0, smoothstep(0.04, 0.86, t));
+        sward.tone = clamp(mix(-1.0, 1.0, smoothstep(0.02, 0.92, blade_t)) +
+                               (blade_seed - 0.5) * 0.5,
+                           -1.0,
+                           1.0);
         sward.cover = inside;
         sward.variety = fract(seed * 13.7);
       }
@@ -1002,10 +1021,10 @@ void main() {
   float sward_height = 0.5;
 #if SOI_SURFACE_DETAIL
   {
-    float steppe = clamp(biome_dry * 0.70 + biome_rocky * 0.85 + biome_alpine * 0.45 +
-                             dry_patch * 0.30 + sparse_cover * 0.20 - lush_patch * 0.25,
-                         0.0,
-                         1.0);
+    float steppe =
+        clamp(biome_dry * 0.70 + biome_rocky * 0.85 + biome_alpine * 0.45, 0.0, 1.0);
+    steppe = clamp(steppe * (0.80 + 0.45 * sparse_cover - 0.30 * lush_patch), 0.0, 1.0);
+    float cured = clamp(dry_patch * 0.75 + sparse_cover * 0.25, 0.0, 1.0) * (1.0 - steppe);
     float sward_scale = mix(1.0, 0.82, biome_dry) * mix(1.0, 0.88, biome_rocky);
     vec2 sward_coord =
         v_world_pos.xz * k_soi_sward_frequency * sward_scale + domain_warp * 0.30;
@@ -1030,11 +1049,17 @@ void main() {
                             mix(u_grass_primary, u_grass_secondary, 0.5) * 1.02,
                             smoothstep(-0.7, 0.8, tufts.tone));
       straw_tuft = mix(straw_tuft, green_tuft, step(0.72, tufts.variety));
+      vec3 cured_tuft = mix(mix(u_grass_dry, u_grass_primary, 0.40) * 0.86,
+                            mix(u_grass_dry, u_grass_secondary, 0.25) * 1.08,
+                            smoothstep(-0.7, 0.8, tufts.tone));
+      lush_tuft = mix(lush_tuft, cured_tuft, cured * 0.80);
       vec3 tuft_color = mix(lush_tuft, straw_tuft, steppe);
       tuft_color = mix(tuft_color, grass_color, (0.35 + 0.30 * tufts.variety) * (1.0 - steppe));
       vec3 painted_tuft =
           mix(grass_color, tuft_color, mix(k_soi_sward_hue, 0.88, steppe)) * value;
-      vec3 painted_gap = mix(grass_color * (1.0 - k_soi_sward_gap), open_earth, steppe * 0.86);
+      vec3 painted_gap = mix(grass_color * (1.0 - k_soi_sward_gap * (1.0 - 0.5 * cured)),
+                             open_earth,
+                             steppe * 0.86);
       vec3 painted = mix(painted_gap, painted_tuft, tufts.cover);
       grass_color = mix(grass_color, painted, strength);
       sward_height = mix(0.5, tufts.cover * (0.55 + 0.45 * lit), sward_fade);
