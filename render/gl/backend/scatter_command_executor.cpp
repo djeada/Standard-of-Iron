@@ -113,7 +113,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.grass};
       if ((grass.instance_buffer == nullptr) || grass.instance_count == 0 ||
           (m_terrain_pipeline->m_grass_shader == nullptr) ||
-          (m_terrain_pipeline->m_grass_vao == 0U) ||
+          (!m_terrain_pipeline->m_grass_vao) ||
           m_terrain_pipeline->m_grass_vertex_count == 0) {
         break;
       }
@@ -208,7 +208,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         }
       }
 
-      glBindVertexArray(m_terrain_pipeline->m_grass_vao);
+      glBindVertexArray(m_terrain_pipeline->m_grass_vao.id());
       grass.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(GrassInstanceGpu));
       apply_vertex_attrib_layout({{tex_coord,
@@ -258,7 +258,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.stone};
       if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
           (m_vegetation_pipeline->stone_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_stone_mesh.vao == 0U) ||
+          (!m_vegetation_pipeline->m_stone_mesh.vao) ||
           m_vegetation_pipeline->m_stone_mesh.index_count == 0) {
         break;
       }
@@ -293,7 +293,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                                   cam.get_position());
       }
 
-      glBindVertexArray(m_vegetation_pipeline->m_stone_mesh.vao);
+      glBindVertexArray(m_vegetation_pipeline->m_stone_mesh.vao.id());
       stone.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(StoneInstanceGpu));
       apply_vertex_attrib_layout({{tex_coord,
@@ -390,7 +390,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         shader->set_uniform(uniforms.snow_coverage, params.snow_coverage);
       }
 
-      glBindVertexArray(foliage.mesh->vao);
+      glBindVertexArray(foliage.mesh->vao.id());
       deco_cmd_.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(TreeInstanceGpu));
       apply_vertex_attrib_layout({{instance_position,
@@ -442,7 +442,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
 
       if ((firecamp.instance_buffer == nullptr) || firecamp.instance_count == 0 ||
           (m_vegetation_pipeline->firecamp_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_firecamp_mesh.vao == 0U) ||
+          (!m_vegetation_pipeline->m_firecamp_mesh.vao) ||
           m_vegetation_pipeline->m_firecamp_mesh.index_count == 0) {
         break;
       }
@@ -513,7 +513,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
             m_vegetation_pipeline->m_firecamp_uniforms.camera_forward, camera_forward);
       }
 
-      glBindVertexArray(m_vegetation_pipeline->m_firecamp_mesh.vao);
+      glBindVertexArray(m_vegetation_pipeline->m_firecamp_mesh.vao.id());
       firecamp.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
       apply_vertex_attrib_layout({{instance_position,
@@ -571,7 +571,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           resolve_prop_draw(*m_vegetation_pipeline, deco_cmd_.species);
 
       Shader* prop_shader = prop.shader;
-      GLuint const prop_vao = prop.mesh != nullptr ? prop.mesh->vao : 0U;
+      GLuint const prop_vao = prop.mesh != nullptr ? prop.mesh->vao.id() : 0U;
       GLsizei const prop_idx_count = prop.mesh != nullptr ? prop.mesh->index_count : 0;
       const BackendPipelines::VegetationPipeline::PropUniforms* prop_uniforms =
           prop.uniforms;

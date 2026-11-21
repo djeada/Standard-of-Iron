@@ -177,11 +177,9 @@ auto RiggedCullPipeline::initialize() -> bool {
     }
   }
 
-  glGenVertexArrays(1, &m_vao);
-  note_vertex_arrays_created(1);
-  glGenBuffers(1, &m_command_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_command_buffer);
+  m_vao = VertexArrayHandle::create();
+  m_command_buffer = BufferHandle::create();
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_command_buffer.id());
   glBufferData(GL_SHADER_STORAGE_BUFFER,
                static_cast<GLsizeiptr>(k_command_words * sizeof(GLuint)),
                nullptr,
@@ -190,10 +188,10 @@ auto RiggedCullPipeline::initialize() -> bool {
                       false);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-  const auto create_stream = [this](GLenum target, GLuint& buffer, std::size_t bytes) {
-    glGenBuffers(1, &buffer);
-    note_buffers_created(1);
-    glBindBuffer(target, buffer);
+  const auto create_stream = [this](GLenum target, BufferHandle& buffer,
+                                    std::size_t bytes) {
+    buffer = BufferHandle::create();
+    glBindBuffer(target, buffer.id());
     glBufferData(target, static_cast<GLsizeiptr>(bytes), nullptr, GL_STREAM_DRAW);
     note_buffer_storage(bytes, false);
     glBindBuffer(target, 0);
@@ -207,38 +205,21 @@ auto RiggedCullPipeline::initialize() -> bool {
   create_stream(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo, m_palette_capacity_bytes);
   create_stream(GL_SHADER_STORAGE_BUFFER, m_instance_ssbo, m_instance_capacity_bytes);
   create_stream(GL_TEXTURE_BUFFER, m_role_color_buffer, m_role_color_capacity_bytes);
-  glGenTextures(1, &m_role_color_texture);
-  note_textures_created(1);
+  m_role_color_texture = TextureHandle::create();
   reset_role_color_stream();
 
-  m_available = m_vao != 0 && m_command_buffer != 0;
+  m_available = m_vao.valid() && m_command_buffer.valid();
   return m_available;
 }
 
 void RiggedCullPipeline::shutdown() {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    m_available = false;
-    return;
-  }
-  initializeOpenGLFunctions();
-  if (m_vao != 0) {
-    glDeleteVertexArrays(1, &m_vao);
-    m_vao = 0;
-  }
-  for (GLuint* buffer : {&m_palette_ssbo,
-                         &m_instance_ssbo,
-                         &m_out_index_buffer,
-                         &m_command_buffer,
-                         &m_role_color_buffer}) {
-    if (*buffer != 0) {
-      glDeleteBuffers(1, buffer);
-      *buffer = 0;
-    }
-  }
-  if (m_role_color_texture != 0) {
-    glDeleteTextures(1, &m_role_color_texture);
-    m_role_color_texture = 0;
-  }
+  m_vao.reset();
+  m_palette_ssbo.reset();
+  m_instance_ssbo.reset();
+  m_out_index_buffer.reset();
+  m_command_buffer.reset();
+  m_role_color_buffer.reset();
+  m_role_color_texture.reset();
   m_cull_shader_storage.reset();
   m_finalize_shader_storage.reset();
   m_draw_shader_storage.reset();
@@ -258,16 +239,16 @@ void RiggedCullPipeline::begin_frame() {
   }
   m_role_color_palette_indices.clear();
   orphan_stream(GL_SHADER_STORAGE_BUFFER,
-                m_palette_ssbo,
+                m_palette_ssbo.id(),
                 m_palette_capacity_bytes,
                 m_palette_stream_cursor_bytes);
   orphan_stream(GL_SHADER_STORAGE_BUFFER,
-                m_instance_ssbo,
+                m_instance_ssbo.id(),
                 m_instance_capacity_bytes,
                 m_instance_stream_cursor_bytes);
   if (m_role_color_stream_cursor_bytes > k_role_color_palette_bytes) {
     orphan_stream(GL_TEXTURE_BUFFER,
-                  m_role_color_buffer,
+                  m_role_color_buffer.id(),
                   m_role_color_capacity_bytes,
                   m_role_color_stream_cursor_bytes);
     reset_role_color_stream();
@@ -291,15 +272,15 @@ void RiggedCullPipeline::orphan_stream(GLenum target,
 
 void RiggedCullPipeline::reset_role_color_stream() {
   const std::array<float, RiggedCreatureCmd::k_max_role_colors * 4U> empty_palette{};
-  glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer);
+  glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer.id());
   glBufferSubData(GL_TEXTURE_BUFFER,
                   0,
                   static_cast<GLsizeiptr>(k_role_color_palette_bytes),
                   empty_palette.data());
   note_buffer_transfer(k_role_color_palette_bytes);
   glBindBuffer(GL_TEXTURE_BUFFER, 0);
-  glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture);
-  glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer);
+  glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture.id());
+  glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer.id());
   glBindTexture(GL_TEXTURE_BUFFER, 0);
   m_role_color_stream_cursor_bytes = k_role_color_palette_bytes;
 }
@@ -312,7 +293,7 @@ auto RiggedCullPipeline::ensure_instance_buffers(std::size_t instance_count,
   const std::size_t palette_bytes = instance_count * bone_count * 16 * sizeof(float);
   const std::size_t instance_bytes =
       instance_count * k_floats_per_instance * sizeof(float);
-  return m_palette_ssbo != 0U && m_instance_ssbo != 0U &&
+  return m_palette_ssbo.valid() && m_instance_ssbo.valid() &&
          palette_bytes <= k_max_stream_bytes && instance_bytes <= k_max_stream_bytes;
 }
 
@@ -327,12 +308,11 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
   if (wanted == 0U) {
     return false;
   }
-  if (wanted > m_out_capacity_triangles || m_out_index_buffer == 0) {
-    if (m_out_index_buffer == 0) {
-      glGenBuffers(1, &m_out_index_buffer);
-      note_buffers_created(1);
+  if (wanted > m_out_capacity_triangles || !m_out_index_buffer) {
+    if (!m_out_index_buffer) {
+      m_out_index_buffer = BufferHandle::create();
     }
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_out_index_buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_out_index_buffer.id());
     glBufferData(GL_SHADER_STORAGE_BUFFER,
                  static_cast<GLsizeiptr>(wanted * 3 * sizeof(GLuint)),
                  nullptr,
@@ -340,14 +320,14 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
     note_buffer_storage(static_cast<std::size_t>(wanted * 3 * sizeof(GLuint)), false);
     m_out_capacity_triangles = wanted;
 
-    glBindVertexArray(m_vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_out_index_buffer);
+    glBindVertexArray(m_vao.id());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_out_index_buffer.id());
     glBindVertexArray(0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-  return m_out_index_buffer != 0;
+  return m_out_index_buffer.valid();
 }
 
 auto RiggedCullPipeline::ensure_stream_capacity(GLuint buffer,
@@ -416,13 +396,13 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
   bool streamed_palette = false;
   if (!m_palette_scratch.empty()) {
     const std::size_t bytes = m_palette_scratch.size() * sizeof(float);
-    if (!ensure_stream_capacity(m_palette_ssbo,
+    if (!ensure_stream_capacity(m_palette_ssbo.id(),
                                 m_palette_capacity_bytes,
                                 m_palette_stream_cursor_bytes,
                                 bytes)) {
       return false;
     }
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo.id());
     glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                     static_cast<GLintptr>(m_palette_stream_cursor_bytes),
                     static_cast<GLsizeiptr>(bytes),
@@ -478,7 +458,7 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
 
   m_instance_base = 0U;
   const std::size_t instance_bytes = m_instance_scratch.size() * sizeof(float);
-  if (!ensure_stream_capacity(m_instance_ssbo,
+  if (!ensure_stream_capacity(m_instance_ssbo.id(),
                               m_instance_capacity_bytes,
                               m_instance_stream_cursor_bytes,
                               instance_bytes)) {
@@ -486,7 +466,7 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
   }
   m_instance_base = static_cast<std::uint32_t>(m_instance_stream_cursor_bytes /
                                                (k_floats_per_instance * sizeof(float)));
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_instance_ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_instance_ssbo.id());
   glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                   static_cast<GLintptr>(m_instance_stream_cursor_bytes),
                   static_cast<GLsizeiptr>(instance_bytes),
@@ -525,7 +505,7 @@ auto RiggedCullPipeline::role_color_palette_index(const RiggedCreatureCmd& cmd)
   }
   const auto palette_index =
       static_cast<std::uint32_t>(m_role_color_stream_cursor_bytes / k_bytes);
-  glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer);
+  glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer.id());
   glBufferSubData(GL_TEXTURE_BUFFER,
                   static_cast<GLintptr>(m_role_color_stream_cursor_bytes),
                   static_cast<GLsizeiptr>(k_bytes),
@@ -538,8 +518,8 @@ auto RiggedCullPipeline::role_color_palette_index(const RiggedCreatureCmd& cmd)
 
 auto RiggedCullPipeline::bind_role_color_texture() -> bool {
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture);
-  return m_role_color_buffer != 0U && m_role_color_texture != 0U;
+  glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture.id());
+  return m_role_color_buffer.valid() && m_role_color_texture.valid();
 }
 
 auto RiggedCullPipeline::draw(const RiggedCreatureCmd* const* cmds,
@@ -641,11 +621,11 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
   }
 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_vertex_binding, vertex_buffer->id());
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
                    k_baked_palette_binding,
-                   baked_palette_buffer != 0U ? baked_palette_buffer : m_palette_ssbo);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo);
+                   baked_palette_buffer != 0U ? baked_palette_buffer : m_palette_ssbo.id());
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo.id());
   if (!depth_only && !bind_role_color_texture()) {
     return false;
   }
@@ -675,7 +655,7 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
         m_wear_volume);
   }
 
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao.id());
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->id());
   const auto draw_range =
       [&](std::size_t index_offset, std::size_t index_count, bool rigid) {
@@ -776,13 +756,13 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_vertex_binding, vertex_buffer->id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_index_binding, index_buffer->id());
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo.id());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
                    k_baked_palette_binding,
-                   baked_palette_buffer != 0 ? baked_palette_buffer : m_palette_ssbo);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_out_index_binding, m_out_index_buffer);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_command_binding, m_command_buffer);
+                   baked_palette_buffer != 0 ? baked_palette_buffer : m_palette_ssbo.id());
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo.id());
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_out_index_binding, m_out_index_buffer.id());
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_command_binding, m_command_buffer.id());
 
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLint cull_mode = GL_BACK;
@@ -792,7 +772,7 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   bool const cull_backfaces = cull_enabled == GL_TRUE;
 
   const std::array<GLuint, k_command_words> reset{0U, 1U, 0U, 0U, 0U, 0U, 0U};
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_command_buffer);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_command_buffer.id());
   glBufferSubData(GL_SHADER_STORAGE_BUFFER,
                   0,
                   static_cast<GLsizeiptr>(reset.size() * sizeof(GLuint)),
@@ -873,8 +853,8 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
         m_wear_volume);
   }
 
-  glBindVertexArray(m_vao);
-  glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_command_buffer);
+  glBindVertexArray(m_vao.id());
+  glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_command_buffer.id());
   glDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr);
   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
   glBindVertexArray(0);

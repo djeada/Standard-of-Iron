@@ -18,25 +18,14 @@ Buffer::Buffer(Type type)
     : m_type(type) {
 }
 
-Buffer::~Buffer() {
-  if (m_buffer == 0) {
-    return;
-  }
-  if (!gl_objects_can_be_released(m_share_group)) {
-    defer_gl_delete(DeferredGlObject::Buffer, m_buffer, m_share_group);
-    return;
-  }
-  glDeleteBuffers(1, &m_buffer);
-}
+Buffer::~Buffer() = default;
 
 void Buffer::bind() {
-  if (m_buffer == 0U) {
+  if (!m_buffer) {
     initializeOpenGLFunctions();
-    glGenBuffers(1, &m_buffer);
-    m_share_group = current_gl_share_group();
-    note_buffers_created();
+    m_buffer = BufferHandle::create();
   }
-  glBindBuffer(get_gl_type(), m_buffer);
+  glBindBuffer(get_gl_type(), m_buffer.id());
 }
 
 void Buffer::unbind() {
@@ -51,7 +40,7 @@ void Buffer::set_data(const void* data, size_t size, Usage usage) {
 }
 
 void Buffer::reserve(size_t size, Usage usage) {
-  if (m_size_bytes >= size && m_buffer != 0U) {
+  if (m_size_bytes >= size && m_buffer) {
     return;
   }
   set_data(nullptr, size, usage);
@@ -61,7 +50,7 @@ void Buffer::update_sub_data(const void* data, size_t size) {
   if (size == 0) {
     return;
   }
-  if (size > m_size_bytes || m_buffer == 0U) {
+  if (size > m_size_bytes || !m_buffer) {
     set_data(data, size, Usage::Dynamic);
     return;
   }
@@ -96,31 +85,20 @@ auto Buffer::get_gl_usage(Usage usage) -> GLenum {
 
 VertexArray::VertexArray() = default;
 
-VertexArray::~VertexArray() {
-  if (m_vao == 0) {
-    return;
-  }
-  if (!gl_objects_can_be_released(m_share_group)) {
-    defer_gl_delete(DeferredGlObject::VertexArray, m_vao, m_share_group);
-    return;
-  }
-  glDeleteVertexArrays(1, &m_vao);
-}
+VertexArray::~VertexArray() = default;
 
 void VertexArray::bind() {
-  if (m_vao == 0U) {
+  if (!m_vao) {
     initializeOpenGLFunctions();
 #ifndef NDEBUG
     while (glGetError() != GL_NO_ERROR) {
     }
 #endif
-    glGenVertexArrays(1, &m_vao);
-    m_share_group = current_gl_share_group();
-    note_vertex_arrays_created();
+    m_vao = VertexArrayHandle::create();
 #ifndef NDEBUG
     GLenum gen_err = glGetError();
     if (gen_err != GL_NO_ERROR) {
-      qWarning() << "VertexArray glGenVertexArrays error" << gen_err;
+      qWarning() << "VertexArray creation error" << gen_err;
     }
 #endif
   }
@@ -130,11 +108,11 @@ void VertexArray::bind() {
   }
 #endif
 
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao.id());
 #ifndef NDEBUG
   GLenum bind_err = glGetError();
   if (bind_err != GL_NO_ERROR) {
-    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao" << m_vao;
+    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao" << m_vao.id();
   }
 #endif
 }

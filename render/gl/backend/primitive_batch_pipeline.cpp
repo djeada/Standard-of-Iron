@@ -48,7 +48,9 @@ auto PrimitiveBatchPipeline::initialize() -> bool {
 }
 
 void PrimitiveBatchPipeline::shutdown() {
-  shutdown_vaos();
+  m_sphere_mesh.reset();
+  m_cylinder_mesh.reset();
+  m_cone_mesh.reset();
   m_initialized = false;
 }
 
@@ -119,13 +121,11 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
     return;
   }
 
-  glGenVertexArrays(1, &m_sphere_mesh.vao);
-  note_vertex_arrays_created(1);
-  glBindVertexArray(m_sphere_mesh.vao);
+  m_sphere_mesh.vao = VertexArrayHandle::create();
+  glBindVertexArray(m_sphere_mesh.vao.id());
 
-  glGenBuffers(1, &m_sphere_mesh.vertex_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.vertex_buffer);
+  m_sphere_mesh.vertex_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
@@ -133,9 +133,8 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
   note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
                       vertices.data() != nullptr);
 
-  glGenBuffers(1, &m_sphere_mesh.index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_sphere_mesh.index_buffer);
+  m_sphere_mesh.index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_sphere_mesh.index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
@@ -154,9 +153,8 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
         sizeof(Vertex),
         offsetof(Vertex, tex_coord)}});
 
-  glGenBuffers(1, &m_sphere_mesh.instance_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.instance_buffer);
+  m_sphere_mesh.instance_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.instance_buffer.id());
   m_sphere_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                m_sphere_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
@@ -166,7 +164,7 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
                                                sizeof(GL::PrimitiveInstanceGpu)),
                       false);
 
-  setup_instance_attributes(m_sphere_mesh.vao, m_sphere_mesh.instance_buffer);
+  setup_instance_attributes(m_sphere_mesh.vao.id(), m_sphere_mesh.instance_buffer.id());
   glBindVertexArray(0);
 }
 
@@ -182,13 +180,11 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
     return;
   }
 
-  glGenVertexArrays(1, &m_cylinder_mesh.vao);
-  note_vertex_arrays_created(1);
-  glBindVertexArray(m_cylinder_mesh.vao);
+  m_cylinder_mesh.vao = VertexArrayHandle::create();
+  glBindVertexArray(m_cylinder_mesh.vao.id());
 
-  glGenBuffers(1, &m_cylinder_mesh.vertex_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.vertex_buffer);
+  m_cylinder_mesh.vertex_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
@@ -196,9 +192,8 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
   note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
                       vertices.data() != nullptr);
 
-  glGenBuffers(1, &m_cylinder_mesh.index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinder_mesh.index_buffer);
+  m_cylinder_mesh.index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinder_mesh.index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
@@ -217,9 +212,8 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
         sizeof(Vertex),
         offsetof(Vertex, tex_coord)}});
 
-  glGenBuffers(1, &m_cylinder_mesh.instance_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.instance_buffer);
+  m_cylinder_mesh.instance_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.instance_buffer.id());
   m_cylinder_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                m_cylinder_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
@@ -229,7 +223,7 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
                                                sizeof(GL::PrimitiveInstanceGpu)),
                       false);
 
-  setup_instance_attributes(m_cylinder_mesh.vao, m_cylinder_mesh.instance_buffer);
+  setup_instance_attributes(m_cylinder_mesh.vao.id(), m_cylinder_mesh.instance_buffer.id());
   glBindVertexArray(0);
 }
 
@@ -245,13 +239,11 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
     return;
   }
 
-  glGenVertexArrays(1, &m_cone_mesh.vao);
-  note_vertex_arrays_created(1);
-  glBindVertexArray(m_cone_mesh.vao);
+  m_cone_mesh.vao = VertexArrayHandle::create();
+  glBindVertexArray(m_cone_mesh.vao.id());
 
-  glGenBuffers(1, &m_cone_mesh.vertex_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.vertex_buffer);
+  m_cone_mesh.vertex_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                vertices.size() * sizeof(Vertex),
                vertices.data(),
@@ -259,9 +251,8 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
   note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
                       vertices.data() != nullptr);
 
-  glGenBuffers(1, &m_cone_mesh.index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cone_mesh.index_buffer);
+  m_cone_mesh.index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cone_mesh.index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                indices.size() * sizeof(unsigned int),
                indices.data(),
@@ -280,9 +271,8 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
         sizeof(Vertex),
         offsetof(Vertex, tex_coord)}});
 
-  glGenBuffers(1, &m_cone_mesh.instance_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.instance_buffer);
+  m_cone_mesh.instance_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.instance_buffer.id());
   m_cone_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                m_cone_instance_capacity * sizeof(GL::PrimitiveInstanceGpu),
@@ -292,24 +282,18 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
                                                sizeof(GL::PrimitiveInstanceGpu)),
                       false);
 
-  setup_instance_attributes(m_cone_mesh.vao, m_cone_mesh.instance_buffer);
+  setup_instance_attributes(m_cone_mesh.vao.id(), m_cone_mesh.instance_buffer.id());
   glBindVertexArray(0);
-}
-
-void PrimitiveBatchPipeline::shutdown_vaos() {
-  for (StaticMeshBuffers* mesh : {&m_sphere_mesh, &m_cylinder_mesh, &m_cone_mesh}) {
-    release_mesh_buffers(*this, *mesh);
-  }
 }
 
 void PrimitiveBatchPipeline::upload_sphere_instances(
     const GL::PrimitiveInstanceGpu* data, std::size_t count) {
   m_sphere_instances_resident = 0;
-  if (count == 0 || data == nullptr || m_sphere_mesh.instance_buffer == 0) {
+  if (count == 0 || data == nullptr || !m_sphere_mesh.instance_buffer) {
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_sphere_mesh.instance_buffer.id());
 
   if (count > m_sphere_instance_capacity) {
     m_sphere_instance_capacity = static_cast<std::size_t>(count * k_growth_factor);
@@ -331,11 +315,11 @@ void PrimitiveBatchPipeline::upload_sphere_instances(
 void PrimitiveBatchPipeline::upload_cylinder_instances(
     const GL::PrimitiveInstanceGpu* data, std::size_t count) {
   m_cylinder_instances_resident = 0;
-  if (count == 0 || data == nullptr || m_cylinder_mesh.instance_buffer == 0) {
+  if (count == 0 || data == nullptr || !m_cylinder_mesh.instance_buffer) {
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_mesh.instance_buffer.id());
 
   if (count > m_cylinder_instance_capacity) {
     m_cylinder_instance_capacity = static_cast<std::size_t>(count * k_growth_factor);
@@ -357,11 +341,11 @@ void PrimitiveBatchPipeline::upload_cylinder_instances(
 void PrimitiveBatchPipeline::upload_cone_instances(const GL::PrimitiveInstanceGpu* data,
                                                    std::size_t count) {
   m_cone_instances_resident = 0;
-  if (count == 0 || data == nullptr || m_cone_mesh.instance_buffer == 0) {
+  if (count == 0 || data == nullptr || !m_cone_mesh.instance_buffer) {
     return;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cone_mesh.instance_buffer.id());
 
   if (count > m_cone_instance_capacity) {
     m_cone_instance_capacity = static_cast<std::size_t>(count * k_growth_factor);
@@ -385,7 +369,7 @@ void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
                                           const QVector3D& light_dir,
                                           float ambient_strength) {
   count = m_sphere_draw_guard.clamp(count, m_sphere_instances_resident);
-  if (count == 0 || m_sphere_mesh.vao == 0 || m_shader == nullptr) {
+  if (count == 0 || !m_sphere_mesh.vao || m_shader == nullptr) {
     return;
   }
 
@@ -394,7 +378,7 @@ void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
   m_shader->set_uniform(m_uniforms.light_dir, light_dir);
   m_shader->set_uniform(m_uniforms.ambient_strength, ambient_strength);
 
-  glBindVertexArray(m_sphere_mesh.vao);
+  glBindVertexArray(m_sphere_mesh.vao.id());
   glDrawElementsInstanced(GL_TRIANGLES,
                           m_sphere_mesh.index_count,
                           GL_UNSIGNED_INT,
@@ -409,7 +393,7 @@ void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
                                             const QVector3D& light_dir,
                                             float ambient_strength) {
   count = m_cylinder_draw_guard.clamp(count, m_cylinder_instances_resident);
-  if (count == 0 || m_cylinder_mesh.vao == 0 || m_shader == nullptr) {
+  if (count == 0 || !m_cylinder_mesh.vao || m_shader == nullptr) {
     return;
   }
 
@@ -418,7 +402,7 @@ void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
   m_shader->set_uniform(m_uniforms.light_dir, light_dir);
   m_shader->set_uniform(m_uniforms.ambient_strength, ambient_strength);
 
-  glBindVertexArray(m_cylinder_mesh.vao);
+  glBindVertexArray(m_cylinder_mesh.vao.id());
   glDrawElementsInstanced(GL_TRIANGLES,
                           m_cylinder_mesh.index_count,
                           GL_UNSIGNED_INT,
@@ -433,7 +417,7 @@ void PrimitiveBatchPipeline::draw_cones(std::size_t count,
                                         const QVector3D& light_dir,
                                         float ambient_strength) {
   count = m_cone_draw_guard.clamp(count, m_cone_instances_resident);
-  if (count == 0 || m_cone_mesh.vao == 0 || m_shader == nullptr) {
+  if (count == 0 || !m_cone_mesh.vao || m_shader == nullptr) {
     return;
   }
 
@@ -442,7 +426,7 @@ void PrimitiveBatchPipeline::draw_cones(std::size_t count,
   m_shader->set_uniform(m_uniforms.light_dir, light_dir);
   m_shader->set_uniform(m_uniforms.ambient_strength, ambient_strength);
 
-  glBindVertexArray(m_cone_mesh.vao);
+  glBindVertexArray(m_cone_mesh.vao.id());
   glDrawElementsInstanced(GL_TRIANGLES,
                           m_cone_mesh.index_count,
                           GL_UNSIGNED_INT,

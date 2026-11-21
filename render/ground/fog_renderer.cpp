@@ -1,9 +1,7 @@
 #include "fog_renderer.h"
 
 #include <QOpenGLContext>
-#include <QOpenGLFunctions>
 #include <QVector2D>
-#include <QtGui/qopengl.h>
 
 #include <algorithm>
 #include <cmath>
@@ -12,7 +10,7 @@
 #include <vector>
 
 #include "game/map/visibility_service.h"
-#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/texture_upload.h"
 #include "render/scene_renderer.h"
 #include "visibility_mask_encoder.h"
 
@@ -253,9 +251,7 @@ void FogRenderer::upload_mask(Renderer& renderer) {
     return;
   }
 
-  auto* gl_context = QOpenGLContext::currentContext();
-  auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
-  if (gl_functions == nullptr) {
+  if (QOpenGLContext::currentContext() == nullptr) {
     return;
   }
 
@@ -287,20 +283,11 @@ void FogRenderer::upload_mask(Renderer& renderer) {
   }
 
   m_mask_texture->bind();
-  gl_functions->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  gl_functions->glTexSubImage2D(GL_TEXTURE_2D,
-                                0,
-                                m_mask_dirty.x,
-                                m_mask_dirty.z,
-                                m_mask_dirty.width,
-                                m_mask_dirty.height,
-                                GL_RGBA,
-                                GL_UNSIGNED_BYTE,
-                                m_mask_texels.data());
-  Render::GL::note_texture_transfer(
-      Render::GL::texture_transfer_bytes(static_cast<std::size_t>(m_mask_dirty.width),
-                                         static_cast<std::size_t>(m_mask_dirty.height),
-                                         4U));
+  Render::GL::upload_bound_texture_rgba8(m_mask_dirty.x,
+                                         m_mask_dirty.z,
+                                         m_mask_dirty.width,
+                                         m_mask_dirty.height,
+                                         m_mask_texels.data());
   m_mask_dirty = {};
 }
 

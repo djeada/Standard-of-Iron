@@ -15,13 +15,11 @@ void upload_static_instanced_mesh(QOpenGLFunctions_3_3_Core& gl,
                                   std::size_t index_count,
                                   std::span<const GLuint> instance_locations) {
 
-  gl.glGenVertexArrays(1, &mesh.vao);
-  note_vertex_arrays_created(1);
-  gl.glBindVertexArray(mesh.vao);
+  mesh.vao = VertexArrayHandle::create();
+  gl.glBindVertexArray(mesh.vao.id());
 
-  gl.glGenBuffers(1, &mesh.vertex_buffer);
-  note_buffers_created(1);
-  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  mesh.vertex_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
   gl.glBufferData(GL_ARRAY_BUFFER,
                   static_cast<GLsizeiptr>(vertex_count * vertex_stride),
                   vertex_data,
@@ -40,9 +38,8 @@ void upload_static_instanced_mesh(QOpenGLFunctions_3_3_Core& gl,
                              reinterpret_cast<void*>(attribute.offset));
   }
 
-  gl.glGenBuffers(1, &mesh.index_buffer);
-  note_buffers_created(1);
-  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  mesh.index_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
   gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                   static_cast<GLsizeiptr>(index_count * sizeof(std::uint16_t)),
                   index_data,
@@ -73,22 +70,19 @@ auto upload_static_effect_mesh(QOpenGLFunctions_3_3_Core& gl,
     return check_gl_error(label, stage);
   };
 
-  gl.glGenVertexArrays(1, &mesh.vao);
-  note_vertex_arrays_created(1);
-  if (!stage_ok("glGenVertexArrays") || mesh.vao == 0) {
+  mesh.vao = VertexArrayHandle::create();
+  if (!stage_ok("create vertex array") || !mesh.vao) {
     return false;
   }
 
-  gl.glBindVertexArray(mesh.vao);
+  gl.glBindVertexArray(mesh.vao.id());
   if (!stage_ok("glBindVertexArray")) {
-    gl.glDeleteVertexArrays(1, &mesh.vao);
-    mesh.vao = 0;
+    mesh.vao.reset();
     return false;
   }
 
-  gl.glGenBuffers(1, &mesh.vertex_buffer);
-  note_buffers_created(1);
-  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  mesh.vertex_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
   gl.glBufferData(GL_ARRAY_BUFFER,
                   static_cast<GLsizeiptr>(vertex_count * vertex_stride),
                   vertex_data,
@@ -96,14 +90,13 @@ auto upload_static_effect_mesh(QOpenGLFunctions_3_3_Core& gl,
   note_buffer_storage(static_cast<std::size_t>(vertex_count * vertex_stride),
                       vertex_data != nullptr);
   if (!stage_ok("vertex buffer")) {
-    release_mesh_buffers(gl, mesh);
+    mesh.reset();
     return false;
   }
   mesh.vertex_count = static_cast<GLsizei>(vertex_count);
 
-  gl.glGenBuffers(1, &mesh.index_buffer);
-  note_buffers_created(1);
-  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  mesh.index_buffer = BufferHandle::create();
+  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
   gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                   static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
                   indices.data(),
@@ -111,7 +104,7 @@ auto upload_static_effect_mesh(QOpenGLFunctions_3_3_Core& gl,
   note_buffer_storage(static_cast<std::size_t>(indices.size() * sizeof(unsigned int)),
                       indices.data() != nullptr);
   if (!stage_ok("index buffer")) {
-    release_mesh_buffers(gl, mesh);
+    mesh.reset();
     return false;
   }
   mesh.index_count = static_cast<GLsizei>(indices.size());
@@ -129,7 +122,7 @@ auto upload_static_effect_mesh(QOpenGLFunctions_3_3_Core& gl,
   gl.glBindVertexArray(0);
 
   if (!stage_ok("vertex attributes")) {
-    release_mesh_buffers(gl, mesh);
+    mesh.reset();
     return false;
   }
 

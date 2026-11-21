@@ -11,6 +11,7 @@
 
 #include "instance_draw_guard.h"
 #include "pipeline_interface.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"
 
@@ -62,9 +63,9 @@ public:
 
 private:
   struct MergedBuffers {
-    GLuint vao{0};
-    GLuint vertices{0};
-    GLuint indices{0};
+    VertexArrayHandle vao;
+    BufferHandle vertices;
+    BufferHandle indices;
   };
 
   auto bind_mesh(Mesh* mesh) -> bool;
@@ -78,7 +79,7 @@ private:
   std::vector<MeshInstanceGpu> m_instances;
   std::size_t m_instance_capacity{0};
 
-  GLuint m_instance_buffer{0};
+  BufferHandle m_instance_buffer;
   std::size_t m_ring_capacity_bytes{0};
   std::size_t m_ring_offset_bytes{0};
 

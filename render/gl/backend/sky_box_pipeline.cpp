@@ -55,13 +55,7 @@ auto SkyBoxPipeline::initialize() -> bool {
 }
 
 void SkyBoxPipeline::shutdown() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    release_cube();
-  }
-  m_vao = 0;
-  m_vertex_buffer = 0;
-  m_index_buffer = 0;
+  release_cube();
   m_initialized = false;
 }
 
@@ -77,26 +71,23 @@ void SkyBoxPipeline::cache_uniforms() {
 auto SkyBoxPipeline::build_cube() -> bool {
   release_cube();
 
-  glGenVertexArrays(1, &m_vao);
-  note_vertex_arrays_created(1);
-  glGenBuffers(1, &m_vertex_buffer);
-  note_buffers_created(1);
-  glGenBuffers(1, &m_index_buffer);
-  note_buffers_created(1);
-  if (m_vao == 0U || m_vertex_buffer == 0U || m_index_buffer == 0U) {
+  m_vao = VertexArrayHandle::create();
+  m_vertex_buffer = BufferHandle::create();
+  m_index_buffer = BufferHandle::create();
+  if (!m_vao || !m_vertex_buffer || !m_index_buffer) {
     release_cube();
     return false;
   }
 
-  glBindVertexArray(m_vao);
-  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
+  glBindVertexArray(m_vao.id());
+  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(k_cube_corners.size() * sizeof(float)),
                k_cube_corners.data(),
                GL_STATIC_DRAW);
   note_buffer_storage(static_cast<std::size_t>(k_cube_corners.size() * sizeof(float)),
                       k_cube_corners.data() != nullptr);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(k_cube_indices.size() * sizeof(std::uint16_t)),
                k_cube_indices.data(),
@@ -114,18 +105,9 @@ auto SkyBoxPipeline::build_cube() -> bool {
 }
 
 void SkyBoxPipeline::release_cube() {
-  if (m_index_buffer != 0U) {
-    glDeleteBuffers(1, &m_index_buffer);
-    m_index_buffer = 0;
-  }
-  if (m_vertex_buffer != 0U) {
-    glDeleteBuffers(1, &m_vertex_buffer);
-    m_vertex_buffer = 0;
-  }
-  if (m_vao != 0U) {
-    glDeleteVertexArrays(1, &m_vao);
-    m_vao = 0;
-  }
+  m_index_buffer.reset();
+  m_vertex_buffer.reset();
+  m_vao.reset();
 }
 
 auto SkyBoxPipeline::camera_rotation_only(const QMatrix4x4& view) -> QMatrix4x4 {
@@ -157,7 +139,7 @@ void SkyBoxPipeline::draw(const QMatrix4x4& view,
   m_shader->set_uniform(m_uniforms.blend, alpha);
   m_shader->set_uniform(m_uniforms.time, time);
 
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao.id());
   glDrawElements(GL_TRIANGLES,
                  static_cast<GLsizei>(k_cube_indices.size()),
                  GL_UNSIGNED_SHORT,

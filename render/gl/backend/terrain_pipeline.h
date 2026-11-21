@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include "pipeline_interface.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -173,8 +174,8 @@ public:
                                              : m_terrain_uniforms;
   }
 
-  GLuint m_grass_vao = 0;
-  GLuint m_grass_vertex_buffer = 0;
+  VertexArrayHandle m_grass_vao;
+  BufferHandle m_grass_vertex_buffer;
   GLsizei m_grass_vertex_count = 0;
 
 private:

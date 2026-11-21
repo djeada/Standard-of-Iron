@@ -115,11 +115,8 @@ auto VegetationPipeline::all_meshes() -> std::array<StaticMeshBuffers*, k_mesh_c
 }
 
 void VegetationPipeline::shutdown() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-  }
   for (StaticMeshBuffers* mesh : all_meshes()) {
-    release_mesh_buffers(*this, *mesh);
+    mesh->reset();
   }
   m_initialized = false;
 }
@@ -208,13 +205,11 @@ void VegetationPipeline::upload_prop_mesh_impl(
     flat.push_back({p, n});
   }
 
-  glGenVertexArrays(1, &mesh.vao);
-  note_vertex_arrays_created(1);
-  glBindVertexArray(mesh.vao);
+  mesh.vao = VertexArrayHandle::create();
+  glBindVertexArray(mesh.vao.id());
 
-  glGenBuffers(1, &mesh.vertex_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  mesh.vertex_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(flat.size() * sizeof(V)),
                flat.data(),
@@ -238,9 +233,8 @@ void VegetationPipeline::upload_prop_mesh_impl(
                         sizeof(V),
                         reinterpret_cast<void*>(offsetof(V, nrm)));
 
-  glGenBuffers(1, &mesh.index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  mesh.index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
                idx.data(),
@@ -283,13 +277,11 @@ void VegetationPipeline::upload_prop_mesh_with_surface_impl(
                     i < surface.size() ? surface[i] : QVector4D()});
   }
 
-  glGenVertexArrays(1, &mesh.vao);
-  note_vertex_arrays_created(1);
-  glBindVertexArray(mesh.vao);
+  mesh.vao = VertexArrayHandle::create();
+  glBindVertexArray(mesh.vao.id());
 
-  glGenBuffers(1, &mesh.vertex_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  mesh.vertex_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(flat.size() * sizeof(V)),
                flat.data(),
@@ -321,9 +313,8 @@ void VegetationPipeline::upload_prop_mesh_with_surface_impl(
                         reinterpret_cast<void*>(offsetof(V, surface)));
   glVertexAttribDivisor(k_surface_attrib, 0);
 
-  glGenBuffers(1, &mesh.index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  mesh.index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
                idx.data(),

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "creature/part_graph.h"
+#include "gl/gl_handle.h"
 #include "rigged_mesh.h"
 #include "rigged_mesh_bake.h"
 
@@ -29,7 +30,7 @@ struct RiggedSkinAtlas {
   std::span<const QMatrix4x4> palettes;
   std::uint32_t frame_total{0};
   std::uint32_t bone_count{0};
-  GLuint palette_ubo{0};
+  BufferHandle palette_ubo;
   std::size_t frame_stride_bytes{0};
 };
 

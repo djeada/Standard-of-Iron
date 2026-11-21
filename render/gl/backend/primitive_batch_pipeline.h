@@ -59,7 +59,6 @@ private:
   void initialize_sphere_vao();
   void initialize_cylinder_vao();
   void initialize_cone_vao();
-  void shutdown_vaos();
 
   void setup_instance_attributes(GLuint vao, GLuint instance_buffer);
 

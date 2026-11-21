@@ -44,7 +44,7 @@ constexpr std::array<GLuint, 3> k_stone_instance_locations{2, 3, 4};
 
 void VegetationPipeline::initialize_stone_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_stone_mesh);
+  m_stone_mesh.reset();
 
   struct StoneVertex {
     QVector3D position;
@@ -184,7 +184,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
 
 void VegetationPipeline::initialize_plant_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_plant_mesh);
+  m_plant_mesh.reset();
 
   struct PlantVertex {
     QVector3D position;
@@ -247,7 +247,7 @@ void VegetationPipeline::initialize_plant_pipeline() {
 
 void VegetationPipeline::initialize_pine_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_pine_mesh);
+  m_pine_mesh.reset();
 
   struct PineVertex {
     QVector3D position;
@@ -335,7 +335,7 @@ void VegetationPipeline::initialize_pine_pipeline() {
 
 void VegetationPipeline::initialize_olive_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_olive_mesh);
+  m_olive_mesh.reset();
 
   struct OliveVertex {
     QVector3D position;
@@ -369,7 +369,7 @@ void VegetationPipeline::initialize_olive_pipeline() {
 
 void VegetationPipeline::initialize_dead_tree_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_dead_tree_mesh);
+  m_dead_tree_mesh.reset();
 
   const auto mesh = build_dead_tree_mesh();
 
@@ -378,7 +378,7 @@ void VegetationPipeline::initialize_dead_tree_pipeline() {
 
 void VegetationPipeline::initialize_iron_ore_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_iron_ore_mesh);
+  m_iron_ore_mesh.reset();
 
   PropMeshData mesh = build_iron_ore_mesh();
   upload_prop_mesh_impl(mesh.vertices, mesh.indices, m_iron_ore_mesh);
@@ -386,7 +386,7 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
 
 void VegetationPipeline::initialize_cypress_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_cypress_mesh);
+  m_cypress_mesh.reset();
 
   struct CypressVertex {
     QVector3D position;
@@ -457,7 +457,7 @@ void VegetationPipeline::initialize_cypress_pipeline() {
 
 void VegetationPipeline::initialize_palm_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_palm_mesh);
+  m_palm_mesh.reset();
 
   struct PalmVertex {
     QVector3D position;

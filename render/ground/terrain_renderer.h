@@ -15,6 +15,7 @@
 #include "game/map/terrain.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"
+#include "render/gl/terrain_noise_atlas.h"
 #include "render/gl/texture.h"
 #include "render/ground/building_ground.h"
 #include "render/ground/ground_ecology.h"
@@ -106,14 +107,7 @@ private:
   std::vector<Render::Ground::BuildingGroundFootprint> m_building_footprints;
   std::uint64_t m_building_ground_revision = 0U;
   bool m_cover_dirty = true;
-  std::unique_ptr<Shader> m_noise_bake_shader;
-  std::unique_ptr<Shader> m_microdetail_bake_shader;
-  unsigned int m_microdetail_texture = 0U;
-  unsigned int m_noise_atlas_texture = 0U;
-  unsigned int m_noise_atlas_detail_texture = 0U;
-  unsigned int m_noise_atlas_fbo = 0U;
-  unsigned int m_noise_atlas_vao = 0U;
-  int m_noise_atlas_size = 0;
+  TerrainNoiseAtlas m_noise_atlas;
   bool m_noise_atlas_dirty = true;
   std::vector<ChunkMesh> m_chunks;
   std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;

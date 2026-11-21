@@ -837,7 +837,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     return;
   }
   const bool frames_resident =
-      skin_atlas->palette_ubo != 0U && skin_atlas->frame_total != 0U &&
+      skin_atlas->palette_ubo.valid() && skin_atlas->frame_total != 0U &&
       global_frame < skin_atlas->frame_total &&
       primary_playback.next_global_frame < skin_atlas->frame_total;
   const bool use_resident_frames = frames_resident && !wants_layered_pose;
@@ -860,11 +860,11 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              alpha,
                              team_emphasis);
 
-  const bool skin_ubo_covers_frame = skin_atlas->palette_ubo != 0U &&
+  const bool skin_ubo_covers_frame = skin_atlas->palette_ubo.valid() &&
                                      skin_atlas->frame_total != 0U &&
                                      global_frame < skin_atlas->frame_total;
   if (skin_ubo_covers_frame) {
-    cmd.palette_ubo = skin_atlas->palette_ubo;
+    cmd.palette_ubo = skin_atlas->palette_ubo.id();
     cmd.palette_offset = static_cast<std::uint32_t>(
         static_cast<std::size_t>(global_frame) * skin_atlas->frame_stride_bytes);
     if (use_resident_frames) {

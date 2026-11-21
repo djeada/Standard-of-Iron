@@ -7,6 +7,7 @@
 
 #include "pipeline_interface.h"
 #include "render/gl/frame_environment.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -49,10 +50,10 @@ private:
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_rain_shader = nullptr;
 
-  GLuint m_vao = 0;
-  GLuint m_quad_buffer = 0;
-  GLuint m_index_buffer = 0;
-  GLuint m_instance_buffer = 0;
+  VertexArrayHandle m_vao;
+  BufferHandle m_quad_buffer;
+  BufferHandle m_index_buffer;
+  BufferHandle m_instance_buffer;
 
   std::vector<WeatherParticleGpu> m_particles;
 

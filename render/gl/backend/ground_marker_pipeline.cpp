@@ -56,18 +56,10 @@ auto GroundMarkerPipeline::initialize() -> bool {
 }
 
 void GroundMarkerPipeline::shutdown() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    for (StaticMeshBuffers& mesh : m_meshes) {
-      release_mesh_buffers(*this, mesh);
-    }
-    if (m_instance_buffer != 0U) {
-      glDeleteBuffers(1, &m_instance_buffer);
-    }
-  } else {
-    m_meshes = {};
+  for (StaticMeshBuffers& mesh : m_meshes) {
+    mesh.reset();
   }
-  m_instance_buffer = 0;
+  m_instance_buffer.reset();
   m_instance_capacity = 0;
   m_instances_resident = 0;
   for (auto& bucket : m_scratch) {
@@ -107,16 +99,12 @@ void GroundMarkerPipeline::build_meshes() {
   initializeOpenGLFunctions();
 
   for (StaticMeshBuffers& mesh : m_meshes) {
-    release_mesh_buffers(*this, mesh);
+    mesh.reset();
   }
-  if (m_instance_buffer != 0U) {
-    glDeleteBuffers(1, &m_instance_buffer);
-    m_instance_buffer = 0;
-  }
+  m_instance_buffer.reset();
 
-  glGenBuffers(1, &m_instance_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  m_instance_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   m_instance_capacity = k_default_instance_capacity;
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(m_instance_capacity * sizeof(InstanceGpu)),
@@ -170,13 +158,11 @@ void GroundMarkerPipeline::build_mesh(StaticMeshBuffers& mesh, int angular_segme
     }
   }
 
-  glGenVertexArrays(1, &mesh.vao);
-  note_vertex_arrays_created(1);
-  glBindVertexArray(mesh.vao);
+  mesh.vao = VertexArrayHandle::create();
+  glBindVertexArray(mesh.vao.id());
 
-  glGenBuffers(1, &mesh.vertex_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  mesh.vertex_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
                vertices.data(),
@@ -184,9 +170,8 @@ void GroundMarkerPipeline::build_mesh(StaticMeshBuffers& mesh, int angular_segme
   note_buffer_storage(static_cast<std::size_t>(vertices.size() * sizeof(Vertex)),
                       vertices.data() != nullptr);
 
-  glGenBuffers(1, &mesh.index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  mesh.index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
                indices.data(),
@@ -218,7 +203,7 @@ void GroundMarkerPipeline::build_mesh(StaticMeshBuffers& mesh, int angular_segme
                         sizeof(Vertex),
                         reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   const auto stride = static_cast<GLsizei>(sizeof(InstanceGpu));
   glEnableVertexAttribArray(VertexAttrib::instance_position);
   glVertexAttribPointer(VertexAttrib::instance_position,
@@ -318,12 +303,12 @@ void GroundMarkerPipeline::flush_batch() {
 void GroundMarkerPipeline::upload_instances(std::size_t lod, std::size_t count) {
   m_instances_resident = 0;
   count = std::min(count, m_scratch[lod].size());
-  if (count == 0 || m_instance_buffer == 0U) {
+  if (count == 0 || !m_instance_buffer) {
     return;
   }
 
   initializeOpenGLFunctions();
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   if (count > m_instance_capacity) {
     m_instance_capacity =
         std::max<std::size_t>(count, m_instance_capacity * k_capacity_growth);
@@ -351,7 +336,7 @@ void GroundMarkerPipeline::draw(std::size_t lod, std::size_t count) {
   }
 
   initializeOpenGLFunctions();
-  glBindVertexArray(mesh.vao);
+  glBindVertexArray(mesh.vao.id());
   glDrawElementsInstanced(GL_TRIANGLES,
                           mesh.index_count,
                           GL_UNSIGNED_INT,

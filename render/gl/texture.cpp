@@ -40,9 +40,7 @@ auto bytes_per_texel(GLenum internal_format, GLenum type) -> std::size_t {
 
 Texture::Texture() = default;
 
-Texture::~Texture() {
-  release_gl_object(DeferredGlObject::Texture, m_texture, m_share_group);
-}
+Texture::~Texture() = default;
 
 auto Texture::load_from_file(const QString& path) -> bool {
   initializeOpenGLFunctions();
@@ -127,13 +125,11 @@ auto Texture::create_empty(int width, int height, Format format) -> bool {
 
 void Texture::bind(int unit) {
   initializeOpenGLFunctions();
-  if (m_texture == 0U) {
-    glGenTextures(1, &m_texture);
-    m_share_group = current_gl_share_group();
-    note_textures_created();
+  if (!m_texture) {
+    m_texture = TextureHandle::create();
   }
   glActiveTexture(GL_TEXTURE0 + unit);
-  glBindTexture(GL_TEXTURE_2D, m_texture);
+  glBindTexture(GL_TEXTURE_2D, m_texture.id());
 }
 
 void Texture::unbind() {

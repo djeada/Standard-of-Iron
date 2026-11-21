@@ -50,21 +50,14 @@ auto PostProcessPipeline::initialize() -> bool {
     return false;
   }
 
-  glGenVertexArrays(1, &m_empty_vao);
-  note_vertex_arrays_created(1);
+  m_empty_vao = VertexArrayHandle::create();
   m_initialized = true;
   return true;
 }
 
 void PostProcessPipeline::shutdown() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    release_targets();
-    if (m_empty_vao != 0) {
-      glDeleteVertexArrays(1, &m_empty_vao);
-    }
-  }
-  m_empty_vao = 0;
+  release_targets();
+  m_empty_vao.reset();
   m_initialized = false;
 }
 
@@ -75,15 +68,14 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
                                               int width,
                                               int height,
                                               unsigned int internal_format) -> bool {
-  if (target.fbo == 0) {
-    glGenFramebuffers(1, &target.fbo);
+  if (!target.fbo) {
+    target.fbo = FramebufferHandle::create();
   }
-  if (target.color == 0) {
-    glGenTextures(1, &target.color);
-    note_textures_created(1);
+  if (!target.color) {
+    target.color = TextureHandle::create();
   }
 
-  glBindTexture(GL_TEXTURE_2D, target.color);
+  glBindTexture(GL_TEXTURE_2D, target.color.id());
   glTexImage2D(GL_TEXTURE_2D,
                0,
                static_cast<GLint>(internal_format),
@@ -103,9 +95,9 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, target.fbo.id());
   glFramebufferTexture2D(
-      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.color, 0);
+      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.color.id(), 0);
 
   target.width = width;
   target.height = height;
@@ -113,7 +105,7 @@ auto PostProcessPipeline::create_color_target(RenderTarget& target,
 }
 
 auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
-  if (m_scene.fbo != 0 && m_scene.width == width && m_scene.height == height &&
+  if (m_scene.fbo.valid() && m_scene.width == width && m_scene.height == height &&
       attachments_match(m_target_passes, m_passes)) {
     return true;
   }
@@ -143,11 +135,10 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
     }
   }
 
-  if (m_scene_depth == 0) {
-    glGenTextures(1, &m_scene_depth);
-    note_textures_created(1);
+  if (!m_scene_depth) {
+    m_scene_depth = TextureHandle::create();
   }
-  glBindTexture(GL_TEXTURE_2D, m_scene_depth);
+  glBindTexture(GL_TEXTURE_2D, m_scene_depth.id());
   glTexImage2D(GL_TEXTURE_2D,
                0,
                GL_DEPTH_COMPONENT24,
@@ -165,9 +156,9 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindFramebuffer(GL_FRAMEBUFFER, m_scene.fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_scene.fbo.id());
   glFramebufferTexture2D(
-      GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_scene_depth, 0);
+      GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_scene_depth.id(), 0);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     release_targets();
     return false;
@@ -202,15 +193,7 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
 }
 
 void PostProcessPipeline::release_disabled_targets() {
-  auto drop = [this](RenderTarget& target) {
-    if (target.color != 0) {
-      glDeleteTextures(1, &target.color);
-    }
-    if (target.fbo != 0) {
-      glDeleteFramebuffers(1, &target.fbo);
-    }
-    target = RenderTarget{};
-  };
+  auto drop = [](RenderTarget& target) { target = RenderTarget{}; };
 
   if (!m_passes.bloom) {
     for (auto& target : m_bloom) {
@@ -226,15 +209,7 @@ void PostProcessPipeline::release_disabled_targets() {
 }
 
 void PostProcessPipeline::release_targets() {
-  auto drop = [this](RenderTarget& target) {
-    if (target.color != 0) {
-      glDeleteTextures(1, &target.color);
-    }
-    if (target.fbo != 0) {
-      glDeleteFramebuffers(1, &target.fbo);
-    }
-    target = RenderTarget{};
-  };
+  auto drop = [](RenderTarget& target) { target = RenderTarget{}; };
 
   drop(m_scene);
   drop(m_composite);
@@ -242,10 +217,7 @@ void PostProcessPipeline::release_targets() {
   for (auto& target : m_bloom) {
     drop(target);
   }
-  if (m_scene_depth != 0) {
-    glDeleteTextures(1, &m_scene_depth);
-    m_scene_depth = 0;
-  }
+  m_scene_depth.reset();
 }
 
 void PostProcessPipeline::set_depth_range(float near_plane, float far_plane) noexcept {
@@ -324,14 +296,14 @@ auto PostProcessPipeline::begin_scene(int width, int height) -> bool {
   }
 
   m_output_fbo = bound_fbo;
-  glBindFramebuffer(GL_FRAMEBUFFER, m_scene.fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_scene.fbo.id());
   glViewport(0, 0, width, height);
   m_capturing = true;
   return true;
 }
 
 void PostProcessPipeline::draw_fullscreen() {
-  glBindVertexArray(m_empty_vao);
+  glBindVertexArray(m_empty_vao.id());
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindVertexArray(0);
 }
@@ -340,16 +312,16 @@ void PostProcessPipeline::blur_bloom_once() {
   const auto blur_width = static_cast<float>(m_bloom[0].width);
   const auto blur_height = static_cast<float>(m_bloom[0].height);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[1].fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[1].fbo.id());
   glViewport(0, 0, m_bloom[1].width, m_bloom[1].height);
   m_blur_shader->set_uniform("u_texel_step", QVector2D(1.0F / blur_width, 0.0F));
-  glBindTexture(GL_TEXTURE_2D, m_bloom[0].color);
+  glBindTexture(GL_TEXTURE_2D, m_bloom[0].color.id());
   draw_fullscreen();
 
-  glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[0].fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[0].fbo.id());
   glViewport(0, 0, m_bloom[0].width, m_bloom[0].height);
   m_blur_shader->set_uniform("u_texel_step", QVector2D(0.0F, 1.0F / blur_height));
-  glBindTexture(GL_TEXTURE_2D, m_bloom[1].color);
+  glBindTexture(GL_TEXTURE_2D, m_bloom[1].color.id());
   draw_fullscreen();
 }
 
@@ -369,13 +341,13 @@ void PostProcessPipeline::resolve_scene() {
   glActiveTexture(GL_TEXTURE0);
 
   if (m_passes.bloom) {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[0].fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[0].fbo.id());
     glViewport(0, 0, m_bloom[0].width, m_bloom[0].height);
     m_bright_shader->use();
     m_bright_shader->set_uniform("u_scene", 0);
     m_bright_shader->set_uniform("u_threshold", k_bloom_threshold);
     m_bright_shader->set_uniform("u_knee", k_bloom_knee);
-    glBindTexture(GL_TEXTURE_2D, m_scene.color);
+    glBindTexture(GL_TEXTURE_2D, m_scene.color.id());
     draw_fullscreen();
 
     m_blur_shader->use();
@@ -385,9 +357,9 @@ void PostProcessPipeline::resolve_scene() {
   }
 
   const bool rays_enabled =
-      m_passes.godrays && m_godrays_shader != nullptr && m_rays.fbo != 0;
+      m_passes.godrays && m_godrays_shader != nullptr && m_rays.fbo.valid();
   if (rays_enabled) {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_rays.fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_rays.fbo.id());
     glViewport(0, 0, m_rays.width, m_rays.height);
     m_godrays_shader->use();
     m_godrays_shader->set_uniform("u_depth", 0);
@@ -395,12 +367,12 @@ void PostProcessPipeline::resolve_scene() {
                                   QVector2D(m_near_plane, m_far_plane));
     m_godrays_shader->set_uniform("u_sun_screen", m_sun_screen);
     m_godrays_shader->set_uniform("u_sun_visibility", m_sun_visibility);
-    glBindTexture(GL_TEXTURE_2D, m_scene_depth);
+    glBindTexture(GL_TEXTURE_2D, m_scene_depth.id());
     draw_fullscreen();
   }
 
   if (m_passes.fxaa) {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_composite.fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_composite.fbo.id());
     glViewport(0, 0, m_composite.width, m_composite.height);
   } else {
     glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(m_output_fbo));
@@ -463,13 +435,13 @@ void PostProcessPipeline::resolve_scene() {
     m_mist_dirty = false;
   }
   glActiveTexture(GL_TEXTURE3);
-  glBindTexture(GL_TEXTURE_2D, rays_enabled ? m_rays.color : 0);
+  glBindTexture(GL_TEXTURE_2D, rays_enabled ? m_rays.color.id() : 0);
   glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, m_scene_depth);
+  glBindTexture(GL_TEXTURE_2D, m_scene_depth.id());
   glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, m_bloom[0].color);
+  glBindTexture(GL_TEXTURE_2D, m_bloom[0].color.id());
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_scene.color);
+  glBindTexture(GL_TEXTURE_2D, m_scene.color.id());
   draw_fullscreen();
 
   if (m_passes.fxaa) {
@@ -484,7 +456,7 @@ void PostProcessPipeline::resolve_scene() {
         m_fxaa_shader->optional_uniform_handle("u_inverse_resolution"),
         QVector2D(1.0F / static_cast<float>(std::max(m_composite.width, 1)),
                   1.0F / static_cast<float>(std::max(m_composite.height, 1))));
-    glBindTexture(GL_TEXTURE_2D, m_composite.color);
+    glBindTexture(GL_TEXTURE_2D, m_composite.color.id());
     draw_fullscreen();
   }
 

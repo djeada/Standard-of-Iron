@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "gl_lifetime.h"
+#include "gl_handle.h"
 
 namespace Render::GL {
 
@@ -47,11 +47,10 @@ public:
 
   [[nodiscard]] auto size_bytes() const -> std::size_t { return m_size_bytes; }
 
-  [[nodiscard]] auto id() const -> GLuint { return m_buffer; }
+  [[nodiscard]] auto id() const -> GLuint { return m_buffer.id(); }
 
 private:
-  GLuint m_buffer = 0;
-  GlShareGroup m_share_group = k_unknown_share_group;
+  BufferHandle m_buffer;
   std::size_t m_size_bytes = 0;
   Type m_type;
   [[nodiscard]] auto get_gl_type() const -> GLenum;
@@ -68,12 +67,11 @@ public:
 
   void add_vertex_buffer(Buffer& buffer, const std::vector<int>& layout);
   void set_index_buffer(Buffer& buffer);
-  [[nodiscard]] auto id() const -> GLuint { return m_vao; }
-  [[nodiscard]] auto share_group() const -> GlShareGroup { return m_share_group; }
+  [[nodiscard]] auto id() const -> GLuint { return m_vao.id(); }
+  [[nodiscard]] auto share_group() const -> GlShareGroup { return m_vao.share_group(); }
 
 private:
-  GLuint m_vao = 0;
-  GlShareGroup m_share_group = k_unknown_share_group;
+  VertexArrayHandle m_vao;
   int m_current_attrib_index = 0;
 };
 

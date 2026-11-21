@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "gl/buffer.h"
+#include "gl/rigged_mesh_gpu.h"
 
 namespace Render::GL {
 
@@ -23,10 +24,10 @@ struct RiggedVertex {
   std::array<std::uint8_t, 3> padding{};
 };
 
-class RiggedMesh : protected QOpenGLFunctions_3_3_Core {
+class RiggedMesh {
 public:
   RiggedMesh(std::vector<RiggedVertex> vertices, std::vector<std::uint32_t> indices);
-  ~RiggedMesh() override;
+  ~RiggedMesh();
 
   [[nodiscard]] auto id() const noexcept -> std::uint64_t { return m_id; }
 
@@ -67,6 +68,7 @@ private:
   std::vector<std::uint32_t> m_indices;
   std::size_t m_rigid_index_count{0};
 
+  RiggedMeshGpu m_gpu;
   std::unique_ptr<VertexArray> m_vao;
   std::unique_ptr<Buffer> m_vbo;
   std::unique_ptr<Buffer> m_ebo;

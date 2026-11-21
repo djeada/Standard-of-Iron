@@ -2,9 +2,7 @@
 
 #include <QDebug>
 #include <QOpenGLContext>
-#include <QOpenGLFunctions>
 #include <QVector2D>
-#include <QtGui/qopengl.h>
 
 #include <cstdint>
 #include <memory>
@@ -12,8 +10,8 @@
 
 #include "game/map/visibility_service.h"
 #include "render/draw_commands.h"
-#include "render/gl/gl_resource_tracking.h"
 #include "render/gl/texture.h"
+#include "render/gl/texture_upload.h"
 #include "visibility_mask_encoder.h"
 
 namespace Render::Ground {
@@ -36,9 +34,7 @@ public:
               float explored_alpha = 0.82F) -> VisibilityResources {
     const int vis_w = snapshot.width;
     const int vis_h = snapshot.height;
-    auto* gl_context = QOpenGLContext::currentContext();
-    auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
-    if (gl_functions == nullptr) {
+    if (QOpenGLContext::currentContext() == nullptr) {
       qWarning() << "VisibilityTextureHelper: no current OpenGL context for visibility "
                     "texture upload";
       VisibilityResources res;
@@ -71,20 +67,8 @@ public:
         encode_visibility_mask_region(snapshot.cells, vis_w, vis_h, dirty, m_texels);
         if (!m_texels.empty()) {
           m_texture->bind();
-          gl_functions->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-          gl_functions->glTexSubImage2D(GL_TEXTURE_2D,
-                                        0,
-                                        dirty.x,
-                                        dirty.z,
-                                        dirty.width,
-                                        dirty.height,
-                                        GL_RGBA,
-                                        GL_UNSIGNED_BYTE,
-                                        m_texels.data());
-          Render::GL::note_texture_transfer(
-              Render::GL::texture_transfer_bytes(static_cast<std::size_t>(dirty.width),
-                                                 static_cast<std::size_t>(dirty.height),
-                                                 4U));
+          GL::upload_bound_texture_rgba8(
+              dirty.x, dirty.z, dirty.width, dirty.height, m_texels.data());
         }
       }
       m_previous_cells = snapshot.cells;
