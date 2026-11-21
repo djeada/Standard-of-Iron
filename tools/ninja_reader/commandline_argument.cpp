@@ -156,8 +156,8 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
         }
       }
       // By default, we do not use string quotes because it is not portable, since Bash
-      // strips out these before passing final arguments to a command. As long as a
-      // solution appears fixing this issue, we'll use quotes.
+      // strips out these before passing final arguments to a command. If a solution
+      // appears fixing this issue, we'll use quotes.
       auto argument = Argument(argument_name, ArgumentValue::from(argument_value));
       parsed_arguments.push_back(argument);
       parsing_argument_value = false;
