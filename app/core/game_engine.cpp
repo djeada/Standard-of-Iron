@@ -337,10 +337,9 @@ void GameEngine::report_renderer_failure(QString error) {
       [this, error = std::move(error)]() {
         m_loading_overlay.abort();
         m_saves->stop_autosave_timer();
-        m_renderer_error = error;
-        qCritical().noquote() << "Gameplay renderer failed." << m_renderer_error;
+        qCritical().noquote() << "Gameplay renderer failed." << error;
         emit is_loading_changed();
-        emit renderer_failed();
+        emit renderer_failed(error);
       },
       Qt::QueuedConnection);
 }

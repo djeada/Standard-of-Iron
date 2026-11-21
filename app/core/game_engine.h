@@ -178,7 +178,6 @@ public:
   Q_PROPERTY(int selected_player_id READ selected_player_id WRITE set_selected_player_id
                  NOTIFY selected_player_id_changed)
   Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
-  Q_PROPERTY(QString renderer_error READ renderer_error NOTIFY renderer_failed)
   Q_PROPERTY(QObject* audio_system READ audio_system CONSTANT)
   Q_PROPERTY(
       bool is_spectator_mode READ is_spectator_mode NOTIFY spectator_mode_changed)
@@ -231,7 +230,6 @@ public:
   [[nodiscard]] int selected_player_id() const { return m_selected_player_id; }
   void set_selected_player_id(int id);
   [[nodiscard]] QString last_error() const { return m_runtime.last_error; }
-  [[nodiscard]] QString renderer_error() const { return m_renderer_error; }
   Q_INVOKABLE void clear_error() {
     if (!m_runtime.last_error.isEmpty()) {
       m_runtime.last_error = "";
@@ -607,7 +605,6 @@ private:
 
   App::Session::LoadingOverlay m_loading_overlay;
   std::atomic_bool m_renderer_failed{false};
-  QString m_renderer_error;
   App::Core::SimulationLifecycle m_lifecycle;
   mutable App::Core::DeferredPresentationQueue m_deferred_presentation;
   std::atomic<float> m_simulation_time_scale{0.0F};
@@ -631,7 +628,7 @@ private:
 
 signals:
   void renderer_initialized_changed();
-  void renderer_failed();
+  void renderer_failed(const QString& error);
   void selected_units_changed();
   void selected_units_data_changed();
   void enemy_troops_defeated_changed();

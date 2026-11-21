@@ -1089,7 +1089,8 @@ ApplicationWindow {
     Design.IronDialog {
         id: error_dialog
 
-        readonly property bool renderer_failed: game && game.renderer_error !== ""
+        property string renderer_error: ""
+        readonly property bool renderer_failed: renderer_error !== ""
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.6, 520)
@@ -1097,7 +1098,7 @@ ApplicationWindow {
         tone: "danger"
         closePolicy: renderer_failed ? Popup.NoAutoClose : Popup.CloseOnEscape
         primaryAction: renderer_failed ? qsTr("Quit") : qsTranslate("IronDialog", "OK")
-        message: renderer_failed ? game.renderer_error : (game ? game.last_error : "")
+        message: renderer_failed ? renderer_error : (game ? game.last_error : "")
         onPrimaryActivated: {
             if (renderer_failed)
                 game.exit_game();
@@ -1119,7 +1120,8 @@ ApplicationWindow {
             if (game.last_error !== "" && !mainWindow.suppress_modals)
                 error_dialog.open();
         }
-        function onRenderer_failed() {
+        function onRenderer_failed(error) {
+            error_dialog.renderer_error = error;
             if (!mainWindow.suppress_modals)
                 error_dialog.open();
         }
