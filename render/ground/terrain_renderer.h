@@ -60,66 +60,11 @@ private:
   [[nodiscard]] static auto
   compute_ground_fog(const std::vector<float>& heights) -> Render::GroundFogSettings;
 
-  [[nodiscard]] auto compute_hill_entry_weights(
-      const std::vector<float>& height_data) const -> std::vector<float>;
-
-  [[nodiscard]] auto compute_feature_foot_weights(
-      const std::vector<float>& height_data) const -> std::vector<float>;
-
-  void smooth_terrain_normals(const std::vector<float>& height_data,
-                              const std::vector<QVector3D>& face_normals,
-                              std::vector<QVector3D>& normals,
-                              float min_height,
-                              float height_range) const;
   [[nodiscard]] auto
   make_chunk_params(const Game::Map::TerrainSurfaceProfile& surface_profile,
                     const Game::Map::ClimateProfile& climate_profile,
                     Game::Map::TerrainType chunk_type,
                     float tint) const -> TerrainChunkParams;
-
-  struct SectionData {
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    std::unordered_map<int, unsigned int> remap;
-    QVector3D bounds_min{std::numeric_limits<float>::max(),
-                         std::numeric_limits<float>::max(),
-                         std::numeric_limits<float>::max()};
-    QVector3D bounds_max{std::numeric_limits<float>::lowest(),
-                         std::numeric_limits<float>::lowest(),
-                         std::numeric_limits<float>::lowest()};
-  };
-
-  struct TerrainMeshBuild {
-    const std::vector<QVector3D>& positions;
-    const std::vector<QVector3D>& normals;
-    const std::vector<float>& height_data;
-    const std::vector<float>& feature_foot_weight;
-    const std::vector<float>& entry_weight;
-    const std::vector<float>& hill_weight;
-    const std::vector<float>& mountain_weight;
-    const Game::Map::TerrainSurfaceProfile& surface_profile;
-    const Game::Map::ClimateProfile& climate_profile;
-    const std::function<float(float, float)>& sample_height_at;
-    const std::function<QVector3D(float, float)>& normal_from_heights_at;
-    const std::function<int(Game::Map::TerrainType,
-                            Game::Map::TerrainType,
-                            Game::Map::TerrainType,
-                            Game::Map::TerrainType)>& quad_section;
-    float half_width;
-    float half_height;
-  };
-
-  void emit_terrain_chunk(const TerrainMeshBuild& build,
-                          int chunk_x,
-                          int chunk_z,
-                          int chunk_max_x,
-                          int chunk_max_z,
-                          std::size_t& total_triangles);
-
-  void finish_chunk_section(const TerrainMeshBuild& build,
-                            const SectionData& section,
-                            int section_index,
-                            std::size_t& total_triangles);
 
   auto update_height_texture(const Render::Ground::BuildingGroundSet& building_ground)
       -> TerrainSurfaceCmd::HeightResources;
@@ -128,7 +73,6 @@ private:
   void stamp_building_ground();
   void bake_terrain_noise_atlas();
   void bake_terrain_microdetail();
-  [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 
   struct ChunkMesh {
     std::unique_ptr<Mesh> mesh;

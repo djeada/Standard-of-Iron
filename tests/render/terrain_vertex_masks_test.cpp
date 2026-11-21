@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "game/map/terrain.h"
+#include "render/ground/terrain_mesh_builder.h"
 #include "render/ground/terrain_quad_tessellation.h"
 #include "render/ground/terrain_vertex_masks.h"
 
@@ -63,6 +64,51 @@ TEST(TerrainVertexMasksTest, QuadTessellationFollowsTheChosenDiagonal) {
   EXPECT_EQ(subdivided[0], 0U);
   EXPECT_EQ(subdivided[2], 4U)
       << "the first sub-quad creases through the centre vertex";
+}
+
+TEST(TerrainMeshBuilderTest, BuildsChunkGeometryWithoutAGraphicsContext) {
+  const int size = 40;
+  std::vector<float> heights(static_cast<std::size_t>(size * size), 0.0F);
+  std::vector<TerrainType> types(heights.size(), TerrainType::Flat);
+  for (int z = 12; z < 28; ++z) {
+    for (int x = 12; x < 28; ++x) {
+      heights[static_cast<std::size_t>(z * size + x)] = 3.0F;
+      types[static_cast<std::size_t>(z * size + x)] = TerrainType::Hill;
+    }
+  }
+  const std::vector<bool> no_entrances;
+  const Render::Ground::TerrainMeshBuilder builder({.width = size,
+                                                    .height = size,
+                                                    .tile_size = 1.0F,
+                                                    .heights = heights,
+                                                    .terrain_types = types,
+                                                    .hill_entrances = no_entrances});
+  const auto chunks = builder.build();
+  ASSERT_FALSE(chunks.empty());
+
+  std::size_t triangles = 0;
+  bool saw_hill = false;
+  for (const auto& chunk : chunks) {
+    ASSERT_EQ(chunk.indices.size() % 3U, 0U);
+    for (const unsigned int index : chunk.indices) {
+      ASSERT_LT(index, chunk.vertices.size());
+    }
+    EXPECT_LE(chunk.bounds_min.y(), chunk.bounds_max.y());
+    triangles += chunk.indices.size() / 3U;
+    saw_hill = saw_hill || chunk.type == TerrainType::Hill;
+  }
+  EXPECT_TRUE(saw_hill);
+  EXPECT_GE(triangles, static_cast<std::size_t>((size - 1) * (size - 1) * 2))
+      << "every grid square must be covered by at least two triangles";
+
+  bool hill_vertex_carries_weight = false;
+  for (const auto& chunk : chunks) {
+    for (const auto& vertex : chunk.vertices) {
+      const auto mask = Render::Ground::unpack_entry_and_landform(vertex.tex_coord[1]);
+      hill_vertex_carries_weight = hill_vertex_carries_weight || mask.hill >= 1.0F;
+    }
+  }
+  EXPECT_TRUE(hill_vertex_carries_weight);
 }
 
 } // namespace
