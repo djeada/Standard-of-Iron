@@ -4,8 +4,10 @@
 #ifndef NINJA_READER_H
 #define NINJA_READER_H
 
+#include <chrono>
 #include <concepts>
 #include <cstdint>
+#include <filesystem>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -13,7 +15,9 @@
 #include <variant>
 #include <vector>
 
-namespace NinjaReader::CommandLine::Argument {
+namespace NinjaReader {
+
+namespace CommandLine::Argument {
 
 class ArgumentValue {
 public:
@@ -122,6 +126,32 @@ public:
   parse_vector(const std::span<char*>& vector) const;
 };
 
-} // namespace NinjaReader::CommandLine::Argument
+} // namespace CommandLine::Argument
+
+namespace Routines {
+
+// Contains the parsed informaiton of a `.ninja_log` file. It is supplied by the
+// `NinjaLogParser` class.
+struct NinjaLog {
+  struct Element {
+    std::chrono::milliseconds start_time;
+    std::chrono::milliseconds end_time;
+    std::chrono::nanoseconds end_timestamp_unix;
+    std::filesystem::path output_file;
+  };
+  std::filesystem::path path;
+  std::vector<Element> elements;
+};
+
+// Responsible for reading the provided `.ninja_log` and parsing it, producing a
+// `NinjaLog` instance.
+class NinjaLogParser {
+public:
+  [[nodiscard]] NinjaLog parse(const std::filesystem::path& log_path) const;
+};
+
+} // namespace Routines
+
+} // namespace NinjaReader
 
 #endif
