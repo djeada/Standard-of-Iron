@@ -114,7 +114,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
         bool has_digits = true;
         for (char ch : argument_value) {
           if (ch < 0) {
-            break;
+            continue;
           }
           // static_cast<bool> is required to calm down clang-tidy, because it reports
           // "implicit conversion: int -> bool"
