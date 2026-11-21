@@ -1,0 +1,219 @@
+// Copyright 2026 dywoq - MIT License
+// https://github.com/djeada/Standard-of-Iron
+
+#include "commandline_argument.h"
+
+#include <algorithm>
+#include <cctype>
+#include <format>
+#include <limits>
+#include <ranges>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <variant>
+
+namespace NinjaReader::CommandLine::Argument {
+
+namespace {
+// A utility function which trims leading and ending whitespace from the provided
+// string in place.
+void trim_whitespace_in_place(std::string& string) {
+  auto not_space = [](unsigned char c) {
+    return !std::isspace(c);
+  };
+  string.erase(std::ranges::find_if(string | std::views::reverse, not_space).base(),
+               string.end());
+  string.erase(string.begin(), std::ranges::find_if(string, not_space));
+}
+} // namespace
+
+// ArgumentValue
+
+ArgumentValue::ArgumentValue(Integer integer) noexcept
+    : m_value(integer) {
+}
+ArgumentValue::ArgumentValue(String string) noexcept
+    : m_value(string) {
+}
+ArgumentValue::ArgumentValue(Boolean boolean) noexcept
+    : m_value(boolean) {
+}
+
+bool ArgumentValue::is_integer() const noexcept {
+  return std::holds_alternative<Integer>(m_value);
+}
+ArgumentValue::Integer ArgumentValue::integer() const {
+  return std::get<Integer>(m_value);
+}
+
+bool ArgumentValue::is_string() const noexcept {
+  return std::holds_alternative<String>(m_value);
+}
+const ArgumentValue::String& ArgumentValue::string() const {
+  return std::get<String>(m_value);
+}
+
+bool ArgumentValue::is_boolean() const noexcept {
+  return std::holds_alternative<Boolean>(m_value);
+}
+ArgumentValue::Boolean ArgumentValue::boolean() const {
+  return std::get<Boolean>(m_value);
+}
+
+// Argument
+
+Argument::Argument(std::string name, ArgumentValue value) noexcept
+    : m_name(std::move(name))
+    , m_value(std::move(value)) {
+}
+
+const std::string& Argument::name() const noexcept {
+  return m_name;
+}
+ArgumentValue& Argument::value() noexcept {
+  return m_value;
+}
+
+// ArgumentValidator
+
+bool ArgumentValidator::is_argument(std::string_view argument_str) const {
+  std::string copied_argument_str(argument_str);
+  trim_whitespace_in_place(copied_argument_str);
+  if (copied_argument_str.empty()) {
+    return false;
+  }
+  if (!argument_str.starts_with("--")) {
+    return false;
+  }
+  size_t hyphen_index = argument_str.find("--");
+  auto name = argument_str.substr(hyphen_index + 2);
+  return !name.empty();
+}
+
+// VectorParser
+
+VectorParser::Exception::Exception(const std::string& msg)
+    : std::runtime_error(
+          std::string("NinjaReader::CommandLine::Argument::VectorParser: ") + msg) {
+}
+
+std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector) const {
+  if (vector.empty()) {
+    throw VectorParser::Exception("provided arguments vector is empty");
+  }
+  ArgumentValidator argument_validator;
+  std::vector<Argument> parsed_arguments = {};
+  std::string argument_name;
+  bool parsing_argument_value = false;
+  for (char* str : vector) {
+    if (str == nullptr) {
+      throw VectorParser::Exception("argument cannot be null");
+    }
+
+    // As the argument value is parsed, "parsing_argument_value" must be set to false,
+    // an Argument instance is created and pushed to the "parsed_arguments" vector.
+    // Then, continue the iteration over the argument vector.
+    if (parsing_argument_value) {
+      std::string argument_value = str;
+      if (argument_validator.is_argument(argument_value)) {
+        throw VectorParser::Exception(
+            std::format("the value of \"{0}\" must not be an argument", argument_name));
+      }
+
+      // Since the std::stoi function throws an exception if a conversion failure
+      // occurs, we can use a try/catch block to catch an exception and immediately go
+      // to the next check. A caught exception tells the parser that this value is not
+      // an integer.
+      try {
+        // This check addresses the bug, where an argument value could start with digits
+        // and still can be accepted as an integer despite containing non-digit
+        // characters:
+        //
+        //    12345  -> INTEGER
+        //    12cats -> INTEGER
+        //
+        // To fix this, iterate over characters to ensure this is an integer.
+        bool has_digits = true;
+        for (char ch : argument_value) {
+          if (ch < 0) {
+            continue;
+          }
+          // static_cast<bool> is required to calm down clang-tidy, because it reports
+          // "implicit conversion: int -> bool"
+          if (!static_cast<bool>(std::isdigit(ch))) {
+            has_digits = false;
+            break;
+          }
+        }
+
+        if (has_digits) {
+          auto argument =
+              Argument(argument_name, ArgumentValue::from(std::stoi(argument_value)));
+          parsed_arguments.push_back(argument);
+          parsing_argument_value = false;
+          continue;
+        }
+      } catch (const std::out_of_range&) {
+        auto min = std::numeric_limits<ArgumentValue::Integer>::min();
+        auto max = std::numeric_limits<ArgumentValue::Integer>::max();
+        throw VectorParser::Exception(
+            std::format("The integer is out of bounds (min: {}, max: {}): {}",
+                        min,
+                        max,
+                        argument_value));
+      } catch (const std::exception&) {
+        // .clang-tidy generates a warning about an empty catch block, therefore, we
+        // declare this variable to prevent this warning.
+        auto _ = 0;
+      }
+
+      {
+        bool is_boolean = false;
+        ArgumentValue::Boolean boolean = false;
+        if (argument_value == "true") {
+          boolean = true;
+          is_boolean = true;
+        } else if (argument_value == "false") {
+          boolean = false;
+          is_boolean = true;
+        }
+
+        if (is_boolean) {
+          auto argument = Argument(argument_name, ArgumentValue::from(boolean));
+          parsed_arguments.push_back(argument);
+          parsing_argument_value = false;
+          continue;
+        }
+      }
+      // By default, we do not use string quotes because it is not portable, since Bash
+      // strips out these before passing final arguments to a command. If a solution
+      // appears fixing this issue, we'll use quotes.
+      auto argument = Argument(argument_name, ArgumentValue::from(argument_value));
+      parsed_arguments.push_back(argument);
+      parsing_argument_value = false;
+      continue;
+    }
+
+    std::string argument_str = str;
+    trim_whitespace_in_place(argument_str);
+    if (!argument_validator.is_argument(argument_str)) {
+      continue;
+    }
+    size_t equal_operator_index = argument_str.find("--");
+    argument_name = argument_str.substr(equal_operator_index + 2);
+    if (argument_name.empty()) {
+      throw VectorParser::Exception("argument name cannot be empty");
+    }
+    parsing_argument_value = true;
+  }
+
+  if (parsing_argument_value) {
+    throw VectorParser::Exception(
+        std::format("\"{}\" argument has no value", argument_name));
+  }
+
+  return parsed_arguments;
+}
+
+} // namespace NinjaReader::CommandLine::Argument
