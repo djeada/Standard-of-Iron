@@ -2,7 +2,8 @@
 
 #include <QVector3D>
 
-#include "render/scene_renderer.h"
+#include "creature_submission_context.h"
+#include "render/submitter.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -32,13 +33,13 @@ void flush_shadow_batch(HumanoidShadowBatch& batch, Render::GL::ISubmitter& out)
     return;
   }
 
-  auto* renderer = dynamic_cast<Render::GL::Renderer*>(out.unwrap_submitter());
-  if (renderer == nullptr) {
+  const CreatureSubmissionContext* submission = resolve_creature_submission(out);
+  if (submission == nullptr) {
     return;
   }
 
-  Render::GL::Shader* previous_shader = renderer->get_current_shader();
-  renderer->set_current_shader(batch.shader());
+  Render::GL::Shader* previous_shader = submission->current_shader();
+  submission->set_current_shader(batch.shader());
 
   for (const auto& inst : batch.instances()) {
     if (inst.pass == RenderPassIntent::Shadow) {
@@ -48,7 +49,7 @@ void flush_shadow_batch(HumanoidShadowBatch& batch, Render::GL::ISubmitter& out)
         batch.mesh(), inst.model, QVector3D(0.0F, 0.0F, 0.0F), nullptr, inst.alpha, 0);
   }
 
-  renderer->set_current_shader(previous_shader);
+  submission->set_current_shader(previous_shader);
 }
 
 } // namespace Render::Creature::Pipeline

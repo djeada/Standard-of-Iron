@@ -22,6 +22,7 @@
 #include "creature_asset.h"
 #include "creature_asset_init.h"
 #include "creature_bone_probe.h"
+#include "creature_submission_context.h"
 #include "game/map/terrain_service.h"
 #include "preparation_common.h"
 #include "render/bone_palette_arena.h"
@@ -41,7 +42,6 @@
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_profile.h"
 #include "render/rigged_mesh_cache.h"
-#include "render/scene_renderer.h"
 #include "render/snapshot_mesh_cache.h"
 #include "render/submitter.h"
 #include "render/wildlife/wildlife_rig.h"
@@ -49,10 +49,6 @@
 namespace Render::Creature::Pipeline {
 
 namespace {
-
-auto resolve_renderer(Render::GL::ISubmitter& out) noexcept -> Render::GL::Renderer* {
-  return dynamic_cast<Render::GL::Renderer*>(out.unwrap_submitter());
-}
 
 void report_submit_cache_miss(std::string_view path,
                               const CreatureRenderAssetHandle& handle,
@@ -106,12 +102,10 @@ void report_submit_cache_miss(std::string_view path,
   log_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss, detail.str());
 }
 
-auto rigged_cache_for(Render::GL::Renderer* renderer) -> Render::GL::RiggedMeshCache& {
-  if (renderer != nullptr) {
-    return renderer->rigged_mesh_cache();
-  }
-  thread_local Render::GL::RiggedMeshCache fallback;
-  return fallback;
+auto rigged_cache_for(const CreatureSubmissionContext* submission)
+    -> Render::GL::RiggedMeshCache& {
+  return submission != nullptr ? submission->rigged_meshes()
+                               : detached_rigged_mesh_cache();
 }
 
 auto make_snapshot_key(const CreatureRenderAssetHandle& handle,
@@ -807,13 +801,13 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             float alpha,
                             float team_emphasis,
                             Render::GL::ISubmitter& out,
-                            Render::GL::Renderer* renderer) {
+                            const CreatureSubmissionContext* submission) {
   const CreatureAsset* asset = handle.asset;
   if (lod == CreatureLOD::Culled || asset == nullptr || asset->spec == nullptr ||
       handle.bind_palette.empty()) {
     return;
   }
-  auto& cache = rigged_cache_for(renderer);
+  auto& cache = rigged_cache_for(submission);
 
   const auto asset_key = rigged_asset_key(handle, lod, blob.species_id());
   const auto* entry = cache.require_rigged_asset(asset_key);
@@ -1058,7 +1052,7 @@ auto submit_snapshot_creature(
     float alpha,
     float team_emphasis,
     Render::GL::ISubmitter& out,
-    Render::GL::Renderer* renderer,
+    const CreatureSubmissionContext* submission,
     bool allow_bake_fallback = true) -> bool {
   const CreatureAsset* asset = handle.asset;
   if (lod == CreatureLOD::Culled || asset == nullptr || asset->spec == nullptr ||
@@ -1092,7 +1086,7 @@ auto submit_snapshot_creature(
         &pose_source);
   }
 
-  if (renderer == nullptr) {
+  if (submission == nullptr) {
     return false;
   }
 
@@ -1106,7 +1100,7 @@ auto submit_snapshot_creature(
     if (mesh_blob != nullptr) {
       std::uint32_t mesh_global_frame = 0U;
       if (mesh_blob->resolve_global_frame(clip_id, frame_in_clip, mesh_global_frame)) {
-        const auto* snap = renderer->snapshot_mesh_cache().get_or_load(
+        const auto* snap = submission->snapshot_meshes().get_or_load(
             key, *mesh_blob, mesh_global_frame);
         if (snap != nullptr && snap->mesh != nullptr &&
             snap->mesh->index_count() != 0U) {
@@ -1145,7 +1139,7 @@ auto submit_snapshot_creature(
     return false;
   }
 
-  auto& rigged_cache = renderer->rigged_mesh_cache();
+  auto& rigged_cache = submission->rigged_meshes();
   const auto* source = create_creature_render_asset(
       rigged_cache, handle, lod, blob, variant_bucket, false);
   if (source == nullptr || source->mesh == nullptr ||
@@ -1171,7 +1165,7 @@ auto submit_snapshot_creature(
   }
 
   const auto* snap =
-      renderer->snapshot_mesh_cache().get_or_bake(key, *source, global_frame);
+      submission->snapshot_meshes().get_or_bake(key, *source, global_frame);
   if (snap == nullptr || snap->mesh == nullptr || snap->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_bake",
                              handle,
@@ -1252,12 +1246,12 @@ auto CreaturePipeline::submit_requests(
     return stats;
   }
 
-  auto* renderer = resolve_renderer(out);
-  if (renderer != nullptr) {
-    renderer->rigged_mesh_cache().reset_frame_stats();
-    renderer->snapshot_mesh_cache().reset_frame_stats();
-    renderer->rigged_mesh_cache().reserve_for_frame(requests.size());
-    renderer->snapshot_mesh_cache().reserve_for_frame(requests.size());
+  const CreatureSubmissionContext* submission = resolve_creature_submission(out);
+  if (submission != nullptr) {
+    submission->rigged_meshes().reset_frame_stats();
+    submission->snapshot_meshes().reset_frame_stats();
+    submission->rigged_meshes().reserve_for_frame(requests.size());
+    submission->snapshot_meshes().reserve_for_frame(requests.size());
   }
 
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest& req) {
@@ -1434,7 +1428,7 @@ auto CreaturePipeline::submit_requests(
                                    req.alpha,
                                    req.team_emphasis,
                                    out,
-                                   renderer,
+                                   submission,
                                    !prebaked_lowpoly_required);
       if (emitted) {
         return;
@@ -1456,7 +1450,7 @@ auto CreaturePipeline::submit_requests(
     }
 
     if (primary.blob != nullptr) {
-      auto& asset_cache = rigged_cache_for(renderer);
+      auto& asset_cache = rigged_cache_for(submission);
       const auto asset_key =
           rigged_asset_key(*handle, req.lod, primary.blob->species_id());
       if (asset_cache.find_rigged_asset(asset_key) == nullptr) {
@@ -1465,7 +1459,7 @@ auto CreaturePipeline::submit_requests(
                                      req.lod,
                                      *primary.blob,
                                      static_cast<std::uint16_t>(req.variant),
-                                     renderer != nullptr);
+                                     submission != nullptr);
       }
     }
 
@@ -1495,22 +1489,22 @@ auto CreaturePipeline::submit_requests(
                            req.alpha,
                            req.team_emphasis,
                            out,
-                           renderer);
+                           submission);
   };
 
   for (const auto& req : requests) {
     emit_request(req);
   }
 
-  if (renderer != nullptr) {
-    const auto& rs = renderer->rigged_mesh_cache().frame_stats();
+  if (submission != nullptr) {
+    const auto& rs = submission->rigged_meshes().frame_stats();
     stats.rigged_cache_hits = rs.hits;
     stats.rigged_cache_misses = rs.misses;
     stats.rigged_cache_bakes = rs.bakes;
     stats.skin_atlas_builds = rs.skin_atlas_builds;
     stats.skin_ubo_uploads = rs.skin_ubo_uploads;
     stats.skin_ubo_bytes_uploaded = rs.skin_ubo_bytes_uploaded;
-    const auto& ss = renderer->snapshot_mesh_cache().frame_stats();
+    const auto& ss = submission->snapshot_meshes().frame_stats();
     stats.snapshot_cache_hits = ss.hits;
     stats.snapshot_loads = ss.loads;
     stats.snapshot_bakes = ss.bakes;
