@@ -305,7 +305,7 @@ auto find_by_id(const MapData& data, int kind, const QString& id) -> int {
 auto apply(MapData& data, const QJsonArray& operations) -> Report {
   Report report;
   int step = 0;
-  for (const QJsonValue& value : operations) {
+  for (const QJsonValue value : operations) {
     ++step;
     const QJsonObject op = value.toObject();
     const QString verb = op.value(QStringLiteral("op")).toString();

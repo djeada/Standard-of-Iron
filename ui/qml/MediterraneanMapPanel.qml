@@ -1089,7 +1089,7 @@ Rectangle {
 
                     SequentialAnimation on scale  {
                         loops: Animation.Infinite
-                        running: visible
+                        running: visible && Design.Motion.allowAmbientLoops
 
                         NumberAnimation {
                             from: 1
@@ -1175,7 +1175,7 @@ Rectangle {
 
                 SequentialAnimation on opacity  {
                     loops: Animation.Infinite
-                    running: hannibal_icon.visible
+                    running: hannibal_icon.visible && Design.Motion.allowAmbientLoops
 
                     NumberAnimation {
                         from: 0.4
@@ -1191,7 +1191,7 @@ Rectangle {
 
                 SequentialAnimation on scale  {
                     loops: Animation.Infinite
-                    running: hannibal_icon.visible
+                    running: hannibal_icon.visible && Design.Motion.allowAmbientLoops
 
                     NumberAnimation {
                         from: 1

@@ -7327,6 +7327,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Quit</source>
         <translation>خروج</translation>
     </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>خُفّضت الرسومات إلى %1 لتبقى المعركة سلسة</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>اختر إعدادًا مسبقًا في الإعدادات للاحتفاظ باختيارك.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>

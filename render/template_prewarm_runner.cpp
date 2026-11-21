@@ -507,6 +507,7 @@ void Renderer::prewarm_unit_templates(
     }
   } prewarm_timer;
   cancel_async_template_prewarm();
+  m_prewarmed_graphics_generation = Render::GraphicsSettings::instance().generation();
   m_forbids_runtime_bake = false;
   Render::Creature::set_runtime_bake_forbidden(false);
   m_async_prewarm.clear_forbid_runtime_bake();
@@ -530,6 +531,27 @@ void Renderer::prewarm_unit_templates(
     progress.completed = completed;
     progress.total = total;
     return progress_callback(progress);
+  };
+
+  // The bake below runs inline on the thread that called us (the GUI thread
+  // during a match load). Report progress at least every k_keep_alive_interval
+  // of work so the progress callback can pump the event loop: without this
+  // the loading screen froze for several seconds on slow machines and the
+  // window manager offered to kill the "unresponsive" game.
+  constexpr auto k_keep_alive_interval = std::chrono::milliseconds(33);
+  auto last_keep_alive = std::chrono::steady_clock::now();
+  auto keep_alive = [&](TemplatePrewarmProgress::Phase phase,
+                        std::size_t completed,
+                        std::size_t total) -> bool {
+    if (!progress_callback) {
+      return true;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    if (now - last_keep_alive < k_keep_alive_interval) {
+      return true;
+    }
+    last_keep_alive = now;
+    return report_progress(phase, completed, total);
   };
 
   if (!report_progress(TemplatePrewarmProgress::Phase::CollectingProfiles, 0, 0)) {
@@ -883,9 +905,9 @@ void Renderer::prewarm_unit_templates(
                      return lhs.renderer_id < rhs.renderer_id;
                    });
 
-  auto preload_profile_archetypes = [&]() {
+  auto preload_profile_archetypes = [&]() -> bool {
     if (owner_ids.empty()) {
-      return;
+      return true;
     }
 
     AnimKey idle_key{};
@@ -905,6 +927,11 @@ void Renderer::prewarm_unit_templates(
     constexpr HumanoidLOD k_preload_lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
 
     for (std::size_t profile_idx = 0; profile_idx < profiles.size(); ++profile_idx) {
+      if (!keep_alive(TemplatePrewarmProgress::Phase::CollectingProfiles,
+                      profile_idx,
+                      profiles.size())) {
+        return false;
+      }
       const PrewarmProfile& profile = profiles[profile_idx];
       for (std::uint8_t variant = 0; variant < k_template_variant_count; ++variant) {
         execute_template_prewarm_item(*this,
@@ -945,9 +972,13 @@ void Renderer::prewarm_unit_templates(
         }
       }
     }
+    return true;
   };
 
-  preload_profile_archetypes();
+  if (!preload_profile_archetypes()) {
+    report_progress(TemplatePrewarmProgress::Phase::Cancelled, 0, 0);
+    return;
+  }
 
   const std::size_t lod_domain_count = full_lod_only ? 1U : 3U;
   const std::size_t domain_count =
@@ -1004,6 +1035,7 @@ void Renderer::prewarm_unit_templates(
   std::vector<std::mutex> profile_mutexes(profiles.size());
 
   const std::size_t worker_count = 1U;
+  const bool inline_worker = worker_count == 1U;
 
   std::atomic<std::size_t> next_index{0};
   std::atomic<std::size_t> completed_count{0};
@@ -1038,7 +1070,17 @@ void Renderer::prewarm_unit_templates(
                                     item.variant,
                                     true,
                                     item.anim_key);
-      completed_count.fetch_add(1, std::memory_order_relaxed);
+      const std::size_t done =
+          completed_count.fetch_add(1, std::memory_order_relaxed) + 1;
+      // Only the inline (single worker) bake runs on the caller's thread and
+      // may pump its event loop; worker threads must never do that.
+      if (inline_worker &&
+          !keep_alive(TemplatePrewarmProgress::Phase::BuildingCoreTemplates,
+                      done,
+                      core_work_items.size())) {
+        cancel_requested.store(true, std::memory_order_relaxed);
+        break;
+      }
     }
   };
 

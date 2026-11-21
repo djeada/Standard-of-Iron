@@ -70,6 +70,44 @@ TEST_F(SettingsPersistenceTest, FreshProfileDefaultsToHighGraphics) {
   EXPECT_EQ(Render::k_default_graphics_quality, Render::GraphicsQuality::High);
 }
 
+TEST_F(SettingsPersistenceTest, ASlowPcStartsWhereTheGameLastSettled) {
+  App::Core::UserSettings::save_auto_graphics_quality_level(
+      static_cast<int>(Render::GraphicsQuality::Low));
+
+  App::Core::UserSettings::apply_saved_graphics_quality();
+
+  EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
+            Render::GraphicsQuality::Low);
+  EXPECT_FALSE(Render::GraphicsSettings::instance().quality_chosen_by_user())
+      << "an automatic step down must not lock the preset like a player choice";
+}
+
+TEST_F(SettingsPersistenceTest, ThePlayersPresetBeatsTheAutomaticOne) {
+  App::Core::UserSettings::save_auto_graphics_quality_level(
+      static_cast<int>(Render::GraphicsQuality::Low));
+  App::Core::UserSettings::save_graphics_quality_level(
+      static_cast<int>(Render::GraphicsQuality::Ultra));
+
+  App::Core::UserSettings::apply_saved_graphics_quality();
+
+  EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
+            Render::GraphicsQuality::Ultra);
+  EXPECT_TRUE(Render::GraphicsSettings::instance().quality_chosen_by_user());
+}
+
+TEST_F(SettingsPersistenceTest, PickingTheAutomaticPresetMakesItThePlayersChoice) {
+  Render::GraphicsSettings::instance().set_quality_chosen_by_user(false);
+  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Medium);
+  App::Models::GraphicsSettingsProxy proxy;
+
+  proxy.set_quality_level(static_cast<int>(Render::GraphicsQuality::Medium));
+
+  EXPECT_TRUE(Render::GraphicsSettings::instance().quality_chosen_by_user());
+  const auto saved = App::Core::UserSettings::load_graphics_quality_level();
+  ASSERT_TRUE(saved.has_value());
+  EXPECT_EQ(*saved, static_cast<int>(Render::GraphicsQuality::Medium));
+}
+
 TEST_F(SettingsPersistenceTest, LanguageSelectionIsLoadedFromSavedPreferences) {
   App::Core::UserSettings::save_language(QStringLiteral("de"));
 

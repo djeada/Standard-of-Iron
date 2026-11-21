@@ -7311,6 +7311,14 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
         <source>Quit</source>
         <translation>Salir</translation>
     </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Gráficos reducidos a %1 para que la batalla vaya fluida</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Elige un ajuste en Opciones para mantener tu propia elección.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>

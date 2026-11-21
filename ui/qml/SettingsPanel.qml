@@ -573,7 +573,7 @@ Item {
                             }
 
                             Label {
-                                text: typeof graphics_settings !== 'undefined' ? graphics_settings.get_quality_description() : ""
+                                text: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_description : ""
                                 color: Theme.textSub
                                 font.pixelSize: Design.Typography.body
                                 opacity: 0.7

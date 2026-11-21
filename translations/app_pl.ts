@@ -7315,6 +7315,14 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
         <source>Quit</source>
         <translation>Zakończ grę</translation>
     </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Grafika obniżona do %1, aby bitwa działała płynnie</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Wybierz ustawienie w Ustawieniach, aby zachować własny wybór.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>

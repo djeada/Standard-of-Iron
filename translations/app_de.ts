@@ -7311,6 +7311,14 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
         <source>Quit</source>
         <translation>Beenden</translation>
     </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Grafik auf %1 gesenkt, damit die Schlacht flüssig bleibt</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Wähle in den Einstellungen eine Stufe, um deine eigene Wahl zu behalten.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
