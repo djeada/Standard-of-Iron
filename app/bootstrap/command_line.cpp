@@ -21,6 +21,7 @@ auto parse_command_line(QCoreApplication& app,
   QCommandLineParser parser;
   parser.setApplicationDescription("Standard of Iron");
   parser.addHelpOption();
+  parser.addVersionOption();
   QCommandLineOption const force_software_opt(
       QStringList{"s", "force-software"},
       "Force the CPU software rendering backend (ShaderQuality::None).");
