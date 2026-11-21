@@ -370,9 +370,8 @@ void GameEngine::ensure_initialized() {
                                                 &error);
   if (!m_runtime.initialized || !error.isEmpty()) {
     report_renderer_failure(
-        error.isEmpty()
-            ? QStringLiteral("OpenGL renderer initialization failed.")
-            : error);
+        error.isEmpty() ? QStringLiteral("OpenGL renderer initialization failed.")
+                        : error);
     return;
   }
   if (!was_initialized && m_runtime.initialized) {
