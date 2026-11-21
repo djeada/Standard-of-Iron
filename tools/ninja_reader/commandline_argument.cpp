@@ -10,6 +10,7 @@
 #include <ranges>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 
 namespace NinjaReader::CommandLine::Argument {

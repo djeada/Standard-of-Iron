@@ -6,6 +6,8 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "routines_ninjalog_parser.h"
 

@@ -7,6 +7,8 @@
 #include <chrono>
 #include <filesystem>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace NinjaReader::Routines {
 
