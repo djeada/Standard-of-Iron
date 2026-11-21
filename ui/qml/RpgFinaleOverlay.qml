@@ -120,9 +120,9 @@ Item {
             text: root.title_text()
             color: Design.Theme.parchment
             fontSizeMode: Text.HorizontalFit
-            minimumPixelSize: Math.round(22 * root.resolutionScale)
+            minimumPixelSize: Design.Typography.display(22 * root.resolutionScale)
             font.family: Design.Typography.titleFamily
-            font.pixelSize: Math.round(58 * root.resolutionScale)
+            font.pixelSize: Design.Typography.display(58 * root.resolutionScale)
             font.letterSpacing: Design.Typography.trackingTitle
             font.capitalization: Font.AllUppercase
             font.hintingPreference: Design.Typography.titleHinting
