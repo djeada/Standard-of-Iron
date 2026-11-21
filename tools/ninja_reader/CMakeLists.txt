@@ -9,9 +9,5 @@ add_executable(ninja_reader
     commandline_argument.cpp
     routines_ninjalog_parser.cpp
 )
-target_compile_options(ninja_reader
-    PUBLIC -std=c++20
-)
-target_include_directories(ninja_reader
-    PUBLIC ${CMAKE_SOURCE_DIR}/include
-)
+target_compile_options(ninja_reader PUBLIC -std=c++20)
+target_include_directories(ninja_reader PUBLIC ${CMAKE_SOURCE_DIR})
