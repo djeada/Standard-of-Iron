@@ -407,6 +407,33 @@ production-panel bindings (each calling into C++) ten times a second even with n
 selected. The tick is now bumped only while a building or builder with a production
 panel is selected; selection changes still bump it immediately.
 
+### Front end on a weak PC (November 2026)
+
+Measured on Mesa llvmpipe in Xvfb (a stand-in for a weak integrated GPU), clicking
+through the menus with XTEST and timing how long the window showed no new frame:
+
+|                                | before                               | after                |
+| ------------------------------ | ------------------------------------ | -------------------- |
+| Idle main menu, CPU            | ~350 % (redrawn ~25-50 fps)          | ~1 % (static)        |
+| Open Skirmish                  | 1.07 s frozen                        | no stall over 0.11 s |
+| Start a skirmish (Amber Delta) | 4.3 s + 2.2 s + 1.8 s + 1.4 s frozen | 2 x 1.6 s frozen     |
+
+- The gameplay `GLView` kept rendering the empty world under the front-end screens:
+  its `render()` always ended with `update()`, and Qt still calls it for a hidden item.
+  A hidden, initialised view now draws nothing and stops asking for frames.
+- Ornamental loops on the main menu and campaign map (backdrop drift, crest glow and
+  bob, pulsing markers) follow `Design.Motion.allowAmbientLoops`, which is off on the
+  Low preset, and the menu's also stop while the window is in the background.
+- The core template bake in `prewarm_unit_templates` ran inline on the GUI thread with
+  no progress report until it finished (4.9 s here). It now reports at least every
+  33 ms so the loading screen keeps animating.
+- Map previews keep each map's parsed definition and painted terrain until the file
+  changes; a seat or colour change only repaints the bases, a burst of changes is one
+  render, and it starts after the screen has painted.
+- Still open: the two 1.6 s stalls are the first battlefield frames on the render
+  thread (shader compiles and GPU uploads in `prewarm_overlay_gpu_resources`), and the
+  Campaign screen's first frame takes 0.55 s.
+
 ## Build time
 
 Every translation unit parsed ~120k lines of standard-library and Qt headers. The

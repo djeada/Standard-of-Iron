@@ -442,12 +442,15 @@ Item {
     }
 
     function refresh_map_preview() {
-        Qt.callLater(function () {
-                if (map_preview && map_preview.refresh_preview) {
-                    map_preview.player_configs = get_player_configs();
-                    map_preview.refresh_preview();
-                }
-            });
+        Qt.callLater(root.push_preview_configs);
+    }
+
+    // One named function so Qt.callLater folds a burst of refreshes into a
+    // single call. Assigning player_configs is what asks the preview to
+    // redraw; calling refresh_preview() as well used to draw it twice.
+    function push_preview_configs() {
+        if (map_preview && map_preview.refresh_preview)
+            map_preview.player_configs = get_player_configs();
     }
 
     function select_map(index) {

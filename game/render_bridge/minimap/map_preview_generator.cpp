@@ -2,7 +2,9 @@
 
 #include <QColor>
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QFile>
+#include <QFileInfo>
 #include <QHash>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -15,6 +17,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iterator>
+#include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -94,6 +99,94 @@ auto preview_config() -> MinimapGenerator::Config {
   return config;
 }
 
+// The skirmish screen asks for a preview every time a seat, colour or base
+// changes, and the battlefield list asks for one per row. Parsing the map and
+// painting its terrain is the expensive part and does not depend on the
+// players, so keep both per map (until the file changes) and only paint the
+// player bases per request.
+struct CachedMap {
+  QString path;
+  qint64 size = -1;
+  QDateTime modified;
+  std::shared_ptr<const MapDefinition> definition;
+  QImage terrain;
+};
+
+constexpr std::size_t k_cached_maps = 16;
+
+auto cache_mutex() -> std::mutex& {
+  static std::mutex mutex;
+  return mutex;
+}
+
+auto cached_maps() -> std::vector<CachedMap>& {
+  static std::vector<CachedMap> maps;
+  return maps;
+}
+
+// Preview painting borrows the global minimap orientation, which the live
+// minimap layers read. Put it back afterwards: the skirmish screen can be
+// opened from a running battle, and its previews used to leave the in-game
+// minimap rotated to whichever map was browsed last.
+class ScopedMinimapYaw {
+public:
+  explicit ScopedMinimapYaw(float yaw_deg)
+      : m_previous(MinimapOrientation::instance().yaw_degrees()) {
+    MinimapOrientation::instance().set_yaw_degrees(yaw_deg);
+  }
+  ~ScopedMinimapYaw() { MinimapOrientation::instance().set_yaw_degrees(m_previous); }
+  ScopedMinimapYaw(const ScopedMinimapYaw&) = delete;
+  auto operator=(const ScopedMinimapYaw&) -> ScopedMinimapYaw& = delete;
+  ScopedMinimapYaw(ScopedMinimapYaw&&) = delete;
+  auto operator=(ScopedMinimapYaw&&) -> ScopedMinimapYaw& = delete;
+
+private:
+  float m_previous;
+};
+
+auto acquire_cached_map(const QString& map_path,
+                        MinimapGenerator* terrain_painter) -> CachedMap {
+  const QFileInfo info(map_path);
+  const qint64 size = info.exists() ? info.size() : -1;
+  const QDateTime modified = info.exists() ? info.lastModified() : QDateTime();
+
+  std::lock_guard<std::mutex> const lock(cache_mutex());
+  auto& maps = cached_maps();
+  auto found = std::find_if(maps.begin(), maps.end(), [&](const CachedMap& entry) {
+    return entry.path == map_path;
+  });
+  if (found != maps.end() && (found->size != size || found->modified != modified ||
+                              found->definition == nullptr)) {
+    maps.erase(found);
+    found = maps.end();
+  }
+  if (found == maps.end()) {
+    auto definition = std::make_shared<MapDefinition>();
+    QString error;
+    if (!MapLoader::load_from_json_file(map_path, *definition, &error)) {
+      return {};
+    }
+    if (maps.size() >= k_cached_maps) {
+      maps.erase(maps.begin());
+    }
+    maps.push_back(CachedMap{.path = map_path,
+                             .size = size,
+                             .modified = modified,
+                             .definition = std::move(definition),
+                             .terrain = {}});
+    found = std::prev(maps.end());
+  } else if (std::next(found) != maps.end()) {
+    std::rotate(found, std::next(found), maps.end());
+    found = std::prev(maps.end());
+  }
+
+  if (terrain_painter != nullptr && found->terrain.isNull()) {
+    const ScopedMinimapYaw yaw(found->definition->camera.yaw_deg);
+    found->terrain = terrain_painter->generate(*found->definition);
+  }
+  return *found;
+}
+
 } // namespace
 
 MapPreviewGenerator::MapPreviewGenerator()
@@ -105,22 +198,27 @@ MapPreviewGenerator::~MapPreviewGenerator() = default;
 auto MapPreviewGenerator::generate_preview(
     const QString& map_path, const QVariantList& player_configs) -> QImage {
 
-  MapDefinition map_def;
-  QString error;
-  if (!MapLoader::load_from_json_file(map_path, map_def, &error)) {
+  const CachedMap cached = acquire_cached_map(map_path, m_minimap_generator.get());
+  if (cached.definition == nullptr || cached.terrain.isNull()) {
     QImage error_image(200, 200, QImage::Format_ARGB32);
     error_image.fill(QColor(40, 40, 40));
     return error_image;
   }
+  const MapDefinition& map_def = *cached.definition;
+  const ScopedMinimapYaw yaw(map_def.camera.yaw_deg);
 
-  MinimapOrientation::instance().set_yaw_degrees(map_def.camera.yaw_deg);
-
-  QImage preview = m_minimap_generator->generate(map_def);
+  // Painting the bases detaches this copy; the cached terrain stays clean.
+  QImage preview = cached.terrain;
 
   std::vector<PlayerConfig> parsed_configs = parse_player_configs(player_configs);
   draw_player_bases(preview, map_def, parsed_configs);
 
   return preview;
+}
+
+void MapPreviewGenerator::clear_cache() {
+  std::lock_guard<std::mutex> const lock(cache_mutex());
+  cached_maps().clear();
 }
 
 auto MapPreviewGenerator::parse_player_configs(const QVariantList& configs) const
@@ -258,16 +356,16 @@ void MapPreviewGenerator::draw_player_bases(
 auto MapPreviewGenerator::base_markers(const QString& map_path) -> QVariantList {
   QVariantList markers;
 
-  MapDefinition map_def;
-  QString error;
-  if (!MapLoader::load_from_json_file(map_path, map_def, &error)) {
+  const CachedMap cached = acquire_cached_map(map_path, nullptr);
+  if (cached.definition == nullptr) {
     return markers;
   }
+  const MapDefinition& map_def = *cached.definition;
   if (map_def.grid.width <= 0 || map_def.grid.height <= 0) {
     return markers;
   }
 
-  MinimapOrientation::instance().set_yaw_degrees(map_def.camera.yaw_deg);
+  const ScopedMinimapYaw yaw(map_def.camera.yaw_deg);
 
   const auto [world_width, world_height] = rotated_world_bounds(
       static_cast<float>(map_def.grid.width) * map_def.grid.tile_size,

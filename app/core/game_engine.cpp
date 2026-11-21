@@ -787,6 +787,7 @@ void GameEngine::update(float dt) {
 }
 
 auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
+  m_last_render_was_gameplay = false;
   if (!m_renderer || !m_world || !renderer_initialized() || m_runtime.loading) {
     return 0;
   }
@@ -809,6 +810,7 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
 
   m_renderer->set_world_view(Render::WorldView::of(*m_session));
   m_renderer->set_loading_overlay_active(m_loading_overlay.active());
+  m_last_render_was_gameplay = !m_loading_overlay.active();
 
   if (m_loading_overlay.active()) {
     prewarm_overlay_gpu_resources();

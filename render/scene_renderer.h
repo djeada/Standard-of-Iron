@@ -643,8 +643,13 @@ private:
   AsyncTemplatePrewarm m_async_prewarm;
   bool m_loading_overlay_active = false;
   bool m_forbids_runtime_bake = false;
+  // Graphics preset generation the unit templates were prewarmed for. A
+  // preset change mid-match (Settings, or the automatic step-down) needs
+  // templates at LODs nobody prewarmed, so the bake ban is lifted then.
+  std::uint32_t m_prewarmed_graphics_generation = 0;
 
   void set_forbids_runtime_bake(bool forbidden);
+  void allow_bakes_after_preset_change();
 };
 
 struct FrameScope {

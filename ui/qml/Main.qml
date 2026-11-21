@@ -1192,6 +1192,18 @@ ApplicationWindow {
     }
 
     Connections {
+        function onQuality_lowered_automatically(preset_name) {
+            Design.Notifications.push("info", qsTr("Graphics lowered to %1 to keep the battle smooth").arg(preset_name), {
+                    "channel": "graphics-auto-quality",
+                    "detail": qsTr("Pick a preset in Settings to keep your own choice.")
+                });
+        }
+
+        target: typeof graphics_settings !== 'undefined' ? graphics_settings : null
+        ignoreUnknownSignals: true
+    }
+
+    Connections {
         function onHome_attacked(text, world_x, world_z) {
             if (!text || !mainWindow.game_started)
                 return;

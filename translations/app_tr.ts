@@ -7307,6 +7307,14 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Quit</source>
         <translation>Çık</translation>
     </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Savaşın akıcı kalması için grafikler %1 seviyesine düşürüldü</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Kendi seçiminizi korumak için Ayarlar&apos;dan bir ön ayar seçin.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>

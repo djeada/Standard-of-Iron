@@ -7311,6 +7311,14 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
         <source>Quit</source>
         <translation>Sair</translation>
     </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Gráficos reduzidos para %1 para manter a batalha fluida</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Escolha uma predefinição nas Configurações para manter sua própria escolha.</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>

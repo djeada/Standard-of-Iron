@@ -18,6 +18,9 @@ namespace App::Core::UserSettings {
 inline constexpr char kOrganization[] = "djeada";
 inline constexpr char kApplication[] = "StandardOfIron";
 inline constexpr char kGraphicsQualityKey[] = "graphics/quality_level";
+// Preset the game stepped down to on its own because battles ran too slowly.
+// Used only while the player has not picked a preset themselves.
+inline constexpr char kAutoGraphicsQualityKey[] = "graphics/auto_quality_level";
 inline constexpr char kLanguageKey[] = "ui/language";
 inline constexpr char kMasterVolumeKey[] = "audio/master_volume";
 inline constexpr char kSoundVolumeKey[] = "audio/sound_volume";
@@ -131,12 +134,40 @@ inline auto load_graphics_quality_level() -> std::optional<int> {
   return level;
 }
 
+inline auto load_auto_graphics_quality_level() -> std::optional<int> {
+  auto settings = open();
+  const QVariant value = settings.value(QString::fromLatin1(kAutoGraphicsQualityKey));
+  if (!value.isValid()) {
+    return std::nullopt;
+  }
+  bool ok = false;
+  const int level = value.toInt(&ok);
+  if (!ok || level < 0 || level > 3) {
+    return std::nullopt;
+  }
+  return level;
+}
+
+inline void save_auto_graphics_quality_level(int level) {
+  if (level < 0 || level > 3) {
+    return;
+  }
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(kAutoGraphicsQualityKey), level);
+  settings.sync();
+}
+
 inline void apply_saved_graphics_quality() {
   const auto level = load_graphics_quality_level();
   auto& graphics = Render::GraphicsSettings::instance();
   graphics.set_quality_chosen_by_user(level.has_value());
   if (!level.has_value()) {
-    graphics.set_quality(Render::k_default_graphics_quality);
+    // No choice of the player's: start where the game last had to settle,
+    // so a slow PC does not relive the first slow battle every launch.
+    const auto settled = load_auto_graphics_quality_level();
+    const auto fallback = static_cast<int>(Render::k_default_graphics_quality);
+    graphics.set_quality(static_cast<Render::GraphicsQuality>(
+        settled.has_value() ? std::min(*settled, fallback) : fallback));
     return;
   }
 

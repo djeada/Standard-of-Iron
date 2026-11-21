@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <ctime>
 #include <exception>
 #include <numeric>
@@ -84,6 +85,9 @@ auto distribution_json(const std::vector<double>& samples) -> QJsonObject {
 
 GLView::GLView() {
   setMirrorVertically(true);
+  // The renderer sizes the framebuffer itself (it may be smaller than the item
+  // on the Low preset) and asks for a new one when the item or preset changes.
+  setTextureFollowsItemSize(false);
 }
 
 auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
@@ -110,6 +114,14 @@ auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNod
     return node;
   }
   return QQuickFramebufferObject::updatePaintNode(node, data);
+}
+
+void GLView::itemChange(ItemChange change, const ItemChangeData& value) {
+  QQuickFramebufferObject::itemChange(change, value);
+  if (change == ItemVisibleHasChanged && value.boolValue) {
+    // The renderer stops requesting frames while hidden; wake it up.
+    update();
+  }
 }
 
 auto GLView::engine() const -> QObject* {
@@ -257,9 +269,19 @@ void GLView::GLRenderer::render() {
       }
     }
 
-    if (!m_engine->try_begin_render_frame()) {
+    // Behind the front-end screens the battlefield item is hidden, but Qt
+    // still calls render(); each frame then asked for the next one and the
+    // empty world was drawn at full resolution under the main menu forever.
+    // Once the renderer exists, a hidden view draws nothing and stops asking;
+    // GLView::itemChange() restarts it when the view is shown.
+    if (!m_item_visible && m_engine->renderer_initialized()) {
+      return;
+    }
 
-      update();
+    if (!m_engine->try_begin_render_frame()) {
+      if (m_item_visible) {
+        update();
+      }
       return;
     }
     const FrameGate frame_gate{m_engine};
@@ -268,6 +290,18 @@ void GLView::GLRenderer::render() {
     if (!m_engine->renderer_initialized()) {
       m_engine->report_renderer_failure(
           GLView::tr("The OpenGL battlefield renderer failed."));
+      return;
+    }
+    if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
+      m_engine->start_simulation_thread();
+    }
+    if (!m_item_visible) {
+      // Initialised behind the menu: report readiness, draw nothing.
+      if (!m_ready_reported && m_view != nullptr) {
+        m_ready_reported = true;
+        QMetaObject::invokeMethod(
+            m_view, "notify_renderer_ready", Qt::QueuedConnection);
+      }
       return;
     }
     if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
@@ -297,6 +331,12 @@ void GLView::GLRenderer::render() {
     const std::uint64_t simulation_us = m_engine->take_simulation_tick_us();
     profile.add_phase_us(Render::Profiling::Phase::Simulation, simulation_us);
 
+    double frame_interval_ms = 0.0;
+    if (m_last_frame_time.time_since_epoch().count() != 0) {
+      frame_interval_ms = std::chrono::duration<double, std::milli>(frame_work_start -
+                                                                    m_last_frame_time)
+                              .count();
+    }
     float dt = 1.0F / 60.0F;
     if (m_film_fps > 0) {
       dt = 1.0F / static_cast<float>(m_film_fps);
@@ -323,6 +363,14 @@ void GLView::GLRenderer::render() {
       m_software_blitter.release();
     }
     m_engine->notify_loading_frame_presented(rendered_load);
+    observe_frame_rate(frame_interval_ms, m_benchmark_seconds > 0.0 || m_film_fps > 0);
+    if (m_item_pixel_size.isValid() && !m_resize_requested &&
+        scaled_framebuffer_size(m_item_pixel_size) != m_size && m_view != nullptr) {
+      // The preset's render scale changed. synchronize() only runs when the
+      // item is dirty, so mark it from the GUI thread.
+      m_resize_requested = true;
+      QMetaObject::invokeMethod(m_view, "update", Qt::QueuedConnection);
+    }
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;
     const double thread_cpu_end_ms = render_thread_cpu_ms();
@@ -363,7 +411,28 @@ void GLView::GLRenderer::render() {
       std::this_thread::sleep_for(wait);
     }
   }
-  update();
+  if (m_item_visible) {
+    update();
+  }
+}
+
+void GLView::GLRenderer::observe_frame_rate(double frame_interval_ms,
+                                            bool cadence_exempt) {
+  auto& graphics = Render::GraphicsSettings::instance();
+  const bool eligible = !cadence_exempt && m_cadence.window_active() &&
+                        m_engine->last_render_was_gameplay();
+  const auto lower = m_quality_governor.observe(frame_interval_ms,
+                                                eligible,
+                                                graphics.quality(),
+                                                graphics.quality_chosen_by_user());
+  if (!lower.has_value()) {
+    return;
+  }
+  if (graphics.lower_quality_automatically(*lower)) {
+    qInfo() << "GLView: battle frame rate stayed below"
+            << qRound(1000.0 / m_quality_governor.policy().slow_frame_ms)
+            << "fps; lowering graphics to" << Render::graphics_quality_key(*lower);
+  }
 }
 
 void GLView::GLRenderer::warm_commander_portraits() {
@@ -908,9 +977,32 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
   QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 }
 
-auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
+auto GLView::GLRenderer::scaled_framebuffer_size(const QSize& item_pixels) const
+    -> QSize {
+  // Captures (film, benchmarks) always get the full picture.
+  if (m_benchmark_seconds > 0.0 || m_film_fps > 0) {
+    return item_pixels;
+  }
+  const auto extent =
+      Render::scaled_render_extent(Render::GraphicsSettings::instance().render_scale(),
+                                   item_pixels.width(),
+                                   item_pixels.height());
+  return {extent[0], extent[1]};
+}
+
+auto GLView::GLRenderer::createFramebufferObject(const QSize& requested)
     -> QOpenGLFramebufferObject* {
+  // `requested` is the item's pixel size; Qt stretches whatever we return
+  // over the item, so a smaller framebuffer is a cheaper 3D view under a
+  // full-resolution HUD.
+  m_item_pixel_size = requested;
+  m_resize_requested = false;
+  const QSize size = scaled_framebuffer_size(requested);
   m_size = size;
+  if (size != requested) {
+    qInfo() << "GLView: drawing the battlefield at" << size << "for a" << requested
+            << "view";
+  }
 
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
@@ -931,11 +1023,27 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   auto* view = dynamic_cast<GLView*>(item);
   m_engine = qobject_cast<GameEngine*>(view->engine());
+  m_item_visible = view->isVisible();
   const bool cadence_exempt = m_benchmark_seconds > 0.0 || m_film_fps > 0;
   m_cadence.set_window_active(
       cadence_exempt || (view->window() != nullptr && view->window()->isActive()));
   if (m_engine != nullptr) {
     m_engine->set_input_viewport_size(view->width(), view->height());
+  }
+
+  if (view->window() != nullptr && m_item_pixel_size.isValid()) {
+    // Same arithmetic Qt uses for the size it passes to
+    // createFramebufferObject(), so an unchanged item never looks resized.
+    const QSize item_pixels = QSize(qMax(1, static_cast<int>(view->width())),
+                                    qMax(1, static_cast<int>(view->height()))) *
+                              view->window()->effectiveDevicePixelRatio();
+    const bool resized =
+        std::abs(item_pixels.width() - m_item_pixel_size.width()) > 1 ||
+        std::abs(item_pixels.height() - m_item_pixel_size.height()) > 1;
+    if (resized || scaled_framebuffer_size(m_item_pixel_size) != m_size) {
+      // The item was resized or the preset's render scale changed.
+      invalidateFramebufferObject();
+    }
   }
 
   if (m_engine != nullptr) {
