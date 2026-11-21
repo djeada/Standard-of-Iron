@@ -16,6 +16,7 @@
 #include "commander_signature_effects.h"
 #include "damage_application.h"
 #include "damage_processor.h"
+#include "game/util/planar_math.h"
 #include "melee_exchange.h"
 
 namespace Game::Systems::Combat {
@@ -43,7 +44,7 @@ void present_melee_exchange(Engine::Core::World& world,
 
   float const dx = target_transform.position.x - attacker_transform.position.x;
   float const dz = target_transform.position.z - attacker_transform.position.z;
-  float const distance = std::max(0.001F, std::hypot(dx, dz));
+  float const distance = std::max(0.001F, Game::Systems::planar_length(dx, dz));
   float const contact_reach =
       std::min(distance * 0.72F, std::max(0.35F, reach * 0.55F));
   QVector3D const contact_point(
@@ -256,7 +257,7 @@ void deal_rts_melee_contact_damage(
   auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
   float const dx = target_transform->position.x - attacker_transform->position.x;
   float const dz = target_transform->position.z - attacker_transform->position.z;
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   bool const in_range = target_is_in_reach(
       attacker, *target, *attacker_transform, *target_transform, definition, distance);
   if (!in_range ||

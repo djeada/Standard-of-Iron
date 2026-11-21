@@ -51,7 +51,7 @@ void MovementSystem::Motor::drive_along_heading(
   float speed = std::max(
       0.0F, (movement.get_vx() * forward_x0) + (movement.get_vz() * forward_z0));
 
-  float const wanted_speed = std::hypot(target_vx, target_vz);
+  float const wanted_speed = Game::Systems::planar_length(target_vx, target_vz);
   float target_speed = 0.0F;
   if (wanted_speed > k_heading_locked_idle_speed) {
     float const desired_yaw =
@@ -103,8 +103,9 @@ auto MovementSystem::Motor::wanted_velocity(const Mover& mover,
     float const nz = facts.motor.contact_nz;
     float const into = (wanted.vx * nx) + (wanted.vz * nz);
     if (into < 0.0F) {
-      float const speed = std::hypot(wanted.vx, wanted.vz);
-      float const along = std::hypot(wanted.vx - (nx * into), wanted.vz - (nz * into));
+      float const speed = Game::Systems::planar_length(wanted.vx, wanted.vz);
+      float const along = Game::Systems::planar_length(wanted.vx - (nx * into),
+                                                       wanted.vz - (nz * into));
       if (along > 1.0e-4F && speed > 1.0e-4F) {
         float const slide_x = (wanted.vx - (nx * into)) * (speed / along);
         float const slide_z = (wanted.vz - (nz * into)) * (speed / along);
@@ -146,7 +147,7 @@ void MovementSystem::Motor::accelerate_toward(Mover& mover,
   } else {
     float delta_vx = wanted.vx - movement.vx;
     float delta_vz = wanted.vz - movement.vz;
-    float const delta_speed = std::hypot(delta_vx, delta_vz);
+    float const delta_speed = Game::Systems::planar_length(delta_vx, delta_vz);
     float const max_delta = limits.slew * delta_time;
     if (delta_speed > max_delta && delta_speed > 1.0e-6F) {
       delta_vx *= max_delta / delta_speed;
@@ -172,7 +173,8 @@ auto MovementSystem::Motor::sweep_step(Mover& mover,
   if (body_acceleration > 0.0F) {
     float const speed_ceiling =
         mover.facts.last_accepted_speed + body_acceleration * delta_time;
-    float const translated_speed = std::hypot(translated_vx, translated_vz);
+    float const translated_speed =
+        Game::Systems::planar_length(translated_vx, translated_vz);
     if (translated_speed > speed_ceiling && translated_speed > 1.0e-5F) {
       float const scale = speed_ceiling / translated_speed;
       translated_vx *= scale;
@@ -227,7 +229,7 @@ void MovementSystem::Motor::record_motion(Mover& mover,
 
   publish_displacement(facts, transform, old_x, old_z, mover.delta_time);
   facts.last_accepted_speed =
-      std::hypot(facts.motor.accepted_vx, facts.motor.accepted_vz);
+      Game::Systems::planar_length(facts.motor.accepted_vx, facts.motor.accepted_vz);
   facts.motor.rejected_dx = sweep.rejected_dx;
   facts.motor.rejected_dz = sweep.rejected_dz;
   facts.motor.accepted_fraction = sweep.accepted_fraction;
