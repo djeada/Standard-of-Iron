@@ -87,7 +87,7 @@ auto run_list(const QStringList& args) -> int {
     out() << QJsonDocument(rows).toJson(QJsonDocument::Indented);
     return 0;
   }
-  for (const QJsonValue& value : rows) {
+  for (const QJsonValue value : rows) {
     const QJsonObject row = value.toObject();
     out() << row.value("kind").toString() << "[" << row.value("index").toInt() << "]\t"
           << row.value("type").toString() << "\t";
