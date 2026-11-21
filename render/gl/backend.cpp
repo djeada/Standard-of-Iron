@@ -1728,8 +1728,27 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
 
   draw_pending_static_batch();
 
+  m_opaque_first_batches.assign(prepared_batches.size(), 0U);
+  for (std::size_t early = 0; early < prepared_batches.size(); ++early) {
+    const PreparedBatch& prepared = prepared_batches[early];
+    if (draw_cmd_type(queue.get_sorted(prepared.start)) != DrawCmdType::RiggedCreature) {
+      continue;
+    }
+    breakdown_enter(DrawCmdType::RiggedCreature);
+    draw_tally.set_type(static_cast<std::size_t>(DrawCmdType::RiggedCreature));
+    execute_rigged_commands(prepared, context);
+    for (std::size_t executed = 0; executed < prepared.count; ++executed) {
+      m_frame_tracker.record_executed();
+    }
+    m_opaque_first_batches[early] = 1U;
+  }
+
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
+    if (m_opaque_first_batches[batch_index] != 0U) {
+      ++batch_index;
+      continue;
+    }
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
     const auto& cmd = queue.get_sorted(i);

@@ -419,6 +419,7 @@ private:
       m_shadow_terrain_height_cache;
 
   std::size_t m_rigged_drawn_this_frame = 0;
+  std::vector<std::uint8_t> m_opaque_first_batches;
   PlaybackStats m_last_playback_stats{};
 
   std::array<QMatrix4x4, k_max_shadow_cascades> m_directional_shadow_matrices{};
