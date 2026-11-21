@@ -8,6 +8,7 @@
 
 #include "../../core/world.h"
 #include "../formation_combat_geometry.h"
+#include "../rpg_combat_system/rpg_targeting.h"
 #include "action_contact_damage.h"
 #include "authored_action_reaction.h"
 #include "combat_action_predicates.h"
@@ -127,17 +128,54 @@ void apply_advanced_commander_hit(
   }
 }
 
+struct SwingOrigin {
+  float yaw_degrees{0.0F};
+  float dx{0.0F};
+  float dz{0.0F};
+  float distance{0.0F};
+};
+
+[[nodiscard]] auto
+swing_origin(Engine::Core::World& world,
+             Engine::Core::Entity& attacker,
+             const Engine::Core::Entity& target,
+             const Engine::Core::TransformComponent& attacker_transform,
+             float dx,
+             float dz,
+             float distance) -> SwingOrigin {
+  if (FormationCombat::has_formation_slots(attacker)) {
+    auto const* target_transform =
+        world.try_get<Engine::Core::TransformComponent>(target.get_id());
+    auto const carrier =
+        Game::Systems::RpgCombat::resolve_damage_carrier(attacker, target.get_id());
+    if (carrier.has_value() && target_transform != nullptr) {
+      float const carrier_dx = target_transform->position.x - carrier->position.x();
+      float const carrier_dz = target_transform->position.z - carrier->position.z();
+      return {.yaw_degrees = carrier->yaw_degrees,
+              .dx = carrier_dx,
+              .dz = carrier_dz,
+              .distance = Game::Systems::planar_length(carrier_dx, carrier_dz)};
+    }
+  }
+  return {.yaw_degrees = attacker_transform.rotation.y,
+          .dx = dx,
+          .dz = dz,
+          .distance = distance};
+}
+
 [[nodiscard]] auto
 swing_is_within_facing_cone(Engine::Core::World& world,
-                            const Engine::Core::Entity& attacker,
+                            Engine::Core::Entity& attacker,
                             const Engine::Core::Entity& target,
                             const Engine::Core::TransformComponent& attacker_transform,
                             float dx,
                             float dz,
                             float distance) -> bool {
-  float const yaw = attacker_transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const facing =
-      (std::sin(yaw) * dx + std::cos(yaw) * dz) / std::max(distance, 0.0001F);
+  auto const origin =
+      swing_origin(world, attacker, target, attacker_transform, dx, dz, distance);
+  float const yaw = origin.yaw_degrees * std::numbers::pi_v<float> / 180.0F;
+  float const facing = (std::sin(yaw) * origin.dx + std::cos(yaw) * origin.dz) /
+                       std::max(origin.distance, 0.0001F);
   auto const* attack = world.try_get<Engine::Core::AttackComponent>(attacker.get_id());
   bool const soldiers_face_the_animal =
       world.has<Engine::Core::WildlifeComponent>(target.get_id()) &&
