@@ -175,3 +175,15 @@ vec3 apply_directional_shadow(vec3 lit_color, vec3 world_position, vec3 normal) 
   amount = 1.0 - (1.0 - clamp(amount, 0.0, 1.0)) * (1.0 - cloud);
   return mix(lit_color, lit_color * environment_shadow_tint(), clamp(amount, 0.0, 1.0));
 }
+
+vec3 apply_directional_shadow(vec3 lit_color,
+                              vec3 world_position,
+                              vec3 normal,
+                              float direct_share) {
+  float amount = directional_shadow_occlusion(world_position, normal) *
+                 environment_shadow_strength();
+  float cloud = environment_cloud_shadow_amount(world_position);
+  amount = 1.0 - (1.0 - clamp(amount, 0.0, 1.0)) * (1.0 - cloud);
+  amount *= clamp(direct_share, 0.0, 1.0);
+  return mix(lit_color, lit_color * environment_shadow_tint(), clamp(amount, 0.0, 1.0));
+}

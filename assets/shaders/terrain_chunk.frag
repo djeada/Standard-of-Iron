@@ -45,6 +45,11 @@ const float k_soi_stroke_frequency = 3.4;
 const float k_soi_stroke_light = 0.20;
 const float k_soi_stroke_dark = 0.13;
 const float k_soi_meadow_frequency = 0.030;
+const float k_soi_strata_frequency = 0.95;
+const float k_soi_unlit_shadow_share = 0.30;
+const float k_soi_strata_contrast = 0.44;
+const float k_soi_strata_lip = 0.30;
+const float k_soi_strata_undercut = 0.26;
 const float k_soi_sward_lean = 0.785;
 const float k_soi_sward_frequency = 1.85;
 const float k_soi_sward_fine_frequency = 4.6;
@@ -1242,6 +1247,35 @@ void main() {
     rock_color *= 1.0 + rock_grain * 0.075;
     vec3 scree_color = mix(u_rock_low, u_soil_color, 0.24) * (0.90 + 0.14 * rock_value);
     rock_color = mix(rock_color, scree_color, mountain_scree * 0.42);
+    {
+      float strata_wander = ecology_noise(world_coord * 0.07 + vec2(31.0, -12.0)) * 1.6 +
+                            ecology_noise(world_coord * 0.31 + vec2(-9.0, 44.0)) * 0.40;
+      float strata_weight = smoothstep(0.14, 0.46, slope);
+      vec3 warm_layer = vec3(1.10, 1.01, 0.88);
+      vec3 cool_layer = vec3(0.90, 0.96, 1.04);
+      for (int bed = 0; bed < 2; ++bed) {
+        float frequency = bed == 0 ? k_soi_strata_frequency : k_soi_strata_frequency * 3.3;
+        float amount = bed == 0 ? 1.0 : 0.34;
+        float strata_coord =
+            v_world_pos.y * frequency + strata_wander * (bed == 0 ? 1.0 : 1.9) +
+            float(bed) * 3.7;
+        float strata_fade = 1.0 - smoothstep(0.22, 0.75, max(fwidth(strata_coord), 1e-5));
+        float layer = floor(strata_coord);
+        float within = fract(strata_coord);
+        float layer_tone = fract(sin(layer * 12.9898 + 4.1) * 43758.5453);
+        float layer_hue = fract(sin(layer * 78.233 + 1.7) * 43758.5453);
+        float lip =
+            smoothstep(0.82, 0.93, within) * (1.0 - smoothstep(0.93, 1.0, within));
+        float undercut = 1.0 - smoothstep(0.0, 0.16, within);
+        float weight = strata_weight * strata_fade * amount;
+        rock_color *= mix(vec3(1.0),
+                          mix(cool_layer, warm_layer, layer_hue) *
+                              (1.0 + (layer_tone - 0.5) * k_soi_strata_contrast),
+                          weight);
+        rock_color *= 1.0 + lip * k_soi_strata_lip * weight;
+        rock_color *= 1.0 - undercut * k_soi_strata_undercut * weight;
+      }
+    }
     float crag_shadow = mountain_crag * gully_mask * (0.35 + 0.65 * leeward_aspect);
     rock_color *= 1.0 - crag_shadow * 0.14;
 
@@ -1588,7 +1622,11 @@ void main() {
       terrain_color *
       (ambient_term + sun_light * (ndl * direct_occlusion * 0.76 + wet_glint) + sheen) *
       u_ambient_boost * environment_exposure();
-  lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
+  lit_color = apply_directional_shadow(
+      lit_color,
+      v_world_pos,
+      detail_normal,
+      mix(k_soi_unlit_shadow_share, 1.0, smoothstep(0.03, 0.42, ndl)));
   float landform_fill = smoothstep(0.12, 0.62, slope) *
                         clamp(hill_surface * 0.72 + mountain_surface, 0.0, 1.0);
   vec3 landform_fill_color = mix(environment_ground_bounce_color(),
