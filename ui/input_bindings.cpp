@@ -428,14 +428,16 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   commander,
                   movement,
                   QObject::tr("Turn left"),
-                  {},
+                  QObject::tr("While a target is locked, moves the lock to the next "
+                              "enemy on the left instead."),
                   QStringLiteral("Q"),
                   false});
   catalog.append({QStringLiteral("commander.turn_right"),
                   commander,
                   movement,
                   QObject::tr("Turn right"),
-                  {},
+                  QObject::tr("While a target is locked, moves the lock to the next "
+                              "enemy on the right instead."),
                   QStringLiteral("E"),
                   false});
   catalog.append({QStringLiteral("commander.sprint"),
@@ -452,12 +454,13 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   {},
                   QStringLiteral("Space"),
                   false});
+
   catalog.append({QStringLiteral("commander.jump"),
                   commander,
                   movement,
                   QObject::tr("Jump"),
                   {},
-                  QStringLiteral("Alt"),
+                  QStringLiteral("V"),
                   false});
   catalog.append({QStringLiteral("commander.primary_action"),
                   commander,
@@ -483,8 +486,10 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
   catalog.append({QStringLiteral("commander.cycle_lock_on"),
                   commander,
                   combat,
-                  QObject::tr("Cycle locked target"),
-                  {},
+                  QObject::tr("Lock on to a target, or release it"),
+                  QObject::tr("Locks the enemy nearest the centre of the view; "
+                              "press again to let go. Turn left and right step the "
+                              "lock to the next enemy over."),
                   QStringLiteral("Tab"),
                   false});
   catalog.append({QStringLiteral("commander.special_action"),

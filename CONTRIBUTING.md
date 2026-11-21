@@ -272,6 +272,35 @@ make arena
 make run-headless
 ```
 
+### Diagnose a Missing Resource
+
+`Utils::Resources::resolve_resource_path()` (`utils/resource_utils.h`) looks for
+a `:/` path on disk above the application and current directories, then in the
+compiled resources under several roots, and hands the path back unchanged when
+nothing matches. Set `SOI_RESOURCE_DIAGNOSTICS=1` to have every failed lookup
+log what it tried:
+
+```bash
+SOI_RESOURCE_DIAGNOSTICS=1 ./build/bin/standard_of_iron
+```
+
+```text
+Could not resolve resource: :/assets/data/nations/rome.json
+Checked:
+- /path/to/build/bin/assets/data/nations/rome.json
+- /path/to/build/assets/data/nations/rome.json
+- ...
+- :/assets/data/nations/rome.json
+- :/StandardOfIron/assets/data/nations/rome.json
+- :/qt/qml/StandardOfIron/assets/data/nations/rome.json
+- :/qt/qml/default/assets/data/nations/rome.json
+```
+
+Successful lookups never log, and the switch is off by default. Some callers
+probe for optional files on purpose, so a few reports are expected. Code and
+tests can call `resolve_resource_path_with_diagnostics()` for the same list
+without logging, or `set_resource_diagnostics_enabled()` to flip the switch.
+
 ## Testing
 
 ```bash

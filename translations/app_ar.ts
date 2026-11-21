@@ -4250,6 +4250,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>يتطلب عرض ساحة المعركة سياق رسومات OpenGL 3.3 Core يعمل بصورة صحيحة.</translation>
     </message>
     <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>يتطلب عرض ساحة المعركة OpenGL 3.3 Core. الإصدار المكتشف هو OpenGL %1.</translation>
+    </message>
+    <message>
         <source>The OpenGL graphics context was lost.</source>
         <translation>فُقد سياق رسومات OpenGL.</translation>
     </message>
@@ -4260,10 +4264,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The OpenGL battlefield renderer failed.</source>
         <translation>تعطّل محرّك عرض OpenGL لساحة المعركة.</translation>
-    </message>
-    <message>
-        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
-        <translation>يتطلب عرض ساحة المعركة OpenGL 3.3 Core. الإصدار المكتشف هو OpenGL %1.</translation>
     </message>
 </context>
 <context>
@@ -5608,38 +5608,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>أدوات التحكم القتالية</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[الزر الأيسر] ضربة  [الزر الأيمن] حراسة</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[مسافة] مراوغة  [Alt] قفز</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] حركة  [Shift] عَدْو</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] تبديل الهدف  [3] الهالة  [C] الكاميرا</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] أوامر التجميع  [Enter] العودة إلى وضع RTS</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] ضربة الترس  [1] اندفاعة  [2] النفَس الثاني</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] الهدف  [1] اندفاعة  [2] النفَس الثاني  [3] الهالة  [F] ضربة الترس</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] وضع التجميع  [C] الكاميرا  [Enter] العودة إلى وضع RTS</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>الطيار الآلي للتجميع مفعَّل حتى تُغرس الراية</translation>
     </message>
@@ -5662,6 +5630,38 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
         <translation>استخدم مهارة سلاحك، أو استمر في الحراسة لضربة ترس تُصيب بالدوار.</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] ضربة  [%2] حراسة</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] مراوغة  [%2] قفز</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] حركة  [%2] عَدْو</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] قفل الهدف  [%2] الهالة  [%3] الكاميرا</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] أوامر التجميع  [%2] العودة إلى وضع RTS</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] ضربة الترس  [%2] اندفاعة  [%3] النفَس الثاني</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] قفل الهدف  [%2] اندفاعة  [%3] النفَس الثاني  [%4] الهالة  [%5] ضربة الترس</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] وضع التجميع  [%2] الكاميرا  [%3] العودة إلى وضع RTS</translation>
     </message>
 </context>
 <context>
@@ -7318,6 +7318,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Roman field commander</source>
         <translation>قائد ميداني روماني</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>%1 لعرض الجيش</translation>
     </message>
     <message>
         <source>Quit</source>
@@ -11970,10 +11974,6 @@ Right-click to cancel.</source>
         <translation>صدّ</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>تبديل الهدف المقفل</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>اندفاعة الطليعة</translation>
     </message>
@@ -12165,6 +12165,22 @@ Right-click to cancel.</source>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>يحدد المجموعة. اضغط مع الاستمرار على Ctrl لحفظ التحديد الحالي فيها، أو على Shift لإضافة المجموعة إلى التحديد، واضغط مرتين بسرعة لتوسيط الكاميرا عليها.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>عند قفل هدف، ينتقل القفل بدلاً من ذلك إلى العدو التالي يساراً.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>عند قفل هدف، ينتقل القفل بدلاً من ذلك إلى العدو التالي يميناً.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>قفل هدف أو تحريره</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>يقفل على العدو الأقرب إلى مركز الرؤية؛ اضغط مرة أخرى لتحريره. الالتفات يساراً ويميناً ينقل القفل إلى العدو المجاور.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12217,6 +12233,48 @@ Right-click to cancel.</source>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>الأعداء يصعدون أسفل حجارتك. دحرجها!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 م</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>قائد العدو</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>جيشك</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>راية التجميع</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>عدو</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>الميدان لك</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>سقط %1</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>سقط قائدك</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>خسرنا هذا اليوم</translation>
     </message>
 </context>
 <context>
@@ -13160,6 +13218,50 @@ Right-click to cancel.</source>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>تتحكّم السرعات الثلاث أدناه في تحريك العرض والتكبير والتدوير بلوحة المفاتيح. يبقى السحب بالفأرة والتنقّل عبر الخريطة المصغّرة دون تغيير.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>قيادة القائد بنفسك</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>النظر بالفأرة والكاميرا عندما تقاتل بنفسك بصفتك القائد.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>سرعة النظر، أفقياً:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>سرعة النظر، عمودياً:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>عكس النظر العمودي</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>دفع الفأرة بعيداً عنك يميل الرؤية إلى الأسفل، كما في عصا الطيران.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>مجال الرؤية:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>بُعد الكاميرا:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>المسافة التي تقف عندها الكاميرا خلف القائد. تغيّرها عجلة الفأرة أثناء اللعب.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>تبقى الحراسة مرفوعة حتى الضغط مجدداً</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>اضغط زر الحراسة مرة لرفع الترس ومرة أخرى لإنزاله، بدلاً من إبقائه مضغوطاً.</translation>
     </message>
 </context>
 <context>

@@ -27,4 +27,9 @@ inline constexpr float k_radians_to_degrees = 57.29577951308232F;
   return diff;
 }
 
+[[nodiscard]] inline auto rightward_look_delta(float yaw_degrees,
+                                               float previous_yaw_degrees) -> float {
+  return -signed_angle_delta(yaw_degrees, previous_yaw_degrees);
+}
+
 } // namespace App::Core

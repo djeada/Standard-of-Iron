@@ -236,6 +236,26 @@ void CommanderControlController::cycle_lock_on_target(
   }
 }
 
+void CommanderControlController::toggle_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) {
+  if (m_targeting.toggle_lock(world, commander_id, local_owner_id, m_look.yaw()) ==
+      App::Core::CommanderTargeting::LockToggle::NoTarget) {
+    m_abilities.refuse("commander.cycle_lock_on");
+  }
+}
+
+void CommanderControlController::switch_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id,
+    int direction) {
+  if (!m_targeting.switch_lock(world, commander_id, local_owner_id, direction)) {
+    m_abilities.refuse("commander.cycle_lock_on");
+  }
+}
+
 void CommanderControlController::note_refusal(const char* action) {
   m_abilities.refuse(action);
 }
@@ -356,11 +376,12 @@ void CommanderControlController::steer_view(Engine::Core::World& world,
                                           .dt = dt}));
 
   if (m_targeting.locked_id() == 0) {
+
     if (tick.turn_left) {
-      m_look.set_yaw(m_look.yaw() - k_turn_speed_degrees * dt);
+      m_look.set_yaw(m_look.yaw() + k_turn_speed_degrees * dt);
     }
     if (tick.turn_right) {
-      m_look.set_yaw(m_look.yaw() + k_turn_speed_degrees * dt);
+      m_look.set_yaw(m_look.yaw() - k_turn_speed_degrees * dt);
     }
   }
   m_look.set_yaw(App::Core::wrap_angle_degrees(m_look.yaw()));
@@ -609,7 +630,7 @@ void CommanderControlController::advance_swing(const App::Core::CommanderHandles
                                                float dt) {
   auto const& tick = m_input_port.tick();
   m_strike.advance_melee(body.entity,
-                         {.aim_delta_x = App::Core::signed_angle_delta(
+                         {.aim_delta_x = App::Core::rightward_look_delta(
                               m_look.yaw(), m_look.previous_yaw()),
                           .aim_delta_y = m_look.pitch() - m_look.previous_pitch(),
                           .view_pitch = m_look.pitch(),

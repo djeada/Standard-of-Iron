@@ -60,7 +60,11 @@ TEST_F(ArenaRpgHudTest, PaintsTheGamesRpgOverlayOntoACapturedFrame) {
   EXPECT_GT(changed_pixels(untouched, frame, lower_left), 2000);
   EXPECT_GT(changed_pixels(untouched, frame, centre), 20);
 
-  const QRect open_sky(frame.width() / 3, 40, frame.width() / 3, frame.height() / 4);
+  const QRect bearing_strip(frame.width() / 2 - 200, 12, 400, 40);
+  EXPECT_GT(changed_pixels(untouched, frame, bearing_strip), 1500)
+      << "the bearing strip across the top of the commander's view was not painted";
+
+  const QRect open_sky(frame.width() / 3, 130, frame.width() / 3, frame.height() / 4);
   EXPECT_EQ(changed_pixels(untouched, frame, open_sky), 0);
 }
 

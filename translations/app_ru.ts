@@ -4250,6 +4250,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Для отрисовки поля боя требуется рабочий графический контекст OpenGL 3.3 Core.</translation>
     </message>
     <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Для отрисовки поля боя требуется OpenGL 3.3 Core. Обнаружен OpenGL %1.</translation>
+    </message>
+    <message>
         <source>The OpenGL graphics context was lost.</source>
         <translation>Графический контекст OpenGL потерян.</translation>
     </message>
@@ -4260,10 +4264,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The OpenGL battlefield renderer failed.</source>
         <translation>Сбой отрисовщика OpenGL поля боя.</translation>
-    </message>
-    <message>
-        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
-        <translation>Для отрисовки поля боя требуется OpenGL 3.3 Core. Обнаружен OpenGL %1.</translation>
     </message>
 </context>
 <context>
@@ -5614,38 +5614,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>УПРАВЛЕНИЕ В БОЮ</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[ЛКМ] Удар  [ПКМ] Защита</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Пробел] Уклон  [Alt] Прыжок</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Движение  [Shift] Рывок</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Смена цели  [3] Аура  [C] Камера</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Приказы сбора  [Enter] Назад в RTS</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Щит  [1] Рывок  [2] Второе дыхание</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Цель  [1] Рывок  [2] Второе дыхание  [3] Аура  [F] Щит</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Поставить сбор  [C] Камера  [Enter] Назад в RTS</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>Автопилот сбора включён, пока знамя не водружено</translation>
     </message>
@@ -5656,6 +5624,38 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>First-person command engaged</source>
         <translation>Командование от первого лица включено</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] Удар  [%2] Защита</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] Уклон  [%2] Прыжок</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] Движение  [%2] Рывок</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] Захват  [%2] Аура  [%3] Камера</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] Приказы сбора  [%2] Назад в RTS</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] Удар щитом  [%2] Натиск  [%3] Второе дыхание</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] Захват  [%2] Натиск  [%3] Второе дыхание  [%4] Аура  [%5] Удар щитом</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] Точка сбора  [%2] Камера  [%3] Назад в RTS</translation>
     </message>
 </context>
 <context>
@@ -7306,6 +7306,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Roman field commander</source>
         <translation>Римский полевой командир</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>%1 — вид армии</translation>
     </message>
     <message>
         <source>Quit</source>
@@ -12062,10 +12066,6 @@ Right-click to cancel.</source>
         <translation>Блок</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>Сменить захваченную цель</translation>
-    </message>
-    <message>
         <source>Weapon special</source>
         <translation>Приём оружием</translation>
     </message>
@@ -12153,6 +12153,22 @@ Right-click to cancel.</source>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>Выбирает группу. Удерживайте Ctrl, чтобы сохранить в ней текущий выбор, удерживайте Shift, чтобы добавить группу к выбору, и нажмите дважды быстро, чтобы центрировать на ней камеру.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>Если цель захвачена, вместо поворота переводит захват на следующего врага слева.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>Если цель захвачена, вместо поворота переводит захват на следующего врага справа.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>Захватить цель или сбросить захват</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>Захватывает врага, ближайшего к центру обзора; нажмите ещё раз, чтобы сбросить. Повороты влево и вправо переводят захват на соседнего врага.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12205,6 +12221,48 @@ Right-click to cancel.</source>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Враги поднимаются под вашими камнями. Скатите их!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 м</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>Вражеский полководец</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>Ваша армия</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>Знамя сбора</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Враг</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>Поле за вами</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>%1 пал</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>Ваш полководец пал</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>День проигран</translation>
     </message>
 </context>
 <context>
@@ -13145,6 +13203,50 @@ Right-click to cancel.</source>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>Три скорости ниже задают прокрутку, масштабирование и вращение с клавиатуры. Перетаскивание мышью и перемещение по миникарте не меняются.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>Управление полководцем</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>Обзор мышью и камера, когда вы сами сражаетесь за полководца.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>Скорость обзора, по горизонтали:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>Скорость обзора, по вертикали:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>Инвертировать обзор по вертикали</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>Движение мыши от себя наклоняет обзор вниз, как на авиационной ручке.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>Поле зрения:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>Дистанция камеры:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>Как далеко камера стоит за полководцем. В игре меняется колесом мыши.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>Защита держится до повторного нажатия</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>Нажмите кнопку защиты один раз, чтобы поднять щит, и ещё раз, чтобы опустить его, вместо удержания.</translation>
     </message>
 </context>
 <context>

@@ -461,6 +461,105 @@ TestCase {
         host.destroy();
     }
 
+    function bearingStatus(bearings) {
+        var status = quietStatus();
+        status["has_commander"] = true;
+        status["bearings"] = bearings;
+        return status;
+    }
+
+    function collectNamed(item, name, out) {
+        for (var i = 0; i < item.children.length; ++i) {
+            var child = item.children[i];
+            if (child === null)
+                continue;
+            if (child.objectName === name)
+                out.push(child);
+            collectNamed(child, name, out);
+        }
+    }
+
+    function test_the_bearing_strip_names_what_the_commander_faces() {
+        var host = makeOverlay(1280, 720, bearingStatus([{
+                        "kind": "enemy_commander",
+                        "bearing": 3.0,
+                        "distance": 41.6,
+                        "label": "Hannibal Barca"
+                    }, {
+                        "kind": "enemy",
+                        "bearing": 40.0,
+                        "distance": 12.0,
+                        "label": ""
+                    }]));
+        var overlay = host.overlay;
+        var strip = findChild(overlay, "rpgBearingStrip");
+        verify(strip !== null && strip.visible, "the bearing strip is missing");
+        var r = rectIn(overlay, strip);
+        verify(r.left >= 0 && r.right <= overlay.width && r.top >= 0, "the bearing strip overflows the viewport");
+        var caption = findChild(overlay, "rpgBearingCaption");
+        var label = findChild(overlay, "rpgBearingCaptionLabel");
+        verify(caption !== null && label !== null, "the bearing caption is missing");
+        tryVerify(function () {
+                return caption.visible && label.text.indexOf("Hannibal Barca") >= 0 && label.text.indexOf("42") >= 0;
+            }, 1000, "facing the enemy commander did not name him and his distance");
+        overlay.status = bearingStatus([{
+                    "kind": "enemy_commander",
+                    "bearing": 70.0,
+                    "distance": 41.6,
+                    "label": "Hannibal Barca"
+                }]);
+        tryVerify(function () {
+                return !caption.visible;
+            }, 1000, "the caption stayed up for a commander the player is no longer facing");
+        host.destroy();
+    }
+
+    function test_marks_behind_the_commander_wait_at_the_ends_of_the_strip() {
+        var host = makeOverlay(1280, 720, bearingStatus([{
+                        "kind": "army",
+                        "bearing": -170.0,
+                        "distance": 80.0,
+                        "label": ""
+                    }, {
+                        "kind": "rally",
+                        "bearing": 135.0,
+                        "distance": 30.0,
+                        "label": ""
+                    }, {
+                        "kind": "enemy",
+                        "bearing": 0.0,
+                        "distance": 9.0,
+                        "label": ""
+                    }]));
+        var overlay = host.overlay;
+        var strip = findChild(overlay, "rpgBearingStrip");
+        verify(strip !== null, "the bearing strip is missing");
+        var marks = [];
+        collectNamed(strip, "rpgBearingMark", marks);
+        compare(marks.length, 3, "every bearing gets one mark");
+        var centres = [];
+        for (var i = 0; i < marks.length; ++i) {
+            var centre = marks[i].x + marks[i].width * 0.5;
+            verify(centre >= 0 && centre <= strip.width, "a mark left the strip");
+            centres.push(centre);
+        }
+        centres.sort(function (a, b) {
+                return a - b;
+            });
+        verify(centres[0] < strip.width * 0.1, "a mark behind on the left must sit at the left end");
+        verify(Math.abs(centres[1] - strip.width * 0.5) < 2, "a mark dead ahead must sit under the centre");
+        verify(centres[2] > strip.width * 0.9, "a mark behind on the right must sit at the right end");
+        host.destroy();
+    }
+
+    function test_the_bearing_strip_is_hidden_without_a_commander() {
+        var host = makeOverlay(1280, 720, quietStatus());
+        var strip = findChild(host.overlay, "rpgBearingStrip");
+        verify(strip !== null, "the bearing strip is missing");
+        verify(!strip.visible, "the strip has nothing to say before the commander status arrives");
+        host.destroy();
+    }
+
     Component {
         id: hostComponent
 

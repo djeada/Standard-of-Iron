@@ -9,7 +9,50 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Leading the commander, the mouse turns the way you move it.** Moving the
+  mouse right turned the camera left, and `E` ("turn right") turned left with
+  it; only strafing was the right way round. The view now follows the hand.
+  The warning arrows at the screen edges were mirrored the same way, so an
+  attacker closing from the right lit the left one; they point at the attacker
+  now.
+- **Taking control of the commander no longer throws the camera at the
+  ground.** When the pointer could not be put exactly at the centre of the
+  window (a window partly off screen, some display scalings), its whole
+  distance from the centre was applied as one look movement the moment you
+  pressed Enter, leaving the view pinned straight down.
+- **A lock can be let go.** `Tab` locked a target and could then only cycle to
+  another; with one enemy in reach you stayed locked until he died. `Tab` now
+  locks and releases, and `Q`/`E` step the lock to the next enemy on that side.
+- **Looking away from a locked enemy no longer tips the camera into the
+  ground.**
+
+### Added
+
+- **The end of a battle fought as the commander is shown.** The verdict panel
+  used to cut in on the frame the last blow landed. Now the camera stays with
+  the commander for a few seconds in slow motion, turning and drawing back,
+  under a single line - then the result. It is skipped when Reduce motion is
+  on.
+- **Taking control of the commander drops the camera down to him** instead of
+  cutting from the army view to his shoulder.
+- **A marker over your own commander in a fight**, so he can be found in a
+  press of several hundred soldiers.
+- **A bearing strip across the top of the commander's view** points to the
+  enemy commander, the nearest enemy in sight, your own army and your rally
+  flag, with the distance to whichever you are facing.
+- **Objectives, wave timers and the mission clock stay on screen** while you
+  lead the commander.
+- **Settings for the commander's view**: look speed for each axis, inverted
+  vertical look, field of view, camera distance and guard as a toggle, under
+  Settings → Controls. The mouse wheel sets the camera distance during play.
+
 ### Changed
+
+- **Jump is on `V`, not `Alt`.** Next to the other defaults `Alt` made
+  `Alt+Tab`, `Alt+Space` and `Alt+click`, which belong to the desktop. A
+  binding you have changed yourself is kept.
 
 - **Ultra spends 8–30% less GPU time per frame at 1080p, with the same
   picture.** At 1920x1080 Ultra on an RTX 5060, interleaved against the previous
