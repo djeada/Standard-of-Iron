@@ -211,6 +211,23 @@ Simulation fixes from that profile (2,000 units: 36.3 -> 28.7 ms a tick, 500 uni
 _Rule:_ no `std::hypot`, `std::remainder` or `std::fmod` in per-soldier or per-unit
 tick code; use `planar_length` and `signed_yaw_delta`.
 
+GPU work from the same baseline:
+
+- With `SOI_GPU_BREAKDOWN=1` the game log prints `SOI_GPU_BREAKDOWN per frame:` with
+  the colour pass split by draw command type. Zama in melee, Ultra 1080p: terrain
+  surface 3.7 ms, rigged creatures 1.7 ms, post 0.74 ms, everything else under 1 ms
+  together; the shadow pass is a further 2.1 ms that this line does not break down.
+- Inside the terrain shader, by returning early at checkpoints: field setup 0.1 ms,
+  base grass 0.3 ms, sward + soil + rock 0.9 ms, snow/talus/wetness 0.6 ms, lighting
+  2.0 ms of which shadow lookups are about 1.25 ms.
+- Rigged creatures are now drawn before the terrain surface so the depth test rejects
+  the ground they cover (colour pass 6.07 -> 5.90 ms).
+- Tried and reverted, no measurable gain: a PCSS early-out when the blocker search
+  finds nothing (the search is unbiased, so it always finds neighbouring ground), and
+  dropping relief-free terrain chunks from the shadow casters (shadow pass 2.2 -> 2.1 ms).
+- Open: the 2 ms of shadow lookups per ground pixel and the unattributed shadow-pass
+  time are the two places a large GPU gain can still come from.
+
 Measuring traps met on the way: VirtualGL through GLX (`VGL_DISPLAY=:0`) drops to
 exactly 1 fps when the desktop display sleeps, so unattended game runs use
 `VGL_DISPLAY=egl0`; the arena is the opposite, the EGL route trips its watchdog, so it
