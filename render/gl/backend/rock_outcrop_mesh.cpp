@@ -1,4 +1,4 @@
-#include "rock_outcrop_mesh.h"
+#include "render/gl/backend/rock_outcrop_mesh.h"
 
 #include <algorithm>
 #include <array>

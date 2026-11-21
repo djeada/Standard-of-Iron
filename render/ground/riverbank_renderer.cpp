@@ -1,4 +1,4 @@
-#include "riverbank_renderer.h"
+#include "render/ground/riverbank_renderer.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -15,12 +15,12 @@
 #include <vector>
 
 #include "game/map/visibility_service.h"
-#include "linear_feature_geometry.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
+#include "render/ground/linear_feature_geometry.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {

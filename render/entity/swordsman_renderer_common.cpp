@@ -1,4 +1,4 @@
-#include "swordsman_renderer_common.h"
+#include "render/entity/swordsman_renderer_common.h"
 
 #include <array>
 #include <memory>
@@ -7,9 +7,9 @@
 
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
-#include "nations/equipment_loadout_catalog.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"

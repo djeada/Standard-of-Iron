@@ -1,14 +1,14 @@
-#include "archer_renderer_common.h"
+#include "render/entity/archer_renderer_common.h"
 
 #include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
-#include "nations/equipment_loadout_catalog.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"

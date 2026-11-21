@@ -5,8 +5,8 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "ground/scatter_runtime.h"
-#include "i_render_pass.h"
+#include "render/ground/scatter_runtime.h"
+#include "render/i_render_pass.h"
 
 namespace Render::GL {
 

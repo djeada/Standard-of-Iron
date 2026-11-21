@@ -10,7 +10,7 @@
 #include <span>
 #include <vector>
 
-#include "render_archetype.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 

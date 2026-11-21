@@ -1,4 +1,4 @@
-#include "weapon_rack_mesh.h"
+#include "render/gl/backend/weapon_rack_mesh.h"
 
 #include <QVector3D>
 
@@ -11,8 +11,8 @@
 #include <span>
 #include <vector>
 
-#include "prop_mesh_builder.h"
-#include "weapon_rack_parts.h"
+#include "render/gl/backend/prop_mesh_builder.h"
+#include "render/gl/backend/weapon_rack_parts.h"
 
 namespace Render::GL::BackendPipelines {
 

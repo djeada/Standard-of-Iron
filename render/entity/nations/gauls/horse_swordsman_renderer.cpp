@@ -1,9 +1,9 @@
-#include "horse_swordsman_renderer.h"
+#include "render/entity/nations/gauls/horse_swordsman_renderer.h"
 
 #include <memory>
 
-#include "palette.h"
 #include "render/entity/mounted_swordsman_renderer_base.h"
+#include "render/entity/nations/gauls/palette.h"
 #include "render/submitter.h"
 
 namespace Render::GL::Gauls {

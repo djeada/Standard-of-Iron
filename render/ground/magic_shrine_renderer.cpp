@@ -1,17 +1,17 @@
-#include "magic_shrine_renderer.h"
+#include "render/ground/magic_shrine_renderer.h"
 
 #include <QVector4D>
 
 #include <algorithm>
 #include <cmath>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
+#include "render/decoration_gpu.h"
+#include "render/ground/scatter_runtime.h"
 #include "render/scene_renderer.h"
-#include "scatter_runtime.h"
 
 namespace {
 

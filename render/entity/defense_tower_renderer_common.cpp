@@ -1,4 +1,4 @@
-#include "defense_tower_renderer_common.h"
+#include "render/entity/defense_tower_renderer_common.h"
 
 #include <QVector3D>
 #include <QVector4D>
@@ -6,9 +6,9 @@
 #include <array>
 #include <cmath>
 
-#include "../entity_appearance.h"
-#include "ambient_people.h"
 #include "game/core/component_core.h"
+#include "render/entity/ambient_people.h"
+#include "render/entity_appearance.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {

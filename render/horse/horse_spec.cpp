@@ -1,4 +1,4 @@
-#include "horse_spec.h"
+#include "render/horse/horse_spec.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -10,13 +10,13 @@
 #include <numbers>
 #include <span>
 
-#include "horse_anatomy.h"
-#include "horse_layout.h"
-#include "horse_manifest.h"
-#include "horse_source_asset.h"
 #include "render/creature/assets/creature_lod_geometry.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
+#include "render/horse/horse_anatomy.h"
+#include "render/horse/horse_layout.h"
+#include "render/horse/horse_manifest.h"
+#include "render/horse/horse_source_asset.h"
 #include "render/submitter.h"
 
 namespace Render::Horse {

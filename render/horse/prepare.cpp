@@ -1,4 +1,4 @@
-#include "prepare.h"
+#include "render/horse/prepare.h"
 
 #include <QDebug>
 #include <QMatrix4x4>
@@ -11,8 +11,6 @@
 #include <optional>
 
 #include "game/core/component.h"
-#include "horse_motion.h"
-#include "horse_renderer_base.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/pipeline/corpse_sink.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
@@ -25,6 +23,8 @@
 #include "render/creature/quadruped/render_stats.h"
 #include "render/creature/quadruped/runtime_context.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/horse/horse_motion.h"
+#include "render/horse/horse_renderer_base.h"
 #include "render/math/creature_math_utils.h"
 #include "render/submitter.h"
 #include "render/terrain_contact.h"

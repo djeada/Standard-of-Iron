@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "creature_asset.h"
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/rigged_mesh_cache.h"
 
 namespace Render::Creature::Bpat {

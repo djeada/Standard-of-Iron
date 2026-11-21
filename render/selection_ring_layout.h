@@ -10,10 +10,10 @@
 #include <span>
 #include <vector>
 
-#include "entity/formation_instance_layout.h"
 #include "game/core/component.h"
 #include "game/units/spawn_type.h"
-#include "humanoid/runtime/unit_layout_spacing.h"
+#include "render/entity/formation_instance_layout.h"
+#include "render/humanoid/runtime/unit_layout_spacing.h"
 
 namespace Render::GL {
 

@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "frame_budget.h"
+#include "render/frame_budget.h"
 
 namespace Render::GL {
 

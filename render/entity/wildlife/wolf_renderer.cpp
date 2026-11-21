@@ -1,4 +1,4 @@
-#include "wolf_renderer.h"
+#include "render/entity/wildlife/wolf_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -9,9 +9,9 @@
 #include "render/creature/animation_state_components.h"
 #include "render/creature/pipeline/corpse_sink.h"
 #include "render/entity/registry.h"
+#include "render/entity/wildlife/wildlife_draw_state.h"
 #include "render/wildlife/wildlife_prepare.h"
 #include "render/wildlife/wolf_spec.h"
-#include "wildlife_draw_state.h"
 
 namespace Render::GL::Wildlife {
 

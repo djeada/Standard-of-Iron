@@ -1,4 +1,4 @@
-#include "elephant_profile_data.h"
+#include "render/elephant/elephant_profile_data.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,19 +12,19 @@
 #include <unordered_map>
 #include <vector>
 
-#include "elephant_renderer_base.h"
-#include "elephant_spec.h"
 #include "game/core/component.h"
-#include "math/creature_math_utils.h"
-#include "math/math_utils.h"
-#include "prepare.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/elephant/elephant_renderer_base.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/elephant/prepare.h"
 #include "render/entity/registry.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/math/creature_math_utils.h"
+#include "render/math/math_utils.h"
 #include "render/submitter.h"
 
 namespace Render::GL {

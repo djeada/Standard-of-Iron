@@ -1,4 +1,4 @@
-#include "ambient_fog_renderer.h"
+#include "render/ground/ambient_fog_renderer.h"
 
 #include <algorithm>
 #include <cmath>

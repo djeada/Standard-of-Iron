@@ -1,4 +1,4 @@
-#include "building_archetype_library.h"
+#include "render/entity/building_archetype_library.h"
 
 #include <QDebug>
 
@@ -7,8 +7,8 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "building_archetype_catalog.h"
 #include "render/creature/runtime_bake_guard.h"
+#include "render/entity/building_archetype_catalog.h"
 #include "render/submitter.h"
 
 namespace Render::GL {

@@ -1,4 +1,4 @@
-#include "humanoid_pose_policies.h"
+#include "render/entity/humanoid_pose_policies.h"
 
 #include "render/entity/healer_renderer_common.h"
 #include "render/entity/nations/carthage/healer_renderer.h"

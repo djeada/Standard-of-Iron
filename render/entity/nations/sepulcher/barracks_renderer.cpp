@@ -1,8 +1,7 @@
-#include "barracks_renderer.h"
+#include "render/entity/nations/sepulcher/barracks_renderer.h"
 
 #include <QVector3D>
 
-#include "../../../entity_appearance.h"
 #include "game/core/component_core.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_decay.h"
@@ -10,6 +9,7 @@
 #include "render/entity/building_state.h"
 #include "render/entity/nations/material_palette.h"
 #include "render/entity/registry.h"
+#include "render/entity_appearance.h"
 #include "render/gl/backend.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"

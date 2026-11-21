@@ -1,4 +1,4 @@
-#include "horse_mount_archetype.h"
+#include "render/equipment/horse/saddles/horse_mount_archetype.h"
 
 #include <array>
 #include <span>

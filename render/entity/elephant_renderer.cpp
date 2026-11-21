@@ -1,9 +1,9 @@
-#include "elephant_renderer.h"
+#include "render/entity/elephant_renderer.h"
 
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
-#include "nations/carthage/elephant_renderer.h"
-#include "registry.h"
+#include "render/entity/nations/carthage/elephant_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

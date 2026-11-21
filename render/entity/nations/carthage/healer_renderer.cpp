@@ -1,4 +1,4 @@
-#include "healer_renderer.h"
+#include "render/entity/nations/carthage/healer_renderer.h"
 
 #include <QMatrix4x4>
 #include <QString>
@@ -21,12 +21,11 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
-#include "healer_style.h"
-#include "math/math_utils.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/healer_renderer_common.h"
+#include "render/entity/nations/carthage/healer_style.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
@@ -50,6 +49,7 @@
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/humanoid/runtime/style_palette.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
+#include "render/math/math_utils.h"
 #include "render/palette.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"

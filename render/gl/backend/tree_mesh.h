@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ring_loft_builder.h"
+#include "render/gl/backend/ring_loft_builder.h"
 
 namespace Render::GL::BackendPipelines {
 

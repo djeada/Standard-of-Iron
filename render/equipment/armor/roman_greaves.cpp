@@ -1,4 +1,4 @@
-#include "roman_greaves.h"
+#include "render/equipment/armor/roman_greaves.h"
 
 #include <algorithm>
 #include <array>
@@ -9,13 +9,13 @@
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/entity/registry.h"
+#include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/shared_geometry_cache.h"
 #include "render/humanoid/runtime/style_palette.h"
 #include "render/render_archetype.h"
-#include "sheet_mesh.h"
 
 namespace Render::GL {
 

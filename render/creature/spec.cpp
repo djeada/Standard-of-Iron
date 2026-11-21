@@ -1,4 +1,4 @@
-#include "spec.h"
+#include "render/creature/spec.h"
 
 namespace Render::Creature {
 

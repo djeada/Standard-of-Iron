@@ -1,4 +1,4 @@
-#include "farm_worker_props.h"
+#include "render/entity/farm_worker_props.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

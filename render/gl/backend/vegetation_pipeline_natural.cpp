@@ -16,17 +16,17 @@
 #include <utility>
 #include <vector>
 
-#include "dead_tree_mesh.h"
-#include "gl/shader_cache.h"
-#include "mesh_buffers.h"
-#include "prop_mesh_builder.h"
+#include "render/gl/backend/dead_tree_mesh.h"
 #include "render/gl/backend/iron_ore_mesh.h"
+#include "render/gl/backend/mesh_buffers.h"
+#include "render/gl/backend/prop_mesh_builder.h"
 #include "render/gl/backend/ring_loft_builder.h"
 #include "render/gl/backend/static_mesh_upload.h"
+#include "render/gl/backend/tree_mesh.h"
+#include "render/gl/backend/vegetation_pipeline.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
-#include "tree_mesh.h"
-#include "vegetation_pipeline.h"
+#include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 

@@ -1,4 +1,4 @@
-#include "healer_renderer_common.h"
+#include "render/entity/healer_renderer_common.h"
 
 #include <array>
 #include <cmath>
@@ -6,12 +6,12 @@
 #include <string>
 #include <unordered_map>
 
-#include "civilian_actor.h"
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
-#include "nations/equipment_loadout_catalog.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/humanoid/asset/humanoid_spec.h"

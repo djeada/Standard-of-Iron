@@ -1,12 +1,12 @@
-#include "tent_mesh.h"
+#include "render/gl/backend/tent_mesh.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <functional>
 
-#include "prop_mesh_builder.h"
-#include "tent_parts.h"
+#include "render/gl/backend/prop_mesh_builder.h"
+#include "render/gl/backend/tent_parts.h"
 
 namespace {
 

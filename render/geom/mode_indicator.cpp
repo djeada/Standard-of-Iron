@@ -1,4 +1,4 @@
-#include "mode_indicator.h"
+#include "render/geom/mode_indicator.h"
 
 #include <QVector2D>
 

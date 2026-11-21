@@ -1,4 +1,4 @@
-#include "terrain_renderer.h"
+#include "render/ground/terrain_renderer.h"
 
 #include <QOpenGLContext>
 

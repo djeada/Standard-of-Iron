@@ -1,7 +1,7 @@
 #pragma once
 
-#include "movement_state.h"
-#include "render_request.h"
+#include "render/creature/movement_state.h"
+#include "render/creature/render_request.h"
 
 namespace Render::Creature {
 

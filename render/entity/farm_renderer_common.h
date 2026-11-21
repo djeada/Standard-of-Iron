@@ -7,12 +7,12 @@
 #include <span>
 #include <string_view>
 
-#include "building_archetype_desc.h"
-#include "building_render_common.h"
-#include "building_state.h"
-#include "building_torches.h"
 #include "game/core/component_economy.h"
-#include "registry.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/building_torches.h"
+#include "render/entity/registry.h"
 #include "render/render_archetype.h"
 
 namespace Render::GL {

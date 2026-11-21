@@ -1,4 +1,4 @@
-#include "sheep_spec.h"
+#include "render/wildlife/sheep_spec.h"
 
 #include <algorithm>
 #include <array>
@@ -9,8 +9,8 @@
 
 #include "render/creature/assets/creature_lod_geometry.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
-#include "sheep_manifest.h"
-#include "wildlife_gait.h"
+#include "render/wildlife/sheep_manifest.h"
+#include "render/wildlife/wildlife_gait.h"
 
 namespace Render::Wildlife {
 

@@ -1,4 +1,4 @@
-#include "primitive_geometry.h"
+#include "render/creature/primitive_geometry.h"
 
 #include <algorithm>
 #include <array>

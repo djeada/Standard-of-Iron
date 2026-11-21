@@ -1,4 +1,4 @@
-#include "wading_effects_renderer.h"
+#include "render/entity/wading_effects_renderer.h"
 
 #include <QVector3D>
 
@@ -8,7 +8,6 @@
 #include <optional>
 #include <span>
 
-#include "formation_instance_layout.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
@@ -17,6 +16,7 @@
 #include "game/units/spawn_type.h"
 #include "render/camera_visibility.h"
 #include "render/draw_commands.h"
+#include "render/entity/formation_instance_layout.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {

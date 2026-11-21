@@ -2,7 +2,7 @@
 
 #include "render/creature/animation_state_components.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "wildlife_variant.h"
+#include "render/wildlife/wildlife_variant.h"
 
 namespace Render::GL {
 struct DrawContext;

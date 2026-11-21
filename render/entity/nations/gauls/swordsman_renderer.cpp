@@ -1,9 +1,9 @@
-#include "swordsman_renderer.h"
+#include "render/entity/nations/gauls/swordsman_renderer.h"
 
 #include <array>
 
-#include "palette.h"
 #include "render/creature/pipeline/creature_asset.h"
+#include "render/entity/nations/gauls/palette.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 namespace Render::GL::Gauls {

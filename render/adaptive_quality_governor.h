@@ -5,7 +5,7 @@
 #include <optional>
 #include <vector>
 
-#include "graphics_settings.h"
+#include "render/graphics_settings.h"
 
 namespace Render {
 

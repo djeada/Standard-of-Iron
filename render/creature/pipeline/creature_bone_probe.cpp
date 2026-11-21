@@ -1,4 +1,4 @@
-#include "creature_bone_probe.h"
+#include "render/creature/pipeline/creature_bone_probe.h"
 
 namespace Render::Creature::Pipeline {
 namespace {

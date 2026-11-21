@@ -9,8 +9,8 @@
 #include <memory>
 #include <vector>
 
-#include "gl/buffer.h"
-#include "gl/rigged_mesh_gpu.h"
+#include "render/gl/buffer.h"
+#include "render/gl/rigged_mesh_gpu.h"
 
 namespace Render::GL {
 

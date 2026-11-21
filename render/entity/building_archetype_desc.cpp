@@ -1,4 +1,4 @@
-#include "building_archetype_desc.h"
+#include "render/entity/building_archetype_desc.h"
 
 #include <algorithm>
 #include <cmath>
@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "building_decay.h"
+#include "render/entity/building_decay.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
 #include "render/material_classification.h"

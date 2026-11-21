@@ -1,4 +1,4 @@
-#include "raft_renderer.h"
+#include "render/geom/raft_renderer.h"
 
 #include <QVector3D>
 
@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/scene_renderer.h"
-#include "transforms.h"
 
 namespace Render::GL {
 

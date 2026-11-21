@@ -12,7 +12,7 @@
 #include <GL/gl.h>
 #endif
 
-#include "gl_resource_tracking.h"
+#include "render/gl/gl_resource_tracking.h"
 
 #ifndef GL_DRAW_INDIRECT_BUFFER
 #define GL_DRAW_INDIRECT_BUFFER 0x8F3F

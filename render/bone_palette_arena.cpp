@@ -1,4 +1,4 @@
-#include "bone_palette_arena.h"
+#include "render/bone_palette_arena.h"
 
 #include <cstring>
 

@@ -1,4 +1,4 @@
-#include "animation_inputs.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
 
 #include <algorithm>
 #include <cmath>

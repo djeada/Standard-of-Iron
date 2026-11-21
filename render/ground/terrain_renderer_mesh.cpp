@@ -26,10 +26,10 @@
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/resources.h"
+#include "render/ground/terrain_mesh_builder.h"
+#include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
-#include "terrain_mesh_builder.h"
-#include "terrain_renderer.h"
-#include "world_chunk.h"
+#include "render/world_chunk.h"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "fog_renderer.h"
+#include "render/ground/fog_renderer.h"
 
 #include <QOpenGLContext>
 #include <QVector2D>
@@ -11,8 +11,8 @@
 
 #include "game/map/visibility_service.h"
 #include "render/gl/texture_upload.h"
+#include "render/ground/visibility_mask_encoder.h"
 #include "render/scene_renderer.h"
-#include "visibility_mask_encoder.h"
 
 namespace Render::GL {
 

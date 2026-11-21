@@ -1,17 +1,17 @@
-#include "static_building_batch.h"
+#include "render/static_building_batch.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
 
-#include "draw_commands.h"
-#include "entity/unseen_submitter.h"
-#include "gl/mesh.h"
-#include "gl/primitives.h"
-#include "material.h"
-#include "material_classification.h"
-#include "static_mesh_pack.h"
+#include "render/draw_commands.h"
+#include "render/entity/unseen_submitter.h"
+#include "render/gl/mesh.h"
+#include "render/gl/primitives.h"
+#include "render/material.h"
+#include "render/material_classification.h"
+#include "render/static_mesh_pack.h"
 
 namespace Render::GL {
 namespace {

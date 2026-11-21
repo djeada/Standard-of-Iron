@@ -1,4 +1,4 @@
-#include "quadruped_asset_key.h"
+#include "render/creature/quadruped/quadruped_asset_key.h"
 
 namespace Render::Creature::Quadruped {
 

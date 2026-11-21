@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "anim_key.h"
-#include "entity/registry.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
+#include "render/anim_key.h"
+#include "render/entity/registry.h"
 
 namespace Render::Creature {
 class ArchetypeRegistry;

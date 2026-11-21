@@ -1,7 +1,7 @@
 #include <QVector2D>
 
-#include "command_executor_common.h"
-#include "rigged_cull_pipeline.h"
+#include "render/gl/backend/command_executor_common.h"
+#include "render/gl/backend/rigged_cull_pipeline.h"
 
 namespace Render::GL {
 

@@ -8,7 +8,7 @@
 #include <span>
 #include <string_view>
 
-#include "skeleton.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::GL {
 class Mesh;

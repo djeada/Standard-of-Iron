@@ -1,9 +1,9 @@
-#include "temple_renderer.h"
+#include "render/entity/temple_renderer.h"
 
-#include "building_render_common.h"
-#include "nations/carthage/temple_renderer.h"
-#include "nations/roman/temple_renderer.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/temple_renderer.h"
+#include "render/entity/nations/roman/temple_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

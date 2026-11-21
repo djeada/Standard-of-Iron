@@ -1,4 +1,4 @@
-#include "elephant_spec.h"
+#include "render/elephant/elephant_spec.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -10,10 +10,10 @@
 #include <numbers>
 #include <span>
 
-#include "elephant_manifest.h"
 #include "render/creature/assets/creature_lod_geometry.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
+#include "render/elephant/elephant_manifest.h"
 #include "render/submitter.h"
 
 namespace Render::Elephant {

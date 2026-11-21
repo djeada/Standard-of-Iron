@@ -1,4 +1,4 @@
-#include "water_pipeline.h"
+#include "render/gl/backend/water_pipeline.h"
 
 #include <QDebug>
 #include <qglobal.h>

@@ -1,4 +1,4 @@
-#include "healing_beam_pipeline.h"
+#include "render/gl/backend/healing_beam_pipeline.h"
 
 #include <QDebug>
 #include <QMatrix4x4>
@@ -8,12 +8,12 @@
 #include <cmath>
 #include <numbers>
 
-#include "gl_error_check.h"
+#include "render/gl/backend/gl_error_check.h"
+#include "render/gl/backend/static_mesh_upload.h"
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/state_scopes.h"
-#include "static_mesh_upload.h"
 
 namespace Render::GL::BackendPipelines {
 

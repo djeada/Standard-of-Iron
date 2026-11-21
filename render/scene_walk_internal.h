@@ -5,17 +5,17 @@
 #include <cstdint>
 #include <string>
 
-#include "battle_render_optimizer.h"
-#include "entity/building_collapse.h"
-#include "entity/registry.h"
 #include "game/core/component.h"
 #include "game/units/spawn_type.h"
-#include "gl/resources.h"
-#include "pipeline/screen_metrics.h"
-#include "scene_renderer.h"
-#include "submission_visibility.h"
-#include "submitter.h"
-#include "unit_render_cache.h"
+#include "render/battle_render_optimizer.h"
+#include "render/entity/building_collapse.h"
+#include "render/entity/registry.h"
+#include "render/gl/resources.h"
+#include "render/pipeline/screen_metrics.h"
+#include "render/scene_renderer.h"
+#include "render/submission_visibility.h"
+#include "render/submitter.h"
+#include "render/unit_render_cache.h"
 
 namespace Render::GL {
 

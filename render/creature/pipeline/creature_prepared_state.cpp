@@ -1,4 +1,4 @@
-#include "creature_prepared_state.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
 
 #include <QVector2D>
 #include <QtMath>

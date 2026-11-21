@@ -1,4 +1,4 @@
-#include "wolf_manifest.h"
+#include "render/wildlife/wolf_manifest.h"
 
 #include <QMatrix4x4>
 
@@ -14,8 +14,8 @@
 #include "animation/bpat/bpat_format.h"
 #include "game/core/component.h"
 #include "render/creature/bake/creature_bake_recipe.h"
-#include "wildlife_rig.h"
-#include "wolf_spec.h"
+#include "render/wildlife/wildlife_rig.h"
+#include "render/wildlife/wolf_spec.h"
 
 namespace Render::Wildlife {
 

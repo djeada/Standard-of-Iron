@@ -11,10 +11,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "armor/shoulder_cover_archetype.h"
-#include "equipment_registry.h"
-#include "horse_equipment_archetype.h"
-#include "humanoid_equipment_archetype.h"
+#include "render/equipment/armor/shoulder_cover_archetype.h"
+#include "render/equipment/equipment_registry.h"
+#include "render/equipment/horse_equipment_archetype.h"
+#include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/asset/humanoid_spec.h"

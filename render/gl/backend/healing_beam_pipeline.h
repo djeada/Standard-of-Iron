@@ -4,8 +4,8 @@
 #include <QVector3D>
 #include <QtGui/qopengl.h>
 
-#include "mesh_buffers.h"
-#include "pipeline_interface.h"
+#include "render/gl/backend/mesh_buffers.h"
+#include "render/gl/backend/pipeline_interface.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {

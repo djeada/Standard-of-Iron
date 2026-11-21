@@ -5,8 +5,8 @@
 #include <string_view>
 
 #include "animation/siege_wreck_manifest.h"
-#include "registry.h"
-#include "siege_crew.h"
+#include "render/entity/registry.h"
+#include "render/entity/siege_crew.h"
 
 namespace Render::GL {
 class Mesh;

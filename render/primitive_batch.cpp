@@ -1,4 +1,4 @@
-#include "primitive_batch.h"
+#include "render/primitive_batch.h"
 
 namespace Render::GL {
 

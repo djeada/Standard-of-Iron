@@ -1,4 +1,4 @@
-#include "sheep_slapstick.h"
+#include "render/entity/wildlife/sheep_slapstick.h"
 
 #include <algorithm>
 #include <cmath>

@@ -1,4 +1,4 @@
-#include "quadruped_prepare.h"
+#include "render/creature/quadruped/quadruped_prepare.h"
 
 #include <QtMath>
 

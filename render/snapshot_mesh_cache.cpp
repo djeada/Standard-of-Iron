@@ -1,4 +1,4 @@
-#include "snapshot_mesh_cache.h"
+#include "render/snapshot_mesh_cache.h"
 
 #include <QVector3D>
 #include <QVector4D>
@@ -10,11 +10,11 @@
 #include <sstream>
 #include <utility>
 
-#include "bone_palette_arena.h"
-#include "creature/runtime_bake_guard.h"
-#include "creature/snapshot_mesh_asset.h"
-#include "rigged_mesh_cache.h"
-#include "snapshot_mesh_bake.h"
+#include "render/bone_palette_arena.h"
+#include "render/creature/runtime_bake_guard.h"
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/rigged_mesh_cache.h"
+#include "render/snapshot_mesh_bake.h"
 
 namespace Render::GL {
 

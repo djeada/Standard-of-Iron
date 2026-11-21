@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "wildlife_rig.h"
+#include "render/wildlife/wildlife_rig.h"
 
 namespace Render::Wildlife {
 

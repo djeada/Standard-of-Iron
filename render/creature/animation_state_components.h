@@ -8,15 +8,15 @@
 #include "animation/playback_manifest.h"
 #include "animation/rig/horse_attachment_frames.h"
 #include "animation/rig/horse_gait.h"
-#include "combat_visual_state.h"
 #include "game/core/entity.h"
-#include "pipeline/humanoid_transition_continuity.h"
+#include "render/creature/combat_visual_state.h"
+#include "render/creature/pipeline/humanoid_transition_continuity.h"
+#include "render/creature/render_request.h"
 #include "render/elephant/dimensions.h"
 #include "render/elephant/runtime/gait_state.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
 #include "render/humanoid/runtime/combat_root_smoothing.h"
-#include "render_request.h"
 
 namespace Render::Creature {
 

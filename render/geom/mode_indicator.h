@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "game/systems/unit_activity.h"
-#include "icon_glyph.h"
+#include "render/geom/icon_glyph.h"
 #include "render/gl/mesh.h"
 
 namespace Render::Geom {

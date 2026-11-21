@@ -1,4 +1,4 @@
-#include "creature_pipeline.h"
+#include "render/creature/pipeline/creature_pipeline.h"
 
 #include <QQuaternion>
 #include <QVector4D>
@@ -19,15 +19,15 @@
 #include "animation/bpat/bpat_reader.h"
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
-#include "creature_asset.h"
-#include "creature_asset_init.h"
-#include "creature_bone_probe.h"
-#include "creature_submission_context.h"
 #include "game/map/terrain_service.h"
-#include "preparation_common.h"
 #include "render/bone_palette_arena.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/pipeline/creature_asset_init.h"
+#include "render/creature/pipeline/creature_bone_probe.h"
+#include "render/creature/pipeline/creature_submission_context.h"
 #include "render/creature/pipeline/lod_decision.h"
+#include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/skeleton_blend_profile.h"

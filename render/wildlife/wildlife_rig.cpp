@@ -1,4 +1,4 @@
-#include "wildlife_rig.h"
+#include "render/wildlife/wildlife_rig.h"
 
 #include <algorithm>
 #include <array>

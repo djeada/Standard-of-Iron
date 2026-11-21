@@ -1,4 +1,4 @@
-#include "rigged_character_pipeline.h"
+#include "render/gl/backend/rigged_character_pipeline.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -9,9 +9,9 @@
 #include <array>
 #include <vector>
 
-#include "character_wear_binding.h"
 #include "render/bone_palette_arena.h"
 #include "render/draw_commands.h"
+#include "render/gl/backend/character_wear_binding.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/texture.h"

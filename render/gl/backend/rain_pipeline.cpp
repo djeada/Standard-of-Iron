@@ -1,4 +1,4 @@
-#include "rain_pipeline.h"
+#include "render/gl/backend/rain_pipeline.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -11,7 +11,7 @@
 #include <numbers>
 #include <random>
 
-#include "gl_error_check.h"
+#include "render/gl/backend/gl_error_check.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/shader_cache.h"
 #include "render/rain_gpu.h"

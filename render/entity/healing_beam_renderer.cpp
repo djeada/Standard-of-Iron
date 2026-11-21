@@ -1,4 +1,4 @@
-#include "healing_beam_renderer.h"
+#include "render/entity/healing_beam_renderer.h"
 
 #include "game/systems/healing_colors.h"
 #include "game/systems/render_effects_frame.h"

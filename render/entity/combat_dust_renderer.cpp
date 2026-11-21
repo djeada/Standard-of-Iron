@@ -1,4 +1,4 @@
-#include "combat_dust_renderer.h"
+#include "render/entity/combat_dust_renderer.h"
 
 #include <QMatrix4x4>
 
@@ -6,7 +6,6 @@
 #include <cmath>
 #include <numbers>
 
-#include "building_collapse.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
@@ -20,6 +19,7 @@
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "render/camera_visibility.h"
 #include "render/combat_dust_defaults.h"
+#include "render/entity/building_collapse.h"
 #include "render/scene_renderer.h"
 
 namespace Render::GL {

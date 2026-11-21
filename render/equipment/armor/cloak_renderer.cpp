@@ -1,4 +1,4 @@
-#include "cloak_renderer.h"
+#include "render/equipment/armor/cloak_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector2D>
@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "render/equipment/armor/sheet_mesh.h"
+#include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
@@ -23,8 +25,6 @@
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/schema/skeleton_schema.h"
 #include "render/static_attachment_spec.h"
-#include "sheet_mesh.h"
-#include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
 

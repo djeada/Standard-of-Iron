@@ -1,4 +1,4 @@
-#include "skirmisher_renderer.h"
+#include "render/entity/skirmisher_renderer.h"
 
 #include <QQuaternion>
 

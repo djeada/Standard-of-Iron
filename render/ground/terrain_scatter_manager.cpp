@@ -1,4 +1,4 @@
-#include "terrain_scatter_manager.h"
+#include "render/ground/terrain_scatter_manager.h"
 
 #include <QVector3D>
 

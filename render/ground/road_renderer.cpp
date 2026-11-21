@@ -1,4 +1,4 @@
-#include "road_renderer.h"
+#include "render/ground/road_renderer.h"
 
 #include <QVector2D>
 #include <QVector3D>
@@ -20,8 +20,8 @@
 #include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
+#include "render/ground/road_network_geometry.h"
 #include "render/scene_renderer.h"
-#include "road_network_geometry.h"
 
 namespace Render::GL {
 

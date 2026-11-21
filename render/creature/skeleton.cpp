@@ -1,4 +1,4 @@
-#include "skeleton.h"
+#include "render/creature/skeleton.h"
 
 #include <QVector3D>
 

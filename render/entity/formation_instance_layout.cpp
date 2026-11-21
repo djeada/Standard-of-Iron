@@ -1,4 +1,4 @@
-#include "formation_instance_layout.h"
+#include "render/entity/formation_instance_layout.h"
 
 #include "animation/layout_manifest.h"
 #include "game/core/component.h"

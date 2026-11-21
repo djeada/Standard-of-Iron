@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "equipment_registry.h"
 #include "render/creature/archetype_registry.h"
+#include "render/equipment/equipment_registry.h"
 
 namespace Render::GL::EquipmentArchetype {
 

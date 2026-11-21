@@ -1,4 +1,4 @@
-#include "humanoid_animation_selection.h"
+#include "render/creature/pipeline/humanoid_animation_selection.h"
 
 #include <QMatrix4x4>
 
@@ -11,9 +11,9 @@
 
 #include "animation/locomotion_manifest.h"
 #include "animation/selection_manifest.h"
-#include "creature_asset.h"
-#include "preparation_common.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/asset/facial_hair_catalog.h"

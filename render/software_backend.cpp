@@ -1,11 +1,11 @@
-#include "software_backend.h"
+#include "render/software_backend.h"
 
 #include <variant>
 
-#include "draw_part.h"
-#include "draw_queue.h"
+#include "render/draw_part.h"
+#include "render/draw_queue.h"
+#include "render/static_building_batch.h"
 #include "scene/camera.h"
-#include "static_building_batch.h"
 
 namespace Render::GL {
 

@@ -1,4 +1,4 @@
-#include "elephant_bake_recipe.h"
+#include "render/elephant/elephant_bake_recipe.h"
 
 #include <QMatrix4x4>
 
@@ -11,10 +11,10 @@
 #include <string_view>
 #include <vector>
 
-#include "elephant_gait.h"
-#include "elephant_manifest.h"
-#include "elephant_source_asset.h"
-#include "elephant_spec.h"
+#include "render/elephant/elephant_gait.h"
+#include "render/elephant/elephant_manifest.h"
+#include "render/elephant/elephant_source_asset.h"
+#include "render/elephant/elephant_spec.h"
 
 namespace Render::Elephant {
 

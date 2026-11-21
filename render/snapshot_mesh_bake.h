@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-#include "rigged_mesh.h"
+#include "render/rigged_mesh.h"
 
 namespace Render::GL {
 

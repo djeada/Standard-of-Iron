@@ -1,4 +1,4 @@
-#include "archetype_registry.h"
+#include "render/creature/archetype_registry.h"
 
 #include <algorithm>
 #include <mutex>

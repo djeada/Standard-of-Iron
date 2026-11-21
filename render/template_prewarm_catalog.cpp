@@ -1,11 +1,11 @@
-#include "template_prewarm_catalog.h"
+#include "render/template_prewarm_catalog.h"
 
 #include <algorithm>
 #include <unordered_set>
 
-#include "creature/archetype_registry.h"
-#include "creature/pose_intent.h"
 #include "game/core/component_combat.h"
+#include "render/creature/archetype_registry.h"
+#include "render/creature/pose_intent.h"
 
 namespace Render::GL {
 

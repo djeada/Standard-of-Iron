@@ -12,7 +12,7 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/decoration_gpu.h"
-#include "scatter_renderer_base.h"
+#include "render/ground/scatter_renderer_base.h"
 
 namespace Render::GL {
 class Buffer;

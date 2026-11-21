@@ -1,4 +1,4 @@
-#include "sky_box_pipeline.h"
+#include "render/gl/backend/sky_box_pipeline.h"
 
 #include <QOpenGLContext>
 #include <QString>

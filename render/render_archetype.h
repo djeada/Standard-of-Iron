@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "world_chunk.h"
+#include "render/world_chunk.h"
 
 namespace Render::GL {
 class Mesh;

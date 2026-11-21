@@ -1,4 +1,4 @@
-#include "prepare.h"
+#include "render/elephant/prepare.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -10,8 +10,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include "elephant_motion.h"
-#include "elephant_renderer_base.h"
 #include "game/core/component.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
@@ -27,6 +25,8 @@
 #include "render/creature/quadruped/quadruped_prepare.h"
 #include "render/creature/quadruped/render_stats.h"
 #include "render/creature/quadruped/runtime_context.h"
+#include "render/elephant/elephant_motion.h"
+#include "render/elephant/elephant_renderer_base.h"
 #include "render/entity_appearance.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/primitives.h"

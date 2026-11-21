@@ -1,9 +1,9 @@
-#include "marketplace_renderer.h"
+#include "render/entity/marketplace_renderer.h"
 
-#include "building_render_common.h"
-#include "nations/carthage/marketplace_renderer.h"
-#include "nations/roman/marketplace_renderer.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/marketplace_renderer.h"
+#include "render/entity/nations/roman/marketplace_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

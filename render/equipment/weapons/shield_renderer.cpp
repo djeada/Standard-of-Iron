@@ -1,4 +1,4 @@
-#include "shield_renderer.h"
+#include "render/equipment/weapons/shield_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -14,13 +14,13 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/weapons/shield_anchor.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/asset/bind_skeleton.h"
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/render_archetype.h"
-#include "shield_anchor.h"
 
 namespace Render::GL {
 

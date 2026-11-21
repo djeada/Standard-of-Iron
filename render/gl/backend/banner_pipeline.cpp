@@ -1,4 +1,4 @@
-#include "banner_pipeline.h"
+#include "render/gl/backend/banner_pipeline.h"
 
 #include <QDebug>
 

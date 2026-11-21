@@ -1,12 +1,12 @@
-#include "render_archetype.h"
+#include "render/render_archetype.h"
 
 #include <array>
 #include <utility>
 
-#include "entity/unseen_submitter.h"
-#include "geom/transforms.h"
-#include "gl/primitives.h"
-#include "submitter.h"
+#include "render/entity/unseen_submitter.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

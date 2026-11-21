@@ -1,8 +1,8 @@
-#include "cursed_gold_vein_mesh.h"
+#include "render/gl/backend/cursed_gold_vein_mesh.h"
 
 #include <array>
 
-#include "rock_outcrop_mesh.h"
+#include "render/gl/backend/rock_outcrop_mesh.h"
 
 namespace {
 

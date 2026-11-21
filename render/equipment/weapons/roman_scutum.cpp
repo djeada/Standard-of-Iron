@@ -1,4 +1,4 @@
-#include "roman_scutum.h"
+#include "render/equipment/weapons/roman_scutum.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -13,6 +13,7 @@
 #include "render/entity/nations/material_palette.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/weapons/shield_anchor.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
@@ -23,7 +24,6 @@
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/style_palette.h"
 #include "render/render_archetype.h"
-#include "shield_anchor.h"
 
 namespace Render::GL {
 

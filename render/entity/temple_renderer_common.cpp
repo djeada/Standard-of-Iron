@@ -1,4 +1,4 @@
-#include "temple_renderer_common.h"
+#include "render/entity/temple_renderer_common.h"
 
 namespace Render::GL {
 

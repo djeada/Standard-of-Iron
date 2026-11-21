@@ -1,4 +1,4 @@
-#include "healer_aura_renderer.h"
+#include "render/entity/healer_aura_renderer.h"
 
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"

@@ -1,4 +1,4 @@
-#include "rigged_mesh_cache.h"
+#include "render/rigged_mesh_cache.h"
 
 #include <QtGlobal>
 
@@ -12,12 +12,12 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
-#include "attachment_mesh_library.h"
-#include "bone_palette_arena.h"
-#include "creature/rigged_mesh_registry.h"
-#include "creature/runtime_bake_guard.h"
-#include "creature/spec.h"
-#include "gl/rigged_mesh_gpu.h"
+#include "render/attachment_mesh_library.h"
+#include "render/bone_palette_arena.h"
+#include "render/creature/rigged_mesh_registry.h"
+#include "render/creature/runtime_bake_guard.h"
+#include "render/creature/spec.h"
+#include "render/gl/rigged_mesh_gpu.h"
 
 namespace Render::GL {
 

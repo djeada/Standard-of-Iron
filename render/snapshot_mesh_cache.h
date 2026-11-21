@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "creature/pipeline/creature_asset.h"
-#include "creature/render_request.h"
-#include "rigged_mesh.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/render_request.h"
+#include "render/rigged_mesh.h"
 
 namespace Render::Creature::Bpat {
 class BpatBlob;

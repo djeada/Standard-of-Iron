@@ -1,12 +1,12 @@
-#include "creature_asset.h"
+#include "render/creature/pipeline/creature_asset.h"
 
 #include <algorithm>
 #include <limits>
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
-#include "creature_visual_definition.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/asset/humanoid_spec.h"

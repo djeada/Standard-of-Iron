@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "building_state.h"
+#include "render/entity/building_state.h"
 #include "render/render_archetype.h"
 #include "render/template_cache.h"
 

@@ -1,4 +1,4 @@
-#include "firecamp_renderer.h"
+#include "render/ground/firecamp_renderer.h"
 
 #include <algorithm>
 #include <array>
@@ -8,18 +8,18 @@
 #include <utility>
 #include <vector>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
-#include "gl/render_constants.h"
-#include "gl/resources.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
+#include "render/decoration_gpu.h"
 #include "render/gl/primitives.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/resources.h"
+#include "render/ground/scatter_runtime.h"
+#include "render/ground/scatter_submission.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_contact.h"
-#include "scatter_runtime.h"
-#include "scatter_submission.h"
 
 namespace {
 

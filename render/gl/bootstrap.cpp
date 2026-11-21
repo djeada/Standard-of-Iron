@@ -1,11 +1,11 @@
-#include "bootstrap.h"
+#include "render/gl/bootstrap.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
 #include <qglobal.h>
 
-#include "adapter_class.h"
-#include "gl_capabilities.h"
+#include "render/gl/adapter_class.h"
+#include "render/gl/gl_capabilities.h"
 #include "render/graphics_settings.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"

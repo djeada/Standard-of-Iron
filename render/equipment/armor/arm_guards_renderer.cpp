@@ -1,4 +1,4 @@
-#include "arm_guards_renderer.h"
+#include "render/equipment/armor/arm_guards_renderer.h"
 
 #include <array>
 #include <cmath>

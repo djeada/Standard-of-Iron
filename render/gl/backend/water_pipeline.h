@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "pipeline_interface.h"
+#include "render/gl/backend/pipeline_interface.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {

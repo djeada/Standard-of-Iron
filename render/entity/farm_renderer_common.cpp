@@ -1,15 +1,15 @@
-#include "farm_renderer_common.h"
+#include "render/entity/farm_renderer_common.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 
-#include "building_archetype_library.h"
-#include "building_decay.h"
-#include "farm_activity.h"
-#include "farm_worker_props.h"
 #include "game/core/component_economy.h"
+#include "render/entity/building_archetype_library.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/farm_activity.h"
+#include "render/entity/farm_worker_props.h"
 #include "render/submitter.h"
 
 namespace Render::GL {

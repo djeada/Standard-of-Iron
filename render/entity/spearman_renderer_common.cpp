@@ -1,4 +1,4 @@
-#include "spearman_renderer_common.h"
+#include "render/entity/spearman_renderer_common.h"
 
 #include <QMatrix4x4>
 
@@ -11,9 +11,9 @@
 
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
-#include "nations/equipment_loadout_catalog.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/armor/armor_light_carthage.h"
 #include "render/equipment/armor/carthage_shoulder_cover.h"
 #include "render/equipment/armor/shoulder_cover_archetype.h"

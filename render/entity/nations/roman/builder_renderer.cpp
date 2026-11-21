@@ -1,4 +1,4 @@
-#include "builder_renderer.h"
+#include "render/entity/nations/roman/builder_renderer.h"
 
 #include <QMatrix4x4>
 #include <QString>
@@ -19,16 +19,15 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "builder_style.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
-#include "math/math_utils.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/civilian_actor.h"
 #include "render/entity/nations/builder_tool_palette.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/entity/nations/roman/builder_style.h"
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
@@ -53,6 +52,7 @@
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/humanoid/runtime/style_palette.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
+#include "render/math/math_utils.h"
 #include "render/palette.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"

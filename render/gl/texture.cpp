@@ -1,4 +1,4 @@
-#include "texture.h"
+#include "render/gl/texture.h"
 
 #include <QDebug>
 #include <QImage>
@@ -8,9 +8,9 @@
 
 #include <cstddef>
 
-#include "gl_lifetime.h"
-#include "gl_resource_tracking.h"
-#include "platform_gl.h"
+#include "render/gl/gl_lifetime.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {

@@ -1,4 +1,4 @@
-#include "combat_dust_pipeline.h"
+#include "render/gl/backend/combat_dust_pipeline.h"
 
 #include <QDebug>
 #include <QMatrix4x4>
@@ -9,11 +9,11 @@
 #include <string>
 #include <vector>
 
-#include "gl_error_check.h"
+#include "render/gl/backend/gl_error_check.h"
+#include "render/gl/backend/spark_orientation.h"
+#include "render/gl/backend/static_mesh_upload.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
-#include "spark_orientation.h"
-#include "static_mesh_upload.h"
 
 namespace Render::GL::BackendPipelines {
 

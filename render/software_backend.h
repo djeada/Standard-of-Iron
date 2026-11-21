@@ -5,10 +5,10 @@
 #include <QImage>
 #include <QString>
 
-#include "draw_queue.h"
-#include "frame_budget.h"
-#include "i_render_backend.h"
-#include "software/software_rasterizer.h"
+#include "render/draw_queue.h"
+#include "render/frame_budget.h"
+#include "render/i_render_backend.h"
+#include "render/software/software_rasterizer.h"
 
 namespace Render::GL {
 

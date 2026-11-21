@@ -1,4 +1,4 @@
-#include "dead_tree_mesh.h"
+#include "render/gl/backend/dead_tree_mesh.h"
 
 #include <cmath>
 #include <iterator>

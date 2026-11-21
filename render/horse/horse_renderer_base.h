@@ -5,9 +5,9 @@
 #include <utility>
 
 #include "animation/rig/horse_attachment_frames.h"
-#include "dimensions.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/registry.h"
+#include "render/horse/dimensions.h"
 
 namespace Render::Creature::Pipeline {
 struct CreaturePreparationResult;

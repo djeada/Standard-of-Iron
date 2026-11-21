@@ -1,26 +1,26 @@
-#include "projectile_renderer.h"
+#include "render/geom/projectile_renderer.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <numbers>
 
-#include "arrow.h"
 #include "game/systems/arrow_projectile.h"
 #include "game/systems/render_effects_frame.h"
 #include "game/systems/stone_projectile.h"
-#include "raft_renderer.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/registry.h"
 #include "render/entity_appearance.h"
+#include "render/geom/arrow.h"
+#include "render/geom/raft_renderer.h"
+#include "render/geom/stone.h"
+#include "render/geom/transforms.h"
 #include "render/gl/backend.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
 #include "render/submission_visibility.h"
-#include "stone.h"
-#include "transforms.h"
 
 namespace Render::GL {
 

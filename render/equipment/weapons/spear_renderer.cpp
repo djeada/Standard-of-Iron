@@ -1,4 +1,4 @@
-#include "spear_renderer.h"
+#include "render/equipment/weapons/spear_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

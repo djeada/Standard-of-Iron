@@ -15,9 +15,10 @@
 #include <variant>
 #include <vector>
 
-#include "mesh_instancing_pipeline.h"
 #include "render/draw_queue.h"
 #include "render/gl/backend.h"
+#include "render/gl/backend/mesh_instancing_pipeline.h"
+#include "render/gl/backend/rigged_cull_pipeline.h"
 #include "render/gl/directional_shadow_block.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
@@ -26,7 +27,6 @@
 #include "render/gl/shadow_cascade_fit.h"
 #include "render/gl/ubo_bindings.h"
 #include "render/rigged_mesh.h"
-#include "rigged_cull_pipeline.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

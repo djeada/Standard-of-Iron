@@ -1,4 +1,4 @@
-#include "blanket_renderer.h"
+#include "render/equipment/horse/tack/blanket_renderer.h"
 
 #include <array>
 

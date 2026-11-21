@@ -1,4 +1,4 @@
-#include "healing_waves_renderer.h"
+#include "render/entity/healing_waves_renderer.h"
 
 #include <QVector3D>
 

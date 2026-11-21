@@ -1,4 +1,4 @@
-#include "horse_profile_data.h"
+#include "render/horse/horse_profile_data.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,18 +12,18 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "horse_renderer_base.h"
-#include "horse_spec.h"
-#include "math/creature_math_utils.h"
-#include "math/math_utils.h"
-#include "prepare.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/registry.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
+#include "render/horse/horse_renderer_base.h"
+#include "render/horse/horse_spec.h"
+#include "render/horse/prepare.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/math/creature_math_utils.h"
+#include "render/math/math_utils.h"
 #include "render/submitter.h"
 
 namespace Render::GL {

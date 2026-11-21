@@ -5,7 +5,7 @@
 #include <array>
 #include <cstdint>
 
-#include "dimensions.h"
+#include "render/horse/dimensions.h"
 
 namespace Render::Horse {
 

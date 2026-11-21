@@ -1,4 +1,4 @@
-#include "creature_visual_definition.h"
+#include "render/creature/pipeline/creature_visual_definition.h"
 
 #include <initializer_list>
 

@@ -1,8 +1,8 @@
-#include "parts.h"
+#include "render/geom/parts.h"
 
 #include <cmath>
 
-#include "affine_matrix.h"
+#include "render/geom/affine_matrix.h"
 
 namespace Render::Geom {
 

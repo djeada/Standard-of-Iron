@@ -1,7 +1,7 @@
-#include "effects_submitter.h"
+#include "render/effects_submitter.h"
 
-#include "draw_queue.h"
-#include "scene_renderer.h"
+#include "render/draw_queue.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

@@ -1,9 +1,9 @@
-#include "part_graph.h"
+#include "render/creature/part_graph.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "primitive_geometry.h"
+#include "render/creature/primitive_geometry.h"
 #include "render/gl/mesh.h"
 #include "render/submitter.h"
 

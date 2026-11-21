@@ -6,12 +6,12 @@
 #include <string>
 #include <string_view>
 
-#include "mounted_horse_equipment.h"
-#include "mounted_humanoid_renderer_base.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/render_request.h"
+#include "render/entity/mounted_horse_equipment.h"
+#include "render/entity/mounted_humanoid_renderer_base.h"
+#include "render/entity/swordsman_renderer_common.h"
 #include "render/equipment/equipment_registry.h"
-#include "swordsman_renderer_common.h"
 
 namespace Render::GL {
 

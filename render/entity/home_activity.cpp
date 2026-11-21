@@ -1,4 +1,4 @@
-#include "home_activity.h"
+#include "render/entity/home_activity.h"
 
 #include <QQuaternion>
 
@@ -10,16 +10,16 @@
 #include <string>
 
 #include "animation/clip_manifest.h"
-#include "building_render_common.h"
-#include "building_state.h"
-#include "civilian_actor.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
-#include "home_props.h"
-#include "registry.h"
 #include "render/creature/archetype_registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/home_props.h"
+#include "render/entity/registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/graphics_settings.h"
 

@@ -1,7 +1,7 @@
-#include "template_cache.h"
+#include "render/template_cache.h"
 
-#include "gl/humanoid/animation/animation_inputs.h"
-#include "material_classification.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/material_classification.h"
 
 namespace Render::GL {
 

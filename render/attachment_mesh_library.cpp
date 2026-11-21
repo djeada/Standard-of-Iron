@@ -1,4 +1,4 @@
-#include "attachment_mesh_library.h"
+#include "render/attachment_mesh_library.h"
 
 #include <QDebug>
 
@@ -7,9 +7,9 @@
 #include <utility>
 
 #include "animation/bpat/asset_compression.h"
-#include "creature/spec.h"
-#include "mesh_pack_format.h"
-#include "static_mesh_pack.h"
+#include "render/creature/spec.h"
+#include "render/mesh_pack_format.h"
+#include "render/static_mesh_pack.h"
 
 namespace Render::GL {
 

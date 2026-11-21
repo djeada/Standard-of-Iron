@@ -46,18 +46,18 @@
 #include <windows.h>
 #endif
 
-#include "../render/draw_cmd_traits.h"
-#include "../render/gl/gl_capabilities.h"
-#include "../render/graphics_settings.h"
-#include "../render/i_render_backend.h"
-#include "../render/profiling/frame_profile.h"
 #include "app/core/game_engine.h"
 #include "commander_portrait_scenes.h"
 #include "game/core/nav_profile.h"
 #include "game/core/presentation_coverage.h"
 #include "game/units/commander_catalog.h"
+#include "render/draw_cmd_traits.h"
+#include "render/gl/gl_capabilities.h"
+#include "render/graphics_settings.h"
+#include "render/i_render_backend.h"
 #include "render/profiling/allocation_tracker.h"
 #include "render/profiling/asset_counters.h"
+#include "render/profiling/frame_profile.h"
 #include "render/profiling/frame_swap_clock.h"
 #include "render/profiling/gl_creation_trace.h"
 #include "render/profiling/performance_report.h"

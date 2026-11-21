@@ -4,7 +4,7 @@
 
 #include "animation/combat_manifest.h"
 #include "game/core/component_combat.h"
-#include "movement_state.h"
+#include "render/creature/movement_state.h"
 
 namespace Render::Creature {
 

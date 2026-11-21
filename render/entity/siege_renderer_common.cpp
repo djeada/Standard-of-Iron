@@ -1,4 +1,4 @@
-#include "siege_renderer_common.h"
+#include "render/entity/siege_renderer_common.h"
 
 #include <algorithm>
 #include <cmath>
@@ -6,11 +6,11 @@
 #include <numbers>
 #include <unordered_map>
 
-#include "../entity_appearance.h"
 #include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/death_sequence.h"
 #include "game/core/world.h"
+#include "render/entity_appearance.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"

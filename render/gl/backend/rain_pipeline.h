@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "pipeline_interface.h"
+#include "render/gl/backend/pipeline_interface.h"
 #include "render/gl/frame_environment.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"

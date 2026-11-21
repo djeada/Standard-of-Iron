@@ -1,4 +1,4 @@
-#include "tree_renderer.h"
+#include "render/ground/tree_renderer.h"
 
 #include <QVector2D>
 
@@ -7,19 +7,19 @@
 #include <cstdint>
 #include <vector>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/scatter/tree_scatter_walk.h"
-#include "gl/render_constants.h"
-#include "gl/resources.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
+#include "render/decoration_gpu.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/resources.h"
+#include "render/ground/scatter_runtime.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_contact.h"
-#include "scatter_runtime.h"
 
 namespace {
 

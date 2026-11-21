@@ -3,7 +3,7 @@
 #include <QMatrix4x4>
 #include <QtGui/qopengl.h>
 
-#include "pipeline_interface.h"
+#include "render/gl/backend/pipeline_interface.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 

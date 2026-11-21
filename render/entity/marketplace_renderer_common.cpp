@@ -1,4 +1,4 @@
-#include "marketplace_renderer_common.h"
+#include "render/entity/marketplace_renderer_common.h"
 
 #include <QMatrix4x4>
 
@@ -7,8 +7,8 @@
 #include <cstdint>
 #include <numbers>
 
-#include "../entity_appearance.h"
-#include "civilian_actor.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity_appearance.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 

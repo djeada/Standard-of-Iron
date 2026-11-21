@@ -1,4 +1,4 @@
-#include "anatomy_bake.h"
+#include "render/creature/anatomy_bake.h"
 
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_motion.h"

@@ -1,7 +1,7 @@
-#include "terrain_surface_manager.h"
+#include "render/ground/terrain_surface_manager.h"
 
-#include "ground_renderer.h"
-#include "terrain_renderer.h"
+#include "render/ground/ground_renderer.h"
+#include "render/ground/terrain_renderer.h"
 
 namespace Render::GL {
 

@@ -1,4 +1,4 @@
-#include "home_props.h"
+#include "render/entity/home_props.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

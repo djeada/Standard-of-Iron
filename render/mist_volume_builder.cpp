@@ -1,4 +1,4 @@
-#include "mist_volume_builder.h"
+#include "render/mist_volume_builder.h"
 
 #include <QVector2D>
 

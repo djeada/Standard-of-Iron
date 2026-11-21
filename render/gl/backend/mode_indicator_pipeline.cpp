@@ -1,9 +1,9 @@
-#include "mode_indicator_pipeline.h"
+#include "render/gl/backend/mode_indicator_pipeline.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
 
-#include "gl_error_check.h"
+#include "render/gl/backend/gl_error_check.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/state_scopes.h"

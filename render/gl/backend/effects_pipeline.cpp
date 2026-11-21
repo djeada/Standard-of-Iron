@@ -1,4 +1,4 @@
-#include "effects_pipeline.h"
+#include "render/gl/backend/effects_pipeline.h"
 
 #include <QDebug>
 #include <qglobal.h>

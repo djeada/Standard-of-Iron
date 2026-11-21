@@ -1,4 +1,4 @@
-#include "humanoid_equipment_archetype.h"
+#include "render/equipment/humanoid_equipment_archetype.h"
 
 namespace Render::GL {
 namespace {

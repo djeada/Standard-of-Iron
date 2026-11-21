@@ -1,4 +1,4 @@
-#include "allied_garments.h"
+#include "render/equipment/armor/allied_garments.h"
 
 #include <QVector4D>
 
@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/equipment/armor/sheet_mesh.h"
+#include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/geom/parts.h"
 #include "render/geom/transforms.h"
@@ -19,8 +21,6 @@
 #include "render/humanoid/asset/mesh_helpers.h"
 #include "render/humanoid/runtime/style_palette.h"
 #include "render/humanoid/schema/skeleton_schema.h"
-#include "sheet_mesh.h"
-#include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
 

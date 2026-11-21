@@ -4,7 +4,7 @@
 #include <array>
 
 #include "animation/transition_manifest.h"
-#include "humanoid_animation_selection.h"
+#include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/creature/render_request.h"
 
 namespace Render::Creature::Pipeline {

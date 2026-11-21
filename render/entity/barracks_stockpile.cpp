@@ -1,4 +1,4 @@
-#include "barracks_stockpile.h"
+#include "render/entity/barracks_stockpile.h"
 
 #include <QMatrix4x4>
 
@@ -7,12 +7,12 @@
 #include <cmath>
 #include <cstdint>
 
-#include "building_decay.h"
-#include "building_render_common.h"
-#include "building_state.h"
 #include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/systems/resource_stockpile.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
 #include "render/geom/stone.h"
 #include "render/gl/primitives.h"
 #include "render/submitter.h"

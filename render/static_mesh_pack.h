@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "static_building_batch.h"
+#include "render/static_building_batch.h"
 
 namespace Render::GL {
 

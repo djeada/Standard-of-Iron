@@ -1,6 +1,6 @@
 
 
-#include "attachment_builder.h"
+#include "render/equipment/attachment_builder.h"
 
 #include <QVector4D>
 

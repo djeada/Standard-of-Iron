@@ -1,4 +1,4 @@
-#include "rigged_mesh_bake.h"
+#include "render/rigged_mesh_bake.h"
 
 #include <QDebug>
 #include <QMatrix4x4>
@@ -15,18 +15,17 @@
 #include <utility>
 #include <vector>
 
-#include "creature/part_graph.h"
-#include "creature/primitive_geometry.h"
-#include "creature/skeleton.h"
-#include "elephant/elephant_spec.h"
-#include "geom/parts.h"
-#include "geom/transforms.h"
-#include "gl/mesh.h"
-#include "gl/primitives.h"
-#include "horse/horse_spec.h"
+#include "render/creature/part_graph.h"
+#include "render/creature/primitive_geometry.h"
+#include "render/creature/skeleton.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/geom/parts.h"
+#include "render/geom/transforms.h"
+#include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
+#include "render/horse/horse_spec.h"
 #include "render/profiling/asset_counters.h"
-#include "render_archetype.h"
+#include "render/render_archetype.h"
 
 namespace Render::Creature {
 

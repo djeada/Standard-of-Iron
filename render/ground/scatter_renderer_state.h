@@ -13,7 +13,7 @@
 
 #include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
-#include "scatter_runtime.h"
+#include "render/ground/scatter_runtime.h"
 
 namespace Render::Ground::Scatter {
 

@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "game/map/terrain.h"
+#include "render/ground/road_network_geometry.h"
 #include "render/i_render_pass.h"
-#include "road_network_geometry.h"
 
 namespace Render::GL {
 class Mesh;

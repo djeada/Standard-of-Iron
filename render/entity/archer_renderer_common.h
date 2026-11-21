@@ -11,9 +11,9 @@
 #include <string_view>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/registry.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/humanoid/schema/pose_policy.h"
 

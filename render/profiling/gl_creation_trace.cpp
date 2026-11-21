@@ -1,4 +1,4 @@
-#include "gl_creation_trace.h"
+#include "render/profiling/gl_creation_trace.h"
 
 #include <QByteArray>
 #include <QJsonObject>
@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "asset_counters.h"
+#include "render/profiling/asset_counters.h"
 
 #if defined(__linux__)
 #include <cxxabi.h>

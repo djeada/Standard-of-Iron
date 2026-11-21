@@ -1,4 +1,4 @@
-#include "wolf_spec.h"
+#include "render/wildlife/wolf_spec.h"
 
 #include <algorithm>
 #include <cmath>
@@ -8,8 +8,8 @@
 #include "game/core/component.h"
 #include "render/creature/assets/creature_lod_geometry.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
-#include "wildlife_gait.h"
-#include "wolf_manifest.h"
+#include "render/wildlife/wildlife_gait.h"
+#include "render/wildlife/wolf_manifest.h"
 
 namespace Render::Wildlife {
 

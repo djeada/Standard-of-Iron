@@ -1,4 +1,4 @@
-#include "terrain_noise_atlas.h"
+#include "render/gl/terrain_noise_atlas.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -11,9 +11,9 @@
 #include <array>
 #include <cstddef>
 
-#include "gl_resource_tracking.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/shader.h"
 #include "render/graphics_settings.h"
-#include "shader.h"
 
 namespace Render::GL {
 

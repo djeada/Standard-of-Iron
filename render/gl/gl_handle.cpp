@@ -1,10 +1,10 @@
-#include "gl_handle.h"
+#include "render/gl/gl_handle.h"
 
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
-#include "gl_resource_tracking.h"
-#include "platform_gl.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {

@@ -1,4 +1,4 @@
-#include "saddle_bag_renderer.h"
+#include "render/equipment/horse/decorations/saddle_bag_renderer.h"
 
 #include <array>
 

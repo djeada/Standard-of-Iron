@@ -1,4 +1,4 @@
-#include "shield_carthage.h"
+#include "render/equipment/weapons/shield_carthage.h"
 
 #include <array>
 #include <cmath>
@@ -12,6 +12,7 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/weapons/shield_anchor.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
@@ -20,7 +21,6 @@
 #include "render/humanoid/asset/humanoid_spec.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/render_archetype.h"
-#include "shield_anchor.h"
 
 namespace Render::GL {
 

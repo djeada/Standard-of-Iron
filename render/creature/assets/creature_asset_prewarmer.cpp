@@ -1,4 +1,4 @@
-#include "creature_asset_prewarmer.h"
+#include "render/creature/assets/creature_asset_prewarmer.h"
 
 #include "animation/bpat/bpat_reader.h"
 #include "render/creature/pipeline/creature_asset_init.h"

@@ -1,4 +1,4 @@
-#include "skeleton_factory.h"
+#include "render/creature/quadruped/skeleton_factory.h"
 
 namespace Render::Creature::Quadruped {
 

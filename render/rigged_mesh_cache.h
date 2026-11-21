@@ -14,10 +14,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "creature/part_graph.h"
-#include "gl/gl_handle.h"
-#include "rigged_mesh.h"
-#include "rigged_mesh_bake.h"
+#include "render/creature/part_graph.h"
+#include "render/gl/gl_handle.h"
+#include "render/rigged_mesh.h"
+#include "render/rigged_mesh_bake.h"
 
 namespace Render::Creature {
 struct CreatureSpec;

@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "creature/part_graph.h"
-#include "rigged_mesh.h"
+#include "render/creature/part_graph.h"
+#include "render/rigged_mesh.h"
 
 namespace Render::Creature {
 struct CreatureSpec;

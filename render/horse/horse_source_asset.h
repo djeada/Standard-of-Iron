@@ -7,10 +7,10 @@
 #include <string>
 #include <string_view>
 
-#include "dimensions.h"
 #include "render/creature/assets/compiled_creature_asset_status.h"
 #include "render/creature/quadruped/mesh_graph.h"
 #include "render/creature/skeleton.h"
+#include "render/horse/dimensions.h"
 
 namespace Render::GL {
 struct MountedAttachmentFrame;

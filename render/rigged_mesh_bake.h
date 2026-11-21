@@ -9,9 +9,9 @@
 #include <span>
 #include <vector>
 
-#include "creature/part_graph.h"
-#include "rigged_mesh.h"
-#include "static_attachment_spec.h"
+#include "render/creature/part_graph.h"
+#include "render/rigged_mesh.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::Creature {
 

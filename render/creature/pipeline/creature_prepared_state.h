@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "creature_render_graph.h"
+#include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/render_request.h"
 #include "render/elephant/dimensions.h"
 #include "render/gl/humanoid/humanoid_types.h"

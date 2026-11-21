@@ -1,4 +1,4 @@
-#include "sheep_manifest.h"
+#include "render/wildlife/sheep_manifest.h"
 
 #include <QMatrix4x4>
 
@@ -12,8 +12,8 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "render/creature/bake/creature_bake_recipe.h"
-#include "sheep_spec.h"
-#include "wildlife_rig.h"
+#include "render/wildlife/sheep_spec.h"
+#include "render/wildlife/wildlife_rig.h"
 
 namespace Render::Wildlife {
 

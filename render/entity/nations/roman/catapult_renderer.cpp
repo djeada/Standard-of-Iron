@@ -1,4 +1,4 @@
-#include "catapult_renderer.h"
+#include "render/entity/nations/roman/catapult_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -11,7 +11,6 @@
 #include "game/core/component_gameplay.h"
 #include "game/systems/projectile_kind.h"
 #include "game/visuals/team_colors.h"
-#include "math/math_utils.h"
 #include "render/entity/nations/siege_anim_types.h"
 #include "render/entity/registry.h"
 #include "render/entity/siege_renderer_common.h"
@@ -19,6 +18,7 @@
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
+#include "render/math/math_utils.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
 

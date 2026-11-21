@@ -1,4 +1,4 @@
-#include "formation_arrow.h"
+#include "render/geom/formation_arrow.h"
 
 #include <QMatrix4x4>
 #include <qvectornd.h>
@@ -7,10 +7,10 @@
 #include <cmath>
 #include <numbers>
 
+#include "render/geom/selection_disc.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
-#include "selection_disc.h"
 
 namespace Render::GL {
 

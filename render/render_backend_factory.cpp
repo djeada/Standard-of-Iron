@@ -1,7 +1,7 @@
-#include "render_backend_factory.h"
+#include "render/render_backend_factory.h"
 
-#include "gl/backend.h"
-#include "software_backend.h"
+#include "render/gl/backend.h"
+#include "render/software_backend.h"
 
 namespace Render {
 

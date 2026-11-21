@@ -8,7 +8,7 @@
 #include <ostream>
 
 #include "animation/bpat/bpat_format.h"
-#include "part_graph.h"
+#include "render/creature/part_graph.h"
 
 namespace Render::Creature::MeshAssetIo {
 

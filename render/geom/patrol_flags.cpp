@@ -1,4 +1,4 @@
-#include "patrol_flags.h"
+#include "render/geom/patrol_flags.h"
 
 #include <qvectornd.h>
 
@@ -6,13 +6,13 @@
 #include <optional>
 #include <unordered_set>
 
-#include "flag.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/visuals/team_colors.h"
+#include "render/geom/flag.h"
+#include "render/geom/transforms.h"
 #include "render/gl/resources.h"
 #include "render/scene_renderer.h"
-#include "transforms.h"
 
 namespace Render::GL {
 

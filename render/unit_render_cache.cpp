@@ -1,16 +1,16 @@
-#include "unit_render_cache.h"
+#include "render/unit_render_cache.h"
 
 #include <QMatrix4x4>
 
 #include <string_view>
 
-#include "entity/building_render_common.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
-#include "geom/mode_indicator.h"
+#include "render/entity/building_render_common.h"
+#include "render/geom/mode_indicator.h"
 
 namespace Render {
 

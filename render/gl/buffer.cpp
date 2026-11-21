@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "render/gl/buffer.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <vector>
 
-#include "gl_lifetime.h"
-#include "gl_resource_tracking.h"
-#include "platform_gl.h"
+#include "render/gl/gl_lifetime.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {

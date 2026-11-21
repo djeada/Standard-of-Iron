@@ -1,9 +1,9 @@
-#include "archer_renderer.h"
+#include "render/entity/nations/roman/archer_renderer.h"
 
 #include <array>
 
-#include "archer_style.h"
 #include "render/creature/pipeline/creature_asset.h"
+#include "render/entity/nations/roman/archer_style.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 namespace Render::GL::Roman {

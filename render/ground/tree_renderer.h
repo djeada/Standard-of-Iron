@@ -11,7 +11,7 @@
 #include "game/map/terrain.h"
 #include "render/decoration_gpu.h"
 #include "render/ground/ground_ecology.h"
-#include "scatter_renderer_base.h"
+#include "render/ground/scatter_renderer_base.h"
 
 namespace Render::Ground {
 struct TreeScatterProfile;

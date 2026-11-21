@@ -1,4 +1,4 @@
-#include "rigged_mesh.h"
+#include "render/rigged_mesh.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -9,9 +9,9 @@
 #include <cstddef>
 #include <utility>
 
-#include "gl/gl_lifetime.h"
-#include "gl/platform_gl.h"
 #include "render/gl/draw_tally.h"
+#include "render/gl/gl_lifetime.h"
+#include "render/gl/platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {

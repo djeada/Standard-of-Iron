@@ -1,7 +1,7 @@
-#include "construction_preview_pass.h"
+#include "render/pass/construction_preview_pass.h"
 
-#include "frame_context.h"
 #include "game/map/visibility_service.h"
+#include "render/pass/frame_context.h"
 #include "render/scene_renderer.h"
 
 namespace Render::Pass {

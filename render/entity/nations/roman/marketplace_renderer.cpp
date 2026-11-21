@@ -1,4 +1,4 @@
-#include "marketplace_renderer.h"
+#include "render/entity/nations/roman/marketplace_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -9,8 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "building_architecture.h"
-#include "building_palette.h"
 #include "game/core/component.h"
 #include "game/visuals/team_colors.h"
 #include "render/entity/building_archetype_desc.h"
@@ -20,6 +18,8 @@
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
 #include "render/entity/marketplace_renderer_common.h"
+#include "render/entity/nations/roman/building_architecture.h"
+#include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/registry.h"
 #include "render/geom/transforms.h"
 #include "render/gl/backend.h"

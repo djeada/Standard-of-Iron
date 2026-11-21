@@ -1,4 +1,4 @@
-#include "equipment_submit.h"
+#include "render/equipment/equipment_submit.h"
 
 #include "render/render_archetype.h"
 

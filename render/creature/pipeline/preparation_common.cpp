@@ -1,4 +1,4 @@
-#include "preparation_common.h"
+#include "render/creature/pipeline/preparation_common.h"
 
 #include <QVector4D>
 

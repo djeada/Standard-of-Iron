@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
-#include "building_palette.h"
 #include "render/entity/building_ornaments.h"
+#include "render/entity/nations/roman/building_palette.h"
 
 namespace Render::GL::Roman {
 

@@ -8,9 +8,9 @@
 #include <array>
 #include <cstdint>
 
-#include "elephant_renderer_base.h"
-#include "elephant_source_asset.h"
 #include "render/creature/spec.h"
+#include "render/elephant/elephant_renderer_base.h"
+#include "render/elephant/elephant_source_asset.h"
 #include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {

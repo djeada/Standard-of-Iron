@@ -9,7 +9,7 @@
 
 #include "render/creature/quadruped/mesh_graph.h"
 #include "render/creature/spec.h"
-#include "wildlife_rig.h"
+#include "render/wildlife/wildlife_rig.h"
 
 namespace Render::Wildlife {
 

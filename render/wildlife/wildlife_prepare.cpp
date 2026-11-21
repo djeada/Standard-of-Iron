@@ -1,4 +1,4 @@
-#include "wildlife_prepare.h"
+#include "render/wildlife/wildlife_prepare.h"
 
 #include <QMatrix4x4>
 

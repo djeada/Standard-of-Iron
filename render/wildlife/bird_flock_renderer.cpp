@@ -1,4 +1,4 @@
-#include "bird_flock_renderer.h"
+#include "render/wildlife/bird_flock_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

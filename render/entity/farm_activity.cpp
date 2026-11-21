@@ -1,4 +1,4 @@
-#include "farm_activity.h"
+#include "render/entity/farm_activity.h"
 
 #include <algorithm>
 #include <array>
@@ -10,16 +10,16 @@
 #include <vector>
 
 #include "animation/clip_manifest.h"
-#include "building_state.h"
-#include "farm_worker_props.h"
 #include "game/core/component_economy.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
-#include "registry.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_graph.h"
+#include "render/entity/building_state.h"
+#include "render/entity/farm_worker_props.h"
+#include "render/entity/registry.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/gl/humanoid/humanoid_types.h"

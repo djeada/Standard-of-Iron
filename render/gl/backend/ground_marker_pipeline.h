@@ -8,10 +8,10 @@
 #include <cstddef>
 #include <vector>
 
-#include "instance_draw_guard.h"
-#include "mesh_buffers.h"
-#include "pipeline_interface.h"
 #include "render/geom/ground_marker_tessellation.h"
+#include "render/gl/backend/instance_draw_guard.h"
+#include "render/gl/backend/mesh_buffers.h"
+#include "render/gl/backend/pipeline_interface.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"

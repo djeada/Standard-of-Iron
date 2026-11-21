@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "dimensions.h"
+#include "render/horse/dimensions.h"
 
 namespace Render::Horse {
 

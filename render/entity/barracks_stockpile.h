@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "registry.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

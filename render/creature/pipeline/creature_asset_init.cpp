@@ -1,4 +1,4 @@
-#include "creature_asset_init.h"
+#include "render/creature/pipeline/creature_asset_init.h"
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"

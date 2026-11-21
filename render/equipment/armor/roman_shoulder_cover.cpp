@@ -1,4 +1,4 @@
-#include "roman_shoulder_cover.h"
+#include "render/equipment/armor/roman_shoulder_cover.h"
 
 #include <array>
 #include <cmath>
@@ -6,9 +6,9 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/equipment/armor/shoulder_cover_archetype.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
-#include "shoulder_cover_archetype.h"
 
 namespace Render::GL {
 

@@ -1,4 +1,4 @@
-#include "combat_animation_diagnostics.h"
+#include "render/profiling/combat_animation_diagnostics.h"
 
 #include <QDebug>
 #include <QtMath>

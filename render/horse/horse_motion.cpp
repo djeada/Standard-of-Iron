@@ -1,4 +1,4 @@
-#include "horse_motion.h"
+#include "render/horse/horse_motion.h"
 
 #include <QVector3D>
 
@@ -10,15 +10,15 @@
 #include "animation/horse_gait_manifest.h"
 #include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
-#include "dimensions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
-#include "horse_anatomy.h"
-#include "horse_layout.h"
-#include "horse_source_asset.h"
-#include "math/creature_math_utils.h"
 #include "render/creature/animation_state_components.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/dimensions.h"
+#include "render/horse/horse_anatomy.h"
+#include "render/horse/horse_layout.h"
+#include "render/horse/horse_source_asset.h"
+#include "render/math/creature_math_utils.h"
 
 namespace Render::GL {
 

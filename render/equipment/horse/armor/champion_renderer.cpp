@@ -1,4 +1,4 @@
-#include "champion_renderer.h"
+#include "render/equipment/horse/armor/champion_renderer.h"
 
 #include <array>
 

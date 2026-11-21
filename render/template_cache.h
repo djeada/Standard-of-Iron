@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "anim_key.h"
-#include "material.h"
-#include "scene_renderer.h"
+#include "render/anim_key.h"
+#include "render/material.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

@@ -8,7 +8,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "render/decoration_gpu.h"
-#include "scatter_renderer_base.h"
+#include "render/ground/scatter_renderer_base.h"
 
 namespace Render::GL {
 class Renderer;

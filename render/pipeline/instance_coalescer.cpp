@@ -1,4 +1,4 @@
-#include "instance_coalescer.h"
+#include "render/pipeline/instance_coalescer.h"
 
 #include <utility>
 

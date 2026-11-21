@@ -1,4 +1,4 @@
-#include "creature_lod_geometry.h"
+#include "render/creature/assets/creature_lod_geometry.h"
 
 #include <atomic>
 

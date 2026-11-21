@@ -7,14 +7,14 @@
 
 #include "game/core/component_gameplay.h"
 #include "game/visuals/team_colors.h"
+#include "render/entity/renderer_constants.h"
 #include "render/geom/banner_cloth.h"
 #include "render/geom/flag.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shader.h"
 #include "render/scene_renderer.h"
-#include "renderer_constants.h"
-#include "submitter.h"
+#include "render/submitter.h"
 
 namespace Render::GL {
 

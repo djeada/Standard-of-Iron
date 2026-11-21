@@ -1,9 +1,9 @@
-#include "barracks_renderer_common.h"
+#include "render/entity/barracks_renderer_common.h"
 
 #include <array>
 
-#include "../entity_appearance.h"
 #include "game/core/component_core.h"
+#include "render/entity_appearance.h"
 #include "render/gl/backend.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"

@@ -1,4 +1,4 @@
-#include "horse_manifest.h"
+#include "render/horse/horse_manifest.h"
 
 #include <QMatrix4x4>
 
@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
-#include "horse_source_asset.h"
-#include "horse_spec.h"
 #include "render/elephant/loop_subdivision.h"
+#include "render/horse/horse_source_asset.h"
+#include "render/horse/horse_spec.h"
 
 namespace Render::Horse {
 

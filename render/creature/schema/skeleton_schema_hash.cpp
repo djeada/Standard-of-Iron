@@ -1,4 +1,4 @@
-#include "skeleton_schema_hash.h"
+#include "render/creature/schema/skeleton_schema_hash.h"
 
 #include <QDebug>
 

@@ -5,7 +5,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "gl/render_constants.h"
+#include "render/gl/render_constants.h"
 
 namespace Render::GL {
 

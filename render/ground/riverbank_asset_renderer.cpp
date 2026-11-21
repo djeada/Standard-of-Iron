@@ -1,4 +1,4 @@
-#include "riverbank_asset_renderer.h"
+#include "render/ground/riverbank_asset_renderer.h"
 
 #include <QDebug>
 #include <QVector2D>
@@ -14,13 +14,13 @@
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain_surface.h"
 #include "game/map/visibility_service.h"
-#include "gl/resources.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/gl/buffer.h"
+#include "render/gl/resources.h"
+#include "render/ground/riverbank_asset_gpu.h"
+#include "render/ground/scatter_runtime.h"
 #include "render/scene_renderer.h"
-#include "riverbank_asset_gpu.h"
-#include "scatter_runtime.h"
 
 namespace {
 

@@ -1,10 +1,10 @@
-#include "horse_anatomy.h"
+#include "render/horse/horse_anatomy.h"
 
 #include <algorithm>
 #include <cmath>
 
-#include "horse_layout.h"
-#include "horse_source_asset.h"
+#include "render/horse/horse_layout.h"
+#include "render/horse/horse_source_asset.h"
 
 namespace Render::Horse {
 

@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "shader.h"
+#include "render/gl/shader.h"
 #include "utils/resource_utils.h"
 
 namespace Render::GL {

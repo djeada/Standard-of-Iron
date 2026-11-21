@@ -1,4 +1,4 @@
-#include "entity_appearance.h"
+#include "render/entity_appearance.h"
 
 #include "../game/core/component_core.h"
 #include "../game/core/component_gameplay.h"

@@ -1,4 +1,4 @@
-#include "wildlife_gait.h"
+#include "render/wildlife/wildlife_gait.h"
 
 #include <algorithm>
 #include <cmath>

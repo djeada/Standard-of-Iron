@@ -1,4 +1,4 @@
-#include "icon_glyph.h"
+#include "render/geom/icon_glyph.h"
 
 #include <QPainterPath>
 #include <QPointF>

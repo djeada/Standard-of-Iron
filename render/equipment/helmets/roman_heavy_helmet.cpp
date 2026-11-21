@@ -1,11 +1,11 @@
-#include "roman_heavy_helmet.h"
+#include "render/equipment/helmets/roman_heavy_helmet.h"
 
 #include <array>
 
-#include "helmet_alignment.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/generated_equipment.h"
+#include "render/equipment/helmets/helmet_alignment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/humanoid/runtime/style_palette.h"
 

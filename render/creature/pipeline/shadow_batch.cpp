@@ -1,8 +1,8 @@
-#include "shadow_batch.h"
+#include "render/creature/pipeline/shadow_batch.h"
 
 #include <QVector3D>
 
-#include "creature_submission_context.h"
+#include "render/creature/pipeline/creature_submission_context.h"
 #include "render/submitter.h"
 
 namespace Render::Creature::Pipeline {

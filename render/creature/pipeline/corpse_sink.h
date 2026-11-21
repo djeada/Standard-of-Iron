@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "unit_visual_spec.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 
 namespace Render::Creature::Pipeline {
 

@@ -1,4 +1,4 @@
-#include "siege_crew.h"
+#include "render/entity/siege_crew.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -10,11 +10,11 @@
 
 #include "animation/clip_manifest.h"
 #include "animation/siege_wreck_manifest.h"
-#include "civilian_actor.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
-#include "registry.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 namespace {

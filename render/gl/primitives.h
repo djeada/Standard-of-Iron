@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "mesh.h"
+#include "render/gl/mesh.h"
 
 namespace Render::GL {
 

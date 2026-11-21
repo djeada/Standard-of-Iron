@@ -1,4 +1,4 @@
-#include "palette.h"
+#include "render/palette.h"
 
 #include <qvectornd.h>
 
@@ -6,8 +6,8 @@
 #include <cmath>
 #include <cstdint>
 
-#include "humanoid/runtime/humanoid_math.h"
-#include "math/math_utils.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL {
 

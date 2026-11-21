@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include "elephant_gait.h"
+#include "render/elephant/elephant_gait.h"
 #include "render/elephant/schema/attachment_schema.h"
 
 namespace Render::GL {

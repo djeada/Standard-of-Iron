@@ -1,4 +1,4 @@
-#include "attachment_resolver.h"
+#include "render/creature/quadruped/attachment_resolver.h"
 
 namespace Render::Creature::Quadruped {
 

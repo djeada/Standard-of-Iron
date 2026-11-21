@@ -1,4 +1,4 @@
-#include "temple_renderer.h"
+#include "render/entity/nations/roman/temple_renderer.h"
 
 #include <QVector3D>
 
@@ -6,13 +6,13 @@
 #include <cmath>
 #include <cstdint>
 
-#include "building_palette.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/registry.h"
 #include "render/entity/temple_renderer_common.h"
 #include "render/render_archetype.h"

@@ -1,4 +1,4 @@
-#include "leather_barding_renderer.h"
+#include "render/equipment/horse/armor/leather_barding_renderer.h"
 
 #include <array>
 

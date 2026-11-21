@@ -4,8 +4,8 @@
 
 #include <utility>
 
-#include "dimensions.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/elephant/dimensions.h"
 #include "render/elephant/runtime/motion_sample.h"
 #include "render/entity/registry.h"
 

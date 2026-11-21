@@ -1,4 +1,4 @@
-#include "crupper_renderer.h"
+#include "render/equipment/horse/armor/crupper_renderer.h"
 
 #include <array>
 

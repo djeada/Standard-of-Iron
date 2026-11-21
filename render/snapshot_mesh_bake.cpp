@@ -1,4 +1,4 @@
-#include "snapshot_mesh_bake.h"
+#include "render/snapshot_mesh_bake.h"
 
 #include <QVector3D>
 #include <QVector4D>

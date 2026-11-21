@@ -1,4 +1,4 @@
-#include "stone.h"
+#include "render/geom/stone.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

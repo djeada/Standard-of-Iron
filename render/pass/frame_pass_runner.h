@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-#include "i_pass.h"
+#include "render/pass/i_pass.h"
 
 namespace Render::Pass {
 

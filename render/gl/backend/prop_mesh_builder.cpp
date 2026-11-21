@@ -1,4 +1,4 @@
-#include "prop_mesh_builder.h"
+#include "render/gl/backend/prop_mesh_builder.h"
 
 #include <qvectornd.h>
 

@@ -1,13 +1,13 @@
-#include "wildlife_draw_state.h"
+#include "render/entity/wildlife/wildlife_draw_state.h"
 
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
 
-#include "../../entity_appearance.h"
 #include "game/core/component_economy.h"
 #include "game/core/death_sequence.h"
 #include "game/core/entity.h"
+#include "render/entity_appearance.h"
 
 namespace Render::GL::Wildlife {
 

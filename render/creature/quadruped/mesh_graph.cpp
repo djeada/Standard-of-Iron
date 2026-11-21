@@ -1,4 +1,4 @@
-#include "mesh_graph.h"
+#include "render/creature/quadruped/mesh_graph.h"
 
 #include <QVector4D>
 

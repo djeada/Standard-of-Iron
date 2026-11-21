@@ -1,4 +1,4 @@
-#include "elephant_manifest.h"
+#include "render/elephant/elephant_manifest.h"
 
 #include <QMatrix4x4>
 
@@ -10,9 +10,9 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
-#include "elephant_source_asset.h"
-#include "elephant_spec.h"
-#include "loop_subdivision.h"
+#include "render/elephant/elephant_source_asset.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/elephant/loop_subdivision.h"
 
 namespace Render::Elephant {
 

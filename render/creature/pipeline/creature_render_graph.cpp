@@ -1,4 +1,4 @@
-#include "creature_render_graph.h"
+#include "render/creature/pipeline/creature_render_graph.h"
 
 #include <algorithm>
 #include <cstring>
@@ -7,13 +7,13 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
-#include "creature_asset.h"
-#include "creature_prepared_state.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
-#include "humanoid_animation_selection.h"
-#include "preparation_common.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
+#include "render/creature/pipeline/humanoid_animation_selection.h"
+#include "render/creature/pipeline/preparation_common.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/graphics_settings.h"

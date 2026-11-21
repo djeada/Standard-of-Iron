@@ -4,9 +4,9 @@
 #include <span>
 #include <vector>
 
-#include "creature_pipeline.h"
-#include "creature_render_graph.h"
-#include "creature_render_state.h"
+#include "render/creature/pipeline/creature_pipeline.h"
+#include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/creature_render_state.h"
 #include "render/entity/registry.h"
 
 namespace Render::GL {

@@ -1,4 +1,4 @@
-#include "elephant_motion.h"
+#include "render/elephant/elephant_motion.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,11 +12,11 @@
 #include "animation/elephant_motion_manifest.h"
 #include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
-#include "dimensions.h"
-#include "elephant_source_asset.h"
-#include "elephant_spec.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/movement_animation.h"
+#include "render/elephant/dimensions.h"
+#include "render/elephant/elephant_source_asset.h"
+#include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 
 namespace Render::GL {

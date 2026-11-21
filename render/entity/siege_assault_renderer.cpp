@@ -1,4 +1,4 @@
-#include "siege_assault_renderer.h"
+#include "render/entity/siege_assault_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -11,18 +11,18 @@
 #include <string>
 #include <unordered_map>
 
-#include "../entity_appearance.h"
 #include "game/core/component_combat.h"
 #include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
-#include "math/math_utils.h"
+#include "render/entity/siege_renderer_common.h"
+#include "render/entity_appearance.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
+#include "render/math/math_utils.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
-#include "siege_renderer_common.h"
 
 namespace Render::GL {
 namespace {

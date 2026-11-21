@@ -4,8 +4,8 @@
 #include <string_view>
 #include <vector>
 
-#include "building_archetype_desc.h"
-#include "building_state.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_state.h"
 #include "render/static_mesh_pack.h"
 
 namespace Render::GL {

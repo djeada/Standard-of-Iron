@@ -1,4 +1,4 @@
-#include "shader.h"
+#include "render/gl/shader.h"
 
 #include <QByteArray>
 #include <QDebug>
@@ -25,10 +25,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "platform_gl.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/ubo_bindings.h"
 #include "render/profiling/asset_counters.h"
-#include "render_constants.h"
-#include "ubo_bindings.h"
 #include "utils/resource_utils.h"
 
 namespace Render::GL {

@@ -1,4 +1,4 @@
-#include "arrow.h"
+#include "render/geom/arrow.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

@@ -1,4 +1,4 @@
-#include "static_mesh_pack.h"
+#include "render/static_mesh_pack.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "animation/bpat/asset_compression.h"
-#include "mesh_pack_format.h"
+#include "render/mesh_pack_format.h"
 
 namespace Render::GL {
 static_assert(sizeof(MergedBuildingVertex) == 16U * sizeof(float));

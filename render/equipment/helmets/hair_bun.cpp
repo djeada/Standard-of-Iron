@@ -1,12 +1,12 @@
-#include "hair_bun.h"
+#include "render/equipment/helmets/hair_bun.h"
 
 #include <array>
 #include <utility>
 
-#include "headwear_mesh.h"
-#include "helmet_alignment.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
+#include "render/equipment/helmets/headwear_mesh.h"
+#include "render/equipment/helmets/helmet_alignment.h"
 
 namespace Render::GL {
 

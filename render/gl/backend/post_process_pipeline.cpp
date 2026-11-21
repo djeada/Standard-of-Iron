@@ -1,4 +1,4 @@
-#include "post_process_pipeline.h"
+#include "render/gl/backend/post_process_pipeline.h"
 
 #include <QDebug>
 #include <QOpenGLContext>

@@ -1,4 +1,4 @@
-#include "terrain_pipeline.h"
+#include "render/gl/backend/terrain_pipeline.h"
 
 #include <QDebug>
 #include <QOpenGLExtraFunctions>

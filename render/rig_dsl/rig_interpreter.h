@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-#include "rig_def.h"
+#include "render/rig_dsl/rig_def.h"
 
 namespace Render::GL {
 class ISubmitter;

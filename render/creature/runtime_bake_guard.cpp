@@ -1,4 +1,4 @@
-#include "runtime_bake_guard.h"
+#include "render/creature/runtime_bake_guard.h"
 
 #include <QDebug>
 #include <QLatin1Char>

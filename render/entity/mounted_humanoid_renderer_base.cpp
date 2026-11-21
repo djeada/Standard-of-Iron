@@ -1,4 +1,4 @@
-#include "mounted_humanoid_renderer_base.h"
+#include "render/entity/mounted_humanoid_renderer_base.h"
 
 #include <QVector3D>
 
@@ -9,7 +9,6 @@
 #include "animation/bpat/bpat_registry.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
-#include "mounted_swordsman_pose.h"
 #include "render/creature/anatomy_bake.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
@@ -19,6 +18,7 @@
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/quadruped/mount_scale.h"
+#include "render/entity/mounted_swordsman_pose.h"
 #include "render/graphics_settings.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/prepare.h"

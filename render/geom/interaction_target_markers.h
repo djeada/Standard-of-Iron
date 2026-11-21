@@ -4,7 +4,7 @@
 
 #include <span>
 
-#include "mode_indicator.h"
+#include "render/geom/mode_indicator.h"
 
 namespace Render::GL {
 class Renderer;

@@ -1,4 +1,4 @@
-#include "light_cavalry_saddle_renderer.h"
+#include "render/equipment/horse/saddles/light_cavalry_saddle_renderer.h"
 
 #include <array>
 

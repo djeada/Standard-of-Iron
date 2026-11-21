@@ -1,4 +1,4 @@
-#include "ambient_people.h"
+#include "render/entity/ambient_people.h"
 
 #include <QMatrix4x4>
 
@@ -7,11 +7,11 @@
 #include <cmath>
 
 #include "animation/clip_manifest.h"
-#include "building_render_common.h"
-#include "building_state.h"
-#include "civilian_actor.h"
-#include "home_activity.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/home_activity.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 namespace {

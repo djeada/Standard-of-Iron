@@ -1,4 +1,4 @@
-#include "scale_barding_renderer.h"
+#include "render/equipment/horse/armor/scale_barding_renderer.h"
 
 #include <array>
 

@@ -1,4 +1,4 @@
-#include "snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_asset.h"
 
 #include <algorithm>
 #include <array>
@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "animation/bpat/asset_compression.h"
-#include "mesh_asset_io.h"
+#include "render/creature/mesh_asset_io.h"
 
 namespace Render::Creature::Snapshot {
 

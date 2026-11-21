@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <utility>
 
-#include "gl_lifetime.h"
+#include "render/gl/gl_lifetime.h"
 
 namespace Render::GL {
 

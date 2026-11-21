@@ -9,8 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "instance_draw_guard.h"
-#include "pipeline_interface.h"
+#include "render/gl/backend/instance_draw_guard.h"
+#include "render/gl/backend/pipeline_interface.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"

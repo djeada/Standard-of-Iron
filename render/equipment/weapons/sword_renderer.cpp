@@ -1,4 +1,4 @@
-#include "sword_renderer.h"
+#include "render/equipment/weapons/sword_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,7 +12,6 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "math/math_utils.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
@@ -27,6 +26,7 @@
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/humanoid/runtime/style_palette.h"
+#include "render/math/math_utils.h"
 #include "render/render_archetype.h"
 #include "render/static_attachment_spec.h"
 

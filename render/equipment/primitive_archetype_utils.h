@@ -6,8 +6,8 @@
 #include <string>
 #include <string_view>
 
-#include "generated_equipment.h"
 #include "render/equipment/equipment_cache_key.h"
+#include "render/equipment/generated_equipment.h"
 
 namespace Render::GL {
 

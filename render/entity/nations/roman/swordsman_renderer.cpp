@@ -1,12 +1,12 @@
-#include "swordsman_renderer.h"
+#include "render/entity/nations/roman/swordsman_renderer.h"
 
 #include <array>
 
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/entity/nations/carthage/builder_renderer.h"
 #include "render/entity/nations/roman/builder_renderer.h"
+#include "render/entity/nations/roman/swordsman_style.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
-#include "swordsman_style.h"
 
 namespace Render::GL::Roman {
 namespace {

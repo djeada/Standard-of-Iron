@@ -1,4 +1,4 @@
-#include "attack_target_markers.h"
+#include "render/geom/attack_target_markers.h"
 
 #include <QMatrix4x4>
 #include <QVector4D>
@@ -7,7 +7,7 @@
 
 #include "game/accessibility/team_identity.h"
 #include "game/map/terrain_service.h"
-#include "mode_indicator.h"
+#include "render/geom/mode_indicator.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 

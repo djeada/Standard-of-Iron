@@ -1,7 +1,7 @@
-#include "pose_intent.h"
+#include "render/creature/pose_intent.h"
 
 #include "animation/intent_manifest.h"
-#include "animation_core_bridge.h"
+#include "render/creature/animation_core_bridge.h"
 
 namespace Render::Creature {
 

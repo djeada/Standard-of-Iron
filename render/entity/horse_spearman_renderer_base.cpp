@@ -1,4 +1,4 @@
-#include "horse_spearman_renderer_base.h"
+#include "render/entity/horse_spearman_renderer_base.h"
 
 #include <QVector3D>
 
@@ -8,16 +8,16 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
-#include "mounted_swordsman_pose.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
+#include "render/entity/mounted_swordsman_pose.h"
+#include "render/entity/renderer_constants.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/humanoid/runtime/humanoid_math.h"
 #include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/palette.h"
-#include "renderer_constants.h"
 
 namespace Render::GL {
 

@@ -6,8 +6,8 @@
 #include <iterator>
 #include <vector>
 
-#include "entity/registry.h"
-#include "graphics_settings.h"
+#include "render/entity/registry.h"
+#include "render/graphics_settings.h"
 
 namespace Render {
 

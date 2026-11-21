@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <span>
 
-#include "creature_render_state.h"
+#include "render/creature/pipeline/creature_render_state.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/render_request.h"
-#include "unit_visual_spec.h"
 
 namespace Render::GL {
 class ISubmitter;

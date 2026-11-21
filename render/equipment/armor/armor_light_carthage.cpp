@@ -1,4 +1,4 @@
-#include "armor_light_carthage.h"
+#include "render/equipment/armor/armor_light_carthage.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,7 +12,8 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "cuirass_trim.h"
+#include "render/equipment/armor/cuirass_trim.h"
+#include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/parts.h"
@@ -24,7 +25,6 @@
 #include "render/humanoid/runtime/humanoid_math.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/style_palette.h"
-#include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
 

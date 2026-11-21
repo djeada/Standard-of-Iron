@@ -6,8 +6,8 @@
 #include <functional>
 #include <vector>
 
-#include "elephant_spec.h"
 #include "render/creature/pipeline/creature_render_graph.h"
+#include "render/elephant/elephant_spec.h"
 
 namespace Render::GL {
 struct DrawContext;

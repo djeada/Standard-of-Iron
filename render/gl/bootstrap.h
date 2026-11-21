@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "gl_capabilities.h"
+#include "render/gl/gl_capabilities.h"
 
 class QOpenGLContext;
 

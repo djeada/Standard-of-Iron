@@ -1,4 +1,4 @@
-#include "tool_belt_renderer.h"
+#include "render/equipment/armor/tool_belt_renderer.h"
 
 #include <array>
 #include <cmath>

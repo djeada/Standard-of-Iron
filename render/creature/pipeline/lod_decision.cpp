@@ -1,4 +1,4 @@
-#include "lod_decision.h"
+#include "render/creature/pipeline/lod_decision.h"
 
 namespace Render::Creature::Pipeline {
 

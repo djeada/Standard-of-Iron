@@ -12,15 +12,19 @@
 #include <utility>
 #include <vector>
 
-#include "backend/shader_uniform_cache.h"
-#include "backend/sky_box_transition.h"
-#include "directional_shadow_block.h"
-#include "persistent_buffer.h"
 #include "render/decoration_gpu.h"
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
+#include "render/gl/backend/shader_uniform_cache.h"
+#include "render/gl/backend/sky_box_transition.h"
+#include "render/gl/directional_shadow_block.h"
 #include "render/gl/frame_environment.h"
 #include "render/gl/gl_handle.h"
+#include "render/gl/persistent_buffer.h"
+#include "render/gl/resources.h"
+#include "render/gl/shader.h"
+#include "render/gl/shader_cache.h"
+#include "render/gl/shadow_cascade_fit.h"
 #include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
@@ -28,12 +32,8 @@
 #include "render/static_building_batch.h"
 #include "render/world_chunk.h"
 #include "render/world_render_mode.h"
-#include "resources.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
-#include "shader.h"
-#include "shader_cache.h"
-#include "shadow_cascade_fit.h"
 
 namespace Render::GL::BackendPipelines {
 class CylinderPipeline;

@@ -1,4 +1,4 @@
-#include "rigged_cull_pipeline.h"
+#include "render/gl/backend/rigged_cull_pipeline.h"
 
 #include <QDebug>
 #include <QFile>
@@ -13,8 +13,8 @@
 #include <cstring>
 #include <limits>
 
-#include "character_wear_binding.h"
 #include "render/draw_commands.h"
+#include "render/gl/backend/character_wear_binding.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_capabilities.h"

@@ -1,4 +1,4 @@
-#include "frame_continuity_analyzer.h"
+#include "render/profiling/frame_continuity_analyzer.h"
 
 #include <algorithm>
 #include <cmath>

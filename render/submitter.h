@@ -6,11 +6,11 @@
 #include <algorithm>
 #include <utility>
 
-#include "draw_queue.h"
-#include "gl/primitives.h"
-#include "material.h"
-#include "primitive_batch.h"
-#include "render_archetype.h"
+#include "render/draw_queue.h"
+#include "render/gl/primitives.h"
+#include "render/material.h"
+#include "render/primitive_batch.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 class Mesh;

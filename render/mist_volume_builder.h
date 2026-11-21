@@ -5,7 +5,7 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/terrain_features.h"
-#include "mist_volume.h"
+#include "render/mist_volume.h"
 
 namespace Render {
 

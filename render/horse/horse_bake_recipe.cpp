@@ -1,4 +1,4 @@
-#include "horse_bake_recipe.h"
+#include "render/horse/horse_bake_recipe.h"
 
 #include <QMatrix4x4>
 
@@ -10,9 +10,9 @@
 #include <vector>
 
 #include "animation/rig/horse_gait.h"
-#include "horse_manifest.h"
-#include "horse_source_asset.h"
-#include "horse_spec.h"
+#include "render/horse/horse_manifest.h"
+#include "render/horse/horse_source_asset.h"
+#include "render/horse/horse_spec.h"
 
 namespace Render::Horse {
 

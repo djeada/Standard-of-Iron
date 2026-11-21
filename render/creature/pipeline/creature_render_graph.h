@@ -11,12 +11,12 @@
 #include <vector>
 
 #include "animation/bpat/bpat_playback.h"
-#include "creature_render_state.h"
-#include "humanoid_animation_selection.h"
-#include "lod_decision.h"
+#include "render/creature/pipeline/creature_render_state.h"
+#include "render/creature/pipeline/humanoid_animation_selection.h"
+#include "render/creature/pipeline/lod_decision.h"
+#include "render/creature/pipeline/shadow_batch.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/render_request.h"
-#include "shadow_batch.h"
-#include "unit_visual_spec.h"
 
 namespace Engine::Core {
 class Entity;
