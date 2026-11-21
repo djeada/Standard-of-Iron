@@ -314,6 +314,9 @@ public:
     return m_lifecycle.stats();
   }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
+  [[nodiscard]] bool renderer_init_failed() const { return m_renderer_init_failed; }
+  void report_renderer_failure(const QString& error_message);
+  void retry_renderer_initialization();
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
@@ -594,6 +597,7 @@ private:
   std::unique_ptr<App::World::AllyAnnouncementPresenter> m_ally_announcements;
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
+  bool m_renderer_init_failed = false;
   ViewportState m_viewport;
   bool m_release_self_test_mode = false;
   Game::Systems::LevelSnapshot m_level;

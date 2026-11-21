@@ -90,7 +90,12 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
   if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical() << "GLView::createRenderer() - No valid OpenGL context";
     qCritical() << "Running in software rendering mode - 3D view not available";
-    return nullptr;
+    if (m_engine != nullptr) {
+      m_engine->report_renderer_failure(
+          QStringLiteral("Gameplay renderer creation failed: no valid OpenGL "
+                         "context is available (OpenGL 3.3 Core required)."));
+    }
+    return new GLRenderer(const_cast<GLView*>(this), m_engine);
   }
 
   const auto fmt = ctx->format();
@@ -216,6 +221,13 @@ void GLView::GLRenderer::render() {
   QOpenGLContext* ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical() << "GLRenderer::render() - OpenGL context lost";
+    m_engine->report_renderer_failure(
+        QStringLiteral("Gameplay rendering failed: OpenGL context is unavailable "
+                       "or was lost (OpenGL 3.3 Core required)."));
+    return;
+  }
+
+  if (m_engine->renderer_init_failed()) {
     return;
   }
 
@@ -885,7 +897,13 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
   QOpenGLContext* ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical() << "GLRenderer::createFramebufferObject() - No valid OpenGL context";
-    return nullptr;
+    if (m_engine != nullptr) {
+      m_engine->report_renderer_failure(
+          QStringLiteral("Gameplay framebuffer creation failed: no valid OpenGL "
+                         "context is available (OpenGL 3.3 Core required)."));
+    }
+    return new QOpenGLFramebufferObject(size.expandedTo(QSize(1, 1)),
+                                        QOpenGLFramebufferObjectFormat{});
   }
 
   QOpenGLFramebufferObjectFormat fmt;
