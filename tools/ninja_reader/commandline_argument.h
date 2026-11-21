@@ -117,7 +117,13 @@ public:
   // - `vector` is empty;
   // - one of the arguments string from `vector` is null;
   // - a name of one of the arguments is empty;
-  // - iteration ends, but one of the arguments has no value.
+  // - iteration ends, but one of the arguments has no value;
+  // - the argument's integral value is out of bounds (overflow/underflow) of
+  //   `ArgumentValue::Integer`;
+  // - the argument's value is declaration of a next argument. Example:
+  //
+  //   { "--<argA>", "--<argB>" } (Expected a value after "--<argA>", but got argument
+  //   declaration)
   [[nodiscard]] std::vector<Argument>
   parse_vector(const std::span<char*>& vector) const;
 };
