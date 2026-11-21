@@ -13,13 +13,13 @@ in vec2 v_uv;
 in float v_vertex_displacement;
 in float v_entry_mask;
 in float v_feature_foot;
+in vec2 v_landform;
 
 layout(location = 0) out vec4 frag_color;
 
 uniform vec3 u_grass_primary, u_grass_secondary, u_grass_dry, u_soil_color;
 uniform vec3 u_rock_low, u_rock_high, u_tint;
 uniform int u_ground_type;
-uniform int u_terrain_type;
 uniform vec2 u_noise_offset;
 uniform float u_tile_size, u_macro_noise_scale, u_detail_noise_scale;
 uniform float u_slope_rock_threshold, u_slope_rock_sharpness;
@@ -568,8 +568,8 @@ void main() {
   float biome_rocky = float(u_ground_type == k_soil_rocky);
   float biome_alpine = float(u_ground_type == k_alpine_mix);
   float biome_fertile = float(u_ground_type == k_soil_fertile);
-  float hill_surface = float(u_terrain_type == 1);
-  float mountain_surface = float(u_terrain_type == 2);
+  float mountain_surface = clamp(v_landform.y, 0.0, 1.0);
+  float hill_surface = clamp(v_landform.x, 0.0, 1.0 - mountain_surface);
 
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);

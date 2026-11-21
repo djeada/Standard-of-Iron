@@ -77,6 +77,7 @@ add_executable(
     render/scatter_composition_test.cpp
     render/scatter_gpu_retention_test.cpp
     render/scatter_runtime_test.cpp
+    render/terrain_vertex_masks_test.cpp
     render/terrain_scene_proxy_test.cpp
     render/render_thread_boundary_test.cpp
     render/scene_walk_entity_handle_test.cpp

@@ -868,8 +868,9 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float material_patch ="), std::string::npos);
   EXPECT_NE(flat.find("float deposited_soil ="), std::string::npos);
   EXPECT_NE(flat.find("uniform int u_ground_type;"), std::string::npos);
-  EXPECT_NE(flat.find("uniform int u_terrain_type;"), std::string::npos);
-  EXPECT_NE(flat.find("float mountain_surface = float(u_terrain_type == 2);"),
+  EXPECT_EQ(flat.find("u_terrain_type"), std::string::npos)
+      << "a per-section landform uniform steps along grid squares at every hill rim";
+  EXPECT_NE(flat.find("float mountain_surface = clamp(v_landform.y, 0.0, 1.0);"),
             std::string::npos);
   EXPECT_NE(flat.find("float mountain_face ="), std::string::npos);
   EXPECT_NE(flat.find("float snowline ="), std::string::npos);
