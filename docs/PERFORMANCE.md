@@ -177,6 +177,46 @@ view went from 42 to 50 fps, GPU colour pass 14.8 to 11.7 ms and frame-lock wait
 indicative only. The intended comparison records a played session with
 `--record-replay` and replays it on both builds with `--replay`.
 
+## November 2026 baseline and simulation pass
+
+A scripted baseline lives outside the repository in
+`~/.cache/soi-worktrees/perf-results/2026-11-21-baseline/` (`INDEX.md`, one folder per
+sample with the benchmark JSON, `perf.data` and per-thread reports) and is re-run with
+`~/.cache/soi-worktrees/perf-results/run_samples.sh`. Samples: Aurelia Magna, Cannae and
+Zama in melee, a four-AI skirmish, five arena battles and `sim_benchmark` at 500 and
+2,000 units, all at Ultra 1080p.
+
+What it showed:
+
+- Every rendered sample is GPU-bound. The render thread's own code is flat: no symbol
+  above 5 %.
+- On Zama in melee the colour pass splits as: terrain surface 61 % (shadow sampling on
+  the ground 21 %, ground colour 30 %, other lighting 5 %, the painted sward 2 %),
+  everything else 39 %. Shadow sampling across all passes is 28 % of the colour pass;
+  the PCSS blocker search is 8 % of it. Measured by staging one-line shader variants
+  into `build/bin/assets/shaders` and reading `gpu_color_ms` from the benchmark JSON.
+- Massed battles are simulation-bound: `sim_benchmark --units 2000` cost 36.3 ms a tick
+  against a 16.7 ms budget, 81 % of it in `CombatSystem` walking formation soldiers.
+
+Simulation fixes from that profile (2,000 units: 36.3 -> 28.7 ms a tick, 500 units:
+8.4 -> 6.8 ms):
+
+- `signed_yaw_delta` took `std::remainder` on every call. It compiles to the microcoded
+  `fprem1` instruction, so it never showed up as a libm symbol; the cost hid in its
+  callers. Differences already inside +-180 degrees now return directly.
+- `std::hypot` was 8 % of the tick. It is careful about overflow that metre-scale
+  distances never reach; hot paths use `planar_length`.
+- The formation local frame recomputed sin/cos of the unit yaw for every soldier.
+
+_Rule:_ no `std::hypot`, `std::remainder` or `std::fmod` in per-soldier or per-unit
+tick code; use `planar_length` and `signed_yaw_delta`.
+
+Measuring traps met on the way: VirtualGL through GLX (`VGL_DISPLAY=:0`) drops to
+exactly 1 fps when the desktop display sleeps, so unattended game runs use
+`VGL_DISPLAY=egl0`; the arena is the opposite, the EGL route trips its watchdog, so it
+stays on GLX. A benchmark window is only 1920x1080 once a window manager has made it
+fullscreen (`wmctrl -b add,fullscreen`); otherwise it measures 1280x720.
+
 ## October 2026 shadow caster budget
 
 With the sepulcher waves the GPU, not the simulation, capped a crowded frame: 468 skeletons plus a hundred Romans tick in 0.73 ms, while the shadow pass drew every rigged soldier in range into every cascade. `DirectionalShadowSettings::max_rigged_casters_per_cascade` now keeps the nearest casters per cascade (60/100/160/240 by preset). Measured on the last rising with a fixed camera on the bridge mouth (`--action-fixture` with `camera_look_at`, preset High, 1280x720, about 280 soldiers visible): shadow 4.64 ms average / 7.62 ms p95 unlimited, 3.24 / 3.90 at 220, 2.72 / 3.16 at 120, 2.56 / 2.98 at 60; GPU p95 13.1 ms down to 8.6 ms at 120. Below about 120 the curve is flat because the rest is static casters and terrain.
