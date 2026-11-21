@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <chrono>
 #include <format>
-#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -64,6 +63,23 @@ SourceFilesSorter::sort(const NinjaLog& ninja_log,
         "Order::FROM_FASTEST_TO_SLOWEST");
   }
   return elements_copy;
+}
+
+// SourceFilesCompilationTimeCalculator
+
+std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_average_time(
+    const NinjaLog& ninja_log) const {
+  auto total_time = calculate_total_time(ninja_log);
+  return total_time / std::chrono::milliseconds::rep(ninja_log.elements.size());
+}
+
+std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_total_time(
+    const NinjaLog& ninja_log) const {
+  std::chrono::milliseconds calculation_result(0);
+  for (const auto& elem : ninja_log.elements) {
+    calculation_result += ninjalog_element_duration(elem);
+  }
+  return calculation_result;
 }
 
 } // namespace NinjaReader::Routines

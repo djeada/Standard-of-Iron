@@ -25,5 +25,9 @@ int main() {
                              element.output_file.string());
   }
 
+  SourceFilesCompilationTimeCalculator calculator;
+  std::cout << "Total time: " << calculator.calculate_total_time(log) << "\n";
+  std::cout << "Average time: " << calculator.calculate_average_time(log) << "\n";
+
   return 0;
 }

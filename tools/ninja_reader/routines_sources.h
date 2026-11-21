@@ -4,6 +4,7 @@
 #ifndef ROUTINES_SOURCES_H
 #define ROUTINES_SOURCES_H
 
+#include <chrono>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -32,6 +33,17 @@ public:
 
   [[nodiscard]] std::vector<NinjaLog::Element> sort(const NinjaLog& ninja_log,
                                                     Order order) const;
+};
+
+// Responsible for calculating the average and total compilation time of source files
+// that is achived through reading `NinjaLog` structure.
+class SourceFilesCompilationTimeCalculator {
+public:
+  [[nodiscard]] std::chrono::milliseconds
+  calculate_average_time(const NinjaLog& ninja_log) const;
+
+  [[nodiscard]] std::chrono::milliseconds
+  calculate_total_time(const NinjaLog& ninja_log) const;
 };
 
 } // namespace NinjaReader::Routines
