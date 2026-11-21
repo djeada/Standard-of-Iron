@@ -752,6 +752,7 @@ namespace {
 constexpr float k_shadow_min_caster_texels = 0.75F;
 constexpr float k_shadow_light_follow_cos = 0.99999848F;
 constexpr double k_shadow_cache_triangles_per_texel = 0.1;
+constexpr float k_shadow_flat_terrain_relief = 0.30F;
 constexpr std::size_t k_shadow_min_instanced_run = 2;
 constexpr float k_shadow_receiver_margin_texels = 16.0F;
 
@@ -952,9 +953,15 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         add_static_caster(part->mesh, part->world);
       }
     } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
-      if (!terrain->horizon_dressing) {
-        add_static_caster(terrain->mesh, terrain->model, true);
+      if (terrain->horizon_dressing) {
+        continue;
       }
+      const auto relief = m_shadow_terrain_height_cache.find(terrain->mesh);
+      if (relief != m_shadow_terrain_height_cache.end() &&
+          relief->second.second - relief->second.first < k_shadow_flat_terrain_relief) {
+        continue;
+      }
+      add_static_caster(terrain->mesh, terrain->model, true);
     }
   }
   std::sort(m_shadow_static_casters.begin(),
@@ -1731,7 +1738,8 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_opaque_first_batches.assign(prepared_batches.size(), 0U);
   for (std::size_t early = 0; early < prepared_batches.size(); ++early) {
     const PreparedBatch& prepared = prepared_batches[early];
-    if (draw_cmd_type(queue.get_sorted(prepared.start)) != DrawCmdType::RiggedCreature) {
+    if (draw_cmd_type(queue.get_sorted(prepared.start)) !=
+        DrawCmdType::RiggedCreature) {
       continue;
     }
     breakdown_enter(DrawCmdType::RiggedCreature);

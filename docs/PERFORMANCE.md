@@ -222,11 +222,16 @@ GPU work from the same baseline:
   2.0 ms of which shadow lookups are about 1.25 ms.
 - Rigged creatures are now drawn before the terrain surface so the depth test rejects
   the ground they cover (colour pass 6.07 -> 5.90 ms).
-- Tried and reverted, no measurable gain: a PCSS early-out when the blocker search
-  finds nothing (the search is unbiased, so it always finds neighbouring ground), and
-  dropping relief-free terrain chunks from the shadow casters (shadow pass 2.2 -> 2.1 ms).
-- Open: the 2 ms of shadow lookups per ground pixel and the unattributed shadow-pass
-  time are the two places a large GPU gain can still come from.
+- Terrain chunks with less than `k_shadow_flat_terrain_relief` of height range are no
+  longer shadow casters, and a PCSS lookup whose blocker search finds nothing and whose
+  nine-tap probe of the filter footprint is fully lit returns at once instead of running
+  the 25-tap filter. Neither helps alone: with flat ground in the shadow map the
+  unbiased blocker search always finds the ground itself, and without the early-out the
+  missing ground saves almost nothing. Together: terrain surface 3.6 -> 3.3 ms, colour
+  pass 5.90 -> 5.6 ms. Flat ground at a low sun also loses a faint self-shadow that
+  used to stop at the cascade edge.
+- Open: the remaining shadow lookups per ground pixel and the unattributed shadow-pass
+  time (2.1 ms) are the two places a large GPU gain can still come from.
 
 Measuring traps met on the way: VirtualGL through GLX (`VGL_DISPLAY=:0`) drops to
 exactly 1 fps when the desktop display sleeps, so unattended game runs use

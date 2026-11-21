@@ -40,6 +40,7 @@ const float k_shadow_far_fade_start = 0.82;
 const float k_shadow_pcss_light_size_m = 0.55;
 const float k_shadow_pcss_search_m = 1.6;
 const float k_shadow_pcss_max_spread_texels = 9.0;
+const float k_shadow_probe_all_lit = 8.999;
 
 #if SOI_SHADOW_PCSS
 
@@ -58,6 +59,20 @@ float shadow_blocker_depth(vec3 projected, int cascade, float search_texels) {
     }
   }
   return blocker_count > 0.0 ? blocker_sum / blocker_count : -1.0;
+}
+
+float shadow_footprint_probe(vec3 projected,
+                             float layer,
+                             float compare_depth,
+                             float spread_uv) {
+  float lit = 0.0;
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      lit += texture(u_directional_shadow_map,
+                     vec4(projected.xy + vec2(x, y) * spread_uv, layer, compare_depth));
+    }
+  }
+  return lit;
 }
 #endif
 
@@ -101,7 +116,13 @@ float sample_shadow_cascade(vec3 world_position, vec3 normal, int cascade) {
   if (!in_far_atlas) {
     float search_texels = clamp(k_shadow_pcss_search_m / texel_world, 2.0, 24.0);
     float blocker = shadow_blocker_depth(projected, cascade, search_texels);
-    if (blocker >= 0.0) {
+    if (blocker < 0.0) {
+
+      if (shadow_footprint_probe(projected, layer, compare_depth, spread * texel_uv) >=
+          k_shadow_probe_all_lit) {
+        return 0.0;
+      }
+    } else {
       float gap_world = max(compare_depth - blocker, 0.0) * depth_span;
       float soft_world = gap_world * k_shadow_pcss_light_size_m /
                          max(gap_world + k_shadow_pcss_light_size_m * 0.5, 0.05);
