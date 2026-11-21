@@ -12,6 +12,19 @@
 
 namespace NinjaReader::CommandLine::Argument {
 
+namespace {
+// A utility function which trims leading and ending whitespace from the provided
+// string in place.
+void trim_whitespace_in_place(std::string& string) {
+  auto not_space = [](unsigned char c) {
+    return !std::isspace(c);
+  };
+  string.erase(std::ranges::find_if(string | std::views::reverse, not_space).base(),
+               string.end());
+  string.erase(string.begin(), std::ranges::find_if(string, not_space));
+}
+} // namespace
+
 // ArgumentValue
 
 ArgumentValue::ArgumentValue(Integer integer) noexcept
@@ -59,6 +72,22 @@ ArgumentValue& Argument::value() noexcept {
   return m_value;
 }
 
+// ArgumentValidator
+
+bool ArgumentValidator::is_argument(std::string_view argument_str) const {
+  std::string copied_argument_str(argument_str);
+  trim_whitespace_in_place(copied_argument_str);
+  if (copied_argument_str.empty()) {
+    return false;
+  }
+  if (!argument_str.starts_with("--")) {
+    return false;
+  }
+  size_t hyphen_index = argument_str.find("--");
+  auto name = argument_str.substr(hyphen_index + 2);
+  return !name.empty();
+}
+
 // VectorParser
 
 VectorParser::Exception::Exception(const std::string& msg)
@@ -66,24 +95,11 @@ VectorParser::Exception::Exception(const std::string& msg)
           std::string("NinjaReader::CommandLine::Argument::VectorParser: ") + msg) {
 }
 
-namespace {
-// A utility function which trims leading and ending whitespace from the provided
-// string in place.
-void trim_whitespace_in_place(std::string& string) {
-  auto not_space = [](unsigned char c) {
-    return !std::isspace(c);
-  };
-  string.erase(std::ranges::find_if(string | std::views::reverse, not_space).base(),
-               string.end());
-  string.erase(string.begin(), std::ranges::find_if(string, not_space));
-}
-} // namespace
-
 std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector) const {
   if (vector.empty()) {
     throw VectorParser::Exception("provided arguments vector is empty");
   }
-
+  ArgumentValidator argument_validator;
   std::vector<Argument> parsed_arguments = {};
   std::string argument_name;
   bool parsing_argument_value = false;
@@ -166,7 +182,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
 
     std::string argument_str = str;
     trim_whitespace_in_place(argument_str);
-    if (argument_str.empty() || !argument_str.starts_with("--")) {
+    if (!argument_validator.is_argument(argument_str)) {
       continue;
     }
     size_t equal_operator_index = argument_str.find("--");

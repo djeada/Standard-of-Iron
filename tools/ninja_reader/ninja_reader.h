@@ -9,6 +9,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -83,6 +84,15 @@ public:
 
   // Provides the argument's name.
   [[nodiscard]] const std::string& name() const noexcept;
+};
+
+// Responsible for checking whether a specific string is a valid command-line argument
+// or not.
+class ArgumentValidator {
+public:
+  // Checks whether `argument_str` is not empty, starts with the `--` prefix and has
+  // non-empty name: `--<name>`
+  [[nodiscard]] bool is_argument(std::string_view argument_str) const;
 };
 
 // Responsible for reading and parsing the supplied arguments vector.
