@@ -147,6 +147,11 @@ struct NinjaLog {
 // `NinjaLog` instance.
 class NinjaLogParser {
 public:
+  class Exception : public std::runtime_error {
+  public:
+    Exception(const std::string& msg);
+  };
+
   [[nodiscard]] NinjaLog parse(const std::filesystem::path& log_path) const;
 };
 
