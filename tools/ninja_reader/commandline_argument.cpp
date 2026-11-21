@@ -113,6 +113,10 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
     // Then, continue the iteration over the argument vector.
     if (parsing_argument_value) {
       std::string argument_value = str;
+      if (argument_validator.is_argument(argument_value)) {
+        throw VectorParser::Exception(
+            std::format("the value of \"{0}\" must not be an argument", argument_name));
+      }
 
       // Since the std::stoi function throws an exception if a conversion failure
       // occurs, we can use a try/catch block to catch an exception and immediately go
@@ -195,7 +199,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
 
   if (parsing_argument_value) {
     throw VectorParser::Exception(
-        std::format("argument \"{}\" has no value", argument_name));
+        std::format("\"{}\" argument has no value", argument_name));
   }
 
   return parsed_arguments;
