@@ -333,8 +333,28 @@ auto GameEngine::global_cursor_y() const -> qreal {
   return m_cursor_manager->global_cursor_y(m_window);
 }
 
+void GameEngine::report_renderer_failure(const QString& error_message) {
+  if (m_renderer_init_failed) {
+    return;
+  }
+  m_renderer_init_failed = true;
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(
+        this,
+        [this, error_message]() { set_error(error_message); },
+        Qt::QueuedConnection);
+    return;
+  }
+  set_error(error_message);
+}
+
+void GameEngine::retry_renderer_initialization() {
+  m_renderer_init_failed = false;
+  clear_error();
+}
+
 void GameEngine::ensure_initialized() {
-  if (!m_renderer || (m_camera == nullptr)) {
+  if (m_renderer_init_failed || !m_renderer || (m_camera == nullptr)) {
     return;
   }
   if (!m_runtime.initialized && QOpenGLContext::currentContext() == nullptr) {
@@ -348,8 +368,11 @@ void GameEngine::ensure_initialized() {
                                                 m_surface ? m_surface->ground()
                                                           : nullptr,
                                                 &error);
-  if (!error.isEmpty()) {
-    set_error(error);
+  if (!m_runtime.initialized || !error.isEmpty()) {
+    report_renderer_failure(
+        error.isEmpty() ? QStringLiteral("OpenGL renderer initialization failed.")
+                        : error);
+    return;
   }
   if (!was_initialized && m_runtime.initialized) {
     emit renderer_initialized_changed();

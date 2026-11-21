@@ -8,6 +8,7 @@ qt6_add_executable(standard_of_iron
     app/bootstrap/screenshot_capture.cpp
     app/bootstrap/self_test_driver.cpp
     app/bootstrap/startup_self_test.cpp
+    app/bootstrap/version_info.cpp
     app/bootstrap/windows_gl_probe.cpp
     ${SOI_ASSET_STRINGS_CPP}
 )
@@ -248,6 +249,21 @@ add_dependencies(
 # a hard-coded copy in a .qml or a .ts file silently outlives the tag it was
 # written for.
 target_compile_definitions(standard_of_iron PRIVATE SOI_VERSION="${PROJECT_VERSION}")
+
+# `standard_of_iron --version` also names the commit and the build type. The
+# commit is the one game/CMakeLists.txt already stamps into replays ("unknown"
+# without git, which --version leaves out). Like there, only the one source that
+# prints it gets the definitions, so a new commit recompiles one small object.
+get_directory_property(
+    SOI_BUILD_COMMIT
+    DIRECTORY ${CMAKE_SOURCE_DIR}/game
+    DEFINITION SOI_SIMULATION_BUILD_ID
+)
+set_property(
+    SOURCE app/bootstrap/version_info.cpp
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS SOI_BUILD_COMMIT="${SOI_BUILD_COMMIT}" SOI_BUILD_TYPE="$<CONFIG>"
+)
 
 # Windows-specific OpenGL linking
 if(WIN32)

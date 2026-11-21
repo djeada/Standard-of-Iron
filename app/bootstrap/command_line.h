@@ -32,6 +32,7 @@ struct CommandLineOptions {
   QString runtime_action_fixture_path;
   std::optional<App::Core::BenchmarkActionFixture> runtime_action_fixture;
   std::optional<App::Core::FilmConfig> film_config;
+  QString language_override;
 };
 
 auto parse_command_line(QCoreApplication& app,
