@@ -45,6 +45,7 @@
 
 #include "app/audio/audio_resource_loader.h"
 #include "app/audio/audio_status_hud.h"
+#include "app/bootstrap/campaign_mission_list.h"
 #include "app/bootstrap/command_line.h"
 #include "app/bootstrap/data_paths.h"
 #include "app/bootstrap/log_handler.h"
@@ -102,6 +103,10 @@ auto main(int argc, char* argv[]) -> int {
 
   if (App::Bootstrap::data_paths_requested_from_argv(argc, argv)) {
     return App::Bootstrap::print_data_paths(argc, argv);
+  }
+
+  if (App::Bootstrap::campaign_mission_list_requested_from_argv(argc, argv)) {
+    return App::Bootstrap::print_campaign_mission_list(argc, argv);
   }
 
 #if defined(Q_OS_MACOS)
@@ -276,6 +281,9 @@ auto main(int argc, char* argv[]) -> int {
 
   qInfo() << "Creating LanguageManager...";
   language_manager = std::make_unique<LanguageManager>(&app);
+  if (!opts.language_override.isEmpty()) {
+    language_manager->apply_temporary_language(opts.language_override);
+  }
   qInfo() << "LanguageManager created";
 
   qInfo() << "Creating GameEngine...";

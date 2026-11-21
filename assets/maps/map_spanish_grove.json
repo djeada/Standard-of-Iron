@@ -2746,6 +2746,518 @@
       "z": 31,
       "scale": 1.0,
       "rotation": 2.72
+    },
+    {
+      "type": "statue",
+      "x": 78.16,
+      "z": 80.27,
+      "scale": 1.0,
+      "rotation": 0.732,
+      "dressing": "spanish_grove_junction_1"
+    },
+    {
+      "type": "statue",
+      "x": 154.83,
+      "z": 84.88,
+      "scale": 1.0,
+      "rotation": -0.733,
+      "dressing": "spanish_grove_junction_2"
+    },
+    {
+      "type": "statue",
+      "x": 85.17,
+      "z": 155.12,
+      "scale": 1.0,
+      "rotation": 2.409,
+      "dressing": "spanish_grove_junction_4"
+    },
+    {
+      "type": "boulder",
+      "x": 168.08,
+      "z": 170.9,
+      "scale": 0.96,
+      "rotation": 0.755,
+      "dressing": "spanish_grove_ramp_1"
+    },
+    {
+      "type": "statue",
+      "x": 173.52,
+      "z": 170.51,
+      "scale": 1.0,
+      "rotation": -2.57,
+      "dressing": "spanish_grove_ramp_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 218.46,
+      "z": 32.89,
+      "scale": 0.92,
+      "rotation": 6.191,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 214.21,
+      "z": 43.78,
+      "scale": 1.02,
+      "rotation": 0.608,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 220.62,
+      "z": 37.63,
+      "scale": 1.25,
+      "rotation": 3.901,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 214.78,
+      "z": 37.94,
+      "scale": 0.87,
+      "rotation": 1.487,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 220.24,
+      "z": 40.7,
+      "scale": 0.88,
+      "rotation": 5.221,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 212.4,
+      "z": 40.72,
+      "scale": 1.13,
+      "rotation": 2.696,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 219.16,
+      "z": 46.11,
+      "scale": 1.21,
+      "rotation": 0.884,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 217.37,
+      "z": 36.27,
+      "scale": 0.93,
+      "rotation": 0.713,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 221.58,
+      "z": 34.15,
+      "scale": 0.82,
+      "rotation": 3.471,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 223.82,
+      "z": 42.72,
+      "scale": 1.0,
+      "rotation": 0.68,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 224.91,
+      "z": 33.69,
+      "scale": 0.89,
+      "rotation": 4.024,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 226.25,
+      "z": 40.44,
+      "scale": 1.07,
+      "rotation": 3.653,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 224.27,
+      "z": 37.61,
+      "scale": 1.16,
+      "rotation": 1.7,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 215.25,
+      "z": 33.87,
+      "scale": 1.17,
+      "rotation": 1.523,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "plant",
+      "x": 220.57,
+      "z": 27.54,
+      "scale": 1.16,
+      "rotation": 5.72,
+      "dressing": "spanish_grove_copse_1"
+    },
+    {
+      "type": "olive_tree",
+      "x": 20.41,
+      "z": 198.71,
+      "scale": 0.89,
+      "rotation": 6.075,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 23.48,
+      "z": 199.93,
+      "scale": 1.19,
+      "rotation": 5.083,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 28.22,
+      "z": 200.52,
+      "scale": 1.21,
+      "rotation": 2.477,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 26.45,
+      "z": 197.67,
+      "scale": 1.02,
+      "rotation": 4.109,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 18.45,
+      "z": 195.47,
+      "scale": 1.1,
+      "rotation": 5.254,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 26.0,
+      "z": 202.99,
+      "scale": 1.16,
+      "rotation": 5.4,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 22.15,
+      "z": 204.31,
+      "scale": 1.22,
+      "rotation": 4.96,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 16.0,
+      "z": 199.15,
+      "scale": 0.98,
+      "rotation": 2.258,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 17.54,
+      "z": 204.5,
+      "scale": 1.09,
+      "rotation": 0.664,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 14.3,
+      "z": 195.79,
+      "scale": 1.22,
+      "rotation": 4.317,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 23.44,
+      "z": 196.6,
+      "scale": 1.0,
+      "rotation": 0.905,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 15.12,
+      "z": 201.94,
+      "scale": 0.89,
+      "rotation": 2.133,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 16.74,
+      "z": 192.93,
+      "scale": 0.93,
+      "rotation": 5.824,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 31.42,
+      "z": 206.55,
+      "scale": 0.97,
+      "rotation": 1.587,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "plant",
+      "x": 9.71,
+      "z": 201.05,
+      "scale": 1.17,
+      "rotation": 2.282,
+      "dressing": "spanish_grove_copse_2"
+    },
+    {
+      "type": "olive_tree",
+      "x": 202.0,
+      "z": 220.73,
+      "scale": 1.16,
+      "rotation": 4.843,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 205.05,
+      "z": 215.01,
+      "scale": 0.96,
+      "rotation": 0.648,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 198.75,
+      "z": 220.32,
+      "scale": 0.89,
+      "rotation": 3.896,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 192.09,
+      "z": 220.13,
+      "scale": 1.19,
+      "rotation": 1.27,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 200.17,
+      "z": 224.32,
+      "scale": 0.95,
+      "rotation": 1.408,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 204.79,
+      "z": 219.55,
+      "scale": 0.87,
+      "rotation": 5.137,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 194.54,
+      "z": 217.25,
+      "scale": 1.09,
+      "rotation": 4.999,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 198.15,
+      "z": 216.93,
+      "scale": 1.25,
+      "rotation": 3.014,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 202.58,
+      "z": 217.29,
+      "scale": 0.86,
+      "rotation": 6.084,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 197.69,
+      "z": 222.86,
+      "scale": 0.82,
+      "rotation": 3.374,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 193.92,
+      "z": 213.22,
+      "scale": 1.14,
+      "rotation": 6.025,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 205.43,
+      "z": 226.22,
+      "scale": 1.21,
+      "rotation": 1.453,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 204.46,
+      "z": 228.04,
+      "scale": 1.4,
+      "rotation": 5.764,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "plant",
+      "x": 209.12,
+      "z": 222.46,
+      "scale": 1.37,
+      "rotation": 3.116,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "boulder",
+      "x": 210.38,
+      "z": 220.44,
+      "scale": 0.95,
+      "rotation": 1.095,
+      "dressing": "spanish_grove_copse_3"
+    },
+    {
+      "type": "olive_tree",
+      "x": 31.74,
+      "z": 18.41,
+      "scale": 1.04,
+      "rotation": 3.202,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 33.54,
+      "z": 22.5,
+      "scale": 0.91,
+      "rotation": 0.796,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 36.15,
+      "z": 15.89,
+      "scale": 1.22,
+      "rotation": 3.575,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 37.04,
+      "z": 18.92,
+      "scale": 0.88,
+      "rotation": 4.514,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 39.64,
+      "z": 16.18,
+      "scale": 1.2,
+      "rotation": 4.996,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 39.88,
+      "z": 21.41,
+      "scale": 1.12,
+      "rotation": 2.36,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 40.9,
+      "z": 12.63,
+      "scale": 1.22,
+      "rotation": 0.916,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 37.29,
+      "z": 24.21,
+      "scale": 0.97,
+      "rotation": 0.202,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 43.54,
+      "z": 19.24,
+      "scale": 0.89,
+      "rotation": 3.761,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 31.3,
+      "z": 24.95,
+      "scale": 1.23,
+      "rotation": 0.887,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "cypress_tree",
+      "x": 37.09,
+      "z": 12.87,
+      "scale": 0.93,
+      "rotation": 2.163,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "olive_tree",
+      "x": 44.06,
+      "z": 11.4,
+      "scale": 0.85,
+      "rotation": 3.104,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "plant",
+      "x": 42.5,
+      "z": 27.17,
+      "scale": 0.9,
+      "rotation": 2.682,
+      "dressing": "spanish_grove_copse_4"
+    },
+    {
+      "type": "plant",
+      "x": 46.22,
+      "z": 24.07,
+      "scale": 1.03,
+      "rotation": 2.169,
+      "dressing": "spanish_grove_copse_4"
     }
   ],
   "firecamps": [
@@ -3032,5 +3544,153 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "id": "spanish_grove_junction_1",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 84,
+      "z": 80,
+      "clear_of_bases": true
+    },
+    {
+      "id": "spanish_grove_junction_2",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 160,
+      "z": 84,
+      "clear_of_bases": true
+    },
+    {
+      "id": "spanish_grove_junction_3",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 156,
+      "z": 160,
+      "clear_of_bases": true
+    },
+    {
+      "id": "spanish_grove_junction_4",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 80,
+      "z": 156,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "spanish_grove_ramp_1",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 155.6,
+      "z": 142.9,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "spanish_grove_ramp_2",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 111.7,
+      "z": 29.6,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "spanish_grove_ramp_3",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 210.4,
+      "z": 111.7,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "spanish_grove_ramp_4",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 128.3,
+      "z": 210.4,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "spanish_grove_ramp_5",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 29.6,
+      "z": 128.3,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "spanish_grove_ramp_6",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 119.1,
+      "z": 76,
+      "clear_of_bases": true
+    },
+    {
+      "count": 15,
+      "id": "spanish_grove_copse_1",
+      "kind": "copse",
+      "radius": 9,
+      "trees": [
+        "olive_tree",
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 219.5,
+      "z": 39.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 15,
+      "id": "spanish_grove_copse_2",
+      "kind": "copse",
+      "radius": 9,
+      "trees": [
+        "olive_tree",
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 20.5,
+      "z": 200.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 15,
+      "id": "spanish_grove_copse_3",
+      "kind": "copse",
+      "radius": 9,
+      "trees": [
+        "olive_tree",
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 199.5,
+      "z": 219.5,
+      "clear_of_bases": true
+    },
+    {
+      "count": 14,
+      "id": "spanish_grove_copse_4",
+      "kind": "copse",
+      "radius": 8,
+      "trees": [
+        "olive_tree",
+        "olive_tree",
+        "cypress_tree"
+      ],
+      "x": 38.5,
+      "z": 19.5,
+      "clear_of_bases": true
+    }
+  ]
 }

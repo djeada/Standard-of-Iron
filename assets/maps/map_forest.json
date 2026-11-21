@@ -64,7 +64,8 @@
     "irregularity_amplitude": 0.075,
     "moisture_level": 0.92,
     "grass_saturation": 0.86,
-    "soil_roughness": 0.72
+    "soil_roughness": 0.72,
+    "forest_density": 2.4
   },
   "rain": {
     "enabled": true,
@@ -497,6 +498,66 @@
       "x": 66.6,
       "z": 36.3,
       "radius": 10.0
+    },
+    {
+      "id": "east_strip_wood",
+      "radius": 8.5,
+      "x": 163.5,
+      "z": 75.5
+    },
+    {
+      "id": "west_strip_wood",
+      "radius": 8.5,
+      "x": 12.5,
+      "z": 100.5
+    },
+    {
+      "id": "north_gap_wood",
+      "radius": 7,
+      "x": 112,
+      "z": 28
+    },
+    {
+      "id": "south_gap_wood",
+      "radius": 7,
+      "x": 64,
+      "z": 148
+    },
+    {
+      "id": "inner_east_wood",
+      "radius": 5.5,
+      "x": 131,
+      "z": 66
+    },
+    {
+      "id": "inner_west_wood",
+      "radius": 5.5,
+      "x": 45,
+      "z": 110
+    },
+    {
+      "id": "hollow_east_copse",
+      "radius": 5,
+      "x": 107,
+      "z": 76
+    },
+    {
+      "id": "hollow_west_copse",
+      "radius": 5,
+      "x": 69,
+      "z": 100
+    },
+    {
+      "id": "hollow_south_copse",
+      "radius": 5,
+      "x": 98,
+      "z": 106
+    },
+    {
+      "id": "hollow_north_copse",
+      "radius": 5,
+      "x": 78,
+      "z": 70
     }
   ],
   "rivers": [],
@@ -1559,6 +1620,84 @@
       "z": 136,
       "scale": 1.0,
       "rotation": 5.28
+    },
+    {
+      "type": "firecamp",
+      "x": 23.8,
+      "z": 78.41,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "forest_junction_3",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
+    },
+    {
+      "type": "boulder",
+      "x": 36.63,
+      "z": 73.62,
+      "scale": 1.3,
+      "rotation": 3.514,
+      "dressing": "forest_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 26.57,
+      "z": 72.28,
+      "scale": 1.47,
+      "rotation": 6.246,
+      "dressing": "forest_ramp_1"
+    },
+    {
+      "type": "statue",
+      "x": 23.54,
+      "z": 72.46,
+      "scale": 1.0,
+      "rotation": 0.132,
+      "dressing": "forest_ramp_1"
+    },
+    {
+      "type": "boulder",
+      "x": 157.47,
+      "z": 135.3,
+      "scale": 1.45,
+      "rotation": 0.242,
+      "dressing": "forest_ramp_6"
+    },
+    {
+      "type": "dead_tree",
+      "x": 168.41,
+      "z": 132.39,
+      "scale": 1.0,
+      "rotation": 1.543,
+      "dressing": "forest_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 148.51,
+      "z": 133.57,
+      "scale": 1.06,
+      "rotation": 2.193,
+      "dressing": "forest_ramp_6"
+    },
+    {
+      "type": "boulder",
+      "x": 144.34,
+      "z": 138.32,
+      "scale": 1.11,
+      "rotation": 1.878,
+      "dressing": "forest_ramp_6"
+    },
+    {
+      "type": "firecamp",
+      "x": 144.28,
+      "z": 134.64,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "dressing": "forest_ramp_6",
+      "radius": 3.2,
+      "intensity": 1.15,
+      "persistent": true
     }
   ],
   "firecamps": [
@@ -1733,5 +1872,97 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "id": "forest_junction_1",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 152,
+      "z": 88,
+      "clear_of_bases": true
+    },
+    {
+      "id": "forest_junction_2",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 88,
+      "z": 152,
+      "clear_of_bases": true
+    },
+    {
+      "id": "forest_junction_3",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 24,
+      "z": 88,
+      "clear_of_bases": true
+    },
+    {
+      "id": "forest_junction_4",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 88,
+      "z": 24,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "forest_ramp_1",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 59.4,
+      "z": 84.2,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "forest_ramp_2",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 34.9,
+      "z": 154.7,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "forest_ramp_3",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 141.1,
+      "z": 21.3,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "forest_ramp_4",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 52.7,
+      "z": 183.5,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "forest_ramp_5",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 113.9,
+      "z": 35.7,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "forest_ramp_6",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 155.3,
+      "z": 134.3,
+      "clear_of_bases": true
+    }
+  ]
 }

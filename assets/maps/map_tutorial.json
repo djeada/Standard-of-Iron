@@ -140,6 +140,18 @@
       "x": 80,
       "z": 44,
       "radius": 5
+    },
+    {
+      "id": "north_west_grove",
+      "radius": 7,
+      "x": 11,
+      "z": 12
+    },
+    {
+      "id": "south_east_grove",
+      "radius": 6.5,
+      "x": 85,
+      "z": 85
     }
   ],
   "spawns": [
@@ -743,5 +755,50 @@
     "stone": 40,
     "iron": 40
   },
-  "theme": "Learn the trade of war before Rome comes looking for you."
+  "theme": "Learn the trade of war before Rome comes looking for you.",
+  "roads": [
+    {
+      "end": [
+        68,
+        36.5
+      ],
+      "id": "camp_track",
+      "start": [
+        37,
+        62
+      ],
+      "style": "default",
+      "waypoints": [
+        [
+          37,
+          62
+        ],
+        [
+          42,
+          57
+        ],
+        [
+          51,
+          55.5
+        ],
+        [
+          58,
+          50
+        ],
+        [
+          64,
+          46
+        ],
+        [
+          67.5,
+          40
+        ],
+        [
+          68,
+          36.5
+        ]
+      ],
+      "width": 3.2
+    }
+  ]
 }

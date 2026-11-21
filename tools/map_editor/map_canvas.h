@@ -1,8 +1,10 @@
 #pragma once
 
+#include <QElapsedTimer>
 #include <QPoint>
 #include <QPolygonF>
 #include <QSizeF>
+#include <QTimer>
 #include <QWidget>
 
 #include <array>
@@ -13,6 +15,7 @@
 #include "map_data.h"
 #include "mission_data.h"
 #include "tool_panel.h"
+#include "world_backdrop.h"
 
 namespace MapEditor {
 
@@ -83,6 +86,12 @@ public:
 
   [[nodiscard]] static QString layer_label(int layer);
 
+  void set_world_view(bool enabled);
+  [[nodiscard]] bool world_view() const { return m_world_view; }
+  void set_living_world(bool enabled);
+  [[nodiscard]] bool living_world() const { return m_living_world; }
+  [[nodiscard]] bool world_backdrop_ready() const { return m_backdrop.ok(); }
+
 signals:
   void element_double_clicked(int element_type, int index);
   void grid_double_clicked();
@@ -112,6 +121,12 @@ private:
   [[nodiscard]] QPointF clamp_to_grid(const QPointF& grid_pos) const;
 
   void draw_grid(QPainter& painter);
+  void draw_world(QPainter& painter);
+  void draw_world_frame(QPainter& painter);
+  [[nodiscard]] QRectF map_rect_px() const;
+  [[nodiscard]] bool painting_world() const;
+  void schedule_world_backdrop();
+  void start_world_backdrop();
   void draw_fog_zones(QPainter& painter);
   void draw_category(QPainter& painter, int kind);
   void draw_one_element(QPainter& painter, const ElementRef& ref);
@@ -251,6 +266,17 @@ private:
   std::array<int, k_element_kind_count> m_element_counts{};
 
   std::array<bool, LayerCount> m_layer_visible{};
+
+  bool m_world_view = true;
+  bool m_living_world = true;
+  WorldBackdrop m_backdrop;
+  QTimer m_backdrop_debounce;
+  QTimer m_ambient_timer;
+  QElapsedTimer m_world_clock;
+  quint64 m_backdrop_generation = 0;
+  bool m_backdrop_running = false;
+  bool m_backdrop_stale = false;
+  qint64 m_last_paint_ms = 0;
 
   int m_current_player_id = 0;
   QString m_current_nation;

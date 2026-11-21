@@ -32,7 +32,7 @@ void flush_shadow_batch(HumanoidShadowBatch& batch, Render::GL::ISubmitter& out)
     return;
   }
 
-  auto* renderer = dynamic_cast<Render::GL::Renderer*>(&out);
+  auto* renderer = dynamic_cast<Render::GL::Renderer*>(out.unwrap_submitter());
   if (renderer == nullptr) {
     return;
   }

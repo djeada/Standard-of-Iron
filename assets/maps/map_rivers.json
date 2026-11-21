@@ -1583,6 +1583,118 @@
       "z": 128,
       "scale": 1.0,
       "rotation": 3.26
+    },
+    {
+      "type": "boulder",
+      "x": 74.9,
+      "z": 28.22,
+      "scale": 1.2,
+      "rotation": 4.78,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 89.01,
+      "z": 43.71,
+      "scale": 1.06,
+      "rotation": 3.169,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 90.15,
+      "z": 47.36,
+      "scale": 1.36,
+      "rotation": 3.056,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 76.69,
+      "z": 66.53,
+      "scale": 0.82,
+      "rotation": 3.61,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 91.3,
+      "z": 77.2,
+      "scale": 1.1,
+      "rotation": 4.572,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 82.88,
+      "z": 97.32,
+      "scale": 1.24,
+      "rotation": 4.51,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "boulder",
+      "x": 97.98,
+      "z": 110.21,
+      "scale": 1.0,
+      "rotation": 5.206,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 86.95,
+      "z": 130.81,
+      "scale": 1.14,
+      "rotation": 1.19,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "plant",
+      "x": 85.03,
+      "z": 134.68,
+      "scale": 0.91,
+      "rotation": 4.317,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 100.23,
+      "z": 146.24,
+      "scale": 0.91,
+      "rotation": 2.209,
+      "dressing": "rivers_riverbank_1"
+    },
+    {
+      "type": "ruins",
+      "x": 160.45,
+      "z": 98.28,
+      "scale": 0.8,
+      "rotation": 5.748,
+      "dressing": "rivers_junction_3"
+    },
+    {
+      "type": "dead_tree",
+      "x": 26.91,
+      "z": 23.78,
+      "scale": 1.0,
+      "rotation": 3.426,
+      "dressing": "rivers_ramp_3"
+    },
+    {
+      "type": "boulder",
+      "x": 144.78,
+      "z": 160.06,
+      "scale": 1.33,
+      "rotation": 6.072,
+      "dressing": "rivers_ramp_4"
+    },
+    {
+      "type": "dead_tree",
+      "x": 148.91,
+      "z": 151.12,
+      "scale": 1.0,
+      "rotation": 1.37,
+      "dressing": "rivers_ramp_4"
     }
   ],
   "firecamps": [
@@ -1690,5 +1802,111 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "from": [
+        84.2,
+        21
+      ],
+      "id": "rivers_riverbank_1",
+      "kind": "riverbank",
+      "spacing": 17,
+      "to": [
+        91.9,
+        154
+      ],
+      "clear_of_bases": true
+    },
+    {
+      "id": "rivers_junction_1",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 18,
+      "z": 88,
+      "clear_of_bases": true
+    },
+    {
+      "id": "rivers_junction_2",
+      "kind": "junction",
+      "snap": 6,
+      "style": "milestone",
+      "x": 110,
+      "z": 60,
+      "clear_of_bases": true
+    },
+    {
+      "id": "rivers_junction_3",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 158,
+      "z": 88,
+      "clear_of_bases": true
+    },
+    {
+      "id": "rivers_junction_4",
+      "kind": "junction",
+      "snap": 6,
+      "style": "shrine",
+      "x": 66,
+      "z": 116,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "rivers_ramp_1",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 34.3,
+      "z": 138.2,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "rivers_ramp_2",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 141.7,
+      "z": 37.8,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "rivers_ramp_3",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 36.8,
+      "z": 18,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "rivers_ramp_4",
+      "kind": "ramp_mouth",
+      "statue": true,
+      "x": 139.2,
+      "z": 158,
+      "clear_of_bases": true
+    },
+    {
+      "fire": false,
+      "id": "rivers_ramp_5",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 41,
+      "z": 94,
+      "clear_of_bases": true
+    },
+    {
+      "fire": true,
+      "id": "rivers_ramp_6",
+      "kind": "ramp_mouth",
+      "statue": false,
+      "x": 135,
+      "z": 82,
+      "clear_of_bases": true
+    }
+  ]
 }
