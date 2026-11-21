@@ -21,7 +21,11 @@ namespace Game::Systems {
 [[nodiscard]] inline auto signed_yaw_delta(float from_degrees,
                                            float to_degrees) noexcept -> float {
 
-  return std::remainder(to_degrees - from_degrees, 360.0F);
+  float const delta = to_degrees - from_degrees;
+  if (delta >= -180.0F && delta <= 180.0F) {
+    return delta;
+  }
+  return std::remainder(delta, 360.0F);
 }
 
 [[nodiscard]] inline auto turn_yaw_toward(float current_degrees,

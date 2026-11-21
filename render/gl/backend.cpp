@@ -485,6 +485,9 @@ void Backend::update_contact_shadow_uniforms() {
 void Backend::begin_frame() {
 
   drain_deferred_gl_deletes();
+  if (m_terrain_pipeline != nullptr) {
+    m_terrain_pipeline->m_frame_ground_cover = {};
+  }
 
   sync_graphics_profile();
   if (m_viewport_width > 0 && m_viewport_height > 0) {
@@ -749,6 +752,7 @@ namespace {
 constexpr float k_shadow_min_caster_texels = 0.75F;
 constexpr float k_shadow_light_follow_cos = 0.99999848F;
 constexpr double k_shadow_cache_triangles_per_texel = 0.1;
+constexpr float k_shadow_flat_terrain_relief = 0.30F;
 constexpr std::size_t k_shadow_min_instanced_run = 2;
 constexpr float k_shadow_receiver_margin_texels = 16.0F;
 
@@ -949,9 +953,15 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         add_static_caster(part->mesh, part->world);
       }
     } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
-      if (!terrain->horizon_dressing) {
-        add_static_caster(terrain->mesh, terrain->model, true);
+      if (terrain->horizon_dressing) {
+        continue;
       }
+      const auto relief = m_shadow_terrain_height_cache.find(terrain->mesh);
+      if (relief != m_shadow_terrain_height_cache.end() &&
+          relief->second.second - relief->second.first < k_shadow_flat_terrain_relief) {
+        continue;
+      }
+      add_static_caster(terrain->mesh, terrain->model, true);
     }
   }
   std::sort(m_shadow_static_casters.begin(),
@@ -1725,8 +1735,28 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
 
   draw_pending_static_batch();
 
+  m_opaque_first_batches.assign(prepared_batches.size(), 0U);
+  for (std::size_t early = 0; early < prepared_batches.size(); ++early) {
+    const PreparedBatch& prepared = prepared_batches[early];
+    if (draw_cmd_type(queue.get_sorted(prepared.start)) !=
+        DrawCmdType::RiggedCreature) {
+      continue;
+    }
+    breakdown_enter(DrawCmdType::RiggedCreature);
+    draw_tally.set_type(static_cast<std::size_t>(DrawCmdType::RiggedCreature));
+    execute_rigged_commands(prepared, context);
+    for (std::size_t executed = 0; executed < prepared.count; ++executed) {
+      m_frame_tracker.record_executed();
+    }
+    m_opaque_first_batches[early] = 1U;
+  }
+
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
+    if (m_opaque_first_batches[batch_index] != 0U) {
+      ++batch_index;
+      continue;
+    }
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
     const auto& cmd = queue.get_sorted(i);

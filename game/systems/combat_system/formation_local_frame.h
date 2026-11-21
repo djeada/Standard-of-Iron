@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <numbers>
 #include <utility>
 
@@ -38,12 +39,28 @@ find_live_slot(const FormationCombat::FormationLayout& layout,
                                                                           : nullptr;
 }
 
+struct YawBasis {
+  float sin_yaw{0.0F};
+  float cos_yaw{1.0F};
+};
+
+[[nodiscard]] inline auto yaw_basis(float yaw_degrees) -> YawBasis {
+  thread_local float cached_degrees = std::numeric_limits<float>::quiet_NaN();
+  thread_local YawBasis cached;
+  if (yaw_degrees != cached_degrees) {
+    float const yaw = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
+    cached = {std::sin(yaw), std::cos(yaw)};
+    cached_degrees = yaw_degrees;
+  }
+  return cached;
+}
+
 [[nodiscard]] inline auto local_to_world(const Engine::Core::TransformComponent& actor,
                                          float local_x,
                                          float local_z) -> QVector3D {
-  float const yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(yaw);
-  float const cos_yaw = std::cos(yaw);
+  auto const basis = yaw_basis(actor.rotation.y);
+  float const sin_yaw = basis.sin_yaw;
+  float const cos_yaw = basis.cos_yaw;
   return {actor.position.x + cos_yaw * local_x + sin_yaw * local_z,
           actor.position.y,
           actor.position.z - sin_yaw * local_x + cos_yaw * local_z};
@@ -55,9 +72,9 @@ local_contact_vector(const Engine::Core::TransformComponent& actor,
                      float source_local_z,
                      float target_world_x,
                      float target_world_z) -> LocalContactVector {
-  float const actor_yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(actor_yaw);
-  float const cos_yaw = std::cos(actor_yaw);
+  auto const basis = yaw_basis(actor.rotation.y);
+  float const sin_yaw = basis.sin_yaw;
+  float const cos_yaw = basis.cos_yaw;
   float const source_world_x =
       actor.position.x + cos_yaw * source_local_x + sin_yaw * source_local_z;
   float const source_world_z =
@@ -79,9 +96,9 @@ local_contact_vector(const Engine::Core::TransformComponent& actor,
 world_vector_to_local(const Engine::Core::TransformComponent& actor,
                       float world_x,
                       float world_z) -> std::pair<float, float> {
-  float const yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(yaw);
-  float const cos_yaw = std::cos(yaw);
+  auto const basis = yaw_basis(actor.rotation.y);
+  float const sin_yaw = basis.sin_yaw;
+  float const cos_yaw = basis.cos_yaw;
   return {cos_yaw * world_x - sin_yaw * world_z, sin_yaw * world_x + cos_yaw * world_z};
 }
 

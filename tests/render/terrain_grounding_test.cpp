@@ -83,11 +83,40 @@ TEST(TerrainGroundingTest, TriangulatedHeightHitsVerticesAndIsPlanarPerTriangle)
   EXPECT_NEAR(
       Game::Map::sample_triangulated_height(heights.data(), 2, 2, 1, 1), 0.5F, k_eps);
 
+  EXPECT_TRUE(Game::Map::quad_splits_along_rising_diagonal(0.0F, 1.0F, 3.0F, 0.5F));
   EXPECT_NEAR(Game::Map::sample_triangulated_height(heights.data(), 2, 2, 0.5F, 0.5F),
+              0.25F,
+              k_eps)
+      << "the crease runs along the flatter diagonal, between the 0 and 0.5 corners";
+  float const bilinear = (0.0F + 1.0F + 3.0F + 0.5F) * 0.25F;
+  EXPECT_GT(std::abs(0.25F - bilinear), 0.5F);
+}
+
+TEST(TerrainGroundingTest, NearlyPlanarQuadsKeepTheFallingDiagonal) {
+  std::array<float, 4> const gentle{0.00F, 0.05F, 0.08F, 0.02F};
+  EXPECT_FALSE(Game::Map::quad_splits_along_rising_diagonal(
+      gentle[0], gentle[1], gentle[2], gentle[3]))
+      << "ground irregularity must not reshuffle the surface troops stand on";
+  EXPECT_NEAR(Game::Map::sample_triangulated_height(gentle.data(), 2, 2, 0.5F, 0.5F),
+              0.5F * (gentle[1] + gentle[2]),
+              k_eps);
+}
+
+TEST(TerrainGroundingTest, RimQuadsCreaseAlongTheContourInBothDirections) {
+  std::array<float, 4> const falling{2.0F, 2.0F, 2.0F, 0.0F};
+  EXPECT_FALSE(Game::Map::quad_splits_along_rising_diagonal(
+      falling[0], falling[1], falling[2], falling[3]));
+  EXPECT_NEAR(Game::Map::sample_triangulated_height(falling.data(), 2, 2, 0.25F, 0.25F),
               2.0F,
               k_eps);
-  float const bilinear = (0.0F + 1.0F + 3.0F + 0.5F) * 0.25F;
-  EXPECT_GT(std::abs(2.0F - bilinear), 0.5F);
+
+  std::array<float, 4> const rising{2.0F, 0.0F, 2.0F, 2.0F};
+  EXPECT_TRUE(Game::Map::quad_splits_along_rising_diagonal(
+      rising[0], rising[1], rising[2], rising[3]));
+  EXPECT_NEAR(Game::Map::sample_triangulated_height(rising.data(), 2, 2, 0.25F, 0.75F),
+              2.0F,
+              k_eps)
+      << "a fixed diagonal left a flat plateau triangle sagging into this cliff face";
 }
 
 TEST(TerrainGroundingTest, SubdividedMeshQuadsLieExactlyOnTheCoarseTriangles) {
@@ -110,9 +139,15 @@ TEST(TerrainGroundingTest, SubdividedMeshQuadsLieExactlyOnTheCoarseTriangles) {
         for (int sample = 0; sample < 16; ++sample) {
           float const u = lcg(state);
           float const v = lcg(state);
-          float const drawn = (u + v <= 1.0F)
-                                  ? a + (b - a) * u + (c - a) * v
-                                  : d + (c - d) * (1.0F - u) + (b - d) * (1.0F - v);
+          float const falling = (u + v <= 1.0F)
+                                    ? a + (b - a) * u + (c - a) * v
+                                    : d + (c - d) * (1.0F - u) + (b - d) * (1.0F - v);
+          float const rising_split =
+              (u >= v) ? a + (b - a) * u + (d - b) * v : a + (d - c) * u + (c - a) * v;
+          float const drawn = Game::Map::quad_splits_along_rising_diagonal(
+                                  heights[0], heights[1], heights[2], heights[3])
+                                  ? rising_split
+                                  : falling;
           EXPECT_NEAR(drawn, h(x0 + 0.5F * u, z0 + 0.5F * v), 1.0e-4F);
         }
       }

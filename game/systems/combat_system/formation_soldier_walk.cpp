@@ -121,8 +121,9 @@ auto measure_timing(const SlotWalk& walk,
                std::max(walk.march_speed, walk.squad_speed) *
                    (walk.mounted ? k_mounted_catch_up_headroom : 1.15F)) *
       (0.94F + timing.variation * 0.12F);
-  timing.root_travel = std::hypot(walk.actor.position.x - walk.formation.motion_root_x,
-                                  walk.actor.position.z - walk.formation.motion_root_z);
+  timing.root_travel = Game::Systems::planar_length(
+      walk.actor.position.x - walk.formation.motion_root_x,
+      walk.actor.position.z - walk.formation.motion_root_z);
   timing.reset =
       previous == nullptr || !previous->alive || !previous->world_motion_valid ||
       !walk.formation.motion_root_valid ||
@@ -182,7 +183,7 @@ auto foreign_push_direction(const SlotWalk& walk,
     if ((across * across) + (scaled_along * scaled_along) >= crowd_radius_sq_clear) {
       continue;
     }
-    float const separation = std::hypot(across, scaled_along);
+    float const separation = Game::Systems::planar_length(across, scaled_along);
     if (separation >= crowd_radius) {
       continue;
     }
@@ -192,7 +193,7 @@ auto foreign_push_direction(const SlotWalk& walk,
       away_x = std::cos(angle);
       away_z = std::sin(angle);
     } else {
-      float const length = std::hypot(away_x, away_z);
+      float const length = Game::Systems::planar_length(away_x, away_z);
       away_x /= length;
       away_z /= length;
     }
@@ -200,7 +201,7 @@ auto foreign_push_direction(const SlotWalk& walk,
     push_x += away_x * overlap;
     push_z += away_z * overlap;
   }
-  float const push = std::hypot(push_x, push_z);
+  float const push = Game::Systems::planar_length(push_x, push_z);
   if (push > 1.0F) {
     push_x /= push;
     push_z /= push;
@@ -221,7 +222,7 @@ void relax_crowd_offset(const SlotWalk& walk,
   float crowd_step_z = previous.crowd_offset_z * (relax - 1.0F) +
                        foreign_push_z * k_foreign_push_speed * dt;
 
-  float const crowd_step = std::hypot(crowd_step_x, crowd_step_z);
+  float const crowd_step = Game::Systems::planar_length(crowd_step_x, crowd_step_z);
   float const budget = std::max(0.0F, walk.crowd_step_budget);
   if (crowd_step > budget && crowd_step > 1.0e-6F) {
     crowd_step_x *= budget / crowd_step;
@@ -229,7 +230,8 @@ void relax_crowd_offset(const SlotWalk& walk,
   }
   soldier.crowd_offset_x = previous.crowd_offset_x + crowd_step_x;
   soldier.crowd_offset_z = previous.crowd_offset_z + crowd_step_z;
-  float const crowd_offset = std::hypot(soldier.crowd_offset_x, soldier.crowd_offset_z);
+  float const crowd_offset =
+      Game::Systems::planar_length(soldier.crowd_offset_x, soldier.crowd_offset_z);
   float const crowd_limit = walk.spacing * k_crowd_offset_max_spacing;
   if (crowd_offset > crowd_limit && crowd_offset > 0.0001F) {
     soldier.crowd_offset_x *= crowd_limit / crowd_offset;
@@ -333,7 +335,7 @@ void keep_out_of_buildings(const SlotWalk& walk, QVector3D& destination) {
   float const from_z = walk.actor.position.z;
   float const dx = destination.x() - from_x;
   float const dz = destination.z() - from_z;
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   if (distance < 1.0e-3F) {
     return;
   }
@@ -364,7 +366,7 @@ auto clear_reach(const std::vector<SolidBody>& bodies,
                  float from_z,
                  float step_x,
                  float step_z) -> float {
-  float const step = std::hypot(step_x, step_z);
+  float const step = Game::Systems::planar_length(step_x, step_z);
   if (step < 1.0e-5F) {
     return 0.0F;
   }
@@ -382,7 +384,7 @@ auto stop_step_at_buildings(const SlotWalk& walk,
                             const Soldier& soldier,
                             float& step_x,
                             float& step_z) -> bool {
-  float const step = std::hypot(step_x, step_z);
+  float const step = Game::Systems::planar_length(step_x, step_z);
   if (walk.solid_bodies == nullptr || walk.solid_bodies->empty() || step < 1.0e-5F) {
     return false;
   }
@@ -430,10 +432,12 @@ auto worker_waypoint(const SlotWalk& walk,
     }
     goal = *reachable;
     destination = pathfinder.path_waypoint_world_position(goal);
-    held_short = std::hypot(destination.x() - from.x(), destination.z() - from.z()) <
+    held_short = Game::Systems::planar_length(destination.x() - from.x(),
+                                              destination.z() - from.z()) <
                  k_slot_settle_distance;
   }
-  if (std::hypot(destination.x() - from.x(), destination.z() - from.z()) <= 0.2F) {
+  if (Game::Systems::planar_length(destination.x() - from.x(),
+                                   destination.z() - from.z()) <= 0.2F) {
     return destination;
   }
   auto const route = pathfinder.find_path(start, goal, walk.passability);
@@ -467,7 +471,7 @@ auto aim_at_slot(const SlotWalk& walk,
     float const march_z =
         (walk.actor.position.z - walk.formation.motion_root_z) / timing.dt -
         turn_rate * (destination.x() - walk.actor.position.x);
-    float const march = std::hypot(march_x, march_z);
+    float const march = Game::Systems::planar_length(march_x, march_z);
     if (march > k_side_step_min_speed) {
       auto const shift = props.side_step(destination.x(),
                                          destination.z(),
@@ -496,8 +500,8 @@ auto aim_at_slot(const SlotWalk& walk,
 
   SlotAim aim;
   aim.obstructed = destination != slot_destination || previous.relocation_blocked;
-  aim.slot_distance =
-      std::hypot(destination.x() - soldier.world_x, destination.z() - soldier.world_z);
+  aim.slot_distance = Game::Systems::planar_length(destination.x() - soldier.world_x,
+                                                   destination.z() - soldier.world_z);
   bool const walled_off =
       walk.solid_bodies != nullptr && clear_fraction(*walk.solid_bodies,
                                                      soldier.world_x,
@@ -559,7 +563,7 @@ auto aim_at_slot(const SlotWalk& walk,
   }
   aim.dx = destination.x() - soldier.world_x;
   aim.dz = destination.z() - soldier.world_z;
-  aim.distance = std::hypot(aim.dx, aim.dz);
+  aim.distance = Game::Systems::planar_length(aim.dx, aim.dz);
   aim.destination = destination;
   return aim;
 }
@@ -591,8 +595,8 @@ auto catch_direction(const SlotWalk& walk,
 
   float const radial_x = soldier.world_x - walk.actor.position.x;
   float const radial_z = soldier.world_z - walk.actor.position.z;
-  float const radius = std::hypot(radial_x, radial_z);
-  float const target_radius = std::hypot(aim.target_x, aim.target_z);
+  float const radius = Game::Systems::planar_length(radial_x, radial_z);
+  float const target_radius = Game::Systems::planar_length(aim.target_x, aim.target_z);
   if (!walk.engaged && std::abs(aim.heading_change) > 0.05F && radius > 0.5F &&
       target_radius > 0.5F) {
     float const angle = std::atan2(radial_z * aim.target_x - radial_x * aim.target_z,
@@ -621,7 +625,7 @@ auto catch_direction(const SlotWalk& walk,
     if ((away_x * away_x) + (away_z * away_z) >= personal_space_sq_clear) {
       continue;
     }
-    float const separation = std::hypot(away_x, away_z);
+    float const separation = Game::Systems::planar_length(away_x, away_z);
     if (separation > 0.001F && separation < personal_space) {
       bool const approaching = catching.x * away_x + catching.z * away_z < 0.0F;
       if (approaching) {
@@ -641,7 +645,7 @@ auto catch_direction(const SlotWalk& walk,
       }
     }
   }
-  float const catch_length = std::hypot(catching.x, catching.z);
+  float const catch_length = Game::Systems::planar_length(catching.x, catching.z);
   if (catch_length > 0.0001F) {
     catching.x /= catch_length;
     catching.z /= catch_length;
@@ -662,7 +666,8 @@ auto plan_steering(const SlotWalk& walk,
   Steering steering;
   steering.desired_x = aim.slot_velocity_x + catching.x * catch_up_speed;
   steering.desired_z = aim.slot_velocity_z + catching.z * catch_up_speed;
-  steering.desired_magnitude = std::hypot(steering.desired_x, steering.desired_z);
+  steering.desired_magnitude =
+      Game::Systems::planar_length(steering.desired_x, steering.desired_z);
   if (steering.desired_magnitude > timing.max_speed &&
       steering.desired_magnitude > 0.0001F) {
     float const scale = timing.max_speed / steering.desired_magnitude;
@@ -698,8 +703,8 @@ void steer_mounted(Soldier& soldier,
         aim.distance < k_mounted_slot_behind_distance;
     float const heading_target =
         slot_behind ? timing.desired_facing : steering.facing_target;
-    float const ground_speed =
-        std::hypot(soldier.world_velocity_x, soldier.world_velocity_z);
+    float const ground_speed = Game::Systems::planar_length(soldier.world_velocity_x,
+                                                            soldier.world_velocity_z);
     float const arc_rate =
         ground_speed / k_mounted_turn_radius * 180.0F / std::numbers::pi_v<float>;
     float const turn_rate = std::min(k_mounted_turn_cap_degrees,
@@ -764,7 +769,7 @@ void steer_on_foot(const SlotWalk& walk,
   }
   float const velocity_dx = steering.desired_x - soldier.world_velocity_x;
   float const velocity_dz = steering.desired_z - soldier.world_velocity_z;
-  float const velocity_change = std::hypot(velocity_dx, velocity_dz);
+  float const velocity_change = Game::Systems::planar_length(velocity_dx, velocity_dz);
   float const velocity_blend =
       velocity_change > 0.0001F
           ? std::min(1.0F, steering.acceleration_step / velocity_change)
@@ -796,16 +801,19 @@ auto plan_step(const SlotWalk& walk,
       plan.z *= catch_up_limit / aim.distance;
     }
   } else if (!aim.detoured && walk.foreign_neighbors.empty() &&
-             std::hypot(soldier.crowd_offset_x, soldier.crowd_offset_z) <
+             Game::Systems::planar_length(soldier.crowd_offset_x,
+                                          soldier.crowd_offset_z) <
                  k_crowd_offset_settled &&
              aim.distance > 0.0001F && aim.distance < k_slot_settle_distance &&
-             (!walk.mounted || std::hypot(aim.slot_velocity_x, aim.slot_velocity_z) <
-                                   k_mounted_settle_slot_speed)) {
+             (!walk.mounted ||
+              Game::Systems::planar_length(aim.slot_velocity_x, aim.slot_velocity_z) <
+                  k_mounted_settle_slot_speed)) {
     plan.x = aim.dx;
     plan.z = aim.dz;
-    float const settle_limit = (std::hypot(aim.slot_velocity_x, aim.slot_velocity_z) +
-                                timing.max_speed * k_obstacle_catch_up_ratio) *
-                               timing.dt;
+    float const settle_limit =
+        (Game::Systems::planar_length(aim.slot_velocity_x, aim.slot_velocity_z) +
+         timing.max_speed * k_obstacle_catch_up_ratio) *
+        timing.dt;
     if (aim.distance > settle_limit) {
       plan.x *= settle_limit / aim.distance;
       plan.z *= settle_limit / aim.distance;
@@ -813,7 +821,7 @@ auto plan_step(const SlotWalk& walk,
       plan.settled = true;
     }
   }
-  plan.wanted = std::hypot(plan.x, plan.z);
+  plan.wanted = Game::Systems::planar_length(plan.x, plan.z);
   return plan;
 }
 
@@ -842,9 +850,9 @@ void constrain_step(const SlotWalk& walk,
   if (props.push_out(landing_x, landing_z, prop_clearance_of(walk))) {
     float to_x = landing_x - soldier.world_x;
     float to_z = landing_z - soldier.world_z;
-    float const reach = std::hypot(to_x, to_z);
+    float const reach = Game::Systems::planar_length(to_x, to_z);
     float const limit =
-        std::max(std::hypot(plan.x, plan.z),
+        std::max(Game::Systems::planar_length(plan.x, plan.z),
                  timing.max_speed * k_obstacle_catch_up_ratio * timing.dt);
     if (reach > limit && reach > 0.0001F) {
       to_x *= limit / reach;
@@ -875,7 +883,7 @@ void land_step(const SlotWalk& walk,
                const WalkTiming& timing) {
   float const dt = timing.dt;
   bool const stopped_dead =
-      plan.wanted > 1.0e-4F && std::hypot(plan.x, plan.z) < 1.0e-4F;
+      plan.wanted > 1.0e-4F && Game::Systems::planar_length(plan.x, plan.z) < 1.0e-4F;
   float const progress = aim.distance > 1.0e-4F
                              ? (plan.x * aim.dx + plan.z * aim.dz) / aim.distance
                              : 0.0F;
@@ -909,7 +917,8 @@ void land_step(const SlotWalk& walk,
       slip_x = landing_x - soldier.world_x;
       slip_z = landing_z - soldier.world_z;
     }
-    if (std::hypot(slip_x, slip_z) > k_stranded_walk_progress * wanted) {
+    if (Game::Systems::planar_length(slip_x, slip_z) >
+        k_stranded_walk_progress * wanted) {
       plan.x = slip_x;
       plan.z = slip_z;
     } else if (lost && soldier.stranded_seconds >= k_walk_through_after_seconds) {
@@ -928,7 +937,7 @@ void land_step(const SlotWalk& walk,
     }
     float const back_x = ground.x() - soldier.world_x;
     float const back_z = ground.z() - soldier.world_z;
-    float const back = std::hypot(back_x, back_z);
+    float const back = Game::Systems::planar_length(back_x, back_z);
     if (back > 1.0e-4F) {
       float const pace =
           std::min(back, timing.max_speed * k_obstacle_catch_up_ratio * dt);
@@ -938,7 +947,7 @@ void land_step(const SlotWalk& walk,
   }
   if (walk.worker) {
 
-    float const step = std::hypot(plan.x, plan.z);
+    float const step = Game::Systems::planar_length(plan.x, plan.z);
     float const budget = std::max(walk.march_speed, walk.squad_speed) *
                          (walk.walking_to_work_posts ? 1.0F : 1.2F) * dt;
     if (step > budget && step > 0.0001F) {
@@ -989,12 +998,12 @@ void update_reforming_flags(Soldier& soldier,
                             const SlotAim& aim,
                             const StepPlan& plan,
                             const WalkTiming& timing) {
-  float const remaining = std::hypot(aim.destination.x() - soldier.world_x,
-                                     aim.destination.z() - soldier.world_z);
+  float const remaining = Game::Systems::planar_length(
+      aim.destination.x() - soldier.world_x, aim.destination.z() - soldier.world_z);
   float const facing_error =
       std::abs(signed_yaw_delta(soldier.world_yaw, timing.desired_facing));
-  soldier.reforming =
-      remaining > 0.06F || facing_error > 5.0F || std::hypot(plan.x, plan.z) > 0.001F;
+  soldier.reforming = remaining > 0.06F || facing_error > 5.0F ||
+                      Game::Systems::planar_length(plan.x, plan.z) > 0.001F;
   if (std::abs(aim.heading_change) < 0.05F && remaining < 0.08F &&
       facing_error < 3.0F) {
     soldier.turning = false;

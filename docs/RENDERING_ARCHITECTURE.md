@@ -468,6 +468,8 @@ Every cell scatter already jitters each instance anywhere in its cell, so repeti
 
 ### River mist
 
+Valley fog (`valley_fog()`) is a thin bank that gathers in patches: its opacity is capped at `k_ground_fog_max_opacity` and broken up by the square of a drifting noise field, because a uniform veil over all low ground tinted whole river and forest maps teal.
+
 `post_composite.frag` lays water mist over every pixel within `k_mist_bank_reach` (7 m) of a river or lake and below `k_mist_water_ceiling` (1.7 m) above the bank, at up to `k_water_mist_strength` (0.42). The amount is applied at the surface the pixel shows, so it also has to account for how much mist lies between the lens and that surface: it is scaled by `1 - exp(-view_distance / k_mist_view_reach)` with a 9 m reach. Without that, a chase camera standing on a bridge saw the commander and the men beside him, three metres away, through the same milky veil as the far bank.
 
 ## Environment lighting
@@ -511,6 +513,14 @@ Any change to these constants needs the night and dusk check: the `lighting_moon
 ### Meadow drift
 
 At gameplay zoom (40–90 m) the terrain's fine detail is damped for readability (`ground_tactical_distance()`), and the regional and patch fields vary over hundreds of metres, so a battlefield read as one flat green. `terrain_chunk.frag` blends the grass between a sun-cured and a deep-sward tone using two extra microdetail samples at about 33 m and 12 m wavelengths (`k_soi_meadow_frequency`), warped by the existing `domain_warp`. It changes colour only, never relief, so troops stay as readable as before.
+
+### Painted sward
+
+Low-contrast noise read as green felt from the play camera, so the grass surface is drawn as overlapping tufts instead. `soi_painted_sward()` in `terrain_chunk.frag` places one fan of four to six blades per jittered cell, dark at the root and light at the tip, all leaning along `k_soi_sward_lean` so the tips point up-screen at the default yaw. A coarse layer (`k_soi_sward_frequency`, about half a metre per tuft) carries the look at gameplay zoom and a fine layer adds blades up close; both fade with the pixel footprint. In the dry, rocky and alpine ground types the same fans become straw tufts over open earth (`steppe`), which is what separates those biomes from the green ones at a glance.
+
+### Rock strata
+
+Steep faces multiply the rock colour by two beds of height bands (`k_soi_strata_frequency` and a finer one at 3.3 times that), each layer with its own tone, a light lip and a dark undercut, wandering with two low-frequency noise samples. A slope that faces away from the sun is already unlit, so it takes only `k_soi_unlit_shadow_share` of the cast shadow; applying the full shadow tint on top of an unlit face turned hillsides into black slabs.
 
 ### Rock projection, snow and ground patchwork
 
@@ -593,6 +603,19 @@ The current profile values are:
 - Ultra: `1.00`.
 
 Reducing this density should not alter walkability, cover rules, terrain height, or other simulation facts.
+
+### Ground cover
+
+`BiomeRenderer` fills one instance stream with two kinds of plant, both drawn from the seven-blade tuft mesh built in `TerrainPipeline::initialize_grass_geometry()`:
+
+- grass tufts, a couple per square metre in drifts shaped by `grass_patch_density()`, on flat ground and on hills thinned by slope;
+- wildflowers, gathered into drifts and clumps by `scatter_flowers()` from a small palette per ground type (`flower_palette_for()`).
+
+The kind rides in the integer part of the sway strength (`k_instance_kind_stride`; `k_kind_stride` in `grass_instanced.vert`). For a flower the vertex shader folds the same mesh into a stem and a flat rosette of petals, which is the shape a top-down camera actually sees.
+
+The whole stream is capped at `k_grass_instance_budget` scaled by the profile's grass density, so an 800-cell campaign map thins its sward rather than growing its buffers.
+
+Buildings are placed after the grass is generated. The grass shader therefore samples the terrain cover mask (`u_cover_tex`, stashed per frame in `TerrainPipeline::m_frame_ground_cover`) and collapses any tuft or flower that stands on a yard or at a wall foot.
 
 ## Nation and equipment appearance
 

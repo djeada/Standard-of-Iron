@@ -17,6 +17,7 @@
 #include "formation_slot_directive.h"
 #include "formation_structure_facade.h"
 #include "formation_surround.h"
+#include "game/util/planar_math.h"
 #include "target_rules.h"
 
 namespace Game::Systems::Combat {
@@ -283,8 +284,9 @@ auto surrounds_its_opponent(Engine::Core::World& world,
           ? world.try_get<Engine::Core::TransformComponent>(opponent->get_id())
           : nullptr;
   if (actor == nullptr || target == nullptr ||
-      std::hypot(actor->position.x - target->position.x,
-                 actor->position.z - target->position.z) > k_surround_reach) {
+      Game::Systems::planar_length(actor->position.x - target->position.x,
+                                   actor->position.z - target->position.z) >
+          k_surround_reach) {
     return nullptr;
   }
   return opponent;
@@ -327,7 +329,7 @@ void enlist_surrounders(Engine::Core::World& world,
 
 auto squad_speed_of(Engine::Core::World& world, Engine::Core::EntityID id) -> float {
   if (auto const* movement = world.try_get<Engine::Core::MovementComponent>(id)) {
-    return std::hypot(movement->get_vx(), movement->get_vz());
+    return Game::Systems::planar_length(movement->get_vx(), movement->get_vz());
   }
   return 0.0F;
 }

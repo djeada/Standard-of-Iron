@@ -8,6 +8,13 @@
 
 namespace Game::Map {
 
+inline constexpr float k_quad_diagonal_flip_margin = 0.12F;
+
+[[nodiscard]] inline auto
+quad_splits_along_rising_diagonal(float h00, float h10, float h01, float h11) -> bool {
+  return std::abs(h00 - h11) + k_quad_diagonal_flip_margin < std::abs(h10 - h01);
+}
+
 [[nodiscard]] inline auto sample_triangulated_height(
     const float* heights, int width, int height, float gx, float gz) -> float {
   if (heights == nullptr || width <= 0 || height <= 0) {
@@ -26,13 +33,19 @@ namespace Game::Map {
     return heights[static_cast<std::size_t>(z) * static_cast<std::size_t>(width) +
                    static_cast<std::size_t>(x)];
   };
+  float const h00 = at(x0, z0);
   float const h10 = at(x0 + 1, z0);
   float const h01 = at(x0, z0 + 1);
+  float const h11 = at(x0 + 1, z0 + 1);
+  if (quad_splits_along_rising_diagonal(h00, h10, h01, h11)) {
+    if (tx >= tz) {
+      return h00 + (h10 - h00) * tx + (h11 - h10) * tz;
+    }
+    return h00 + (h11 - h01) * tx + (h01 - h00) * tz;
+  }
   if (tx + tz <= 1.0F) {
-    float const h00 = at(x0, z0);
     return h00 + (h10 - h00) * tx + (h01 - h00) * tz;
   }
-  float const h11 = at(x0 + 1, z0 + 1);
   return h11 + (h01 - h11) * (1.0F - tx) + (h10 - h11) * (1.0F - tz);
 }
 

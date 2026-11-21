@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "game/core/nav_profile.h"
+#include "game/util/planar_math.h"
 #include "gate_service.h"
 #include "map/forest_outline.h"
 #include "map/terrain.h"
@@ -164,7 +165,8 @@ auto Pathfinding::is_terrain_walkable(int x, int y) const -> bool {
 auto Pathfinding::is_terrain_segment_walkable(const QVector3D& from,
                                               const QVector3D& to) const -> bool {
   Point const start = world_to_grid(from.x(), from.z());
-  float const length = std::hypot(to.x() - from.x(), to.z() - from.z());
+  float const length =
+      Game::Systems::planar_length(to.x() - from.x(), to.z() - from.z());
   int const steps = std::max(1, static_cast<int>(std::ceil(length / 0.25F)));
   for (int i = 1; i <= steps; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(steps);
@@ -232,7 +234,7 @@ auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
 
   if (clearance_radius > 0.0F) {
     QVector3D const delta = to - from;
-    float const length = std::hypot(delta.x(), delta.z());
+    float const length = Game::Systems::planar_length(delta.x(), delta.z());
     float const sample_spacing = std::max(0.2F, m_grid_cell_size * 0.35F);
     int const samples =
         std::max(1, static_cast<int>(std::ceil(length / sample_spacing)));

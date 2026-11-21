@@ -8,6 +8,7 @@
 #include "game/map/bridge_geometry.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "game/util/planar_math.h"
 #include "gate_service.h"
 #include "nav_grid.h"
 #include "systems/building_collision_registry.h"
@@ -57,7 +58,7 @@ auto building_body_penetration(float x, float z, float radius) -> float {
           float center_x, float center_z, float half_x, float half_z) {
         float const dx = x - std::clamp(x, center_x - half_x, center_x + half_x);
         float const dz = z - std::clamp(z, center_z - half_z, center_z + half_z);
-        deepest = std::max(deepest, radius - std::hypot(dx, dz));
+        deepest = std::max(deepest, radius - Game::Systems::planar_length(dx, dz));
       });
   return std::max(0.0F, deepest);
 }
@@ -228,7 +229,7 @@ auto can_traverse(const QVector3D& from,
   }
 
   QVector3D const delta = to - from;
-  float const length = std::hypot(delta.x(), delta.z());
+  float const length = Game::Systems::planar_length(delta.x(), delta.z());
   float const spacing = std::max(0.2F, pathfinder->grid_cell_size() * 0.35F);
   int const samples = std::max(1, static_cast<int>(std::ceil(length / spacing)));
   for (int sample = 0; sample <= samples; ++sample) {
