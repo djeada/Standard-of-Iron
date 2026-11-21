@@ -221,6 +221,12 @@ void read_biome_scatter(const QJsonObject& obj, BiomeSettings& out) {
   if (obj.contains(PLANT_DENSITY)) {
     out.plant_density = float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
   }
+  if (obj.contains(FOREST_DENSITY)) {
+    out.forest_density =
+        std::clamp(float(obj.value(FOREST_DENSITY).toDouble(out.forest_density)),
+                   0.0F,
+                   k_max_forest_density);
+  }
   if (obj.contains(TREE_MIX)) {
 
     static constexpr std::array<std::pair<const char*, TreeSpecies>,

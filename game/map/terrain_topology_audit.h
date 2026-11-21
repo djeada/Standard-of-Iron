@@ -14,6 +14,8 @@ struct TerrainTopologyAudit {
   int tactically_unanchored_lakes = 0;
   QStringList issues;
 
+  QStringList details;
+
   [[nodiscard]] auto passed() const -> bool { return issues.isEmpty(); }
 };
 

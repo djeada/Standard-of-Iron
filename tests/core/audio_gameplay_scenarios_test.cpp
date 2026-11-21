@@ -214,6 +214,12 @@ protected:
     return CueTrace::instance().record_for(cue_id).requests;
   }
 
+  static void let_the_trace_catch_up(const char* cue_id, std::uint64_t expected) {
+    for (int attempt = 0; attempt < 400 && requests(cue_id) < expected; ++attempt) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+  }
+
   auto add_soldier(int owner_id, Game::Units::SpawnType type, float x) -> Entity* {
     auto* entity = m_world.create_entity();
     auto* transform =
@@ -392,14 +398,9 @@ TEST_F(AudioGameplayScenarioTest, BlowsOnABuildingKeepTheMeleeRhythm) {
     Game::Audio::Clock::advance_rendered(k_step);
   }
 
-  auto record =
+  let_the_trace_catch_up(Game::Audio::Cue::k_combat_hit_structure, k_blows);
+  const auto record =
       CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_structure);
-  for (int settle = 0;
-       settle < 400 && record.requests < static_cast<std::uint64_t>(k_blows);
-       ++settle) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    record = CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_structure);
-  }
   const auto held_back = record.outcomes.at(
       static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown));
   ASSERT_EQ(record.requests, static_cast<std::uint64_t>(k_blows))

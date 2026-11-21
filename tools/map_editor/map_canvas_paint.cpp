@@ -1,3 +1,4 @@
+#include <QElapsedTimer>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPainterPathStroker>
@@ -19,6 +20,7 @@
 #include "tool_catalog.h"
 #include "ui/theme.h"
 #include "wall_geometry.h"
+#include "world_sprites.h"
 
 namespace MapEditor {
 
@@ -90,12 +92,75 @@ void draw_troop_marker(QPainter& painter,
 
 } // namespace
 
+auto MapCanvas::map_rect_px() const -> QRectF {
+  if (m_map_data == nullptr) {
+    return {};
+  }
+  const GridSettings& grid = m_map_data->grid();
+  const double cell = static_cast<double>(grid_cell_size) * m_zoom;
+  if (m_map_data->uses_world_coordinates()) {
+    const double tile = std::max(static_cast<double>(grid.tile_size), 0.0001);
+    return {m_pan_offset.x() + (grid.width - (grid.width * 0.5 + 0.5) * tile) * cell,
+            m_pan_offset.y() + (grid.height - (grid.height * 0.5 + 0.5) * tile) * cell,
+            grid.width * tile * cell,
+            grid.height * tile * cell};
+  }
+  return {m_pan_offset.x(), m_pan_offset.y(), grid.width * cell, grid.height * cell};
+}
+
+auto MapCanvas::painting_world() const -> bool {
+  return m_world_view && m_map_data != nullptr && m_backdrop.ok() &&
+         m_backdrop.grid_width == m_map_data->grid().width &&
+         m_backdrop.grid_height == m_map_data->grid().height;
+}
+
+void MapCanvas::draw_world(QPainter& painter) {
+  const QRectF map_rect = map_rect_px();
+  paint_world_surround(painter, QRectF(rect()), map_rect);
+
+  painter.save();
+  painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+  painter.drawImage(map_rect, m_backdrop.image);
+  if (m_living_world) {
+    painter.setClipRect(map_rect.intersected(QRectF(rect())));
+    paint_cloud_shadows(painter,
+                        map_rect,
+                        static_cast<float>(grid_cell_size) * m_zoom,
+                        static_cast<double>(m_world_clock.elapsed()) / 1000.0,
+                        m_backdrop.night > 0.5F ? 0.14F : 0.2F);
+  }
+  painter.restore();
+}
+
+void MapCanvas::draw_world_frame(QPainter& painter) {
+  const QRectF map_rect = map_rect_px();
+  painter.save();
+  painter.setBrush(Qt::NoBrush);
+  painter.setPen(
+      QPen(QColor(12, 9, 7, 210), 5.0, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+  painter.drawRect(map_rect.adjusted(-2.5, -2.5, 2.5, 2.5));
+  painter.setPen(
+      QPen(QColor(196, 160, 98), 1.4, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+  painter.drawRect(map_rect.adjusted(-4.5, -4.5, 4.5, 4.5));
+  painter.setPen(QPen(QColor(120, 96, 60, 200), 1.0));
+  painter.drawRect(map_rect.adjusted(-0.5, -0.5, 0.5, 0.5));
+  painter.restore();
+}
+
 void MapCanvas::paintEvent(QPaintEvent*) {
+  QElapsedTimer paint_clock;
+  paint_clock.start();
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
 
-  painter.fillRect(rect(), k_canvas_background);
+  const bool world = painting_world();
+  if (world) {
+    draw_world(painter);
+  } else {
+    painter.fillRect(rect(), k_canvas_background);
+  }
   painter.setPen(QPen(k_canvas_border, 1));
+  painter.setBrush(Qt::NoBrush);
   painter.drawRect(rect().adjusted(0, 0, -1, -1));
 
   if (m_map_data == nullptr) {
@@ -105,6 +170,9 @@ void MapCanvas::paintEvent(QPaintEvent*) {
   }
 
   draw_grid(painter);
+  if (world) {
+    draw_world_frame(painter);
+  }
   draw_fog_zones(painter);
 
   for (const ElementRef& ref : m_back_order) {
@@ -136,6 +204,13 @@ void MapCanvas::paintEvent(QPaintEvent*) {
                      Qt::AlignHCenter | Qt::AlignTop,
                      "Select a tool from the panel and click to add elements");
     painter.setOpacity(1.0);
+  }
+  m_last_paint_ms = paint_clock.elapsed();
+  static const bool report_paint = qEnvironmentVariableIsSet("SOI_EDITOR_PAINT_STATS");
+  if (report_paint) {
+    qInfo("map canvas paint %lld ms (%s)",
+          static_cast<long long>(m_last_paint_ms),
+          world ? "world" : "blueprint");
   }
 }
 
@@ -174,6 +249,9 @@ void MapCanvas::draw_grid(QPainter& painter) {
   float const cell_size = grid_cell_size * m_zoom;
 
   if (cell_size <= 0.0F || grid.width <= 0 || grid.height <= 0) {
+    return;
+  }
+  if (painting_world() && m_map_data->uses_world_coordinates()) {
     return;
   }
 
@@ -218,22 +296,27 @@ void MapCanvas::draw_grid(QPainter& painter) {
     }
   };
 
-  if (minor_step < major_step && major_step % minor_step == 0) {
-    QColor minor_color = k_grid_line_color;
-    minor_color.setAlpha(k_minor_grid_alpha);
-    draw_grid_lines(minor_step, QPen(minor_color, 1));
-  }
-  draw_grid_lines(major_step, QPen(k_grid_line_color, 1));
+  const bool world = painting_world();
+  if (world) {
+    draw_grid_lines(major_step, QPen(QColor(255, 248, 228, 20), 1));
+  } else {
+    if (minor_step < major_step && major_step % minor_step == 0) {
+      QColor minor_color = k_grid_line_color;
+      minor_color.setAlpha(k_minor_grid_alpha);
+      draw_grid_lines(minor_step, QPen(minor_color, 1));
+    }
+    draw_grid_lines(major_step, QPen(k_grid_line_color, 1));
 
-  painter.setPen(QPen(k_grid_outline_color, 2));
-  painter.drawRect(
-      QRectF(start_x, start_y, grid.width * cell_size, grid.height * cell_size));
+    painter.setPen(QPen(k_grid_outline_color, 2));
+    painter.drawRect(
+        QRectF(start_x, start_y, grid.width * cell_size, grid.height * cell_size));
+  }
 
   QFont font = painter.font();
   font.setPointSize(8);
   painter.setFont(font);
 
-  painter.setPen(k_grid_text_color);
+  painter.setPen(world ? QColor(255, 246, 222, 150) : k_grid_text_color);
   const float label_y = std::clamp(start_y, clip_top, clip_bottom - 4.0F) + 11.0F;
   const float label_x = std::clamp(start_x, clip_left, clip_right - 4.0F) + 3.0F;
 
@@ -262,9 +345,11 @@ void MapCanvas::draw_grid(QPainter& painter) {
     painter.drawText(QPointF(label_x, y - 3.0F), QString::number(grid.height - i));
   }
 
-  const QPoint origin = grid_to_widget(0.0F, 0.0F);
-  painter.setPen(k_grid_text_color);
-  painter.drawText(QPointF(origin.x() - 26, origin.y() - 4), QStringLiteral("0,0"));
+  if (!world) {
+    const QPoint origin = grid_to_widget(0.0F, 0.0F);
+    painter.setPen(k_grid_text_color);
+    painter.drawText(QPointF(origin.x() - 26, origin.y() - 4), QStringLiteral("0,0"));
+  }
 }
 
 QVector<int> MapCanvas::category_draw_order(int kind) const {
@@ -347,6 +432,16 @@ void MapCanvas::draw_terrain_element(QPainter& painter, int i) {
 
   bool const is_selected = is_selected_element(0, i);
   bool const is_hovered = (m_hovered_type == 0 && m_hovered_index == i);
+
+  if (painting_world()) {
+    if (is_selected || is_hovered) {
+      const QColor ring = is_selected ? QColor(255, 222, 96) : hover_ring_color;
+      draw_terrain_outline(painter, elem, pos, QPen(QColor(10, 8, 6, 150), 4), 0.0);
+      draw_terrain_outline(painter, elem, pos, QPen(ring, 2), 0.0);
+      draw_terrain_entrances(painter, elem);
+    }
+    return;
+  }
 
   draw_terrain_feature(painter, elem, pos);
 
@@ -462,6 +557,56 @@ void MapCanvas::draw_world_prop_element(QPainter& painter, int i) {
 
   bool const is_selected = is_selected_element(1, i);
   bool const is_hovered = (m_hovered_type == 1 && m_hovered_index == i);
+  if (painting_world()) {
+    const NaturalSprite sprite = natural_sprite_for(elem.type);
+    const bool glows = elem.type == QLatin1String("firecamp") ||
+                       elem.type == QLatin1String("magic_shrine") ||
+                       elem.type == QLatin1String("cursed_gold_vein");
+    const double dusk = m_backdrop.night > 0.5F && !glows ? 0.66 : 1.0;
+    if (sprite != NaturalSprite::None) {
+      painter.save();
+      painter.setOpacity(dusk);
+      paint_natural_sprite(painter,
+                           sprite,
+                           QPointF(pos),
+                           static_cast<float>(grid_cell_size) * m_zoom,
+                           elem.scale,
+                           static_cast<unsigned>(i) * 2654435761U + 17U);
+      painter.setOpacity(1.0);
+      if (is_selected || is_hovered) {
+        painter.setPen(QPen(is_selected ? QColor(255, 222, 96) : hover_ring_color, 2));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawEllipse(pos, marker_radius_px() + 2, marker_radius_px() + 2);
+      }
+      painter.restore();
+      return;
+    }
+    if (has_prop_sprite(elem.type)) {
+      const float cell_px = static_cast<float>(grid_cell_size) * m_zoom;
+      painter.setOpacity(dusk);
+      paint_prop_sprite(
+          painter,
+          elem.type,
+          QPointF(pos),
+          cell_px,
+          elem.scale,
+          elem.rotation * 180.0F / std::numbers::pi_v<float>,
+          elem.radius,
+          static_cast<unsigned>(i) * 2246822519U + 5U,
+          m_living_world ? static_cast<double>(m_world_clock.elapsed()) / 1000.0 : 0.0,
+          m_backdrop.night);
+      painter.setOpacity(1.0);
+      if (is_selected || is_hovered) {
+        painter.save();
+        painter.setPen(QPen(is_selected ? QColor(255, 222, 96) : hover_ring_color, 2));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawEllipse(pos, marker_radius_px() + 2, marker_radius_px() + 2);
+        painter.restore();
+      }
+      return;
+    }
+    paint_ground_shadow(painter, QPointF(pos), static_cast<float>(marker_radius_px()));
+  }
   if (is_selected) {
     painter.setPen(QPen(Qt::yellow, 2));
   } else if (is_hovered) {
@@ -526,11 +671,61 @@ void MapCanvas::draw_structure_element(QPainter& painter, int i) {
   bool const is_selected = is_selected_element(3, i);
   bool const is_hovered = (m_hovered_type == 3 && m_hovered_index == i);
 
+  const bool world = painting_world();
+  const float cell_px = static_cast<float>(grid_cell_size) * m_zoom;
+  const QColor owner =
+      elem.player_id > 0 ? player_color_for_editor(elem.player_id) : QColor();
+  const double dusk = world && m_backdrop.night > 0.5F ? 0.68 : 1.0;
   if (elem.type == QStringLiteral("wall_gate")) {
+    if (world) {
+      painter.setOpacity(dusk);
+      paint_gatehouse(painter,
+                      QPointF(pos),
+                      cell_px,
+                      elem.rotation,
+                      WallGeometry::k_gate_span,
+                      WallGeometry::k_gate_depth,
+                      owner);
+      painter.setOpacity(1.0);
+      if (is_selected || is_hovered) {
+        painter.save();
+        painter.setPen(QPen(is_selected ? QColor(255, 222, 96) : hover_ring_color, 2));
+        painter.setBrush(Qt::NoBrush);
+        const double ring =
+            std::max<double>(WallGeometry::k_gate_span * 0.62 * cell_px, 8.0);
+        painter.drawEllipse(QPointF(pos), ring, ring);
+        painter.restore();
+      }
+      return;
+    }
     draw_gate_element(painter, elem, is_selected, is_hovered, hover_ring_color);
     return;
   }
 
+  if (world && has_structure_sprite(elem.type)) {
+    painter.setOpacity(dusk);
+    paint_structure_sprite(painter,
+                           elem.type,
+                           QPointF(pos),
+                           cell_px,
+                           elem.rotation,
+                           owner,
+                           static_cast<unsigned>(i) * 2654435761U + 3U);
+    painter.setOpacity(1.0);
+    if (is_selected || is_hovered) {
+      painter.save();
+      painter.setPen(QPen(is_selected ? QColor(255, 222, 96) : hover_ring_color, 2));
+      painter.setBrush(Qt::NoBrush);
+      const double ring = std::max<double>(
+          structure_sprite_radius_cells(elem.type) * cell_px, marker_radius_px() * 0.6);
+      painter.drawEllipse(QPointF(pos), ring, ring);
+      painter.restore();
+    }
+    return;
+  }
+  if (world) {
+    paint_ground_shadow(painter, QPointF(pos), static_cast<float>(marker_radius_px()));
+  }
   if (is_selected) {
     painter.setPen(QPen(Qt::yellow, 2));
   } else if (is_hovered) {
@@ -566,6 +761,10 @@ void MapCanvas::draw_troop_spawn_element(QPainter& painter, int i) {
     painter.restore();
   }
 
+  if (painting_world()) {
+    paint_ground_shadow(
+        painter, QPointF(pos), static_cast<float>(marker_radius_px()) * 0.7F);
+  }
   draw_troop_marker(painter,
                     pos,
                     elem.type,
@@ -603,6 +802,13 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
   bool const is_selected = is_selected_element(2, i);
   bool const is_hovered = (m_hovered_type == 2 && m_hovered_index == i);
 
+  const bool painted_in_world =
+      painting_world() &&
+      (elem.type == "river" || elem.type == "road" || elem.type == "bridge");
+  if (painted_in_world && !is_selected && !is_hovered) {
+    return;
+  }
+
   QColor color;
   if (elem.type == "river") {
     color = QColor(70, 130, 200);
@@ -619,6 +825,26 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
   const qreal band_width = linear_width_px(elem);
   const qreal centre_width = std::clamp(band_width * 0.18, 1.0, 3.0);
 
+  if (painting_world() && elem.type == "wall") {
+    if (is_selected || is_hovered) {
+      painter.save();
+      painter.setPen(QPen(is_selected ? QColor(255, 222, 96) : hover_ring_color,
+                          band_width + 6.0,
+                          Qt::SolidLine,
+                          Qt::RoundCap,
+                          Qt::RoundJoin));
+      painter.setOpacity(0.7);
+      painter.drawPolyline(path);
+      painter.restore();
+    }
+    paint_palisade(painter,
+                   path,
+                   static_cast<float>(grid_cell_size) * m_zoom,
+                   elem.player_id > 0 ? player_color_for_editor(elem.player_id)
+                                      : QColor());
+    return;
+  }
+
   painter.save();
   if (is_selected || is_hovered) {
     painter.setPen(QPen(is_selected ? QColor(Qt::yellow) : hover_ring_color,
@@ -630,7 +856,7 @@ void MapCanvas::draw_linear_element(QPainter& painter, int i) {
   }
 
   QColor band_color = color;
-  band_color.setAlpha(150);
+  band_color.setAlpha(painted_in_world ? 45 : 150);
   painter.setPen(
       QPen(band_color, band_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
   painter.drawPolyline(path);
@@ -770,17 +996,24 @@ void MapCanvas::draw_forest_element(QPainter& painter, int i) {
   painter.save();
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  painter.setBrush(fill);
+  const bool world = painting_world();
+  painter.setBrush(world ? QBrush(Qt::NoBrush) : QBrush(fill));
   if (is_selected) {
     painter.setPen(QPen(Qt::yellow, 2));
   } else if (is_hovered) {
     painter.setPen(QPen(hover_ring_color, 2));
+  } else if (world) {
+    painter.setPen(QPen(QColor(226, 246, 214, 64), 1, Qt::DashLine));
   } else {
     painter.setPen(QPen(outline, 1, Qt::DashLine));
   }
   painter.drawEllipse(center, radius_px, radius_px);
 
-  painter.setPen(outline);
+  if (world && !is_selected && !is_hovered) {
+    painter.restore();
+    return;
+  }
+  painter.setPen(world ? QColor(236, 248, 226) : outline);
   QFont f = painter.font();
   f.setPointSize(9);
   painter.setFont(f);
@@ -1047,10 +1280,45 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
     break;
   }
   case ToolPlacement::Structure:
-    draw_element(painter, type, widget_pos, m_current_player_id);
+    if (painting_world() && has_structure_sprite(type)) {
+      painter.setOpacity(0.72);
+      paint_structure_sprite(painter,
+                             type,
+                             QPointF(widget_pos),
+                             static_cast<float>(grid_cell_size) * m_zoom,
+                             0.0F,
+                             m_current_player_id > 0
+                                 ? player_color_for_editor(m_current_player_id)
+                                 : QColor(),
+                             7U);
+    } else {
+      draw_element(painter, type, widget_pos, m_current_player_id);
+    }
     break;
   case ToolPlacement::WorldProp:
-    draw_element(painter, type, widget_pos);
+    if (painting_world() && natural_sprite_for(type) != NaturalSprite::None) {
+      painter.setOpacity(0.72);
+      paint_natural_sprite(painter,
+                           natural_sprite_for(type),
+                           QPointF(widget_pos),
+                           static_cast<float>(grid_cell_size) * m_zoom,
+                           1.0F,
+                           7U);
+    } else if (painting_world() && has_prop_sprite(type)) {
+      painter.setOpacity(0.72);
+      paint_prop_sprite(painter,
+                        type,
+                        QPointF(widget_pos),
+                        static_cast<float>(grid_cell_size) * m_zoom,
+                        1.0F,
+                        0.0F,
+                        3.0F,
+                        7U,
+                        0.0,
+                        m_backdrop.night);
+    } else {
+      draw_element(painter, type, widget_pos);
+    }
     break;
   case ToolPlacement::None:
   case ToolPlacement::Erase:

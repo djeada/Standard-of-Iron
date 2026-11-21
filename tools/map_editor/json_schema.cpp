@@ -665,6 +665,12 @@ auto schema_for_biome() -> JsonSchema {
           "soil_roughness", "number", "preset", "Soil specular roughness.", 0.8),
       optional_field(
           "plant_density", "number", "preset", "Scattered plant count.", 1.0),
+      optional_field("forest_density",
+                     "number",
+                     "1",
+                     "How thick the trees stand inside authored forests, 0…6. "
+                     "Open ground is not affected.",
+                     2.0),
       optional_field("spawn_edge_padding",
                      "number",
                      "preset",
