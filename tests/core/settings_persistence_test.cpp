@@ -13,6 +13,8 @@
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
 #include "render/graphics_settings.h"
+#include "render/software_backend.h"
+#include "scene/camera.h"
 
 namespace {
 
@@ -261,6 +263,51 @@ TEST_F(SettingsPersistenceTest, PartiallySavedVolumesAreNotTreatedAsAFirstRun) {
   EXPECT_FLOAT_EQ(loaded.sound, defaults.sound);
   EXPECT_FLOAT_EQ(loaded.voice, defaults.voice);
   EXPECT_FLOAT_EQ(loaded.ambience, defaults.ambience);
+}
+
+TEST_F(SettingsPersistenceTest,
+       SoftwareBackendReportsReadyAndProducesBattlefieldFrame) {
+  Render::GL::SoftwareBackend backend;
+  EXPECT_TRUE(backend.initialize());
+  EXPECT_EQ(backend.resources(), nullptr);
+  EXPECT_TRUE(backend.is_ready());
+  EXPECT_EQ(backend.shader_quality(), Render::ShaderQuality::None);
+
+  backend.set_viewport(64, 64);
+  backend.set_clear_color(0.05F, 0.05F, 0.05F, 1.0F);
+  backend.begin_frame();
+
+  Render::GL::Camera camera;
+  camera.set_perspective(45.0F, 1.0F, 0.1F, 100.0F);
+  camera.look_at(QVector3D(0.0F, 6.0F, 10.0F),
+                 QVector3D(0.0F, 0.0F, 0.0F),
+                 QVector3D(0.0F, 1.0F, 0.0F));
+
+  Render::GL::DrawQueue queue;
+  Render::GL::MeshCmd cmd;
+  cmd.model.scale(2.0F, 2.0F, 2.0F);
+  cmd.color = QVector3D(0.85F, 0.25F, 0.20F);
+  cmd.alpha = 1.0F;
+  queue.submit(cmd);
+  backend.execute(queue, camera);
+
+  const QImage* frame = backend.presented_frame();
+  ASSERT_NE(frame, nullptr);
+  ASSERT_FALSE(frame->isNull());
+  EXPECT_EQ(frame->width(), 64);
+  EXPECT_EQ(frame->height(), 64);
+
+  const QRgb corner = frame->pixel(0, 0);
+  bool found_battlefield_pixel = false;
+  for (int y = 0; y < frame->height() && !found_battlefield_pixel; ++y) {
+    for (int x = 0; x < frame->width(); ++x) {
+      if (frame->pixel(x, y) != corner) {
+        found_battlefield_pixel = true;
+        break;
+      }
+    }
+  }
+  EXPECT_TRUE(found_battlefield_pixel);
 }
 
 } // namespace

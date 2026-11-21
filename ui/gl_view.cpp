@@ -12,6 +12,8 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
+#include <QOpenGLTextureBlitter>
 #include <QQuickWindow>
 #include <QStringList>
 #include <QSurfaceFormat>
@@ -296,6 +298,22 @@ void GLView::GLRenderer::render() {
     }
     m_last_frame_time = frame_work_start;
     m_engine->render(m_size.width(), m_size.height());
+    if (const QImage* cpu_frame = m_engine->last_software_frame();
+        cpu_frame != nullptr && !cpu_frame->isNull()) {
+      QOpenGLTextureBlitter blitter;
+      if (blitter.create()) {
+        QOpenGLTexture texture(cpu_frame->convertToFormat(QImage::Format_RGBA8888),
+                               QOpenGLTexture::DontGenerateMipMaps);
+        texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
+        if (auto* funcs = ctx->functions()) {
+          funcs->glViewport(0, 0, m_size.width(), m_size.height());
+        }
+        blitter.bind();
+        blitter.blit(
+            texture.textureId(), QMatrix4x4(), QOpenGLTextureBlitter::OriginTopLeft);
+        blitter.release();
+      }
+    }
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;
     const double thread_cpu_end_ms = render_thread_cpu_ms();

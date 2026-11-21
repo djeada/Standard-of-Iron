@@ -314,6 +314,7 @@ public:
     return m_lifecycle.stats();
   }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
+  [[nodiscard]] auto last_software_frame() const -> const QImage*;
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
