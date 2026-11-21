@@ -171,6 +171,13 @@ auto parse_command_line(QCoreApplication& app,
       "Mix the game's own sound offline in step with the film and write it to "
       "audio.wav beside the frames (no sound reaches the speakers).");
   parser.addOption(film_audio_opt);
+  QCommandLineOption const language_opt(
+      "language",
+      "Start in this language for this session only, without changing the saved "
+      "language (e.g. en, de, pt_BR). An unsupported code prints the supported "
+      "ones and keeps the saved language.",
+      "locale");
+  parser.addOption(language_opt);
   parser.process(app);
 
   opts.component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -334,6 +341,7 @@ auto parse_command_line(QCoreApplication& app,
 
     gfx.set_backend_kind(*requested);
   }
+  opts.language_override = parser.value(language_opt).trimmed();
   return -1;
 }
 

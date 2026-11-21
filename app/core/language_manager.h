@@ -18,6 +18,10 @@ public:
   [[nodiscard]] QStringList available_languages() const;
 
   Q_INVOKABLE void set_language(const QString& language);
+
+  auto apply_temporary_language(const QString& language) -> bool;
+  [[nodiscard]] auto is_language_temporary() const -> bool;
+  [[nodiscard]] static auto normalize_language_code(const QString& language) -> QString;
   Q_INVOKABLE [[nodiscard]] static QString
   language_display_name(const QString& language);
 
@@ -28,8 +32,9 @@ private:
   QString m_current_language;
   QTranslator* m_translator;
   QStringList m_available_languages;
+  bool m_language_is_temporary = false;
 
-  void load_language(const QString& language);
+  auto load_language(const QString& language, bool persist) -> bool;
 };
 
 #endif

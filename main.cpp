@@ -276,6 +276,9 @@ auto main(int argc, char* argv[]) -> int {
 
   qInfo() << "Creating LanguageManager...";
   language_manager = std::make_unique<LanguageManager>(&app);
+  if (!opts.language_override.isEmpty()) {
+    language_manager->apply_temporary_language(opts.language_override);
+  }
   qInfo() << "LanguageManager created";
 
   qInfo() << "Creating GameEngine...";
