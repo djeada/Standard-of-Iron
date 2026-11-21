@@ -52,11 +52,11 @@ const float k_fog_inscatter_power = 5.0;
 const float k_fog_inscatter_gain = 0.42;
 const vec3 k_fog_haze_tone = vec3(0.86, 0.84, 0.82);
 
-const float k_ground_fog_gain = 0.20;
-const float k_ground_fog_night_gain = 0.22;
-const float k_ground_fog_dawn_gain = 0.30;
-const float k_ground_fog_weather_gain = 0.22;
-const float k_ground_fog_max_opacity = 0.24;
+const float k_ground_fog_gain = 0.05;
+const float k_ground_fog_night_gain = 0.16;
+const float k_ground_fog_dawn_gain = 0.22;
+const float k_ground_fog_weather_gain = 0.12;
+const float k_ground_fog_max_opacity = 0.14;
 const float k_ground_fog_distance_reach = 34.0;
 const vec3 k_ground_fog_lift = vec3(1.02, 1.03, 1.04);
 const float k_mist_water_ceiling = 1.7;
@@ -165,8 +165,8 @@ float valley_fog(vec3 world) {
       soi_value_noise_e2c097(world.xz * 0.045 + vec2(u_time * 0.030, -u_time * 0.018));
   float swirl =
       soi_value_noise_e2c097(world.xz * 0.14 - vec2(u_time * 0.012, u_time * 0.021));
-  float patch = smoothstep(0.28, 0.80, 0.60 * drift + 0.40 * swirl);
-  float breakup = 0.30 + 0.70 * patch;
+  float patch = smoothstep(0.34, 0.80, 0.60 * drift + 0.40 * swirl);
+  float breakup = 0.06 + 0.94 * patch * patch;
   float view_distance = length(u_camera_position - world);
   float thickness = 1.0 - exp(-view_distance / k_ground_fog_distance_reach);
   float night = environment_night_amount();

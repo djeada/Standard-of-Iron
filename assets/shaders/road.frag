@@ -129,11 +129,16 @@ void main() {
   float boundary = clamp(v_tex_coord.y, 0.0, 1.0);
   float edge_noise = fbm_2d(uv * 0.42 + vec2(19.0, -7.0)) - 0.5;
   float edge_tufts = noise_2d(uv * 2.3 + vec2(-5.0, 9.0)) - 0.5;
-  float edge_threshold =
-      clamp(0.40 + edge_noise * 0.94 + edge_tufts * 0.32, 0.10, 0.82);
+  float edge_blades = noise_2d(uv * 7.5 + vec2(13.0, -21.0)) - 0.5;
+  float edge_resolved =
+      1.0 - smoothstep(0.10, 0.45, max(length(dFdx(uv)), length(dFdy(uv))));
+  float edge_threshold = clamp(0.34 + edge_noise * 0.70 + edge_tufts * 0.30 +
+                                   edge_blades * 0.20 * edge_resolved,
+                               0.08,
+                               0.74);
   float edge_alpha =
-      smoothstep(edge_threshold - 0.29, edge_threshold + 0.24, boundary) *
-      smoothstep(0.0, 0.14, boundary);
+      smoothstep(edge_threshold - 0.085, edge_threshold + 0.085, boundary) *
+      smoothstep(0.0, 0.10, boundary);
   float edge_distance = boundary * 0.5;
 
   float broad = fbm_2d(uv * 0.055 + vec2(7.0, 13.0));

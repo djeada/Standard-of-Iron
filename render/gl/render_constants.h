@@ -53,8 +53,8 @@ inline constexpr int shader_info_log_size = 512;
 namespace Render::GL::Geometry {
 inline constexpr int quad_vertex_count = 4;
 inline constexpr int quad_index_count = 6;
-inline constexpr int grass_blades_per_tuft = 3;
-inline constexpr int grass_blade_segments = 2;
+inline constexpr int grass_blades_per_tuft = 7;
+inline constexpr int grass_blade_segments = 3;
 inline constexpr int grass_blade_vertex_count =
     grass_blades_per_tuft * grass_blade_segments * 6;
 inline constexpr int cube_vertex_count = 24;
