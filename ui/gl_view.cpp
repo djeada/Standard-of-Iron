@@ -87,33 +87,29 @@ GLView::GLView() {
 }
 
 auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
-
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "GLView::createRenderer() - No valid OpenGL context";
-    qCritical() << "Running in software rendering mode - 3D view not available";
-    if (m_engine != nullptr) {
-      m_engine->report_renderer_failure(
-          QStringLiteral("Gameplay renderer creation failed: no valid OpenGL "
-                         "context is available (OpenGL 3.3 Core required)."));
-    }
-    return new GLRenderer(const_cast<GLView*>(this), m_engine);
-  }
-
-  const auto fmt = ctx->format();
-  const auto version = fmt.version();
-  if (!Render::GL::GLCapabilities::meets_minimum_version()) {
-    qWarning() << "GLView::createRenderer() - OpenGL" << version.first << "."
-               << version.second
-               << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "non-Core")
-               << "is below the 3.3 Core floor; the renderer will refuse to start "
-                  "and report the driver requirement.";
-  } else {
-    qInfo() << "GLView::createRenderer() - OpenGL" << version.first << "."
-            << version.second << "context OK";
-  }
-
   return new GLRenderer(const_cast<GLView*>(this), m_engine);
+}
+
+auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNode* {
+  if (!m_engine || m_engine->renderer_has_failed()) {
+    return node;
+  }
+  // Qt consumes the renderer and framebuffer factory results immediately.
+  // Check the context before letting Qt create either object.
+  const auto* context = QOpenGLContext::currentContext();
+  if (context == nullptr || !context->isValid()) {
+    m_engine->report_renderer_failure(
+        tr("The battlefield needs a working OpenGL 3.3 Core graphics context."));
+    return node;
+  }
+  if (!Render::GL::GLCapabilities::meets_minimum_version()) {
+    Render::GL::GLCapabilities::report_minimum_version();
+    m_engine->report_renderer_failure(
+        tr("The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.")
+            .arg(Render::GL::GLCapabilities::describe_version(context->format())));
+    return node;
+  }
+  return QQuickFramebufferObject::updatePaintNode(node, data);
 }
 
 auto GLView::engine() const -> QObject* {
@@ -130,7 +126,7 @@ void GLView::set_engine(QObject* eng) {
 }
 
 void GLView::notify_renderer_ready() {
-  if (m_renderer_ready) {
+  if (m_renderer_ready || !m_engine || m_engine->renderer_has_failed()) {
     return;
   }
   m_renderer_ready = true;
@@ -215,21 +211,20 @@ GLView::GLRenderer::~GLRenderer() {
 }
 
 void GLView::GLRenderer::render() {
-  if (m_engine == nullptr) {
-    qWarning() << "GLRenderer::render() - engine is null";
+  if (m_engine == nullptr || m_engine->renderer_has_failed()) {
     return;
   }
 
   QOpenGLContext* ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "GLRenderer::render() - OpenGL context lost";
     m_engine->report_renderer_failure(
-        QStringLiteral("Gameplay rendering failed: OpenGL context is unavailable "
-                       "or was lost (OpenGL 3.3 Core required)."));
+        GLView::tr("The OpenGL graphics context was lost."));
     return;
   }
-
-  if (m_engine->renderer_init_failed()) {
+  const auto* framebuffer = framebufferObject();
+  if (framebuffer == nullptr || !framebuffer->isValid()) {
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield framebuffer could not be created."));
     return;
   }
 
@@ -271,7 +266,8 @@ void GLView::GLRenderer::render() {
 
     m_engine->ensure_initialized();
     if (!m_engine->renderer_initialized()) {
-      qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";
+      m_engine->report_renderer_failure(
+          GLView::tr("The OpenGL battlefield renderer failed."));
       return;
     }
     if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
@@ -309,23 +305,24 @@ void GLView::GLRenderer::render() {
       dt = std::min(dt, 0.1F);
     }
     m_last_frame_time = frame_work_start;
-    m_engine->render(m_size.width(), m_size.height());
+    const quint64 rendered_load = m_engine->render(m_size.width(), m_size.height());
     if (const QImage* cpu_frame = m_engine->last_software_frame();
-        cpu_frame != nullptr && !cpu_frame->isNull()) {
-      QOpenGLTextureBlitter blitter;
-      if (blitter.create()) {
-        QOpenGLTexture texture(cpu_frame->convertToFormat(QImage::Format_RGBA8888),
-                               QOpenGLTexture::DontGenerateMipMaps);
-        texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
-        if (auto* funcs = ctx->functions()) {
-          funcs->glViewport(0, 0, m_size.width(), m_size.height());
-        }
-        blitter.bind();
-        blitter.blit(
-            texture.textureId(), QMatrix4x4(), QOpenGLTextureBlitter::OriginTopLeft);
-        blitter.release();
+        cpu_frame != nullptr) {
+      QOpenGLTexture texture(*cpu_frame, QOpenGLTexture::DontGenerateMipMaps);
+      if (!texture.isCreated() ||
+          (!m_software_blitter.isCreated() && !m_software_blitter.create())) {
+        m_engine->report_renderer_failure(
+            GLView::tr("The OpenGL battlefield renderer failed."));
+        return;
       }
+      texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
+      ctx->functions()->glViewport(0, 0, m_size.width(), m_size.height());
+      m_software_blitter.bind();
+      m_software_blitter.blit(
+          texture.textureId(), QMatrix4x4(), QOpenGLTextureBlitter::OriginTopLeft);
+      m_software_blitter.release();
     }
+    m_engine->notify_loading_frame_presented(rendered_load);
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;
     const double thread_cpu_end_ms = render_thread_cpu_ms();
@@ -350,9 +347,12 @@ void GLView::GLRenderer::render() {
 
   } catch (const std::exception& e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield renderer failed."));
     return;
   } catch (...) {
-    qCritical() << "GLRenderer::render() unknown exception";
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield renderer failed."));
     return;
   }
 
@@ -912,21 +912,20 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
     -> QOpenGLFramebufferObject* {
   m_size = size;
 
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "GLRenderer::createFramebufferObject() - No valid OpenGL context";
-    if (m_engine != nullptr) {
-      m_engine->report_renderer_failure(
-          QStringLiteral("Gameplay framebuffer creation failed: no valid OpenGL "
-                         "context is available (OpenGL 3.3 Core required)."));
-    }
-    return new QOpenGLFramebufferObject(size.expandedTo(QSize(1, 1)),
-                                        QOpenGLFramebufferObjectFormat{});
-  }
-
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-  return new QOpenGLFramebufferObject(size, fmt);
+  auto framebuffer = std::make_unique<QOpenGLFramebufferObject>(size, fmt);
+  if (framebuffer->isValid()) {
+    return framebuffer.release();
+  }
+  if (m_engine != nullptr) {
+    qCritical() << "Could not allocate gameplay framebuffer of size" << size;
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield framebuffer could not be created."));
+  }
+  // Qt still needs a framebuffer texture for this scene graph node.
+  framebuffer.reset();
+  return new QOpenGLFramebufferObject(QSize(1, 1));
 }
 
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {

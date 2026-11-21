@@ -4244,6 +4244,29 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>El campo de batalla requiere un contexto gráfico OpenGL 3.3 Core operativo.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>El campo de batalla requiere OpenGL 3.3 Core. Se detectó OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>Se perdió el contexto gráfico de OpenGL.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>No se pudo crear el búfer de fotogramas OpenGL del campo de batalla.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Falló el renderizador OpenGL del campo de batalla.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 no recibió respuesta y retira la petición.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Se agotó el tiempo de espera para mostrar el campo de batalla. La última fase de carga fue %1.</translation>
     </message>
 </context>
 <context>
@@ -7279,6 +7306,10 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
     <message>
         <source>%1 for the army view</source>
         <translation>%1 para la vista del ejército</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Salir</translation>
     </message>
 </context>
 <context>

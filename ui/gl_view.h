@@ -4,6 +4,7 @@
 
 class QOpenGLDebugLogger;
 
+#include <QOpenGLTextureBlitter>
 #include <QPointer>
 #include <QQmlEngine>
 #include <QQuickFramebufferObject>
@@ -40,6 +41,9 @@ public:
     return m_renderer_ready;
   }
 
+protected:
+  auto updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNode* override;
+
 signals:
   void engine_changed();
   void renderer_ready();
@@ -64,6 +68,7 @@ private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
     Render::FrameCadence m_cadence;
+    QOpenGLTextureBlitter m_software_blitter;
     bool m_ready_reported = false;
     QStringList m_pending_commander_speakers;
     QSize m_size;

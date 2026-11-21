@@ -4244,6 +4244,29 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>Savaş alanı için çalışan bir OpenGL 3.3 Core grafik bağlamı gerekir.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Savaş alanı OpenGL 3.3 Core gerektirir. Algılanan sürüm OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>OpenGL grafik bağlamı kayboldu.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>Savaş alanı için OpenGL kare arabelleği oluşturulamadı.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>OpenGL savaş alanı işleyicisi başarısız oldu.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 yanıt alamadı ve isteğini geri çekiyor.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Savaş alanının görüntülenmesi beklenirken süre doldu. Son yükleme aşaması %1.</translation>
     </message>
 </context>
 <context>
@@ -7275,6 +7302,10 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>%1 for the army view</source>
         <translation>Ordu görünümü için %1</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Çık</translation>
     </message>
 </context>
 <context>

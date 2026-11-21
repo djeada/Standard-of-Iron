@@ -4244,6 +4244,29 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>يتطلب عرض ساحة المعركة سياق رسومات OpenGL 3.3 Core يعمل بصورة صحيحة.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>يتطلب عرض ساحة المعركة OpenGL 3.3 Core. الإصدار المكتشف هو OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>فُقد سياق رسومات OpenGL.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>تعذّر إنشاء مخزن الإطارات OpenGL لساحة المعركة.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>تعطّل محرّك عرض OpenGL لساحة المعركة.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>لم يتلقَّ %1 ردًا ويسحب طلبه.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>انتهت مهلة انتظار عرض ساحة المعركة. كانت مرحلة التحميل الأخيرة %1.</translation>
     </message>
 </context>
 <context>
@@ -7295,6 +7322,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>%1 for the army view</source>
         <translation>%1 لعرض الجيش</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>خروج</translation>
     </message>
 </context>
 <context>

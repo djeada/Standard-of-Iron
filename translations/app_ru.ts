@@ -4244,6 +4244,29 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>Для отрисовки поля боя требуется рабочий графический контекст OpenGL 3.3 Core.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Для отрисовки поля боя требуется OpenGL 3.3 Core. Обнаружен OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>Графический контекст OpenGL потерян.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>Не удалось создать кадровый буфер OpenGL для поля боя.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Сбой отрисовщика OpenGL поля боя.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 не получил ответа и отзывает просьбу.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Истекло время ожидания отрисовки поля боя. Последним этапом загрузки был %1.</translation>
     </message>
 </context>
 <context>
@@ -7283,6 +7310,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>%1 for the army view</source>
         <translation>%1 — вид армии</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Выйти</translation>
     </message>
 </context>
 <context>

@@ -4244,6 +4244,29 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>Pole bitwy wymaga działającego kontekstu graficznego OpenGL 3.3 Core.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Pole bitwy wymaga OpenGL 3.3 Core. Wykryto OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>Utracono kontekst graficzny OpenGL.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>Nie udało się utworzyć bufora ramki OpenGL dla pola bitwy.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Renderer OpenGL pola bitwy uległ awarii.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 nie otrzymał odpowiedzi i wycofuje prośbę.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Upłynął limit czasu oczekiwania na wyświetlenie pola bitwy. Ostatni etap ładowania to %1.</translation>
     </message>
 </context>
 <context>
@@ -7283,6 +7310,10 @@ Każdy rekrut kosztuje ludzi swojego oddziału; rezerwa w koszarach podnosi limi
     <message>
         <source>%1 for the army view</source>
         <translation>%1 – widok armii</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Zakończ grę</translation>
     </message>
 </context>
 <context>

@@ -1,9 +1,14 @@
 #include <QCoreApplication>
+#include <QEventLoop>
 #include <QGuiApplication>
 #include <QSettings>
 #include <QTemporaryDir>
+#include <QThread>
+#include <QTimer>
 
+#include <chrono>
 #include <gtest/gtest.h>
+#include <thread>
 
 #define private public
 #include "game/audio/audio_system.h"
@@ -312,31 +317,43 @@ TEST_F(SettingsPersistenceTest,
 }
 
 TEST_F(SettingsPersistenceTest,
-       RendererInitFailureLatchesTerminalStateAndStopsReopeningErrorDialog) {
+       RendererFailureStopsLoadingAndReportsOnceOnTheGuiThread) {
   GameEngine engine;
-  int error_signals = 0;
-  QObject::connect(&engine, &GameEngine::last_error_changed, [&]() {
-    if (!engine.last_error().isEmpty()) {
-      ++error_signals;
-    }
+  engine.set_release_self_test_mode(true);
+  engine.launch_match({.map_path = QStringLiteral("should-never-load")});
+  ASSERT_TRUE(engine.is_loading());
+
+  QEventLoop loop;
+  QStringList errors;
+  QObject::connect(
+      &engine,
+      &GameEngine::renderer_failed,
+      &loop,
+      [&](const QString& error) {
+        EXPECT_EQ(QThread::currentThread(), engine.thread());
+        EXPECT_FALSE(engine.is_loading());
+        errors.push_back(error);
+      },
+      Qt::DirectConnection);
+
+  const QString first_error = QStringLiteral("OpenGL 3.3 Core required");
+  std::thread render_thread([&] {
+    engine.report_renderer_failure(first_error);
+    engine.report_renderer_failure(QStringLiteral("Framebuffer unavailable"));
   });
+  render_thread.join();
 
-  engine.report_renderer_failure(QStringLiteral("OpenGL 3.3 Core required"));
-  EXPECT_TRUE(engine.renderer_init_failed());
+  EXPECT_TRUE(engine.renderer_has_failed());
   EXPECT_FALSE(engine.renderer_initialized());
-  EXPECT_EQ(error_signals, 1);
-
+  EXPECT_TRUE(errors.isEmpty());
   engine.clear_error();
-  EXPECT_TRUE(engine.last_error().isEmpty());
-  EXPECT_TRUE(engine.renderer_init_failed());
-
   engine.ensure_initialized();
-  engine.report_renderer_failure(QStringLiteral("OpenGL 3.3 Core required"));
-  EXPECT_EQ(error_signals, 1);
-  EXPECT_TRUE(engine.last_error().isEmpty());
 
-  engine.retry_renderer_initialization();
-  EXPECT_FALSE(engine.renderer_init_failed());
+  QTimer::singleShot(std::chrono::milliseconds(100), &loop, &QEventLoop::quit);
+  loop.exec();
+  EXPECT_EQ(errors, QStringList{first_error});
+  EXPECT_TRUE(engine.last_error().isEmpty());
+  EXPECT_FALSE(engine.is_loading());
 }
 
 } // namespace
