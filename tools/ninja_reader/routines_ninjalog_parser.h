@@ -1,8 +1,8 @@
 // Copyright 2026 dywoq - MIT License
 // https://github.com/djeada/Standard-of-Iron
 
-#ifndef NINJALOG_PARSER_H
-#define NINJALOG_PARSER_H
+#ifndef ROUTINES_NINJALOG_PARSER_H
+#define ROUTINEs_NINJALOG_PARSER_H
 
 #include <chrono>
 #include <filesystem>
