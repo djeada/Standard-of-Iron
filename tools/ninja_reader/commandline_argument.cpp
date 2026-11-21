@@ -149,7 +149,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
 
         if (has_digits) {
           auto argument =
-              Argument(argument_name, ArgumentValue::from(std::stoi(argument_value)));
+              Argument(argument_name, ArgumentValue::from(std::stoll(argument_value)));
           parsed_arguments.push_back(argument);
           parsing_argument_value = false;
           continue;
