@@ -2,7 +2,7 @@
 // https://github.com/djeada/Standard-of-Iron
 
 #ifndef ROUTINES_NINJALOG_PARSER_H
-#define ROUTINEs_NINJALOG_PARSER_H
+#define ROUTINES_NINJALOG_PARSER_H
 
 #include <chrono>
 #include <filesystem>
