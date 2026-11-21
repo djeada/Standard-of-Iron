@@ -24,7 +24,7 @@
 #include "render/ground/ground_ecology.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_ground_fit.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -59,7 +59,7 @@ void StoneRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, QVector3D(0.35F, 0.8F, 0.45F));
 }
 
-void StoneRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void StoneRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   submit_filtered_common<false>(
       renderer,
       resources,

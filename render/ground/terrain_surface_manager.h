@@ -9,7 +9,7 @@ namespace Render::GL {
 
 class GroundRenderer;
 class TerrainRenderer;
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class TerrainSurfaceManager {
@@ -17,7 +17,7 @@ public:
   TerrainSurfaceManager();
   ~TerrainSurfaceManager();
 
-  void submit(Renderer& renderer, ResourceManager* resources);
+  void submit(FrameSubmitter& renderer, ResourceManager* resources);
 
   [[nodiscard]] auto ground() const -> GroundRenderer*;
   [[nodiscard]] auto terrain() const -> TerrainRenderer*;

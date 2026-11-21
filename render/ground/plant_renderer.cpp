@@ -22,7 +22,7 @@
 #include "render/ground/ground_ecology.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -79,7 +79,7 @@ void PlantRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, FoliageBatchParams::default_light_direction());
 }
 
-void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void PlantRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   submit_filtered_common<true>(
       renderer,
       resources,

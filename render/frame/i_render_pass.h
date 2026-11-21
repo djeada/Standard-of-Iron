@@ -4,12 +4,12 @@
 
 namespace Render::GL {
 
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 struct IRenderPass {
   virtual ~IRenderPass() = default;
-  virtual void submit(Renderer& renderer, ResourceManager* resources) = 0;
+  virtual void submit(FrameSubmitter& renderer, ResourceManager* resources) = 0;
 
   virtual void set_world_view(const Render::WorldView& view) noexcept {
     m_world_view = view;

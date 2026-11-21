@@ -12,7 +12,7 @@
 #include "render/creature/animation_state_components.h"
 #include "render/creature/combat_animation_diagnostics.h"
 #include "render/creature/movement_animation.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/gl/humanoid/humanoid_constants.h"
 #include "render/profiling/frame_profile.h"
 

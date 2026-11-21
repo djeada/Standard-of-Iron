@@ -16,6 +16,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_prepare.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_runner.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frame/effects_submitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_effects.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/render_backend_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frame/draw_queue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cache/render_archetype.cpp
@@ -28,26 +29,27 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/frame/primitive_batch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cache/template_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_catalog.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rig_dsl/rig_interpreter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/rig_dsl/rig_interpreter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frame/pipeline/instance_coalescer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frame/pass/frame_pass_runner.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/frame/pass/primitive_flush_pass.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/frame/pass/construction_preview_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/primitive_flush_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/construction_preview_pass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_disc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/arrow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/arrow_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/stone.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/icon_glyph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/mode_indicator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/projectile_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/raft_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/projectile_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/raft_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/flag.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/banner_cloth.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/attack_target_markers.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/target_focus_rings.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/patrol_flags.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/interaction_target_markers.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/range_rings.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/formation_arrow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/attack_target_markers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/target_focus_rings.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/patrol_flags.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/interaction_target_markers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/range_rings.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/overlay/formation_arrow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/transforms.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/parts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frame/palette.cpp

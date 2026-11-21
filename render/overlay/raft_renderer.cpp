@@ -1,4 +1,4 @@
-#include "render/geom/raft_renderer.h"
+#include "render/overlay/raft_renderer.h"
 
 #include <QVector3D>
 
@@ -9,7 +9,7 @@
 
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -35,7 +35,7 @@ constexpr float k_rope_side_clearance = 0.45F;
   return static_cast<float>(value & 0xffffU) / 65535.0F;
 }
 
-void draw_cylinder(Renderer* renderer,
+void draw_cylinder(FrameSubmitter* renderer,
                    Mesh* cylinder,
                    const QVector3D& a,
                    const QVector3D& b,
@@ -44,7 +44,7 @@ void draw_cylinder(Renderer* renderer,
   renderer->mesh(cylinder, Geom::cylinder_between(a, b, radius), color, nullptr, 1.0F);
 }
 
-void draw_raft(Renderer* renderer,
+void draw_raft(FrameSubmitter* renderer,
                Mesh* cylinder,
                const RaftDrawable& raft,
                float time) {
@@ -98,7 +98,7 @@ void draw_raft(Renderer* renderer,
   draw_cylinder(renderer, cylinder, pole_foot, rope_point - up * 0.05F, 0.05F, k_post);
 }
 
-void draw_guide_rope(Renderer* renderer, Mesh* cylinder, const RaftDrawable& raft) {
+void draw_guide_rope(FrameSubmitter* renderer, Mesh* cylinder, const RaftDrawable& raft) {
   QVector3D const up(0.0F, 1.0F, 0.0F);
   QVector3D const forward = raft.across;
   QVector3D const lateral(-forward.z(), 0.0F, forward.x());
@@ -130,7 +130,7 @@ void draw_guide_rope(Renderer* renderer, Mesh* cylinder, const RaftDrawable& raf
 
 } // namespace
 
-void draw_rafts(Renderer* renderer, std::span<const RaftDrawable> rafts) {
+void draw_rafts(FrameSubmitter* renderer, std::span<const RaftDrawable> rafts) {
   if (renderer == nullptr || rafts.empty()) {
     return;
   }

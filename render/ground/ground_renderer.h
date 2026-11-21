@@ -12,7 +12,7 @@
 #include "render/frame/world_chunk.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 class Mesh;
 class Texture;
@@ -53,7 +53,7 @@ public:
     invalidate_params_cache();
   }
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
 private:
   void recompute_model();

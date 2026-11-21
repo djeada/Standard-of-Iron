@@ -8,7 +8,7 @@
 #include "game/systems/attack_range.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 enum class RangeRingPattern : std::uint8_t {
@@ -29,11 +29,11 @@ struct RangeRingSpec {
 [[nodiscard]] auto range_ring_pattern_for(Game::Systems::RangeWeaponClass weapon_class)
     -> RangeRingPattern;
 
-void render_range_rings(Renderer* renderer,
+void render_range_rings(FrameSubmitter* renderer,
                         ResourceManager* resources,
                         std::span<const RangeRingSpec> rings);
 
-void render_attack_range_rings(Renderer* renderer,
+void render_attack_range_rings(FrameSubmitter* renderer,
                                ResourceManager* resources,
                                std::span<const Game::Systems::AttackRangeRing> rings);
 

@@ -12,7 +12,7 @@
 #include "game/map/visibility_service.h"
 #include "render/gl/texture_upload.h"
 #include "render/ground/visibility_mask_encoder.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -245,7 +245,7 @@ void FogRenderer::rebuild_patches() {
   m_instances_dirty = true;
 }
 
-void FogRenderer::upload_mask(Renderer& renderer) {
+void FogRenderer::upload_mask(FrameSubmitter& renderer) {
   (void)renderer;
   if (m_width <= 0 || m_height <= 0 || m_fog_amount.empty()) {
     return;
@@ -291,7 +291,7 @@ void FogRenderer::upload_mask(Renderer& renderer) {
   m_mask_dirty = {};
 }
 
-auto FogRenderer::prepare_mask(Renderer& renderer) -> FogMaskResources {
+auto FogRenderer::prepare_mask(FrameSubmitter& renderer) -> FogMaskResources {
   if (!m_enabled || m_width <= 0 || m_height <= 0) {
     return {};
   }
@@ -323,7 +323,7 @@ auto FogRenderer::prepare_mask(Renderer& renderer) -> FogMaskResources {
   return mask;
 }
 
-void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void FogRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   (void)resources;
 
   const FogMaskResources mask = prepare_mask(renderer);

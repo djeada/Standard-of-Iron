@@ -5,10 +5,10 @@ class World;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
-void render_wading_effects(Renderer* renderer,
+void render_wading_effects(FrameSubmitter* renderer,
                            ResourceManager* resources,
                            Engine::Core::World* world);
 

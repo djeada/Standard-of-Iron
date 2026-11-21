@@ -1,4 +1,4 @@
-#include "render/geom/patrol_flags.h"
+#include "render/overlay/patrol_flags.h"
 
 #include <qvectornd.h>
 
@@ -12,14 +12,14 @@
 #include "render/geom/flag.h"
 #include "render/geom/transforms.h"
 #include "render/gl/resources.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
 constexpr float k_position_grid_precision = 10.0F;
 constexpr int k_position_hash_shift = 32;
 
-void draw_flag(Renderer* renderer,
+void draw_flag(FrameSubmitter* renderer,
                ResourceManager* resources,
                const Geom::Flag::FlagMatrices& flag) {
   if ((renderer == nullptr) || (resources == nullptr)) {
@@ -65,7 +65,7 @@ void draw_flag(Renderer* renderer,
   }
 }
 
-void render_patrol_flags(Renderer* renderer,
+void render_patrol_flags(FrameSubmitter* renderer,
                          ResourceManager* resources,
                          Engine::Core::World& world,
                          const std::optional<QVector3D>& preview_waypoint) {
@@ -130,7 +130,7 @@ void render_patrol_flags(Renderer* renderer,
   }
 }
 
-void render_commander_rally_flags(Renderer* renderer,
+void render_commander_rally_flags(FrameSubmitter* renderer,
                                   ResourceManager* resources,
                                   Engine::Core::World* world,
                                   int preview_owner_id,

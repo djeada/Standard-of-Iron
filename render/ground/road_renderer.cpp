@@ -21,7 +21,7 @@
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
 #include "render/ground/road_network_geometry.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -82,7 +82,7 @@ void RoadRenderer::build_meshes() {
   m_surfaces = Ground::build_road_network_surfaces(m_road_segments, settings);
 }
 
-void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void RoadRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_surfaces.empty()) {

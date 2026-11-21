@@ -25,7 +25,7 @@
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 class Mesh;
 class Texture;
@@ -50,7 +50,7 @@ public:
 
   void set_light_direction(const QVector3D& dir);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 

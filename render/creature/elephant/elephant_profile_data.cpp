@@ -20,7 +20,7 @@
 #include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"

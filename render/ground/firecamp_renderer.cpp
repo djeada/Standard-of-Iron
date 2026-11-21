@@ -19,7 +19,7 @@
 #include "render/gl/resources.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -49,7 +49,7 @@ void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   generate_firecamp_instances();
 }
 
-void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void FireCampRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_state(

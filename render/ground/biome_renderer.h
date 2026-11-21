@@ -15,7 +15,7 @@
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 
 class BiomeRenderer : public IScatterPass {
 public:
@@ -27,7 +27,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   void refresh_grass();
   [[nodiscard]] auto grass_matches_graphics_profile() const noexcept -> bool;

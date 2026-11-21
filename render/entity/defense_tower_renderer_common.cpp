@@ -9,7 +9,7 @@
 #include "game/core/component_core.h"
 #include "render/entity/ambient_people.h"
 #include "render/frame/entity_appearance.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -27,7 +27,7 @@ void draw_night_braziers(const DrawContext& ctx,
   if (state != BuildingState::Normal) {
     return;
   }
-  auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter());
+  auto* scene_renderer = dynamic_cast<FrameSubmitter*>(out.unwrap_submitter());
   if (scene_renderer == nullptr) {
     return;
   }

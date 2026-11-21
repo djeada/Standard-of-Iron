@@ -17,7 +17,7 @@
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/math/math_utils.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 namespace {

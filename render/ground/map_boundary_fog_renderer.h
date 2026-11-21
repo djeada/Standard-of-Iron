@@ -11,7 +11,7 @@
 #include "render/gl/mesh.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class MapBoundaryFogRenderer : public IRenderPass {
@@ -35,7 +35,7 @@ public:
     return m_mountain_max_height - m_mountain_min_height;
   }
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
 private:
   struct BoundaryCard {

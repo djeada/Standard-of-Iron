@@ -17,7 +17,7 @@
 #include "render/entity/formation_instance_layout.h"
 #include "render/frame/camera_visibility.h"
 #include "render/frame/draw_commands.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -64,7 +64,7 @@ auto body_size_for(Engine::Core::World& world,
 
 } // namespace
 
-void render_wading_effects(Renderer* renderer,
+void render_wading_effects(FrameSubmitter* renderer,
                            ResourceManager*,
                            Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {

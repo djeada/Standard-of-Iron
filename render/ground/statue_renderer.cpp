@@ -11,7 +11,7 @@
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -41,7 +41,7 @@ void StatueRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void StatueRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void StatueRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::Statue) ==
       0) {
     return;

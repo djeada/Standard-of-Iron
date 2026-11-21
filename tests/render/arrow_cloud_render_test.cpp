@@ -10,6 +10,7 @@
 
 #include "game/systems/arrow_system.h"
 #include "render/geom/arrow.h"
+#include "render/overlay/arrow_renderer.h"
 #include "render/scene/scene_renderer.h"
 
 namespace {

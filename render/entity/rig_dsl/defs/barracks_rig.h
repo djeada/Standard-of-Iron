@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "render/rig_dsl/rig_def.h"
+#include "render/entity/rig_dsl/rig_def.h"
 
 namespace Render::RigDSL::Barracks {
 

@@ -108,7 +108,7 @@
 #include "game/units/troop_type.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/frame/camera_visibility.h"
-#include "render/geom/projectile_renderer.h"
+#include "render/overlay/projectile_renderer.h"
 #include "render/gl/shared_geometry_cache.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"

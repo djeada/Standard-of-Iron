@@ -16,7 +16,7 @@
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/creature/pipeline/preparation_common.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/graphics_settings.h"
 #include "render/profiling/frame_profile.h"
 

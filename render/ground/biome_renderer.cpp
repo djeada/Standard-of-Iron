@@ -28,7 +28,7 @@
 #include "render/gl/resources.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -198,7 +198,7 @@ auto BiomeRenderer::prewarm_gpu_resources() -> bool {
       });
 }
 
-void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
   const auto visible_count = Scatter::sync_filtered_state(
       m_grass_state,

@@ -55,7 +55,7 @@
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
 #include "render/math/math_utils.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;

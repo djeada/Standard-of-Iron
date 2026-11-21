@@ -1,4 +1,4 @@
-#include "render/frame/pass/construction_preview_pass.h"
+#include "render/scene/construction_preview_pass.h"
 
 #include "game/map/visibility_service.h"
 #include "render/frame/pass/frame_context.h"

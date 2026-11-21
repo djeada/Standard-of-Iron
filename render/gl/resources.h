@@ -4,7 +4,6 @@
 
 #include <memory>
 
-#include "render/geom/arrow.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/mesh.h"
 #include "render/gl/texture.h"

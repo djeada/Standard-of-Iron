@@ -7,7 +7,7 @@
 #include "render/geom/mode_indicator.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 struct InteractionTargetMarkerVisual {
@@ -18,7 +18,7 @@ struct InteractionTargetMarkerVisual {
 };
 
 void render_interaction_target_markers(
-    Renderer* renderer,
+    FrameSubmitter* renderer,
     ResourceManager* resources,
     std::span<const InteractionTargetMarkerVisual> markers,
     bool reduced_motion = false);

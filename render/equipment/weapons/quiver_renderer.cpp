@@ -7,7 +7,7 @@
 
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/runtime/humanoid_math.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"

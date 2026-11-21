@@ -4,11 +4,11 @@
 #include "game/core/world.h"
 #include "game/systems/healing_colors.h"
 #include "game/systems/nation_id.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
-void render_healer_auras(Renderer* renderer,
+void render_healer_auras(FrameSubmitter* renderer,
                          ResourceManager*,
                          Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {

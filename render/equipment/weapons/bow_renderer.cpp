@@ -18,7 +18,7 @@
 #include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/humanoid/runtime/skeleton_evaluator.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/entity/renderer_constants.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"

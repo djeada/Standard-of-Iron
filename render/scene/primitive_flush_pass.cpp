@@ -1,4 +1,4 @@
-#include "render/frame/pass/primitive_flush_pass.h"
+#include "render/scene/primitive_flush_pass.h"
 
 #include "render/frame/draw_queue.h"
 #include "render/frame/pass/frame_context.h"

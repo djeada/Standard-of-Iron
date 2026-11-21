@@ -11,7 +11,7 @@
 #include "render/ground/scatter_renderer_base.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 
 class TentRenderer : public ScatterRendererBase<PropInstanceGpu, PropBatchParams> {
 public:
@@ -23,7 +23,7 @@ public:
                  const std::vector<Game::Map::WorldProp>& world_props = {});
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
 private:
   void generate_instances(const std::vector<Game::Map::WorldProp>& world_props,

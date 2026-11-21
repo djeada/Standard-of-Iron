@@ -1,4 +1,4 @@
-#include "render/rig_dsl/rig_interpreter.h"
+#include "render/entity/rig_dsl/rig_interpreter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

@@ -15,7 +15,7 @@
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 
 class PlantRenderer : public ScatterRendererBase<PlantInstanceGpu, FoliageBatchParams> {
 public:
@@ -28,7 +28,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
 

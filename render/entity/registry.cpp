@@ -1,5 +1,7 @@
 #include "render/entity/registry.h"
 
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+
 #include <string>
 #include <utility>
 
@@ -47,7 +49,7 @@
 #include "render/entity/wall_renderer.h"
 #include "render/entity/wildlife/sheep_renderer.h"
 #include "render/entity/wildlife/wolf_renderer.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -159,6 +161,17 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   Wildlife::register_sheep_renderer(registry);
   Wildlife::register_wolf_renderer(registry);
+}
+
+void register_humanoid_renderer(EntityRendererRegistry& registry,
+                                std::string key,
+                                std::shared_ptr<const HumanoidRendererBase> renderer) {
+  registry.register_renderer(
+      std::move(key),
+      [renderer](const DrawContext& ctx, ISubmitter& out) {
+        renderer->render(ctx, out);
+      },
+      renderer);
 }
 
 } // namespace Render::GL

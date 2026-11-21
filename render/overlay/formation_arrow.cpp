@@ -1,4 +1,4 @@
-#include "render/geom/formation_arrow.h"
+#include "render/overlay/formation_arrow.h"
 
 #include <QMatrix4x4>
 #include <qvectornd.h>
@@ -10,11 +10,11 @@
 #include "render/geom/selection_disc.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
-void render_formation_arrow(Renderer* renderer,
+void render_formation_arrow(FrameSubmitter* renderer,
                             ResourceManager* resources,
                             const FormationPlacementInfo& placement) {
   if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {
@@ -86,7 +86,7 @@ void render_formation_arrow(Renderer* renderer,
   renderer->mesh(arrow_mesh, arrow_xform, body_color, nullptr, 0.88F * fa);
 }
 
-void render_formation_slot_preview(Renderer* renderer,
+void render_formation_slot_preview(FrameSubmitter* renderer,
                                    ResourceManager* resources,
                                    const FormationPlacementInfo& placement) {
   if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {

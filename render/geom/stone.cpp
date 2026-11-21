@@ -8,11 +8,11 @@
 #include <numbers>
 #include <vector>
 
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/gl/mesh.h"
 #include "render/gl/resources.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render {
 namespace Geom {

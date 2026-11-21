@@ -20,7 +20,7 @@
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/math/math_utils.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -424,7 +424,7 @@ void draw_throwing_arm(const DrawContext& p,
                  white);
       }
 
-      auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter());
+      auto* scene_renderer = dynamic_cast<FrameSubmitter*>(out.unwrap_submitter());
       if (scene_renderer != nullptr) {
         QVector3D const flame_origin =
             (arm_matrix * QVector4D(seat, 1.0F)).toVector3D();

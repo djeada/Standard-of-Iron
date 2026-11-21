@@ -13,7 +13,7 @@ TerrainSurfaceManager::TerrainSurfaceManager()
 
 TerrainSurfaceManager::~TerrainSurfaceManager() = default;
 
-void TerrainSurfaceManager::submit(Renderer& renderer, ResourceManager* resources) {
+void TerrainSurfaceManager::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   for (auto* pass : m_passes) {
     if (pass != nullptr) {
       pass->submit(renderer, resources);

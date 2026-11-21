@@ -11,7 +11,7 @@
 #include <string_view>
 
 #include "render/cache/render_archetype.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/primitives.h"
 

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "render/frame/terrain_scene_types.h"
 #include "render/gl/buffer.h"
 
 namespace Render::Ground::Scatter {
@@ -20,25 +21,6 @@ inline void set_visibility_filter_enabled_for_current_thread(bool enabled) {
 [[nodiscard]] inline auto visibility_filter_enabled_for_current_thread() -> bool {
   return visibility_filter_enabled_ref();
 }
-
-struct SyncStats {
-  std::uint32_t visibility_rebuilds = 0;
-  std::uint32_t buffer_uploads = 0;
-  std::uint32_t buffer_resets = 0;
-  std::uint32_t chunks_rescanned = 0;
-
-  [[nodiscard]] auto did_upload_or_rebuild() const noexcept -> bool {
-    return visibility_rebuilds != 0U || buffer_uploads != 0U || buffer_resets != 0U;
-  }
-
-  auto operator+=(const SyncStats& other) noexcept -> SyncStats& {
-    visibility_rebuilds += other.visibility_rebuilds;
-    buffer_uploads += other.buffer_uploads;
-    buffer_resets += other.buffer_resets;
-    chunks_rescanned += other.chunks_rescanned;
-    return *this;
-  }
-};
 
 [[nodiscard]] inline auto direct_needs_buffer_upload(
     bool instances_empty, bool has_buffer, bool instances_dirty) noexcept -> bool {

@@ -13,7 +13,7 @@
 #include "render/backend/backend.h"
 #include "render/creature/combat_animation_diagnostics.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/contact_shadow.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/visibility_budget.h"

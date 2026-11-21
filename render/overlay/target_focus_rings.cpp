@@ -1,4 +1,4 @@
-#include "render/geom/target_focus_rings.h"
+#include "render/overlay/target_focus_rings.h"
 
 #include <QMatrix4x4>
 #include <QVector4D>
@@ -9,7 +9,7 @@
 #include "game/accessibility/team_identity.h"
 #include "game/map/terrain_service.h"
 #include "render/geom/mode_indicator.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 #include "scene/camera.h"
 
 namespace Render::GL {
@@ -52,7 +52,7 @@ auto billboard_basis(const Camera& camera) -> BillboardBasis {
   return basis;
 }
 
-void draw_glyph(Renderer* renderer,
+void draw_glyph(FrameSubmitter* renderer,
                 const BillboardBasis& basis,
                 const QVector3D& ground_position,
                 float radius,
@@ -76,7 +76,7 @@ void draw_glyph(Renderer* renderer,
 
 } // namespace
 
-void render_target_focus_rings(Renderer* renderer,
+void render_target_focus_rings(FrameSubmitter* renderer,
                                ResourceManager* resources,
                                std::span<const TargetFocusVisual> visuals,
                                const TargetFocusStyle& style) {

@@ -10,14 +10,14 @@
 #include "game/map/visibility_service.h"
 #include "render/gl/mesh.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/ground/terrain_scene_types.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/terrain_scene_types.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::Ground {
 
 template <typename Segment>
 void submit_linear_feature_segments(
-    GL::Renderer& renderer,
+    GL::FrameSubmitter& renderer,
     const std::vector<Segment>& segments,
     const std::vector<std::unique_ptr<GL::Mesh>>& meshes,
     GL::LinearFeatureKind kind,

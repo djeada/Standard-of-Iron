@@ -12,7 +12,7 @@
 #include "render/gl/texture_upload.h"
 #include "render/ground/ground_ecology.h"
 #include "render/ground/terrain_renderer.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -415,7 +415,7 @@ auto TerrainRenderer::update_height_texture(
   return resources;
 }
 
-void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void TerrainRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (m_chunks.empty()) {
     return;
   }

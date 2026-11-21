@@ -18,7 +18,7 @@ struct TreeScatterProfile;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 
 struct AnchoredTree {
   Game::Map::TreeSpecies species{Game::Map::TreeSpecies::Olive};
@@ -47,7 +47,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
 

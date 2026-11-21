@@ -6,7 +6,7 @@
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
 #include "render/frame/i_render_pass.h"
-#include "render/ground/terrain_scene_types.h"
+#include "render/frame/terrain_scene_types.h"
 
 namespace Render::GL {
 
@@ -27,7 +27,7 @@ public:
 
   void set_fog_renderer(FogRenderer* fog);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 

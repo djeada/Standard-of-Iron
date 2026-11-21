@@ -9,7 +9,7 @@
 #include "game/systems/nation_id.h"
 #include "render/entity/selection_ring_layout.h"
 #include "render/frame/draw_commands.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -40,7 +40,7 @@ constexpr float k_buff_ring_pulse = 0.05F;
 
 } // namespace
 
-void render_commander_auras(Renderer* renderer,
+void render_commander_auras(FrameSubmitter* renderer,
                             ResourceManager*,
                             Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {

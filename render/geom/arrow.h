@@ -74,18 +74,4 @@ public:
 };
 } // namespace Geom
 
-namespace GL {
-class Renderer;
-class ResourceManager;
-} // namespace GL
 } // namespace Render
-
-namespace Game::Systems {
-struct ArrowInstance;
-}
-
-namespace Render::GL {
-void render_arrows(Renderer* renderer,
-                   ResourceManager* resources,
-                   const std::vector<Game::Systems::ArrowInstance>& arrows);
-}

@@ -1,4 +1,4 @@
-#include "render/geom/interaction_target_markers.h"
+#include "render/overlay/interaction_target_markers.h"
 
 #include <QMatrix4x4>
 #include <QVector4D>
@@ -10,7 +10,7 @@
 #include "game/map/terrain_service.h"
 #include "render/frame/local_lighting.h"
 #include "render/geom/mode_indicator.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 #include "scene/camera.h"
 
 namespace Render::GL {
@@ -51,7 +51,7 @@ auto billboard_basis(const Camera& camera) -> BillboardBasis {
   return basis;
 }
 
-void draw_action_glyph(Renderer* renderer,
+void draw_action_glyph(FrameSubmitter* renderer,
                        const BillboardBasis& basis,
                        const QVector3D& ground_position,
                        float radius,
@@ -77,7 +77,7 @@ void draw_action_glyph(Renderer* renderer,
                            k_glyph_alpha);
 }
 
-void draw_hover_glow(Renderer* renderer,
+void draw_hover_glow(FrameSubmitter* renderer,
                      const QVector3D& ground_position,
                      float radius,
                      bool reduced_motion) {
@@ -106,7 +106,7 @@ void draw_hover_glow(Renderer* renderer,
 } // namespace
 
 void render_interaction_target_markers(
-    Renderer* renderer,
+    FrameSubmitter* renderer,
     ResourceManager* resources,
     std::span<const InteractionTargetMarkerVisual> markers,
     bool reduced_motion) {

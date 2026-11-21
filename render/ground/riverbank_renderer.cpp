@@ -21,7 +21,7 @@
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
 #include "render/ground/linear_feature_geometry.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -71,7 +71,7 @@ void ShorelineRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_m
   }
 }
 
-void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void ShorelineRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (m_meshes.empty()) {
     return;
   }

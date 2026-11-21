@@ -82,7 +82,7 @@ A boulder moving faster than `k_rockfall_lethal_speed` strikes every hostile tro
 - knocks the surviving troop down (`StaggerTier::Knockdown`); and
 - costs the boulder 18% of its speed, so a column shields its rear ranks a little.
 
-Releasing a trap plays the positioned `hazard.rockfall` cue. `render_rockfall` in `render/geom/projectile_renderer.cpp` draws:
+Releasing a trap plays the positioned `hazard.rockfall` cue. `render_rockfall` in `render/overlay/projectile_renderer.cpp` draws:
 
 - the caches, with their timber crib and the standard hanging claim banner (`BarracksFlagRenderer::draw_hanging_banner`);
 - the ramp chevrons;

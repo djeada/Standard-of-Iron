@@ -7,10 +7,10 @@ struct HealingBeamView;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
-void render_healing_waves(Renderer* renderer,
+void render_healing_waves(FrameSubmitter* renderer,
                           ResourceManager* resources,
                           const std::vector<Game::Systems::HealingBeamView>& beams);
 

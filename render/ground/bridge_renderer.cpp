@@ -21,7 +21,7 @@
 #include "render/ground/linear_feature_geometry.h"
 #include "render/ground/linear_feature_submission.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -74,7 +74,7 @@ auto BridgeRenderer::segment_cull_options(float longest_segment) const
   return options;
 }
 
-void BridgeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void BridgeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   float longest_segment = 0.0F;

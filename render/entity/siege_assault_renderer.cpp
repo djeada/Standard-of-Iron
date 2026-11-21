@@ -22,7 +22,7 @@
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/math/math_utils.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 namespace {
@@ -572,7 +572,7 @@ void register_variant(EntityRendererRegistry& registry, const Variant& v) {
           unit = ctx.resources->unit();
           white = ctx.resources->white();
         }
-        if (auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter())) {
+        if (auto* scene_renderer = dynamic_cast<FrameSubmitter*>(out.unwrap_submitter())) {
           unit = scene_renderer->get_mesh_cube();
           white = scene_renderer->get_white_texture();
         }

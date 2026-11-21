@@ -39,7 +39,7 @@
 #include "render/creature/snapshot_mesh_registry.h"
 #include "render/creature/spec.h"
 #include "render/creature/wildlife/wildlife_rig.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/submitter.h"

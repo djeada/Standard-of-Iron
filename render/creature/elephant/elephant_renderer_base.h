@@ -7,7 +7,7 @@
 #include "render/creature/elephant/dimensions.h"
 #include "render/creature/elephant/runtime/motion_sample.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 
 namespace Render::GL {
 

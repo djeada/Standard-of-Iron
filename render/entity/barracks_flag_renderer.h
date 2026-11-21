@@ -14,7 +14,8 @@
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shader.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -51,7 +52,7 @@ struct BannerShaderScope {
       return;
     }
 
-    m_renderer = dynamic_cast<Renderer*>(sink);
+    m_renderer = dynamic_cast<FrameSubmitter*>(sink);
     if (m_renderer != nullptr) {
       m_previous_renderer_shader = m_renderer->get_current_shader();
       m_renderer->set_current_shader(shader);
@@ -70,7 +71,7 @@ struct BannerShaderScope {
 private:
   QueueSubmitter* m_queue = nullptr;
   Shader* m_previous_queue_shader = nullptr;
-  Renderer* m_renderer = nullptr;
+  FrameSubmitter* m_renderer = nullptr;
   Shader* m_previous_renderer_shader = nullptr;
 };
 

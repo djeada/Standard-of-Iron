@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "render/frame/creature_lod.h"
 #include "animation/action_manifest.h"
 #include "animation/clip_manifest.h"
 #include "animation/guard_manifest.h"
@@ -239,17 +240,6 @@ struct VariationParams {
 
     return v;
   }
-};
-
-enum class FacialHairStyle {
-  None,
-  Stubble,
-  ShortBeard,
-  FullBeard,
-  LongBeard,
-  Goatee,
-  Mustache,
-  MustacheAndBeard
 };
 
 struct FacialHairParams {

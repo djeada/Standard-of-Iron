@@ -12,7 +12,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/terrain_noise_atlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/bootstrap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/bootstrap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/instance_draw_guard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/cylinder_pipeline.cpp

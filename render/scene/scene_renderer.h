@@ -28,6 +28,7 @@
 #include "render/entity/registry.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/draw_queue.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/frame_budget.h"
 #include "render/frame/i_render_backend.h"
 #include "render/frame/pipeline/screen_metrics.h"
@@ -90,7 +91,7 @@ struct RenderEntry;
 struct UnitSubmitContext;
 struct UnitDrawPlan;
 
-class Renderer : public ISubmitter {
+class Renderer : public FrameSubmitter {
 public:
   using WorldRenderMode = Render::GL::WorldRenderMode;
 
@@ -109,21 +110,21 @@ public:
   }
 
   void set_world_view(const Render::WorldView& view) { m_world_view = view; }
-  [[nodiscard]] auto world_view() const noexcept -> const Render::WorldView& {
+  [[nodiscard]] auto world_view() const noexcept -> const Render::WorldView& override {
     return m_world_view;
   }
 
   void set_camera(Camera* camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
-  auto camera() const -> Camera* { return m_camera; }
-  auto backend() -> Backend* { return m_gl_backend; }
+  auto camera() const -> Camera* override { return m_camera; }
+  auto backend() -> Backend* override { return m_gl_backend; }
 
   void update_animation_time(float delta_time) {
     m_accumulated_time += delta_time;
     m_last_frame_delta = delta_time;
   }
   [[nodiscard]] auto last_frame_delta() const -> float { return m_last_frame_delta; }
-  auto get_animation_time() const -> float { return m_accumulated_time; }
+  auto get_animation_time() const -> float override { return m_accumulated_time; }
 
   void reset_animation_time() {
     m_accumulated_time = 0.0F;
@@ -131,7 +132,7 @@ public:
     m_animation_time_cache.clear();
   }
 
-  auto resources() const -> ResourceManager* {
+  auto resources() const -> ResourceManager* override {
     return m_backend ? m_backend->resources() : nullptr;
   }
   [[nodiscard]] auto is_ready() const -> bool {
@@ -152,7 +153,7 @@ public:
     m_view.set_order_marker_spectator_mode(enabled);
   }
   [[nodiscard]] auto
-  order_markers_visible_for_owner(int owner_id) const noexcept -> bool {
+  order_markers_visible_for_owner(int owner_id) const noexcept -> bool override {
     return m_view.order_markers_visible_for_owner(owner_id);
   }
   [[nodiscard]] auto selection_markers_visible() const noexcept -> bool {
@@ -186,13 +187,13 @@ public:
     return m_view.rpg_lens_gap_applies();
   }
   [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
-  [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
+  [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool override;
   [[nodiscard]] auto
-  submission_visibility() const noexcept -> const SubmissionVisibilityPolicy& {
+  submission_visibility() const noexcept -> const SubmissionVisibilityPolicy& override {
     return m_submission_visibility;
   }
 
-  [[nodiscard]] auto visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources&;
+  [[nodiscard]] auto visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources& override;
 
   void set_frame_budget(const FrameBudgetConfig& config) {
     if (m_backend) {
@@ -222,30 +223,30 @@ public:
                ? m_backend->resources()->ground()
                : nullptr;
   }
-  auto get_mesh_cube() const -> Mesh* {
+  auto get_mesh_cube() const -> Mesh* override {
     return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->unit()
                : nullptr;
   }
 
-  auto get_white_texture() const -> Texture* {
+  auto get_white_texture() const -> Texture* override {
     return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->white()
                : nullptr;
   }
 
-  auto get_shader(const QString& name) const -> Shader* {
+  auto get_shader(const QString& name) const -> Shader* override {
     return m_backend ? m_backend->shader(name) : nullptr;
   }
   auto load_shader(const QString& name,
                    const QString& vert_path,
-                   const QString& frag_path) -> Shader* {
+                   const QString& frag_path) -> Shader* override {
     return m_gl_backend ? m_gl_backend->get_or_load_shader(name, vert_path, frag_path)
                         : nullptr;
   }
 
-  void set_current_shader(Shader* shader) { m_current_shader = shader; }
-  auto get_current_shader() const -> Shader* { return m_current_shader; }
+  void set_current_shader(Shader* shader) override { m_current_shader = shader; }
+  auto get_current_shader() const -> Shader* override { return m_current_shader; }
 
   struct GridParams {
     float cell_size = 1.0F;
@@ -273,7 +274,7 @@ public:
     }
   }
   [[nodiscard]] auto
-  environment_lighting() const noexcept -> const EnvironmentLightingState& {
+  environment_lighting() const noexcept -> const EnvironmentLightingState& override {
     return m_environment_lighting;
   }
 
@@ -305,7 +306,7 @@ public:
       m_gl_backend->set_mist_volumes(volumes);
     }
   }
-  void set_ground_fog(const Render::GroundFogSettings& fog) {
+  void set_ground_fog(const Render::GroundFogSettings& fog) override {
     if (m_gl_backend != nullptr) {
       m_gl_backend->set_ground_fog(fog);
     }
@@ -341,7 +342,7 @@ public:
                 float alpha = 1.0F) override;
   void ground_marker(const GroundMarkerCmd& marker) override;
 
-  void set_terrain_height_resources(const TerrainSurfaceCmd::HeightResources& height) {
+  void set_terrain_height_resources(const TerrainSurfaceCmd::HeightResources& height) override {
     m_terrain_height_resources = height;
   }
 
@@ -380,23 +381,23 @@ public:
                       const QVector3D& color,
                       float radius,
                       float intensity,
-                      float time);
+                      float time) override;
   void burning_flame(const QVector3D& position,
                      const QVector3D& color,
                      float radius,
                      float intensity,
-                     float time);
+                     float time) override;
   void fireball(const QVector3D& position,
                 const QVector3D& color,
                 float radius,
                 float intensity,
-                float time);
+                float time) override;
   void blood_pool(const QVector3D& position,
                   float radius,
                   float alpha_scale,
                   float rotation = 0.0F,
                   float aspect_ratio = 1.0F,
-                  float seed = 0.0F);
+                  float seed = 0.0F) override;
   void stone_impact(const QVector3D& position,
                     const QVector3D& color,
                     float radius,
@@ -408,7 +409,7 @@ public:
                    float radius,
                    float intensity,
                    float time,
-                   const QVector3D& direction = {});
+                   const QVector3D& direction = {}) override;
   void weapon_arc(const QVector3D& position,
                   const QVector3D& color,
                   float radius,
@@ -416,16 +417,16 @@ public:
                   float time,
                   const QVector3D& direction,
                   float span,
-                  float tilt = 0.0F);
+                  float tilt = 0.0F) override;
   void mode_indicator(const QMatrix4x4& model,
                       int mode_type,
                       const QVector3D& color,
                       float alpha = 1.0F) override;
   void rigged(const RiggedCreatureCmd& cmd) override;
   void rigged(RiggedCreatureCmd&& cmd) override;
-  void terrain_surface(const TerrainSurfaceCmd& cmd);
-  void terrain_feature(const TerrainFeatureCmd& cmd);
-  void terrain_scatter(const TerrainScatterCmd& cmd);
+  void terrain_surface(const TerrainSurfaceCmd& cmd) override;
+  void terrain_feature(const TerrainFeatureCmd& cmd) override;
+  void terrain_scatter(const TerrainScatterCmd& cmd) override;
 
   void local_light(const Render::LocalLight& light) override;
 
@@ -455,11 +456,11 @@ public:
 
   void fog_batch(const FogInstanceData* instances,
                  std::size_t count,
-                 const FogMaskResources& mask = {});
+                 const FogMaskResources& mask = {}) override;
   void fog_batch(Buffer* instance_buffer,
                  std::size_t count,
-                 const FogMaskResources& mask = {});
-  void rain_batch(const RainBatchParams& params);
+                 const FogMaskResources& mask = {}) override;
+  void rain_batch(const RainBatchParams& params) override;
 
   void render_construction_previews_public(Engine::Core::World* world,
                                            const Game::Map::VisibilityService* vis,
@@ -479,7 +480,7 @@ public:
   }
 
   [[nodiscard]] auto
-  building_ground() const noexcept -> const Render::Ground::BuildingGroundSet& {
+  building_ground() const noexcept -> const Render::Ground::BuildingGroundSet& override {
     return m_building_ground;
   }
 

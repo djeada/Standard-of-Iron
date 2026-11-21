@@ -7,7 +7,7 @@
 #include <array>
 #include <cstddef>
 
-#include "render/rig_dsl/rig_interpreter.h"
+#include "render/entity/rig_dsl/rig_interpreter.h"
 
 namespace Render::RigDSL {
 

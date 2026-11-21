@@ -10,11 +10,11 @@
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
 #include "render/frame/i_render_pass.h"
-#include "render/ground/terrain_scene_types.h"
+#include "render/frame/terrain_scene_types.h"
 
 namespace Render::GL {
 class Mesh;
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class WaterRenderer : public IRenderPass {
@@ -27,7 +27,7 @@ public:
                  const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 

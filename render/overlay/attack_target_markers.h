@@ -5,7 +5,7 @@
 #include <span>
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 struct AttackTargetMarkerVisual {
@@ -15,7 +15,7 @@ struct AttackTargetMarkerVisual {
   bool attackable{true};
 };
 
-void render_attack_target_markers(Renderer* renderer,
+void render_attack_target_markers(FrameSubmitter* renderer,
                                   ResourceManager* resources,
                                   std::span<const AttackTargetMarkerVisual> markers);
 

@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 } // namespace Render::GL
 
@@ -36,11 +36,11 @@ struct FormationPlacementInfo {
   std::vector<FormationSlotMarker> slot_markers;
 };
 
-void render_formation_arrow(Renderer* renderer,
+void render_formation_arrow(FrameSubmitter* renderer,
                             ResourceManager* resources,
                             const FormationPlacementInfo& placement);
 
-void render_formation_slot_preview(Renderer* renderer,
+void render_formation_slot_preview(FrameSubmitter* renderer,
                                    ResourceManager* resources,
                                    const FormationPlacementInfo& placement);
 

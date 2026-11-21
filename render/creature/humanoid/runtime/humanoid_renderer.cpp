@@ -21,7 +21,7 @@
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/entity/humanoid_pose_policies.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/palette.h"
 
@@ -199,17 +199,6 @@ void HumanoidRendererBase::render(const DrawContext& ctx, ISubmitter& out) const
   prep.clear();
   prepare(ctx, prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
-}
-
-void register_humanoid_renderer(EntityRendererRegistry& registry,
-                                std::string key,
-                                std::shared_ptr<const HumanoidRendererBase> renderer) {
-  registry.register_renderer(
-      std::move(key),
-      [renderer](const DrawContext& ctx, ISubmitter& out) {
-        renderer->render(ctx, out);
-      },
-      renderer);
 }
 
 } // namespace Render::GL

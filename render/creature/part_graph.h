@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "render/creature/skeleton.h"
+#include "render/frame/creature_lod.h"
 
 namespace Render::GL {
 class Mesh;
@@ -45,12 +46,6 @@ enum class MeshSkinning : std::uint8_t {
 enum class SpanSkinning : std::uint8_t {
   LinearBlend = 0,
   AnchorRigid,
-};
-
-enum class CreatureLOD : std::uint8_t {
-  Full = 0,
-  Minimal = 1,
-  Culled = 2,
 };
 
 inline constexpr std::uint8_t k_lod_full = 1U << 0;

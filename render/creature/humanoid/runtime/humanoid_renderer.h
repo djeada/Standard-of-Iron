@@ -12,7 +12,7 @@
 #include "render/creature/humanoid/asset/humanoid_capabilities.h"
 #include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 
 namespace Engine::Core {
 class Entity;
@@ -150,9 +150,5 @@ private:
       .debug_name = "humanoid/default",
       .kind = Render::Creature::Pipeline::CreatureKind::Humanoid};
 };
-
-void register_humanoid_renderer(EntityRendererRegistry& registry,
-                                std::string key,
-                                std::shared_ptr<const HumanoidRendererBase> renderer);
 
 } // namespace Render::GL

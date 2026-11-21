@@ -16,7 +16,7 @@
 #include "render/frame/decoration_gpu.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_ground_fit.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -54,7 +54,7 @@ void BoulderRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, StoneBatchParams::default_light_direction());
 }
 
-void BoulderRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void BoulderRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   submit_filtered_common<false>(
       renderer,
       resources,

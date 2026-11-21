@@ -6,7 +6,7 @@
 
 namespace Render {
 namespace GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 } // namespace GL
 } // namespace Render
@@ -45,12 +45,12 @@ inline constexpr int k_projectile_impact_effect_budget = 40;
 
 [[nodiscard]] auto fireball_impact_envelope(float progress) -> float;
 
-void render_projectiles(Renderer* renderer,
+void render_projectiles(FrameSubmitter* renderer,
                         ResourceManager* resources,
                         const Game::Systems::RenderEffectsFrame& effects,
                         const ProjectileViewContext* view = nullptr);
 
-void render_arrow_projectile(Renderer* renderer,
+void render_arrow_projectile(FrameSubmitter* renderer,
                              ResourceManager* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
@@ -58,16 +58,16 @@ void render_arrow_projectile(Renderer* renderer,
                              ProjectileRelation relation = ProjectileRelation::Neutral,
                              bool reduced_effects = false);
 
-void render_stone_projectile(Renderer* renderer,
+void render_stone_projectile(FrameSubmitter* renderer,
                              ResourceManager* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
                              bool reduced_effects = false);
 
-void render_rafts(Renderer* renderer, const Game::Systems::RenderEffectsFrame& effects);
+void render_rafts(FrameSubmitter* renderer, const Game::Systems::RenderEffectsFrame& effects);
 
-void render_rockfall(Renderer* renderer,
+void render_rockfall(FrameSubmitter* renderer,
                      const Game::Systems::RenderEffectsFrame& effects,
                      const ProjectileViewContext* view = nullptr);
 

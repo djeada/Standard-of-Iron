@@ -19,7 +19,7 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
-#include "render/ground/terrain_scene_types.h"
+#include "render/frame/terrain_scene_types.h"
 #include "render/ground/terrain_surface_manager.h"
 #include "render/ground/tree_renderer.h"
 #include "render/scene/scene_renderer.h"

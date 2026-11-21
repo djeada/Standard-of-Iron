@@ -20,7 +20,7 @@
 #include "render/gl/resources.h"
 #include "render/ground/riverbank_asset_gpu.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -63,7 +63,7 @@ void RiverbankAssetRenderer::set_light_direction(const QVector3D& dir) {
   m_asset_state.params.light_direction = normalized;
 }
 
-void RiverbankAssetRenderer::submit(Renderer&, ResourceManager* resources) {
+void RiverbankAssetRenderer::submit(FrameSubmitter&, ResourceManager* resources) {
   Q_UNUSED(resources);
 }
 

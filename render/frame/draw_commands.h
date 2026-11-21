@@ -20,7 +20,7 @@
 #include "render/frame/rain_gpu.h"
 #include "render/frame/role_color_palette.h"
 #include "render/frame/world_chunk.h"
-#include "render/ground/terrain_scene_types.h"
+#include "render/frame/terrain_scene_types.h"
 
 namespace Render::GL {
 class Mesh;

@@ -7,7 +7,7 @@
 #include <span>
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -22,6 +22,6 @@ struct RaftDrawable {
   std::uint32_t seed{0};
 };
 
-void draw_rafts(Renderer* renderer, std::span<const RaftDrawable> rafts);
+void draw_rafts(FrameSubmitter* renderer, std::span<const RaftDrawable> rafts);
 
 } // namespace Render::GL

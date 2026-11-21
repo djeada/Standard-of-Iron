@@ -6,7 +6,7 @@
 #include <span>
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 enum class TargetFocusVisualRole : std::uint8_t {
@@ -28,7 +28,7 @@ struct TargetFocusStyle {
   bool reduced_motion{false};
 };
 
-void render_target_focus_rings(Renderer* renderer,
+void render_target_focus_rings(FrameSubmitter* renderer,
                                ResourceManager* resources,
                                std::span<const TargetFocusVisual> visuals,
                                const TargetFocusStyle& style = {});

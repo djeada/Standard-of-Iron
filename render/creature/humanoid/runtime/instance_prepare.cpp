@@ -44,7 +44,7 @@
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pose_intent.h"
 #include "render/entity/formation_instance_layout.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/terrain_contact.h"
 #include "render/gl/humanoid/humanoid_constants.h"

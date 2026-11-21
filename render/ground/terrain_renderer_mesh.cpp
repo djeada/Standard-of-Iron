@@ -29,7 +29,7 @@
 #include "render/gl/resources.h"
 #include "render/ground/terrain_mesh_builder.h"
 #include "render/ground/terrain_renderer.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 

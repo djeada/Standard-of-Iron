@@ -14,7 +14,7 @@
 #include "render/frame/decoration_gpu.h"
 #include "render/gl/render_constants.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace {
 
@@ -55,7 +55,7 @@ void DeadTreeRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void DeadTreeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::DeadTree);
 }
 

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -33,7 +33,7 @@ auto AmbientFogRenderer::is_point_in_fog(float world_x, float world_z) const -> 
   return false;
 }
 
-void AmbientFogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void AmbientFogRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (!m_enabled || m_instances.empty()) {
     return;
   }

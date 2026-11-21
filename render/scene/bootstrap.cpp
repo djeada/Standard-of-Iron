@@ -1,4 +1,4 @@
-#include "render/gl/bootstrap.h"
+#include "render/scene/bootstrap.h"
 
 #include <QDebug>
 #include <QOpenGLContext>

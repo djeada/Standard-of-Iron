@@ -16,7 +16,7 @@ namespace Render::GL {
 class Mesh;
 class Texture;
 struct Material;
-class Renderer;
+class FrameSubmitter;
 } // namespace Render::GL
 
 namespace Render::Creature::Pipeline {

@@ -28,7 +28,7 @@
 #include "render/creature/wildlife/sheep_spec.h"
 #include "render/creature/wildlife/wildlife_rig.h"
 #include "render/creature/wildlife/wolf_spec.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 
 namespace Render::Creature::Pipeline {
 

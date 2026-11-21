@@ -1,4 +1,4 @@
-#include "render/geom/projectile_renderer.h"
+#include "render/overlay/projectile_renderer.h"
 
 #include <algorithm>
 #include <array>
@@ -10,17 +10,17 @@
 #include "game/systems/stone_projectile.h"
 #include "render/backend/backend.h"
 #include "render/entity/barracks_flag_renderer.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/submission_visibility.h"
 #include "render/geom/arrow.h"
-#include "render/geom/raft_renderer.h"
+#include "render/overlay/raft_renderer.h"
 #include "render/geom/stone.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -110,7 +110,7 @@ const QVector3D k_outgoing_glow(1.0F, 0.92F, 0.70F);
 const QVector3D k_night_glint_steel(0.55F, 0.80F, 1.0F);
 const QVector3D k_night_glint_cursed(0.42F, 0.12F, 0.80F);
 
-[[nodiscard]] auto projectile_night_amount(const Renderer* renderer) -> float {
+[[nodiscard]] auto projectile_night_amount(const FrameSubmitter* renderer) -> float {
   return renderer->environment_lighting().darkness_amount();
 }
 
@@ -125,7 +125,7 @@ flight_tangent(const Game::Systems::ProjectileView& projectile) -> QVector3D {
   return tangent.normalized();
 }
 
-void draw_night_glint(Renderer* renderer,
+void draw_night_glint(FrameSubmitter* renderer,
                       const QVector3D& position,
                       const QVector3D& direction,
                       const QVector3D& tint,
@@ -135,7 +135,7 @@ void draw_night_glint(Renderer* renderer,
   renderer->metal_spark(position, tint, radius, intensity, phase, direction);
 }
 
-void add_night_projectile_light(Renderer* renderer,
+void add_night_projectile_light(FrameSubmitter* renderer,
                                 const QVector3D& position,
                                 const QVector3D& tint,
                                 float radius,
@@ -166,7 +166,7 @@ constexpr float k_bolt_trail_step = 0.02F;
           std::clamp(color.z() * scale, 0.0F, 1.0F)};
 }
 
-void draw_arrow_glow(Renderer* renderer,
+void draw_arrow_glow(FrameSubmitter* renderer,
                      GL::Mesh* shaft,
                      GL::Mesh* tip,
                      const QMatrix4x4& model,
@@ -203,7 +203,7 @@ void draw_arrow_glow(Renderer* renderer,
   return model;
 }
 
-void render_aimed_arrow_impact(Renderer* renderer,
+void render_aimed_arrow_impact(FrameSubmitter* renderer,
                                const Game::Systems::ProjectileImpactEvent& impact,
                                float progress,
                                float fade) {
@@ -283,7 +283,7 @@ void render_aimed_arrow_impact(Renderer* renderer,
   }
 }
 
-void render_plain_arrow_impact(Renderer* renderer,
+void render_plain_arrow_impact(FrameSubmitter* renderer,
                                const Game::Systems::ProjectileImpactEvent& impact,
                                ProjectileRelation relation,
                                bool reduced_effects,
@@ -347,7 +347,7 @@ void render_plain_arrow_impact(Renderer* renderer,
                         time + impact.age);
 }
 
-void render_projectile_impact(Renderer* renderer,
+void render_projectile_impact(FrameSubmitter* renderer,
                               const Game::Systems::ProjectileImpactEvent& impact,
                               ProjectileRelation relation = ProjectileRelation::Neutral,
                               bool reduced_effects = false) {
@@ -488,7 +488,7 @@ void render_projectile_impact(Renderer* renderer,
                         renderer->get_animation_time() + impact.age);
 }
 
-void render_spent_projectile(Renderer* renderer,
+void render_spent_projectile(FrameSubmitter* renderer,
                              const Game::Systems::SpentProjectile& spent) {
   float const alpha = Game::Systems::spent_projectile_alpha(spent);
   if (alpha <= 0.01F) {
@@ -536,7 +536,7 @@ void render_spent_projectile(Renderer* renderer,
 
 } // namespace
 
-void render_arrow_projectile(Renderer* renderer,
+void render_arrow_projectile(FrameSubmitter* renderer,
                              ResourceManager* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
@@ -920,7 +920,7 @@ void render_arrow_projectile(Renderer* renderer,
   }
 }
 
-void render_stone_projectile(Renderer* renderer,
+void render_stone_projectile(FrameSubmitter* renderer,
                              ResourceManager* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& position,
@@ -1021,7 +1021,7 @@ void render_stone_projectile(Renderer* renderer,
   }
 }
 
-void render_projectiles(Renderer* renderer,
+void render_projectiles(FrameSubmitter* renderer,
                         ResourceManager* resources,
                         const Game::Systems::RenderEffectsFrame& effects,
                         const ProjectileViewContext* view) {
@@ -1125,7 +1125,7 @@ constexpr float k_rad_to_deg_f = 180.0F / std::numbers::pi_v<float>;
           0.90F + 0.18F * rock_hash(seed, 5U)};
 }
 
-void draw_rock(Renderer* renderer,
+void draw_rock(FrameSubmitter* renderer,
                Mesh* mesh,
                const QMatrix4x4& placement,
                float radius,
@@ -1136,7 +1136,7 @@ void draw_rock(Renderer* renderer,
   renderer->mesh(mesh, model, rock_color(seed), nullptr, 1.0F);
 }
 
-void draw_log(Renderer* renderer,
+void draw_log(FrameSubmitter* renderer,
               Mesh* cylinder,
               const QVector3D& a,
               const QVector3D& b,
@@ -1145,7 +1145,7 @@ void draw_log(Renderer* renderer,
   renderer->mesh(cylinder, Geom::cylinder_between(a, b, radius), color, nullptr, 1.0F);
 }
 
-void draw_chevron(Renderer* renderer,
+void draw_chevron(FrameSubmitter* renderer,
                   Mesh* cube,
                   const QVector3D& tip,
                   const QVector3D& downhill,
@@ -1165,7 +1165,7 @@ void draw_chevron(Renderer* renderer,
   }
 }
 
-void draw_cache_banner(Renderer* renderer,
+void draw_cache_banner(FrameSubmitter* renderer,
                        const QVector3D& pole_base,
                        float yaw,
                        const QVector3D& cloth) {
@@ -1217,7 +1217,7 @@ void draw_cache_banner(Renderer* renderer,
       &cloth_resources);
 }
 
-void draw_cache(Renderer* renderer,
+void draw_cache(FrameSubmitter* renderer,
                 const Game::Systems::RockfallCacheView& cache,
                 const ProjectileViewContext* view) {
   auto* stone = Geom::Stone::get();
@@ -1319,7 +1319,7 @@ void draw_cache(Renderer* renderer,
 
 } // namespace
 
-void render_rockfall(Renderer* renderer,
+void render_rockfall(FrameSubmitter* renderer,
                      const Game::Systems::RenderEffectsFrame& effects,
                      const ProjectileViewContext* view) {
   if (renderer == nullptr) {
@@ -1350,7 +1350,7 @@ void render_rockfall(Renderer* renderer,
   }
 }
 
-void render_rafts(Renderer* renderer,
+void render_rafts(FrameSubmitter* renderer,
                   const Game::Systems::RenderEffectsFrame& effects) {
   if (effects.rafts.empty()) {
     return;

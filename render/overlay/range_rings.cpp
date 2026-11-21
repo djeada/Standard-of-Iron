@@ -1,8 +1,8 @@
-#include "render/geom/range_rings.h"
+#include "render/overlay/range_rings.h"
 
 #include <vector>
 
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -51,7 +51,7 @@ auto range_ring_pattern_for(Game::Systems::RangeWeaponClass weapon_class)
   return RangeRingPattern::Solid;
 }
 
-void render_attack_range_rings(Renderer* renderer,
+void render_attack_range_rings(FrameSubmitter* renderer,
                                ResourceManager* resources,
                                std::span<const Game::Systems::AttackRangeRing> rings) {
   if (rings.empty()) {
@@ -78,7 +78,7 @@ void render_attack_range_rings(Renderer* renderer,
   render_range_rings(renderer, resources, specs);
 }
 
-void render_range_rings(Renderer* renderer,
+void render_range_rings(FrameSubmitter* renderer,
                         ResourceManager* resources,
                         std::span<const RangeRingSpec> rings) {
   if ((renderer == nullptr) || (resources == nullptr) || rings.empty()) {

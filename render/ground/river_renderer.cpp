@@ -24,7 +24,7 @@
 #include "render/gl/resources.h"
 #include "render/ground/linear_feature_geometry.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -277,7 +277,7 @@ void WaterRenderer::build_meshes() {
   }
 }
 
-void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void WaterRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_meshes.empty()) {

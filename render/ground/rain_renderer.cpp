@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "render/frame/graphics_settings.h"
-#include "render/scene/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -62,7 +62,7 @@ void RainRenderer::set_camera_position(const QVector3D& position) {
   m_camera_position = position;
 }
 
-void RainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void RainRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   (void)resources;
 
   if (!m_enabled) {
