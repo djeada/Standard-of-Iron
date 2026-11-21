@@ -3,6 +3,8 @@
 #include <QQuickWindow>
 
 #include <algorithm>
+#include <cmath>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -14,6 +16,7 @@
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
 #include "app/world/unit_queries.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
 #include "game/command/command.h"
@@ -26,8 +29,10 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
+#include "game/systems/combat_system/target_rules.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/navigation/nav_grid.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -218,6 +223,14 @@ void CommanderViewModel::enter_mode() {
                            *commander_camera,
                            0.0F);
   }
+  if (m_context.rts_camera != nullptr && m_rts_camera_bookmark.valid &&
+      !Game::Accessibility::MotionSettings::reduced_motion()) {
+    m_entry_dive.begin(m_context.rts_camera->get_position(),
+                       m_context.rts_camera->get_target());
+    show_entry_dive();
+  } else {
+    m_entry_dive.end();
+  }
   select_controlled_commander();
   m_mode->complete_transition();
   record_action(Game::Command::CommanderAction::EnterControl);
@@ -233,6 +246,8 @@ void CommanderViewModel::enter_mode() {
 void CommanderViewModel::exit_mode() {
   const auto frame_lock = m_host.lock_frame();
   const bool was_active = active();
+  clear_finale();
+  m_entry_dive.end();
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
       [this, signals_before]() { emit_mode_signal_changes(signals_before); });
@@ -411,6 +426,87 @@ void CommanderViewModel::mouse_look_at(qreal sx,
   m_control.mouse_look_at(sx, sy, center_sx, center_sy, m_context.window);
 }
 
+void CommanderViewModel::aim_view_at_world(float x, float z) {
+  if (ignores_player_input() || !active() || m_context.world == nullptr) {
+    return;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto const* transform = m_context.world->try_get<Engine::Core::TransformComponent>(
+      m_controlled_commander_id);
+  if (transform == nullptr) {
+    return;
+  }
+  const float dx = x - transform->position.x;
+  const float dz = z - transform->position.z;
+  if ((dx * dx) + (dz * dz) < 1.0e-4F) {
+    return;
+  }
+  constexpr float k_radians_to_degrees = 57.29577951308232F;
+  m_control.set_view_yaw(std::atan2(dx, dz) * k_radians_to_degrees);
+}
+
+auto CommanderViewModel::aim_view_at_nearest_enemy(float max_range,
+                                                   bool commanders_only) -> bool {
+  if (ignores_player_input() || !active() || m_context.world == nullptr) {
+    return false;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto& world = *m_context.world;
+  auto const* transform =
+      world.try_get<Engine::Core::TransformComponent>(m_controlled_commander_id);
+  if (transform == nullptr) {
+    return false;
+  }
+
+  constexpr float k_formation_reach = 14.0F;
+  std::vector<Engine::Core::EntityID> nearby;
+  world.spatial_index().refresh(world);
+  world.spatial_index().for_each_in_radius(
+      transform->position.x,
+      transform->position.z,
+      max_range + k_formation_reach,
+      [&nearby, this](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        if (entry.id != m_controlled_commander_id) {
+          nearby.push_back(entry.id);
+        }
+      });
+
+  auto& owners = Game::Session::session_for(world).owners();
+  float best_sq = max_range * max_range;
+  std::optional<QVector3D> best;
+  for (Engine::Core::EntityID const candidate_id : nearby) {
+    auto* candidate = world.get_entity(candidate_id);
+    if (candidate == nullptr ||
+        (commanders_only &&
+         world.try_get<Engine::Core::CommanderComponent>(candidate_id) == nullptr)) {
+      continue;
+    }
+    if (Game::Systems::Combat::evaluate_target(
+            owners,
+            m_context.local_owner_id,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = false}) != Game::Systems::Combat::TargetRefusal::None) {
+      continue;
+    }
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      const float dx = soldier.position.x() - transform->position.x;
+      const float dz = soldier.position.z() - transform->position.z;
+      const float distance_sq = (dx * dx) + (dz * dz);
+      if (distance_sq < best_sq) {
+        best_sq = distance_sq;
+        best = soldier.position;
+      }
+    }
+  }
+  if (!best.has_value()) {
+    return false;
+  }
+  aim_view_at_world(best->x(), best->z());
+  return true;
+}
+
 void CommanderViewModel::center_mouse(qreal center_sx, qreal center_sy) {
   if (ignores_player_input()) {
     return;
@@ -524,6 +620,40 @@ void CommanderViewModel::cycle_lock_on() {
   record_action(Game::Command::CommanderAction::CycleLockOn);
   m_control.cycle_lock_on_target(
       *world, m_controlled_commander_id, m_context.local_owner_id);
+}
+
+void CommanderViewModel::toggle_lock_on() {
+  if (ignores_player_input()) {
+    return;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto* world = m_context.world;
+  if (!active() || world == nullptr) {
+    return;
+  }
+  record_action(Game::Command::CommanderAction::ToggleLockOn);
+  m_control.toggle_lock_on_target(
+      *world, m_controlled_commander_id, m_context.local_owner_id);
+}
+
+void CommanderViewModel::switch_lock_target(int direction) {
+  if (ignores_player_input() || direction == 0) {
+    return;
+  }
+  const auto frame_lock = m_host.lock_frame();
+  auto* world = m_context.world;
+  if (!active() || world == nullptr) {
+    return;
+  }
+  record_action(direction < 0 ? Game::Command::CommanderAction::SwitchLockLeft
+                              : Game::Command::CommanderAction::SwitchLockRight);
+  m_control.switch_lock_on_target(
+      *world, m_controlled_commander_id, m_context.local_owner_id, direction);
+}
+
+auto CommanderViewModel::lock_active() const -> bool {
+  const auto frame_lock = m_host.lock_frame();
+  return active() && m_control.locked_target_id() != 0;
 }
 
 void CommanderViewModel::special_action() {
@@ -774,6 +904,9 @@ void CommanderViewModel::seed_flag_rally_preview_from_view_center() {
 }
 
 void CommanderViewModel::update_control_mode(float dt) {
+  if (m_finale.active() && !m_finale_body_live) {
+    return;
+  }
   const auto effects = m_mode->update_commander_control_mode(
       {.world = m_context.world,
        .commander_camera = m_context.commander_camera,
@@ -782,6 +915,11 @@ void CommanderViewModel::update_control_mode(float dt) {
        .local_owner_id = m_context.local_owner_id,
        .dt = dt});
   if (effects.should_exit_commander_mode) {
+    if (m_finale.active()) {
+
+      m_finale_body_live = false;
+      return;
+    }
     exit_mode();
     return;
   }
@@ -799,8 +937,39 @@ void CommanderViewModel::update_camera_presentation(float dt) {
       m_context.commander_camera == nullptr) {
     return;
   }
+  if (m_finale.active()) {
+    m_finale.advance(dt);
+    auto pose = m_finale.pose();
+
+    constexpr float k_ground_clearance = 0.9F;
+    pose.eye.setY(std::max(
+        pose.eye.y(),
+        Game::Systems::PickingService::surface_height_at(pose.eye.x(), pose.eye.z()) +
+            k_ground_clearance));
+    m_context.commander_camera->look_at(
+        pose.eye, pose.target, QVector3D(0.0F, 1.0F, 0.0F));
+    if (m_finale.take_hand_back()) {
+      QMetaObject::invokeMethod(
+          this, [this]() { finish_finale(); }, Qt::QueuedConnection);
+    }
+    return;
+  }
   m_control.update_camera_presentation(
       *m_context.world, m_controlled_commander_id, *m_context.commander_camera, dt);
+  if (m_entry_dive.active()) {
+    m_entry_dive.advance(dt);
+    show_entry_dive();
+  }
+}
+
+void CommanderViewModel::show_entry_dive() {
+  auto* camera = m_context.commander_camera;
+  if (camera == nullptr || !m_entry_dive.active()) {
+    return;
+  }
+  auto const shown = m_entry_dive.blend(
+      {.eye = camera->get_position(), .target = camera->get_target()});
+  camera->look_at(shown.eye, shown.target, QVector3D(0.0F, 1.0F, 0.0F));
 }
 
 void CommanderViewModel::restore_direct_control_if_ready() {
@@ -824,7 +993,113 @@ auto CommanderViewModel::follows_replay() const -> bool {
 }
 
 auto CommanderViewModel::ignores_player_input() const -> bool {
-  return !m_applying_replay && follows_replay();
+  return finale_active() || (!m_applying_replay && follows_replay());
+}
+
+auto CommanderViewModel::finale() const -> QString {
+  switch (static_cast<App::Core::CommanderFinale::Kind>(
+      m_finale_kind.load(std::memory_order_acquire))) {
+  case App::Core::CommanderFinale::Kind::Fallen:
+    return QStringLiteral("fallen");
+  case App::Core::CommanderFinale::Kind::Victory:
+    return QStringLiteral("victory");
+  case App::Core::CommanderFinale::Kind::Defeat:
+    return QStringLiteral("defeat");
+  case App::Core::CommanderFinale::Kind::None:
+    break;
+  }
+  return {};
+}
+
+void CommanderViewModel::announce_finale_change() {
+
+  QMetaObject::invokeMethod(
+      this, [this]() { emit finale_changed(); }, Qt::QueuedConnection);
+}
+
+auto CommanderViewModel::begin_finale(App::Core::CommanderFinale::Kind kind) -> bool {
+  const auto frame_lock = m_host.lock_frame();
+  auto* camera = m_context.commander_camera;
+  if (!active() || camera == nullptr || m_context.world == nullptr ||
+      kind == App::Core::CommanderFinale::Kind::None ||
+      Game::Accessibility::MotionSettings::reduced_motion()) {
+    return false;
+  }
+  if (m_finale.active()) {
+    return true;
+  }
+  auto const* transform = m_context.world->try_get<Engine::Core::TransformComponent>(
+      m_controlled_commander_id);
+  QVector3D ground = camera->get_target();
+  if (transform != nullptr) {
+    ground = QVector3D(transform->position.x,
+                       Game::Systems::PickingService::surface_height_at(
+                           transform->position.x, transform->position.z),
+                       transform->position.z);
+  }
+  m_control.release_all_input();
+  m_finale.begin(kind, ground, camera->get_position(), camera->get_target());
+  m_finale_body_live = kind != App::Core::CommanderFinale::Kind::Fallen;
+  m_finale_kind.store(static_cast<int>(kind), std::memory_order_release);
+  announce_finale_change();
+  return true;
+}
+
+void CommanderViewModel::clear_finale() {
+  if (!m_finale.active() && !finale_active()) {
+    return;
+  }
+  m_finale.end();
+  m_finale_body_live = false;
+  m_finale_kind.store(0, std::memory_order_release);
+  announce_finale_change();
+}
+
+void CommanderViewModel::conclude_for_outcome(const QString& victory_state) {
+  const auto frame_lock = m_host.lock_frame();
+  if (!active() || follows_replay()) {
+    return;
+  }
+  if (m_finale.active()) {
+
+    return;
+  }
+  using Kind = App::Core::CommanderFinale::Kind;
+  Kind kind = Kind::None;
+  if (victory_state == QLatin1String("victory")) {
+    kind = Kind::Victory;
+  } else if (victory_state == QLatin1String("defeat")) {
+    auto const* unit = m_context.world != nullptr
+                           ? m_context.world->try_get<Engine::Core::UnitComponent>(
+                                 m_controlled_commander_id)
+                           : nullptr;
+    kind = unit != nullptr && unit->health > 0 ? Kind::Defeat : Kind::Fallen;
+  }
+  if (!begin_finale(kind)) {
+    exit_mode();
+  }
+}
+
+void CommanderViewModel::controlled_commander_fell() {
+  const auto frame_lock = m_host.lock_frame();
+  if (!active()) {
+    return;
+  }
+  if (follows_replay() || !begin_finale(App::Core::CommanderFinale::Kind::Fallen)) {
+    exit_mode();
+  }
+}
+
+void CommanderViewModel::finish_finale() {
+  const auto frame_lock = m_host.lock_frame();
+  if (!m_finale.active()) {
+    return;
+  }
+  if (active()) {
+    exit_mode();
+  } else {
+    clear_finale();
+  }
 }
 
 void CommanderViewModel::record_action(Game::Command::CommanderAction action) {
@@ -883,6 +1158,17 @@ void CommanderViewModel::apply_replayed_action(
     m_control.set_view_pitch(record.view_pitch);
     cycle_lock_on();
     break;
+  case CommanderAction::ToggleLockOn:
+    m_control.set_view_yaw(record.view_yaw);
+    m_control.set_view_pitch(record.view_pitch);
+    toggle_lock_on();
+    break;
+  case CommanderAction::SwitchLockLeft:
+    switch_lock_target(-1);
+    break;
+  case CommanderAction::SwitchLockRight:
+    switch_lock_target(1);
+    break;
   case CommanderAction::ToggleCameraMode:
     toggle_camera_mode();
     break;
@@ -914,7 +1200,8 @@ auto CommanderViewModel::time_effect_scale(float scaled_dt, bool paused) -> floa
 
   static_cast<void>(scaled_dt);
   static_cast<void>(paused);
-  return 1.0F;
+
+  return finale_active() ? App::Core::CommanderFinale::k_time_scale : 1.0F;
 }
 
 auto CommanderViewModel::should_render_selected_entity(Engine::Core::EntityID id) const
@@ -949,6 +1236,7 @@ void CommanderViewModel::reset_for_new_match() {
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
       [this, signals_before]() { emit_mode_signal_changes(signals_before); });
+  clear_finale();
   m_mode->force_inactive();
   enter_rts_runtime_mode();
   m_saved_rts_selection_ids.clear();
@@ -975,6 +1263,7 @@ void CommanderViewModel::publish_frame() {
   input.controlled_commander_id = m_controlled_commander_id;
   input.dodge_active = m_control.is_dodge_rolling();
   input.locked_target_id = m_control.locked_target_id();
+  input.view_yaw = m_control.view_yaw();
   input.rally_placing = is_placing_rally();
   input.refusal_sequence = m_control.last_refusal().sequence;
   input.refusal_action = m_control.last_refusal().action;

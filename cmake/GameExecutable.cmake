@@ -87,6 +87,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/UnitInspectPanel.qml
             ui/qml/BarracksProductionView.qml
             ui/qml/RecruitCard.qml
+            ui/qml/RpgBearingStrip.qml
+            ui/qml/RpgFinaleOverlay.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgMeter.qml
             ui/qml/FloatingNumbers.qml

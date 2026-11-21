@@ -69,6 +69,8 @@ add_library(
     app/commander/commander_mode_coordinator.cpp
     app/commander/commander_presentation.cpp
     app/commander/commander_primary_scan.cpp
+    app/commander/commander_bearings.cpp
+    app/commander/commander_finale.cpp
     app/commander/commander_status_builder.cpp
     app/commander/commander_strike.cpp
     app/commander/commander_targeting.cpp

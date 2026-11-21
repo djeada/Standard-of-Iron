@@ -1943,7 +1943,7 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
     const auto troop_type = Game::Units::spawn_typeToTroopType(event.spawn_type);
     if (troop_type.has_value() && Game::Units::is_commander_troop(*troop_type)) {
       if (m_commander_view_model->controlled_commander_id() == event.unit_id) {
-        m_commander_view_model->exit_mode();
+        m_commander_view_model->controlled_commander_fell();
       }
       m_commander_view_model->notify_availability_changed();
     }

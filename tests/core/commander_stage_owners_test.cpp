@@ -231,7 +231,7 @@ TEST(CommanderLookTest, FrameIntentReportsLookDeltaSinceTheLastSample) {
 
   look.set_yaw(25.0F);
   auto second = look.sample_frame_intent(held);
-  EXPECT_FLOAT_EQ(second.look_delta.x(), 15.0F);
+  EXPECT_FLOAT_EQ(second.look_delta.x(), -15.0F);
   EXPECT_EQ(second.frame_index, first.frame_index + 1);
 }
 

@@ -171,6 +171,63 @@ Soldier diagnostics record the selected animation clip as well as its semantic
 state. The hold-pose check accepts the authored kneeling bow attack even though its
 state is `AttackRanged`, and still rejects ordinary standing attacks.
 
+## Which way is right
+
+Yaw is measured from +z toward +x, the view looks along `(sin yaw, cos yaw)`, and the world is right-handed: `QMatrix4x4::lookAt` puts the camera's right-hand vector at `front × up`, which for a view along +z is **-x**. A growing yaw therefore swings the view to its **left**. `CommanderLocomotion::move_basis` and the camera rig have always built "right" as `(-forward.z, forward.x)`, which agrees with the camera; three other places assumed the opposite, and all three were mirrored on screen:
+
+- `CommanderLook::apply_mouse_delta` added the horizontal mouse delta to yaw, so a mouse pushed right turned the camera left. The turn keys were bound to match the mouse, so `E` ("turn right") also turned left. Strafing was correct, which is why `A`/`D` and the mouse disagreed about which way right was.
+- `build_controlled_commander_status` lit `threat_left` for an engagement slot at a negative angle. `RpgEngagementComponent::Slot::signed_angle_degrees` grows toward +yaw, the commander's left, so an attacker closing from the right lit the left-hand pip.
+- Tests named an enemy at +x "the right-hand target" of a view along +z.
+
+The mouse and the turn keys now take yaw **down** for a turn to the right. Anything that means "how far did the player look to the right" goes through `App::Core::rightward_look_delta` in `commander_heading.h` instead of reading a yaw difference as a screen direction: the frame intent's `look_delta.x` and the melee steering's `aim_delta_x` both do, so a drag to the right still chambers a strike to the right exactly as before.
+
+`CommanderCameraRigFeelTest.AMousePushedRightTurnsTheLensToItsOwnRight` runs the whole chain, a mouse delta through the controller and the rig to the real camera's right vector, from three headings. `CommanderControlControllerTest.TheTurnKeysTurnTheWayTheyAreNamed` holds the keys to the same rule and requires them to agree with the mouse. `CommanderStatusBuilder.AnAttackerOnTheRightLightsTheRightHandPip` covers the pips. This was confirmed in the running game by moving the pointer with XTEST and watching the horizon.
+
+## Mouse capture
+
+Mouse look reads `QCursor::pos()` once per rendered frame and warps the pointer back to the centre of the view. The warp is not assumed to have worked. `CommanderLook::warp_to_centre` reads the pointer back and measures the next delta from where it actually is: a platform that refuses the warp (Wayland), clamps it (a window reaching past the edge of the screen) or rounds it (fractional display scaling) leaves the pointer somewhere else, and measuring from the requested centre turned that whole offset into one look delta. Entering commander control with the pointer in a corner threw the view to the pitch limit and left it there. The pointer counts as recentred when it lands within two pixels of the centre; it is warped again only after it has really moved, and no delta is measured across a spell without window focus.
+
+The game does not use raw mouse input: deltas are pointer deltas, so the operating system's pointer acceleration applies. That is the remaining gap against "what PC players expect"; closing it needs a native event filter per platform (`WM_INPUT` on Windows, XInput2 raw motion on X11) and is tracked as future work rather than shipped untested.
+
+## Player-facing controls
+
+Sensitivity for each axis, invert-vertical, field of view, guard as a toggle and the camera stand-off had been stored and honoured since the commander view was written but had no control anywhere in the game. They are in **Settings → Controls → Leading the commander**.
+
+| Input       | Does                                                                          | Notes                                                                                                                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tab`       | Lock the enemy nearest the centre of the view, or release the lock            | It used to cycle only. With one enemy in reach the lock could never be dropped until he died or walked 26 m away. `CommanderTargeting::toggle_lock`.                                                                                                          |
+| `Q` / `E`   | Turn left / right; while locked, move the lock to the next enemy on that side | `CommanderTargeting::switch_lock`. Every soldier is a candidate, not one per troop. A candidate further away than the locked target is charged 8° per metre of extra depth, so the front-rank neighbour wins over the man standing behind the current target. |
+| Mouse wheel | Camera stand-off, 0.7× to 2.4× of the authored boom                           | Stored as `commander/camera_distance`. The boom lengthens and climbs together and the look point drops with it, so the commander stays where he was on screen. The bow's aiming view ignores it.                                                              |
+| `V`         | Jump                                                                          | Was `Alt`. Held with its neighbours `Alt` makes `Alt+Tab` (lock on), `Alt+Space` (dodge) and `Alt+click` (attack): the window switcher, the window menu and, on most Linux window managers, a window drag. Existing bindings a player has changed are kept.   |
+
+`cycle_lock` is kept for recorded replays and the arena's `RpgCycleLockOn` step. Replays record the new inputs as `toggle_lock_on`, `switch_lock_left` and `switch_lock_right`.
+
+Looking away from a locked target no longer tips the lens into the ground. The look point is a blend of "straight ahead" and the target; with the target behind the lens that blend landed at the commander's feet. The rig now fades the lock framing between 50° and 85° off the view axis (`k_focus_full_cos`, `k_focus_release_cos`); the lock itself is unchanged. `CommanderCameraRig.LookingAwayFromALockedTargetKeepsTheHorizon`.
+
+Keyboard bindings are matched by the key the layout produces, with the digit row also matched by position. Letter keys are not: on AZERTY the forward key has to be rebound. Matching letters by position as well would fix that but shows QWERTY names for keys labelled otherwise, and is a decision about the bindings screen rather than the commander view.
+
+## What the commander can see from the ground
+
+The army view's objective card, wave tracker and mission clock stayed hidden while the commander was led in person. They are shown there now; a mission deadline in particular has to be visible from the ground.
+
+`RpgBearingStrip.qml` is a strip of bearings across the top of the commander's view, fed by `collect_commander_bearings` (`app/commander/commander_bearings.*`) through the `bearings` list of the commander status. Its centre is the centre of the view, its ends are abeam, and anything behind the commander waits at the nearer end with an arrowhead. It marks every enemy commander, the nearest enemy troop, the middle of the player's own troops once he is more than 14 m from it, and a planted rally flag. Enemies count only on ground the player can currently see, so the strip reveals nothing the minimap would not. Positions come from the world's spatial index as the last tick left it; nothing is scanned for it. `CommanderBearingsTest`.
+
+In a fight a small marker hangs over the commander's own head (`rpgSelfMarker`, placed from `self_x/y/z` in the commander status through the same world projector as the lock brackets). In a press of several hundred soldiers he was easy to lose behind the shields nearest the lens; the marker is the one thing in the frame that is always him. It is hidden when no fight is on.
+
+The "your troops are under attack" card says which key returns to the army view while the commander is led, in place of "Click to look": the pointer belongs to the view there.
+
+## Taking control
+
+Entering commander control used to be a cut from the army view, fifty metres up, to the commander's shoulder. `App::Core::CommanderEntryDive` makes the drop instead: it starts on the frame the player was looking at and eases onto the chase camera over 0.55 s, most of it in the first half so the lens is already close when the player starts to steer. Control is the player's from the first tick; only the picture travels. The chase rig runs unchanged underneath and the view model blends its result toward the captured army view, so nothing the rig or the aim ray reads is affected. It is skipped with reduced motion on. `CommanderEntryDive` tests and `CommanderViewModelInputTest.TakingControlDropsTheCameraInsteadOfCuttingToIt`.
+
+## The closing beat
+
+A battle that ended while the player was the commander cut to the verdict panel on the frame the blow landed. The kill, or the commander's own fall, was never seen.
+
+`App::Core::CommanderFinale` holds the commander's camera for 3.4 s instead. It is given the view the player had and the ground the commander stood on, and answers with a lens pose for an amount of elapsed real time: it starts exactly on the player's own frame, turns 34° about the commander, draws back to at least 5.2 m and rises above head height, and settles its look point on him, lower for a commander on the ground than for one on his feet. It owns no world state, so the same sequence plays under the film clock, in a test and at any frame rate.
+
+`CommanderViewModel` starts it from two places: `controlled_commander_fell` when the controlled commander dies, and `conclude_for_outcome` when the match is decided. While it runs input is ignored, `time_effect_scale` returns `CommanderFinale::k_time_scale` (0.35), the HUD stands down, `RpgFinaleOverlay.qml` closes the frame to a letterbox with one line of text, and `HUDVictory` holds the verdict (`held`). The hand-back to the army view is queued to the interface thread once. Leaving commander control by any other route (a load, a restart, the menu) ends it. With reduced motion on it does not run at all and the verdict follows at once.
+
 ## Presented pose
 
 The simulation ticks at 60 Hz while presentation can run at a different rate. `CommanderPresentationSampleComponent` carries the authoritative previous and current pose, tick duration, tick sequence, and the resolved presentation sample used by both camera and renderer.
@@ -320,7 +377,7 @@ Framing uses `look_drop` to keep the commander inside the viewport. The ordinary
 
 Lock-on reaches 20 m within 70° of the view and drops a target beyond 26 m. At the earlier 12 m, a formation charging the commander could not be locked until it was already in contact.
 
-Lock-on selection and cycling are screen-space operations. Initial lock chooses the target nearest the view center. Cycling steps to the next target to the right and wraps from the rightmost target to the leftmost.
+Lock-on selection is a screen-space operation. Initial lock chooses the target nearest the view center; the same key releases it, and the turn keys step the lock to the neighbouring soldier on that side (see "Player-facing controls"). The older cycle, kept for replays and arena scripts, sweeps toward +yaw, which is to the player's left, and wraps.
 
 Facing authority is suppressed inside 0.75 m, tapers in from 0.75 m to 2 m, and is capped at 220°/s. Manual look suspends the lock spring for 0.35 s without dropping the target.
 
@@ -477,7 +534,7 @@ Before this only the input frames were recorded, so playback never entered direc
 
 ## Accessibility
 
-`Game::Accessibility::CommanderInput` contains look sensitivity X/Y, invert Y, camera impulse, head bob, FOV scale, and hold-versus-toggle guard. `UiPreferences` persists and publishes all seven.
+`Game::Accessibility::CommanderInput` contains look sensitivity X/Y, invert Y, camera impulse, head bob, FOV scale, camera stand-off, and hold-versus-toggle guard. `UiPreferences` persists and publishes all eight, and the Settings panel exposes them.
 
 The camera rig applies the individual motion switches in addition to `camera_motion_scale`. Run and dodge FOV effects scale with reduced-motion settings. `CommanderAccessibilityTest` verifies behavior changes, not merely stored preference values.
 
@@ -562,6 +619,8 @@ The following integration items remain open: moving the pointer to a top-bar con
 - Arena `--fps` changes simulation timestep, so it cannot yet prove identical behavior under different presentation sampling rates.
 - The barracks RTS navigation footprint is smaller than its rendered geometry; the RPG person-scale body does not change RTS pathing.
 - Two HUD/integration issues remain: mouse-look over top-bar controls and the empty-production wording.
+- Mouse look uses pointer deltas, not raw device input, so operating-system pointer acceleration applies.
+- Letter keys are matched by layout symbol; AZERTY players have to rebind movement.
 - Climbing a stair or ladder plays the ordinary walk cycle; there are no climb clips.
 
 ## Related
