@@ -50,6 +50,9 @@ const float k_soi_unlit_shadow_share = 0.30;
 const float k_soi_strata_contrast = 0.44;
 const float k_soi_strata_lip = 0.30;
 const float k_soi_strata_undercut = 0.26;
+const float k_soi_snow_drift_frequency = 1.6;
+const vec2 k_soi_snow_drift_axis = vec2(0.83, 0.56);
+const float k_soi_snow_tuft_burial = 0.82;
 const float k_soi_sward_lean = 0.785;
 const float k_soi_sward_frequency = 1.85;
 const float k_soi_sward_fine_frequency = 4.6;
@@ -1409,6 +1412,25 @@ void main() {
     alpine_snow_color = mix(alpine_snow_color * vec3(0.86, 0.85, 0.82),
                             alpine_snow_color,
                             alpine_snow_core);
+    {
+      float drift_coord =
+          dot(world_coord, k_soi_snow_drift_axis) * k_soi_snow_drift_frequency +
+          ecology_noise(world_coord * 0.22 + vec2(14.0, -52.0)) * 3.4 +
+          ecology_noise(world_coord * 0.71 + vec2(-33.0, 8.0)) * 0.9;
+      float drift_fade = band_limit(coord_footprint, k_soi_snow_drift_frequency);
+      float ripple = sin(drift_coord * 6.2831853) * 0.5 + 0.5;
+      float crest = smoothstep(0.55, 0.95, ripple);
+      float trough = 1.0 - smoothstep(0.05, 0.45, ripple);
+      float drifted =
+          drift_fade * alpine_snow_core * (1.0 - smoothstep(0.10, 0.30, slope));
+      alpine_snow_color *= 1.0 + (crest * 0.045 - trough * 0.075) * drifted;
+      alpine_snow_color = mix(alpine_snow_color,
+                              alpine_snow_color * vec3(0.84, 0.91, 1.05),
+                              trough * 0.40 * drifted);
+      float tuft_poke = smoothstep(0.55, 0.95, sward_height) *
+                        (1.0 - alpine_snow_core * k_soi_snow_tuft_burial);
+      alpine_snow_mask *= 1.0 - tuft_poke * 0.85;
+    }
     float exposed_face = alpine_cover * (1.0 - alpine_snow_slope_retention);
     terrain_color *= mix(vec3(1.0), vec3(0.72, 0.75, 0.79), exposed_face);
     terrain_color = mix(terrain_color, alpine_snow_color, alpine_snow_mask);
