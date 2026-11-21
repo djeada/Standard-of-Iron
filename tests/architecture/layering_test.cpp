@@ -138,6 +138,8 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/gl/humanoid/animation/animation_inputs.cpp",
       "render/humanoid/runtime/humanoid_renderer.cpp",
       "render/humanoid/runtime/instance_prepare.cpp",
+      "render/scene_collect.cpp",
+      "render/scene_overlays.cpp",
       "render/scene_renderer.cpp",
       "render/scene_renderer.h",
       "render/scene_walk.cpp",
