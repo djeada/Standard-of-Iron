@@ -139,8 +139,11 @@ TEST(ReleaseContract, CampaignMapRuntimeAssetsAreMandatory) {
 TEST(ReleaseContract, FreshProfileDefaultAndPackagedCreatureLookupAreExplicit) {
   const auto root = find_repo_root();
   const auto graphics = read_text(root / "render" / "frame" / "graphics_settings.h");
-  const auto creature_assets =
-      read_text(root / "render" / "creature" / "compiled_creature_assets.cpp");
+  // The compiled-asset lookup is split into the public API and its parser.
+  const auto creature_assets = read_text(root / "render" / "creature" / "quadruped" /
+                                         "compiled_source_assets.cpp") +
+                               read_text(root / "render" / "creature" / "quadruped" /
+                                         "compiled_source_parse.cpp");
 
   EXPECT_NE(graphics.find("k_default_graphics_quality = GraphicsQuality::High"),
             std::string::npos);

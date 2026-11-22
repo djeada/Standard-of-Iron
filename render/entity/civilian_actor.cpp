@@ -6,6 +6,7 @@
 #include <string>
 
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
@@ -145,7 +146,7 @@ void add_civilian_actor(const DrawContext& ctx,
   const Render::GL::HumanoidAnimationContext anim{};
   Render::GL::HumanoidVariant variant{};
   rig.fill_variant(ctx, actor.seed, variant);
-  batch().add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch(), output, pose, variant, anim);
 }
 
 void submit_civilian_actors(ISubmitter& out) {

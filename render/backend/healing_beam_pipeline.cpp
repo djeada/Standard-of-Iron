@@ -11,7 +11,7 @@
 #include "render/backend/gl_error_check.h"
 #include "render/backend/state_scopes.h"
 #include "render/backend/static_mesh_upload.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
 

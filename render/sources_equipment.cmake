@@ -62,5 +62,6 @@ set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/spear_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_carthage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/held_prop_attachments.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/weapons/sword_roman.cpp
 )

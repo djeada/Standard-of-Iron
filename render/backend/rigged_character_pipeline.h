@@ -11,6 +11,8 @@
 #include "render/backend/frame_environment.h"
 #include "render/backend/pipeline_interface.h"
 #include "render/gl/gl_handle.h"
+#include "render/gl/instance_buffer_table.h"
+#include "render/gl/rigged_mesh_gpu_table.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -36,6 +38,13 @@ public:
   void shutdown() override;
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
+
+  // The backend's GPU copies of skinned meshes and palette atlases.
+  void set_gpu_tables(GL::RiggedMeshGpuTable* meshes,
+                      GL::InstanceBufferTable* blocks) noexcept {
+    m_meshes = meshes;
+    m_blocks = blocks;
+  }
 
   auto draw(const RiggedCreatureCmd& cmd,
             const QMatrix4x4& view_proj,
@@ -87,6 +96,8 @@ private:
   BorrowedGlName m_wear_volume = 0;
   static constexpr std::size_t k_palette_ring_slots = 1024;
 
+  GL::RiggedMeshGpuTable* m_meshes = nullptr;
+  GL::InstanceBufferTable* m_blocks = nullptr;
   BufferHandle m_palette_ubo;
   std::size_t m_palette_ubo_capacity_bytes = 0;
   std::size_t m_palette_slot_stride_bytes = 0;

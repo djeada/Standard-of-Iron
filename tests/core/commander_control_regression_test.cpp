@@ -916,8 +916,14 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
       read_text(root / "game" / "core" / "component_presentation.h");
   const auto controller_source = commander_control_source(root);
   const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
-  const auto prepare_submission_source = read_text(
-      root / "render" / "creature" / "humanoid" / "runtime" / "instance_prepare.cpp");
+  // instance_prepare is split along its stages; read every piece.
+  const auto runtime_dir = root / "render" / "creature" / "humanoid" / "runtime";
+  const auto prepare_submission_source =
+      read_text(runtime_dir / "instance_prepare.cpp") +
+      read_text(runtime_dir / "instance_prepare_unit.cpp") +
+      read_text(runtime_dir / "instance_prepare_soldier.cpp") +
+      read_text(runtime_dir / "instance_prepare_motion.cpp") +
+      read_text(runtime_dir / "instance_prepare_stages.h");
   const auto locomotion_manifest_source =
       read_text(root / "animation" / "locomotion_manifest.cpp");
   const auto ambient_manifest_source =

@@ -33,7 +33,7 @@ public:
   void set_wind_direction_deg(float degrees);
   void set_camera_position(const QVector3D& position);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   void clear();
 

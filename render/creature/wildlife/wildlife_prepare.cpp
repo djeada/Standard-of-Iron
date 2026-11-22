@@ -12,6 +12,9 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/wildlife/wildlife_body_state.h"
+#include "render/creature/wildlife/wildlife_render_batch.h"
+#include "render/creature/wildlife/wildlife_species.h"
 #include "render/frame/draw_context.h"
 #include "scene/camera.h"
 
@@ -71,7 +74,7 @@ void submit_wildlife(const Render::GL::DrawContext& ctx,
 
   thread_local RCP::CreaturePreparationResult prep;
   prep.clear();
-  prep.bodies.add_quadruped(body_state);
+  add_quadruped(prep.bodies, body_state);
   RCP::submit_preparation(prep, out);
 }
 

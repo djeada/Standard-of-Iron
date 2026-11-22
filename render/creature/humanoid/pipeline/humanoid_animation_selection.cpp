@@ -1,0 +1,536 @@
+#include <algorithm>
+#include <cstdint>
+#include <mutex>
+#include <unordered_map>
+
+#include "render/creature/humanoid/pipeline/humanoid_animation_selection_internal.h"
+
+namespace Render::Creature::Pipeline {
+
+namespace humanoid_animation_selection_detail {
+
+auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noexcept
+    -> Render::Creature::ArchetypeId {
+  return (archetype_id != Render::Creature::k_invalid_archetype)
+             ? archetype_id
+             : Render::Creature::ArchetypeRegistry::k_humanoid_base;
+}
+
+auto steps_over_ground(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> bool {
+  return anim.inputs.visual_movement.measured_from_ground && !anim.inputs.is_mounted &&
+         Render::Creature::is_moving_animation(anim.inputs.movement_state);
+}
+
+void update_clip_id(HumanoidAnimationSelection& selection) noexcept {
+  auto const clip_id =
+      Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+          selection.resolved_archetype, selection.state, selection.clip_variant);
+  if (clip_id == Render::Creature::ArchetypeDescriptor::k_unmapped_clip) {
+    selection.clip_id.reset();
+    return;
+  }
+  selection.clip_id = clip_id;
+}
+
+void apply_named_sword_attack_state(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_sword_attack_animation || !anim.inputs.is_attacking ||
+      anim.inputs.attack_family != Engine::Core::CombatAttackFamily::Sword) {
+    return;
+  }
+  auto const state =
+      Animation::state_for_sword_attack_animation(anim.inputs.sword_attack_animation);
+  if (state == Render::Creature::AnimationStateId::AttackSword) {
+    return;
+  }
+  selection.state = state;
+  selection.phase = humanoid_phase_for_state(anim, selection.state);
+  selection.clip_variant = 0U;
+  update_clip_id(selection);
+}
+
+void apply_authored_action_clip(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_authored_action_clip || !anim.inputs.is_attacking ||
+      anim.inputs.authored_action_clip == Animation::k_unmapped_clip) {
+    return;
+  }
+  selection.clip_id = anim.inputs.authored_action_clip;
+  selection.phase = std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F);
+  selection.clip_variant = 0U;
+}
+
+void apply_melee_reaction_clip(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.is_hit_reacting || anim.inputs.is_mounted || anim.inputs.is_dying ||
+      anim.inputs.is_dead || anim.inputs.is_in_hold_mode ||
+      anim.inputs.is_exiting_hold || anim.inputs.is_defensive_layout_locked ||
+      anim.inputs.has_showcase_clip) {
+    return;
+  }
+  if (selection.state != Render::Creature::AnimationStateId::Idle) {
+    return;
+  }
+  auto const clip = Animation::humanoid_reaction_clip(
+      static_cast<std::uint8_t>(anim.inputs.hit_reaction_kind));
+  if (clip == Animation::k_unmapped_clip) {
+    return;
+  }
+  selection.clip_id = clip;
+  selection.clip_variant = 0U;
+  selection.phase = std::clamp(anim.inputs.hit_reaction_progress, 0.0F, 1.0F);
+}
+
+void apply_combat_ready_clip(HumanoidAnimationSelection& selection,
+                             const Render::GL::HumanoidAnimationContext& anim,
+                             std::uint32_t seed) noexcept {
+  if (selection.state != Render::Creature::AnimationStateId::Idle ||
+      anim.inputs.is_attacking || anim.inputs.is_hit_reacting ||
+      anim.inputs.is_mounted || anim.inputs.is_dying || anim.inputs.is_dead ||
+      anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold ||
+      anim.inputs.is_guarding || anim.inputs.is_exiting_guard ||
+      anim.inputs.is_defensive_layout_locked || anim.inputs.is_constructing ||
+      anim.inputs.is_healing || anim.inputs.is_casting ||
+      anim.inputs.has_showcase_clip ||
+      anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
+    return;
+  }
+  if (!anim.inputs.is_in_melee_lock) {
+    return;
+  }
+  if (Render::Creature::is_moving_animation(anim.inputs.movement_state) &&
+      !steps_over_ground(anim)) {
+    return;
+  }
+  selection.clip_id = Animation::k_humanoid_combat_ready_clip;
+  selection.clip_variant = 0U;
+  selection.phase = Animation::wrap_locomotion_phase(
+      anim.inputs.time / Animation::k_humanoid_combat_ready_cycle_time +
+      Animation::humanoid_idle_breath_offset(seed));
+}
+
+void apply_construction_clip(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.is_constructing || anim.inputs.is_attacking ||
+      anim.inputs.is_mounted || anim.inputs.is_dying || anim.inputs.is_dead) {
+    return;
+  }
+  auto const role = anim.construction_role == Animation::HumanoidConstructionRole::None
+                        ? Animation::HumanoidConstructionRole::Hammer
+                        : anim.construction_role;
+  selection.clip_id = Animation::humanoid_construction_clip_for_role(role);
+  selection.clip_variant = 0U;
+  selection.phase =
+      humanoid_phase_for_state(anim, Render::Creature::AnimationStateId::AttackSword);
+}
+
+void apply_showcase_clip(HumanoidAnimationSelection& selection,
+                         const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_showcase_clip ||
+      anim.inputs.showcase_clip == Animation::k_unmapped_clip) {
+    return;
+  }
+  selection.clip_id = anim.inputs.showcase_clip;
+  selection.phase = std::clamp(anim.inputs.showcase_phase, 0.0F, 1.0F);
+  selection.clip_variant = 0U;
+  selection.full_body_blend = {};
+  selection.upper_body_overlay = {};
+}
+
+void apply_role_specific_combat_clip(
+    HumanoidAnimationSelection& selection,
+    const UnitVisualSpec& spec,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.is_attacking || anim.inputs.is_mounted) {
+    return;
+  }
+
+  float const attack_phase = std::clamp(anim.attack_phase, 0.0F, 1.0F);
+  if (anim.inputs.is_in_hold_mode) {
+    if (anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Spear) {
+      selection.clip_id = Animation::k_humanoid_hold_spear_attack_clip;
+      selection.clip_variant = 0U;
+      selection.phase = attack_phase;
+    } else if (!anim.inputs.is_melee &&
+               anim.inputs.attack_family == Engine::Core::CombatAttackFamily::Bow) {
+      selection.clip_id = Animation::k_humanoid_hold_bow_attack_clip;
+      selection.clip_variant = 0U;
+      selection.phase = attack_phase;
+    }
+  }
+
+  if (!anim.inputs.is_melee &&
+      spec.animation_manifest.ranged_clip_override != Animation::k_unmapped_clip) {
+    selection.clip_id = spec.animation_manifest.ranged_clip_override;
+    selection.clip_variant = 0U;
+    selection.phase = anim.inputs.has_authored_action_phase
+                          ? std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F)
+                          : std::clamp(anim.attack_phase, 0.0F, 1.0F);
+  }
+
+  if (!anim.inputs.is_melee) {
+    return;
+  }
+  if (spec.animation_manifest.melee_clip_for_variant != nullptr) {
+    std::uint8_t const variant =
+        anim.inputs.has_sword_attack_animation
+            ? melee_variant_for_combo_step(anim.inputs.sword_attack_animation)
+            : anim.inputs.attack_variant;
+    selection.clip_id = spec.animation_manifest.melee_clip_for_variant(variant);
+    selection.clip_variant = 0U;
+    selection.phase = anim.inputs.has_authored_action_phase
+                          ? std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F)
+                          : attack_phase;
+  } else if (spec.animation_manifest.melee_clip_override !=
+             Animation::k_unmapped_clip) {
+    selection.clip_id = spec.animation_manifest.melee_clip_override;
+    selection.clip_variant = 0U;
+  }
+}
+
+[[nodiscard]] auto
+defensive_layout_clip_for(Render::GL::ShieldFormationPose pose) -> std::uint16_t {
+  switch (pose) {
+  case Render::GL::ShieldFormationPose::RomanTop:
+    return Animation::k_humanoid_testudo_top_clip;
+  case Render::GL::ShieldFormationPose::RomanLeft:
+    return Animation::k_humanoid_testudo_left_clip;
+  case Render::GL::ShieldFormationPose::RomanRight:
+    return Animation::k_humanoid_testudo_right_clip;
+  case Render::GL::ShieldFormationPose::RomanRear:
+    return Animation::k_humanoid_testudo_rear_clip;
+  case Render::GL::ShieldFormationPose::RomanFront:
+    return Animation::k_humanoid_testudo_front_clip;
+  case Render::GL::ShieldFormationPose::CarthageFront:
+    return Animation::k_humanoid_carthage_shield_wall_front_clip;
+  case Render::GL::ShieldFormationPose::CarthageLeft:
+    return Animation::k_humanoid_carthage_shield_wall_left_clip;
+  case Render::GL::ShieldFormationPose::CarthageRight:
+    return Animation::k_humanoid_carthage_shield_wall_right_clip;
+  default:
+    break;
+  }
+  return Animation::k_unmapped_clip;
+}
+
+auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
+  auto const profile = Animation::guard_shield_attachment_profile(pose);
+  QMatrix4x4 guard_turn;
+  guard_turn.rotate(profile.base_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  if (profile.yaw_degrees != 0.0F) {
+    guard_turn.rotate(profile.yaw_degrees, 0.0F, 1.0F, 0.0F);
+  }
+  if (profile.pitch_degrees != 0.0F) {
+    guard_turn.rotate(profile.pitch_degrees, 1.0F, 0.0F, 0.0F);
+  }
+  if (profile.translate_y != 0.0F || profile.translate_z != 0.0F) {
+    guard_turn.translate(0.0F, profile.translate_y, profile.translate_z);
+  }
+  return guard_turn;
+}
+
+auto guard_pose_suffix(Render::GL::ShieldFormationPose pose) -> const char* {
+  switch (pose) {
+  case Render::GL::ShieldFormationPose::RomanFront:
+    return "_guard_shield_roman_front";
+  case Render::GL::ShieldFormationPose::RomanTop:
+    return "_guard_shield_roman_top";
+  case Render::GL::ShieldFormationPose::CarthageFront:
+    return "_guard_shield_carthage_front";
+  case Render::GL::ShieldFormationPose::RomanLeft:
+    return "_guard_shield_roman_left";
+  case Render::GL::ShieldFormationPose::RomanRight:
+    return "_guard_shield_roman_right";
+  case Render::GL::ShieldFormationPose::RomanRear:
+    return "_guard_shield_roman_rear";
+  case Render::GL::ShieldFormationPose::CarthageLeft:
+    return "_guard_shield_carthage_left";
+  case Render::GL::ShieldFormationPose::CarthageRight:
+    return "_guard_shield_carthage_right";
+  case Render::GL::ShieldFormationPose::GuardDefault:
+    return "_guard_shield";
+  case Render::GL::ShieldFormationPose::None:
+    return "_guard_shield_none";
+  }
+  return "_guard_shield";
+}
+
+auto guard_shield_archetype(Render::Creature::ArchetypeId base_archetype,
+                            Render::GL::ShieldFormationPose pose)
+    -> Render::Creature::ArchetypeId {
+  if (base_archetype == Render::Creature::k_invalid_archetype) {
+    return base_archetype;
+  }
+
+  static std::mutex cache_mutex;
+  static std::unordered_map<std::uint64_t, Render::Creature::ArchetypeId> cache;
+  std::uint64_t const cache_key =
+      (static_cast<std::uint64_t>(static_cast<std::uint32_t>(base_archetype)) << 8U) |
+      static_cast<std::uint8_t>(pose);
+  std::lock_guard<std::mutex> const lock(cache_mutex);
+  if (auto const it = cache.find(cache_key); it != cache.end()) {
+    return it->second;
+  }
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const* base_desc = registry.get(base_archetype);
+  if (base_desc == nullptr || base_desc->bake_attachment_count == 0U) {
+    cache.emplace(cache_key, base_archetype);
+    return base_archetype;
+  }
+
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::StaticArchetypeBuild,
+        base_desc->debug_name + guard_pose_suffix(pose));
+    return base_archetype;
+  }
+
+  auto desc = *base_desc;
+  desc.debug_name += guard_pose_suffix(pose);
+  bool changed = false;
+
+  QMatrix4x4 const guard_turn = guard_shield_turn(pose);
+  constexpr auto k_hand_l_bone =
+      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandL);
+
+  for (std::uint8_t i = 0; i < desc.bake_attachment_count; ++i) {
+    auto& attachment = desc.bake_attachments[i];
+    if (attachment.socket_bone_index != k_hand_l_bone) {
+      continue;
+    }
+    attachment.local_offset = attachment.local_offset * guard_turn;
+    changed = true;
+  }
+
+  if (!changed) {
+    cache.emplace(cache_key, base_archetype);
+    return base_archetype;
+  }
+
+  auto const guard_archetype = registry.register_archetype(desc);
+  auto const resolved = guard_archetype != Render::Creature::k_invalid_archetype
+                            ? guard_archetype
+                            : base_archetype;
+  cache.emplace(cache_key, resolved);
+  return resolved;
+}
+
+auto build_selection_for_pose(const UnitVisualSpec& spec,
+                              const Render::GL::HumanoidAnimationContext& anim,
+                              const Render::Creature::ResolvedPose& pose,
+                              std::uint32_t seed,
+                              const Render::GL::HumanoidVariant* variant) noexcept
+    -> HumanoidAnimationSelection {
+  HumanoidAnimationSelection selection{};
+  selection.pose = pose;
+  selection.requested_archetype = default_humanoid_archetype(spec.archetype_id);
+  selection.resolved_archetype = selection.requested_archetype;
+  selection.state = selection.pose.animation_state;
+  selection.phase = humanoid_phase_for_state(anim, selection.state);
+  selection.clip_variant = humanoid_clip_variant_for_state(
+      selection.resolved_archetype, anim, selection.state);
+
+  if (spec.animation_manifest.variant_table != nullptr) {
+    auto const job_role =
+        anim.construction_role != Animation::HumanoidConstructionRole::None
+            ? anim.construction_role
+            : Animation::humanoid_construction_role_for_job(
+                  static_cast<Animation::HumanoidWorkJob>(
+                      anim.inputs.construction_job));
+
+    bool const job_forces_tool =
+        anim.inputs.is_constructing &&
+        job_role != Animation::HumanoidConstructionRole::None &&
+        job_role != Animation::HumanoidConstructionRole::Push &&
+        job_role != Animation::HumanoidConstructionRole::Climb;
+    auto const override = Animation::resolve_archetype_variant_override({
+        .table = spec.animation_manifest.variant_table,
+        .pose_intent = selection.pose.intent,
+        .seed = seed,
+        .variant_index_hint =
+            variant != nullptr ? static_cast<std::uint8_t>(variant->facial_hair.style)
+                               : std::uint8_t{0U},
+        .has_variant_index_hint = variant != nullptr,
+        .forced_variant_index =
+            Animation::humanoid_construction_variant_for_role(job_role),
+        .has_forced_variant_index = job_forces_tool,
+    });
+
+    if (override.archetype_changed) {
+      selection.resolved_archetype =
+          variant != nullptr ? Render::Humanoid::resolve_facial_hair_archetype(
+                                   override.archetype, *variant)
+                             : override.archetype;
+    }
+    if (override.state_changed) {
+      selection.state = override.state;
+    }
+    selection.variant_table_changed = override.changed();
+
+    if (override.changed()) {
+      selection.phase = humanoid_phase_for_state(anim, selection.state);
+      selection.clip_variant = humanoid_clip_variant_for_state(
+          selection.resolved_archetype, anim, selection.state);
+    }
+  }
+
+  auto const* table = spec.animation_manifest.variant_table;
+  if (table != nullptr &&
+      table->variant_trigger_pose == Render::Creature::PoseIntent::Construct) {
+    auto const role =
+        anim.construction_role != Animation::HumanoidConstructionRole::None
+            ? anim.construction_role
+            : Animation::humanoid_construction_role_for_job(
+                  static_cast<Animation::HumanoidWorkJob>(
+                      anim.inputs.construction_job));
+    if (role != Animation::HumanoidConstructionRole::Push &&
+        role != Animation::HumanoidConstructionRole::Climb) {
+      auto const tool = Animation::resolve_archetype_variant_override({
+          .table = table,
+          .pose_intent = Render::Creature::PoseIntent::Construct,
+          .seed = seed,
+          .forced_variant_index =
+              Animation::humanoid_construction_variant_for_role(role),
+          .has_forced_variant_index = role != Animation::HumanoidConstructionRole::None,
+      });
+      if (tool.archetype_changed) {
+        selection.resolved_archetype =
+            variant != nullptr ? Render::Humanoid::resolve_facial_hair_archetype(
+                                     tool.archetype, *variant)
+                               : tool.archetype;
+        selection.variant_table_changed = true;
+      }
+    }
+  }
+
+  apply_named_sword_attack_state(selection, anim);
+  update_clip_id(selection);
+  apply_melee_reaction_clip(selection, anim);
+  apply_combat_ready_clip(selection, anim, seed);
+  apply_construction_clip(selection, anim);
+  apply_authored_action_clip(selection, anim);
+  apply_role_specific_combat_clip(selection, spec, anim);
+  apply_showcase_clip(selection, anim);
+  return selection;
+}
+
+auto playback_layer_from_selection(const HumanoidAnimationSelection& selection,
+                                   float weight,
+                                   Render::Creature::PlaybackLayerMode mode) noexcept
+    -> HumanoidPlaybackLayerSelection {
+  HumanoidPlaybackLayerSelection layer{};
+  layer.archetype = selection.resolved_archetype;
+  layer.state = selection.state;
+  layer.phase = selection.phase;
+  layer.clip_variant = selection.clip_variant;
+  layer.clip_id = selection.clip_id;
+  layer.weight = std::clamp(weight, 0.0F, 1.0F);
+  layer.mode = mode;
+  return layer;
+}
+
+auto selection_from_layer_source(Animation::PlaybackLayerSource source,
+                                 const HumanoidAnimationSelection& base,
+                                 const HumanoidAnimationSelection& action) noexcept
+    -> const HumanoidAnimationSelection* {
+  switch (source) {
+  case Animation::PlaybackLayerSource::Base:
+    return &base;
+  case Animation::PlaybackLayerSource::Action:
+    return &action;
+  case Animation::PlaybackLayerSource::None:
+    break;
+  }
+  return nullptr;
+}
+
+auto locomotion_only_context(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> Render::GL::HumanoidAnimationContext {
+  auto base = anim;
+  auto& base_inputs = base.inputs;
+  base_inputs.is_attacking = false;
+  base_inputs.is_casting = false;
+  base_inputs.combat_visual = {};
+  base_inputs.has_authored_action_clip = false;
+  base_inputs.authored_action_clip = Animation::k_unmapped_clip;
+  if (anim.inputs.is_in_melee_lock &&
+      !anim.inputs.visual_movement.measured_from_ground) {
+
+    base_inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
+  }
+  return base;
+}
+
+auto action_only_context(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> Render::GL::HumanoidAnimationContext {
+  auto action = anim;
+  auto& action_inputs = action.inputs;
+  if (action_inputs.combat_visual.authoritative) {
+    action_inputs.combat_visual.active = true;
+    action_inputs.combat_visual.prioritize_action_over_locomotion = true;
+  }
+  action_inputs.is_attacking = true;
+  return action;
+}
+
+} // namespace humanoid_animation_selection_detail
+
+using namespace humanoid_animation_selection_detail;
+
+auto resolve_unit_visual_spec(
+    UnitVisualSpec spec, const Render::GL::HumanoidVariant& variant) -> UnitVisualSpec {
+  if (!spec.skip_default_facial_hair_archetype) {
+    spec.archetype_id =
+        Render::Humanoid::resolve_facial_hair_archetype(spec.archetype_id, variant);
+    spec.skip_default_facial_hair_archetype = true;
+  }
+  return spec;
+}
+
+namespace {
+
+auto holds_shield_to_the_threat(const UnitVisualSpec& spec,
+                                const Render::GL::AnimationInputs& anim,
+                                bool has_locomotion) -> bool {
+  if (!spec.capabilities.contains(
+          Render::Humanoid::HumanoidCapability::LeftHandShield) ||
+      anim.is_dying || anim.is_dead) {
+    return false;
+  }
+  if (anim.is_attacking) {
+    return anim.is_melee;
+  }
+  if (has_locomotion) {
+    return false;
+  }
+  if (anim.is_hit_reacting) {
+    return anim.hit_reaction_kind == Engine::Core::HitReactionKind::Block;
+  }
+  return anim.is_in_melee_lock && !anim.is_mounted;
+}
+
+} // namespace
+
+auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
+                                    const Render::GL::AnimationInputs& anim,
+                                    bool has_locomotion) -> UnitVisualSpec {
+  bool const guarding = Render::GL::guard_pose_amount(anim) > 0.0F &&
+                        (anim.is_defensive_layout_locked || !has_locomotion) &&
+                        (anim.is_defensive_layout_locked || !anim.is_attacking);
+  if (guarding || holds_shield_to_the_threat(spec, anim, has_locomotion)) {
+    auto pose = anim.shield_formation_pose;
+    if (pose == Render::GL::ShieldFormationPose::None) {
+      pose = Render::GL::ShieldFormationPose::GuardDefault;
+    }
+    spec.archetype_id = guard_shield_archetype(spec.archetype_id, pose);
+  }
+  return spec;
+}
+
+} // namespace Render::Creature::Pipeline

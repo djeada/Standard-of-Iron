@@ -14,7 +14,7 @@
 #include "render/frame/material_classification.h"
 #include "render/frame/render_archetype.h"
 #include "render/frame/unseen_submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace {
 

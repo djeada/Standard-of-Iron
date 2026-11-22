@@ -1,7 +1,8 @@
 #pragma once
 
-#include "render/creature/animation_state_components.h"
+#include "game/core/entity.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/render_request.h"
 #include "render/creature/wildlife/wildlife_variant.h"
 
 namespace Render::GL {

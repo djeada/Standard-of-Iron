@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::Geom {
 

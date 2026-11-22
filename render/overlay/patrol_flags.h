@@ -9,20 +9,20 @@ class World;
 }
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 } // namespace Render::GL
 
 namespace Render::GL {
 
 void render_patrol_flags(
     FrameSubmitter* renderer,
-    ResourceManager* resources,
+    const DrawResources* resources,
     Engine::Core::World& world,
     const std::optional<QVector3D>& preview_waypoint = std::nullopt);
 
 void render_commander_rally_flags(
     FrameSubmitter* renderer,
-    ResourceManager* resources,
+    const DrawResources* resources,
     Engine::Core::World* world,
     int preview_owner_id,
     const std::optional<QVector3D>& preview_pos = std::nullopt);

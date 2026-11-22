@@ -12,7 +12,7 @@
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace {
 

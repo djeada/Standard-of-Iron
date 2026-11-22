@@ -17,17 +17,19 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "render/frame/draw_commands.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/mesh_prewarmer.h"
-#include "render/gl/resources.h"
+#include "render/geom/mesh.h"
 #include "render/ground/road_network_geometry.h"
 
 namespace Render::GL {
 
-auto RoadRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(
-      meshes, m_surfaces, [](auto& entry) { return entry.mesh.get(); });
+void RoadRenderer::for_each_mesh(const MeshVisitor& visit) const {
+  for (const auto& entry : m_surfaces) {
+    if (entry.mesh != nullptr) {
+      visit(*entry.mesh);
+    }
+  }
 }
 
 namespace {
@@ -83,7 +85,7 @@ void RoadRenderer::build_meshes() {
   m_surfaces = Ground::build_road_network_surfaces(m_road_segments, settings);
 }
 
-void RoadRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void RoadRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   Q_UNUSED(resources);
 
   if (m_surfaces.empty()) {

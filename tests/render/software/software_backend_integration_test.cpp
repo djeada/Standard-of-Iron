@@ -7,7 +7,7 @@
 
 #include "render/backend/software_backend.h"
 #include "render/frame/draw_queue.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/profiling/frame_profile.h"
 #include "scene/camera.h"
 

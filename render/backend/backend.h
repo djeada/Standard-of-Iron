@@ -21,6 +21,7 @@
 #include "render/cache/static_building_batch.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/draw_queue.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_budget.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/i_render_backend.h"
@@ -147,8 +148,11 @@ public:
 
   [[nodiscard]] auto render_context() noexcept -> RenderContext& { return m_context; }
 
-  [[nodiscard]] auto resources() const -> ResourceManager* override {
+  [[nodiscard]] auto resources() const -> ResourceManager* {
     return m_context.resources();
+  }
+  [[nodiscard]] auto draw_resources() const -> const DrawResources* override {
+    return m_context.resources() != nullptr ? &m_draw_resources : nullptr;
   }
 
   [[nodiscard]] auto shader(const QString& name) const -> Shader* override {
@@ -375,6 +379,12 @@ private:
 
   std::array<float, 4> m_clear_color{0.055F, 0.065F, 0.05F, 1.0F};
   RenderContext m_context;
+  // Pointers into m_context and the pipelines, refreshed every frame.
+  DrawResources m_draw_resources;
+  void refresh_draw_resources();
+  // The resources stage: uploads every instance block and texture image the
+  // queue names before any pass draws, so pipelines only look them up.
+  void sync_frame_resources(const DrawQueue& queue);
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;
   std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrain_pipeline;

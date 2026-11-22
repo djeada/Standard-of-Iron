@@ -83,8 +83,9 @@ void VegetationPipeline::draw_stone(const TerrainScatterCmd& deco_cmd_,
     std::size_t instance_count;
     const StoneBatchParams& params;
   };
-  const StoneView stone{
-      deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.stone};
+  const StoneView stone{context.instances.resolve(deco_cmd_.instances),
+                        deco_cmd_.instance_count,
+                        deco_cmd_.stone};
   if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
       (stone_shader() == nullptr) || !m_stone_mesh.vao ||
       m_stone_mesh.index_count == 0) {
@@ -100,7 +101,7 @@ void VegetationPipeline::draw_stone(const TerrainScatterCmd& deco_cmd_,
     context.state.bound_shader = stone_shader;
     context.state.bound_texture = nullptr;
   }
-  bind_visibility_mask(*stone_shader, deco_cmd_.visibility);
+  bind_visibility_mask(*stone_shader, deco_cmd_.visibility, context.textures);
 
   if (m_stone_uniforms.view_proj != Shader::InvalidUniform) {
     stone_shader->set_uniform(m_stone_uniforms.view_proj, view_proj);
@@ -155,8 +156,9 @@ void VegetationPipeline::draw_foliage(const TerrainScatterCmd& deco_cmd_,
 
   const FoliageDraw foliage = resolve_foliage_draw(deco_cmd_.species);
   const FoliageBatchParams& params = deco_cmd_.foliage;
+  Buffer* const instance_buffer = context.instances.resolve(deco_cmd_.instances);
 
-  if (deco_cmd_.instance_buffer == nullptr || deco_cmd_.instance_count == 0 ||
+  if (instance_buffer == nullptr || deco_cmd_.instance_count == 0 ||
       foliage.shader == nullptr || foliage.mesh == nullptr ||
       !foliage.mesh->drawable()) {
     return;
@@ -176,7 +178,7 @@ void VegetationPipeline::draw_foliage(const TerrainScatterCmd& deco_cmd_,
     context.state.bound_shader = shader;
     context.state.bound_texture = nullptr;
   }
-  bind_visibility_mask(*shader, deco_cmd_.visibility);
+  bind_visibility_mask(*shader, deco_cmd_.visibility, context.textures);
 
   const auto& uniforms = *foliage.uniforms;
   if (uniforms.view_proj != Shader::InvalidUniform) {
@@ -206,7 +208,7 @@ void VegetationPipeline::draw_foliage(const TerrainScatterCmd& deco_cmd_,
   }
 
   glBindVertexArray(foliage.mesh->vao.id());
-  deco_cmd_.instance_buffer->bind();
+  instance_buffer->bind();
   const auto stride = static_cast<GLsizei>(sizeof(TreeInstanceGpu));
   apply_vertex_attrib_layout({{instance_position,
                                vec4,
@@ -226,7 +228,7 @@ void VegetationPipeline::draw_foliage(const TerrainScatterCmd& deco_cmd_,
                                GL_FALSE,
                                stride,
                                offsetof(TreeInstanceGpu, rotation)}});
-  deco_cmd_.instance_buffer->unbind();
+  instance_buffer->unbind();
 
   glDrawElementsInstanced(GL_TRIANGLES,
                           foliage.mesh->index_count,
@@ -252,8 +254,9 @@ void VegetationPipeline::draw_firecamp(const TerrainScatterCmd& deco_cmd_,
     std::size_t instance_count;
     const FireCampBatchParams& params;
   };
-  const FireCampView firecamp{
-      deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.firecamp};
+  const FireCampView firecamp{context.instances.resolve(deco_cmd_.instances),
+                              deco_cmd_.instance_count,
+                              deco_cmd_.firecamp};
 
   if ((firecamp.instance_buffer == nullptr) || firecamp.instance_count == 0 ||
       (firecamp_shader() == nullptr) || !m_firecamp_mesh.vao ||
@@ -357,6 +360,7 @@ void VegetationPipeline::draw_prop(const TerrainScatterCmd& deco_cmd_,
   const QMatrix4x4& view_proj = context.frame.view_proj;
 
   const PropDraw prop = resolve_prop_draw(deco_cmd_.species);
+  Buffer* const instance_buffer = context.instances.resolve(deco_cmd_.instances);
 
   Shader* prop_shader = prop.shader;
   GLuint const prop_vao = prop.mesh != nullptr ? prop.mesh->vao.id() : 0U;
@@ -365,7 +369,7 @@ void VegetationPipeline::draw_prop(const TerrainScatterCmd& deco_cmd_,
   const QVector3D prop_light_dir = deco_cmd_.prop.light_direction;
 
   if (prop_shader == nullptr || prop_vao == 0U || prop_idx_count == 0 ||
-      deco_cmd_.instance_buffer == nullptr || deco_cmd_.instance_count == 0 ||
+      instance_buffer == nullptr || deco_cmd_.instance_count == 0 ||
       prop_uniforms == nullptr) {
     return;
   }
@@ -382,7 +386,7 @@ void VegetationPipeline::draw_prop(const TerrainScatterCmd& deco_cmd_,
     context.state.bound_shader = prop_shader;
     context.state.bound_texture = nullptr;
   }
-  bind_visibility_mask(*prop_shader, deco_cmd_.visibility);
+  bind_visibility_mask(*prop_shader, deco_cmd_.visibility, context.textures);
 
   if (prop_uniforms->view_proj != Shader::InvalidUniform) {
     prop_shader->set_uniform(prop_uniforms->view_proj, view_proj);
@@ -408,7 +412,7 @@ void VegetationPipeline::draw_prop(const TerrainScatterCmd& deco_cmd_,
   }
 
   glBindVertexArray(prop_vao);
-  deco_cmd_.instance_buffer->bind();
+  instance_buffer->bind();
   const auto stride2 = static_cast<GLsizei>(sizeof(PropInstanceGpu));
   apply_vertex_attrib_layout({{tex_coord,
                                vec4,
@@ -422,7 +426,7 @@ void VegetationPipeline::draw_prop(const TerrainScatterCmd& deco_cmd_,
                                GL_FALSE,
                                stride2,
                                offsetof(PropInstanceGpu, color_rot)}});
-  deco_cmd_.instance_buffer->unbind();
+  instance_buffer->unbind();
 
   glDrawElementsInstanced(GL_TRIANGLES,
                           prop_idx_count,

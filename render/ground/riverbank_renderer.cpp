@@ -1,8 +1,6 @@
 #include "render/ground/riverbank_renderer.h"
 
 #include <QDebug>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
 #include <QVector2D>
 #include <QVector3D>
 #include <qglobal.h>
@@ -17,17 +15,19 @@
 #include "game/map/visibility_service.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/mesh_prewarmer.h"
-#include "render/gl/resources.h"
+#include "render/geom/mesh.h"
 #include "render/ground/linear_feature_geometry.h"
 
 namespace Render::GL {
 
-auto ShorelineRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(
-      meshes, m_meshes, [](auto& entry) { return entry.get(); });
+void ShorelineRenderer::for_each_mesh(const MeshVisitor& visit) const {
+  for (const auto& entry : m_meshes) {
+    if (entry != nullptr) {
+      visit(*entry);
+    }
+  }
 }
 
 ShorelineRenderer::ShorelineRenderer() = default;
@@ -72,7 +72,8 @@ void ShorelineRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_m
   }
 }
 
-void ShorelineRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void ShorelineRenderer::submit(FrameSubmitter& renderer,
+                               const DrawResources* resources) {
   if (m_meshes.empty()) {
     return;
   }

@@ -1,13 +1,9 @@
 #include "render/ground/terrain_renderer.h"
 
-#include <QOpenGLContext>
-
 #include <algorithm>
 #include <cstddef>
 
-#include "render/gl/mesh.h"
-#include "render/gl/mesh_prewarmer.h"
-#include "render/gl/shader.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
 
@@ -41,7 +37,7 @@ void TerrainRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   m_terrain_fields_dirty = true;
   m_cover_dirty = true;
   m_ecology.reset();
-  m_noise_atlas_dirty = true;
+  ++m_noise_revision;
   m_ground_fog = compute_ground_fog(m_height_data);
   build_meshes();
 }
@@ -74,9 +70,12 @@ auto TerrainRenderer::compute_ground_fog(const std::vector<float>& heights)
   return fog;
 }
 
-auto TerrainRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(
-      meshes, m_chunks, [](auto& chunk) { return chunk.mesh.get(); });
+void TerrainRenderer::for_each_mesh(const MeshVisitor& visit) const {
+  for (const auto& chunk : m_chunks) {
+    if (chunk.mesh != nullptr) {
+      visit(*chunk.mesh);
+    }
+  }
 }
 
 void TerrainRenderer::set_light_direction(const QVector3D& dir) {

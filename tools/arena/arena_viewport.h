@@ -71,7 +71,7 @@ class FrameContinuityAnalyzer;
 
 namespace Render::GL {
 class Renderer;
-class ResourceManager;
+class DrawResources;
 class Camera;
 class TerrainSceneProxy;
 class TerrainSurfaceManager;
@@ -450,8 +450,8 @@ private:
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,
                           Game::Units::SpawnType spawn_type) const -> QString;
-  void render_attack_range_rings(Render::GL::ResourceManager* resources);
-  void render_target_focus_rings(Render::GL::ResourceManager* resources);
+  void render_attack_range_rings(const Render::GL::DrawResources* resources);
+  void render_target_focus_rings(const Render::GL::DrawResources* resources);
   auto selection_system() const -> Game::Session::SelectionService*;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
@@ -482,7 +482,7 @@ private:
 
   void step_world(float simulation_dt);
   void submit_terrain_layers();
-  void submit_world_effects(Render::GL::ResourceManager* res);
+  void submit_world_effects(const Render::GL::DrawResources* res);
   void record_render_profile(Arena::ArenaRenderedFrameTimings& timings) const;
   void paint_ui_overlays(bool show_debug_overlays);
   [[nodiscard]] auto hide_gameplay_overlays() const -> bool;

@@ -47,7 +47,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
 
@@ -59,8 +59,6 @@ public:
 
 private:
   void rebuild_instances();
-  void append_world_prop_trees();
-  void append_anchored_trees();
 
   Game::Map::TreeSpecies m_species;
   const Render::Ground::TreeScatterProfile* m_profile;

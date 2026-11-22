@@ -5,11 +5,14 @@
 #include <QtOpenGL>
 
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_commands.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
+#include "render/gl/terrain_noise_atlas.h"
 
 namespace Render {
 struct LocalLight;
@@ -166,7 +169,15 @@ public:
                      PipelineDrawContext& context,
                      const std::vector<Render::LocalLight>& local_lights);
 
+  // Resources stage: bakes the microdetail once, and the noise atlas once per
+  // terrain revision. Changes GL bindings.
+  void sync_noise_atlas(const TerrainNoiseRequest& request);
+
 private:
+  GL::TerrainNoiseAtlas m_noise_atlas;
+  bool m_noise_baked = false;
+  std::uint64_t m_baked_noise_revision = 0;
+
   GL::Shader* m_grass_shader = nullptr;
   GL::Shader* m_ground_shader = nullptr;
   GL::Shader* m_terrain_shader = nullptr;

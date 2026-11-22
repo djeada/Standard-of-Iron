@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "game/map/terrain.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/ground/road_network_geometry.h"
 
 namespace {

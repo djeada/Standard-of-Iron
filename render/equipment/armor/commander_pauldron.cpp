@@ -6,7 +6,7 @@
 
 #include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/attachment_builder.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::GL {
 

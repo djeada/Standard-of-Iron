@@ -41,6 +41,11 @@ CHECKS: tuple[Check, ...] = (
     Check("gl-ownership", "GL object ownership", "scripts/check-gl-ownership.py"),
     Check("render-layers", "Render layer order", "scripts/check-render-layers.py"),
     Check(
+        "render-file-size",
+        "Render file size limit",
+        "scripts/check-render-file-size.py",
+    ),
+    Check(
         "pipeline-interface",
         "Backend pipeline interface",
         "scripts/check-pipeline-interface.py",

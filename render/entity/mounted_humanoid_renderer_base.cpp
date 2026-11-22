@@ -9,11 +9,12 @@
 #include "animation/bpat/bpat_registry.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
-#include "render/creature/anatomy_bake.h"
-#include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/horse/horse_anatomy_bake.h"
 #include "render/creature/horse/horse_motion.h"
 #include "render/creature/horse/prepare.h"
+#include "render/creature/humanoid/pipeline/humanoid_playback.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/humanoid/runtime/body_frame_resolver.h"
 #include "render/creature/humanoid/runtime/frame_control.h"
 #include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
@@ -24,6 +25,7 @@
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/quadruped/mount_scale.h"
+#include "render/creature/species/animation_state_components.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/palette.h"
 #include "render/frame/visibility_budget.h"
@@ -313,7 +315,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
           ? *resolved_selection
           : RCP::resolve_humanoid_animation_selection(
                 rider_output.spec, anim_ctx, rider_output.seed, &variant);
-  out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);
+  add_humanoid(out.bodies, rider_output, pose, variant, anim_ctx);
 }
 
 } // namespace Render::GL

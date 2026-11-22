@@ -7,13 +7,13 @@
 
 #include "game/map/terrain.h"
 #include "render/frame/i_draw_source.h"
-#include "render/gl/mesh_gpu_table.h"
+#include "render/geom/mesh.h"
 #include "render/ground/road_network_geometry.h"
 
 namespace Render::GL {
 class Mesh;
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 class RoadRenderer : public IDrawSource {
 public:
@@ -23,9 +23,10 @@ public:
   void configure(const std::vector<Game::Map::RoadSegment>& road_segments,
                  const Game::Map::TerrainHeightMap& height_map);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
+  // Every mesh this renderer draws, for prewarming a backend's MeshGpuTable.
+  void for_each_mesh(const MeshVisitor& visit) const;
 
   [[nodiscard]] auto surface_count() const -> std::size_t { return m_surfaces.size(); }
 

@@ -7,9 +7,9 @@
 #include <cmath>
 
 #include "render/frame/draw_commands.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/world_chunk.h"
-#include "render/gl/resources.h"
 
 namespace Render::GL {
 
@@ -154,7 +154,7 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   return params;
 }
 
-void GroundRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void GroundRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   sync_biome_from_service();
 
   if (resources == nullptr) {

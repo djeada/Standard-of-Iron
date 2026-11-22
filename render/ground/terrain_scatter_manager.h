@@ -49,13 +49,16 @@ public:
 
   void set_light_direction(const QVector3D& dir);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   void clear();
   void refresh_grass();
 
   [[nodiscard]] bool is_gpu_ready() const;
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  // Partitions every layer and reserves its instance blocks (load time).
+  void prepare_instance_blocks();
+  // Every instance block of every layer, for prewarming a backend.
+  void for_each_instance_block(const InstanceBlockVisitor& visit) const;
 
   [[nodiscard]] auto biome() const -> BiomeRenderer*;
   [[nodiscard]] auto stone() const -> StoneRenderer*;
@@ -86,7 +89,25 @@ public:
     }
   }
 
+  // What every scatter layer holds: placed instances and their CPU bytes, and
+  // the GPU bytes reserved for their instance blocks.
+  struct LayerMemory {
+    ScatterSpeciesId species{ScatterSpeciesId::Grass};
+    std::size_t instances{0};
+    std::size_t cpu_bytes{0};
+    std::size_t gpu_reserved_bytes{0};
+    // The layer's instance budget, whether the generator reached it, and the
+    // bytes one instance takes (budget x stride bounds the layer's memory).
+    std::size_t budget{0};
+    bool budget_hit{false};
+    std::size_t instance_stride{0};
+  };
+  [[nodiscard]] auto memory() const -> std::vector<LayerMemory>;
+
 private:
+  // Hands every layer its share of the map's instance budget (scatter_budget.h).
+  void apply_instance_budgets();
+
   struct ScatterSourceEntry {
     ScatterSpeciesId species{ScatterSpeciesId::Grass};
     IScatterSource* source{nullptr};

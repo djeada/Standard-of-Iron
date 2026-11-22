@@ -9,7 +9,7 @@
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 enum class RangeRingPattern : std::uint8_t {
   Solid,
@@ -30,11 +30,11 @@ struct RangeRingSpec {
     -> RangeRingPattern;
 
 void render_range_rings(FrameSubmitter* renderer,
-                        ResourceManager* resources,
+                        const DrawResources* resources,
                         std::span<const RangeRingSpec> rings);
 
 void render_attack_range_rings(FrameSubmitter* renderer,
-                               ResourceManager* resources,
+                               const DrawResources* resources,
                                std::span<const Game::Systems::AttackRangeRing> rings);
 
 } // namespace Render::GL

@@ -10,9 +10,9 @@
 #include <vector>
 
 #include "game/map/terrain_surface.h"
-#include "render/gl/render_constants.h"
 #include "render/ground/terrain_quad_tessellation.h"
 #include "render/ground/terrain_vertex_masks.h"
+#include "render/math/render_constants.h"
 
 namespace {
 

@@ -1,7 +1,6 @@
 #include "render/ground/biome_renderer.h"
 
 #include <QDebug>
-#include <QOpenGLContext>
 #include <QVector2D>
 #include <qglobal.h>
 #include <qvectornd.h>
@@ -22,133 +21,22 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/graphics_settings.h"
-#include "render/gl/buffer.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/resources.h"
+#include "render/ground/scatter/scatter_generators.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
+#include "render/math/render_constants.h"
 
 namespace {
 
-using std::uint32_t;
 using namespace Render::Ground;
-using namespace Render::GL::Geometry;
-
-constexpr float k_grass_patch_frequency = 0.055F;
-constexpr float k_grass_patch_detail_frequency = 0.16F;
-constexpr float k_grass_patch_fringe_frequency = 0.52F;
-constexpr float k_grass_patch_floor = 0.14F;
-constexpr float k_grass_patch_gain = 2.05F;
-constexpr float k_grass_patch_peak = k_grass_patch_floor + k_grass_patch_gain;
-
-auto grass_patch_density(float gx, float gz, uint32_t seed) -> float {
-  float const broad = value_noise(
-      gx * k_grass_patch_frequency, gz * k_grass_patch_frequency, seed ^ 0x3C6EF372U);
-  float const detail = value_noise(gx * k_grass_patch_detail_frequency,
-                                   gz * k_grass_patch_detail_frequency,
-                                   seed ^ 0xA54FF53AU);
-  float const fringe = value_noise(gx * k_grass_patch_fringe_frequency,
-                                   gz * k_grass_patch_fringe_frequency,
-                                   seed ^ 0x1B873593U);
-  float const field = broad * 0.58F + detail * 0.30F + fringe * 0.12F;
-  float const t = std::clamp((field - 0.41F) / 0.15F, 0.0F, 1.0F);
-  return k_grass_patch_floor + k_grass_patch_gain * t * t * (3.0F - 2.0F * t);
-}
-
-constexpr float k_grass_height_scale = 0.56F;
-constexpr float k_grass_width_scale = 1.90F;
-
-constexpr float k_grass_cover_scale = 4.0F;
-constexpr float k_grass_tall_tuft_share = 0.16F;
-constexpr std::size_t k_grass_instance_budget = 1'100'000U;
-constexpr float k_grass_hill_slope_thinning = 1.6F;
-
-constexpr float k_instance_kind_stride = 4.0F;
-constexpr float k_instance_kind_flower = 1.0F;
-constexpr float k_flower_drift_frequency = 0.043F;
-constexpr float k_flower_drift_threshold = 0.60F;
-constexpr float k_flower_stray_chance = 0.006F;
-constexpr float k_flower_clump_frequency = 0.85F;
-constexpr float k_flower_clump_threshold = 0.52F;
-constexpr float k_flower_clump_gain = 2.4F;
-
-struct FlowerSpecies {
-  QVector3D petal;
-  float stem_min;
-  float stem_max;
-  float head_min;
-  float head_max;
-  float drift_density;
-};
-
-struct FlowerPalette {
-  std::array<FlowerSpecies, 4> species;
-  int count;
-  float abundance;
-};
-
-auto flower_palette_for(Game::Map::GroundType ground_type) -> FlowerPalette {
-  using Game::Map::GroundType;
-  switch (ground_type) {
-  case GroundType::GrassDry:
-    return {{{{{0.95F, 0.77F, 0.18F}, 0.16F, 0.30F, 0.050F, 0.074F, 1.5F},
-              {{0.60F, 0.36F, 0.74F}, 0.20F, 0.36F, 0.052F, 0.078F, 1.1F},
-              {{0.94F, 0.86F, 0.84F}, 0.22F, 0.38F, 0.050F, 0.070F, 1.0F},
-              {{0.84F, 0.14F, 0.10F}, 0.16F, 0.28F, 0.056F, 0.080F, 0.9F}}},
-            4,
-            0.70F};
-  case GroundType::SoilRocky:
-    return {{{{{0.93F, 0.72F, 0.20F}, 0.12F, 0.24F, 0.046F, 0.068F, 1.2F},
-              {{0.88F, 0.50F, 0.62F}, 0.12F, 0.22F, 0.050F, 0.072F, 1.0F},
-              {{0.94F, 0.92F, 0.86F}, 0.12F, 0.22F, 0.044F, 0.062F, 0.9F},
-              {{0.60F, 0.38F, 0.72F}, 0.16F, 0.28F, 0.046F, 0.066F, 0.8F}}},
-            4,
-            0.45F};
-  case GroundType::AlpineMix:
-    return {{{{{0.24F, 0.36F, 0.88F}, 0.08F, 0.16F, 0.044F, 0.064F, 1.2F},
-              {{0.95F, 0.95F, 0.92F}, 0.08F, 0.16F, 0.044F, 0.062F, 1.0F},
-              {{0.88F, 0.42F, 0.62F}, 0.08F, 0.16F, 0.044F, 0.064F, 1.0F},
-              {{0.95F, 0.80F, 0.22F}, 0.08F, 0.14F, 0.040F, 0.058F, 0.8F}}},
-            4,
-            0.55F};
-  case GroundType::ForestMud:
-    return {{{{{0.94F, 0.95F, 0.92F}, 0.12F, 0.22F, 0.046F, 0.066F, 1.3F},
-              {{0.42F, 0.46F, 0.88F}, 0.16F, 0.28F, 0.044F, 0.062F, 1.2F},
-              {{0.95F, 0.90F, 0.50F}, 0.10F, 0.20F, 0.046F, 0.066F, 1.0F},
-              {{0.80F, 0.44F, 0.70F}, 0.18F, 0.30F, 0.046F, 0.064F, 0.8F}}},
-            4,
-            0.60F};
-  case GroundType::SoilFertile:
-  default:
-    return {{{{{0.86F, 0.19F, 0.08F}, 0.18F, 0.32F, 0.058F, 0.084F, 1.2F},
-              {{0.97F, 0.96F, 0.91F}, 0.14F, 0.24F, 0.052F, 0.076F, 1.7F},
-              {{0.98F, 0.82F, 0.15F}, 0.14F, 0.26F, 0.050F, 0.074F, 1.6F},
-              {{0.44F, 0.42F, 0.88F}, 0.20F, 0.34F, 0.048F, 0.068F, 1.0F}}},
-            4,
-            1.0F};
-  }
-}
 
 constexpr float k_grass_full_screen_fraction = 0.0040F;
 constexpr float k_grass_min_screen_fraction = 0.0018F;
 constexpr float k_grass_cull_screen_fraction = 0.0010F;
 constexpr float k_grass_min_density = 0.04F;
-constexpr float k_forest_floor_grass_keep = 0.30F;
-
-inline auto section_for(Game::Map::TerrainType type) -> int {
-  switch (type) {
-  case Game::Map::TerrainType::Mountain:
-    return 2;
-  case Game::Map::TerrainType::Hill:
-    return 1;
-  case Game::Map::TerrainType::Forest:
-  case Game::Map::TerrainType::Flat:
-  default:
-    return 0;
-  }
-}
 
 } // namespace
 
@@ -159,19 +47,11 @@ BiomeRenderer::~BiomeRenderer() = default;
 
 void BiomeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                               const Game::Map::BiomeSettings& biome_settings) {
-  m_width = height_map.get_width();
-  m_height = height_map.get_height();
-  m_tile_size = height_map.get_tile_size();
-  m_height_data = height_map.get_height_data();
-  m_terrain_types = height_map.getTerrainTypes();
-  m_biome_settings = biome_settings;
-  m_noise_seed = biome_settings.seed;
-
-  m_grass_state.reset_instances();
+  configure_height_scatter_common(height_map, biome_settings, {});
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto& scatter_profile = profiles.scatter;
   const auto& wind_profile = profiles.wind;
-  auto& grass_params = m_grass_state.params;
+  auto& grass_params = m_state.params;
 
   grass_params.soil_color = scatter_profile.soil_color;
   grass_params.wind_strength = wind_profile.sway_strength;
@@ -185,23 +65,13 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
 
 void BiomeRenderer::set_light_direction(const QVector3D& dir) {
   m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
-  m_grass_state.params.light_direction = m_light_direction;
+  m_state.params.light_direction = m_light_direction;
 }
 
-auto BiomeRenderer::prewarm_gpu_resources() -> bool {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return false;
-  }
-  return Scatter::prewarm_filtered_state(
-      m_grass_state, [](const GrassInstanceGpu& instance) -> const QVector4D& {
-        return instance.pos_height;
-      });
-}
-
-void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void BiomeRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   Q_UNUSED(resources);
   const auto visible_count = Scatter::sync_filtered_state(
-      m_grass_state,
+      m_state,
       [](const GrassInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_height;
       },
@@ -211,7 +81,7 @@ void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources)
     return;
   }
 
-  GrassBatchParams params = m_grass_state.params;
+  GrassBatchParams params = m_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.visibility = renderer.visibility_mask();
@@ -220,7 +90,7 @@ void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources)
 
   const auto* camera = renderer.camera();
   if (camera == nullptr || m_typical_blade_height <= 0.0F) {
-    Scatter::submit_visible_chunks(renderer, m_grass_state, cmd);
+    Scatter::submit_visible_chunks(renderer, m_state, cmd);
     return;
   }
 
@@ -231,7 +101,7 @@ void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources)
 
   Scatter::submit_visible_chunks_lod(
       renderer,
-      m_grass_state,
+      m_state,
       cmd,
       [&](const QVector3D& chunk_center, std::size_t chunk_size) -> std::size_t {
         const float distance =
@@ -252,10 +122,6 @@ void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources)
       });
 }
 
-void BiomeRenderer::clear() {
-  m_grass_state.reset_instances();
-}
-
 void BiomeRenderer::refresh_grass() {
   generate_grass_instances();
 }
@@ -267,546 +133,20 @@ auto BiomeRenderer::grass_matches_graphics_profile() const noexcept -> bool {
          std::abs(m_generated_grass_density - wanted) < 1e-4F;
 }
 
-void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
-  const auto& scatter_profile = ctx.scatter_profile;
-  const auto& terrain_cache = ctx.terrain_cache;
-  const float tile_safe = ctx.tile_safe;
-  const int chunk_size = ctx.chunk_size;
-  const auto& add_grass_blade = ctx.add_grass_blade;
-  for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {
-    int const chunk_max_z = std::min(chunk_z + chunk_size, m_height - 1);
-    for (int chunk_x = 0; chunk_x < m_width - 1; chunk_x += chunk_size) {
-      int const chunk_max_x = std::min(chunk_x + chunk_size, m_width - 1);
-
-      int flat_count = 0;
-      int hill_count = 0;
-      float chunk_slope_sum = 0.0F;
-      int sample_count = 0;
-
-      for (int z = chunk_z; z < chunk_max_z && z < m_height - 1; ++z) {
-        for (int x = chunk_x; x < chunk_max_x && x < m_width - 1; ++x) {
-          Game::Map::TerrainType const t0 = terrain_cache.get_terrain_type_at(x, z);
-          Game::Map::TerrainType const t1 = terrain_cache.get_terrain_type_at(x + 1, z);
-          Game::Map::TerrainType const t2 = terrain_cache.get_terrain_type_at(x, z + 1);
-          Game::Map::TerrainType const t3 =
-              terrain_cache.get_terrain_type_at(x + 1, z + 1);
-
-          bool const unusable =
-              t0 == Game::Map::TerrainType::Mountain ||
-              t1 == Game::Map::TerrainType::Mountain ||
-              t2 == Game::Map::TerrainType::Mountain ||
-              t3 == Game::Map::TerrainType::Mountain ||
-              Game::Map::is_water_terrain(t0) || Game::Map::is_water_terrain(t1) ||
-              Game::Map::is_water_terrain(t2) || Game::Map::is_water_terrain(t3);
-          if (!unusable) {
-            if (t0 == Game::Map::TerrainType::Hill ||
-                t1 == Game::Map::TerrainType::Hill ||
-                t2 == Game::Map::TerrainType::Hill ||
-                t3 == Game::Map::TerrainType::Hill) {
-              hill_count++;
-            } else {
-              flat_count++;
-            }
-          }
-
-          float const slope0 = terrain_cache.get_slope_at(x, z);
-          float const slope1 = terrain_cache.get_slope_at(x + 1, z);
-          float const slope2 = terrain_cache.get_slope_at(x, z + 1);
-          float const slope3 = terrain_cache.get_slope_at(x + 1, z + 1);
-          float const avg_slope = (slope0 + slope1 + slope2 + slope3) * 0.25F;
-          chunk_slope_sum += avg_slope;
-          sample_count++;
-        }
-      }
-
-      if (sample_count == 0) {
-        continue;
-      }
-
-      const float usable_coverage =
-          sample_count > 0 ? float(flat_count + hill_count) / float(sample_count)
-                           : 0.0F;
-      if (usable_coverage < 0.05F) {
-        continue;
-      }
-
-      float const avg_slope = chunk_slope_sum / float(sample_count);
-
-      uint32_t state = hash_coords(chunk_x, chunk_z, m_noise_seed ^ 0xC915872BU);
-      float const slope_penalty = 1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
-
-      float const type_bias = 1.0F;
-      constexpr float k_cluster_boost = 1.35F;
-      float const expected_clusters =
-          std::max(0.0F,
-                   scatter_profile.patch_density * k_cluster_boost * slope_penalty *
-                       type_bias * usable_coverage);
-      int cluster_count = static_cast<int>(std::floor(expected_clusters));
-      float const frac = expected_clusters - float(cluster_count);
-      if (rand_01(state) < frac) {
-        cluster_count += 1;
-      }
-
-      if (cluster_count > 0) {
-        auto chunk_span_x = float(chunk_max_x - chunk_x + 1);
-        auto chunk_span_z = float(chunk_max_z - chunk_z + 1);
-        float const scatter_base = std::max(0.25F, scatter_profile.patch_jitter);
-
-        auto pick_cluster_center = [&](uint32_t& rng) -> std::optional<QVector2D> {
-          constexpr int k_max_attempts = 8;
-          for (int attempt = 0; attempt < k_max_attempts; ++attempt) {
-            float const candidate_gx = float(chunk_x) + rand_01(rng) * chunk_span_x;
-            float const candidate_gz = float(chunk_z) + rand_01(rng) * chunk_span_z;
-
-            int const cx = std::clamp(int(std::round(candidate_gx)), 0, m_width - 1);
-            int const cz = std::clamp(int(std::round(candidate_gz)), 0, m_height - 1);
-            Game::Map::TerrainType const center_terrain_type =
-                terrain_cache.get_terrain_type_at(cx, cz);
-            if (center_terrain_type == Game::Map::TerrainType::Mountain ||
-                Game::Map::is_water_terrain(center_terrain_type)) {
-              continue;
-            }
-
-            float const center_slope = terrain_cache.get_slope_at(cx, cz);
-            if (center_slope > 0.92F) {
-              continue;
-            }
-            if (rand_01(rng) * k_grass_patch_peak >
-                grass_patch_density(candidate_gx, candidate_gz, m_noise_seed)) {
-              continue;
-            }
-
-            return QVector2D(candidate_gx, candidate_gz);
-          }
-          return std::nullopt;
-        };
-
-        for (int cluster = 0; cluster < cluster_count; ++cluster) {
-          auto center = pick_cluster_center(state);
-          if (!center) {
-            continue;
-          }
-
-          float const center_gx = center->x();
-          float const center_gz = center->y();
-
-          int blades = 6 + static_cast<int>(rand_01(state) * 6.0F);
-          blades =
-              std::max(4, int(std::round(blades * (0.85F + 0.3F * rand_01(state)))));
-          float const scatter_radius =
-              (0.45F + 0.55F * rand_01(state)) * scatter_base * tile_safe;
-
-          for (int blade = 0; blade < blades; ++blade) {
-            float const angle = rand_01(state) * MathConstants::k_two_pi;
-            float const radius = scatter_radius * std::sqrt(rand_01(state));
-            float const gx = center_gx + std::cos(angle) * radius / tile_safe;
-            float const gz = center_gz + std::sin(angle) * radius / tile_safe;
-            add_grass_blade(gx, gz, state);
-          }
-        }
-      }
-    }
-  }
-}
-
-void BiomeRenderer::scatter_background_grass(const GrassScatterContext& ctx) {
-  const auto& scatter_profile = ctx.scatter_profile;
-  const auto& terrain_cache = ctx.terrain_cache;
-  const auto& add_grass_blade = ctx.add_grass_blade;
-
-  const float background_density =
-      std::max(0.0F, scatter_profile.background_blade_density);
-  if (background_density > 0.0F) {
-    for (int z = 0; z < m_height; ++z) {
-      for (int x = 0; x < m_width; ++x) {
-        Game::Map::TerrainType const terrain_type =
-            terrain_cache.get_terrain_type_at(x, z);
-        if (terrain_type == Game::Map::TerrainType::Mountain ||
-            Game::Map::is_water_terrain(terrain_type)) {
-          continue;
-        }
-
-        float const slope = terrain_cache.get_slope_at(x, z);
-        if (slope > 0.95F) {
-          continue;
-        }
-        float const slope_keep =
-            terrain_type == Game::Map::TerrainType::Hill
-                ? std::clamp(1.0F - slope * k_grass_hill_slope_thinning, 0.0F, 1.0F)
-                : 1.0F;
-        if (slope_keep <= 0.0F) {
-          continue;
-        }
-
-        int const idx = z * m_width + x;
-        uint32_t state =
-            hash_coords(x, z, m_noise_seed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
-        float const local_density =
-            background_density * slope_keep *
-            grass_patch_density(float(x) + 0.5F, float(z) + 0.5F, m_noise_seed);
-        int base_count = static_cast<int>(std::floor(local_density));
-        float const frac = local_density - float(base_count);
-        if (rand_01(state) < frac) {
-          base_count += 1;
-        }
-
-        for (int i = 0; i < base_count; ++i) {
-          float const gx = float(x) + rand_01(state);
-          float const gz = float(z) + rand_01(state);
-          add_grass_blade(gx, gz, state);
-        }
-      }
-    }
-  }
-}
-
-void BiomeRenderer::scatter_flowers(const GrassScatterContext& ctx) {
-  const auto& terrain_cache = ctx.terrain_cache;
-  const auto& add_flower = ctx.add_flower;
-  const auto palette = flower_palette_for(ctx.scatter_profile.ground_type);
-  const float abundance = palette.abundance * ctx.flower_density_scale;
-  if (palette.count <= 0 || abundance <= 0.0F) {
-    return;
-  }
-
-  for (int z = 0; z < m_height; ++z) {
-    for (int x = 0; x < m_width; ++x) {
-      Game::Map::TerrainType const terrain_type =
-          terrain_cache.get_terrain_type_at(x, z);
-      if (terrain_type == Game::Map::TerrainType::Mountain ||
-          Game::Map::is_water_terrain(terrain_type)) {
-        continue;
-      }
-      float const slope = terrain_cache.get_slope_at(x, z);
-      if (slope > 0.55F) {
-        continue;
-      }
-
-      uint32_t state = hash_coords(x, z, m_noise_seed ^ 0x7F4A7C15U);
-      int best = -1;
-      float best_field = 0.0F;
-      for (int species = 0; species < palette.count; ++species) {
-        const uint32_t species_seed =
-            m_noise_seed ^ (0x9E3779B9U * static_cast<uint32_t>(species + 1));
-        float const broad = value_noise((float(x) + 0.5F) * k_flower_drift_frequency,
-                                        (float(z) + 0.5F) * k_flower_drift_frequency,
-                                        species_seed);
-        float const fine =
-            value_noise((float(x) + 0.5F) * k_flower_drift_frequency * 3.7F,
-                        (float(z) + 0.5F) * k_flower_drift_frequency * 3.7F,
-                        species_seed ^ 0x51ED270BU);
-        float const field = broad * 0.72F + fine * 0.28F;
-        if (field > best_field) {
-          best_field = field;
-          best = species;
-        }
-      }
-
-      float density = 0.0F;
-      if (best >= 0 && best_field > k_flower_drift_threshold) {
-        float const t = std::clamp((best_field - k_flower_drift_threshold) /
-                                       (1.0F - k_flower_drift_threshold) * 2.2F,
-                                   0.0F,
-                                   1.0F);
-        density = palette.species[static_cast<std::size_t>(best)].drift_density * t *
-                  abundance;
-      }
-      if (terrain_type == Game::Map::TerrainType::Forest) {
-        density *= 0.45F;
-      }
-      if (density > 0.0F) {
-        float const clump = value_noise((float(x) + 0.5F) * k_flower_clump_frequency,
-                                        (float(z) + 0.5F) * k_flower_clump_frequency,
-                                        m_noise_seed ^ 0x2C1B3C6DU);
-        density *= std::clamp((clump - k_flower_clump_threshold) /
-                                  (1.0F - k_flower_clump_threshold),
-                              0.0F,
-                              1.0F) *
-                   k_flower_clump_gain;
-      }
-
-      int count = static_cast<int>(std::floor(density));
-      if (rand_01(state) < density - float(count)) {
-        count += 1;
-      }
-      for (int i = 0; i < count; ++i) {
-        float const gx = float(x) + rand_01(state);
-        float const gz = float(z) + rand_01(state);
-        const auto& bloom = palette.species[static_cast<std::size_t>(best)];
-        add_flower(gx,
-                   gz,
-                   bloom.petal,
-                   remap(rand_01(state), bloom.stem_min, bloom.stem_max),
-                   remap(rand_01(state), bloom.head_min, bloom.head_max),
-                   state);
-      }
-
-      if (rand_01(state) < k_flower_stray_chance * abundance) {
-        const auto stray = static_cast<std::size_t>(
-            std::min(palette.count - 1, int(rand_01(state) * float(palette.count))));
-        const auto& bloom = palette.species[stray];
-        add_flower(float(x) + rand_01(state),
-                   float(z) + rand_01(state),
-                   bloom.petal,
-                   remap(rand_01(state), bloom.stem_min, bloom.stem_max),
-                   remap(rand_01(state), bloom.head_min, bloom.head_max),
-                   state);
-      }
-    }
-  }
-}
-
 void BiomeRenderer::generate_grass_instances() {
-  auto& grass_instances = m_grass_state.instances;
-  auto& grass_instance_count = m_grass_state.instance_count;
-  auto& grass_instances_dirty = m_grass_state.instances_dirty;
-
-  grass_instances.clear();
-
-  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    grass_instance_count = 0;
-    grass_instances_dirty = false;
-    return;
+  auto grass = Ground::Scatter::generate_grass(
+      {scatter_grid(), nullptr, m_biome_settings, world().terrain_or_empty(), {}},
+      GraphicsSettings::instance().profile().grass_density);
+  if (grass.generated_density >= 0.0F) {
+    m_generated_grass_density = grass.generated_density;
   }
-
-  const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
-  auto scatter_profile = profiles.scatter;
-
-  const float density_scale =
-      std::clamp(GraphicsSettings::instance().profile().grass_density, 0.0F, 1.0F);
-  m_generated_grass_density = density_scale;
-  const float snow_cover = std::clamp(profiles.climate.snow_coverage, 0.0F, 1.0F);
-  const float snow_thinning = 1.0F - (0.82F * snow_cover);
-  scatter_profile.patch_density *= density_scale * snow_thinning;
-
-  scatter_profile.background_blade_density *=
-      density_scale * 0.78F * snow_thinning * snow_thinning * k_grass_cover_scale;
-  {
-    const float expected =
-        scatter_profile.background_blade_density * float(m_width) * float(m_height);
-    const float budget = float(k_grass_instance_budget) * std::max(density_scale, 0.1F);
-    if (expected > budget) {
-      scatter_profile.background_blade_density *= budget / expected;
-    }
+  if (grass.typical_blade_height >= 0.0F) {
+    m_typical_blade_height = grass.typical_blade_height;
   }
-  const float flower_density_scale = density_scale * snow_thinning;
-  if (scatter_profile.patch_density < 0.01F) {
-    grass_instance_count = 0;
-    grass_instances_dirty = false;
-    return;
+  adopt_generated(std::move(grass.instances));
+  if (m_state.instance_count > 0) {
+    m_state.visibility_dirty = true;
   }
-
-  const float tile_safe = std::max(0.001F, m_tile_size);
-
-  SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(
-      m_height_data, m_terrain_types, m_width, m_height, m_tile_size);
-
-  SpawnValidationConfig config = make_grass_spawn_config();
-  config.grid_width = m_width;
-  config.grid_height = m_height;
-  config.tile_size = m_tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding;
-
-  config.check_river_margin = false;
-  config.allow_hill = true;
-
-  SpawnValidator validator(terrain_cache, config);
-  const int chunk_size = default_chunk_size;
-
-  const std::size_t cell_count =
-      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
-  const std::size_t chunk_columns =
-      static_cast<std::size_t>((std::max(0, m_width - 2) + chunk_size) / chunk_size);
-  const std::size_t chunk_rows =
-      static_cast<std::size_t>((std::max(0, m_height - 2) + chunk_size) / chunk_size);
-  const std::size_t chunk_count = chunk_columns * chunk_rows;
-  const std::size_t background_blades_per_cell = static_cast<std::size_t>(
-      std::ceil(std::max(0.0F, scatter_profile.background_blade_density)));
-  const std::size_t cluster_count_per_chunk = static_cast<std::size_t>(
-      std::ceil(std::max(0.0F, scatter_profile.patch_density * 2.0F)));
-  constexpr std::size_t k_max_blades_per_cluster = 12U;
-  const std::size_t reserve_hint =
-      cell_count * background_blades_per_cell +
-      chunk_count * cluster_count_per_chunk * k_max_blades_per_cluster;
-  grass_instances.reserve(reserve_hint);
-
-  auto check_riverbank = [&](int ix, int iz, uint32_t& state) -> bool {
-    constexpr int k_river_margin = 1;
-    int near_river_count = 0;
-    for (int dz = -k_river_margin; dz <= k_river_margin; ++dz) {
-      for (int dx = -k_river_margin; dx <= k_river_margin; ++dx) {
-        if (dx == 0 && dz == 0) {
-          continue;
-        }
-        int const nx = ix + dx;
-        int const nz = iz + dz;
-        if (nx >= 0 && nx < m_width && nz >= 0 && nz < m_height) {
-          if (Game::Map::is_water_terrain(terrain_cache.get_terrain_type_at(nx, nz))) {
-            near_river_count++;
-          }
-        }
-      }
-    }
-
-    if (near_river_count > 0) {
-
-      float const riverbank_density =
-          0.18F + 0.12F * std::clamp(profiles.climate.moisture_level, 0.0F, 1.0F);
-      if (rand_01(state) > riverbank_density) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  auto add_grass_blade = [&](float gx, float gz, uint32_t& state) {
-    if (!validator.can_spawn_at_grid(gx, gz)) {
-      return false;
-    }
-
-    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
-    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
-
-    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
-    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
-
-    if (!check_riverbank(ix, iz, state)) {
-      return false;
-    }
-    if (terrain_cache.get_terrain_type_at(ix, iz) == Game::Map::TerrainType::Forest &&
-        rand_01(state) > k_forest_floor_grass_keep) {
-      return false;
-    }
-
-    float world_x = 0.0F;
-    float world_z = 0.0F;
-    validator.grid_to_world(gx, gz, world_x, world_z);
-    float const world_y = terrain_cache.sample_height_at(sgx, sgz);
-
-    float const slope = terrain_cache.get_slope_at(ix, iz);
-
-    float const lush_noise =
-        value_noise(world_x * 0.06F, world_z * 0.06F, m_noise_seed ^ 0x9235U);
-    float const dryness_noise =
-        value_noise(world_x * 0.12F, world_z * 0.12F, m_noise_seed ^ 0x47d2U);
-    float const dryness = std::clamp(
-        dryness_noise * 0.5F + slope * 0.3F +
-            (1.0F - profiles.climate.moisture_level) * 0.2F + snow_cover * 0.55F,
-        0.0F,
-        1.0F);
-    QVector3D const lush_mix = scatter_profile.grass_primary * (1.0F - lush_noise) +
-                               scatter_profile.grass_secondary * lush_noise;
-    QVector3D const raw_color =
-        lush_mix * (1.0F - dryness) + scatter_profile.grass_dry * dryness;
-    QVector3D const color = contrast_grass_blade_color(
-        raw_color, scatter_profile.soil_color, scatter_profile.ground_type, dryness);
-
-    float const height_roll = rand_01(state);
-    float const tall = rand_01(state) < k_grass_tall_tuft_share ? 1.0F : 0.0F;
-    float const height_t =
-        tall > 0.5F ? 0.62F + 0.38F * height_roll : 0.55F * height_roll * height_roll;
-    float const height = remap(height_t,
-                               scatter_profile.blade_height_min,
-                               scatter_profile.blade_height_max) *
-                         tile_safe * 0.5F * k_grass_height_scale;
-    float const width = remap(rand_01(state),
-                              scatter_profile.blade_width_min,
-                              scatter_profile.blade_width_max) *
-                        tile_safe * k_grass_width_scale * (1.0F - 0.22F * tall);
-
-    float const sway_strength = remap(rand_01(state), 0.75F, 1.25F);
-    float const sway_speed = remap(rand_01(state), 0.85F, 1.15F);
-    float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
-    float const orientation = rand_01(state) * MathConstants::k_two_pi;
-
-    GrassInstanceGpu instance;
-    instance.pos_height = QVector4D(world_x, world_y, world_z, height);
-    instance.color_width = QVector4D(color.x(), color.y(), color.z(), width);
-    instance.sway_params =
-        QVector4D(sway_strength, sway_speed, sway_phase, orientation);
-    grass_instances.push_back(std::move(instance));
-    return true;
-  };
-
-  auto add_flower = [&](float gx,
-                        float gz,
-                        const QVector3D& petal,
-                        float stem_height,
-                        float head_radius,
-                        uint32_t& state) {
-    if (!validator.can_spawn_at_grid(gx, gz)) {
-      return false;
-    }
-    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
-    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
-    float world_x = 0.0F;
-    float world_z = 0.0F;
-    validator.grid_to_world(gx, gz, world_x, world_z);
-    float const world_y = terrain_cache.sample_height_at(sgx, sgz);
-
-    float const shade = remap(rand_01(state), 0.90F, 1.06F);
-    float const sway_strength = remap(rand_01(state), 0.55F, 0.95F);
-    float const sway_speed = remap(rand_01(state), 0.85F, 1.15F);
-    float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
-    float const orientation = rand_01(state) * MathConstants::k_two_pi;
-
-    GrassInstanceGpu instance;
-    instance.pos_height = QVector4D(world_x, world_y, world_z, stem_height * tile_safe);
-    instance.color_width = QVector4D(std::min(petal.x() * shade, 1.0F),
-                                     std::min(petal.y() * shade, 1.0F),
-                                     std::min(petal.z() * shade, 1.0F),
-                                     head_radius * tile_safe);
-    instance.sway_params =
-        QVector4D(sway_strength + k_instance_kind_stride * k_instance_kind_flower,
-                  sway_speed,
-                  sway_phase,
-                  orientation);
-    grass_instances.push_back(std::move(instance));
-    return true;
-  };
-
-  auto quad_section = [&](Game::Map::TerrainType a,
-                          Game::Map::TerrainType b,
-                          Game::Map::TerrainType c,
-                          Game::Map::TerrainType d) {
-    int const priority_a = section_for(a);
-    int const priority_b = section_for(b);
-    int const priority_c = section_for(c);
-    int const priority_d = section_for(d);
-    int result = priority_a;
-    result = std::max(result, priority_b);
-    result = std::max(result, priority_c);
-    result = std::max(result, priority_d);
-    return result;
-  };
-
-  const GrassScatterContext ctx{.scatter_profile = scatter_profile,
-                                .terrain_cache = terrain_cache,
-                                .tile_safe = tile_safe,
-                                .chunk_size = chunk_size,
-                                .cluster_count_per_chunk = cluster_count_per_chunk,
-                                .background_blades_per_cell =
-                                    background_blades_per_cell,
-                                .add_grass_blade = add_grass_blade,
-                                .add_flower = add_flower,
-                                .flower_density_scale = flower_density_scale,
-                                .quad_section = quad_section};
-
-  scatter_grass_clusters(ctx);
-  scatter_background_grass(ctx);
-  scatter_flowers(ctx);
-
-  std::mt19937 shuffle_rng(m_noise_seed ^ 0x5f3aC71dU);
-  std::shuffle(grass_instances.begin(), grass_instances.end(), shuffle_rng);
-
-  m_typical_blade_height =
-      0.5F * (scatter_profile.blade_height_min + scatter_profile.blade_height_max) *
-      tile_safe * 0.5F * k_grass_height_scale;
-
-  grass_instance_count = grass_instances.size();
-  grass_instances_dirty = grass_instance_count > 0;
-  m_grass_state.visibility_dirty = grass_instance_count > 0;
 }
 
 } // namespace Render::GL

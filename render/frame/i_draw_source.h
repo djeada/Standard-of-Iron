@@ -5,11 +5,11 @@
 namespace Render::GL {
 
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 struct IDrawSource {
   virtual ~IDrawSource() = default;
-  virtual void submit(FrameSubmitter& renderer, ResourceManager* resources) = 0;
+  virtual void submit(FrameSubmitter& renderer, const DrawResources* resources) = 0;
 
   virtual void set_world_view(const Render::WorldView& view) noexcept {
     m_world_view = view;

@@ -8,10 +8,13 @@
 
 #include "game/session/session_context.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/elephant/elephant_render_batch.h"
 #include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_render_batch.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
@@ -369,7 +372,7 @@ TEST(CreatureRenderBatch, AddHumanoidIncreasesSize) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   EXPECT_EQ(batch.size(), 1U);
   EXPECT_FALSE(batch.empty());
@@ -388,8 +391,8 @@ TEST(CreatureRenderBatch, StableRoleColorsAreCachedByVariant) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 2U);
   EXPECT_EQ(batch.requests()[0].role_color_count, batch.requests()[1].role_color_count);
@@ -417,8 +420,8 @@ TEST(CreatureRenderBatch, WearProfileBreaksRoleColorCacheReuse) {
   second.weathering = 0.45F;
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, first, anim);
-  batch.add_humanoid(output, pose, second, anim);
+  add_humanoid(batch, output, pose, first, anim);
+  add_humanoid(batch, output, pose, second, anim);
 
   ASSERT_EQ(batch.requests().size(), 2U);
   EXPECT_EQ(g_extra_role_color_calls.load(std::memory_order_relaxed), 2)
@@ -445,7 +448,7 @@ TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].archetype, override_archetype);
@@ -475,7 +478,7 @@ TEST(CreatureRenderBatch, PrecomputedHumanoidSelectionOverridesResolverWork) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1U);
   auto const& req = batch.requests().front();
@@ -502,7 +505,7 @@ TEST(CreatureRenderBatch, MovingCombatHumanoidKeepsMovementRequest) {
   anim.gait.state = Render::GL::HumanoidMotionState::Walk;
   anim.gait.cycle_phase = 0.42F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1U);
   auto const& req = batch.requests()[0];
@@ -540,7 +543,7 @@ TEST(CreatureRenderBatch, AllPoseVariantTableCannotChangeMovingStateByArchetype)
   anim.gait.state = Render::GL::HumanoidMotionState::Run;
   anim.gait.cycle_phase = 0.64F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1U);
   auto const& req = batch.requests()[0];
@@ -563,7 +566,7 @@ TEST(CreatureRenderBatch, HumanoidWearParamsPropagateToRequests) {
   variant.pattern_seed = 0.75F;
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1U);
   auto const& req = batch.requests()[0];
@@ -581,7 +584,7 @@ TEST(CreatureRenderBatch, CulledCreatureNotAdded) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   EXPECT_TRUE(batch.empty());
   EXPECT_EQ(batch.size(), 0U);
@@ -593,7 +596,7 @@ TEST(CreatureRenderBatch, AddHorseIncreasesSize) {
   output.culled = false;
   Render::GL::HorseVariant const variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
+  add_quadruped(batch, output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1U);
 }
@@ -604,7 +607,7 @@ TEST(CreatureRenderBatch, AddElephantIncreasesSize) {
   output.culled = false;
   Render::GL::ElephantVariant const variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
+  add_quadruped(batch, output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1U);
 }
@@ -617,7 +620,7 @@ TEST(CreatureRenderBatch, ClearEmptiesBatch) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   EXPECT_EQ(batch.size(), 1U);
 
   batch.clear();
@@ -649,7 +652,7 @@ TEST(CreatureRenderGraph, EndToEndHumanoidPrepare) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   EXPECT_EQ(batch.size(), 1U);
   ASSERT_EQ(batch.requests().size(), 1U);
@@ -673,7 +676,7 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
   CreatureRenderBatch batch;
   Render::GL::HorseVariant const variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
+  add_quadruped(batch, output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1U);
   ASSERT_EQ(batch.requests().size(), 1U);
@@ -697,7 +700,7 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   CreatureRenderBatch batch;
   Render::GL::ElephantVariant const variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
+  add_quadruped(batch, output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1U);
   ASSERT_EQ(batch.requests().size(), 1U);
@@ -764,7 +767,7 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  result.bodies.add_humanoid(output, pose, variant, anim);
+  add_humanoid(result.bodies, output, pose, variant, anim);
 
   EXPECT_EQ(result.bodies.size(), 1U);
 

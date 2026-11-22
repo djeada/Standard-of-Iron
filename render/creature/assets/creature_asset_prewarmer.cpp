@@ -1,13 +1,10 @@
 #include "render/creature/assets/creature_asset_prewarmer.h"
 
 #include "animation/bpat/bpat_reader.h"
-#include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
-#include "render/creature/horse/horse_spec.h"
 #include "render/creature/pipeline/creature_asset_init.h"
+#include "render/creature/pipeline/species_contract.h"
 #include "render/creature/schema/skeleton_schema_hash.h"
-#include "render/creature/wildlife/sheep_spec.h"
-#include "render/creature/wildlife/wolf_spec.h"
 
 namespace Render::Creature {
 
@@ -26,23 +23,9 @@ auto representative_blob(const Pipeline::CreatureRenderAssetHandle& handle)
 } // namespace
 
 void initialize_species_lod_geometry(Pipeline::CreatureKind kind) {
-  switch (kind) {
-  case Pipeline::CreatureKind::Horse:
-    Render::Horse::initialize_horse_asset();
-    return;
-  case Pipeline::CreatureKind::Elephant:
-    Render::Elephant::initialize_elephant_asset();
-    return;
-  case Pipeline::CreatureKind::Sheep:
-    Render::Wildlife::initialize_sheep_asset();
-    return;
-  case Pipeline::CreatureKind::Wolf:
-    Render::Wildlife::initialize_wolf_asset();
-    return;
-  case Pipeline::CreatureKind::Humanoid:
-  case Pipeline::CreatureKind::Mounted:
-
-    return;
+  const Pipeline::SpeciesContract* contract = Pipeline::species_contract(kind);
+  if (contract != nullptr && contract->initialize_lod_geometry != nullptr) {
+    contract->initialize_lod_geometry();
   }
 }
 

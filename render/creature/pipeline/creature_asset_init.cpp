@@ -60,14 +60,17 @@ auto create_creature_render_asset(Render::GL::RiggedMeshCache& cache,
   }
 
   const bool had_ubo =
-      entry->skin_atlas != nullptr && entry->skin_atlas->palette_ubo.valid();
-  Render::GL::rigged_entry_ensure_skin_ubo(*entry);
+      entry->skin_atlas != nullptr && entry->skin_atlas->palette_block != nullptr;
+  if (cache.palette_blocks_enabled()) {
+    Render::GL::rigged_entry_ensure_skin_ubo(*entry);
+  }
   if (!had_ubo && entry->skin_atlas != nullptr &&
-      entry->skin_atlas->palette_ubo.valid()) {
+      entry->skin_atlas->palette_block != nullptr) {
     const auto bytes = static_cast<std::uint64_t>(entry->skin_atlas->frame_total) *
                        Render::GL::BonePaletteArena::k_palette_bytes;
     cache.record_skin_ubo_upload(bytes);
-  } else if (entry->skin_atlas != nullptr && !entry->skin_atlas->palette_ubo.valid() &&
+  } else if (entry->skin_atlas != nullptr &&
+             entry->skin_atlas->palette_block == nullptr &&
              !entry->skin_atlas->palettes.empty() &&
              entry->skin_atlas->frame_total != 0U &&
              entry->skin_atlas->bone_count != 0U) {

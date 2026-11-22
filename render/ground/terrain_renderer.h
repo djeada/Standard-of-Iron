@@ -17,20 +17,16 @@
 #include "render/frame/i_draw_source.h"
 #include "render/frame/mist_volume.h"
 #include "render/frame/world_chunk.h"
-#include "render/gl/mesh.h"
-#include "render/gl/mesh_gpu_table.h"
-#include "render/gl/terrain_noise_atlas.h"
-#include "render/gl/texture.h"
+#include "render/geom/mesh.h"
+#include "render/geom/texture_image.h"
 #include "render/ground/building_ground.h"
 #include "render/ground/ground_ecology.h"
 
 namespace Render::GL {
 class Buffer;
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 class Mesh;
-class Texture;
-class Shader;
 
 [[nodiscard]] auto
 make_terrain_chunk_params(const Game::Map::BiomeSettings& biome_settings,
@@ -51,9 +47,10 @@ public:
 
   void set_light_direction(const QVector3D& dir);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
+  // Every mesh this renderer draws, for prewarming a backend's MeshGpuTable.
+  void for_each_mesh(const MeshVisitor& visit) const;
 
   void set_wireframe(bool enable) { m_wireframe = enable; }
 
@@ -73,8 +70,8 @@ private:
   void bake_terrain_fields();
   void bake_cover_mask();
   void stamp_building_ground();
-  void bake_terrain_noise_atlas();
-  void bake_terrain_microdetail();
+  // What the backend bakes the noise atlas and microdetail from.
+  [[nodiscard]] auto noise_request() const -> TerrainNoiseRequest;
 
   struct ChunkMesh {
     std::unique_ptr<Mesh> mesh;
@@ -97,19 +94,21 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
   Render::GroundFogSettings m_ground_fog{};
-  std::unique_ptr<Texture> m_height_texture;
+  // CPU images the backend uploads: heights, terrain fields, ground cover.
+  TextureImage m_height_texture;
   bool m_height_texture_dirty = true;
-  std::unique_ptr<Texture> m_terrain_field_texture;
+  TextureImage m_terrain_field_texture;
   std::vector<float> m_terrain_field_data;
   bool m_terrain_fields_dirty = true;
-  std::unique_ptr<Texture> m_cover_texture;
+  TextureImage m_cover_texture;
   std::vector<float> m_cover_data;
   std::shared_ptr<const Render::Ground::GroundEcologyField> m_ecology;
   std::vector<Render::Ground::BuildingGroundFootprint> m_building_footprints;
   std::uint64_t m_building_ground_revision = 0U;
   bool m_cover_dirty = true;
-  TerrainNoiseAtlas m_noise_atlas;
-  bool m_noise_atlas_dirty = true;
+  // Moves every time the terrain is configured; the backend bakes its noise
+  // atlas once per revision.
+  std::uint64_t m_noise_revision = 0U;
   std::vector<ChunkMesh> m_chunks;
   std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;
   Game::Map::BiomeSettings m_biome_settings;

@@ -8,7 +8,7 @@
 #include <string_view>
 
 #include "render/creature/assets/compiled_creature_asset_status.h"
-#include "render/creature/quadruped/mesh_graph.h"
+#include "render/creature/schema/mesh_graph.h"
 #include "render/creature/skeleton.h"
 
 namespace Render::Elephant {

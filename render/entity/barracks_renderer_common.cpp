@@ -3,10 +3,10 @@
 #include <array>
 
 #include "game/core/component_core.h"
-#include "render/backend/backend.h"
+#include "render/entity/barracks_activity_submit.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 
@@ -35,9 +35,9 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
         const QVector3D team = Render::entity_color(*ctx.entity);
 
         BarracksFlagRenderer::ClothBannerResources cloth;
-        if (ctx.backend != nullptr) {
-          cloth.cloth_mesh = ctx.backend->banner_mesh();
-          cloth.banner_shader = ctx.backend->banner_shader();
+        if (ctx.resources != nullptr) {
+          cloth.cloth_mesh = ctx.resources->banner_mesh();
+          cloth.banner_shader = ctx.resources->banner_shader();
         }
 
         const std::array<QVector3D, 1> palette{team};

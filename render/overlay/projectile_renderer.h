@@ -4,12 +4,12 @@
 
 #include <cstdint>
 
-#include "render/gl/mesh_gpu_table.h"
+#include "render/geom/mesh.h"
 
 namespace Render {
 namespace GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 } // namespace GL
 } // namespace Render
 
@@ -22,7 +22,8 @@ struct SpentProjectile;
 
 namespace Render::GL {
 
-[[nodiscard]] auto prewarm_projectile_geometry(MeshGpuTable& meshes) -> bool;
+// The arrow, stone and sphere meshes projectiles draw, for prewarming.
+void for_each_projectile_mesh(const MeshVisitor& visit);
 
 enum class ProjectileRelation : std::uint8_t {
   Neutral,
@@ -48,12 +49,12 @@ inline constexpr int k_projectile_impact_effect_budget = 40;
 [[nodiscard]] auto fireball_impact_envelope(float progress) -> float;
 
 void render_projectiles(FrameSubmitter* renderer,
-                        ResourceManager* resources,
+                        const DrawResources* resources,
                         const Game::Systems::RenderEffectsFrame& effects,
                         const ProjectileViewContext* view = nullptr);
 
 void render_arrow_projectile(FrameSubmitter* renderer,
-                             ResourceManager* resources,
+                             const DrawResources* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
@@ -61,7 +62,7 @@ void render_arrow_projectile(FrameSubmitter* renderer,
                              bool reduced_effects = false);
 
 void render_stone_projectile(FrameSubmitter* renderer,
-                             ResourceManager* resources,
+                             const DrawResources* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,

@@ -13,9 +13,7 @@ namespace Engine::Core {
 class World;
 }
 namespace Render::GL {
-struct DrawContext;
 struct HumanoidVariant;
-class ISubmitter;
 
 struct FarmWorkerVisual {
   Render::Creature::ArchetypeId hatted_tending{Render::Creature::k_invalid_archetype};
@@ -62,7 +60,6 @@ struct FarmActivity {
   bool gag_seen{false};
 };
 
-void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage);
 [[nodiscard]] auto farm_activity_growth_stage(float growth) -> int;
 
 struct FarmLane {

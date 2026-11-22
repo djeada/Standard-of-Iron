@@ -46,6 +46,7 @@
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
 #include "render/entity/production_completion_renderer.h"
+#include "render/entity/rpg_telegraph_renderer.h"
 #include "render/entity/wading_effects_renderer.h"
 #include "render/frame/camera_visibility.h"
 #include "render/geom/arrow.h"
@@ -449,7 +450,7 @@ void ArenaViewport::submit_terrain_layers() {
   }
 }
 
-void ArenaViewport::submit_world_effects(Render::GL::ResourceManager* res) {
+void ArenaViewport::submit_world_effects(const Render::GL::DrawResources* res) {
   if (auto* arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
     Render::GL::render_arrows(m_renderer.get(), res, arrow_system->arrows());
   }
@@ -612,7 +613,8 @@ void ArenaViewport::publish_scenario_frame(
   }
 }
 
-void ArenaViewport::render_attack_range_rings(Render::GL::ResourceManager* resources) {
+void ArenaViewport::render_attack_range_rings(
+    const Render::GL::DrawResources* resources) {
   m_attack_range_rings.clear();
   auto* selection = selection_system();
   if (selection == nullptr || m_world == nullptr || m_renderer == nullptr) {
@@ -634,7 +636,8 @@ void ArenaViewport::render_attack_range_rings(Render::GL::ResourceManager* resou
       m_renderer.get(), resources, m_attack_range_rings);
 }
 
-void ArenaViewport::render_target_focus_rings(Render::GL::ResourceManager* resources) {
+void ArenaViewport::render_target_focus_rings(
+    const Render::GL::DrawResources* resources) {
   auto* selection = selection_system();
   if (selection == nullptr || m_world == nullptr || m_renderer == nullptr) {
     return;

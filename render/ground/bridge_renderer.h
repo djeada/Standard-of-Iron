@@ -7,14 +7,14 @@
 
 #include "game/map/terrain.h"
 #include "render/frame/i_draw_source.h"
-#include "render/gl/mesh_gpu_table.h"
+#include "render/geom/mesh.h"
 #include "render/ground/linear_feature_visibility.h"
 
 namespace Render::GL {
 class FogRenderer;
 class Mesh;
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 class BridgeRenderer : public IDrawSource {
 public:
@@ -27,9 +27,10 @@ public:
 
   void set_fog_renderer(FogRenderer* fog);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
+  // Every mesh this renderer draws, for prewarming a backend's MeshGpuTable.
+  void for_each_mesh(const MeshVisitor& visit) const;
 
 private:
   void build_meshes();

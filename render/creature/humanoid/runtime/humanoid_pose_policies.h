@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/creature/humanoid/schema/pose_policy.h"
+#include "render/creature/schema/pose_policy.h"
 
 namespace Render::GL {
 struct HumanoidPose;

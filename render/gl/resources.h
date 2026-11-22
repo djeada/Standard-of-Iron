@@ -4,8 +4,8 @@
 
 #include <memory>
 
+#include "render/geom/mesh.h"
 #include "render/gl/gl_handle.h"
-#include "render/gl/mesh.h"
 #include "render/gl/texture.h"
 
 namespace Render::GL {

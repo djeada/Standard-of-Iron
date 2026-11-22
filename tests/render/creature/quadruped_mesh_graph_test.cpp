@@ -1,9 +1,10 @@
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <limits>
 #include <vector>
 
-#include "render/creature/quadruped/mesh_graph.h"
 #include "render/creature/quadruped/skeleton_factory.h"
+#include "render/creature/schema/mesh_graph.h"
 
 namespace {
 

@@ -15,6 +15,7 @@
 #include "game/core/component.h"
 #include "render/creature/elephant/elephant_renderer_base.h"
 #include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/elephant/elephant_species.h"
 #include "render/creature/elephant/prepare.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
@@ -22,8 +23,8 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 #include "render/math/creature_math_utils.h"
 #include "render/math/math_utils.h"
 

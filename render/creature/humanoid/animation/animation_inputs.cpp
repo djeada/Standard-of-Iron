@@ -9,11 +9,11 @@
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
-#include "render/creature/animation_state_components.h"
 #include "render/creature/combat_animation_diagnostics.h"
+#include "render/creature/humanoid/humanoid_animation_state.h"
+#include "render/creature/humanoid/humanoid_constants.h"
 #include "render/creature/movement_animation.h"
 #include "render/frame/draw_context.h"
-#include "render/gl/humanoid/humanoid_constants.h"
 #include "render/profiling/frame_profile.h"
 
 namespace Render::GL {
@@ -658,3 +658,20 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 }
 
 } // namespace Render::GL
+
+namespace Render::Creature::Pipeline {
+
+auto resolve_humanoid_animation_state(const Render::GL::DrawContext& ctx)
+    -> PreparedAnimationState {
+  PreparedAnimationState state;
+  state.used_override = (ctx.animation_override != nullptr);
+  state.inputs = Render::GL::sample_anim_state(ctx);
+  return state;
+}
+
+auto resolve_elephant_animation_state(const Render::GL::DrawContext& ctx)
+    -> PreparedAnimationState {
+  return resolve_humanoid_animation_state(ctx);
+}
+
+} // namespace Render::Creature::Pipeline

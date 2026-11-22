@@ -107,7 +107,7 @@ The non-uniform transform is intentional and is verified against the generated p
 
 # Compiled creature package
 
-`render/creature/compiled_creature_assets.cpp` loads the generated package used at runtime.
+`render/creature/quadruped/compiled_source_assets.cpp` loads the generated package used at runtime.
 
 The loader validates and decompresses the package, then resolves data such as:
 
@@ -416,15 +416,15 @@ The current horse/elephant pipeline depends on these invariants:
 
 # Source map
 
-| Concern                        | Source                                         |
-| ------------------------------ | ---------------------------------------------- |
-| Compiled creature loading      | `render/creature/compiled_creature_assets.cpp` |
-| Horse production package       | `assets/creatures/horse/horse.cmesh`           |
-| Elephant production package    | `assets/creatures/elephant/elephant.cmesh`     |
-| Shared horse-equipment handles | `render/entity/mounted_horse_equipment.h`      |
-| BPAT format/runtime            | `animation/bpat/`                              |
-| Mesh/shape preview             | `mesh_preview` tool sources                    |
-| Focused tests                  | horse/elephant model test targets              |
-| Runtime integration            | Arena locomotion matrix scenarios              |
+| Concern                        | Source                                                 |
+| ------------------------------ | ------------------------------------------------------ |
+| Compiled creature loading      | `render/creature/quadruped/compiled_source_assets.cpp` |
+| Horse production package       | `assets/creatures/horse/horse.cmesh`                   |
+| Elephant production package    | `assets/creatures/elephant/elephant.cmesh`             |
+| Shared horse-equipment handles | `render/entity/mounted_horse_equipment.h`              |
+| BPAT format/runtime            | `animation/bpat/`                                      |
+| Mesh/shape preview             | `mesh_preview` tool sources                            |
+| Focused tests                  | horse/elephant model test targets                      |
+| Runtime integration            | Arena locomotion matrix scenarios                      |
 
 The production packages, runtime loader, authored animation data, attachment frames, and verification tools define the current mounted-creature model contract. Historical refactor stories are not required to explain that pipeline.

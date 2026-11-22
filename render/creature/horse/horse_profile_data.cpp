@@ -14,6 +14,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/horse/horse_renderer_base.h"
 #include "render/creature/horse/horse_spec.h"
+#include "render/creature/horse/horse_species.h"
 #include "render/creature/horse/prepare.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
@@ -21,8 +22,8 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 #include "render/math/creature_math_utils.h"
 #include "render/math/math_utils.h"
 

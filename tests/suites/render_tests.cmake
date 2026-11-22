@@ -8,6 +8,8 @@ add_executable(
     render/gl_deferred_delete_test.cpp
     render/gl_context_lifetime_test.cpp
     render/gl_ownership_leak_test.cpp
+    render/gpu_data_test.cpp
+    render/building_presentation_test.cpp
     render/asset_counters_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
@@ -78,6 +80,7 @@ add_executable(
     render/adaptive_quality_test.cpp
     render/scatter_composition_test.cpp
     render/scatter_gpu_retention_test.cpp
+    render/scatter_generator_test.cpp
     render/scatter_runtime_test.cpp
     render/terrain_vertex_masks_test.cpp
     render/terrain_scene_proxy_test.cpp

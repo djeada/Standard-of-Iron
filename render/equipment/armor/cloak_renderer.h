@@ -9,7 +9,7 @@
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/equipment/i_equipment_renderer.h"
 #include "render/frame/palette.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
 

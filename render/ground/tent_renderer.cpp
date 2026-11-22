@@ -11,6 +11,7 @@
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
+#include "render/ground/scatter/scatter_generators.h"
 #include "render/ground/scatter_runtime.h"
 
 namespace {
@@ -41,7 +42,7 @@ void TentRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void TentRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void TentRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::Tent) == 0) {
     return;
   }
@@ -69,53 +70,11 @@ void TentRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) 
   }
 }
 
-namespace {
-constexpr float k_tent_footprint_radius = 1.15F;
-}
-
 void TentRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap& height_map) {
-
-  const auto& terrain_service = world().terrain_or_empty();
-
-  for (const auto& prop : world_props) {
-    if (prop.type != Game::Map::WorldProp::Type::Tent) {
-      continue;
-    }
-    const float tent_scale = prop.scale * Game::Map::world_prop_render_scale(
-                                              Game::Map::WorldProp::Type::Tent);
-    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
-        prop, tent_scale * k_tent_footprint_radius);
-
-    uint32_t state = hash_coords(static_cast<int>(prop.x),
-                                 static_cast<int>(prop.z),
-                                 m_biome_settings.seed ^ 0xA7124D93U);
-
-    float const dye = rand_01(state);
-    QVector3D canvas_color;
-    if (dye < 0.16F) {
-      canvas_color = QVector3D(0.46F, 0.15F, 0.11F);
-    } else if (dye < 0.46F) {
-      canvas_color = QVector3D(0.58F, 0.44F, 0.26F);
-    } else if (dye < 0.58F) {
-      canvas_color = QVector3D(0.18F, 0.25F, 0.32F);
-    } else if (dye < 0.70F) {
-      canvas_color = QVector3D(0.30F, 0.33F, 0.20F);
-    } else {
-      canvas_color = QVector3D(0.44F, 0.30F, 0.19F);
-    }
-    canvas_color *= remap(rand_01(state), 0.88F, 1.06F);
-
-    PropInstanceGpu inst;
-    inst.pos_scale = QVector4D(resolved.x(), resolved.y(), resolved.z(), tent_scale);
-    inst.color_rot =
-        QVector4D(canvas_color.x(), canvas_color.y(), canvas_color.z(), prop.rotation);
-    m_state.instances.push_back(inst);
-  }
-
-  m_state.instance_count = m_state.instances.size();
-  m_state.instances_dirty = m_state.instance_count > 0;
+  adopt_generated(Ground::Scatter::generate_tents(
+      {{}, nullptr, m_biome_settings, world().terrain_or_empty(), world_props}));
 }
 
 } // namespace Render::GL

@@ -14,8 +14,10 @@
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
-#include "render/creature/animation_state_components.h"
+#include "render/creature/elephant/elephant_body_state.h"
+#include "render/creature/elephant/elephant_components.h"
 #include "render/creature/elephant/elephant_motion.h"
+#include "render/creature/elephant/elephant_render_batch.h"
 #include "render/creature/elephant/elephant_renderer_base.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/creature/movement_animation.h"
@@ -32,7 +34,7 @@
 #include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
 #include "render/frame/terrain_contact.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 #include "render/math/creature_math_utils.h"
 #include "scene/camera.h"
 
@@ -493,7 +495,7 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   body_state.outgoing_state = blend.outgoing_state;
   body_state.outgoing_phase = blend.outgoing_phase;
   body_state.outgoing_weight = blend.outgoing_weight;
-  out.bodies.add_quadruped(body_state);
+  add_quadruped(out.bodies, body_state);
 
   RCQ::add_quadruped_shadow(input, body, out);
 }

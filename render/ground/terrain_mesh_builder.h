@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "game/map/terrain.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::Ground {
 

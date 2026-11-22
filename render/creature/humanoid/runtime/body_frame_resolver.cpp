@@ -7,8 +7,8 @@
 #include <cmath>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/creature/humanoid/humanoid_constants.h"
 #include "render/creature/humanoid/runtime/skeleton_evaluator.h"
-#include "render/gl/humanoid/humanoid_constants.h"
 
 namespace Render::Humanoid {
 

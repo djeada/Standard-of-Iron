@@ -10,6 +10,7 @@
 #include "render/creature/archetype_registry.h"
 #include "render/entity/civilian_actor.h"
 #include "render/entity/home_activity.h"
+#include "render/entity/home_activity_submit.h"
 #include "render/entity/registry.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/local_lighting.h"

@@ -41,7 +41,7 @@ constexpr float k_buff_ring_pulse = 0.05F;
 } // namespace
 
 void render_commander_auras(FrameSubmitter* renderer,
-                            ResourceManager*,
+                            const DrawResources*,
                             Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
     return;

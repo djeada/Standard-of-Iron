@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/animation_inputs.h"
 #include "render/creature/pose_intent_enum.h"
 
 namespace Render::GL {

@@ -27,8 +27,8 @@
 #include "render/equipment/renderer_constants.h"
 #include "render/equipment/weapons/arrow_archetype_utils.h"
 #include "render/frame/draw_context.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 #include "render/math/math_utils.h"
 
 namespace Render::GL {

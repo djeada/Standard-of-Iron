@@ -107,7 +107,7 @@ void draw_hover_glow(FrameSubmitter* renderer,
 
 void render_interaction_target_markers(
     FrameSubmitter* renderer,
-    ResourceManager* resources,
+    const DrawResources* resources,
     std::span<const InteractionTargetMarkerVisual> markers,
     bool reduced_motion) {
   if ((renderer == nullptr) || (resources == nullptr) || markers.empty()) {

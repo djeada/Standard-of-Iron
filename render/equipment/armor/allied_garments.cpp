@@ -18,9 +18,9 @@
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/geom/parts.h"
+#include "render/geom/primitives.h"
+#include "render/geom/shared_geometry_cache.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
-#include "render/gl/shared_geometry_cache.h"
 
 namespace Render::GL {
 

@@ -20,8 +20,8 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/equipment/renderer_constants.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 
 namespace Render::GL {
 

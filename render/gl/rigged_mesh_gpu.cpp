@@ -1,28 +1,14 @@
 #include "render/gl/rigged_mesh_gpu.h"
 
 #include <QOpenGLContext>
-#include <QOpenGLVersionFunctionsFactory>
 
 #include <cstddef>
 #include <utility>
 
-#include "render/gl/gl_resource_tracking.h"
+#include "render/geom/rigged_mesh.h"
 #include "render/gl/platform_gl.h"
-#include "render/gl/rigged_mesh.h"
 
 namespace Render::GL {
-
-namespace {
-
-auto palette_gl_funcs() -> QOpenGLFunctions_3_3_Core* {
-  auto* ctx = QOpenGLContext::currentContext();
-  if (ctx == nullptr) {
-    return nullptr;
-  }
-  return QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(ctx);
-}
-
-} // namespace
 
 void RiggedMeshGpu::initialize() {
   initializeOpenGLFunctions();
@@ -78,30 +64,6 @@ void RiggedMeshGpu::configure_vertex_attributes() {
 void RiggedMeshGpu::draw_triangles(std::size_t index_count) {
   glDrawElements(
       GL_TRIANGLES, static_cast<GLsizei>(index_count), GL_UNSIGNED_INT, nullptr);
-}
-
-auto palette_ubo_available() -> bool {
-  return palette_gl_funcs() != nullptr;
-}
-
-auto create_palette_ubo(std::span<const float> palette_floats) -> BufferHandle {
-  auto* fn = palette_gl_funcs();
-  if (fn == nullptr) {
-    return {};
-  }
-  BufferHandle ubo = BufferHandle::create();
-  if (!ubo) {
-    return {};
-  }
-  fn->glBindBuffer(GL_UNIFORM_BUFFER, ubo.id());
-  fn->glBufferData(GL_UNIFORM_BUFFER,
-                   static_cast<GLsizeiptr>(palette_floats.size() * sizeof(float)),
-                   palette_floats.data(),
-                   GL_STATIC_DRAW);
-  note_buffer_storage(palette_floats.size() * sizeof(float),
-                      palette_floats.data() != nullptr);
-  fn->glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  return ubo;
 }
 
 } // namespace Render::GL

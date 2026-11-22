@@ -35,11 +35,11 @@
 #include "render/equipment/horse/saddles/carthage_saddle_renderer.h"
 #include "render/equipment/horse/saddles/light_cavalry_saddle_renderer.h"
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
+#include "render/geom/primitives.h"
 
 namespace {
 
@@ -428,7 +428,7 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = QMatrix4x4{};
@@ -650,7 +650,7 @@ TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = QMatrix4x4{};
@@ -680,7 +680,7 @@ TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = QMatrix4x4{};
@@ -729,7 +729,7 @@ TEST(RenderArchetypeBuildings, RomanAndCarthageHomesRemainDistinctSilhouettes) {
     }
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -769,7 +769,7 @@ TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = QMatrix4x4{};
@@ -808,7 +808,7 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = QMatrix4x4{};
@@ -855,7 +855,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
     }
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -907,7 +907,7 @@ TEST(RenderArchetypeBuildings, RomanTowerDrawsNoHealthBarWhileUnderAttack) {
     }
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -955,7 +955,7 @@ TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarWhileUnderAttack) {
     }
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1004,7 +1004,7 @@ TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarOnRecentCombatHit) {
     }
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1045,7 +1045,7 @@ TEST(RenderArchetypeBuildings, DestroyedRomanTowerRemovesBannerTint) {
     unit->health = health;
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1084,7 +1084,7 @@ TEST(RenderArchetypeBuildings, RomanTowerDamageStatesReduceSilhouette) {
     unit->health = health;
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1129,7 +1129,7 @@ TEST(RenderArchetypeBuildings, CarthageTowerDamageStatesReduceSilhouette) {
     unit->health = health;
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1169,7 +1169,7 @@ TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
 
@@ -1208,7 +1208,7 @@ TEST(RenderArchetypeBuildings, CarthageStraightWallFormsContinuousCrenellatedMas
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
 
@@ -1253,7 +1253,7 @@ TEST(RenderArchetypeBuildings, RomanBarracksDamageStatesReduceSilhouette) {
     unit->health = health;
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1300,7 +1300,7 @@ TEST(RenderArchetypeBuildings, CarthageBarracksDamageStatesReduceSilhouette) {
     unit->health = health;
 
     DrawContext ctx;
-    ResourceManager resources;
+    DrawResources resources;
     ctx.entity = &entity;
     ctx.resources = &resources;
     ctx.model = QMatrix4x4{};
@@ -1341,7 +1341,7 @@ TEST(RenderArchetypeBuildings, RomanWallEndKeepsFullSegmentFootprint) {
   unit->owner_id = k_team_owner_id;
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = QMatrix4x4{};
@@ -1371,7 +1371,7 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
 
@@ -1416,7 +1416,7 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsCloseEastWestMasonrySeam) {
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
-  ResourceManager resources;
+  DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
 
@@ -1474,7 +1474,7 @@ auto record_wall_meshes(const Render::GL::EntityRendererRegistry& registry,
       k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
 
   Render::GL::DrawContext ctx;
-  Render::GL::ResourceManager resources;
+  Render::GL::DrawResources resources;
   ctx.entity = &entity;
   ctx.resources = &resources;
   ctx.model = model;

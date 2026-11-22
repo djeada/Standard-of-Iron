@@ -7,8 +7,8 @@
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
-#include "render/creature/anatomy_bake.h"
 #include "render/creature/elephant/dimensions.h"
+#include "render/creature/elephant/elephant_anatomy_bake.h"
 #include "render/entity/nations/carthage/elephant_renderer.h"
 #include "render/math/creature_math_utils.h"
 

@@ -24,9 +24,9 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/frame/render_archetype.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace {
 

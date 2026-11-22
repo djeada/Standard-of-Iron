@@ -11,7 +11,7 @@
 
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/part_graph.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace Render::Creature {
 

@@ -10,12 +10,12 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/death_sequence.h"
 #include "game/core/world.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/terrain_contact.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 
 namespace Render::GL {
 

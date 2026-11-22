@@ -72,7 +72,7 @@ bone palette → palette texture → vertex shader → GPU-skinned geometry
 
 ### Input bridge
 
-`sample_anim_state()` in `render/creature/humanoid/animation/animation_inputs.cpp` reads the ECS and produces one `AnimationInputs` snapshot per entity per frame (is it attacking? dying? guarding? kneeling? how fast is it moving?). Per-entity _persistent_ animation memory (filtered speed/turn, locomotion phase accumulator, guard/hold progress, combat visual state) lives in `HumanoidAnimationStateComponent` (`render/creature/animation_state_components.h`).
+`sample_anim_state()` in `render/creature/humanoid/animation/animation_inputs.cpp` reads the ECS and produces one `AnimationInputs` snapshot per entity per frame (is it attacking? dying? guarding? kneeling? how fast is it moving?). Per-entity _persistent_ animation memory (filtered speed/turn, locomotion phase accumulator, guard/hold progress, combat visual state) lives in `HumanoidAnimationStateComponent` (`render/creature/humanoid/humanoid_animation_state.h`).
 
 ### Intent and selection
 
@@ -609,7 +609,7 @@ The shared evaluator gained **behaviour-exact config knobs** (bob harmonic weigh
 
 ### Elephant gait
 
-The production elephant rig ships no locomotion clip, so `compiled_creature_assets.cpp` synthesises walk, run, idle and the attack at bake time from `animation/elephant_motion_manifest.*`:
+The production elephant rig ships no locomotion clip, so `quadruped/compiled_source_assets.cpp` synthesises walk, run, idle and the attack at bake time from `animation/elephant_motion_manifest.*`:
 
 - **A lateral-sequence walk.** Legs move in the order hind-left, fore-left, hind-right, fore-right (offsets 0, 0.25, 0.5, 0.75). Each leg's stance carries the foot backward linearly under the body; its swing lifts it with a knee fold, a thigh counter-swing and a level-then-curled foot. Walk keeps a foot down 64% of the cycle with a 20° hip sweep; the run is an amble at 50% and 21°. Real elephants never go airborne and their hip excursion is about ±20°; past roughly 25° the top of the thigh leaves the barrel and opens a hole in the flank.
 - **Cadence follows speed.** `elephant_cycle_seconds_for_speed()` gives the cycle that makes the stance sweep match ground speed (sweep / (duty × speed), clamped to 0.8–3.4 s), so planted feet stay planted. Without a speed hint the profile cadence is kept. The locomotion phase accumulates, so a speed change alters the cadence without a jump.
@@ -628,18 +628,18 @@ The production elephant rig ships no locomotion clip, so `compiled_creature_asse
 
 ## Code map
 
-| Concern                 | File(s)                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| ECS → animation inputs  | `render/creature/humanoid/animation/animation_inputs.cpp`                                |
-| Intent resolution       | `render/creature/pose_intent.{h,cpp}`                                                    |
-| Combat visual state     | `render/creature/combat_visual_state.{h,cpp}`                                            |
-| Transition continuity   | `animation/transition_manifest.cpp`, `pipeline/humanoid_transition_continuity.cpp`       |
-| Clip selection          | `render/creature/archetype_registry.cpp`, `pipeline/humanoid_animation_selection.cpp`    |
-| BPAT playback           | `animation/bpat/bpat_playback.cpp`                                                       |
-| BPAT blob/registry      | `animation/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                                    |
-| Humanoid locomotion     | `render/creature/humanoid/runtime/poser.cpp`, `runtime/animation_runtime.cpp`            |
-| Humanoid combat poses   | `render/creature/humanoid/runtime/pose_controller.cpp`                                   |
-| Quadruped shared gait   | `render/creature/quadruped/gait.{h,cpp}`                                                 |
-| Horse / elephant motion | `render/creature/horse/horse_motion.cpp`, `render/creature/elephant/elephant_motion.cpp` |
-| Melee damage sync       | `game/systems/combat_system/attack_processor.cpp`                                        |
-| Bake tool               | `tools/bpat_baker/`, `render/<species>/<species>_manifest.cpp`                           |
+| Concern                 | File(s)                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| ECS → animation inputs  | `render/creature/humanoid/animation/animation_inputs.cpp`                                      |
+| Intent resolution       | `render/creature/pose_intent.{h,cpp}`                                                          |
+| Combat visual state     | `render/creature/combat_visual_state.{h,cpp}`                                                  |
+| Transition continuity   | `animation/transition_manifest.cpp`, `pipeline/humanoid_transition_continuity.cpp`             |
+| Clip selection          | `render/creature/archetype_registry.cpp`, `humanoid/pipeline/humanoid_animation_selection.cpp` |
+| BPAT playback           | `animation/bpat/bpat_playback.cpp`                                                             |
+| BPAT blob/registry      | `animation/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                                          |
+| Humanoid locomotion     | `render/creature/humanoid/runtime/poser.cpp`, `runtime/animation_runtime.cpp`                  |
+| Humanoid combat poses   | `render/creature/humanoid/runtime/pose_controller.cpp`                                         |
+| Quadruped shared gait   | `render/creature/quadruped/gait.{h,cpp}`                                                       |
+| Horse / elephant motion | `render/creature/horse/horse_motion.cpp`, `render/creature/elephant/elephant_motion.cpp`       |
+| Melee damage sync       | `game/systems/combat_system/attack_processor.cpp`                                              |
+| Bake tool               | `tools/bpat_baker/`, `render/<species>/<species>_manifest.cpp`                                 |

@@ -9,7 +9,7 @@
 namespace Render::GL {
 
 void render_healer_auras(FrameSubmitter* renderer,
-                         ResourceManager*,
+                         const DrawResources*,
                          Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
     return;

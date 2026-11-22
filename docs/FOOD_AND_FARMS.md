@@ -103,7 +103,7 @@ The humanoid bake contains five looping construction clips:
 - `construct_kneel_chisel`; and
 - `construct_reap` — a bent-over sickle sweep.
 
-`apply_construction_clip` in `render/creature/pipeline/humanoid_animation_selection.cpp` routes a working humanoid to the clip associated with its `HumanoidConstructionRole`.
+`apply_construction_clip` in `render/creature/humanoid/pipeline/humanoid_animation_selection.cpp` routes a working humanoid to the clip associated with its `HumanoidConstructionRole`.
 
 The role and visible tool follow the **job** through `Animation::HumanoidWorkJob`, carried by `CreaturePresentationComponent::construction_job` and derived from the builder's product type in `game/core/world.cpp`.
 

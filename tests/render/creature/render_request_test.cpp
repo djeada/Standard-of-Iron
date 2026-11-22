@@ -18,6 +18,7 @@
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_asset.h"
@@ -519,7 +520,7 @@ TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
   Render::GL::HumanoidPose const pose{};
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
-  prep.bodies.add_humanoid(output, pose, variant, anim);
+  add_humanoid(prep.bodies, output, pose, variant, anim);
 
   CreatureRenderRequest req{};
   req.archetype = ArchetypeRegistry::k_humanoid_base;

@@ -15,12 +15,12 @@
 
 #include "render/backend/character_wear_binding.h"
 #include "render/frame/draw_commands.h"
+#include "render/geom/rigged_mesh.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_capabilities.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/platform_gl.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/gl/shader_cache.h"
 #include "utils/resource_utils.h"
 
@@ -583,7 +583,7 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
   }
 
   const std::size_t bone_count = cmds[0]->bone_count;
-  GLuint baked_palette_buffer = 0U;
+  const InstanceBlock* baked_palette_block = nullptr;
   for (std::size_t k = 0; k < count; ++k) {
     if (cmds[k] == nullptr) {
       return false;
@@ -596,9 +596,9 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
       return false;
     }
     if (cmds[k]->palette_frames_resident) {
-      if (baked_palette_buffer == 0U) {
-        baked_palette_buffer = cmds[k]->palette_ubo;
-      } else if (baked_palette_buffer != cmds[k]->palette_ubo) {
+      if (baked_palette_block == nullptr) {
+        baked_palette_block = cmds[k]->palette_block;
+      } else if (baked_palette_block != cmds[k]->palette_block) {
         return false;
       }
     } else if (cmds[k]->bone_palette == nullptr) {
@@ -606,11 +606,16 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
     }
   }
 
-  if (!mesh->ensure_gl_buffers()) {
+  if (m_meshes == nullptr || !m_meshes->ensure(*mesh)) {
     return false;
   }
-  Buffer* vertex_buffer = mesh->vertex_buffer();
-  Buffer* index_buffer = mesh->index_buffer();
+  Buffer* vertex_buffer = m_meshes->vertex_buffer(*mesh);
+  Buffer* index_buffer = m_meshes->index_buffer(*mesh);
+  Buffer* const baked_palette = m_blocks != nullptr && baked_palette_block != nullptr
+                                    ? m_blocks->resolve(baked_palette_block)
+                                    : nullptr;
+  const GLuint baked_palette_buffer =
+      baked_palette != nullptr ? baked_palette->id() : 0U;
   if (vertex_buffer == nullptr || index_buffer == nullptr ||
       vertex_buffer->id() == 0U || index_buffer->id() == 0U ||
       !ensure_instance_buffers(count, bone_count) ||
@@ -709,7 +714,7 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
     return false;
   }
   std::size_t const bone_count = cmds[0]->bone_count;
-  GLuint baked_palette_buffer = 0;
+  const InstanceBlock* baked_palette_block = nullptr;
   for (std::size_t k = 0; k < count; ++k) {
     RiggedMesh* cmd_mesh =
         depth_only && cmds[k] != nullptr && cmds[k]->shadow_mesh != nullptr
@@ -721,20 +726,25 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
     }
     if (cmds[k]->palette_frames_resident) {
 
-      if (baked_palette_buffer == 0) {
-        baked_palette_buffer = cmds[k]->palette_ubo;
-      } else if (baked_palette_buffer != cmds[k]->palette_ubo) {
+      if (baked_palette_block == nullptr) {
+        baked_palette_block = cmds[k]->palette_block;
+      } else if (baked_palette_block != cmds[k]->palette_block) {
         return false;
       }
     } else if (cmds[k]->bone_palette == nullptr) {
       return false;
     }
   }
-  if (!mesh->ensure_gl_buffers()) {
+  if (m_meshes == nullptr || !m_meshes->ensure(*mesh)) {
     return false;
   }
-  Buffer* vertex_buffer = mesh->vertex_buffer();
-  Buffer* index_buffer = mesh->index_buffer();
+  Buffer* vertex_buffer = m_meshes->vertex_buffer(*mesh);
+  Buffer* index_buffer = m_meshes->index_buffer(*mesh);
+  Buffer* const baked_palette = m_blocks != nullptr && baked_palette_block != nullptr
+                                    ? m_blocks->resolve(baked_palette_block)
+                                    : nullptr;
+  const GLuint baked_palette_buffer =
+      baked_palette != nullptr ? baked_palette->id() : 0U;
   if (vertex_buffer == nullptr || index_buffer == nullptr || vertex_buffer->id() == 0 ||
       index_buffer->id() == 0) {
     return false;

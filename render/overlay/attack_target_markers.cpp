@@ -77,7 +77,7 @@ void draw_marker_glyph(FrameSubmitter* renderer,
 } // namespace
 
 void render_attack_target_markers(FrameSubmitter* renderer,
-                                  ResourceManager* resources,
+                                  const DrawResources* resources,
                                   std::span<const AttackTargetMarkerVisual> markers) {
   if ((renderer == nullptr) || (resources == nullptr) || markers.empty()) {
     return;

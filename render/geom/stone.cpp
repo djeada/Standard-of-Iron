@@ -8,9 +8,8 @@
 #include <numbers>
 #include <vector>
 
-#include "render/gl/mesh.h"
-#include "render/gl/resources.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/mesh.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render {
 namespace Geom {

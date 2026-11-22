@@ -5,14 +5,15 @@
 #include "animation/action_manifest.h"
 #include "animation/ambient_pose_manifest.h"
 #include "game/core/component_presentation.h"
-#include "render/creature/animation_state_components.h"
+#include "game/core/entity.h"
 #include "render/creature/combat_visual_state.h"
+#include "render/creature/humanoid/humanoid_animation_state.h"
+#include "render/creature/humanoid/humanoid_constants.h"
 #include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/humanoid/runtime/prepare.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/geom/transforms.h"
-#include "render/gl/humanoid/humanoid_constants.h"
 
 namespace Engine::Core {
 class Entity;

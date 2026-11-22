@@ -14,8 +14,8 @@
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
 #include "render/frame/submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/stone.h"
-#include "render/gl/primitives.h"
 
 namespace Render::GL {
 namespace {

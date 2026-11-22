@@ -9,11 +9,10 @@
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/visuals/team_colors.h"
-#include "render/backend/backend.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/geom/flag.h"
 #include "render/geom/transforms.h"
-#include "render/gl/resources.h"
 
 namespace Render::GL {
 
@@ -21,7 +20,7 @@ constexpr float k_position_grid_precision = 10.0F;
 constexpr int k_position_hash_shift = 32;
 
 void draw_flag(FrameSubmitter* renderer,
-               ResourceManager* resources,
+               const DrawResources* resources,
                const Geom::Flag::FlagMatrices& flag) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
@@ -42,9 +41,9 @@ void draw_flag(FrameSubmitter* renderer,
 
   Mesh* cloth_mesh = nullptr;
   Shader* banner_shader = nullptr;
-  if (renderer->backend() != nullptr) {
-    cloth_mesh = renderer->backend()->banner_mesh();
-    banner_shader = renderer->backend()->banner_shader();
+  if (renderer->resources() != nullptr) {
+    cloth_mesh = renderer->resources()->banner_mesh();
+    banner_shader = renderer->resources()->banner_shader();
   }
 
   if (cloth_mesh != nullptr && banner_shader != nullptr) {
@@ -67,7 +66,7 @@ void draw_flag(FrameSubmitter* renderer,
 }
 
 void render_patrol_flags(FrameSubmitter* renderer,
-                         ResourceManager* resources,
+                         const DrawResources* resources,
                          Engine::Core::World& world,
                          const std::optional<QVector3D>& preview_waypoint) {
   if ((renderer == nullptr) || (resources == nullptr)) {
@@ -132,7 +131,7 @@ void render_patrol_flags(FrameSubmitter* renderer,
 }
 
 void render_commander_rally_flags(FrameSubmitter* renderer,
-                                  ResourceManager* resources,
+                                  const DrawResources* resources,
                                   Engine::Core::World* world,
                                   int preview_owner_id,
                                   const std::optional<QVector3D>& preview_pos) {

@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/animation_inputs.h"
 #include "render/creature/movement_state.h"
 #include "render/creature/pose_intent.h"
 

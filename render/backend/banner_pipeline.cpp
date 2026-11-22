@@ -3,7 +3,7 @@
 #include <QDebug>
 
 #include "render/backend/state_scopes.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/texture.h"
 #include "scene/camera.h"

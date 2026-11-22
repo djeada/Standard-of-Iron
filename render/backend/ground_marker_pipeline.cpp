@@ -12,8 +12,8 @@
 #include "render/backend/uniform_helpers.h"
 #include "render/geom/ground_marker_pattern.h"
 #include "render/geom/ground_marker_tessellation.h"
+#include "render/geom/mesh.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/texture.h"
 
@@ -290,12 +290,13 @@ void GroundMarkerPipeline::draw_markers(const PreparedBatch& prepared,
       *marker_shader, uniforms.max_thickness_gain, k_ground_marker_max_thickness_gain);
 
   const auto& height = std::get<GroundMarkerCmdIndex>(queue.get_sorted(i)).height;
-  const bool has_height = height.enabled && height.texture != nullptr;
+  Texture* const height_tex = context.textures.resolve(height.texture);
+  const bool has_height = height.enabled && height_tex != nullptr;
   set_uniform_if_valid(*marker_shader, uniforms.has_height_tex, has_height ? 1 : 0);
   float world_per_cell = 1.0F;
   if (has_height) {
-    height.texture->bind(TextureUnit::terrain_height);
-    context.state.bound_texture = height.texture;
+    height_tex->bind(TextureUnit::terrain_height);
+    context.state.bound_texture = height_tex;
     set_uniform_if_valid(
         *marker_shader, uniforms.height_tex, TextureUnit::terrain_height);
     set_uniform_if_valid(*marker_shader, uniforms.height_uv_scale, height.uv_scale);

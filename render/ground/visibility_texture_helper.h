@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QDebug>
-#include <QOpenGLContext>
 #include <QVector2D>
 
 #include <cstdint>
@@ -10,8 +8,7 @@
 
 #include "game/map/visibility_service.h"
 #include "render/frame/draw_commands.h"
-#include "render/gl/texture.h"
-#include "render/gl/texture_upload.h"
+#include "render/geom/texture_image.h"
 #include "render/ground/visibility_mask_encoder.h"
 
 namespace Render::Ground {
@@ -21,7 +18,7 @@ public:
   using VisibilityResources = GL::TerrainSurfaceCmd::VisibilityResources;
 
   void reset() {
-    m_texture.reset();
+    m_image.reset();
     m_cached_version = 0;
     m_width = 0;
     m_height = 0;
@@ -34,25 +31,14 @@ public:
               float explored_alpha = 0.82F) -> VisibilityResources {
     const int vis_w = snapshot.width;
     const int vis_h = snapshot.height;
-    if (QOpenGLContext::currentContext() == nullptr) {
-      qWarning() << "VisibilityTextureHelper: no current OpenGL context for visibility "
-                    "texture upload";
-      VisibilityResources res;
-      res.size = QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
-      res.tile_size = tile_size;
-      res.explored_alpha = explored_alpha;
-      res.enabled = false;
-      return res;
-    }
 
     bool const size_changed = (vis_w != m_width) || (vis_h != m_height);
 
-    if (!m_texture || size_changed) {
-      m_texture = std::make_unique<GL::Texture>();
-      m_texture->create_empty(vis_w, vis_h, GL::Texture::Format::RGBA);
-      m_texture->set_filter(GL::Texture::Filter::Linear, GL::Texture::Filter::Linear);
-      m_texture->set_wrap(GL::Texture::Wrap::ClampToEdge,
-                          GL::Texture::Wrap::ClampToEdge);
+    if (!m_image || size_changed) {
+      if (!m_image) {
+        m_image = std::make_unique<GL::TextureImage>();
+      }
+      m_image->reset(vis_w, vis_h, GL::TextureImage::Format::Rgba8);
       m_width = vis_w;
       m_height = vis_h;
       m_cached_version = 0;
@@ -66,9 +52,8 @@ public:
       if (!dirty.is_empty()) {
         encode_visibility_mask_region(snapshot.cells, vis_w, vis_h, dirty, m_texels);
         if (!m_texels.empty()) {
-          m_texture->bind();
-          GL::upload_bound_texture_rgba8(
-              dirty.x, dirty.z, dirty.width, dirty.height, m_texels.data());
+          m_image->update_region({dirty.x, dirty.z, dirty.width, dirty.height},
+                                 m_texels.data());
         }
       }
       m_previous_cells = snapshot.cells;
@@ -76,7 +61,7 @@ public:
     }
 
     VisibilityResources res;
-    res.texture = m_texture.get();
+    res.texture = m_image.get();
     res.size = QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
     res.tile_size = tile_size;
     res.explored_alpha = explored_alpha;
@@ -111,7 +96,8 @@ private:
     return dirty;
   }
 
-  std::unique_ptr<GL::Texture> m_texture;
+  // The mask texels; backends upload the changed region.
+  std::unique_ptr<GL::TextureImage> m_image;
   std::vector<std::uint8_t> m_previous_cells;
   std::vector<unsigned char> m_texels;
   std::uint64_t m_cached_version = 0;

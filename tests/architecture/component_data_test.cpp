@@ -43,7 +43,11 @@ auto component_headers() -> std::vector<fs::path> {
                            "component_presentation.h"}) {
     headers.push_back(root / "game" / "core" / name);
   }
-  headers.push_back(root / "render" / "creature" / "animation_state_components.h");
+  headers.push_back(root / "render" / "creature" / "humanoid" /
+                    "humanoid_animation_state.h");
+  headers.push_back(root / "render" / "creature" / "horse" / "horse_components.h");
+  headers.push_back(root / "render" / "creature" / "elephant" /
+                    "elephant_components.h");
   headers.push_back(root / "render" / "creature" / "humanoid" / "runtime" /
                     "instance_state.h");
   return headers;

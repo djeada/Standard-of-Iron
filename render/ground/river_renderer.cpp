@@ -19,18 +19,20 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/frame/draw_commands.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/mesh_prewarmer.h"
-#include "render/gl/resources.h"
+#include "render/geom/mesh.h"
 #include "render/ground/linear_feature_geometry.h"
 #include "render/ground/linear_feature_visibility.h"
 
 namespace Render::GL {
 
-auto WaterRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(
-      meshes, m_meshes, [](auto& entry) { return entry.mesh.get(); });
+void WaterRenderer::for_each_mesh(const MeshVisitor& visit) const {
+  for (const auto& entry : m_meshes) {
+    if (entry.mesh != nullptr) {
+      visit(*entry.mesh);
+    }
+  }
 }
 
 WaterRenderer::WaterRenderer() = default;
@@ -278,7 +280,7 @@ void WaterRenderer::build_meshes() {
   }
 }
 
-void WaterRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void WaterRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   Q_UNUSED(resources);
 
   if (m_meshes.empty()) {

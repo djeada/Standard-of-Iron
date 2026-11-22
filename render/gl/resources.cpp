@@ -9,8 +9,8 @@
 #include <memory>
 #include <vector>
 
+#include "render/geom/mesh.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"

@@ -306,6 +306,8 @@ public:
   using FrameLockStats = App::Core::FrameLockStats;
 
   [[nodiscard]] auto simulation_profile_report() -> QJsonObject;
+  // Scatter instance memory per layer and in total, for the benchmark report.
+  [[nodiscard]] auto scatter_memory_report() -> QJsonObject;
 
   [[nodiscard]] auto frame_lock_stats() const -> const FrameLockStats& {
     return m_lifecycle.stats();

@@ -3,17 +3,16 @@
 #include <QVector3D>
 
 #include "game/core/component_core.h"
-#include "render/backend/backend.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
 #include "render/entity/registry.h"
 #include "render/equipment/material_palette.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL::Sepulcher {
 namespace {
@@ -86,9 +85,9 @@ void register_barracks_renderer(EntityRendererRegistry& registry) {
         const QVector3D team = Render::entity_color(*ctx.entity);
 
         BarracksFlagRenderer::ClothBannerResources cloth;
-        if (ctx.backend != nullptr) {
-          cloth.cloth_mesh = ctx.backend->banner_mesh();
-          cloth.banner_shader = ctx.backend->banner_shader();
+        if (ctx.resources != nullptr) {
+          cloth.cloth_mesh = ctx.resources->banner_mesh();
+          cloth.banner_shader = ctx.resources->banner_shader();
         }
 
         draw_grave_banner(ctx, out, unit, white, team, &cloth);

@@ -25,7 +25,6 @@
 #include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
-#include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/elephant/elephant_motion.h"
 #include "render/creature/elephant/elephant_renderer_base.h"
@@ -41,11 +40,12 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/render_request.h"
+#include "render/creature/species/animation_state_components.h"
 #include "render/entity/registry.h"
 #include "render/frame/draw_commands.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace {
 

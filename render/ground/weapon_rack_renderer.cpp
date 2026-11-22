@@ -8,13 +8,8 @@
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
+#include "render/ground/scatter/scatter_generators.h"
 #include "render/ground/scatter_runtime.h"
-
-namespace {
-
-using namespace Render::Ground;
-
-}
 
 namespace Render::GL {
 
@@ -34,45 +29,16 @@ void WeaponRackRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void WeaponRackRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void WeaponRackRenderer::submit(FrameSubmitter& renderer,
+                                const DrawResources* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::WeaponRack);
 }
 
 void WeaponRackRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap& height_map) {
-
-  const auto& terrain_service = world().terrain_or_empty();
-  for (const auto& prop : world_props) {
-    if (prop.type != Game::Map::WorldProp::Type::WeaponRack) {
-      continue;
-    }
-    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
-        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
-
-    uint32_t state = hash_coords(static_cast<int>(prop.x),
-                                 static_cast<int>(prop.z),
-                                 m_biome_settings.seed ^ 0xC4318A6DU);
-    QVector3D const old_oak(0.34F, 0.19F, 0.085F);
-    QVector3D const warm_oak(0.50F, 0.30F, 0.12F);
-    float const wood_mix = rand_01(state);
-    QVector3D wood_color = old_oak * (1.0F - wood_mix) + warm_oak * wood_mix;
-    wood_color *= remap(rand_01(state), 0.90F, 1.08F);
-
-    PropInstanceGpu inst;
-    inst.pos_scale =
-        QVector4D(resolved.x(),
-                  resolved.y(),
-                  resolved.z(),
-                  prop.scale * Game::Map::world_prop_render_scale(
-                                   Game::Map::WorldProp::Type::WeaponRack));
-    inst.color_rot =
-        QVector4D(wood_color.x(), wood_color.y(), wood_color.z(), prop.rotation);
-    m_state.instances.push_back(inst);
-  }
-
-  m_state.instance_count = m_state.instances.size();
-  m_state.instances_dirty = m_state.instance_count > 0;
+  adopt_generated(Ground::Scatter::generate_weapon_racks(
+      {{}, nullptr, m_biome_settings, world().terrain_or_empty(), world_props}));
 }
 
 } // namespace Render::GL

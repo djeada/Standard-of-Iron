@@ -1,6 +1,5 @@
 #include "render/ground/fog_renderer.h"
 
-#include <QOpenGLContext>
 #include <QVector2D>
 
 #include <algorithm>
@@ -11,7 +10,6 @@
 
 #include "game/map/visibility_service.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/texture_upload.h"
 #include "render/ground/visibility_mask_encoder.h"
 
 namespace Render::GL {
@@ -45,7 +43,7 @@ void FogRenderer::clear_state() {
   m_instances.clear();
   m_mask_texels.clear();
   m_mask_filter_rows.clear();
-  m_instance_buffer.reset();
+  m_instance_block.reset();
   m_mask_texture.reset();
   m_mask_texture_width = 0;
   m_mask_texture_height = 0;
@@ -83,7 +81,7 @@ void FogRenderer::update_mask(int width,
     m_target_fog.assign(cell_count, 1.0F);
     m_fog_amount.assign(cell_count, 1.0F);
     m_seen_amount.assign(cell_count, 0.0F);
-    m_instance_buffer.reset();
+    m_instance_block.reset();
     m_mask_texture.reset();
     m_mask_texture_width = 0;
     m_mask_texture_height = 0;
@@ -251,17 +249,13 @@ void FogRenderer::upload_mask(FrameSubmitter& renderer) {
     return;
   }
 
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return;
-  }
-
   const bool size_changed =
       (m_mask_texture_width != m_width) || (m_mask_texture_height != m_height);
   if (!m_mask_texture || size_changed) {
-    m_mask_texture = std::make_unique<Texture>();
-    m_mask_texture->create_empty(m_width, m_height, Texture::Format::RGBA);
-    m_mask_texture->set_filter(Texture::Filter::Linear, Texture::Filter::Linear);
-    m_mask_texture->set_wrap(Texture::Wrap::ClampToEdge, Texture::Wrap::ClampToEdge);
+    if (!m_mask_texture) {
+      m_mask_texture = std::make_unique<TextureImage>();
+    }
+    m_mask_texture->reset(m_width, m_height, TextureImage::Format::Rgba8);
     m_mask_texture_width = m_width;
     m_mask_texture_height = m_height;
     m_mask_dirty = Ground::MaskRegion::whole(m_width, m_height);
@@ -282,12 +276,9 @@ void FogRenderer::upload_mask(FrameSubmitter& renderer) {
     return;
   }
 
-  m_mask_texture->bind();
-  Render::GL::upload_bound_texture_rgba8(m_mask_dirty.x,
-                                         m_mask_dirty.z,
-                                         m_mask_dirty.width,
-                                         m_mask_dirty.height,
-                                         m_mask_texels.data());
+  m_mask_texture->update_region(
+      {m_mask_dirty.x, m_mask_dirty.z, m_mask_dirty.width, m_mask_dirty.height},
+      m_mask_texels.data());
   m_mask_dirty = {};
 }
 
@@ -323,7 +314,7 @@ auto FogRenderer::prepare_mask(FrameSubmitter& renderer) -> FogMaskResources {
   return mask;
 }
 
-void FogRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void FogRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   (void)resources;
 
   const FogMaskResources mask = prepare_mask(renderer);
@@ -335,24 +326,7 @@ void FogRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   }
 
   upload_instances();
-
-  if (m_instance_buffer) {
-    renderer.fog_batch(m_instance_buffer.get(), m_instances.size(), mask);
-  } else {
-    renderer.fog_batch(m_instances.data(), m_instances.size(), mask);
-  }
-}
-
-auto FogRenderer::prewarm_gpu_resources() -> bool {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return false;
-  }
-  if (!m_instance_buffer) {
-    m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-  }
-  m_instance_buffer->bind();
-  m_instance_buffer->unbind();
-  return m_instance_buffer->id() != 0U;
+  renderer.fog_batch(m_instance_block.get(), m_instances.size(), mask);
 }
 
 void FogRenderer::upload_instances() {
@@ -361,12 +335,13 @@ void FogRenderer::upload_instances() {
     m_instances_dirty = false;
     return;
   }
-  if (!m_instance_buffer) {
-    m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+  if (!m_instance_block) {
+    m_instance_block = std::make_unique<InstanceBlock>();
+    m_instance_block->set_usage(InstanceBlock::Usage::Dynamic);
     m_instances_dirty = true;
   }
   if (m_instances_dirty) {
-    m_instance_buffer->set_data(m_instances, Buffer::Usage::Dynamic);
+    m_instance_block->assign(m_instances);
     m_instances_dirty = false;
   }
 }

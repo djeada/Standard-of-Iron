@@ -13,7 +13,7 @@ class World;
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 struct StoneImpactEffect {
   QVector3D position;
@@ -45,41 +45,11 @@ private:
 };
 
 void render_combat_dust(FrameSubmitter* renderer,
-                        ResourceManager* resources,
+                        const DrawResources* resources,
                         Engine::Core::World* world);
 
 void render_blood_stains(FrameSubmitter* renderer,
-                         ResourceManager* resources,
+                         const DrawResources* resources,
                          Engine::Core::World* world);
-
-struct TelegraphEntry {
-  float last_pos_x{0.0F};
-  float last_pos_z{0.0F};
-  float base_y{0.0F};
-  std::uint16_t soldier_slot{
-      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
-  Engine::Core::CombatAnimationState prev_state{
-      Engine::Core::CombatAnimationState::Idle};
-};
-
-struct StrikeFlash {
-  QVector3D pos;
-  float start_time{0.0F};
-  static constexpr float k_duration = 0.35F;
-};
-
-class RpgTelegraphRenderer {
-public:
-  void render(FrameSubmitter* renderer,
-              Engine::Core::World* world,
-              Engine::Core::EntityID commander_id,
-              Engine::Core::EntityID locked_target_id,
-              float anim_time);
-  void clear();
-
-private:
-  std::unordered_map<Engine::Core::EntityID, TelegraphEntry> m_cache;
-  std::vector<StrikeFlash> m_strike_flashes;
-};
 
 } // namespace Render::GL

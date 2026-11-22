@@ -13,8 +13,8 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/helmets/helmet_alignment.h"
-#include "render/gl/mesh.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/mesh.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::GL::Headwear {
 

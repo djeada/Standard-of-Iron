@@ -11,7 +11,7 @@
 #include "game/session/session_context.h"
 #include "render/entity/building_archetype_catalog.h"
 #include "render/entity/building_render_common.h"
-#include "render/entity/nations/carthage/barracks_renderer.h"
+#include "render/entity/nations/carthage/barracks_authoring.h"
 #include "render/entity/registry.h"
 #include "render/frame/world_view.h"
 #include "render/ground/biome_renderer.h"

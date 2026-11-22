@@ -7,8 +7,8 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_state.h"
 #include "render/frame/submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 
 namespace Render::GL {
 

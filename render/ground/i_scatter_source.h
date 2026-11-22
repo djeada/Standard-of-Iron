@@ -12,12 +12,27 @@ namespace Render::GL {
 struct IScatterSource : IDrawSource {
   [[nodiscard]] virtual auto is_gpu_ready() const -> bool = 0;
   [[nodiscard]] virtual auto instance_count() const -> std::size_t = 0;
+  // CPU bytes held by the placed instances, and the size of one instance.
+  [[nodiscard]] virtual auto instance_bytes() const -> std::size_t = 0;
+  [[nodiscard]] virtual auto instance_stride() const -> std::size_t = 0;
   [[nodiscard]] virtual auto
   last_sync_stats() const -> Render::Ground::Scatter::SyncStats = 0;
 
   virtual void clear() = 0;
 
-  [[nodiscard]] virtual auto prewarm_gpu_resources() -> bool { return true; }
+  // Load time: partition the instances and reserve their instance blocks, so
+  // a backend can create the buffers before the first frame.
+  virtual void prepare_instance_blocks() {}
+  virtual void for_each_instance_block(const InstanceBlockVisitor& visit) const {
+    (void)visit;
+  }
+
+  // The most instances this layer may hold. TerrainScatterManager sets it
+  // from the map's ScatterBudget before configuring; a layer whose generator
+  // produces more keeps the first `budget` and reports budget_hit().
+  virtual void set_instance_budget(std::size_t budget) = 0;
+  [[nodiscard]] virtual auto instance_budget() const -> std::size_t = 0;
+  [[nodiscard]] virtual auto budget_hit() const -> bool = 0;
 
   virtual void set_light_direction(const QVector3D& dir) { (void)dir; }
 };

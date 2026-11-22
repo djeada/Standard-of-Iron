@@ -9,8 +9,8 @@
 
 #include "render/entity/building_decay.h"
 #include "render/frame/material_classification.h"
-#include "render/gl/primitives.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/primitives.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::GL {
 namespace {

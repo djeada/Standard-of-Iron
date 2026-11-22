@@ -15,9 +15,9 @@
 #include "render/frame/draw_commands.h"
 #include "render/frame/draw_queue.h"
 #include "render/frame/local_lighting.h"
+#include "render/geom/mesh.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
-#include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/texture.h"
@@ -169,11 +169,12 @@ void TerrainPipeline::set_terrain_chunk_uniforms(
     const std::vector<Render::LocalLight>& local_lights) {
   const auto& uniforms = terrain_uniforms_for(shader);
   const auto& visibility = single.visibility;
+  Texture* const visibility_tex = context.textures.resolve(visibility.texture);
   if (uniforms.has_visibility != Shader::InvalidUniform) {
-    int const has_vis = visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+    int const has_vis = visibility.enabled && (visibility_tex != nullptr) ? 1 : 0;
     shader.set_uniform(uniforms.has_visibility, has_vis);
   }
-  if (visibility.enabled && visibility.texture != nullptr) {
+  if (visibility.enabled && visibility_tex != nullptr) {
     if (uniforms.visibility_size != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.visibility_size, visibility.size);
     }
@@ -183,8 +184,8 @@ void TerrainPipeline::set_terrain_chunk_uniforms(
     if (uniforms.explored_alpha != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.explored_alpha, visibility.explored_alpha);
     }
-    visibility.texture->bind(TextureUnit::terrain_visibility);
-    context.state.bound_texture = visibility.texture;
+    visibility_tex->bind(TextureUnit::terrain_visibility);
+    context.state.bound_texture = visibility_tex;
     if (uniforms.visibility_texture != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.visibility_texture, TextureUnit::terrain_visibility);
     }
@@ -315,13 +316,16 @@ void TerrainPipeline::set_terrain_chunk_uniforms(
     shader.set_uniform(uniforms.screen_toe_clamp, single.params.screen_toe_clamp);
   }
   const auto& height = single.height;
+  Texture* const height_tex = context.textures.resolve(height.texture);
+  Texture* const field_tex = context.textures.resolve(height.field_texture);
+  Texture* const cover_tex = context.textures.resolve(height.cover_texture);
   if (uniforms.has_height_texture != Shader::InvalidUniform) {
     shader.set_uniform(uniforms.has_height_texture,
-                       height.enabled && height.texture != nullptr ? 1 : 0);
+                       height.enabled && height_tex != nullptr ? 1 : 0);
   }
-  if (height.enabled && height.texture != nullptr) {
-    height.texture->bind(TextureUnit::terrain_height);
-    context.state.bound_texture = height.texture;
+  if (height.enabled && height_tex != nullptr) {
+    height_tex->bind(TextureUnit::terrain_height);
+    context.state.bound_texture = height_tex;
     if (uniforms.height_texture != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.height_texture, TextureUnit::terrain_height);
     }
@@ -338,42 +342,47 @@ void TerrainPipeline::set_terrain_chunk_uniforms(
       shader.set_uniform(uniforms.height_to_world, height.to_world);
     }
   }
-  const bool field_ready = height.enabled && height.field_texture != nullptr;
+  const bool field_ready = height.enabled && field_tex != nullptr;
   if (uniforms.has_field_texture != Shader::InvalidUniform) {
     shader.set_uniform(uniforms.has_field_texture, field_ready ? 1 : 0);
   }
   if (field_ready) {
-    height.field_texture->bind(TextureUnit::terrain_fields);
+    field_tex->bind(TextureUnit::terrain_fields);
     if (uniforms.field_texture != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.field_texture, TextureUnit::terrain_fields);
     }
   }
-  const bool cover_ready = height.enabled && height.cover_texture != nullptr;
+  const bool cover_ready = height.enabled && cover_tex != nullptr;
   if (uniforms.has_cover_texture != Shader::InvalidUniform) {
     shader.set_uniform(uniforms.has_cover_texture, cover_ready ? 1 : 0);
   }
   if (cover_ready) {
-    context.frame.surface.ground_cover = {
-        height.cover_texture, height.uv_scale, height.uv_offset};
-    height.cover_texture->bind(TextureUnit::terrain_cover);
+    context.frame.surface.ground_cover = {cover_tex, height.uv_scale, height.uv_offset};
+    cover_tex->bind(TextureUnit::terrain_cover);
     if (uniforms.cover_texture != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.cover_texture, TextureUnit::terrain_cover);
     }
   }
 
-  const bool atlas_ready = height.noise_atlas != 0U && height.noise_atlas_detail != 0U;
+  const unsigned int noise_atlas =
+      height.noise.enabled ? m_noise_atlas.atlas_texture() : 0U;
+  const unsigned int noise_atlas_detail =
+      height.noise.enabled ? m_noise_atlas.atlas_detail_texture() : 0U;
+  const unsigned int microdetail =
+      height.noise.enabled ? m_noise_atlas.microdetail_texture() : 0U;
+  const bool atlas_ready = noise_atlas != 0U && noise_atlas_detail != 0U;
   if (uniforms.has_noise_atlas != Shader::InvalidUniform) {
     shader.set_uniform(uniforms.has_noise_atlas, atlas_ready ? 1 : 0);
   }
   if (atlas_ready) {
     glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas);
-    glBindTexture(GL_TEXTURE_2D, height.noise_atlas);
+    glBindTexture(GL_TEXTURE_2D, noise_atlas);
     glActiveTexture(GL_TEXTURE0);
     if (uniforms.noise_atlas != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.noise_atlas, TextureUnit::terrain_noise_atlas);
     }
     glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas_detail);
-    glBindTexture(GL_TEXTURE_2D, height.noise_atlas_detail);
+    glBindTexture(GL_TEXTURE_2D, noise_atlas_detail);
     glActiveTexture(GL_TEXTURE0);
     if (uniforms.noise_atlas_detail != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.noise_atlas_detail,
@@ -384,13 +393,13 @@ void TerrainPipeline::set_terrain_chunk_uniforms(
                          height.noise_atlas_world_size);
     }
   }
-  const bool microdetail_ready = height.microdetail != 0U;
+  const bool microdetail_ready = microdetail != 0U;
   if (uniforms.has_microdetail != Shader::InvalidUniform) {
     shader.set_uniform(uniforms.has_microdetail, microdetail_ready ? 1 : 0);
   }
   if (microdetail_ready) {
     glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_microdetail);
-    glBindTexture(GL_TEXTURE_2D, height.microdetail);
+    glBindTexture(GL_TEXTURE_2D, microdetail);
     glActiveTexture(GL_TEXTURE0);
     if (uniforms.microdetail != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.microdetail, TextureUnit::terrain_microdetail);
@@ -417,9 +426,10 @@ auto TerrainPipeline::surface_shader_for(const TerrainSurfaceCmd& single) const
   if (single.params.is_ground_plane) {
     return m_ground_shader;
   }
-  const auto& height = single.height;
-  if (m_terrain_baked_shader != nullptr && height.noise_atlas != 0U &&
-      height.noise_atlas_detail != 0U && height.microdetail != 0U) {
+  if (m_terrain_baked_shader != nullptr && single.height.noise.enabled &&
+      m_noise_atlas.atlas_texture() != 0U &&
+      m_noise_atlas.atlas_detail_texture() != 0U &&
+      m_noise_atlas.microdetail_texture() != 0U) {
     return m_terrain_baked_shader;
   }
   return m_terrain_shader;
@@ -489,8 +499,9 @@ void TerrainPipeline::draw_grass(const TerrainScatterCmd& deco_cmd_,
     std::size_t instance_count;
     const GrassBatchParams& params;
   };
-  const GrassView grass{
-      deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.grass};
+  const GrassView grass{context.instances.resolve(deco_cmd_.instances),
+                        deco_cmd_.instance_count,
+                        deco_cmd_.grass};
   if ((grass.instance_buffer == nullptr) || grass.instance_count == 0 ||
       (m_grass_shader == nullptr) || !m_grass_vao || m_grass_vertex_count == 0) {
     return;
@@ -509,7 +520,7 @@ void TerrainPipeline::draw_grass(const TerrainScatterCmd& deco_cmd_,
     context.state.bound_shader = m_grass_shader;
     context.state.bound_texture = nullptr;
   }
-  bind_visibility_mask(*m_grass_shader, deco_cmd_.visibility);
+  bind_visibility_mask(*m_grass_shader, deco_cmd_.visibility, context.textures);
 
   if (m_grass_uniforms.view_proj != Shader::InvalidUniform) {
     m_grass_shader->set_uniform(m_grass_uniforms.view_proj, view_proj);

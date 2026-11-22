@@ -4,13 +4,16 @@
 
 #include <cstdint>
 
-#include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/render_pass_intent.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/render_request.h"
 
 namespace Render::GL {
 struct DrawContext;
-}
+struct HumanoidAnimationContext;
+struct HumanoidPose;
+struct HumanoidVariant;
+} // namespace Render::GL
 
 namespace Render::Creature::Pipeline {
 

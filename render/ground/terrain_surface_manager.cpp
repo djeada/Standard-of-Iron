@@ -14,7 +14,7 @@ TerrainSurfaceManager::TerrainSurfaceManager()
 TerrainSurfaceManager::~TerrainSurfaceManager() = default;
 
 void TerrainSurfaceManager::submit(FrameSubmitter& renderer,
-                                   ResourceManager* resources) {
+                                   const DrawResources* resources) {
   for (auto* source : m_sources) {
     if (source != nullptr) {
       source->submit(renderer, resources);

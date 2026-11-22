@@ -10,7 +10,7 @@
 #include "render/frame/material.h"
 #include "render/frame/primitive_batch.h"
 #include "render/frame/render_archetype.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 class Mesh;

@@ -11,6 +11,7 @@
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
+#include "render/ground/scatter/scatter_generators.h"
 #include "render/ground/scatter_runtime.h"
 
 namespace {
@@ -41,7 +42,7 @@ void StatueRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void StatueRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void StatueRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::Statue) ==
       0) {
     return;
@@ -73,46 +74,8 @@ void StatueRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources
 void StatueRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap& height_map) {
-
-  const auto& terrain_service = world().terrain_or_empty();
-
-  for (const auto& prop : world_props) {
-    if (prop.type != Game::Map::WorldProp::Type::Statue) {
-      continue;
-    }
-    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
-        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
-
-    uint32_t state = hash_coords(static_cast<int>(prop.x),
-                                 static_cast<int>(prop.z),
-                                 m_biome_settings.seed ^ 0x1D7B4E63U);
-
-    QVector3D const pentelic_marble(0.955F, 0.940F, 0.900F);
-    QVector3D const travertine(0.905F, 0.845F, 0.735F);
-    QVector3D const grey_limestone(0.790F, 0.795F, 0.780F);
-
-    float const quarry = rand_01(state);
-    QVector3D color =
-        quarry < 0.30F
-            ? pentelic_marble
-            : (quarry < 0.74F ? pentelic_marble * 0.45F + travertine * 0.55F
-                              : pentelic_marble * 0.35F + grey_limestone * 0.65F);
-    float const weathering = remap(rand_01(state), 0.0F, 0.14F);
-    color *= 1.0F - weathering;
-    color *= remap(rand_01(state), 0.96F, 1.04F);
-
-    PropInstanceGpu inst;
-    inst.pos_scale = QVector4D(resolved.x(),
-                               resolved.y(),
-                               resolved.z(),
-                               prop.scale * Game::Map::world_prop_render_scale(
-                                                Game::Map::WorldProp::Type::Statue));
-    inst.color_rot = QVector4D(color.x(), color.y(), color.z(), prop.rotation);
-    m_state.instances.push_back(inst);
-  }
-
-  m_state.instance_count = m_state.instances.size();
-  m_state.instances_dirty = m_state.instance_count > 0;
+  adopt_generated(Ground::Scatter::generate_statues(
+      {{}, nullptr, m_biome_settings, world().terrain_or_empty(), world_props}));
 }
 
 } // namespace Render::GL

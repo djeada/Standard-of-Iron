@@ -22,7 +22,7 @@ using Render::GL::TerrainFeatureCmd;
 using Render::GL::TerrainFeatureCmdIndex;
 using Render::GL::TerrainSurfaceCmd;
 using Render::GL::TerrainSurfaceCmdIndex;
-using Render::GL::Texture;
+using Render::GL::TextureImage;
 
 TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeGroundMarker) {
   DrawQueue queue;
@@ -97,13 +97,13 @@ TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
   TerrainFeatureCmd first;
   first.kind = Render::GL::LinearFeatureKind::Shoreline;
   first.visibility.texture =
-      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x1));
+      reinterpret_cast<const TextureImage*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(first);
 
   TerrainFeatureCmd second;
   second.kind = Render::GL::LinearFeatureKind::Shoreline;
   second.visibility.texture =
-      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x2));
+      reinterpret_cast<const TextureImage*>(static_cast<std::uintptr_t>(0x2));
   queue.submit(second);
 
   queue.sort_for_batching();
@@ -186,7 +186,7 @@ TEST(DrawQueuePreparedBatches,
   first.kind = Render::GL::LinearFeatureKind::Shoreline;
   first.visibility.enabled = true;
   first.visibility.texture =
-      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x1));
+      reinterpret_cast<const TextureImage*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(first);
 
   TerrainFeatureCmd second;
@@ -194,7 +194,7 @@ TEST(DrawQueuePreparedBatches,
   second.kind = Render::GL::LinearFeatureKind::Shoreline;
   second.visibility.enabled = true;
   second.visibility.texture =
-      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x2));
+      reinterpret_cast<const TextureImage*>(static_cast<std::uintptr_t>(0x2));
   queue.submit(second);
 
   queue.sort_for_batching();

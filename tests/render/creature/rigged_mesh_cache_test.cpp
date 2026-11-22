@@ -12,7 +12,7 @@
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace {
 
@@ -273,7 +273,7 @@ TEST(RiggedMeshCache, FrameStatsTrackSkinUploadCounters) {
   EXPECT_EQ(cache.frame_stats().skin_ubo_bytes_uploaded, 0U);
 }
 
-TEST(RiggedMeshCache, GpuPrewarmWithoutContextPreservesGuardAndCpuCache) {
+TEST(RiggedMeshCache, GpuPrewarmWithoutABackendPreservesGuardAndCpuCache) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;
   auto const& spec = Render::Humanoid::humanoid_creature_spec();
@@ -281,7 +281,7 @@ TEST(RiggedMeshCache, GpuPrewarmWithoutContextPreservesGuardAndCpuCache) {
   ASSERT_NE(cache.get_or_bake(spec, CreatureLOD::Full, bind), nullptr);
   const auto count = cache.size();
   Render::Creature::set_runtime_bake_forbidden(true);
-  EXPECT_FALSE(cache.prewarm_gpu_resources());
+  EXPECT_FALSE(cache.prepare_gpu_data());
   EXPECT_EQ(cache.size(), count);
   EXPECT_TRUE(Render::Creature::runtime_bake_forbidden());
 }

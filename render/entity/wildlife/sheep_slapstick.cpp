@@ -4,7 +4,7 @@
 #include <cmath>
 
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL::Wildlife {
 

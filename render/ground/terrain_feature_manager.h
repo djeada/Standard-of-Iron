@@ -7,7 +7,7 @@
 #include "game/map/terrain.h"
 #include "render/frame/i_draw_source.h"
 #include "render/frame/terrain_scene_types.h"
-#include "render/gl/mesh_gpu_table.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
 
@@ -28,9 +28,10 @@ public:
 
   void set_fog_renderer(FogRenderer* fog);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
+  // Every water, road, shoreline and bridge mesh, for prewarming.
+  void for_each_mesh(const MeshVisitor& visit) const;
 
   [[nodiscard]] auto water() const -> WaterRenderer*;
   [[nodiscard]] auto road() const -> RoadRenderer*;

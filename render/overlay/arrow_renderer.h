@@ -9,10 +9,10 @@ struct ArrowInstance;
 namespace Render::GL {
 
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 void render_arrows(FrameSubmitter* renderer,
-                   ResourceManager* resources,
+                   const DrawResources* resources,
                    const std::vector<Game::Systems::ArrowInstance>& arrows);
 
 } // namespace Render::GL

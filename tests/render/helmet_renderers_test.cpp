@@ -80,7 +80,6 @@ namespace {
 DrawContext create_test_context() {
   DrawContext ctx;
   ctx.model.setToIdentity();
-  ctx.backend = nullptr;
   ctx.entity = nullptr;
   return ctx;
 }

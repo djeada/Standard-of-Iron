@@ -17,12 +17,12 @@
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "render/entity/siege_renderer_common.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 #include "render/math/math_utils.h"
 
 namespace Render::GL {

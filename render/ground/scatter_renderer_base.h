@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QOpenGLContext>
 #include <QVector3D>
 #include <QVector4D>
 
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "game/map/biome_settings.h"
@@ -14,6 +14,7 @@
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
 #include "render/ground/i_scatter_source.h"
+#include "render/ground/scatter/scatter_request.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_submission.h"
 
@@ -30,12 +31,26 @@ public:
     return m_state.instances.size();
   }
 
+  [[nodiscard]] auto instance_bytes() const -> std::size_t override {
+    return m_state.instances.size() * sizeof(Instance);
+  }
+
+  [[nodiscard]] auto instance_stride() const -> std::size_t override {
+    return sizeof(Instance);
+  }
+
   [[nodiscard]] auto
   last_sync_stats() const -> Render::Ground::Scatter::SyncStats override {
     return m_state.last_sync_stats;
   }
 
   void clear() override { m_state.reset_instances(); }
+
+  void set_instance_budget(std::size_t budget) override { m_instance_budget = budget; }
+  [[nodiscard]] auto instance_budget() const -> std::size_t override {
+    return m_instance_budget;
+  }
+  [[nodiscard]] auto budget_hit() const -> bool override { return m_budget_hit; }
 
   [[nodiscard]] static auto
   instance_position(const Instance& instance) -> const QVector4D& {
@@ -48,11 +63,12 @@ public:
     }
   }
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool override {
-    if (QOpenGLContext::currentContext() == nullptr) {
-      return false;
-    }
-    return Render::Ground::Scatter::prewarm_filtered_state(m_state, &instance_position);
+  void prepare_instance_blocks() override {
+    Render::Ground::Scatter::prepare_filtered_blocks(m_state, &instance_position);
+  }
+
+  void for_each_instance_block(const InstanceBlockVisitor& visit) const override {
+    Render::Ground::Scatter::for_each_filtered_block(m_state, visit);
   }
 
 protected:
@@ -78,6 +94,19 @@ protected:
     m_state.reset_instances();
   }
 
+  // The terrain grid copied at configure, for a generator request.
+  [[nodiscard]] auto scatter_grid() const -> Render::Ground::Scatter::ScatterGrid {
+    return {m_width, m_height, m_tile_size, &m_height_data, &m_terrain_types};
+  }
+
+  // Takes a generator's output as the layer's instances, cut to the budget.
+  void adopt_generated(std::vector<Instance> instances) {
+    m_budget_hit =
+        Render::Ground::Scatter::apply_instance_budget(instances, m_instance_budget);
+    m_state.instances = std::move(instances);
+    finish_instance_rebuild();
+  }
+
   void finish_instance_rebuild() {
     m_state.instance_count = m_state.instances.size();
     m_state.instances_dirty = m_state.instance_count > 0;
@@ -95,7 +124,7 @@ protected:
 
   template <bool CopyTimeToParams>
   auto submit_filtered_common(FrameSubmitter& renderer,
-                              ResourceManager* resources,
+                              const DrawResources* resources,
                               TerrainScatterCmd::Species species,
                               void (*assign_params)(TerrainScatterCmd&,
                                                     const Params&)) -> std::size_t {
@@ -128,7 +157,7 @@ protected:
   }
 
   auto submit_prop_common(FrameSubmitter& renderer,
-                          ResourceManager* resources,
+                          const DrawResources* resources,
                           TerrainScatterCmd::Species species) -> std::size_t {
     m_state.params.time = renderer.get_animation_time();
     return submit_filtered_common<false>(
@@ -149,6 +178,8 @@ protected:
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
 
   State m_state;
+  std::size_t m_instance_budget = Render::Ground::Scatter::k_unbounded_instances;
+  bool m_budget_hit = false;
 };
 
 } // namespace Render::GL

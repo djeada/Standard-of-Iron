@@ -11,6 +11,7 @@
 #include "game/session/session_context.h"
 #include "render/creature/archetype_registry.h"
 #include "render/entity/farm_activity.h"
+#include "render/entity/farm_activity_submit.h"
 #include "render/entity/registry.h"
 #include "render/frame/graphics_settings.h"
 

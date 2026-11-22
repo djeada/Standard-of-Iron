@@ -11,8 +11,12 @@
 #include <optional>
 
 #include "game/core/component.h"
-#include "render/creature/animation_state_components.h"
+#include "game/core/entity.h"
+#include "render/creature/horse/horse_body_state.h"
+#include "render/creature/horse/horse_clip_contact.h"
+#include "render/creature/horse/horse_components.h"
 #include "render/creature/horse/horse_motion.h"
+#include "render/creature/horse/horse_render_batch.h"
 #include "render/creature/horse/horse_renderer_base.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/creature/pipeline/corpse_sink.h"
@@ -252,7 +256,7 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   body_state.variant = v;
   body_state.animation_state = input.animation;
   body_state.phase = input.phase;
-  out.bodies.add_quadruped(body_state);
+  add_quadruped(out.bodies, body_state);
 
   RCQ::add_quadruped_shadow(input, body, out);
 }

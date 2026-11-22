@@ -12,6 +12,7 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/ground_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/iron_ore_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/linear_feature_geometry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/linear_feature_riverbank.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/magic_shrine_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/map_boundary_fog_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/mist_volume_builder.cpp
@@ -21,8 +22,26 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_asset_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_network_geometry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_network_graph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/ruins_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/abandoned_home_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/boulder_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/cursed_gold_vein_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/dead_tree_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/firecamp_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/grass_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/iron_ore_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/magic_shrine_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/plant_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/ruins_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/scatter_budget.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/statue_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/stone_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/supply_cart_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/tent_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/tree_scatter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/scatter/weapon_rack_scatter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/statue_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/stone_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/supply_cart_renderer.cpp

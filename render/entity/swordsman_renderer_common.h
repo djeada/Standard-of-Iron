@@ -11,9 +11,9 @@
 #include <string_view>
 
 #include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
-#include "render/creature/humanoid/schema/pose_policy.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/schema/pose_policy.h"
 #include "render/entity/registry.h"
 
 namespace Render::GL {

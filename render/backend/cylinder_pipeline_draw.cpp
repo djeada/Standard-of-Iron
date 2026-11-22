@@ -57,7 +57,7 @@ void CylinderPipeline::draw(const PreparedBatch& prepared,
     const auto& batch = std::get<FogBatchCmdIndex>(cmd);
     const FogInstanceData* instances = batch.instances;
     const std::size_t instance_count = batch.count;
-    if (((instances != nullptr) || (batch.instance_buffer != nullptr)) &&
+    if (((instances != nullptr) || (batch.instance_block != nullptr)) &&
         instance_count > 0 && (m_fog_shader != nullptr)) {
       DepthMaskScope const depth_mask(false);
       BlendScope const blend(true);
@@ -79,7 +79,8 @@ void CylinderPipeline::draw(const PreparedBatch& prepared,
         fog_shader->set_uniform(m_fog_uniforms.time, context.frame.animation_time);
       }
       const auto& mask = batch.mask;
-      const bool has_mask = mask.enabled && (mask.texture != nullptr);
+      Texture* const mask_tex = context.textures.resolve(mask.texture);
+      const bool has_mask = mask.enabled && (mask_tex != nullptr);
       if (m_fog_uniforms.has_mask != Shader::InvalidUniform) {
         fog_shader->set_uniform(m_fog_uniforms.has_mask, has_mask ? 1 : 0);
       }
@@ -90,15 +91,15 @@ void CylinderPipeline::draw(const PreparedBatch& prepared,
         if (m_fog_uniforms.mask_tile_size != Shader::InvalidUniform) {
           fog_shader->set_uniform(m_fog_uniforms.mask_tile_size, mask.tile_size);
         }
-        mask.texture->bind(TextureUnit::terrain_visibility);
-        context.state.bound_texture = mask.texture;
+        mask_tex->bind(TextureUnit::terrain_visibility);
+        context.state.bound_texture = mask_tex;
         if (m_fog_uniforms.mask_tex != Shader::InvalidUniform) {
           fog_shader->set_uniform(m_fog_uniforms.mask_tex,
                                   TextureUnit::terrain_visibility);
         }
       }
-      if (batch.instance_buffer != nullptr) {
-        bind_fog_instance_buffer(batch.instance_buffer);
+      if (batch.instance_block != nullptr) {
+        bind_fog_instance_buffer(context.instances.resolve(batch.instance_block));
       } else {
         m_fog_scratch.resize(instance_count);
         for (std::size_t idx = 0; idx < instance_count; ++idx) {

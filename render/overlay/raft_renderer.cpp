@@ -8,8 +8,8 @@
 #include <cstdint>
 
 #include "render/frame/frame_submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 
 namespace Render::GL {
 

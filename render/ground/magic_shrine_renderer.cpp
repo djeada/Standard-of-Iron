@@ -11,17 +11,8 @@
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
+#include "render/ground/scatter/scatter_generators.h"
 #include "render/ground/scatter_runtime.h"
-
-namespace {
-
-using namespace Render::Ground;
-
-constexpr float k_base_color_r = 0.128F;
-constexpr float k_base_color_g = 0.118F;
-constexpr float k_base_color_b = 0.124F;
-
-} // namespace
 
 namespace Render::GL {
 
@@ -43,7 +34,8 @@ void MagicShrineRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void MagicShrineRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void MagicShrineRenderer::submit(FrameSubmitter& renderer,
+                                 const DrawResources* resources) {
   if (submit_prop_common(
           renderer, resources, TerrainScatterCmd::Species::MagicShrine) == 0) {
     return;
@@ -68,30 +60,8 @@ void MagicShrineRenderer::submit(FrameSubmitter& renderer, ResourceManager* reso
 void MagicShrineRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap& height_map) {
-
-  const auto& terrain_service = world().terrain_or_empty();
-
-  for (const auto& prop : world_props) {
-    if (prop.type != Game::Map::WorldProp::Type::MagicShrine) {
-      continue;
-    }
-    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
-        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
-
-    PropInstanceGpu inst;
-    inst.pos_scale =
-        QVector4D(resolved.x(),
-                  resolved.y(),
-                  resolved.z(),
-                  prop.scale * Game::Map::world_prop_render_scale(
-                                   Game::Map::WorldProp::Type::MagicShrine));
-    inst.color_rot =
-        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, prop.rotation);
-    m_state.instances.push_back(inst);
-  }
-
-  m_state.instance_count = m_state.instances.size();
-  m_state.instances_dirty = m_state.instance_count > 0;
+  adopt_generated(Ground::Scatter::generate_magic_shrines(
+      {{}, nullptr, m_biome_settings, world().terrain_or_empty(), world_props}));
 }
 
 } // namespace Render::GL

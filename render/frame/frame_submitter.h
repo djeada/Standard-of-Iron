@@ -23,7 +23,7 @@ class Backend;
 class Buffer;
 class Camera;
 class Mesh;
-class ResourceManager;
+class DrawResources;
 class Shader;
 class Texture;
 struct RainBatchParams;
@@ -52,8 +52,7 @@ public:
   building_ground() const noexcept -> const Render::Ground::BuildingGroundSet& = 0;
 
   // Shared GPU resources.
-  [[nodiscard]] virtual auto backend() -> Backend* = 0;
-  [[nodiscard]] virtual auto resources() const -> ResourceManager* = 0;
+  [[nodiscard]] virtual auto resources() const -> const DrawResources* = 0;
   [[nodiscard]] virtual auto get_mesh_cube() const -> Mesh* = 0;
   [[nodiscard]] virtual auto get_white_texture() const -> Texture* = 0;
   [[nodiscard]] virtual auto get_shader(const QString& name) const -> Shader* = 0;
@@ -73,7 +72,7 @@ public:
   virtual void fog_batch(const FogInstanceData* instances,
                          std::size_t count,
                          const FogMaskResources& mask = {}) = 0;
-  virtual void fog_batch(Buffer* instance_buffer,
+  virtual void fog_batch(const InstanceBlock* instance_block,
                          std::size_t count,
                          const FogMaskResources& mask = {}) = 0;
   virtual void rain_batch(const RainBatchParams& params) = 0;

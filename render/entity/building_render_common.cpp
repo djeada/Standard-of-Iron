@@ -12,9 +12,9 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
+#include "render/frame/draw_resources.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 
 namespace Render::GL {
 namespace {

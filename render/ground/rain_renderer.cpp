@@ -62,7 +62,7 @@ void RainRenderer::set_camera_position(const QVector3D& position) {
   m_camera_position = position;
 }
 
-void RainRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void RainRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   (void)resources;
 
   if (!m_enabled) {

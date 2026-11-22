@@ -20,10 +20,10 @@
 #include "render/equipment/material_palette.h"
 #include "render/equipment/weapons/shield_anchor.h"
 #include "render/frame/render_archetype.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
+#include "render/geom/shared_geometry_cache.h"
 #include "render/geom/transforms.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
-#include "render/gl/shared_geometry_cache.h"
 
 namespace Render::GL {
 

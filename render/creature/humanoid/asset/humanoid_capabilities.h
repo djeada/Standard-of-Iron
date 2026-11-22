@@ -1,7 +1,7 @@
 #pragma once
 
-#include "render/creature/humanoid/schema/visual_capabilities.h"
 #include "render/creature/render_request.h"
+#include "render/creature/schema/visual_capabilities.h"
 
 namespace Render::Humanoid {
 

@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/elephant/elephant_species.h"
 #include "render/creature/horse/horse_spec.h"
+#include "render/creature/horse/horse_species.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
 

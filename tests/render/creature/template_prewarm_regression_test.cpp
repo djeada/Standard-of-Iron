@@ -20,9 +20,12 @@
 #include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/creature/humanoid/asset/facial_hair_catalog.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_body_state.h"
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_asset_init.h"
@@ -249,7 +252,7 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   CreaturePreparationResult prep;
   for (const auto& request : batch.requests()) {
@@ -412,7 +415,7 @@ TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
   state.graph = output;
 
   CreatureRenderBatch batch;
-  batch.add_humanoid(state);
+  add_humanoid(batch, state);
   ASSERT_EQ(batch.requests().size(), 1U);
 
   EXPECT_EQ(batch.requests().front().pass, RenderPassIntent::Shadow);
@@ -763,7 +766,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   Render::GL::DrawContext ctx{
       renderer.resources(), &builder, nullptr, renderer.world_view(), QMatrix4x4()};
   ctx.renderer_id = "troops/roman/builder";
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting =
+      renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
   ctx.allow_template_cache = true;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = CreatureLOD::Full;
@@ -834,7 +838,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
                               renderer.world_view(),
                               QMatrix4x4()};
   ctx.renderer_id = "troops/roman/civilian";
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting =
+      renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
   ctx.allow_template_cache = true;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = CreatureLOD::Full;
@@ -905,7 +910,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
                               renderer.world_view(),
                               QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/civilian";
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting =
+      renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
   ctx.allow_template_cache = true;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = CreatureLOD::Full;
@@ -977,7 +983,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
                               renderer.world_view(),
                               QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/commanders/hannibal_barca";
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting =
+      renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
   ctx.allow_template_cache = true;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = CreatureLOD::Full;
@@ -1053,7 +1060,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
                               renderer.world_view(),
                               QMatrix4x4()};
   ctx.renderer_id = "troops/roman/swordsman";
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting =
+      renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
   ctx.allow_template_cache = true;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = CreatureLOD::Full;
@@ -1124,7 +1132,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
                               renderer.world_view(),
                               QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/spearman";
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting =
+      renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
   ctx.allow_template_cache = true;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = CreatureLOD::Full;
@@ -1197,7 +1206,8 @@ TEST(TemplatePrewarmRegression,
     Render::GL::DrawContext ctx{
         renderer.resources(), &entity, nullptr, renderer.world_view(), model};
     ctx.renderer_id = "troops/carthage/spearman";
-    ctx.backend = renderer.backend();
+    ctx.environment_lighting =
+        renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
     ctx.camera = &camera;
     ctx.allow_template_cache = true;
     ctx.force_humanoid_lod = true;
@@ -1438,7 +1448,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmBakesRosterTroopsNotYetOnTheMap) {
     Render::GL::DrawContext ctx{
         renderer.resources(), &unit, nullptr, renderer.world_view(), QMatrix4x4()};
     ctx.renderer_id = trained.renderer_id;
-    ctx.backend = renderer.backend();
+    ctx.environment_lighting =
+        renderer.backend() != nullptr ? &renderer.environment_lighting() : nullptr;
     ctx.allow_template_cache = true;
     ctx.force_humanoid_lod = true;
     ctx.forced_humanoid_lod = CreatureLOD::Full;

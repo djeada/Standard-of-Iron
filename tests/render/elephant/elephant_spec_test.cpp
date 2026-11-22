@@ -18,8 +18,8 @@
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/spec.h"
 #include "render/frame/submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 
 namespace {
 

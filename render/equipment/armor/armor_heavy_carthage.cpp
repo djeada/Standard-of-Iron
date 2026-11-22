@@ -18,9 +18,9 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/geom/garment_shell.h"
 #include "render/geom/parts.h"
-#include "render/gl/garment_shell.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 

@@ -5,7 +5,7 @@
 #include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
 #include "render/frame/draw_queue.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {

@@ -3,15 +3,24 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QSurfaceFormat>
 
+#include <array>
 #include <gtest/gtest.h>
 #include <memory>
+#include <utility>
+#include <vector>
 
+#include "render/geom/instance_block.h"
+#include "render/geom/mesh.h"
+#include "render/geom/rigged_mesh.h"
+#include "render/geom/texture_image.h"
 #include "render/gl/gl_lifetime.h"
-#include "render/gl/mesh.h"
+#include "render/gl/instance_buffer_table.h"
 #include "render/gl/mesh_gpu_table.h"
 #include "render/gl/resources.h"
+#include "render/gl/rigged_mesh_gpu_table.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
+#include "render/gl/texture_table.h"
 
 namespace {
 
@@ -155,4 +164,81 @@ TEST(GlContextLifetime, ATableDropsTheCopyOfADestroyedMesh) {
   }
   table.collect_retired();
   EXPECT_EQ(table.size(), 0U) << "the GPU copy of a destroyed mesh was kept";
+}
+
+TEST(GlContextLifetime, ATextureTableUploadsAnImageOnceAndDropsItWithTheImage) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::TextureTable table;
+  {
+    Render::GL::TextureImage image;
+    image.reset(4, 4, Render::GL::TextureImage::Format::Rgba8);
+    Render::GL::Texture* first = table.resolve(&image);
+    ASSERT_NE(first, nullptr);
+    EXPECT_EQ(first->get_width(), 4);
+    EXPECT_EQ(table.resolve(&image), first)
+        << "an unchanged image must keep its texture";
+
+    const std::array<unsigned char, 4> red{255, 0, 0, 255};
+    image.update_region({1, 1, 1, 1}, red.data());
+    EXPECT_EQ(table.resolve(&image), first) << "a region update reuses the texture";
+
+    image.reset(8, 2, Render::GL::TextureImage::Format::Rgba8);
+    Render::GL::Texture* resized = table.resolve(&image);
+    ASSERT_NE(resized, nullptr);
+    EXPECT_EQ(resized->get_width(), 8);
+    EXPECT_EQ(table.size(), 1U);
+  }
+  table.collect_retired();
+  EXPECT_EQ(table.size(), 0U) << "the texture of a destroyed image was kept";
+}
+
+TEST(GlContextLifetime, AnInstanceTableReuploadsOnlyWhenTheBlockChanges) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::InstanceBufferTable table;
+  {
+    Render::GL::InstanceBlock block;
+    EXPECT_EQ(table.resolve(&block), nullptr) << "an empty block has nothing to draw";
+    block.reserve_bytes(64);
+    ASSERT_TRUE(table.prewarm(block));
+    Render::GL::Buffer* buffer = table.resolve(&block);
+    ASSERT_NE(buffer, nullptr);
+    EXPECT_GE(buffer->size_bytes(), 64U);
+
+    const std::vector<float> values{1.0F, 2.0F, 3.0F, 4.0F};
+    block.assign(values);
+    EXPECT_EQ(table.resolve(&block), buffer) << "a reserved block updates in place";
+    EXPECT_EQ(table.size(), 1U);
+  }
+  table.collect_retired();
+  EXPECT_EQ(table.size(), 0U) << "the buffer of a destroyed block was kept";
+}
+
+TEST(GlContextLifetime, ARiggedMeshTableUploadsOnceAndDropsTheCopyWithTheMesh) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::RiggedMeshGpuTable table;
+  {
+    std::vector<Render::GL::RiggedVertex> vertices(3);
+    for (auto& vertex : vertices) {
+      vertex.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+    }
+    const Render::GL::RiggedMesh mesh(std::move(vertices), {0U, 1U, 2U});
+    ASSERT_TRUE(table.ensure(mesh));
+    Render::GL::Buffer* vertex_buffer = table.vertex_buffer(mesh);
+    ASSERT_NE(vertex_buffer, nullptr);
+    ASSERT_TRUE(table.ensure(mesh));
+    EXPECT_EQ(table.vertex_buffer(mesh), vertex_buffer)
+        << "a second ensure must reuse the uploaded copy";
+    EXPECT_EQ(table.size(), 1U);
+  }
+  table.collect_retired();
+  EXPECT_EQ(table.size(), 0U) << "the GPU copy of a destroyed rigged mesh was kept";
 }

@@ -13,13 +13,14 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/terrain_contact.h"
-#include "render/gl/primitives.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/resources.h"
+#include "render/geom/primitives.h"
+#include "render/ground/scatter/scatter_generators.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
+#include "render/math/render_constants.h"
 
 namespace {
 
@@ -49,7 +50,8 @@ void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   generate_firecamp_instances();
 }
 
-void FireCampRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void FireCampRenderer::submit(FrameSubmitter& renderer,
+                              const DrawResources* resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_state(
@@ -273,70 +275,13 @@ void FireCampRenderer::clear() {
 }
 
 void FireCampRenderer::generate_firecamp_instances() {
-  auto& firecamp_instances = m_state.instances;
-  auto& firecamp_instance_count = m_state.instance_count;
-  auto& firecamp_instances_dirty = m_state.instances_dirty;
-
-  firecamp_instances.clear();
-  m_camp_decor.clear();
-
-  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    return;
-  }
-  const auto& terrain_service = world().terrain_or_empty();
-
-  for (size_t i = 0; i < m_world_props.size(); ++i) {
-    const auto& prop = m_world_props[i];
-    if (prop.type != Game::Map::WorldProp::Type::FireCamp) {
-      continue;
-    }
-
-    const auto [world_x, world_z] = terrain_service.world_prop_world_xz(prop);
-    const float hearth = hearth_radius(prop.scale);
-    const float centre_y = terrain_service.resolve_surface_world_y(world_x, world_z);
-
-    constexpr int k_spokes = 8;
-    float slope_x = 0.0F;
-    float slope_z = 0.0F;
-    std::array<float, k_spokes> rim_heights{};
-    for (int spoke = 0; spoke < k_spokes; ++spoke) {
-      const float angle = MathConstants::k_two_pi * static_cast<float>(spoke) /
-                          static_cast<float>(k_spokes);
-      const float rise =
-          terrain_service.resolve_surface_world_y(world_x + std::cos(angle) * hearth,
-                                                  world_z + std::sin(angle) * hearth) -
-          centre_y;
-      rim_heights[static_cast<std::size_t>(spoke)] = rise;
-      slope_x += rise * std::cos(angle);
-      slope_z += rise * std::sin(angle);
-    }
-    slope_x /= hearth * static_cast<float>(k_spokes) * 0.5F;
-    slope_z /= hearth * static_cast<float>(k_spokes) * 0.5F;
-    float bulge = 0.0F;
-    for (int spoke = 0; spoke < k_spokes; ++spoke) {
-      const float angle = MathConstants::k_two_pi * static_cast<float>(spoke) /
-                          static_cast<float>(k_spokes);
-      const float plane =
-          (slope_x * std::cos(angle) + slope_z * std::sin(angle)) * hearth;
-      bulge = std::max(bulge, rim_heights[static_cast<std::size_t>(spoke)] - plane);
-    }
-
-    const float base_radius = std::max(prop.radius, 1.0F);
-    const float phase = static_cast<float>(i) * 1.234567F;
-
-    const auto decor_index = static_cast<float>(m_camp_decor.size());
-    m_camp_decor.push_back(
-        build_camp_decor(terrain_service, world_x, world_z, hearth, phase));
-
-    FireCampInstanceGpu instance;
-    instance.pos_intensity = QVector4D(world_x, centre_y, world_z, prop.intensity);
-    instance.radius_phase = QVector4D(base_radius, phase, prop.scale, decor_index);
-    instance.ground = QVector4D(slope_x, slope_z, hearth, std::min(bulge, 0.3F));
-    firecamp_instances.push_back(instance);
-  }
-
-  firecamp_instance_count = firecamp_instances.size();
-  firecamp_instances_dirty = firecamp_instance_count > 0;
+  auto generated = Ground::Scatter::generate_firecamps({scatter_grid(),
+                                                        nullptr,
+                                                        m_biome_settings,
+                                                        world().terrain_or_empty(),
+                                                        m_world_props});
+  m_camp_decor = std::move(generated.decor);
+  adopt_generated(std::move(generated.instances));
 }
 
 } // namespace Render::GL

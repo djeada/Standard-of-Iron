@@ -10,7 +10,7 @@
 #include "render/backend/water_pipeline.h"
 #include "render/frame/draw_commands.h"
 #include "render/frame/draw_queue.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
@@ -125,6 +125,7 @@ void WaterPipeline::draw_water(const PreparedBatch& prepared,
   const auto& uniforms = m_water_uniforms;
   auto& state = context.state;
   const auto& visibility = feature.visibility;
+  Texture* const visibility_tex = context.textures.resolve(visibility.texture);
   if (state.bound_shader != water_shader) {
     water_shader->use();
     water_shader->set_uniform(uniforms.view, context.frame.view);
@@ -135,10 +136,10 @@ void WaterPipeline::draw_water(const PreparedBatch& prepared,
     state.bound_texture = nullptr;
   }
   if (uniforms.has_visibility != Shader::InvalidUniform) {
-    int const has_vis = visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+    int const has_vis = visibility.enabled && (visibility_tex != nullptr) ? 1 : 0;
     water_shader->set_uniform(uniforms.has_visibility, has_vis);
   }
-  if (visibility.enabled && visibility.texture != nullptr) {
+  if (visibility.enabled && visibility_tex != nullptr) {
     if (uniforms.visibility_size != Shader::InvalidUniform) {
       water_shader->set_uniform(uniforms.visibility_size, visibility.size);
     }
@@ -148,8 +149,8 @@ void WaterPipeline::draw_water(const PreparedBatch& prepared,
     if (uniforms.explored_alpha != Shader::InvalidUniform) {
       water_shader->set_uniform(uniforms.explored_alpha, visibility.explored_alpha);
     }
-    visibility.texture->bind(k_visibility_texture_unit);
-    state.bound_texture = visibility.texture;
+    visibility_tex->bind(k_visibility_texture_unit);
+    state.bound_texture = visibility_tex;
     if (uniforms.visibility_texture != Shader::InvalidUniform) {
       water_shader->set_uniform(uniforms.visibility_texture, k_visibility_texture_unit);
     }
@@ -225,6 +226,7 @@ void WaterPipeline::draw_riverbank(const PreparedBatch& prepared,
   }
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   const auto& visibility = feature.visibility;
+  Texture* const visibility_tex = context.textures.resolve(visibility.texture);
   if (state.bound_shader != riverbank_shader) {
     riverbank_shader->use();
     riverbank_shader->set_uniform(uniforms.view, context.frame.view);
@@ -234,10 +236,10 @@ void WaterPipeline::draw_riverbank(const PreparedBatch& prepared,
     state.bound_shader = riverbank_shader;
   }
   if (uniforms.has_visibility != Shader::InvalidUniform) {
-    int const has_vis = visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+    int const has_vis = visibility.enabled && (visibility_tex != nullptr) ? 1 : 0;
     riverbank_shader->set_uniform(uniforms.has_visibility, has_vis);
   }
-  if (visibility.enabled && visibility.texture != nullptr) {
+  if (visibility.enabled && visibility_tex != nullptr) {
     if (uniforms.visibility_size != Shader::InvalidUniform) {
       riverbank_shader->set_uniform(uniforms.visibility_size, visibility.size);
     }
@@ -248,12 +250,12 @@ void WaterPipeline::draw_riverbank(const PreparedBatch& prepared,
     if (uniforms.explored_alpha != Shader::InvalidUniform) {
       riverbank_shader->set_uniform(uniforms.explored_alpha, visibility.explored_alpha);
     }
-    visibility.texture->bind(k_visibility_texture_unit);
+    visibility_tex->bind(k_visibility_texture_unit);
     if (uniforms.visibility_texture != Shader::InvalidUniform) {
       riverbank_shader->set_uniform(uniforms.visibility_texture,
                                     k_visibility_texture_unit);
     }
-    state.bound_texture = visibility.texture;
+    state.bound_texture = visibility_tex;
   }
   PolygonOffsetScope const poly(-1.0F, -1.0F);
   for (std::size_t j = prepared.start; j < prepared.end(); ++j) {
@@ -317,6 +319,7 @@ void WaterPipeline::draw_bridge(const PreparedBatch& prepared,
   const auto& bridge_uniforms = m_bridge_uniforms;
   auto& state = context.state;
   const auto& fog_mask = feature.fog_mask;
+  Texture* const fog_mask_tex = context.textures.resolve(fog_mask.texture);
   if (state.bound_shader != bridge_shader) {
     bridge_shader->use();
     set_water_environment(bridge_shader, bridge_uniforms, context.frame);
@@ -324,7 +327,7 @@ void WaterPipeline::draw_bridge(const PreparedBatch& prepared,
     state.bound_texture = nullptr;
   }
 
-  const bool has_fog_mask = fog_mask.enabled && (fog_mask.texture != nullptr);
+  const bool has_fog_mask = fog_mask.enabled && (fog_mask_tex != nullptr);
 
   std::optional<BlendScope> reveal_blend_scope;
   if (has_fog_mask) {
@@ -347,8 +350,8 @@ void WaterPipeline::draw_bridge(const PreparedBatch& prepared,
       bridge_shader->set_uniform(bridge_uniforms.explored_alpha,
                                  feature.visibility.explored_alpha);
     }
-    fog_mask.texture->bind(TextureUnit::terrain_visibility);
-    state.bound_texture = fog_mask.texture;
+    fog_mask_tex->bind(TextureUnit::terrain_visibility);
+    state.bound_texture = fog_mask_tex;
     if (bridge_uniforms.fog_mask_texture != Shader::InvalidUniform) {
       bridge_shader->set_uniform(bridge_uniforms.fog_mask_texture,
                                  TextureUnit::terrain_visibility);
@@ -373,6 +376,7 @@ void WaterPipeline::draw_road(const PreparedBatch& prepared,
   const auto& road_uniforms = m_road_uniforms;
   auto& state = context.state;
   const auto& visibility = feature.visibility;
+  Texture* const visibility_tex = context.textures.resolve(visibility.texture);
   if (state.bound_shader != road_shader) {
     road_shader->use();
     set_water_environment(road_shader, road_uniforms, context.frame);
@@ -380,10 +384,10 @@ void WaterPipeline::draw_road(const PreparedBatch& prepared,
     state.bound_texture = nullptr;
   }
   if (road_uniforms.has_visibility != Shader::InvalidUniform) {
-    int const has_vis = visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+    int const has_vis = visibility.enabled && (visibility_tex != nullptr) ? 1 : 0;
     road_shader->set_uniform(road_uniforms.has_visibility, has_vis);
   }
-  if (visibility.enabled && visibility.texture != nullptr) {
+  if (visibility.enabled && visibility_tex != nullptr) {
     if (road_uniforms.visibility_size != Shader::InvalidUniform) {
       road_shader->set_uniform(road_uniforms.visibility_size, visibility.size);
     }
@@ -394,8 +398,8 @@ void WaterPipeline::draw_road(const PreparedBatch& prepared,
     if (road_uniforms.explored_alpha != Shader::InvalidUniform) {
       road_shader->set_uniform(road_uniforms.explored_alpha, visibility.explored_alpha);
     }
-    visibility.texture->bind(k_visibility_texture_unit);
-    state.bound_texture = visibility.texture;
+    visibility_tex->bind(k_visibility_texture_unit);
+    state.bound_texture = visibility_tex;
     if (road_uniforms.visibility_texture != Shader::InvalidUniform) {
       road_shader->set_uniform(road_uniforms.visibility_texture,
                                k_visibility_texture_unit);

@@ -18,7 +18,7 @@
 #include "app/commander/rts_camera_bookmark.h"
 #include "app/core/frame_snapshot.h"
 #include "game/command/commander_input.h"
-#include "render/entity/combat_dust_renderer.h"
+#include "render/entity/rpg_telegraph_renderer.h"
 
 namespace Engine::Core {
 class Entity;

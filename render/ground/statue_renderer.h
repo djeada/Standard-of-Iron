@@ -23,7 +23,7 @@ public:
                  const std::vector<Game::Map::WorldProp>& world_props = {});
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
 
