@@ -573,7 +573,7 @@ Item {
                             }
 
                             Label {
-                                text: typeof graphics_settings !== 'undefined' ? graphics_settings.get_quality_description() : ""
+                                text: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_description : ""
                                 color: Theme.textSub
                                 font.pixelSize: Design.Typography.body
                                 opacity: 0.7
@@ -778,6 +778,181 @@ Item {
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
+                            }
+
+                            Label {
+                                objectName: "commanderViewGroupHeading"
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                                Layout.topMargin: Theme.spacingSmall
+                                text: qsTr("Leading the commander")
+                                color: Theme.textMain
+                                font.pixelSize: Design.Typography.bodyLarge
+                                font.bold: true
+                            }
+
+                            Label {
+                                text: qsTr("Mouse look and camera while you fight as the commander yourself.")
+                                color: Theme.textDim
+                                font.pixelSize: Design.Typography.label
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: qsTr("Look speed, sideways:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: commander_look_x_slider
+
+                                    objectName: "commander_look_x_slider"
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCommanderLookSensitivity
+                                    to: UiPreferences.maxCommanderLookSensitivity
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.commanderLookSensitivityX
+                                    onMoved: UiPreferences.commanderLookSensitivityX = value
+                                }
+
+                                Label {
+                                    text: root.percent_text(commander_look_x_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Look speed, up and down:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: commander_look_y_slider
+
+                                    objectName: "commander_look_y_slider"
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCommanderLookSensitivity
+                                    to: UiPreferences.maxCommanderLookSensitivity
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.commanderLookSensitivityY
+                                    onMoved: UiPreferences.commanderLookSensitivityY = value
+                                }
+
+                                Label {
+                                    text: root.percent_text(commander_look_y_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Design.IronCheckBox {
+                                objectName: "commanderInvertLookCheck"
+                                Layout.columnSpan: 2
+                                text: qsTr("Invert vertical look")
+                                description: qsTr("Pushing the mouse away from you tilts the view down, as on a flight stick.")
+                                checked: UiPreferences.commanderInvertLookY
+                                onToggled: UiPreferences.commanderInvertLookY = checked
+                            }
+
+                            Label {
+                                text: qsTr("Field of view:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: commander_fov_slider
+
+                                    objectName: "commander_fov_slider"
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCommanderFieldOfViewScale
+                                    to: UiPreferences.maxCommanderFieldOfViewScale
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.commanderFieldOfViewScale
+                                    onMoved: UiPreferences.commanderFieldOfViewScale = value
+                                }
+
+                                Label {
+                                    text: root.percent_text(commander_fov_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Camera distance:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: commander_distance_slider
+
+                                    objectName: "commander_distance_slider"
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCommanderCameraDistance
+                                    to: UiPreferences.maxCommanderCameraDistance
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.commanderCameraDistance
+                                    onMoved: UiPreferences.commanderCameraDistance = value
+                                }
+
+                                Label {
+                                    text: root.percent_text(commander_distance_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("How far the camera stands behind the commander. The mouse wheel changes it while you play.")
+                                color: Theme.textDim
+                                font.pixelSize: Design.Typography.label
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                            }
+
+                            Design.IronCheckBox {
+                                objectName: "commanderGuardToggleCheck"
+                                Layout.columnSpan: 2
+                                text: qsTr("Guard stays up until pressed again")
+                                description: qsTr("Press the guard button once to raise the shield and once more to lower it, instead of holding it down.")
+                                checked: UiPreferences.commanderGuardIsToggle
+                                onToggled: UiPreferences.commanderGuardIsToggle = checked
                             }
                         }
 

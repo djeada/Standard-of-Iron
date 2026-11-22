@@ -84,6 +84,14 @@ void TerrainPipeline::cache_grass_uniforms() {
   m_grass_uniforms.camera_pos = m_grass_shader->optional_uniform_handle("u_camera_pos");
   m_grass_uniforms.ambient_boost =
       m_grass_shader->optional_uniform_handle("u_ambient_boost");
+  m_grass_uniforms.has_cover_texture =
+      m_grass_shader->optional_uniform_handle("u_has_cover_tex");
+  m_grass_uniforms.cover_texture =
+      m_grass_shader->optional_uniform_handle("u_cover_tex");
+  m_grass_uniforms.cover_uv_scale =
+      m_grass_shader->optional_uniform_handle("u_cover_uv_scale");
+  m_grass_uniforms.cover_uv_offset =
+      m_grass_shader->optional_uniform_handle("u_cover_uv_offset");
 }
 
 void TerrainPipeline::cache_ground_uniforms() {
@@ -241,32 +249,41 @@ void TerrainPipeline::initialize_grass_geometry() {
 
   struct GrassVertex {
     QVector3D position;
-    QVector2D uv;
+    QVector4D uv;
   };
 
   GrassVertex blade_vertices[grass_blade_vertex_count];
 
   constexpr int k_rings = grass_blade_segments + 1;
-  constexpr float k_ring_height[k_rings] = {0.0F, 0.56F, 1.0F};
-  constexpr float k_ring_half_width[k_rings] = {0.50F, 0.33F, 0.07F};
-  constexpr float k_ring_splay[k_rings] = {0.0F, 0.30F, 1.12F};
-  constexpr float k_blade_height_scale[grass_blades_per_tuft] = {1.0F, 0.82F, 0.94F};
-  constexpr float k_blade_splay_scale[grass_blades_per_tuft] = {1.0F, 1.32F, 0.72F};
+  constexpr float k_ring_height[k_rings] = {0.0F, 0.40F, 0.74F, 1.0F};
+  constexpr float k_ring_half_width[k_rings] = {0.34F, 0.31F, 0.20F, 0.04F};
+  constexpr float k_ring_splay[k_rings] = {0.0F, 0.30F, 1.00F, 2.30F};
+  constexpr float k_blade_height_scale[grass_blades_per_tuft] = {
+      1.0F, 0.70F, 0.88F, 0.58F, 0.96F, 0.66F, 0.80F};
+  constexpr float k_blade_splay_scale[grass_blades_per_tuft] = {
+      0.42F, 1.30F, 0.80F, 1.55F, 0.60F, 1.40F, 1.05F};
+  constexpr float k_blade_root_offset[grass_blades_per_tuft] = {
+      0.15F, 1.05F, 0.55F, 1.35F, 0.35F, 1.20F, 0.80F};
+  constexpr float k_blade_angle_jitter[grass_blades_per_tuft] = {
+      0.00F, 0.21F, -0.17F, 0.12F, -0.24F, 0.08F, -0.11F};
 
   for (int blade = 0; blade < grass_blades_per_tuft; ++blade) {
     const float angle = (2.0F * std::numbers::pi_v<float> * static_cast<float>(blade)) /
-                        static_cast<float>(grass_blades_per_tuft);
-    const QVector2D right(std::cos(angle), std::sin(angle));
-    const QVector2D splay(-std::sin(angle), std::cos(angle));
+                            static_cast<float>(grass_blades_per_tuft) +
+                        k_blade_angle_jitter[blade];
+    const QVector2D splay(std::cos(angle), std::sin(angle));
+    const QVector2D right(-splay.y(), splay.x());
     const float height = k_blade_height_scale[blade];
     const float splay_scale = k_blade_splay_scale[blade];
+    const float root_offset = k_blade_root_offset[blade];
 
     auto ring_vertex = [&](int ring, float side, float u) {
-      const QVector2D plane = (right * (side * k_ring_half_width[ring])) +
-                              (splay * (k_ring_splay[ring] * splay_scale));
+      const QVector2D plane =
+          (right * (side * k_ring_half_width[ring])) +
+          (splay * (root_offset + k_ring_splay[ring] * splay_scale));
       GrassVertex out;
       out.position = QVector3D(plane.x(), k_ring_height[ring] * height, plane.y());
-      out.uv = QVector2D(u, k_ring_height[ring]);
+      out.uv = QVector4D(u, k_ring_height[ring], splay.x(), splay.y());
       return out;
     };
 
@@ -306,7 +323,7 @@ void TerrainPipeline::initialize_grass_geometry() {
 
   gl->glEnableVertexAttribArray(normal);
   gl->glVertexAttribPointer(normal,
-                            vec2,
+                            vec4,
                             GL_FLOAT,
                             GL_FALSE,
                             sizeof(GrassVertex),

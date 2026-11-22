@@ -1,6 +1,8 @@
 #pragma once
 
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <QVector4D>
 
 #include <algorithm>
 #include <array>
@@ -180,5 +182,162 @@ fit_shadow_cascade_sphere(const QVector3D& camera_position,
   sphere.radius = std::max(radius * k_shadow_sphere_padding, 1.0F);
   return sphere;
 }
+
+inline constexpr float k_shadow_light_follow_cos = 0.99999848F;
+inline constexpr float k_shadow_caster_height_allowance = 10.0F;
+inline constexpr float k_shadow_default_slab_min = -2.0F;
+inline constexpr float k_shadow_default_slab_max = 6.0F;
+
+struct ShadowLightBasis {
+  QVector3D direction{0.0F, 1.0F, 0.0F};
+  QVector3D right{1.0F, 0.0F, 0.0F};
+  QVector3D up{0.0F, 0.0F, 1.0F};
+};
+
+[[nodiscard]] inline auto
+follow_shadow_light_direction(const QVector3D& held,
+                              const QVector3D& sun_direction) noexcept -> QVector3D {
+  if (held.isNull() ||
+      QVector3D::dotProduct(sun_direction, held) < k_shadow_light_follow_cos) {
+    return sun_direction;
+  }
+  return held;
+}
+
+[[nodiscard]] inline auto
+shadow_light_basis(const QVector3D& light_direction) noexcept -> ShadowLightBasis {
+  const QVector3D reference =
+      std::abs(QVector3D::dotProduct(light_direction, QVector3D(0, 1, 0))) > 0.96F
+          ? QVector3D(0, 0, 1)
+          : QVector3D(0, 1, 0);
+  ShadowLightBasis basis;
+  basis.direction = light_direction;
+  basis.right = QVector3D::crossProduct(reference, light_direction).normalized();
+  basis.up = QVector3D::crossProduct(light_direction, basis.right).normalized();
+  return basis;
+}
+
+struct ShadowSunThrow {
+  float stretch = 0.0F;
+  float rigged_slack = 6.0F;
+  float throw_scale = 1.0F;
+};
+
+[[nodiscard]] inline auto
+shadow_sun_throw(const QVector3D& light_direction) noexcept -> ShadowSunThrow {
+  ShadowSunThrow sun;
+  sun.stretch = std::hypot(light_direction.x(), light_direction.z()) /
+                std::max(light_direction.y(), 0.15F);
+  sun.rigged_slack = 6.0F + 4.0F * std::min(sun.stretch, 4.0F);
+  sun.throw_scale = std::sqrt(1.0F + sun.stretch * sun.stretch);
+  return sun;
+}
+
+[[nodiscard]] inline auto
+shadow_view_rays(const QMatrix4x4& inverse_view_projection,
+                 const QVector3D& forward) -> std::array<QVector3D, 5> {
+  std::array<QVector3D, 5> view_rays{};
+  std::size_t corner = 0;
+  for (int y : {-1, 1}) {
+    for (int x : {-1, 1}) {
+      const QVector4D near_h =
+          inverse_view_projection *
+          QVector4D(static_cast<float>(x), static_cast<float>(y), -1.0F, 1.0F);
+      const QVector4D far_h =
+          inverse_view_projection *
+          QVector4D(static_cast<float>(x), static_cast<float>(y), 1.0F, 1.0F);
+      view_rays[corner] =
+          (far_h.toVector3DAffine() - near_h.toVector3DAffine()).normalized();
+      ++corner;
+    }
+  }
+  view_rays[4] = forward.normalized();
+  return view_rays;
+}
+
+struct ShadowReceiverSlab {
+  float min_y = k_shadow_default_slab_min;
+  float max_y = k_shadow_default_slab_max;
+};
+
+[[nodiscard]] inline auto
+finish_shadow_receiver_slab(float terrain_min_y,
+                            float terrain_max_y) noexcept -> ShadowReceiverSlab {
+  ShadowReceiverSlab slab;
+  if (terrain_min_y <= terrain_max_y) {
+    slab.min_y = terrain_min_y;
+    slab.max_y = terrain_max_y;
+  }
+  slab.max_y += k_shadow_caster_height_allowance;
+  return slab;
+}
+
+struct ShadowCascadeFrame {
+  QVector3D center;
+  float radius = 1.0F;
+  float world_texel = 0.0F;
+  float depth_span = 0.0F;
+  QMatrix4x4 light_view;
+  QMatrix4x4 light_projection;
+  QMatrix4x4 light_view_projection;
+};
+
+[[nodiscard]] inline auto
+fit_shadow_cascade_frame(const ShadowCascadeSphere& sphere,
+                         const ShadowLightBasis& light,
+                         int resolution) -> ShadowCascadeFrame {
+  ShadowCascadeFrame frame;
+  frame.radius = std::ceil(sphere.radius * 16.0F) / 16.0F;
+  frame.world_texel =
+      (frame.radius * 2.0F) / static_cast<float>(std::max(resolution, 1));
+  QVector3D center = sphere.center;
+  center -= light.right *
+            std::fmod(QVector3D::dotProduct(center, light.right), frame.world_texel);
+  center -=
+      light.up * std::fmod(QVector3D::dotProduct(center, light.up), frame.world_texel);
+  frame.center = center;
+  frame.depth_span = frame.radius * 6.0F - 0.1F;
+  frame.light_view.lookAt(
+      center + light.direction * (frame.radius * 2.5F), center, light.up);
+  frame.light_projection.ortho(-frame.radius,
+                               frame.radius,
+                               -frame.radius,
+                               frame.radius,
+                               0.1F,
+                               frame.radius * 6.0F);
+  frame.light_view_projection = frame.light_projection * frame.light_view;
+  return frame;
+}
+
+struct ShadowCascadeCull {
+  QVector3D center;
+  float radius = 0.0F;
+  QVector3D light_right;
+  QVector3D light_up;
+  QVector3D camera_position;
+  float receiver_near = 0.0F;
+  float receiver_far = 0.0F;
+  float receiver_margin = 0.0F;
+  float ground_height = 0.0F;
+  float shadow_throw = 1.0F;
+  float min_caster_radius = 0.0F;
+
+  [[nodiscard]] auto accepts(const QVector3D& caster_center,
+                             float caster_radius) const noexcept -> bool {
+    const QVector3D relative = caster_center - center;
+    const float reach = radius + caster_radius;
+    if (std::abs(QVector3D::dotProduct(relative, light_right)) > reach ||
+        std::abs(QVector3D::dotProduct(relative, light_up)) > reach) {
+      return false;
+    }
+    const float caster_height =
+        std::max(0.0F, caster_center.y() + caster_radius - ground_height);
+    const float receiver_reach =
+        caster_radius + receiver_margin + caster_height * shadow_throw;
+    const float distance = (caster_center - camera_position).length();
+    return distance + receiver_reach >= receiver_near &&
+           distance - receiver_reach <= receiver_far;
+  }
+};
 
 } // namespace Render::GL

@@ -8,6 +8,8 @@ add_executable(
     app/achievement_tracker_test.cpp
     app/match_stats_reporter_test.cpp
     app/session_timeline_test.cpp
+    app/version_info_test.cpp
+    app/language_override_test.cpp
     core/audio_system_test.cpp
     world/ambient_state_hysteresis_test.cpp
     world/troops_under_attack_alarm_test.cpp
@@ -45,7 +47,10 @@ add_executable(
     core/commander_defense_windows_test.cpp
     core/commander_accessibility_test.cpp
     core/commander_lifecycle_soak_test.cpp
+    core/commander_bearings_test.cpp
+    core/commander_finale_test.cpp
     core/commander_lock_on_test.cpp
+    core/commander_status_builder_test.cpp
     core/commander_stage_owners_test.cpp
     core/commander_presentation_trace_test.cpp
     core/commander_view_model_input_test.cpp

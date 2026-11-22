@@ -48,6 +48,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/scatter_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_linear_command_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/directional_shadow_pass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/effects_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_command_executor.cpp

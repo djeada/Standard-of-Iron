@@ -13,13 +13,13 @@ in vec2 v_uv;
 in float v_vertex_displacement;
 in float v_entry_mask;
 in float v_feature_foot;
+in vec2 v_landform;
 
 layout(location = 0) out vec4 frag_color;
 
 uniform vec3 u_grass_primary, u_grass_secondary, u_grass_dry, u_soil_color;
 uniform vec3 u_rock_low, u_rock_high, u_tint;
 uniform int u_ground_type;
-uniform int u_terrain_type;
 uniform vec2 u_noise_offset;
 uniform float u_tile_size, u_macro_noise_scale, u_detail_noise_scale;
 uniform float u_slope_rock_threshold, u_slope_rock_sharpness;
@@ -34,7 +34,7 @@ const float k_soi_tuft_light = 1.10;
 const float k_soi_sod_amount = 0.30;
 const float k_soi_earth_fleck_amount = 0.55;
 const float k_soi_terrain_relief_damping = 0.68;
-const float k_soi_meadow_drift_strength = 0.48;
+const float k_soi_meadow_drift_strength = 0.60;
 const float k_soi_meadow_cured_share = 0.42;
 const float k_soi_clump_frequency = 2.6;
 const float k_soi_clump_contrast = 0.20;
@@ -45,6 +45,22 @@ const float k_soi_stroke_frequency = 3.4;
 const float k_soi_stroke_light = 0.20;
 const float k_soi_stroke_dark = 0.13;
 const float k_soi_meadow_frequency = 0.030;
+const float k_soi_strata_frequency = 0.95;
+const float k_soi_unlit_shadow_share = 0.30;
+const float k_soi_strata_contrast = 0.44;
+const float k_soi_strata_lip = 0.30;
+const float k_soi_strata_undercut = 0.26;
+const float k_soi_snow_drift_frequency = 1.6;
+const vec2 k_soi_snow_drift_axis = vec2(0.83, 0.56);
+const float k_soi_snow_tuft_burial = 0.82;
+const float k_soi_sward_lean = 0.785;
+const float k_soi_sward_frequency = 1.85;
+const float k_soi_sward_fine_frequency = 4.6;
+const float k_soi_sward_light = 0.20;
+const float k_soi_sward_dark = 0.22;
+const float k_soi_sward_gap = 0.15;
+const float k_soi_sward_hue = 0.30;
+const float k_soi_sward_fine_amount = 0.50;
 const float k_soi_normal_field_curvature_trust = 0.0;
 const float k_soi_terrain_hue_scale = 0.042;
 const float k_soi_terrain_hue_amount = 0.32;
@@ -186,6 +202,70 @@ vec2 soi_grass_strokes(vec2 p) {
     }
   }
   return vec2(best, tone);
+}
+
+struct PaintedSward {
+  float tone;
+  float cover;
+  float variety;
+};
+
+PaintedSward soi_painted_sward(vec2 p, float softness, float sparsity) {
+  vec2 cell = floor(p);
+  vec2 local = fract(p);
+  PaintedSward sward = PaintedSward(0.0, 0.0, 0.5);
+  float best_rank = -1.0;
+  for (int y = -1; y <= 1; ++y) {
+    for (int x = -1; x <= 1; ++x) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 jitter = hash22(cell + offset);
+      float seed = fract(sin(dot(cell + offset, vec2(41.3, 289.1))) * 43758.5453);
+      if (seed < mix(0.05, 0.20, sparsity)) {
+        continue;
+      }
+      float angle = k_soi_sward_lean + 0.55 * jitter.x;
+      vec2 up = vec2(cos(angle), sin(angle));
+      vec2 side = vec2(-up.y, up.x);
+      float reach = 0.70 + 0.46 * fract(seed * 3.17);
+      vec2 q = local - (offset + 0.5 + 0.46 * jitter - up * reach * 0.42);
+      float t = dot(q, up) / reach;
+      if (t < -0.05 || t > 1.02) {
+        continue;
+      }
+      float across = dot(q, side);
+      float spread = (0.38 + 0.24 * fract(seed * 7.31)) * mix(1.0, 0.88, sparsity);
+      float fan = spread * (0.14 + 0.86 * pow(clamp(t, 0.0, 1.0), 0.72));
+      float u = across / max(fan, 1e-4);
+      if (abs(u) > 1.0) {
+        continue;
+      }
+      float blade_count = 4.0 + floor(fract(seed * 5.93) * 3.0);
+      float blade_position = (u * 0.5 + 0.5) * blade_count;
+      float blade_id = floor(blade_position);
+      float blade_seed = fract(sin(blade_id * 17.17 + seed * 91.7) * 43758.5453);
+      float centre = 1.0 - abs((blade_id + 0.5) / blade_count * 2.0 - 1.0);
+      float blade_length = mix(0.62, 1.0, blade_seed) * mix(0.78, 1.0, centre);
+      float blade_t = t / blade_length;
+      float blade_half = 0.5 * (1.0 - smoothstep(0.64, 1.0, blade_t)) + 0.05;
+      float blade_soft =
+          clamp(softness * blade_count / max(2.0 * fan, 1e-4), 0.04, 0.5);
+      float inside = (1.0 - smoothstep(blade_half - blade_soft,
+                                       blade_half,
+                                       abs(fract(blade_position) - 0.5))) *
+                     smoothstep(-0.04, 0.04, t) * (1.0 - step(1.0, blade_t));
+      float rank = seed + 0.001;
+      if (inside > 0.35 && rank > best_rank) {
+        best_rank = rank;
+        sward.tone = clamp(mix(-1.0, 1.0, smoothstep(0.02, 0.92, blade_t)) +
+                               (blade_seed - 0.5) * 0.5,
+                           -1.0,
+                           1.0);
+        sward.cover = inside;
+        sward.variety = fract(seed * 13.7);
+      }
+    }
+  }
+  return sward;
 }
 
 float ecology_noise(vec2 p) {
@@ -488,8 +568,8 @@ void main() {
   float biome_rocky = float(u_ground_type == k_soil_rocky);
   float biome_alpine = float(u_ground_type == k_alpine_mix);
   float biome_fertile = float(u_ground_type == k_soil_fertile);
-  float hill_surface = float(u_terrain_type == 1);
-  float mountain_surface = float(u_terrain_type == 2);
+  float mountain_surface = clamp(v_landform.y, 0.0, 1.0);
+  float hill_surface = clamp(v_landform.x, 0.0, 1.0 - mountain_surface);
 
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
@@ -902,7 +982,7 @@ void main() {
   vec3 sunlit_meadow = mix(grass_color, u_grass_dry, k_soi_meadow_cured_share) * 1.05;
   vec3 deep_meadow = mix(grass_color, u_grass_secondary, 0.55) * 0.88;
   vec3 meadow_tone =
-      mix(deep_meadow, sunlit_meadow, smoothstep(0.20, 0.80, meadow_drift));
+      mix(deep_meadow, sunlit_meadow, smoothstep(0.34, 0.66, meadow_drift));
   grass_color = mix(grass_color, meadow_tone, k_soi_meadow_drift_strength);
 
   vec3 cropped_sward = mix(u_grass_dry, u_grass_primary, 0.45);
@@ -943,36 +1023,67 @@ void main() {
       mix(grass_color,
           mix(sod_lush, sod_cured, smoothstep(-0.28, 0.28, sod + dry_patch * 0.20)),
           k_soi_sod_amount);
+  float sward_height = 0.5;
 #if SOI_SURFACE_DETAIL
   {
-    vec2 clump_coord = v_world_pos.xz * k_soi_clump_frequency + domain_warp * 0.35;
-    float clump_fade =
-        1.0 - smoothstep(0.22, 0.80, max(length(fwidth(clump_coord)), 1e-5));
-    if (clump_fade > k_soi_band_epsilon) {
-      vec2 clump = soi_grass_clump(clump_coord);
-      float swing = (clump.x - 0.5) * 2.0 * clump.y;
-      vec3 clump_color = grass_color * (1.0 + swing * k_soi_clump_contrast);
-      clump_color = mix(clump_color,
-                        mix(deep_sward, cropped_sward, clump.x),
-                        k_soi_clump_hue * clump.y);
-      grass_color = mix(grass_color, clump_color, clump_fade);
+    float steppe =
+        clamp(biome_dry * 0.70 + biome_rocky * 0.85 + biome_alpine * 0.45, 0.0, 1.0);
+    steppe = clamp(steppe * (0.80 + 0.45 * sparse_cover - 0.30 * lush_patch), 0.0, 1.0);
+    float cured =
+        clamp(dry_patch * 0.75 + sparse_cover * 0.25, 0.0, 1.0) * (1.0 - steppe);
+    float sward_scale = mix(1.0, 0.82, biome_dry) * mix(1.0, 0.88, biome_rocky);
+    vec2 sward_coord =
+        v_world_pos.xz * k_soi_sward_frequency * sward_scale + domain_warp * 0.30;
+    float sward_footprint = max(length(fwidth(sward_coord)), 1e-5);
+    float sward_fade = 1.0 - smoothstep(0.16, 0.62, sward_footprint);
+    vec3 open_earth = mix(u_soil_color, u_grass_dry, 0.22) *
+                      (0.92 + surface_detail * 0.10 + granular * 0.08);
+    if (sward_fade > k_soi_band_epsilon) {
+      PaintedSward tufts = soi_painted_sward(
+          sward_coord, clamp(sward_footprint * 0.9, 0.012, 0.20), steppe);
+      float tall_sward = smoothstep(0.30, 0.70, 0.5 + sod * 0.9 - dry_patch * 0.25);
+      float strength = sward_fade * mix(0.66, 1.0, max(tall_sward, steppe));
+      float lit = max(tufts.tone, 0.0);
+      float shaded = max(-tufts.tone, 0.0);
+      float value = 1.0 + lit * k_soi_sward_light - shaded * k_soi_sward_dark;
+      vec3 crown_color = mix(cropped_sward, sunlit_meadow, 0.5) * 1.06;
+      vec3 lush_tuft = mix(deep_sward, crown_color, smoothstep(-0.6, 0.9, tufts.tone));
+      vec3 straw_tuft = mix(mix(u_grass_dry, u_soil_color, 0.42) * 0.80,
+                            mix(u_grass_dry, vec3(0.86, 0.76, 0.46), 0.45) * 1.14,
+                            smoothstep(-0.7, 0.8, tufts.tone));
+      vec3 green_tuft = mix(u_grass_primary * 0.74,
+                            mix(u_grass_primary, u_grass_secondary, 0.5) * 1.02,
+                            smoothstep(-0.7, 0.8, tufts.tone));
+      straw_tuft = mix(straw_tuft, green_tuft, step(0.72, tufts.variety));
+      vec3 cured_tuft = mix(mix(u_grass_dry, u_grass_primary, 0.40) * 0.86,
+                            mix(u_grass_dry, u_grass_secondary, 0.25) * 1.08,
+                            smoothstep(-0.7, 0.8, tufts.tone));
+      lush_tuft = mix(lush_tuft, cured_tuft, cured * 0.80);
+      vec3 tuft_color = mix(lush_tuft, straw_tuft, steppe);
+      tuft_color =
+          mix(tuft_color, grass_color, (0.35 + 0.30 * tufts.variety) * (1.0 - steppe));
+      vec3 painted_tuft =
+          mix(grass_color, tuft_color, mix(k_soi_sward_hue, 0.88, steppe)) * value;
+      vec3 painted_gap =
+          mix(grass_color * (1.0 - k_soi_sward_gap * (1.0 - 0.5 * cured)),
+              open_earth,
+              steppe * 0.86);
+      vec3 painted = mix(painted_gap, painted_tuft, tufts.cover);
+      grass_color = mix(grass_color, painted, strength);
+      sward_height = mix(0.5, tufts.cover * (0.55 + 0.45 * lit), sward_fade);
     }
-    vec2 tussock_field_coord =
-        v_world_pos.xz * k_soi_tussock_frequency - domain_warp * 0.50 + vec2(17.0, 9.0);
-    float tussock_field_fade =
-        1.0 - smoothstep(0.18, 0.70, max(length(fwidth(tussock_field_coord)), 1e-5));
-    if (tussock_field_fade > k_soi_band_epsilon) {
-      vec2 patch_cell = soi_grass_clump(tussock_field_coord);
-      grass_color *= 1.0 + (patch_cell.x - 0.5) * 2.0 * patch_cell.y *
-                               k_soi_tussock_contrast * tussock_field_fade;
-    }
-    vec2 stroke_coord = v_world_pos.xz * k_soi_stroke_frequency + domain_warp * 0.20;
-    float stroke_fade =
-        1.0 - smoothstep(0.10, 0.34, max(length(fwidth(stroke_coord)), 1e-5));
-    if (stroke_fade > k_soi_band_epsilon) {
-      vec2 stroke = soi_grass_strokes(stroke_coord);
-      float lift = stroke.y > 0.45 ? k_soi_stroke_light : -k_soi_stroke_dark;
-      grass_color *= 1.0 + stroke.x * lift * stroke_fade;
+    vec2 fine_coord = v_world_pos.xz * k_soi_sward_fine_frequency * sward_scale -
+                      domain_warp * 0.45 + vec2(17.0, 9.0);
+    float fine_footprint = max(length(fwidth(fine_coord)), 1e-5);
+    float fine_fade = 1.0 - smoothstep(0.14, 0.50, fine_footprint);
+    if (fine_fade > k_soi_band_epsilon) {
+      PaintedSward blades = soi_painted_sward(
+          fine_coord, clamp(fine_footprint * 0.9, 0.012, 0.20), steppe * 0.6);
+      float value =
+          1.0 +
+          blades.cover * blades.tone * 0.5 * (k_soi_sward_light + k_soi_sward_dark) -
+          (1.0 - blades.cover) * k_soi_sward_gap * 0.6;
+      grass_color *= mix(1.0, value, fine_fade * k_soi_sward_fine_amount);
     }
   }
 #endif
@@ -1169,6 +1280,37 @@ void main() {
     rock_color *= 1.0 + rock_grain * 0.075;
     vec3 scree_color = mix(u_rock_low, u_soil_color, 0.24) * (0.90 + 0.14 * rock_value);
     rock_color = mix(rock_color, scree_color, mountain_scree * 0.42);
+    {
+      float strata_wander =
+          ecology_noise(world_coord * 0.07 + vec2(31.0, -12.0)) * 1.6 +
+          ecology_noise(world_coord * 0.31 + vec2(-9.0, 44.0)) * 0.40;
+      float strata_weight = smoothstep(0.14, 0.46, slope);
+      vec3 warm_layer = vec3(1.10, 1.01, 0.88);
+      vec3 cool_layer = vec3(0.90, 0.96, 1.04);
+      for (int bed = 0; bed < 2; ++bed) {
+        float frequency =
+            bed == 0 ? k_soi_strata_frequency : k_soi_strata_frequency * 3.3;
+        float amount = bed == 0 ? 1.0 : 0.34;
+        float strata_coord = v_world_pos.y * frequency +
+                             strata_wander * (bed == 0 ? 1.0 : 1.9) + float(bed) * 3.7;
+        float strata_fade =
+            1.0 - smoothstep(0.22, 0.75, max(fwidth(strata_coord), 1e-5));
+        float layer = floor(strata_coord);
+        float within = fract(strata_coord);
+        float layer_tone = fract(sin(layer * 12.9898 + 4.1) * 43758.5453);
+        float layer_hue = fract(sin(layer * 78.233 + 1.7) * 43758.5453);
+        float lip =
+            smoothstep(0.82, 0.93, within) * (1.0 - smoothstep(0.93, 1.0, within));
+        float undercut = 1.0 - smoothstep(0.0, 0.16, within);
+        float weight = strata_weight * strata_fade * amount;
+        rock_color *= mix(vec3(1.0),
+                          mix(cool_layer, warm_layer, layer_hue) *
+                              (1.0 + (layer_tone - 0.5) * k_soi_strata_contrast),
+                          weight);
+        rock_color *= 1.0 + lip * k_soi_strata_lip * weight;
+        rock_color *= 1.0 - undercut * k_soi_strata_undercut * weight;
+      }
+    }
     float crag_shadow = mountain_crag * gully_mask * (0.35 + 0.65 * leeward_aspect);
     rock_color *= 1.0 - crag_shadow * 0.14;
 
@@ -1270,6 +1412,25 @@ void main() {
     alpine_snow_color = mix(alpine_snow_color * vec3(0.86, 0.85, 0.82),
                             alpine_snow_color,
                             alpine_snow_core);
+    {
+      float drift_coord =
+          dot(world_coord, k_soi_snow_drift_axis) * k_soi_snow_drift_frequency +
+          ecology_noise(world_coord * 0.22 + vec2(14.0, -52.0)) * 3.4 +
+          ecology_noise(world_coord * 0.71 + vec2(-33.0, 8.0)) * 0.9;
+      float drift_fade = band_limit(coord_footprint, k_soi_snow_drift_frequency);
+      float ripple = sin(drift_coord * 6.2831853) * 0.5 + 0.5;
+      float crest = smoothstep(0.55, 0.95, ripple);
+      float trough = 1.0 - smoothstep(0.05, 0.45, ripple);
+      float drifted =
+          drift_fade * alpine_snow_core * (1.0 - smoothstep(0.10, 0.30, slope));
+      alpine_snow_color *= 1.0 + (crest * 0.045 - trough * 0.075) * drifted;
+      alpine_snow_color = mix(alpine_snow_color,
+                              alpine_snow_color * vec3(0.84, 0.91, 1.05),
+                              trough * 0.40 * drifted);
+      float tuft_poke = smoothstep(0.55, 0.95, sward_height) *
+                        (1.0 - alpine_snow_core * k_soi_snow_tuft_burial);
+      alpine_snow_mask *= 1.0 - tuft_poke * 0.85;
+    }
     float exposed_face = alpine_cover * (1.0 - alpine_snow_slope_retention);
     terrain_color *= mix(vec3(1.0), vec3(0.72, 0.75, 0.79), exposed_face);
     terrain_color = mix(terrain_color, alpine_snow_color, alpine_snow_mask);
@@ -1515,7 +1676,11 @@ void main() {
       terrain_color *
       (ambient_term + sun_light * (ndl * direct_occlusion * 0.76 + wet_glint) + sheen) *
       u_ambient_boost * environment_exposure();
-  lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
+  lit_color = apply_directional_shadow(
+      lit_color,
+      v_world_pos,
+      detail_normal,
+      mix(k_soi_unlit_shadow_share, 1.0, smoothstep(0.03, 0.42, ndl)));
   float landform_fill = smoothstep(0.12, 0.62, slope) *
                         clamp(hill_surface * 0.72 + mountain_surface, 0.0, 1.0);
   vec3 landform_fill_color = mix(environment_ground_bounce_color(),

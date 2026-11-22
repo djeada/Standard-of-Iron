@@ -80,6 +80,16 @@ RowLayout {
         return commander_status && commander_status[key] !== undefined ? commander_status[key] : fallback;
     }
 
+    function key_for(actionId) {
+        var bindings = InputBindings.actions;
+        var label = InputBindings.display_shortcut_for(actionId);
+        return label && label.length > 0 ? label : "?";
+    }
+
+    function move_keys() {
+        return key_for("commander.move_forward") + key_for("commander.strafe_left") + key_for("commander.move_back") + key_for("commander.strafe_right");
+    }
+
     function ratio_color(ratio) {
         if (ratio > 0.6)
             return Theme.accent;
@@ -719,7 +729,7 @@ RowLayout {
                 rowSpacing: bottomRoot.fpv_mode ? 1 : 4
 
                 Repeater {
-                    model: bottomRoot.fpv_mode ? [qsTr("[LMB] Strike  [RMB] Guard"), qsTr("[Space] Dodge  [Alt] Jump"), qsTr("[WASD] Move  [Shift] Sprint"), qsTr("[Tab] Cycle Target  [3] Aura  [C] Camera"), qsTr("[R] Rally Orders  [Enter] Return to RTS"), qsTr("[F] Bash  [1] Rush  [2] Second Wind")] : [qsTr("[LMB] Strike  [RMB] Guard"), qsTr("[WASD] Move  [Shift] Sprint"), qsTr("[Space] Dodge  [Alt] Jump"), qsTr("[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash"), qsTr("[R] Place Rally  [C] Camera  [Enter] Return to RTS")]
+                    model: bottomRoot.fpv_mode ? [qsTr("[%1] Strike  [%2] Guard").arg(bottomRoot.key_for("commander.primary_action")).arg(bottomRoot.key_for("commander.secondary_action")), qsTr("[%1] Dodge  [%2] Jump").arg(bottomRoot.key_for("commander.dodge")).arg(bottomRoot.key_for("commander.jump")), qsTr("[%1] Move  [%2] Sprint").arg(bottomRoot.move_keys()).arg(bottomRoot.key_for("commander.sprint")), qsTr("[%1] Lock On  [%2] Aura  [%3] Camera").arg(bottomRoot.key_for("commander.cycle_lock_on")).arg(bottomRoot.key_for("commander.ability_aura")).arg(bottomRoot.key_for("commander.toggle_camera_mode")), qsTr("[%1] Rally Orders  [%2] Return to RTS").arg(bottomRoot.key_for("commander.rally")).arg(bottomRoot.key_for("global.toggle_control_mode")), qsTr("[%1] Bash  [%2] Rush  [%3] Second Wind").arg(bottomRoot.key_for("commander.special_action")).arg(bottomRoot.key_for("commander.ability_vanguard_rush")).arg(bottomRoot.key_for("commander.ability_second_wind"))] : [qsTr("[%1] Strike  [%2] Guard").arg(bottomRoot.key_for("commander.primary_action")).arg(bottomRoot.key_for("commander.secondary_action")), qsTr("[%1] Move  [%2] Sprint").arg(bottomRoot.move_keys()).arg(bottomRoot.key_for("commander.sprint")), qsTr("[%1] Dodge  [%2] Jump").arg(bottomRoot.key_for("commander.dodge")).arg(bottomRoot.key_for("commander.jump")), qsTr("[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash").arg(bottomRoot.key_for("commander.cycle_lock_on")).arg(bottomRoot.key_for("commander.ability_vanguard_rush")).arg(bottomRoot.key_for("commander.ability_second_wind")).arg(bottomRoot.key_for("commander.ability_aura")).arg(bottomRoot.key_for("commander.special_action")), qsTr("[%1] Place Rally  [%2] Camera  [%3] Return to RTS").arg(bottomRoot.key_for("rts.commander_rally")).arg(bottomRoot.key_for("commander.toggle_camera_mode")).arg(bottomRoot.key_for("global.toggle_control_mode"))]
 
                     delegate: Text {
                         text: modelData

@@ -14,13 +14,16 @@ struct CommanderActionName {
   const char* name;
 };
 
-constexpr std::array<CommanderActionName, 6> k_commander_action_names{{
+constexpr std::array<CommanderActionName, 9> k_commander_action_names{{
     {CommanderAction::EnterControl, "enter_control"},
     {CommanderAction::ExitControl, "exit_control"},
     {CommanderAction::CycleLockOn, "cycle_lock_on"},
     {CommanderAction::ToggleCameraMode, "toggle_camera_mode"},
     {CommanderAction::ToggleWeaponStance, "toggle_weapon_stance"},
     {CommanderAction::ReleaseForRally, "release_for_rally"},
+    {CommanderAction::ToggleLockOn, "toggle_lock_on"},
+    {CommanderAction::SwitchLockLeft, "switch_lock_left"},
+    {CommanderAction::SwitchLockRight, "switch_lock_right"},
 }};
 
 } // namespace

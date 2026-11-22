@@ -340,6 +340,10 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
     shader.set_uniform(uniforms.has_cover_texture, cover_ready ? 1 : 0);
   }
   if (cover_ready) {
+    if (m_terrain_pipeline != nullptr) {
+      m_terrain_pipeline->m_frame_ground_cover = {
+          height.cover_texture, height.uv_scale, height.uv_offset};
+    }
     height.cover_texture->bind(TextureUnit::terrain_cover);
     if (uniforms.cover_texture != Shader::InvalidUniform) {
       shader.set_uniform(uniforms.cover_texture, TextureUnit::terrain_cover);

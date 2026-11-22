@@ -135,6 +135,25 @@ Item {
     property real focusScreenY: 0
     property real focusScreenHeight: 0
 
+    property bool selfProjected: false
+    property real selfScreenX: 0
+    property real selfScreenY: 0
+
+    function refresh_self_projection() {
+        if (root.projector === null || !root.projector.ready || root.status_value("self_valid", false) !== true || String(root.status_value("fight_context", "none")) === "none") {
+            root.selfProjected = false;
+            return;
+        }
+        var head = root.projector.project(Number(root.status_value("self_x", 0)), Number(root.status_value("self_y", 0)) + 2.25, Number(root.status_value("self_z", 0)));
+        if (head === null) {
+            root.selfProjected = false;
+            return;
+        }
+        root.selfProjected = true;
+        root.selfScreenX = head.x;
+        root.selfScreenY = head.y;
+    }
+
     function refresh_focus_projection() {
         if (root.projector === null || !root.projector.ready || root.status_value("focus_marker_valid", false) !== true) {
             root.focusProjected = false;
@@ -160,6 +179,7 @@ Item {
 
         function onTickChanged() {
             root.refresh_focus_projection();
+            root.refresh_self_projection();
         }
     }
 
@@ -493,6 +513,42 @@ Item {
                     ctx.fillStyle = pipColor;
                     ctx.fill();
                 }
+            }
+        }
+    }
+
+    Canvas {
+        id: selfMarker
+        objectName: "rpgSelfMarker"
+
+        readonly property color fill: root.bronzeBright
+
+        width: root.scaled(22)
+        height: root.scaled(15)
+        x: root.selfScreenX - width / 2
+        y: root.selfScreenY - height
+        visible: opacity > 0.0
+        opacity: root.selfProjected ? 0.92 : 0.0
+
+        onFillChanged: requestPaint()
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.moveTo(1, 1);
+            ctx.lineTo(width - 1, 1);
+            ctx.lineTo(width / 2, height - 1);
+            ctx.closePath();
+            ctx.fillStyle = fill;
+            ctx.fill();
+            ctx.lineWidth = Math.max(1.5, width * 0.09);
+            ctx.strokeStyle = Qt.rgba(0, 0, 0, 0.8);
+            ctx.stroke();
+        }
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.normal
             }
         }
     }
@@ -864,13 +920,29 @@ Item {
         }
     }
 
+    RpgBearingStrip {
+        id: bearingStrip
+        objectName: "rpgBearingStrip"
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.topInset + root.scaled(26)
+        width: Math.min(root.width * 0.46, root.scaled(760))
+        height: root.scaled(36)
+        unit: root.uiScale
+        fontPixels: root.fontSize(Design.Typography.caption)
+        bearings: root.status_value("bearings", [])
+        viewYaw: Number(root.status_value("view_yaw", 0))
+        visible: root.status_value("has_commander", false) === true
+    }
+
     Item {
         id: controlsStrip
         objectName: "rpgControlsStrip"
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: root.topInset + root.scaled(12)
+        anchors.top: bearingStrip.bottom
+        anchors.topMargin: root.scaled(40)
         width: controlsFlow.childrenRect.width + root.scaled(24)
         height: controlsFlow.childrenRect.height + root.scaled(12)
         opacity: 0.0
@@ -983,7 +1055,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: hudBand.edgeMargin
             anchors.bottom: parent.bottom
-            width: Math.min(root.scaled(330), root.width * 0.34)
+            width: Math.min(root.scaled(372), root.width * 0.36)
             height: vitalsColumn.implicitHeight + 2 * root.scaled(11)
 
             Rectangle {
@@ -1067,6 +1139,8 @@ Item {
                         text: String(root.status_value("name", ""))
                         color: root.shade(root.bone, 0.88)
                         elide: Text.ElideRight
+                        fontSizeMode: Text.HorizontalFit
+                        minimumPixelSize: Math.round(root.fontSize(Design.Typography.caption) * 0.78)
                         font.family: Design.Typography.titleFamily
                         font.pixelSize: root.fontSize(Design.Typography.caption)
                         font.letterSpacing: Design.Typography.trackingNormal
@@ -1239,6 +1313,8 @@ Item {
                         text: String(root.status_value("focus_target_name", ""))
                         color: root.shade(root.bone, 0.95)
                         elide: Text.ElideRight
+                        fontSizeMode: Text.HorizontalFit
+                        minimumPixelSize: Math.round(root.fontSize(Design.Typography.label) * 0.74)
                         horizontalAlignment: Text.AlignRight
                         font.family: Design.Typography.titleFamily
                         font.pixelSize: root.fontSize(Design.Typography.label)

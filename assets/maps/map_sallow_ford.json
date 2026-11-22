@@ -92,9 +92,10 @@
       "depth": 14.0,
       "height": 4.2,
       "shape": "corridor",
-      "thickness": 11.0,
-      "rotation": 90.0,
-      "description": "The spur that keeps the two lanes apart the whole way down."
+      "thickness": 12,
+      "rotation": 87,
+      "description": "The spur that keeps the two lanes apart the whole way down.",
+      "taper": 0.55
     },
     {
       "id": "west_shoulder",
@@ -105,22 +106,24 @@
       "depth": 14.0,
       "height": 3.6,
       "shape": "corridor",
-      "thickness": 11.0,
-      "rotation": 90.0,
-      "description": "The shoulder that closes the west flank."
+      "thickness": 10.5,
+      "rotation": 93,
+      "description": "The shoulder that closes the west flank.",
+      "taper": 0.22
     },
     {
       "id": "east_shoulder",
       "type": "hill",
       "x": 59.0,
       "z": 30.0,
-      "width": 50.0,
+      "width": 52,
       "depth": 14.0,
       "height": 3.6,
       "shape": "corridor",
-      "thickness": 11.0,
-      "rotation": 90.0,
-      "description": "The shoulder that closes the east flank."
+      "thickness": 11.5,
+      "rotation": 86,
+      "description": "The shoulder that closes the east flank.",
+      "taper": 0.5
     }
   ],
   "forests": [
@@ -141,6 +144,18 @@
       "x": 36.0,
       "z": 52.0,
       "radius": 4.0
+    },
+    {
+      "id": "north_west_scrub",
+      "radius": 5.5,
+      "x": 7,
+      "z": 8
+    },
+    {
+      "id": "north_east_scrub",
+      "radius": 5,
+      "x": 65,
+      "z": 7
     }
   ],
   "roads": [

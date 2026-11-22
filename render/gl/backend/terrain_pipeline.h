@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QVector2D>
 #include <QVector3D>
 #include <QtOpenGL>
 
@@ -10,6 +11,7 @@
 
 namespace Render::GL {
 class ShaderCache;
+class Texture;
 
 namespace BackendPipelines {
 
@@ -34,6 +36,16 @@ public:
     GL::Shader::UniformHandle viewport_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_cover_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle cover_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle cover_uv_scale{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle cover_uv_offset{GL::Shader::InvalidUniform};
+  };
+
+  struct FrameGroundCover {
+    GL::Texture* texture = nullptr;
+    QVector2D uv_scale{0.0F, 0.0F};
+    QVector2D uv_offset{0.5F, 0.5F};
   };
 
   struct GroundUniforms {
@@ -150,6 +162,7 @@ public:
   GL::Shader* m_terrain_baked_shader = nullptr;
 
   GrassUniforms m_grass_uniforms;
+  FrameGroundCover m_frame_ground_cover;
   GroundUniforms m_ground_uniforms;
   TerrainUniforms m_terrain_uniforms;
   TerrainUniforms m_terrain_baked_uniforms;

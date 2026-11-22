@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/qt/qml/StandardOfIron/">
+        <file alias="soi_resource_utils_test/alias_only.txt">fixtures/resource_utils_alias.txt</file>
+    </qresource>
+</RCC>

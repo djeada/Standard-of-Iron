@@ -76,7 +76,7 @@ TEST(MapEditorMapDataTest, LoadSaveKeepsSnakeCaseSchemaAndPreservesExtraRootFiel
   ASSERT_TRUE(data.load_from_json(input_path));
   ASSERT_EQ(data.world_props().size(), 1);
   EXPECT_EQ(data.world_props().first().type, "dead_tree");
-  ASSERT_TRUE(data.save_to_json(output_path));
+  ASSERT_TRUE(data.save_canonical_json(output_path));
 
   const QJsonObject output = read_json(output_path);
   EXPECT_EQ(output.value(MapJsonKeys::coord_system).toString(), "world");
@@ -118,7 +118,7 @@ TEST(MapEditorMapDataTest, LegacyCamelCaseRootsSaveBackAsSnakeCase) {
 
   MapEditor::MapData data;
   ASSERT_TRUE(data.load_from_json(input_path));
-  ASSERT_TRUE(data.save_to_json(output_path));
+  ASSERT_TRUE(data.save_canonical_json(output_path));
 
   const QJsonObject output = read_json(output_path);
   EXPECT_EQ(output.value(MapJsonKeys::coord_system).toString(), "grid");
@@ -151,7 +151,7 @@ TEST(MapEditorMapDataTest, LegacyFirecampsImportAsWorldPropsOnSave) {
   ASSERT_EQ(data.world_props().size(), 1);
   EXPECT_EQ(data.world_props().first().type, "firecamp");
   EXPECT_FLOAT_EQ(data.world_props().first().radius, 4.0F);
-  ASSERT_TRUE(data.save_to_json(output_path));
+  ASSERT_TRUE(data.save_canonical_json(output_path));
 
   const QJsonObject output = read_json(output_path);
   EXPECT_FALSE(output.contains(MapJsonKeys::firecamps));
@@ -635,7 +635,7 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
   EXPECT_FLOAT_EQ(data.terrain_elements().first().z, 20.13F);
   EXPECT_FLOAT_EQ(data.terrain_elements().first().height, 4.0F);
 
-  ASSERT_TRUE(data.save_to_json(output_path));
+  ASSERT_TRUE(data.save_canonical_json(output_path));
   const QJsonObject output = read_json(output_path);
   const QJsonObject terrain_entry =
       output.value(MapJsonKeys::terrain).toArray().first().toObject();

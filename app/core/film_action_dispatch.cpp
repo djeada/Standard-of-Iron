@@ -49,6 +49,12 @@ auto commander_key(const QString& name) -> int {
   if (key == QLatin1String("d")) {
     return Qt::Key_D;
   }
+  if (key == QLatin1String("q")) {
+    return Qt::Key_Q;
+  }
+  if (key == QLatin1String("e")) {
+    return Qt::Key_E;
+  }
   if (key == QLatin1String("shift")) {
     return Qt::Key_Shift;
   }
@@ -391,8 +397,23 @@ void apply_benchmark_action(GameEngine* engine,
     if (numbers.size() >= 2) {
       commander->mouse_move(numbers[0], numbers[1]);
     }
+  } else if (commander != nullptr && name == QLatin1String("commander_aim")) {
+    if (numbers.size() >= 2) {
+      commander->aim_view_at_world(numbers[0], numbers[1]);
+    }
+  } else if (commander != nullptr && name == QLatin1String("commander_aim_enemy")) {
+    static_cast<void>(commander->aim_view_at_nearest_enemy(
+        numbers.empty() ? 60.0F : numbers[0], false));
+  } else if (commander != nullptr &&
+             name == QLatin1String("commander_aim_enemy_commander")) {
+    static_cast<void>(commander->aim_view_at_nearest_enemy(
+        numbers.empty() ? 400.0F : numbers[0], true));
   } else if (commander != nullptr && name == QLatin1String("commander_lock_on")) {
     commander->cycle_lock_on();
+  } else if (commander != nullptr && name == QLatin1String("commander_lock_toggle")) {
+    commander->toggle_lock_on();
+  } else if (commander != nullptr && name == QLatin1String("commander_lock_switch")) {
+    commander->switch_lock_target(!numbers.empty() && numbers[0] < 0.0F ? -1 : 1);
   } else if (commander != nullptr && name == QLatin1String("commander_guard_down")) {
     commander->secondary_action_down();
   } else if (commander != nullptr && name == QLatin1String("commander_guard_up")) {

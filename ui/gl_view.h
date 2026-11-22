@@ -4,6 +4,7 @@
 
 class QOpenGLDebugLogger;
 
+#include <QOpenGLTextureBlitter>
 #include <QPointer>
 #include <QQmlEngine>
 #include <QQuickFramebufferObject>
@@ -18,6 +19,7 @@ class QOpenGLDebugLogger;
 #include <vector>
 
 #include "game/core/presentation_coverage.h"
+#include "render/adaptive_quality_governor.h"
 #include "render/frame_cadence.h"
 #include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
@@ -39,6 +41,10 @@ public:
   [[nodiscard]] auto is_renderer_ready() const noexcept -> bool {
     return m_renderer_ready;
   }
+
+protected:
+  auto updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNode* override;
+  void itemChange(ItemChange change, const ItemChangeData& value) override;
 
 signals:
   void engine_changed();
@@ -64,7 +70,14 @@ private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
     Render::FrameCadence m_cadence;
+    Render::AdaptiveQualityGovernor m_quality_governor;
+    // Pixel size of the view item; the framebuffer may be smaller (render scale).
+    QSize m_item_pixel_size;
+    bool m_resize_requested = false;
+    QOpenGLTextureBlitter m_software_blitter;
     bool m_ready_reported = false;
+    // Effective visibility of the view, copied in synchronize().
+    bool m_item_visible = true;
     QStringList m_pending_commander_speakers;
     QSize m_size;
     std::chrono::steady_clock::time_point m_last_frame_time{};
@@ -133,6 +146,8 @@ private:
     int m_film_fps{0};
 
     void warm_commander_portraits();
+    void observe_frame_rate(double frame_interval_ms, bool cadence_exempt);
+    [[nodiscard]] auto scaled_framebuffer_size(const QSize& item_pixels) const -> QSize;
     void observe_runtime_benchmark(std::chrono::steady_clock::time_point frame_start,
                                    double update_ms,
                                    double render_ms,

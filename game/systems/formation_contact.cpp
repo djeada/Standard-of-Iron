@@ -7,6 +7,7 @@
 #include "../core/component.h"
 #include "formation_combat_geometry.h"
 #include "formation_geometry_internal.h"
+#include "game/util/planar_math.h"
 
 namespace Game::Systems::FormationCombat {
 namespace {
@@ -535,12 +536,12 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
       constexpr float k_closing_cosine = 0.5F;
       float const vx = target_movement->get_vx();
       float const vz = target_movement->get_vz();
-      float const speed = std::hypot(vx, vz);
+      float const speed = Game::Systems::planar_length(vx, vz);
       float const to_attacker_x =
           attacker_transform->position.x - target_transform->position.x;
       float const to_attacker_z =
           attacker_transform->position.z - target_transform->position.z;
-      float const distance = std::hypot(to_attacker_x, to_attacker_z);
+      float const distance = Game::Systems::planar_length(to_attacker_x, to_attacker_z);
       target_walks_past_or_away = speed > k_walking_speed &&
                                   distance > k_contact_numeric_epsilon &&
                                   (vx * to_attacker_x + vz * to_attacker_z) <

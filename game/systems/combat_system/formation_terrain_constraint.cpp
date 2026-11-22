@@ -3,6 +3,8 @@
 #include <cmath>
 #include <numbers>
 
+#include "game/util/planar_math.h"
+
 namespace Game::Systems::Combat {
 
 auto constrain_step_to_ground(const Pathfinding& pathfinder,
@@ -10,7 +12,7 @@ auto constrain_step_to_ground(const Pathfinding& pathfinder,
                               float& step_x,
                               float& step_z,
                               Pathfinding::Passability passability) -> bool {
-  if (std::hypot(step_x, step_z) <= 0.0001F ||
+  if (Game::Systems::planar_length(step_x, step_z) <= 0.0001F ||
       !pathfinder.is_world_position_walkable(origin, passability)) {
     return false;
   }
@@ -58,7 +60,7 @@ void pull_onto_terrain(const Pathfinding& pathfinder,
   }
   float const dx = anchor_x - destination.x();
   float const dz = anchor_z - destination.z();
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   constexpr float k_pull_step = 0.25F;
   for (float pulled = k_pull_step; pulled < distance; pulled += k_pull_step) {
     float const x = destination.x() + dx / distance * pulled;

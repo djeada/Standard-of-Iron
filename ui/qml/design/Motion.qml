@@ -14,7 +14,10 @@ QtObject {
     readonly property int emphasizedEasing: Easing.OutQuart
     readonly property int exitEasing: Easing.InCubic
 
-    readonly property bool allowAmbientLoops: !reducedMotion
+    // The Low preset is for weak PCs: an endless ornamental loop keeps the
+    // whole window redrawing at full rate even when nothing else moves.
+    readonly property bool lowEndGraphics: (typeof graphics_settings !== "undefined" && graphics_settings) ? graphics_settings.quality_level === 0 : false
+    readonly property bool allowAmbientLoops: !reducedMotion && !lowEndGraphics
 
     function dwellFor(priority) {
         switch (priority) {

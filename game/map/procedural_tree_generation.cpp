@@ -127,7 +127,9 @@ void append_generated_trees(std::vector<WorldProp>& out,
   input.scale_min = rule.scale_min;
   input.scale_max = rule.scale_max;
   input.forest_only = !rule.allowed || canopy_only;
-  input.forest_density_floor = canopy ? k_forest_canopy_density : 0.0F;
+  input.forest_density_floor =
+      canopy ? k_forest_canopy_density * std::max(0.0F, biome_settings.forest_density)
+             : 0.0F;
 
   const SpawnValidationConfig config = make_tree_scatter_spawn_config(
       profile, input, scatter_profile.spawn_edge_padding);

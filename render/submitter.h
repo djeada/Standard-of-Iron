@@ -19,6 +19,10 @@ struct Material;
 class Renderer;
 } // namespace Render::GL
 
+namespace Render::Creature::Pipeline {
+class CreatureSubmissionContext;
+} // namespace Render::Creature::Pipeline
+
 namespace Render::GL {
 
 class ISubmitter {
@@ -30,6 +34,10 @@ public:
   auto operator=(ISubmitter&&) -> ISubmitter& = default;
   virtual ~ISubmitter() = default;
   [[nodiscard]] virtual auto unwrap_submitter() noexcept -> ISubmitter* { return this; }
+  [[nodiscard]] virtual auto creature_submission() noexcept
+      -> Render::Creature::Pipeline::CreatureSubmissionContext* {
+    return nullptr;
+  }
   virtual void mesh(Mesh* mesh,
                     const QMatrix4x4& model,
                     const QVector3D& color,

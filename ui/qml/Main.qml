@@ -469,6 +469,14 @@ ApplicationWindow {
         maxHeight: hud.visible && hud.commander_rpg_mode ? Math.max(0, hud.height - hud.bottom_reserved_height - anchors.topMargin - Design.Metrics.space8) : -1
         z: 12
         visible: mainWindow.game_started && !mainWindow.menu_visible
+
+        opacity: hud.visible && hud.commander_finale ? 0.0 : 1.0
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.normal
+            }
+        }
     }
 
     Rectangle {
@@ -1089,13 +1097,20 @@ ApplicationWindow {
     Design.IronDialog {
         id: error_dialog
 
+        property string renderer_error: ""
+        readonly property bool renderer_failed: renderer_error !== ""
+
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.6, 520)
         title: qsTr("Error")
         tone: "danger"
-        message: game ? game.last_error : ""
+        closePolicy: renderer_failed ? Popup.NoAutoClose : Popup.CloseOnEscape
+        primaryAction: renderer_failed ? qsTr("Quit") : qsTranslate("IronDialog", "OK")
+        message: renderer_failed ? renderer_error : (game ? game.last_error : "")
         onPrimaryActivated: {
-            if (game)
+            if (renderer_failed)
+                game.exit_game();
+            else if (game)
                 game.clear_error();
         }
     }
@@ -1110,8 +1125,12 @@ ApplicationWindow {
 
     Connections {
         function onLast_error_changed() {
-            if (game.last_error !== "" && !mainWindow.suppress_modals)
+            if (!error_dialog.renderer_failed && game.last_error !== "" && !mainWindow.suppress_modals)
                 error_dialog.open();
+        }
+        function onRenderer_failed(error) {
+            error_dialog.renderer_error = error;
+            error_dialog.open();
         }
 
         target: game
@@ -1173,15 +1192,27 @@ ApplicationWindow {
     }
 
     Connections {
+        function onQuality_lowered_automatically(preset_name) {
+            Design.Notifications.push("info", qsTr("Graphics lowered to %1 to keep the battle smooth").arg(preset_name), {
+                    "channel": "graphics-auto-quality",
+                    "detail": qsTr("Pick a preset in Settings to keep your own choice.")
+                });
+        }
+
+        target: typeof graphics_settings !== 'undefined' ? graphics_settings : null
+        ignoreUnknownSignals: true
+    }
+
+    Connections {
         function onHome_attacked(text, world_x, world_z) {
             if (!text || !mainWindow.game_started)
                 return;
             Design.Notifications.urgent(text, {
                     "channel": "home-attacked",
-                    "detail": qsTr("Click to look"),
+                    "detail": hud.commander_rpg_mode ? qsTr("%1 for the army view").arg(InputBindings.display_shortcut_for("global.toggle_control_mode")) : qsTr("Click to look"),
                     "icon": Design.Icons.warning,
                     "activate": function () {
-                        if (typeof game !== 'undefined' && game.camera && game.camera.look_at_world)
+                        if (typeof game !== 'undefined' && game.camera && game.camera.look_at_world && !hud.commander_rpg_mode)
                             game.camera.look_at_world(world_x, world_z);
                     }
                 });

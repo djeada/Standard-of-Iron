@@ -531,6 +531,86 @@ TEST(CommanderCameraRig, AnEnemyAtArmsLengthDoesNotTipTheLensIntoTheGround) {
       << "a melee lock framed the fight from above, looking at the ground";
 }
 
+TEST(CommanderCameraRig, LookingAwayFromALockedTargetKeepsTheHorizon) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  auto forward_y_with_lock_at = [](const QVector3D& target) {
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = default_inputs();
+    inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+    inputs.fight_context = FightContext::Skirmish;
+    inputs.lock_target_active = true;
+    inputs.lock_target_position = target;
+    settle(rig, camera, inputs);
+    return rig.forward().y();
+  };
+
+  float const ahead = forward_y_with_lock_at(QVector3D(0.0F, 0.0F, 6.0F));
+  float const abeam = forward_y_with_lock_at(QVector3D(6.0F, 0.0F, 0.0F));
+  float const behind = forward_y_with_lock_at(QVector3D(0.0F, 0.0F, -6.0F));
+  float const floor = std::sin(-30.0F * 0.017453292519943295F);
+  EXPECT_GT(ahead, floor);
+  EXPECT_GT(abeam, floor)
+      << "a locked enemy off the shoulder pitched the lens at the ground";
+  EXPECT_GT(behind, floor)
+      << "with the locked enemy behind him the player was shown his own feet "
+         "from above";
+  EXPECT_NEAR(behind, abeam, 0.03F)
+      << "once the player has looked away, the lock no longer shapes the view";
+}
+
+TEST(CommanderCameraRig, TheWheelStandsTheCameraOffWithoutLosingTheCommander) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  auto boom_at = [](float scale) {
+    Game::Accessibility::CommanderInput::set_camera_distance_scale(scale);
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = default_inputs();
+    inputs.view_pitch_degrees = k_commander_rest_view_pitch_degrees;
+    settle(rig, camera, inputs);
+    return rig.trace();
+  };
+  auto const near = boom_at(0.7F);
+  auto const rest = boom_at(1.0F);
+  auto const far = boom_at(2.4F);
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+
+  EXPECT_LT(near.boom_unconstrained, rest.boom_unconstrained);
+  EXPECT_GT(far.boom_unconstrained, rest.boom_unconstrained * 1.8F)
+      << "the far end of the wheel has to show the fight, not a metre more";
+  EXPECT_GT(far.eye_unconstrained.y(), rest.eye_unconstrained.y())
+      << "pulling back also climbs, or the heads in front fill the frame";
+
+  for (auto const* trace : {&near, &rest, &far}) {
+    QVector3D const forward =
+        (trace->target_unconstrained - trace->eye_unconstrained).normalized();
+    QVector3D const to_chest = (trace->commander_position +
+                                QVector3D(0.0F, 1.1F, 0.0F) - trace->eye_unconstrained)
+                                   .normalized();
+    float const off_axis_degrees =
+        std::acos(std::clamp(QVector3D::dotProduct(forward, to_chest), -1.0F, 1.0F)) *
+        57.29577951308232F;
+    EXPECT_LT(off_axis_degrees, 30.0F);
+  }
+}
+
+TEST(CommanderCameraRig, TheBowKeepsItsAimingViewWhateverTheWheelSays) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  auto boom_at = [](float scale) {
+    Game::Accessibility::CommanderInput::set_camera_distance_scale(scale);
+    CommanderCameraRig rig;
+    Render::GL::Camera camera;
+    auto inputs = default_inputs();
+    inputs.aiming_bow = true;
+    settle(rig, camera, inputs);
+    return rig.trace().boom_unconstrained;
+  };
+  float const rest = boom_at(1.0F);
+  float const far = boom_at(2.4F);
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  EXPECT_NEAR(rest, far, 1.0e-3F);
+}
+
 TEST(CommanderCameraRig, ResetClearsSmoothedState) {
   CommanderCameraRig rig;
   Render::GL::Camera camera;
@@ -561,6 +641,37 @@ auto rig_inputs_at(float yaw,
 }
 
 } // namespace
+
+TEST(CommanderCameraRigFeelTest, AMousePushedRightTurnsTheLensToItsOwnRight) {
+
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  App::Core::CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  const QVector3D anchor(0.0F, 0.0F, 0.0F);
+
+  for (float const start_yaw : {0.0F, 90.0F, 215.0F}) {
+    CommanderControlController controller;
+    controller.set_view_yaw(start_yaw);
+    controller.set_view_pitch(0.0F);
+    rig.reset();
+    for (int settle = 0; settle < 60; ++settle) {
+      static_cast<void>(rig.update(
+          camera, rig_inputs_at(controller.view_yaw(), anchor, 1.0F / 60.0F)));
+    }
+    const QVector3D right_before = camera.get_right_vector();
+    const QVector3D forward_before = camera.get_forward_vector();
+
+    controller.mouse_move(60.0, 0.0);
+    static_cast<void>(
+        rig.update(camera, rig_inputs_at(controller.view_yaw(), anchor, 1.0F / 60.0F)));
+    const QVector3D forward_after = camera.get_forward_vector();
+
+    EXPECT_GT(QVector3D::dotProduct(forward_after - forward_before, right_before),
+              0.05F)
+        << "from yaw " << start_yaw
+        << " a mouse moved right swung the view to the left";
+  }
+}
 
 TEST(CommanderCameraRigFeelTest, MouseRotationIsAppliedWithoutSmoothingLag) {
   App::Core::CommanderCameraRig rig;

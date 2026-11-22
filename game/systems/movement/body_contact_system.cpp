@@ -15,6 +15,7 @@
 #include "core/entity.h"
 #include "core/system_context.h"
 #include "core/world.h"
+#include "game/util/planar_math.h"
 #include "map/terrain_service.h"
 #include "systems/building_collision_registry.h"
 #include "systems/duel_spacing.h"
@@ -135,7 +136,7 @@ void slide_along_travel(const ContactBody& body,
 
 auto try_push(ContactBody& body, float dx, float dz, bool forward_only) -> bool {
   slide_along_travel(body, dx, dz, forward_only);
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   float const step = std::min(distance, body.separation_remaining);
   if (step <= 1.0e-6F || distance <= 1.0e-6F) {
     return true;
@@ -204,7 +205,7 @@ void resolve_duel_standoffs(
               DuelSpacing::standoff_between(*me_entity, *them_entity).minimum;
           float const px = me.transform->position.x - them.transform->position.x;
           float const pz = me.transform->position.z - them.transform->position.z;
-          float const distance = std::hypot(px, pz);
+          float const distance = Game::Systems::planar_length(px, pz);
           if (distance >= minimum) {
             return;
           }
@@ -293,8 +294,8 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     }
     body.yields_when_idle = !body.movable && body_yields_when_idle(world, entry.id);
     if (body.facts != nullptr && body.facts->desired.valid) {
-      float const speed =
-          std::hypot(body.facts->desired.velocity_x, body.facts->desired.velocity_z);
+      float const speed = Game::Systems::planar_length(body.facts->desired.velocity_x,
+                                                       body.facts->desired.velocity_z);
       if (speed > 1.0e-4F) {
         body.has_travel = true;
         body.travel_x = body.facts->desired.velocity_x / speed;
@@ -358,9 +359,9 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
           if (combined <= 1.0e-4F) {
             return;
           }
-          const float distance =
-              std::hypot(me.transform->position.x - them.transform->position.x,
-                         me.transform->position.z - them.transform->position.z);
+          const float distance = Game::Systems::planar_length(
+              me.transform->position.x - them.transform->position.x,
+              me.transform->position.z - them.transform->position.z);
           if (distance >= combined) {
             return;
           }
@@ -383,7 +384,7 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     const float combined = me.radius + them.radius;
     float px = me.transform->position.x - them.transform->position.x;
     float pz = me.transform->position.z - them.transform->position.z;
-    float distance = std::hypot(px, pz);
+    float distance = Game::Systems::planar_length(px, pz);
     if (distance >= combined) {
       continue;
     }

@@ -14,6 +14,7 @@
 #include "../formation/unit_layout_state.h"
 #include "formation_combat_geometry.h"
 #include "formation_geometry_internal.h"
+#include "game/util/planar_math.h"
 
 namespace Game::Systems::FormationCombat {
 namespace Detail {
@@ -67,8 +68,8 @@ void store_layout_cache(const Engine::Core::Entity& entity,
   cache.layout = layout;
   cache.turn_radius = 0.0F;
   for (auto const& slot : layout.live_slots) {
-    cache.turn_radius =
-        std::max(cache.turn_radius, std::hypot(slot.local_x, slot.local_z));
+    cache.turn_radius = std::max(
+        cache.turn_radius, Game::Systems::planar_length(slot.local_x, slot.local_z));
   }
   cache.extents = compute_formation_extents(layout);
 }
@@ -339,9 +340,9 @@ auto compute_formation_extents(const FormationLayout& layout) -> FormationExtent
   FormationExtents extents;
   extents.body_radius = layout.body_radius;
   for (auto const& slot : layout.live_slots) {
-    extents.live_envelope =
-        std::max(extents.live_envelope,
-                 std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
+    extents.live_envelope = std::max(
+        extents.live_envelope,
+        Game::Systems::planar_length(slot.local_x, slot.local_z) + layout.body_radius);
   }
   extents.minimum_scale = minimum_formation_scale(layout);
   float lateral_extent = layout.body_radius;
@@ -520,7 +521,8 @@ auto minimum_formation_scale(const FormationLayout& layout) -> float {
     for (std::size_t second = first + 1; second < layout.all_slots.size(); ++second) {
       auto const& a = layout.all_slots[first];
       auto const& b = layout.all_slots[second];
-      float const distance = std::hypot(a.local_x - b.local_x, a.local_z - b.local_z);
+      float const distance =
+          Game::Systems::planar_length(a.local_x - b.local_x, a.local_z - b.local_z);
       if (distance > 0.001F) {
         nearest = std::min(nearest, distance);
       }

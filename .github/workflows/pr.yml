@@ -125,6 +125,9 @@ jobs:
       - name: Polish startup regression
         run: bash scripts/verify-polish-startup.sh build/bin/standard_of_iron
 
+      - name: Version option
+        run: bash tests/version_option_test.sh build/bin/standard_of_iron
+
       # SOI_TEST_PROFILE=pr subtracts tests/extended_tests.txt; every binary in
       # the suite list still runs. SOI_TEST_REPORT_DIR collects the GoogleTest
       # JSON the speed gate below reads, which costs the run nothing.

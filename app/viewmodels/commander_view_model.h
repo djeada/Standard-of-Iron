@@ -6,12 +6,14 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
 
 #include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_finale.h"
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "app/core/frame_snapshot.h"
@@ -41,6 +43,7 @@ class CommanderViewModel : public QObject {
   Q_PROPERTY(QString game_mode READ game_mode NOTIFY game_mode_changed)
   Q_PROPERTY(bool available READ available NOTIFY available_changed)
   Q_PROPERTY(QString mode_state READ mode_state NOTIFY mode_state_changed)
+  Q_PROPERTY(QString finale READ finale NOTIFY finale_changed)
 
 public:
   CommanderViewModel(const App::Core::ClientContext& context,
@@ -62,6 +65,17 @@ public:
   }
   [[nodiscard]] auto rpg_mode() const -> bool { return m_game_mode == GameMode::Rpg; }
 
+  [[nodiscard]] auto finale() const -> QString;
+  [[nodiscard]] auto finale_active() const -> bool {
+    return m_finale_kind.load(std::memory_order_acquire) != 0;
+  }
+
+  void conclude_for_outcome(const QString& victory_state);
+
+  void controlled_commander_fell();
+
+  void finish_finale();
+
   Q_INVOKABLE void key_down(int key, int modifiers = 0);
   Q_INVOKABLE void key_up(int key, int modifiers = 0);
   Q_INVOKABLE void release_input();
@@ -74,11 +88,17 @@ public:
   Q_INVOKABLE void mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy);
   Q_INVOKABLE void center_mouse(qreal center_sx, qreal center_sy);
 
+  void aim_view_at_world(float x, float z);
+  auto aim_view_at_nearest_enemy(float max_range, bool commanders_only) -> bool;
+
   Q_INVOKABLE void trigger_aura();
   Q_INVOKABLE void trigger_rally();
   Q_INVOKABLE void dodge();
   Q_INVOKABLE void jump();
   Q_INVOKABLE void cycle_lock_on();
+  Q_INVOKABLE void toggle_lock_on();
+  Q_INVOKABLE void switch_lock_target(int direction);
+  Q_INVOKABLE [[nodiscard]] bool lock_active() const;
   Q_INVOKABLE void special_action();
   Q_INVOKABLE void vanguard_rush();
   Q_INVOKABLE void second_wind();
@@ -144,6 +164,7 @@ signals:
   void game_mode_changed();
   void mode_state_changed();
   void available_changed();
+  void finale_changed();
 
   void active_camera_requested(Render::GL::Camera* camera);
 
@@ -165,6 +186,10 @@ private:
     QString mode_state;
   };
   [[nodiscard]] auto capture_mode_signals() const -> ModeSignalBatch;
+
+  auto begin_finale(App::Core::CommanderFinale::Kind kind) -> bool;
+  void clear_finale();
+  void announce_finale_change();
   void bookmark_rts_camera();
   void restore_rts_camera();
   void emit_mode_signal_changes(const ModeSignalBatch& before);
@@ -206,6 +231,13 @@ private:
 
   bool m_status_published_empty = false;
   bool m_applying_replay = false;
+
+  App::Core::CommanderFinale m_finale;
+  std::atomic<int> m_finale_kind{0};
+  bool m_finale_body_live = false;
+  App::Core::CommanderEntryDive m_entry_dive;
+
+  void show_entry_dive();
 };
 
 } // namespace App::ViewModels

@@ -35,7 +35,7 @@ For real-time play, launch the same mission without `--film` or `--action-fixtur
 Select the commander and press Return. Repeat the route manually, then press
 left/right while acquiring and releasing lock-on. Roll into a wall or friendly
 traffic, repeatedly spend stamina, and verify refusals don't grant free movement.
-Use the configured jump binding from Settings; Space is dodge by default.
+Jump is `V` and dodge is Space by default; both can be rebound in Settings.
 
 Preserve matching baseline/candidate captures and their worktree diffs. Film time
 is controlled and cannot measure real-time input latency or frame pacing. Do not

@@ -57,6 +57,9 @@ private:
     std::size_t cluster_count_per_chunk;
     std::size_t background_blades_per_cell;
     const std::function<bool(float, float, std::uint32_t&)>& add_grass_blade;
+    const std::function<bool(
+        float, float, const QVector3D&, float, float, std::uint32_t&)>& add_flower;
+    float flower_density_scale;
     const std::function<int(Game::Map::TerrainType,
                             Game::Map::TerrainType,
                             Game::Map::TerrainType,
@@ -68,6 +71,8 @@ private:
   void scatter_grass_clusters(const GrassScatterContext& ctx);
 
   void scatter_background_grass(const GrassScatterContext& ctx);
+
+  void scatter_flowers(const GrassScatterContext& ctx);
 
   int m_width = 0;
   int m_height = 0;

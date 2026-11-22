@@ -24,6 +24,8 @@ add_executable(
     tools/map_editor_world_document_test.cpp
     tools/map_editor_road_network_test.cpp
     tools/ninja_reader_commandline_argument_test.cpp
+    tools/map_editor_lossless_save_test.cpp
+    tools/map_editor_world_backdrop_test.cpp
     widget_main.cpp
 )
 target_link_libraries(

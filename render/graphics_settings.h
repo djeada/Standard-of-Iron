@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -94,6 +95,17 @@ struct WeatherBudget {
   float particle_scale = 1.0F;
 };
 
+// The 3D view can be drawn into a smaller framebuffer than the window and
+// stretched to fit; the HUD stays at full resolution. This is the cheapest
+// large saving on fill-rate-bound integrated GPUs, and it also stops a HiDPI
+// laptop panel from making a weak GPU shade every pixel of a 4K screen.
+struct RenderScaleSettings {
+  // Fraction of the window's pixel size per axis.
+  float scale = 1.0F;
+  // Upper bound on drawn pixels (width * height); 0 means no bound.
+  int max_pixels = 0;
+};
+
 struct TemplatePrewarmBudget {
   std::size_t items_per_tick = 160;
   std::uint32_t tick_budget_us = 2000;
@@ -110,9 +122,39 @@ struct GraphicsProfile {
   PostProcessSettings post_process{};
   WeatherBudget weather{};
   TemplatePrewarmBudget prewarm{};
+  RenderScaleSettings render_scale{};
 
   float grass_density = 1.0F;
 };
+
+// Pixel size the 3D view should be drawn at for a window of `window_px`
+// pixels. Never smaller than 1x1, never larger than the window.
+[[nodiscard]] inline auto
+scaled_render_extent(const RenderScaleSettings& settings,
+                     int window_width,
+                     int window_height) noexcept -> std::array<int, 2> {
+  if (window_width <= 0 || window_height <= 0) {
+    return {std::max(window_width, 1), std::max(window_height, 1)};
+  }
+  float factor = std::clamp(settings.scale, 0.25F, 1.0F);
+  if (settings.max_pixels > 0) {
+    const float pixels =
+        static_cast<float>(window_width) * static_cast<float>(window_height);
+    const float cap = static_cast<float>(settings.max_pixels);
+    if (pixels * factor * factor > cap) {
+      factor = std::min(factor, std::sqrt(cap / pixels));
+    }
+  }
+  const int width =
+      std::clamp(static_cast<int>(static_cast<float>(window_width) * factor + 0.5F),
+                 1,
+                 window_width);
+  const int height =
+      std::clamp(static_cast<int>(static_cast<float>(window_height) * factor + 0.5F),
+                 1,
+                 window_height);
+  return {width, height};
+}
 
 namespace Detail {
 
@@ -149,6 +191,7 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
             .prewarm = {.items_per_tick = 96,
                         .tick_budget_us = 1200,
                         .template_cache_budget = 256},
+            .render_scale = {.scale = 0.80F, .max_pixels = 1000000},
             .grass_density = 0.30F,
         },
         GraphicsProfile{
@@ -182,6 +225,7 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
             .prewarm = {.items_per_tick = 160,
                         .tick_budget_us = 2000,
                         .template_cache_budget = 512},
+            .render_scale = {.scale = 1.0F, .max_pixels = 2100000},
             .grass_density = 0.65F,
         },
         GraphicsProfile{
@@ -214,6 +258,7 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
             .prewarm = {.items_per_tick = 320,
                         .tick_budget_us = 4000,
                         .template_cache_budget = 2048},
+            .render_scale = {.scale = 1.0F, .max_pixels = 0},
             .grass_density = 1.0F,
         },
         GraphicsProfile{
@@ -246,6 +291,7 @@ inline constexpr std::array<GraphicsProfile, k_graphics_quality_count>
             .prewarm = {.items_per_tick = 320,
                         .tick_budget_us = 4000,
                         .template_cache_budget = 2048},
+            .render_scale = {.scale = 1.0F, .max_pixels = 0},
             .grass_density = 1.0F,
         },
     }};
@@ -272,6 +318,23 @@ public:
     m_profile.store(&graphics_profile_for(q), std::memory_order_release);
     m_quality.store(q, std::memory_order_release);
     m_generation.fetch_add(1U, std::memory_order_release);
+  }
+
+  // Step down to `lower` because the game measured that it cannot keep up.
+  // Does nothing once the player has picked a preset themselves, or when
+  // `lower` is not actually lower. Safe to call from the render thread; the
+  // GUI picks the change up through auto_lowered_count().
+  auto lower_quality_automatically(GraphicsQuality lower) noexcept -> bool {
+    if (quality_chosen_by_user() || lower >= quality()) {
+      return false;
+    }
+    set_quality(lower);
+    m_auto_lowered_count.fetch_add(1U, std::memory_order_release);
+    return true;
+  }
+
+  [[nodiscard]] auto auto_lowered_count() const noexcept -> std::uint32_t {
+    return m_auto_lowered_count.load(std::memory_order_acquire);
   }
 
   [[nodiscard]] auto quality_chosen_by_user() const noexcept -> bool {
@@ -318,6 +381,9 @@ public:
   }
   [[nodiscard]] auto prewarm_budget() const noexcept -> const TemplatePrewarmBudget& {
     return profile().prewarm;
+  }
+  [[nodiscard]] auto render_scale() const noexcept -> const RenderScaleSettings& {
+    return profile().render_scale;
   }
 
   [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
@@ -385,6 +451,7 @@ private:
   std::atomic<ShaderQuality> m_backend_kind{ShaderQuality::Full};
   std::atomic<std::uint32_t> m_generation{0U};
   std::atomic<bool> m_quality_chosen_by_user{false};
+  std::atomic<std::uint32_t> m_auto_lowered_count{0U};
 };
 
 } // namespace Render

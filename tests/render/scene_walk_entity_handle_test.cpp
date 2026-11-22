@@ -51,20 +51,37 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   return buffer.str();
 }
 
+auto read_scene_walk_sources(const std::filesystem::path& root) -> std::string {
+  std::string combined;
+  for (const char* file : {"scene_walk.cpp",
+                           "scene_walk_internal.h",
+                           "scene_collect.cpp",
+                           "scene_unit_submit.cpp",
+                           "scene_overlays.cpp"}) {
+    const auto text = read_text(root / "render" / file);
+    if (text.empty()) {
+      return {};
+    }
+    combined += text;
+    combined += '\n';
+  }
+  return combined;
+}
+
 } // namespace
 
 TEST(SceneWalkEntityHandleTest, WorldWalkIteratesFullWidthEntityHandles) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());
-  const auto source = read_text(root / "render" / "scene_walk.cpp");
+  const auto source = read_scene_walk_sources(root);
   ASSERT_FALSE(source.empty());
 
   EXPECT_EQ(source.find("for (std::uint32_t const entity_id :"), std::string::npos)
-      << "scene_walk.cpp truncates an EntityID to 32 bits while walking the world";
+      << "the scene walk truncates an EntityID to 32 bits while walking the world";
   EXPECT_EQ(source.find("[&](std::uint32_t entity_id,"), std::string::npos)
-      << "scene_walk.cpp truncates an EntityID to 32 bits while collecting entries";
+      << "the scene walk truncates an EntityID to 32 bits while collecting entries";
   EXPECT_EQ(source.find("std::span<const std::uint32_t>"), std::string::npos)
-      << "scene_walk.cpp walks a 32-bit id span";
+      << "the scene walk walks a 32-bit id span";
 
   EXPECT_NE(source.find("for (Engine::Core::EntityID const entity_id : entity_ids)"),
             std::string::npos)
@@ -72,7 +89,8 @@ TEST(SceneWalkEntityHandleTest, WorldWalkIteratesFullWidthEntityHandles) {
 
   for (const char* collector : {"collect_unit_entries", "collect_non_unit_entries"}) {
     const auto at = source.find(std::string("void Renderer::") + collector + "(");
-    ASSERT_NE(at, std::string::npos) << collector << " is missing from scene_walk.cpp";
+    ASSERT_NE(at, std::string::npos)
+        << collector << " is missing from the scene walk sources";
     const auto body = source.find('{', at);
     ASSERT_NE(body, std::string::npos) << collector;
     EXPECT_NE(source.find("std::span<const Engine::Core::EntityID> entity_ids", at),
@@ -87,7 +105,7 @@ TEST(SceneWalkEntityHandleTest, WorldWalkIteratesFullWidthEntityHandles) {
 TEST(SceneWalkEntityHandleTest, RenderEntriesCarryFullWidthEntityHandles) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());
-  const auto source = read_text(root / "render" / "scene_walk.cpp");
+  const auto source = read_scene_walk_sources(root);
   ASSERT_FALSE(source.empty());
 
   EXPECT_EQ(source.find("uint32_t entity_id{0};"), std::string::npos)
@@ -95,7 +113,8 @@ TEST(SceneWalkEntityHandleTest, RenderEntriesCarryFullWidthEntityHandles) {
 
   for (const char* entry : {"struct UnitRenderEntry", "struct RenderEntry"}) {
     const auto at = source.find(entry);
-    ASSERT_NE(at, std::string::npos) << entry << " is missing from scene_walk.cpp";
+    ASSERT_NE(at, std::string::npos)
+        << entry << " is missing from the scene walk sources";
     const auto end = source.find("\n};", at);
     ASSERT_NE(end, std::string::npos) << entry;
     const auto field = source.find("Engine::Core::EntityID entity_id{0};", at);
@@ -113,7 +132,7 @@ TEST(SceneWalkEntityHandleTest, RenderEntriesCarryFullWidthEntityHandles) {
 TEST(SceneWalkEntityHandleTest, MissingBodyWarningsAreOwnedByTheRendererNotTheProcess) {
   const auto root = find_repo_root();
   ASSERT_FALSE(root.empty());
-  const auto source = read_text(root / "render" / "scene_walk.cpp");
+  const auto source = read_scene_walk_sources(root);
   ASSERT_FALSE(source.empty());
 
   EXPECT_EQ(source.find("static std::unordered_set<std::string> warned_units"),

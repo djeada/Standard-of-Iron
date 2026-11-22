@@ -94,6 +94,13 @@ public:
   void cycle_lock_on_target(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
                             int local_owner_id);
+  void toggle_lock_on_target(Engine::Core::World& world,
+                             Engine::Core::EntityID commander_id,
+                             int local_owner_id);
+  void switch_lock_on_target(Engine::Core::World& world,
+                             Engine::Core::EntityID commander_id,
+                             int local_owner_id,
+                             int direction);
   void note_refusal(const char* action);
   [[nodiscard]] auto last_refusal() const -> const App::Core::CommanderRefusal& {
     return m_abilities.last_refusal();

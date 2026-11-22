@@ -1,18 +1,26 @@
 #include <QCoreApplication>
+#include <QEventLoop>
 #include <QGuiApplication>
 #include <QSettings>
 #include <QTemporaryDir>
+#include <QThread>
+#include <QTimer>
 
+#include <chrono>
 #include <gtest/gtest.h>
+#include <thread>
 
 #define private public
 #include "game/audio/audio_system.h"
 #undef private
 
+#include "app/core/game_engine.h"
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
 #include "render/graphics_settings.h"
+#include "render/software_backend.h"
+#include "scene/camera.h"
 
 namespace {
 
@@ -60,6 +68,44 @@ TEST_F(SettingsPersistenceTest, FreshProfileDefaultsToHighGraphics) {
   EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
             Render::GraphicsQuality::High);
   EXPECT_EQ(Render::k_default_graphics_quality, Render::GraphicsQuality::High);
+}
+
+TEST_F(SettingsPersistenceTest, ASlowPcStartsWhereTheGameLastSettled) {
+  App::Core::UserSettings::save_auto_graphics_quality_level(
+      static_cast<int>(Render::GraphicsQuality::Low));
+
+  App::Core::UserSettings::apply_saved_graphics_quality();
+
+  EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
+            Render::GraphicsQuality::Low);
+  EXPECT_FALSE(Render::GraphicsSettings::instance().quality_chosen_by_user())
+      << "an automatic step down must not lock the preset like a player choice";
+}
+
+TEST_F(SettingsPersistenceTest, ThePlayersPresetBeatsTheAutomaticOne) {
+  App::Core::UserSettings::save_auto_graphics_quality_level(
+      static_cast<int>(Render::GraphicsQuality::Low));
+  App::Core::UserSettings::save_graphics_quality_level(
+      static_cast<int>(Render::GraphicsQuality::Ultra));
+
+  App::Core::UserSettings::apply_saved_graphics_quality();
+
+  EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
+            Render::GraphicsQuality::Ultra);
+  EXPECT_TRUE(Render::GraphicsSettings::instance().quality_chosen_by_user());
+}
+
+TEST_F(SettingsPersistenceTest, PickingTheAutomaticPresetMakesItThePlayersChoice) {
+  Render::GraphicsSettings::instance().set_quality_chosen_by_user(false);
+  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Medium);
+  App::Models::GraphicsSettingsProxy proxy;
+
+  proxy.set_quality_level(static_cast<int>(Render::GraphicsQuality::Medium));
+
+  EXPECT_TRUE(Render::GraphicsSettings::instance().quality_chosen_by_user());
+  const auto saved = App::Core::UserSettings::load_graphics_quality_level();
+  ASSERT_TRUE(saved.has_value());
+  EXPECT_EQ(*saved, static_cast<int>(Render::GraphicsQuality::Medium));
 }
 
 TEST_F(SettingsPersistenceTest, LanguageSelectionIsLoadedFromSavedPreferences) {
@@ -261,6 +307,91 @@ TEST_F(SettingsPersistenceTest, PartiallySavedVolumesAreNotTreatedAsAFirstRun) {
   EXPECT_FLOAT_EQ(loaded.sound, defaults.sound);
   EXPECT_FLOAT_EQ(loaded.voice, defaults.voice);
   EXPECT_FLOAT_EQ(loaded.ambience, defaults.ambience);
+}
+
+TEST_F(SettingsPersistenceTest,
+       SoftwareBackendReportsReadyAndProducesBattlefieldFrame) {
+  Render::GL::SoftwareBackend backend;
+  EXPECT_TRUE(backend.initialize());
+  EXPECT_EQ(backend.resources(), nullptr);
+  EXPECT_TRUE(backend.is_ready());
+  EXPECT_EQ(backend.shader_quality(), Render::ShaderQuality::None);
+
+  backend.set_viewport(64, 64);
+  backend.set_clear_color(0.05F, 0.05F, 0.05F, 1.0F);
+  backend.begin_frame();
+
+  Render::GL::Camera camera;
+  camera.set_perspective(45.0F, 1.0F, 0.1F, 100.0F);
+  camera.look_at(QVector3D(0.0F, 6.0F, 10.0F),
+                 QVector3D(0.0F, 0.0F, 0.0F),
+                 QVector3D(0.0F, 1.0F, 0.0F));
+
+  Render::GL::DrawQueue queue;
+  Render::GL::MeshCmd cmd;
+  cmd.model.scale(2.0F, 2.0F, 2.0F);
+  cmd.color = QVector3D(0.85F, 0.25F, 0.20F);
+  cmd.alpha = 1.0F;
+  queue.submit(cmd);
+  backend.execute(queue, camera);
+
+  const QImage* frame = backend.presented_frame();
+  ASSERT_NE(frame, nullptr);
+  ASSERT_FALSE(frame->isNull());
+  EXPECT_EQ(frame->width(), 64);
+  EXPECT_EQ(frame->height(), 64);
+
+  const QRgb corner = frame->pixel(0, 0);
+  bool found_battlefield_pixel = false;
+  for (int y = 0; y < frame->height() && !found_battlefield_pixel; ++y) {
+    for (int x = 0; x < frame->width(); ++x) {
+      if (frame->pixel(x, y) != corner) {
+        found_battlefield_pixel = true;
+        break;
+      }
+    }
+  }
+  EXPECT_TRUE(found_battlefield_pixel);
+}
+
+TEST_F(SettingsPersistenceTest,
+       RendererFailureStopsLoadingAndReportsOnceOnTheGuiThread) {
+  GameEngine engine;
+  engine.set_release_self_test_mode(true);
+  engine.launch_match({.map_path = QStringLiteral("should-never-load")});
+  ASSERT_TRUE(engine.is_loading());
+
+  QEventLoop loop;
+  QStringList errors;
+  QObject::connect(
+      &engine,
+      &GameEngine::renderer_failed,
+      &loop,
+      [&](const QString& error) {
+        EXPECT_EQ(QThread::currentThread(), engine.thread());
+        EXPECT_FALSE(engine.is_loading());
+        errors.push_back(error);
+      },
+      Qt::DirectConnection);
+
+  const QString first_error = QStringLiteral("OpenGL 3.3 Core required");
+  std::thread render_thread([&] {
+    engine.report_renderer_failure(first_error);
+    engine.report_renderer_failure(QStringLiteral("Framebuffer unavailable"));
+  });
+  render_thread.join();
+
+  EXPECT_TRUE(engine.renderer_has_failed());
+  EXPECT_FALSE(engine.renderer_initialized());
+  EXPECT_TRUE(errors.isEmpty());
+  engine.clear_error();
+  engine.ensure_initialized();
+
+  QTimer::singleShot(std::chrono::milliseconds(100), &loop, &QEventLoop::quit);
+  loop.exec();
+  EXPECT_EQ(errors, QStringList{first_error});
+  EXPECT_TRUE(engine.last_error().isEmpty());
+  EXPECT_FALSE(engine.is_loading());
 }
 
 } // namespace

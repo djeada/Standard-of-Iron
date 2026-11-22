@@ -24,6 +24,20 @@ constexpr auto legacy_coord_system_key = "coordSystem";
 constexpr auto max_troops_key = MapJsonKeys::max_troops_per_player;
 constexpr auto legacy_max_troops_key = "maxTroopsPerPlayer";
 
+auto modelled_root_keys() -> const QStringList& {
+  static const QStringList keys = {
+      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
+      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
+      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
+      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
+      MapJsonKeys::rain,       MapJsonKeys::environment, MapJsonKeys::time_of_day,
+      MapJsonKeys::terrain,    MapJsonKeys::world_props, MapJsonKeys::firecamps,
+      MapJsonKeys::rivers,     MapJsonKeys::lakes,       MapJsonKeys::roads,
+      MapJsonKeys::bridges,    MapJsonKeys::fords,       MapJsonKeys::undead_zones,
+      MapJsonKeys::fog_zones,  MapJsonKeys::forests,     MapJsonKeys::wildlife};
+  return keys;
+}
+
 auto round_to_two_decimals(double value) -> double {
   constexpr double scale = 100.0;
   return std::round(value * scale) / scale;
@@ -481,6 +495,11 @@ void MapData::clear() {
                               {MapJsonKeys::lighting_profile, "mediterranean_summer"}};
   m_wildlife = QJsonObject();
   m_extra_root_fields = QJsonObject();
+  m_has_source = false;
+  m_source = JsonText::Node{};
+  m_canonical_root = QJsonObject();
+  m_legacy_firecamps = QJsonArray();
+  m_canonical_legacy_props = QJsonArray();
   m_next_spawn_order = 0;
   m_raw_spawns.clear();
 
@@ -504,6 +523,33 @@ void MapData::set_grid(const GridSettings& grid) {
   m_grid = grid;
   set_modified(true);
   emit data_changed();
+}
+
+auto MapData::is_modelled_root_key(const QString& key) -> bool {
+  return modelled_root_keys().contains(key);
+}
+
+auto MapData::extra_root_field(const QString& key) const -> QJsonValue {
+  return m_extra_root_fields.value(key);
+}
+
+auto MapData::set_extra_root_field(const QString& key,
+                                   const QJsonValue& value) -> bool {
+  if (key.isEmpty() || is_modelled_root_key(key)) {
+    return false;
+  }
+  if (m_extra_root_fields.value(key) == value &&
+      m_extra_root_fields.contains(key) == !value.isUndefined()) {
+    return true;
+  }
+  if (value.isUndefined() || value.isNull()) {
+    m_extra_root_fields.remove(key);
+  } else {
+    m_extra_root_fields.insert(key, value);
+  }
+  set_modified(true);
+  emit data_changed();
+  return true;
 }
 
 void MapData::set_biome(const QJsonObject& biome) {
@@ -622,7 +668,70 @@ bool MapData::replace_document(const QByteArray& data,
 }
 
 QByteArray MapData::to_json_bytes() const {
-  return QJsonDocument(build_root_json()).toJson(QJsonDocument::Indented);
+  const QJsonObject current = build_root_json();
+  if (!m_has_source) {
+    return JsonText::write(JsonText::from_value(current));
+  }
+  return JsonText::write(JsonText::merge(m_source,
+                                         with_legacy_sections(m_canonical_root),
+                                         with_legacy_sections(current)),
+                         m_source_style);
+}
+
+void MapData::remember_source(const QByteArray& data) {
+  m_has_source = false;
+  m_legacy_firecamps = QJsonArray();
+  m_canonical_legacy_props = QJsonArray();
+  m_canonical_root = QJsonObject();
+  if (!JsonText::parse(data, m_source, nullptr) ||
+      m_source.type != JsonText::Node::Type::Object) {
+    return;
+  }
+  m_source_style = JsonText::detect_style(data);
+  m_canonical_root = build_root_json();
+  if (const JsonText::Node* legacy = m_source.find(MapJsonKeys::firecamps)) {
+    m_legacy_firecamps = JsonText::to_value(*legacy).toArray();
+    const QJsonArray props = m_canonical_root.value(MapJsonKeys::world_props).toArray();
+    const qsizetype first = props.size() - m_legacy_firecamps.size();
+    for (qsizetype i = std::max<qsizetype>(first, 0); i < props.size(); ++i) {
+      m_canonical_legacy_props.append(props[i]);
+    }
+    if (m_canonical_legacy_props.size() != m_legacy_firecamps.size()) {
+      m_legacy_firecamps = QJsonArray();
+      m_canonical_legacy_props = QJsonArray();
+    }
+  }
+  m_has_source = true;
+}
+
+QJsonObject MapData::with_legacy_sections(QJsonObject root) const {
+  if (m_legacy_firecamps.isEmpty()) {
+    return root;
+  }
+  std::vector<bool> kept(static_cast<std::size_t>(m_legacy_firecamps.size()), false);
+  QJsonArray props;
+  for (const QJsonValue prop : root.value(MapJsonKeys::world_props).toArray()) {
+    bool legacy = false;
+    for (qsizetype j = 0; j < m_canonical_legacy_props.size(); ++j) {
+      if (!kept[static_cast<std::size_t>(j)] && m_canonical_legacy_props[j] == prop) {
+        kept[static_cast<std::size_t>(j)] = true;
+        legacy = true;
+        break;
+      }
+    }
+    if (!legacy) {
+      props.append(prop);
+    }
+  }
+  QJsonArray firecamps;
+  for (qsizetype j = 0; j < m_legacy_firecamps.size(); ++j) {
+    if (kept[static_cast<std::size_t>(j)]) {
+      firecamps.append(m_legacy_firecamps[j]);
+    }
+  }
+  root[MapJsonKeys::world_props] = props;
+  root[MapJsonKeys::firecamps] = firecamps;
+  return root;
 }
 
 bool MapData::apply_document(const QByteArray& data, QString* out_error) {
@@ -662,17 +771,7 @@ bool MapData::apply_document(const QByteArray& data, QString* out_error) {
       return false;
     }
   }
-  const QStringList known_root_keys = {
-      MapJsonKeys::name,       MapJsonKeys::description, coord_system_key,
-      legacy_coord_system_key, max_troops_key,           legacy_max_troops_key,
-      MapJsonKeys::grid,       MapJsonKeys::biome,       MapJsonKeys::camera,
-      MapJsonKeys::spawns,     MapJsonKeys::structures,  MapJsonKeys::victory,
-      MapJsonKeys::rain,       MapJsonKeys::environment, MapJsonKeys::time_of_day,
-      MapJsonKeys::terrain,    MapJsonKeys::world_props, MapJsonKeys::firecamps,
-      MapJsonKeys::rivers,     MapJsonKeys::lakes,       MapJsonKeys::roads,
-      MapJsonKeys::bridges,    MapJsonKeys::fords,       MapJsonKeys::undead_zones,
-      MapJsonKeys::fog_zones,  MapJsonKeys::forests,     MapJsonKeys::wildlife};
-  m_extra_root_fields = copyExtraFields(root, known_root_keys);
+  m_extra_root_fields = copyExtraFields(root, modelled_root_keys());
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
   m_description = root[MapJsonKeys::description].toString();
@@ -763,6 +862,7 @@ bool MapData::apply_document(const QByteArray& data, QString* out_error) {
   }
   parse_forests_array(root[MapJsonKeys::forests].toArray());
   parse_wildlife_object(root[MapJsonKeys::wildlife].toObject());
+  remember_source(data);
   return true;
 }
 
@@ -886,20 +986,20 @@ QJsonObject MapData::build_root_json() const {
 }
 
 QString MapData::to_json_string() const {
-  const QJsonDocument doc(build_root_json());
-  return QString::fromUtf8(doc.toJson(QJsonDocument::Indented));
+  return QString::fromUtf8(to_json_bytes());
 }
 
-bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
+namespace {
+
+auto write_bytes(const QString& file_path,
+                 const QByteArray& json_data,
+                 QString* out_error) -> bool {
   if (file_path.trimmed().isEmpty()) {
     if (out_error != nullptr) {
       *out_error = "No output path was provided.";
     }
     return false;
   }
-
-  const QJsonDocument doc(build_root_json());
-  const QByteArray json_data = doc.toJson(QJsonDocument::Indented);
 
   QSaveFile file(file_path);
   if (!file.open(QIODevice::WriteOnly)) {
@@ -928,6 +1028,20 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
   }
 
   return true;
+}
+
+} // namespace
+
+bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
+  return write_bytes(file_path, to_json_bytes(), out_error);
+}
+
+QByteArray MapData::to_canonical_json_bytes() const {
+  return JsonText::write(JsonText::from_value(build_root_json()), m_source_style);
+}
+
+bool MapData::save_canonical_json(const QString& file_path, QString* out_error) const {
+  return write_bytes(file_path, to_canonical_json_bytes(), out_error);
 }
 
 void MapData::parse_terrain_array(const QJsonArray& arr) {

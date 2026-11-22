@@ -4,6 +4,7 @@
 #include <QOpenGLContext>
 #include <qglobal.h>
 
+#include "adapter_class.h"
 #include "gl_capabilities.h"
 #include "render/graphics_settings.h"
 #include "render/scene_renderer.h"
@@ -36,12 +37,22 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
   }
 
   auto& graphics = Render::GraphicsSettings::instance();
+  // SOI_IGNORE_ADAPTER_CLASS=1 skips the first-run cap below, so a developer
+  // can try presets above Low on a software or integrated GPU (for example
+  // to watch the battle-time step-down happen).
   if (!graphics.quality_chosen_by_user() &&
-      graphics.quality() != Render::GraphicsQuality::Low &&
-      GLCapabilities::is_low_end_adapter(RenderBootstrap::adapter())) {
-    qInfo() << "RenderBootstrap: no saved graphics preset and a low-end adapter ("
-            << RenderBootstrap::adapter().renderer << "); starting on the Low preset";
-    graphics.set_quality(Render::GraphicsQuality::Low);
+      qEnvironmentVariableIntValue("SOI_IGNORE_ADAPTER_CLASS") == 0) {
+    const auto& adapter = RenderBootstrap::adapter();
+    const AdapterClass adapter_class = classify_adapter(adapter.renderer);
+    Render::GraphicsQuality cap = first_run_quality_cap(adapter_class);
+    if (GLCapabilities::is_low_end_adapter(adapter)) {
+      cap = Render::GraphicsQuality::Low;
+    }
+    if (cap < graphics.quality()) {
+      qInfo() << "RenderBootstrap: no saved graphics preset; starting on"
+              << Render::graphics_quality_key(cap) << "for" << adapter.renderer;
+      graphics.set_quality(cap);
+    }
   }
 
   qInfo() << "RenderBootstrap: Calling renderer.initialize()...";

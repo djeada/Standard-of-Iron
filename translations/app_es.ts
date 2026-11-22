@@ -4244,6 +4244,29 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>El campo de batalla requiere un contexto gráfico OpenGL 3.3 Core operativo.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>El campo de batalla requiere OpenGL 3.3 Core. Se detectó OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>Se perdió el contexto gráfico de OpenGL.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>No se pudo crear el búfer de fotogramas OpenGL del campo de batalla.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>Falló el renderizador OpenGL del campo de batalla.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 no recibió respuesta y retira la petición.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Se agotó el tiempo de espera para mostrar el campo de batalla. La última fase de carga fue %1.</translation>
     </message>
 </context>
 <context>
@@ -5573,38 +5600,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>CONTROLES DE COMBATE</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[Clic izq.] Golpear  [Clic der.] Guardia</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Espacio] Esquivar  [Alt] Saltar</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Mover  [Mayús] Esprintar</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Cambiar objetivo  [3] Aura  [C] Cámara</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Órdenes de reunión  [Intro] Volver al RTS</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Golpe de escudo  [1] Embestida  [2] Segundo aliento</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Objetivo  [1] Embestida  [2] Segundo aliento  [3] Aura  [F] Golpe de escudo</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Colocar reunión  [C] Cámara  [Intro] Volver al RTS</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>Piloto automático de reunión activo hasta que se plante la bandera</translation>
     </message>
@@ -5627,6 +5622,38 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
         <translation>Usa la técnica de tu arma, o mantén la guardia para un golpe de escudo aturdidor.</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] Golpear  [%2] Guardia</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] Esquivar  [%2] Saltar</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] Mover  [%2] Esprintar</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] Fijar  [%2] Aura  [%3] Cámara</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] Órdenes de reunión  [%2] Volver al RTS</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] Golpe de escudo  [%2] Embestida  [%3] Segundo aliento</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] Fijar  [%2] Embestida  [%3] Segundo aliento  [%4] Aura  [%5] Golpe de escudo</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] Colocar reunión  [%2] Cámara  [%3] Volver al RTS</translation>
     </message>
 </context>
 <context>
@@ -7275,6 +7302,22 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
     <message>
         <source>Roman field commander</source>
         <translation>Comandante de campo romano</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>%1 para la vista del ejército</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Salir</translation>
+    </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Gráficos reducidos a %1 para que la batalla vaya fluida</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Elige un ajuste en Opciones para mantener tu propia elección.</translation>
     </message>
 </context>
 <context>
@@ -11923,10 +11966,6 @@ Clic derecho para cancelar.</translation>
         <translation>Bloquear</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>Cambiar de objetivo fijado</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>Embestida de vanguardia</translation>
     </message>
@@ -12118,6 +12157,22 @@ Clic derecho para cancelar.</translation>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>Selecciona el grupo. Mantén Ctrl para guardar en él la selección actual, mantén Mayús para añadir el grupo a la selección y pulsa dos veces rápido para centrar la cámara en él.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>Con un objetivo fijado, pasa en su lugar al siguiente enemigo a la izquierda.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>Con un objetivo fijado, pasa en su lugar al siguiente enemigo a la derecha.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>Fijar un objetivo o soltarlo</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>Fija al enemigo más cercano al centro de la vista; pulsa de nuevo para soltarlo. Girar a izquierda y derecha pasa al enemigo contiguo.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12170,6 +12225,48 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Hay enemigos subiendo bajo tus piedras. ¡Hazlas rodar!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>Comandante enemigo</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>Tu ejército</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>Estandarte de reunión</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Enemigo</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>El campo es tuyo</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>%1 ha caído</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>Tu comandante ha caído</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>El día está perdido</translation>
     </message>
 </context>
 <context>
@@ -13109,6 +13206,50 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>Las tres velocidades de abajo ajustan el desplazamiento, el zoom y la rotación con el teclado. Arrastrar con el ratón y moverse por el minimapa no cambian.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>Al mando del comandante</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>Vista con el ratón y cámara mientras luchas tú mismo como comandante.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>Velocidad de la vista, lateral:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>Velocidad de la vista, arriba y abajo:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>Invertir la vista vertical</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>Empujar el ratón hacia delante inclina la vista hacia abajo, como en una palanca de vuelo.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>Campo de visión:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>Distancia de la cámara:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>A qué distancia se sitúa la cámara tras el comandante. La rueda del ratón la cambia mientras juegas.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>La guardia se mantiene hasta pulsar de nuevo</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>Pulsa el botón de guardia una vez para alzar el escudo y otra para bajarlo, en lugar de mantenerlo pulsado.</translation>
     </message>
 </context>
 <context>

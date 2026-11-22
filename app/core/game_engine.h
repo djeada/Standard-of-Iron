@@ -274,7 +274,7 @@ public:
   [[nodiscard]] bool is_spectator_mode() const { return m_level.is_spectator_mode; }
 
   [[nodiscard]] bool is_loading() const {
-    return m_runtime.loading || m_loading_overlay.active();
+    return !renderer_has_failed() && (m_runtime.loading || m_loading_overlay.active());
   }
 
   [[nodiscard]] float loading_progress() const;
@@ -286,10 +286,7 @@ public:
 
   QObject* audio_system();
 
-  void setWindow(QQuickWindow* w) {
-    m_window = w;
-    publish_client_context();
-  }
+  void setWindow(QQuickWindow* w);
 
   [[nodiscard]] bool consume_screenshot_request();
   void submit_frame_image(const QImage& image);
@@ -313,7 +310,14 @@ public:
   [[nodiscard]] auto frame_lock_stats() const -> const FrameLockStats& {
     return m_lifecycle.stats();
   }
-  [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
+  [[nodiscard]] bool renderer_initialized() const {
+    return !renderer_has_failed() && m_runtime.initialized;
+  }
+  [[nodiscard]] bool renderer_has_failed() const {
+    return m_renderer_failed.load(std::memory_order_acquire);
+  }
+  void report_renderer_failure(QString error);
+  [[nodiscard]] auto last_software_frame() const -> const QImage*;
   [[nodiscard]] auto commander_message_speakers() const -> const QStringList&;
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
@@ -326,7 +330,13 @@ public:
   void publish_frame_snapshots();
   void capture_render_selection();
   void update(float dt);
-  void render(int pixel_width, int pixel_height);
+  [[nodiscard]] auto render(int pixel_width, int pixel_height) -> quint64;
+  // True when the last render() drew the battlefield for play rather than
+  // nothing or a frame behind the loading screen. Render thread only.
+  [[nodiscard]] auto last_render_was_gameplay() const noexcept -> bool {
+    return m_last_render_was_gameplay;
+  }
+  void notify_loading_frame_presented(quint64 rendered_load);
   void set_input_viewport_size(qreal width, qreal height);
 
   [[nodiscard]] auto try_begin_render_frame() -> bool;
@@ -450,7 +460,7 @@ private:
                                const QVariantList& player_configs,
                                bool set_skirmish_context);
   void reset_match_outcome();
-  void begin_match_loading(const QString& map_path);
+  [[nodiscard]] auto begin_match_loading(const QString& map_path) -> quint64;
   void complete_match_load(const QString& map_path, const QVariantList& player_configs);
   [[nodiscard]] auto load_match_world(const QString& map_path,
                                       const QVariantList& player_configs)
@@ -460,6 +470,7 @@ private:
                               const QVariantList& resolved_player_configs);
   void finalize_match_load();
   void fail_loading(const QString& error);
+  void handle_first_frames_timeout();
   void apply_mission_setup();
   void apply_skirmish_commander_setup(const QVariantList& player_configs);
   [[nodiscard]] auto mission_startup_pending_components() const -> QStringList;
@@ -486,7 +497,7 @@ private:
   void restore_tutorial_state(const QJsonObject& state);
   void restore_battle_stats(const QJsonObject& state);
 
-  void update_loading_overlay();
+  void update_loading_overlay(quint64 rendered_load);
   void update_cursor_position();
 
   [[nodiscard]] auto
@@ -595,12 +606,14 @@ private:
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
+  bool m_last_render_was_gameplay = false;
   bool m_release_self_test_mode = false;
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel* m_selected_units_model = nullptr;
   int m_selected_player_id = 1;
 
   App::Session::LoadingOverlay m_loading_overlay;
+  std::atomic_bool m_renderer_failed{false};
   App::Core::SimulationLifecycle m_lifecycle;
   mutable App::Core::DeferredPresentationQueue m_deferred_presentation;
   std::atomic<float> m_simulation_time_scale{0.0F};
@@ -624,6 +637,7 @@ private:
 
 signals:
   void renderer_initialized_changed();
+  void renderer_failed(const QString& error);
   void selected_units_changed();
   void selected_units_data_changed();
   void enemy_troops_defeated_changed();
@@ -638,6 +652,7 @@ signals:
   void last_error_changed();
   void spectator_mode_changed();
   void is_loading_changed();
+  void match_load_completed();
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
   void control_mode_changed();

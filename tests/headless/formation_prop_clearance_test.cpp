@@ -39,6 +39,7 @@ using Game::Units::SpawnType;
 constexpr int k_owner = 1;
 constexpr float k_soldier_radius = 0.25F;
 constexpr float k_spawn_clearance = 8.0F;
+constexpr float k_direct_route_slack = 1.3F;
 
 struct PropHit {
   float soldier_seconds{0.0F};
@@ -125,14 +126,32 @@ protected:
     auto const goal = pathfinder->world_to_grid(target.x(), target.z());
     for (int i = 0; i < 4; ++i) {
       QVector3D const start = patch + spawn_offset(i);
-      if (!pathfinder->can_reach(pathfinder->world_to_grid(start.x(), start.z()),
-                                 goal)) {
-        return false;
-      }
       for (const auto& solid : props) {
         if (std::hypot(solid.x - start.x(), solid.z - start.z()) < k_spawn_clearance) {
           return false;
         }
+      }
+    }
+    for (int i = 0; i < 4; ++i) {
+      QVector3D const start = patch + spawn_offset(i);
+      auto const from = pathfinder->world_to_grid(start.x(), start.z());
+      if (!pathfinder->can_reach(from, goal)) {
+        return false;
+      }
+      auto const path = pathfinder->find_path(from, goal);
+      if (path.empty()) {
+        return false;
+      }
+      float route = 0.0F;
+      QVector3D previous = start;
+      for (const auto& cell : path) {
+        QVector3D const point = pathfinder->grid_to_world(cell);
+        route += std::hypot(point.x() - previous.x(), point.z() - previous.z());
+        previous = point;
+      }
+      float const straight = std::hypot(target.x() - start.x(), target.z() - start.z());
+      if (route > straight * k_direct_route_slack) {
+        return false;
       }
     }
     return true;

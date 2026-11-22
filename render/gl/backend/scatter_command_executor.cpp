@@ -182,6 +182,32 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
             grass.params.ambient_boost);
       }
 
+      {
+        const auto& grass_uniforms = m_terrain_pipeline->m_grass_uniforms;
+        const auto& cover = m_terrain_pipeline->m_frame_ground_cover;
+        const bool cover_ready = cover.texture != nullptr;
+        if (grass_uniforms.has_cover_texture != Shader::InvalidUniform) {
+          m_terrain_pipeline->m_grass_shader->set_uniform(
+              grass_uniforms.has_cover_texture, cover_ready ? 1 : 0);
+        }
+        if (cover_ready) {
+          cover.texture->bind(TextureUnit::terrain_cover);
+          glActiveTexture(GL_TEXTURE0);
+          if (grass_uniforms.cover_texture != Shader::InvalidUniform) {
+            m_terrain_pipeline->m_grass_shader->set_uniform(
+                grass_uniforms.cover_texture, TextureUnit::terrain_cover);
+          }
+          if (grass_uniforms.cover_uv_scale != Shader::InvalidUniform) {
+            m_terrain_pipeline->m_grass_shader->set_uniform(
+                grass_uniforms.cover_uv_scale, cover.uv_scale);
+          }
+          if (grass_uniforms.cover_uv_offset != Shader::InvalidUniform) {
+            m_terrain_pipeline->m_grass_shader->set_uniform(
+                grass_uniforms.cover_uv_offset, cover.uv_offset);
+          }
+        }
+      }
+
       glBindVertexArray(m_terrain_pipeline->m_grass_vao);
       grass.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(GrassInstanceGpu));

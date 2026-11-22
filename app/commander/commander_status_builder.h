@@ -17,6 +17,7 @@ struct CommanderStatusInput {
   Engine::Core::EntityID controlled_commander_id = 0;
   bool dodge_active = false;
   Engine::Core::EntityID locked_target_id = 0;
+  float view_yaw = 0.0F;
   bool rally_placing = false;
   std::uint32_t refusal_sequence = 0;
   const char* refusal_action = "";

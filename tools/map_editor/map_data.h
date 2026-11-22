@@ -15,6 +15,8 @@
 #include <variant>
 #include <vector>
 
+#include "json_text.h"
+
 namespace MapEditor {
 
 struct TerrainElement {
@@ -179,12 +181,24 @@ public:
   [[nodiscard]] QString to_json_string() const;
   [[nodiscard]] QByteArray to_json_bytes() const;
 
+  [[nodiscard]] QByteArray to_canonical_json_bytes() const;
+  bool save_canonical_json(const QString& file_path,
+                           QString* out_error = nullptr) const;
+
   bool replace_document(const QByteArray& data,
                         const QString& description,
                         QString* out_error = nullptr);
   bool restore_document(const QByteArray& data, QString* out_error = nullptr);
   [[nodiscard]] QJsonObject generation() const {
     return m_extra_root_fields.value(QStringLiteral("generation")).toObject();
+  }
+
+  [[nodiscard]] static auto is_modelled_root_key(const QString& key) -> bool;
+  [[nodiscard]] auto extra_root_field(const QString& key) const -> QJsonValue;
+  auto set_extra_root_field(const QString& key, const QJsonValue& value) -> bool;
+
+  [[nodiscard]] bool uses_world_coordinates() const {
+    return m_coord_system.compare(QLatin1String("world"), Qt::CaseInsensitive) == 0;
   }
 
   [[nodiscard]] QString name() const { return m_name; }
@@ -355,6 +369,16 @@ private:
   [[nodiscard]] QJsonArray fog_zones_to_json() const;
   [[nodiscard]] QJsonArray forests_to_json() const;
   [[nodiscard]] QJsonObject wildlife_to_json() const;
+
+  void remember_source(const QByteArray& data);
+  [[nodiscard]] QJsonObject with_legacy_sections(QJsonObject root) const;
+
+  bool m_has_source = false;
+  JsonText::Node m_source;
+  JsonText::Style m_source_style;
+  QJsonObject m_canonical_root;
+  QJsonArray m_legacy_firecamps;
+  QJsonArray m_canonical_legacy_props;
 };
 
 } // namespace MapEditor

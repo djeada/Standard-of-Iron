@@ -257,20 +257,23 @@ frames for CPU.
 
 ## Loading-overlay maximum wait
 
-The loading overlay has a hard maximum wait:
+Both waits start after world preparation. The renderer must complete five
+gameplay frames before it can reveal the battlefield. Pending startup components
+can delay the reveal for up to 15 seconds after preparation. When that limit is
+reached, the engine logs the remaining components and reveals the battlefield
+once the frame requirement is met.
 
-```text
-k_loading_overlay_max_wait_ms = 15000
-```
+A separate 60-second timer on the GUI thread bounds the wait when the renderer
+produces zero frames or too few frames. Minimizing the window pauses this timer.
+When the window is restored, the timer resumes with the remaining time. Frames
+from an abandoned load cannot advance the next load. In software rendering mode,
+a frame counts once the CPU image has been blitted into the gameplay framebuffer.
 
-If the readiness conditions are still pending when that limit is reached, the engine logs which components remain pending instead of holding the loading screen indefinitely.
-
-This is a fallback for robustness, not an assertion that the pending work completed successfully.
-
-The difference matters operationally:
-
-- normal release means readiness conditions became satisfied;
-- timeout release means the runtime chose not to block the player forever and recorded the unresolved components for diagnosis.
+If the timer expires, the game reports the last loading stage and returns to the
+menu after safely clearing the match. A renderer failure ends the attempt
+immediately. The interactive error offers a Quit action if graphics failed or
+the engine could not safely clear the stalled match. Direct mission and replay
+launches log the error and return a failure exit code.
 
 ## Minimum display time
 
@@ -427,4 +430,7 @@ The current mission startup path depends on these invariants:
 | Startup profiling         | `Engine::Core::StartupProfiler` integration                                  |
 | Startup tests             | mission startup tests including `MissionStartupTest.ParsesTheMissionMapOnce` |
 
-The current startup contract is explicit: reuse the parsed map context, construct the world, apply mission ownership before final AI initialization, prepare the first AI decision batch during loading, and keep the overlay active while terrain scatter, initial AI decisions, deferred unit templates or mission audio remain pending—subject to the 15-second maximum wait.
+Mission startup reuses the parsed map context, constructs the world, and applies
+mission ownership before final AI initialization. The overlay waits for gameplay
+frames and gives terrain scatter, initial AI decisions, deferred unit templates,
+and mission audio up to 15 seconds after preparation.

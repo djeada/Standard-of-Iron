@@ -9,6 +9,32 @@ namespace App::Models {
 
 GraphicsSettingsProxy::GraphicsSettingsProxy(QObject* parent)
     : QObject(parent) {
+  const auto& graphics = Render::GraphicsSettings::instance();
+  m_seen_generation = graphics.generation();
+  m_seen_auto_lowered = graphics.auto_lowered_count();
+  constexpr int k_poll_interval_ms = 500;
+  m_poll.setInterval(k_poll_interval_ms);
+  connect(
+      &m_poll, &QTimer::timeout, this, &GraphicsSettingsProxy::poll_render_settings);
+  m_poll.start();
+}
+
+void GraphicsSettingsProxy::poll_render_settings() {
+  const auto& graphics = Render::GraphicsSettings::instance();
+  const std::uint32_t auto_lowered = graphics.auto_lowered_count();
+  if (auto_lowered != m_seen_auto_lowered) {
+    m_seen_auto_lowered = auto_lowered;
+    if (!graphics.quality_chosen_by_user()) {
+      App::Core::UserSettings::save_auto_graphics_quality_level(
+          static_cast<int>(graphics.quality()));
+    }
+    emit quality_lowered_automatically(quality_name());
+  }
+  const std::uint32_t generation = graphics.generation();
+  if (generation != m_seen_generation) {
+    m_seen_generation = generation;
+    emit quality_level_changed();
+  }
 }
 
 int GraphicsSettingsProxy::quality_level() const {
@@ -22,9 +48,13 @@ void GraphicsSettingsProxy::set_quality_level(int level) {
   }
 
   auto newQuality = static_cast<Render::GraphicsQuality>(level);
-  if (newQuality != Render::GraphicsSettings::instance().quality()) {
+  // Picking the preset the game chose automatically still counts as the
+  // player's choice: it stops the game from changing it again.
+  if (newQuality != Render::GraphicsSettings::instance().quality() ||
+      !Render::GraphicsSettings::instance().quality_chosen_by_user()) {
     Render::GraphicsSettings::instance().set_quality(newQuality);
     App::Core::UserSettings::save_graphics_quality_level(level);
+    m_seen_generation = Render::GraphicsSettings::instance().generation();
     emit quality_level_changed();
   }
 }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "game/util/planar_math.h"
 #include "route_follow_system.h"
 #include "systems/navigation/nav_grid.h"
 #include "systems/navigation/pathfinding.h"
@@ -96,7 +97,7 @@ auto sweep_through(const MotorCollision& collision,
     return collision.step_allowed(fx, fz, tx, tz);
   };
   SweepResult result;
-  float const total = std::hypot(delta_x, delta_z);
+  float const total = Game::Systems::planar_length(delta_x, delta_z);
   if (total <= 1.0e-6F) {
     return result;
   }
@@ -115,7 +116,7 @@ auto sweep_through(const MotorCollision& collision,
     float const fraction = 1.0F / static_cast<float>(substeps - step);
     float const step_x = remaining_x * fraction;
     float const step_z = remaining_z * fraction;
-    if (std::hypot(step_x, step_z) <= 1.0e-7F) {
+    if (Game::Systems::planar_length(step_x, step_z) <= 1.0e-7F) {
       break;
     }
 
@@ -141,7 +142,7 @@ auto sweep_through(const MotorCollision& collision,
     } else {
       result.blocked = true;
       result.contact = true;
-      float const length = std::hypot(remaining_x, remaining_z);
+      float const length = Game::Systems::planar_length(remaining_x, remaining_z);
       if (length > 1.0e-6F) {
         result.normal_x = -remaining_x / length;
         result.normal_z = -remaining_z / length;
@@ -167,7 +168,9 @@ auto sweep_through(const MotorCollision& collision,
   result.rejected_dx = delta_x - result.accepted_dx;
   result.rejected_dz = delta_z - result.accepted_dz;
   result.accepted_fraction = std::clamp(
-      std::hypot(result.accepted_dx, result.accepted_dz) / total, 0.0F, 1.0F);
+      Game::Systems::planar_length(result.accepted_dx, result.accepted_dz) / total,
+      0.0F,
+      1.0F);
   return result;
 }
 
@@ -218,7 +221,7 @@ void unstick_body(const Engine::Core::Entity& entity,
   }
   float const dx = escape->x() - here.x();
   float const dz = escape->z() - here.z();
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   if (distance <= 1.0e-4F) {
     return;
   }

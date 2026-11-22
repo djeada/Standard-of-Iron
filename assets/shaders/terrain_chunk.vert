@@ -17,6 +17,11 @@ out vec2 v_uv;
 out float v_vertex_displacement;
 out float v_entry_mask;
 out float v_feature_foot;
+out vec2 v_landform;
+
+const float k_landform_levels = 16.0;
+const float k_landform_mountain_stride = 32.0;
+const float k_entry_mask_pack_scale = 0.5;
 
 float noise21(vec2 p) {
   vec2 i = floor(p);
@@ -79,7 +84,12 @@ float sample_terrain_displacement(vec3 wp,
 void main() {
   vec3 base_wp = (u_model * vec4(a_position, 1.0)).xyz;
   vec3 world_normal = normalize(mat3(u_model) * a_normal);
-  float entry_mask = clamp(a_uv.y, 0.0, 1.0);
+  float packed_mask = a_uv.y;
+  float mountain_level = floor(packed_mask / k_landform_mountain_stride + 1e-4);
+  packed_mask -= mountain_level * k_landform_mountain_stride;
+  float hill_level = floor(packed_mask + 1e-4);
+  float entry_mask =
+      clamp((packed_mask - hill_level) / k_entry_mask_pack_scale, 0.0, 1.0);
   float feature_foot = clamp(a_uv.x, 0.0, 1.0);
 
   float displacement = 0.0;
@@ -124,6 +134,7 @@ void main() {
   v_vertex_displacement = displacement;
   v_entry_mask = entry_mask;
   v_feature_foot = feature_foot;
+  v_landform = vec2(hill_level, mountain_level) / k_landform_levels;
 
   gl_Position = u_mvp * vec4(wp, 1.0);
 }
