@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSize>
 #include <QSurfaceFormat>
 #include <QTextStream>
 #include <QTimer>
@@ -174,6 +175,18 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Override the scenario's graphics preset: low, medium, high, "
                      "or ultra."),
       QStringLiteral("preset"));
+  QCommandLineOption const freeze_animation_option(
+      QStringList{QStringLiteral("freeze-animation")},
+      QStringLiteral("Hold the render animation clock at this many seconds on every "
+                     "frame (water, wind, clouds, sway), so captures repeat pixel for "
+                     "pixel."),
+      QStringLiteral("seconds"));
+  QCommandLineOption const window_size_option(
+      QStringList{QStringLiteral("window-size")},
+      QStringLiteral("Arena window size as WIDTHxHEIGHT (default 1600x900). The "
+                     "rendered viewport is the window minus the side panel; use it "
+                     "to profile at game resolutions."),
+      QStringLiteral("WxH"));
   QCommandLineOption const lighting_profile_option(
       QStringList{QStringLiteral("lighting-profile")},
       QStringLiteral("Environment lighting profile."),
@@ -301,6 +314,8 @@ auto main(int argc, char** argv) -> int {
                      time_of_day_option,
                      environment_time_option,
                      graphics_quality_option,
+                     window_size_option,
+                     freeze_animation_option,
                      lighting_profile_option,
                      artifact_option,
                      capture_interval_option,
@@ -496,7 +511,29 @@ auto main(int argc, char** argv) -> int {
 
   ArenaWindow window(session);
   UiShell::prepare_tool_window(window);
-  window.resize(1600, 900);
+  QSize window_size(1600, 900);
+  if (parser.isSet(window_size_option)) {
+    const QStringList parts = parser.value(window_size_option).split(QLatin1Char('x'));
+    const int width = parts.size() == 2 ? parts[0].toInt() : 0;
+    const int height = parts.size() == 2 ? parts[1].toInt() : 0;
+    if (width <= 0 || height <= 0) {
+      qCritical() << "--window-size expects WIDTHxHEIGHT, got"
+                  << parser.value(window_size_option);
+      return 2;
+    }
+    window_size = QSize(width, height);
+  }
+  window.resize(window_size);
+  if (parser.isSet(freeze_animation_option)) {
+    bool ok = false;
+    const float frozen = parser.value(freeze_animation_option).toFloat(&ok);
+    if (!ok) {
+      qCritical() << "--freeze-animation expects seconds, got"
+                  << parser.value(freeze_animation_option);
+      return 2;
+    }
+    window.viewport()->set_frozen_animation_time(frozen);
+  }
   window.show();
   window.viewport()->set_time_of_day(*parsed_time_of_day);
   window.viewport()->set_lighting_profile(lighting_profile);
