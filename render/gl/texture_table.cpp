@@ -40,7 +40,11 @@ auto TextureTable::resolve(const TextureImage* image) -> Texture* {
   if (image == nullptr || image->empty()) {
     return nullptr;
   }
-  Entry& entry = m_entries[image->id()];
+  if (m_last == nullptr || m_last_id != image->id()) {
+    m_last = &m_entries[image->id()];
+    m_last_id = image->id();
+  }
+  Entry& entry = *m_last;
   if (entry.texture == nullptr || entry.storage_version != image->storage_version()) {
     entry.lifetime = image->lifetime();
     entry.storage_version = image->storage_version();
@@ -107,6 +111,7 @@ void TextureTable::upload(const TextureImage& image, Entry& entry) {
 }
 
 void TextureTable::collect_retired() {
+  m_last = nullptr;
   for (auto it = m_entries.begin(); it != m_entries.end();) {
     if (it->second.lifetime.expired()) {
       it = m_entries.erase(it);

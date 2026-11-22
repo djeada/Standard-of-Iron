@@ -1,10 +1,13 @@
 #include "render/ground/terrain_scatter_manager.h"
 
+#include <QThreadPool>
 #include <QVector3D>
 
 #include <algorithm>
+#include <utility>
 
 #include "game/map/map_definition.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/terrain_service.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/graphics_settings.h"
@@ -78,6 +81,8 @@ TerrainScatterManager::TerrainScatterManager()
   }
 }
 
+// A running job owns only its captured inputs and its RefreshRun, so it may
+// finish after the manager is gone; nothing adopts it then.
 TerrainScatterManager::~TerrainScatterManager() = default;
 
 void TerrainScatterManager::configure(
@@ -86,6 +91,7 @@ void TerrainScatterManager::configure(
     const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
     const std::vector<Game::Map::WorldProp>& runtime_world_props) {
   std::lock_guard<std::mutex> const lock(m_mutex);
+  forget_scheduled_locked();
   m_height_map = &height_map;
   m_biome_settings = biome_settings;
   m_scatter_seed_world_props = scatter_seed_world_props;
@@ -128,6 +134,8 @@ void TerrainScatterManager::apply_instance_budgets() {
 void TerrainScatterManager::refresh_runtime_world_props(
     const std::vector<Game::Map::WorldProp>& runtime_world_props) {
   std::lock_guard<std::mutex> const lock(m_mutex);
+  // A synchronous refresh supersedes whatever was scheduled.
+  forget_scheduled_locked();
 
   if (m_height_map == nullptr) {
     return;
@@ -154,6 +162,7 @@ void TerrainScatterManager::refresh_runtime_world_props(
 
 void TerrainScatterManager::set_anchored_trees(const std::vector<AnchoredTree>& trees) {
   std::lock_guard<std::mutex> const lock(m_mutex);
+  forget_scheduled_locked();
   m_anchored_trees = trees;
   if (m_height_map == nullptr) {
     return;
@@ -174,12 +183,23 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
                                    const DrawResources* resources) {
   std::lock_guard<std::mutex> const lock(m_mutex);
 
+  // The one swap: finished regenerations replace the layers' instances here,
+  // before anything below syncs or submits them.
+  adopt_finished_locked();
+
   const std::uint32_t generation = GraphicsSettings::instance().generation();
   if (generation != m_applied_graphics_generation) {
     m_applied_graphics_generation = generation;
     if (m_biome != nullptr && !m_biome->grass_matches_graphics_profile()) {
       apply_instance_budgets();
-      m_biome->refresh_grass();
+      if (m_snapshots_provided) {
+        // Generating grass reads the live map, which this thread must not;
+        // ask the map's owner for a snapshot and regenerate on a worker.
+        m_pending.grass_density = GraphicsSettings::instance().profile().grass_density;
+        m_wants_world_snapshot = true;
+      } else {
+        m_biome->refresh_grass();
+      }
     }
   }
 
@@ -211,6 +231,7 @@ void TerrainScatterManager::for_each_instance_block(
 
 void TerrainScatterManager::clear() {
   std::lock_guard<std::mutex> const lock(m_mutex);
+  forget_scheduled_locked();
 
   m_height_map = nullptr;
   m_biome_settings = Game::Map::BiomeSettings{};
@@ -224,6 +245,159 @@ void TerrainScatterManager::clear() {
 void TerrainScatterManager::refresh_grass() {
   std::lock_guard<std::mutex> const lock(m_mutex);
   m_biome->refresh_grass();
+}
+
+void TerrainScatterManager::schedule_runtime_world_props_refresh(
+    std::vector<Game::Map::WorldProp> runtime_world_props,
+    std::shared_ptr<const Game::Map::ScatterWorld> world) {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  m_snapshots_provided = true;
+  if (m_height_map == nullptr || world == nullptr) {
+    return;
+  }
+  m_pending.world_props = std::move(runtime_world_props);
+  m_pending_world = std::move(world);
+  launch_pending_locked();
+}
+
+void TerrainScatterManager::schedule_anchored_trees(
+    std::vector<AnchoredTree> trees,
+    std::shared_ptr<const Game::Map::ScatterWorld> world) {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  m_snapshots_provided = true;
+  m_anchored_trees = trees;
+  if (m_height_map == nullptr || world == nullptr) {
+    return;
+  }
+  m_pending.anchored_trees = std::move(trees);
+  m_pending_world = std::move(world);
+  launch_pending_locked();
+}
+
+auto TerrainScatterManager::wants_world_snapshot() const -> bool {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  return m_wants_world_snapshot;
+}
+
+void TerrainScatterManager::provide_world_snapshot(
+    std::shared_ptr<const Game::Map::ScatterWorld> world) {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  m_snapshots_provided = true;
+  m_wants_world_snapshot = false;
+  if (world == nullptr) {
+    return;
+  }
+  m_pending_world = std::move(world);
+  launch_pending_locked();
+}
+
+void TerrainScatterManager::finish_scheduled_refreshes() {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  while (m_running != nullptr) {
+    {
+      std::unique_lock<std::mutex> run_lock(m_running->mutex);
+      m_running->finished.wait(run_lock, [this] { return m_running->done; });
+    }
+    adopt_finished_locked();
+  }
+}
+
+auto TerrainScatterManager::has_scheduled_refreshes() const -> bool {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  return m_running != nullptr || !m_pending.empty();
+}
+
+void TerrainScatterManager::launch_pending_locked() {
+  if (m_pending.empty() || m_pending_world == nullptr || m_height_map == nullptr) {
+    return;
+  }
+  if (m_running != nullptr) {
+    // One job at a time: these wait for the running one and then take the
+    // newest snapshot.
+    return;
+  }
+
+  // Plan on this thread, which holds m_mutex, so every plan copies a
+  // consistent view of its layer; the jobs touch nothing but those copies.
+  std::vector<Render::Ground::Scatter::ScatterJob> jobs;
+  const auto& world = m_pending_world;
+  if (m_pending.world_props.has_value() || m_pending.anchored_trees.has_value()) {
+    const auto* props =
+        m_pending.world_props.has_value() ? &*m_pending.world_props : nullptr;
+    const auto* anchored =
+        m_pending.anchored_trees.has_value() ? &*m_pending.anchored_trees : nullptr;
+    for (auto& tree_pass : m_trees) {
+      jobs.push_back(tree_pass->plan_rebuild(props, anchored, world));
+    }
+  }
+  if (m_pending.world_props.has_value()) {
+    const auto& props = *m_pending.world_props;
+    jobs.push_back(m_boulder->plan_world_props_refresh(props, world));
+    jobs.push_back(m_dead_tree->plan_world_props_refresh(props, world));
+    jobs.push_back(m_iron_ore->plan_world_props_refresh(props, world));
+    jobs.push_back(m_firecamp->plan_world_props_refresh(props, world));
+    jobs.push_back(m_tent->plan_world_props_refresh(props, world));
+    jobs.push_back(m_supply_cart->plan_world_props_refresh(props, world));
+    jobs.push_back(m_weapon_rack->plan_world_props_refresh(props, world));
+    jobs.push_back(m_ruins->plan_world_props_refresh(props, world));
+    jobs.push_back(m_magic_shrine->plan_world_props_refresh(props, world));
+    jobs.push_back(m_cursed_gold_vein->plan_world_props_refresh(props, world));
+    jobs.push_back(m_abandoned_home->plan_world_props_refresh(props, world));
+    jobs.push_back(m_statue->plan_world_props_refresh(props, world));
+  }
+  if (m_pending.grass_density.has_value()) {
+    jobs.push_back(m_biome->plan_grass(*m_pending.grass_density, world));
+  }
+  m_pending = {};
+  m_pending_world.reset();
+
+  auto run = std::make_shared<RefreshRun>();
+  run->epoch = m_epoch;
+  m_running = run;
+  // The jobs share one snapshot, whose terrain copy keeps a private lookup
+  // cache, so they run one after another in a single task.
+  QThreadPool::globalInstance()->start([run, jobs = std::move(jobs)]() mutable {
+    std::vector<Render::Ground::Scatter::ScatterAdoption> adoptions;
+    adoptions.reserve(jobs.size());
+    for (auto& job : jobs) {
+      adoptions.push_back(job());
+    }
+    std::lock_guard<std::mutex> const run_lock(run->mutex);
+    run->adoptions = std::move(adoptions);
+    run->done = true;
+    run->finished.notify_all();
+  });
+}
+
+void TerrainScatterManager::adopt_finished_locked() {
+  if (m_running == nullptr) {
+    return;
+  }
+  std::vector<Render::Ground::Scatter::ScatterAdoption> adoptions;
+  {
+    std::lock_guard<std::mutex> const run_lock(m_running->mutex);
+    if (!m_running->done) {
+      return;
+    }
+    if (m_running->epoch == m_epoch) {
+      adoptions = std::move(m_running->adoptions);
+    }
+  }
+  m_running.reset();
+  for (auto& adopt : adoptions) {
+    adopt();
+  }
+  launch_pending_locked();
+}
+
+void TerrainScatterManager::forget_scheduled_locked() {
+  ++m_epoch;
+  m_pending = {};
+  m_pending_world.reset();
+  m_wants_world_snapshot = false;
+  // A job still running finishes on its own; its epoch no longer matches, so
+  // nothing adopts it.
+  m_running.reset();
 }
 
 auto TerrainScatterManager::is_gpu_ready() const -> bool {

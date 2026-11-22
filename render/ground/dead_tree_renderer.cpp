@@ -7,6 +7,7 @@
 
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
@@ -48,6 +49,25 @@ void DeadTreeRenderer::set_light_direction(const QVector3D& dir) {
 void DeadTreeRenderer::submit(FrameSubmitter& renderer,
                               const DrawResources* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::DeadTree);
+}
+
+auto DeadTreeRenderer::plan_world_props_refresh(
+    std::vector<Game::Map::WorldProp> world_props,
+    std::shared_ptr<const Game::Map::ScatterWorld> world)
+    -> Ground::Scatter::ScatterJob {
+  return [this,
+          biome = m_biome_settings,
+          world_props = std::move(world_props),
+          world = std::move(world)]() mutable -> Ground::Scatter::ScatterAdoption {
+    auto instances = Ground::Scatter::generate_dead_trees(
+        {{}, nullptr, biome, world->terrain(), world_props, world.get()});
+    return [this,
+            world_props = std::move(world_props),
+            instances = std::move(instances)]() mutable {
+      m_world_props = std::move(world_props);
+      adopt_generated(std::move(instances));
+    };
+  };
 }
 
 } // namespace Render::GL

@@ -23,6 +23,30 @@ auto TerrainService::instance() -> TerrainService& {
   return *Game::Session::ambient_services().terrain;
 }
 
+auto TerrainService::clone() const -> std::unique_ptr<TerrainService> {
+  auto copy = std::make_unique<TerrainService>();
+  if (m_height_map != nullptr) {
+    copy->m_height_map = std::make_unique<TerrainHeightMap>(*m_height_map);
+  }
+  copy->m_terrain_field = m_terrain_field;
+  copy->m_biome_settings = m_biome_settings;
+  copy->m_supernatural_presence = m_supernatural_presence;
+  copy->m_world_props_from_save = m_world_props_from_save;
+  copy->m_coord_system = m_coord_system;
+  copy->m_authored_world_props = m_authored_world_props;
+  copy->m_world_props = m_world_props;
+  copy->m_forests = m_forests;
+  copy->m_road_segments = m_road_segments;
+  copy->m_road_index = m_road_index;
+  copy->m_reserved_world_prop_ids = m_reserved_world_prop_ids;
+  copy->m_next_world_prop_id = m_next_world_prop_id;
+  copy->m_sealed = m_sealed;
+  copy->m_authored_world_props_revision = m_authored_world_props_revision;
+  copy->m_world_props_revision = m_world_props_revision;
+  copy->m_navigation_topology_revision = m_navigation_topology_revision;
+  return copy;
+}
+
 namespace {
 
 auto sample_grid_clamped(

@@ -396,6 +396,22 @@ auto WorldPropClearanceIndex::way_round(float from_x,
                blocker.body->z + (sine * corner->x) + (cosine * corner->z)};
 }
 
+auto build_world_prop_clearance_index(const TerrainService& terrain_service)
+    -> std::shared_ptr<const WorldPropClearanceIndex> {
+  const auto* height_map = terrain_service.get_height_map();
+  const float tile_size = height_map != nullptr ? height_map->get_tile_size() : 1.0F;
+
+  std::vector<WorldProp> in_world_space = terrain_service.world_props();
+  for (auto& prop : in_world_space) {
+    const auto [world_x, world_z] = terrain_service.world_prop_world_xz(prop);
+    prop.x = world_x;
+    prop.z = world_z;
+  }
+  auto rebuilt = std::make_shared<WorldPropClearanceIndex>();
+  rebuilt->rebuild(in_world_space, std::max(4.0F * tile_size, 4.0F));
+  return rebuilt;
+}
+
 auto shared_world_prop_clearance_index()
     -> std::shared_ptr<const WorldPropClearanceIndex> {
   static std::mutex mutex;
@@ -407,18 +423,7 @@ auto shared_world_prop_clearance_index()
 
   const std::lock_guard<std::mutex> guard(mutex);
   if (index == nullptr || revision != cached_revision) {
-    const auto* height_map = terrain_service.get_height_map();
-    const float tile_size = height_map != nullptr ? height_map->get_tile_size() : 1.0F;
-
-    std::vector<WorldProp> in_world_space = terrain_service.world_props();
-    for (auto& prop : in_world_space) {
-      const auto [world_x, world_z] = terrain_service.world_prop_world_xz(prop);
-      prop.x = world_x;
-      prop.z = world_z;
-    }
-    auto rebuilt = std::make_shared<WorldPropClearanceIndex>();
-    rebuilt->rebuild(in_world_space, std::max(4.0F * tile_size, 4.0F));
-    index = std::move(rebuilt);
+    index = build_world_prop_clearance_index(terrain_service);
     cached_revision = revision;
   }
   return index;

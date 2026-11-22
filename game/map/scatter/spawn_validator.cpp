@@ -4,12 +4,22 @@
 #include <cmath>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/scatter/world_prop_clearance_index.h"
 #include "game/map/terrain_service.h"
 #include "game/map/terrain_surface.h"
 #include "game/systems/building_collision_registry.h"
 
 namespace Render::Ground {
+
+namespace {
+
+auto live_or_snapshot_terrain(const Game::Map::ScatterWorld* world)
+    -> const Game::Map::TerrainService& {
+  return world != nullptr ? world->terrain() : Game::Map::TerrainService::instance();
+}
+
+} // namespace
 
 void SpawnTerrainCache::build_from_height_map(
     const std::vector<float>& height_data,
@@ -90,8 +100,15 @@ auto SpawnTerrainCache::get_terrain_type_at(int grid_x, int grid_z) const
 
 SpawnValidator::SpawnValidator(const SpawnTerrainCache& cache,
                                const SpawnValidationConfig& config)
+    : SpawnValidator(cache, config, nullptr) {
+}
+
+SpawnValidator::SpawnValidator(const SpawnTerrainCache& cache,
+                               const SpawnValidationConfig& config,
+                               const Game::Map::ScatterWorld* world)
     : m_cache(cache)
-    , m_config(config) {
+    , m_config(config)
+    , m_world(world) {
 
   float const edge_padding = std::clamp(m_config.edge_padding, 0.0F, 0.5F);
   m_edge_margin_x = static_cast<float>(m_config.grid_width) * edge_padding;
@@ -236,6 +253,14 @@ auto SpawnValidator::check_slope(int grid_x, int grid_z) const -> bool {
 
 auto SpawnValidator::check_building_collision(float world_x,
                                               float world_z) const -> bool {
+  if (m_world != nullptr) {
+    const auto& footprints = m_world->buildings();
+    if (m_config.building_clearance > 0.0F) {
+      return !footprints.is_circle_overlapping_building(
+          world_x, world_z, m_config.building_clearance);
+    }
+    return !footprints.is_point_in_building(world_x, world_z);
+  }
   auto& building_registry = Game::Systems::BuildingCollisionRegistry::instance();
   if (m_config.building_clearance > 0.0F) {
     return !building_registry.is_circle_overlapping_building(
@@ -246,25 +271,30 @@ auto SpawnValidator::check_building_collision(float world_x,
 
 auto SpawnValidator::check_world_prop_collision(float world_x,
                                                 float world_z) const -> bool {
+  if (m_world != nullptr) {
+    const auto& index = m_world->clearance();
+    return index.empty() ||
+           !index.overlaps(world_x, world_z, m_config.world_prop_clearance);
+  }
   const auto index = Game::Map::shared_world_prop_clearance_index();
   return index->empty() ||
          !index->overlaps(world_x, world_z, m_config.world_prop_clearance);
 }
 
 auto SpawnValidator::check_road_collision(float world_x, float world_z) const -> bool {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = live_or_snapshot_terrain(m_world);
   return !terrain_service.is_point_near_road(world_x, world_z, m_config.road_clearance);
 }
 
 auto SpawnValidator::check_bridge_collision(float world_x,
                                             float world_z) const -> bool {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = live_or_snapshot_terrain(m_world);
   return !terrain_service.is_point_near_bridge(
       world_x, world_z, m_config.bridge_clearance);
 }
 
 auto SpawnValidator::check_river_clearance(float world_x, float world_z) const -> bool {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = live_or_snapshot_terrain(m_world);
   return !terrain_service.is_point_near_water(
       world_x, world_z, m_config.river_clearance);
 }

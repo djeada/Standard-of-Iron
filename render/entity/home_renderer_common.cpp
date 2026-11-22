@@ -65,7 +65,9 @@ void register_home_renderer_variant(EntityRendererRegistry& registry,
       registry,
       config.nation_slug,
       "home",
-      [config](const DrawContext& ctx, ISubmitter& out) {
+      [config](const DrawContext& ctx,
+               const EntityPresentation& presentation,
+               ISubmitter& out) {
         if (ctx.entity == nullptr) {
           return;
         }
@@ -80,16 +82,19 @@ void register_home_renderer_variant(EntityRendererRegistry& registry,
             home_placement_seed(ctx.model(0, 3),
                                 ctx.model(2, 3),
                                 static_cast<std::uint32_t>(ctx.entity->get_id()));
-        const BuildingState state = resolve_building_state(ctx);
+        const BuildingState state = presented_building_state(presentation, ctx);
         const auto palette_slots = config.palette_slots(team, seed, state);
         submit_building_instance(out,
                                  ctx,
                                  config.archetype(state, home_visual_variant(seed)),
                                  palette_slots);
-        submit_home_activity(ctx, out, config.nation_slug == "carthage");
+        submit_home_activity(
+            ctx, out, config.nation_slug == "carthage", presentation.home);
         submit_building_torches(ctx, out, config.torches);
         draw_building_selection_overlay(out, ctx, config.selection);
-      });
+      },
+      PresentationSystems{
+          home_activity_presentation(config.nation_slug == "carthage")});
 }
 
 } // namespace Render::GL

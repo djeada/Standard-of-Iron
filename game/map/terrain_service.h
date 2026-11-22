@@ -49,6 +49,11 @@ public:
 
   static auto instance() -> TerrainService&;
 
+  // A copy of the whole map state (heights, fields, roads, water, bridges, fords,
+  // world props) for a reader on another thread. It has its own prop-surface
+  // cache, so lookups on the copy never touch this service.
+  [[nodiscard]] auto clone() const -> std::unique_ptr<TerrainService>;
+
   void initialize(const MapDefinition& map_def);
 
   void initialize_keeping_world_props(const MapDefinition& map_def);

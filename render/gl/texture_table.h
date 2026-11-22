@@ -48,6 +48,11 @@ private:
   void upload(const TextureImage& image, Entry& entry);
 
   std::unordered_map<std::uint64_t, Entry> m_entries;
+  // The last entry looked up. Draws of one mesh or block sit together in the
+  // sorted queue, so most lookups hit it instead of hashing. Entry addresses
+  // are stable in the map; anything that erases clears it.
+  std::uint64_t m_last_id = 0;
+  Entry* m_last = nullptr;
   std::vector<std::byte> m_region_scratch;
 };
 

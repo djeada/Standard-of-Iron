@@ -12,6 +12,9 @@ namespace Render::GL {
 struct BuildingArchetypeCatalogEntry {
   std::string name;
   std::function<BuildingArchetypeDesc(BuildingState)> build;
+  // The renderer kinds (EntityRendererRegistry keys, "troops/<nation>/<type>")
+  // that draw this description.
+  std::vector<std::string> kinds;
 };
 
 auto building_archetype_catalog() -> const std::vector<BuildingArchetypeCatalogEntry>&;

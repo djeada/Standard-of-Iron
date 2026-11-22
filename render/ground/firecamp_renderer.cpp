@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_world.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
@@ -282,6 +283,33 @@ void FireCampRenderer::generate_firecamp_instances() {
                                                         m_world_props});
   m_camp_decor = std::move(generated.decor);
   adopt_generated(std::move(generated.instances));
+}
+
+auto FireCampRenderer::plan_world_props_refresh(
+    std::vector<Game::Map::WorldProp> world_props,
+    std::shared_ptr<const Game::Map::ScatterWorld> world)
+    -> Ground::Scatter::ScatterJob {
+  return [this,
+          biome = m_biome_settings,
+          world_props = std::move(world_props),
+          world = std::move(world)]() mutable -> Ground::Scatter::ScatterAdoption {
+    // configure() copied the live height map; the snapshot holds the same map.
+    const auto* height_map = world->terrain().get_height_map();
+    auto grid = height_map != nullptr
+                    ? Ground::Scatter::ScatterGridData::copy_of(*height_map)
+                    : std::make_shared<const Ground::Scatter::ScatterGridData>();
+    auto generated = Ground::Scatter::generate_firecamps(
+        {grid->view(), nullptr, biome, world->terrain(), world_props, world.get()});
+    return [this,
+            grid = std::move(grid),
+            world_props = std::move(world_props),
+            generated = std::move(generated)]() mutable {
+      m_grid = std::move(grid);
+      m_world_props = std::move(world_props);
+      m_camp_decor = std::move(generated.decor);
+      adopt_generated(std::move(generated.instances));
+    };
+  };
 }
 
 } // namespace Render::GL

@@ -8,6 +8,7 @@
 
 #include <array>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -15,6 +16,7 @@
 #include "render/backend/directional_shadow_block.h"
 #include "render/backend/frame_environment.h"
 #include "render/backend/pipeline_draw_context.h"
+#include "render/backend/pipeline_interface.h"
 #include "render/backend/shader_uniform_cache.h"
 #include "render/backend/shadow_cascade_fit.h"
 #include "render/backend/sky_box_transition.h"
@@ -367,6 +369,9 @@ private:
                         const char* name,
                         Args&&... args) -> bool {
     slot = std::make_unique<Subsystem>(std::forward<Args>(args)...);
+    if constexpr (std::is_base_of_v<BackendPipelines::IPipeline, Subsystem>) {
+      slot->initialize_gl_functions();
+    }
     if (!slot->initialize()) {
       qCritical() << "Backend::initialize() FAILED:" << name;
       return false;

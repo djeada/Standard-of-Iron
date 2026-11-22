@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
@@ -134,9 +135,12 @@ auto BiomeRenderer::grass_matches_graphics_profile() const noexcept -> bool {
 }
 
 void BiomeRenderer::generate_grass_instances() {
-  auto grass = Ground::Scatter::generate_grass(
+  adopt_grass(Ground::Scatter::generate_grass(
       {scatter_grid(), nullptr, m_biome_settings, world().terrain_or_empty(), {}},
-      GraphicsSettings::instance().profile().grass_density);
+      GraphicsSettings::instance().profile().grass_density));
+}
+
+void BiomeRenderer::adopt_grass(Ground::Scatter::GrassScatter grass) {
   if (grass.generated_density >= 0.0F) {
     m_generated_grass_density = grass.generated_density;
   }
@@ -147,6 +151,22 @@ void BiomeRenderer::generate_grass_instances() {
   if (m_state.instance_count > 0) {
     m_state.visibility_dirty = true;
   }
+}
+
+auto BiomeRenderer::plan_grass(float density,
+                               std::shared_ptr<const Game::Map::ScatterWorld> world)
+    -> Ground::Scatter::ScatterJob {
+  return [this,
+          grid = shared_grid(),
+          biome = m_biome_settings,
+          density,
+          world = std::move(world)]() -> Ground::Scatter::ScatterAdoption {
+    auto grass = Ground::Scatter::generate_grass(
+        {grid->view(), nullptr, biome, world->terrain(), {}, world.get()}, density);
+    return [this, grass = std::move(grass)]() mutable {
+      adopt_grass(std::move(grass));
+    };
+  };
 }
 
 } // namespace Render::GL

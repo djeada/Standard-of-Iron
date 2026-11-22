@@ -99,6 +99,18 @@ struct NavigationPassage {
   Engine::Core::EntityID source_entity_id{0};
 };
 
+// The building and authored-obstacle footprints at one moment, for a reader on
+// another thread (scatter generation runs on a worker). It answers the same two
+// questions as the registry, with the same code.
+struct BuildingFootprintSnapshot {
+  std::vector<BuildingFootprint> buildings;
+  std::vector<BuildingFootprint> obstacles;
+
+  [[nodiscard]] auto is_point_in_building(float x, float z) const -> bool;
+  [[nodiscard]] auto
+  is_circle_overlapping_building(float x, float z, float radius) const -> bool;
+};
+
 class BuildingCollisionRegistry {
 public:
   BuildingCollisionRegistry();
@@ -314,6 +326,9 @@ public:
       float z,
       float radius,
       Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
+
+  // A copy of every footprint, taken where the simulation is not writing them.
+  [[nodiscard]] auto footprint_snapshot() const -> BuildingFootprintSnapshot;
 
   void set_navigation_passages(std::vector<NavigationPassage> passages);
 

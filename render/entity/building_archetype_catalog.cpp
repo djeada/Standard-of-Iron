@@ -1,8 +1,11 @@
 #include "render/entity/building_archetype_catalog.h"
 
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
+#include "game/visuals/building_asset_key.h"
 #include "render/entity/farm_field.h"
 #include "render/entity/home_yard.h"
 #include "render/entity/nations/carthage/barracks_authoring.h"
@@ -26,6 +29,10 @@
 namespace Render::GL {
 namespace {
 
+auto kind_of(const std::string& nation, std::string_view type) -> std::string {
+  return Game::Visuals::building_asset_key(nation, type);
+}
+
 void add_nation_buildings(std::vector<BuildingArchetypeCatalogEntry>& out,
                           const std::string& nation,
                           BuildingArchetypeDesc (*home)(BuildingState, int),
@@ -37,20 +44,21 @@ void add_nation_buildings(std::vector<BuildingArchetypeCatalogEntry>& out,
   for (int variant = 0; variant < k_home_visual_variant_count; ++variant) {
     const std::string name =
         nation + "_home" + (variant == 0 ? "" : "_variant_" + std::to_string(variant));
-    out.push_back({name, [home, variant](BuildingState state) {
-                     return home(state, variant);
-                   }});
+    out.push_back(
+        {name,
+         [home, variant](BuildingState state) { return home(state, variant); },
+         {kind_of(nation, "home")}});
   }
-  out.push_back({nation + "_barracks", barracks});
-  out.push_back({nation + "_defense_tower", tower});
-  out.push_back({nation + "_marketplace", marketplace});
-  out.push_back({nation + "_temple", temple});
+  out.push_back({nation + "_barracks", barracks, {kind_of(nation, "barracks")}});
+  out.push_back({nation + "_defense_tower", tower, {kind_of(nation, "defense_tower")}});
+  out.push_back(
+      {nation + "_marketplace", marketplace, {kind_of(nation, "marketplace")}});
+  out.push_back({nation + "_temple", temple, {kind_of(nation, "temple")}});
 
   for (int stage = 0; stage < k_farm_render_stage_count; ++stage) {
     out.push_back({nation + "_farm_stage_" + std::to_string(stage),
-                   [farm, stage](BuildingState state) {
-                     return farm(state, stage);
-                   }});
+                   [farm, stage](BuildingState state) { return farm(state, stage); },
+                   {kind_of(nation, "farm")}});
   }
 }
 
@@ -59,31 +67,50 @@ void add_nation_walls(std::vector<BuildingArchetypeCatalogEntry>& out,
                       const WallPalette& palette,
                       const WallGeometry& geometry) {
   const std::string prefix = nation + "_wall_variant";
+  // Every segment kind draws from the whole variant and walk set.
+  std::vector<std::string> segment_kinds;
+  for (const auto& [name, variant] : wall_renderer_variants()) {
+    (void)variant;
+    segment_kinds.push_back(kind_of(nation, name));
+  }
   for (int variant = 0; variant < 6; ++variant) {
     out.push_back({prefix + "_" + std::to_string(variant),
                    [prefix, &palette, &geometry, variant](BuildingState) {
                      return build_wall_variant_desc(
                          prefix, palette, geometry, static_cast<WallVariant>(variant));
-                   }});
+                   },
+                   segment_kinds});
   }
-  out.push_back({prefix + "_gate", [prefix, &palette, &geometry](BuildingState) {
+  out.push_back({prefix + "_gate",
+                 [prefix, &palette, &geometry](BuildingState) {
                    return build_wall_gate_desc(prefix, palette, geometry);
-                 }});
-  out.push_back({prefix + "_gate_leaf", [prefix, &palette, &geometry](BuildingState) {
+                 },
+                 {kind_of(nation, "wall_gate")}});
+  out.push_back({prefix + "_gate_leaf",
+                 [prefix, &palette, &geometry](BuildingState) {
                    return build_wall_gate_leaf_desc(prefix, palette, geometry);
-                 }});
-  out.push_back({prefix + "_walk_span", [prefix, &palette](BuildingState) {
+                 },
+                 {kind_of(nation, "wall_gate")}});
+  out.push_back({prefix + "_walk_span",
+                 [prefix, &palette](BuildingState) {
                    return build_wall_walk_span_desc(prefix, palette);
-                 }});
-  out.push_back({prefix + "_walk_landing", [prefix, &palette](BuildingState) {
+                 },
+                 segment_kinds});
+  out.push_back({prefix + "_walk_landing",
+                 [prefix, &palette](BuildingState) {
                    return build_wall_walk_landing_desc(prefix, palette);
-                 }});
-  out.push_back({prefix + "_walk_stair", [prefix, &palette](BuildingState) {
+                 },
+                 segment_kinds});
+  out.push_back({prefix + "_walk_stair",
+                 [prefix, &palette](BuildingState) {
                    return build_wall_walk_stair_desc(prefix, palette);
-                 }});
-  out.push_back({prefix + "_ladder", [prefix, &palette](BuildingState) {
+                 },
+                 segment_kinds});
+  out.push_back({prefix + "_ladder",
+                 [prefix, &palette](BuildingState) {
                    return build_wall_ladder_desc(prefix, palette);
-                 }});
+                 },
+                 {kind_of(nation, "wall_ladder")}});
 }
 
 auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
@@ -106,10 +133,18 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
                        &Carthage::build_temple_desc,
                        &Carthage::build_farm_desc);
 
-  out.push_back({"carthage_barracks_palms", &Carthage::build_barracks_palms_desc});
-  out.push_back({"roman_barracks_grounds", &Roman::build_barracks_grounds_desc});
-  out.push_back({"carthage_barracks_grounds", &Carthage::build_barracks_grounds_desc});
-  out.push_back({"carthage_barracks_firs", &Carthage::build_barracks_firs_desc});
+  out.push_back({"carthage_barracks_palms",
+                 &Carthage::build_barracks_palms_desc,
+                 {kind_of("carthage", "barracks")}});
+  out.push_back({"roman_barracks_grounds",
+                 &Roman::build_barracks_grounds_desc,
+                 {kind_of("roman", "barracks")}});
+  out.push_back({"carthage_barracks_grounds",
+                 &Carthage::build_barracks_grounds_desc,
+                 {kind_of("carthage", "barracks")}});
+  out.push_back({"carthage_barracks_firs",
+                 &Carthage::build_barracks_firs_desc,
+                 {kind_of("carthage", "barracks")}});
 
   add_nation_walls(out, "roman", Roman::wall_palette(), Roman::wall_geometry());
   add_nation_walls(

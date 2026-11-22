@@ -22,7 +22,8 @@ public:
                             int height,
                             float tile_size,
                             const Game::Map::BiomeSettings& biome_settings,
-                            const std::vector<Game::Map::WorldProp>& world_props = {})
+                            const std::vector<Game::Map::WorldProp>& world_props = {},
+                            const Game::Map::TerrainService* terrain = nullptr)
       : m_cache(cache)
       , m_width(width)
       , m_height(height)
@@ -32,7 +33,10 @@ public:
       , m_biome_settings(biome_settings)
       , m_climate_profile(Game::Map::make_climate_profile(biome_settings)) {
     build_point_anchors(world_props);
-    build_linear_anchors();
+    // Roads, rivers and bridges come from `terrain` (a scatter snapshot's copy)
+    // or, when null, the live service.
+    build_linear_anchors(terrain != nullptr ? *terrain
+                                            : Game::Map::TerrainService::instance());
   }
 
   [[nodiscard]] auto sample_grid(float gx, float gz, std::uint32_t salt = 0U) const
@@ -169,8 +173,7 @@ private:
     }
   }
 
-  void build_linear_anchors() {
-    auto& terrain_service = Game::Map::TerrainService::instance();
+  void build_linear_anchors(const Game::Map::TerrainService& terrain_service) {
     for (const auto& road : terrain_service.road_segments()) {
       m_road_anchors.push_back(
           {{road.start.x(), road.start.z()}, {road.end.x(), road.end.z()}, road.width});

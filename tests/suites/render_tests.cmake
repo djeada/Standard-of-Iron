@@ -10,6 +10,7 @@ add_executable(
     render/gl_ownership_leak_test.cpp
     render/gpu_data_test.cpp
     render/building_presentation_test.cpp
+    render/entity_presentation_test.cpp
     render/asset_counters_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
@@ -82,6 +83,7 @@ add_executable(
     render/scatter_gpu_retention_test.cpp
     render/scatter_generator_test.cpp
     render/scatter_runtime_test.cpp
+    render/scatter_world_test.cpp
     render/terrain_vertex_masks_test.cpp
     render/terrain_scene_proxy_test.cpp
     render/render_thread_boundary_test.cpp

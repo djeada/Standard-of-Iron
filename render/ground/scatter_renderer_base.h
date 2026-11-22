@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -18,6 +19,10 @@
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_submission.h"
 
+namespace Game::Map {
+class ScatterWorld;
+}
+
 namespace Render::GL {
 
 template <typename Instance, typename Params>
@@ -25,6 +30,11 @@ class ScatterRendererBase : public IScatterSource {
 public:
   [[nodiscard]] auto is_gpu_ready() const -> bool override {
     return m_state.is_gpu_ready();
+  }
+
+  // The layer's placed instances, in generation order.
+  [[nodiscard]] auto instances() const noexcept -> const std::vector<Instance>& {
+    return m_state.instances;
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t override {
@@ -78,11 +88,7 @@ protected:
       const Game::Map::TerrainHeightMap& height_map,
       const Game::Map::BiomeSettings& biome_settings,
       const std::vector<Game::Map::WorldProp>& world_props) {
-    m_width = height_map.get_width();
-    m_height = height_map.get_height();
-    m_tile_size = height_map.get_tile_size();
-    m_height_data = height_map.get_height_data();
-    m_terrain_types = height_map.getTerrainTypes();
+    m_grid = Render::Ground::Scatter::ScatterGridData::copy_of(height_map);
     m_world_props = world_props;
     m_biome_settings = biome_settings;
     m_noise_seed = biome_settings.seed;
@@ -96,7 +102,19 @@ protected:
 
   // The terrain grid copied at configure, for a generator request.
   [[nodiscard]] auto scatter_grid() const -> Render::Ground::Scatter::ScatterGrid {
-    return {m_width, m_height, m_tile_size, &m_height_data, &m_terrain_types};
+    return shared_grid()->view();
+  }
+
+  // The same grid, shared, for a regeneration that runs on a worker. Never
+  // null: before configure it is an empty grid.
+  [[nodiscard]] auto shared_grid() const
+      -> std::shared_ptr<const Render::Ground::Scatter::ScatterGridData> {
+    if (m_grid != nullptr) {
+      return m_grid;
+    }
+    static const auto k_empty =
+        std::make_shared<const Render::Ground::Scatter::ScatterGridData>();
+    return k_empty;
   }
 
   // Takes a generator's output as the layer's instances, cut to the budget.
@@ -166,12 +184,7 @@ protected:
         });
   }
 
-  int m_width = 0;
-  int m_height = 0;
-  float m_tile_size = 1.0F;
-
-  std::vector<float> m_height_data;
-  std::vector<Game::Map::TerrainType> m_terrain_types;
+  std::shared_ptr<const Render::Ground::Scatter::ScatterGridData> m_grid;
   std::vector<Game::Map::WorldProp> m_world_props;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;

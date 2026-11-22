@@ -212,11 +212,13 @@ void register_marketplace_renderer_variant(EntityRendererRegistry& registry,
       registry,
       config.nation_slug,
       "marketplace",
-      [config](const DrawContext& ctx, ISubmitter& out) {
+      [config](const DrawContext& ctx,
+               const EntityPresentation& presentation,
+               ISubmitter& out) {
         if (ctx.entity == nullptr) {
           return;
         }
-        const BuildingState state = resolve_building_state(ctx);
+        const BuildingState state = presented_building_state(presentation, ctx);
         if (config.palette_slots != nullptr) {
           const QVector3D team = Render::entity_color(*ctx.entity);
           const auto palette_slots = config.palette_slots(team);

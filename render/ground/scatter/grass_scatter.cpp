@@ -160,7 +160,8 @@ public:
       , m_terrain_types(*request.grid.types)
       , m_biome_settings(request.biome)
       , m_noise_seed(request.biome.seed)
-      , m_requested_density(requested_density) {}
+      , m_requested_density(requested_density)
+      , m_world(request.world) {}
 
   auto run() -> GrassScatter {
     generate_grass_instances();
@@ -198,6 +199,7 @@ private:
   const Game::Map::BiomeSettings& m_biome_settings;
   std::uint32_t m_noise_seed;
   float m_requested_density;
+  const Game::Map::ScatterWorld* m_world;
   GrassScatter m_out;
 };
 
@@ -538,7 +540,7 @@ void GrassGenerator::generate_grass_instances() {
   config.check_river_margin = false;
   config.allow_hill = true;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator validator(terrain_cache, config, m_world);
   const int chunk_size = default_chunk_size;
 
   const std::size_t cell_count =

@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_world.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
@@ -75,6 +76,22 @@ void TentRenderer::generate_instances(
     const Game::Map::TerrainHeightMap& height_map) {
   adopt_generated(Ground::Scatter::generate_tents(
       {{}, nullptr, m_biome_settings, world().terrain_or_empty(), world_props}));
+}
+
+auto TentRenderer::plan_world_props_refresh(
+    std::vector<Game::Map::WorldProp> world_props,
+    std::shared_ptr<const Game::Map::ScatterWorld> world)
+    -> Ground::Scatter::ScatterJob {
+  return [this,
+          biome = m_biome_settings,
+          world_props = std::move(world_props),
+          world = std::move(world)]() mutable -> Ground::Scatter::ScatterAdoption {
+    auto instances = Ground::Scatter::generate_tents(
+        {{}, nullptr, biome, world->terrain(), world_props, world.get()});
+    return [this, instances = std::move(instances)]() mutable {
+      adopt_generated(std::move(instances));
+    };
+  };
 }
 
 } // namespace Render::GL

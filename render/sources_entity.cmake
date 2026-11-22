@@ -31,6 +31,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/elephant_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/entity_presentation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_activity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_activity_submit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_field.cpp
