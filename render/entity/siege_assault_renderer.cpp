@@ -1,4 +1,4 @@
-#include "siege_assault_renderer.h"
+#include "render/entity/siege_assault_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -6,23 +6,24 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <initializer_list>
 #include <memory>
 #include <numbers>
 #include <string>
 #include <unordered_map>
 
-#include "../entity_appearance.h"
 #include "game/core/component_combat.h"
 #include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
-#include "math/math_utils.h"
+#include "render/entity/siege_renderer_common.h"
+#include "render/frame/entity_appearance.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
-#include "render/submitter.h"
-#include "siege_renderer_common.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL {
 namespace {
@@ -572,7 +573,8 @@ void register_variant(EntityRendererRegistry& registry, const Variant& v) {
           unit = ctx.resources->unit();
           white = ctx.resources->white();
         }
-        if (auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter())) {
+        if (auto* scene_renderer =
+                dynamic_cast<FrameSubmitter*>(out.unwrap_submitter())) {
           unit = scene_renderer->get_mesh_cube();
           white = scene_renderer->get_white_texture();
         }

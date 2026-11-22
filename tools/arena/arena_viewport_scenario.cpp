@@ -34,11 +34,11 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "render/creature/combat_animation_diagnostics.h"
+#include "render/ground/mist_volume_builder.h"
 #include "render/ground/rain_renderer.h"
-#include "render/mist_volume_builder.h"
-#include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_continuity_analyzer.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 using namespace arena_viewport_internal;

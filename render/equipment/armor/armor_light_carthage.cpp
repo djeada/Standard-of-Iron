@@ -1,4 +1,4 @@
-#include "armor_light_carthage.h"
+#include "render/equipment/armor/armor_light_carthage.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,19 +12,19 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "cuirass_trim.h"
+#include "render/creature/humanoid/asset/humanoid_derived_meshes.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/asset/mesh_helpers.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
+#include "render/equipment/armor/cuirass_trim.h"
+#include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/geom/parts.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/humanoid_derived_meshes.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/asset/mesh_helpers.h"
-#include "render/humanoid/runtime/humanoid_math.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
 

@@ -6,11 +6,12 @@
 #include <cstdint>
 #include <source_location>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "building_state.h"
-#include "render/render_archetype.h"
-#include "render/template_cache.h"
+#include "render/entity/building_state.h"
+#include "render/frame/recorded_mesh_cmd.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL {
 

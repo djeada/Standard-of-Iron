@@ -1,10 +1,10 @@
-#include "wall_renderer.h"
+#include "render/entity/wall_renderer.h"
 
-#include "building_render_common.h"
-#include "nations/carthage/wall_renderer.h"
-#include "nations/iberians/wall_renderer.h"
-#include "nations/roman/wall_renderer.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/wall_renderer.h"
+#include "render/entity/nations/iberians/wall_renderer.h"
+#include "render/entity/nations/roman/wall_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

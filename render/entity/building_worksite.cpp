@@ -1,4 +1,4 @@
-#include "building_worksite.h"
+#include "render/entity/building_worksite.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -9,15 +9,15 @@
 #include <cstdint>
 #include <numbers>
 
-#include "building_render_common.h"
 #include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/component_structures.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/units/spawn_type.h"
+#include "render/entity/building_render_common.h"
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

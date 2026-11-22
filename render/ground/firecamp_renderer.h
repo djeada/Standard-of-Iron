@@ -11,12 +11,12 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
-#include "render/decoration_gpu.h"
-#include "scatter_renderer_base.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/ground/scatter_renderer_base.h"
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 
 class FireCampRenderer
     : public ScatterRendererBase<FireCampInstanceGpu, FireCampBatchParams> {
@@ -28,7 +28,7 @@ public:
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   void clear() override;
 

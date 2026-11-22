@@ -23,13 +23,13 @@
 #include "game/map/visibility_service.h"
 #include "map/biome_settings.h"
 #include "map/ground_type.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/world_chunk.h"
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
-#include "terrain_mesh_builder.h"
-#include "terrain_renderer.h"
-#include "world_chunk.h"
+#include "render/ground/terrain_mesh_builder.h"
+#include "render/ground/terrain_renderer.h"
 
 namespace {
 

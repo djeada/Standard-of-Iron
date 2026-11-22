@@ -5,11 +5,11 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/equipment/i_equipment_renderer.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/palette.h"
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
+#include "render/frame/palette.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL {
 

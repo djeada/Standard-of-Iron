@@ -9,16 +9,16 @@
 #include "game/map/biome_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
 #include "render/ground/ground_ecology.h"
-#include "scatter_renderer_base.h"
+#include "render/ground/scatter_renderer_base.h"
 
 namespace Render::Ground {
 struct TreeScatterProfile;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 
 struct AnchoredTree {
   Game::Map::TreeSpecies species{Game::Map::TreeSpecies::Olive};
@@ -47,7 +47,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto fog_culls_instances() const -> bool override { return false; }
 

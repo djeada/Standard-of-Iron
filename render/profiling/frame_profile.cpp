@@ -1,4 +1,4 @@
-#include "frame_profile.h"
+#include "render/profiling/frame_profile.h"
 
 #include <cstdio>
 #include <cstring>

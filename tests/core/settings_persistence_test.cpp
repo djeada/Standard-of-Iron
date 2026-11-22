@@ -18,8 +18,8 @@
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
-#include "render/graphics_settings.h"
-#include "render/software_backend.h"
+#include "render/backend/software_backend.h"
+#include "render/frame/graphics_settings.h"
 #include "scene/camera.h"
 
 namespace {

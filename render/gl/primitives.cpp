@@ -1,4 +1,4 @@
-#include "primitives.h"
+#include "render/gl/primitives.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "gl/mesh.h"
 #include "render/gl/garment_shell.h"
+#include "render/gl/mesh.h"
 #include "render/gl/shared_geometry_cache.h"
 
 namespace Render::GL {

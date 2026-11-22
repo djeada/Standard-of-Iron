@@ -1,4 +1,4 @@
-#include "gl_lifetime.h"
+#include "render/gl/gl_lifetime.h"
 
 #include <QCoreApplication>
 #include <QObject>
@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include "platform_gl.h"
+#include "render/gl/platform_gl.h"
 
 namespace Render::GL {
 

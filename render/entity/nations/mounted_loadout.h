@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-#include "equipment_loadout_catalog.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 
 namespace Render::GL::Nation {
 

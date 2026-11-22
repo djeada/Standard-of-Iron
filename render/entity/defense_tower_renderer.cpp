@@ -1,9 +1,9 @@
-#include "defense_tower_renderer.h"
+#include "render/entity/defense_tower_renderer.h"
 
-#include "building_render_common.h"
-#include "nations/carthage/defense_tower_renderer.h"
-#include "nations/roman/defense_tower_renderer.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/defense_tower_renderer.h"
+#include "render/entity/nations/roman/defense_tower_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

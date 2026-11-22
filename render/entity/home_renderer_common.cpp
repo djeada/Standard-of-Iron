@@ -1,16 +1,16 @@
-#include "home_renderer_common.h"
+#include "render/entity/home_renderer_common.h"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
 
-#include "../entity_appearance.h"
-#include "building_archetype_desc.h"
-#include "building_decay.h"
 #include "game/core/component_core.h"
-#include "home_activity.h"
-#include "home_props.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/home_activity.h"
+#include "render/entity/home_props.h"
+#include "render/frame/entity_appearance.h"
 
 namespace Render::GL {
 namespace {

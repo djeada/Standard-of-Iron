@@ -11,12 +11,12 @@
 #include "game/core/component_economy.h"
 #include "game/core/entity.h"
 #include "game/session/session_context.h"
+#include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/pose_controller.h"
+#include "render/creature/humanoid/runtime/spear_pose_utils.h"
 #include "render/entity/registry.h"
-#include "render/gl/humanoid/animation/animation_inputs.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/pose_controller.h"
-#include "render/humanoid/runtime/spear_pose_utils.h"
-#include "render/world_view.h"
+#include "render/frame/world_view.h"
 #include "tests/support/movement_test_access.h"
 
 using namespace Render::GL;

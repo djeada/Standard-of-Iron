@@ -10,7 +10,7 @@
 #include <numbers>
 #include <span>
 
-#include "render/gl/shadow_cascade_fit.h"
+#include "render/backend/shadow_cascade_fit.h"
 
 namespace {
 

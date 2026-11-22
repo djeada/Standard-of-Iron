@@ -1,4 +1,4 @@
-#include "rigged_mesh_registry.h"
+#include "render/creature/rigged_mesh_registry.h"
 
 #include <QCoreApplication>
 

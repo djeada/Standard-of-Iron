@@ -17,5 +17,3 @@ public:
 
 } // namespace Geom
 } // namespace Render
-
-#include "projectile_renderer.h"

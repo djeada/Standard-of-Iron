@@ -1,27 +1,27 @@
-#include "elephant_renderer.h"
+#include "render/entity/nations/carthage/elephant_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 
 #include <cmath>
 
-#include "../../../entity_appearance.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/visuals/team_colors.h"
-#include "math/math_utils.h"
 #include "render/creature/anatomy_bake.h"
+#include "render/creature/elephant/elephant_renderer_base.h"
+#include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
-#include "render/elephant/elephant_renderer_base.h"
 #include "render/entity/registry.h"
+#include "render/frame/entity_appearance.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
-#include "render/gl/humanoid/animation/animation_inputs.h"
-#include "render/gl/humanoid/humanoid_types.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/math/creature_math_utils.h"
-#include "render/scene_renderer.h"
-#include "render/submitter.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {

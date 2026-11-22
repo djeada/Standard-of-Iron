@@ -1,9 +1,9 @@
-#include "home_renderer.h"
+#include "render/entity/home_renderer.h"
 
-#include "building_render_common.h"
-#include "nations/carthage/home_renderer.h"
-#include "nations/roman/home_renderer.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/home_renderer.h"
+#include "render/entity/nations/roman/home_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

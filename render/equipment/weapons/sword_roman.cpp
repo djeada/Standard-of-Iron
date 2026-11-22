@@ -1,4 +1,4 @@
-#include "sword_roman.h"
+#include "render/equipment/weapons/sword_roman.h"
 
 namespace Render::GL {
 

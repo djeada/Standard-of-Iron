@@ -12,7 +12,7 @@
 #include "game/systems/harvest_yields.h"
 #include "game/systems/resource_types.h"
 #include "render/entity/carried_load_renderer.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
 
 namespace {
 

@@ -1,0 +1,135 @@
+#pragma once
+
+#include <QMatrix4x4>
+
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/render_request.h"
+#include "render/gl/rigged_mesh.h"
+
+namespace Render::Creature::Bpat {
+class BpatBlob;
+}
+namespace Render::Creature::Snapshot {
+class SnapshotMeshBlob;
+}
+namespace Render::Creature::Pipeline {
+struct CreatureAsset;
+}
+namespace Render::GL {
+struct RiggedMeshEntry;
+class RiggedMeshCache;
+} // namespace Render::GL
+
+namespace Render::GL {
+
+struct SnapshotMeshEntry {
+  std::unique_ptr<RiggedMesh> mesh;
+
+  std::vector<std::unique_ptr<RiggedMesh>> attachment_meshes;
+
+  std::size_t bytes{0};
+  std::uint64_t last_used_frame{0};
+};
+
+class SnapshotMeshCache {
+public:
+  struct Key {
+    Render::Creature::Pipeline::CreatureAssetId asset_id{
+        Render::Creature::Pipeline::k_invalid_creature_asset};
+    Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
+    Render::Creature::Pipeline::AttachmentSetId attachment_set_id{
+        Render::Creature::Pipeline::k_invalid_attachment_set_id};
+    Render::Creature::VariantId variant{Render::Creature::k_canonical_variant};
+    Render::Creature::AnimationStateId state{Render::Creature::AnimationStateId::Idle};
+    std::uint16_t clip_id{0xFFFFu};
+    std::uint8_t clip_variant{0};
+    std::uint32_t frame_in_clip{0};
+
+    auto operator==(const Key& o) const noexcept -> bool {
+      return asset_id == o.asset_id && archetype == o.archetype &&
+             attachment_set_id == o.attachment_set_id && variant == o.variant &&
+             state == o.state && clip_id == o.clip_id &&
+             clip_variant == o.clip_variant && frame_in_clip == o.frame_in_clip;
+    }
+  };
+
+  struct KeyHash {
+    auto operator()(const Key& k) const noexcept -> std::size_t {
+      auto const a = static_cast<std::size_t>(k.archetype);
+      auto const asset = static_cast<std::size_t>(k.asset_id);
+      auto const set = static_cast<std::size_t>(k.attachment_set_id);
+      auto const v = static_cast<std::size_t>(k.variant);
+      auto const s = static_cast<std::size_t>(k.state);
+      auto const c = static_cast<std::size_t>(k.clip_id);
+      auto const cv = static_cast<std::size_t>(k.clip_variant);
+      auto const f = static_cast<std::size_t>(k.frame_in_clip);
+      return ((asset * 0x165667B1ULL) ^ (a * 0x9E3779B1u) ^ (set * 0x27D4EB2FULL) ^
+              (v << 13U) ^ (s << 21U) ^ (c * 0x85EBCA6BULL) ^ (cv << 7U) ^
+              (f * 0xC2B2AE35ULL));
+    }
+  };
+
+  SnapshotMeshCache() = default;
+  ~SnapshotMeshCache() = default;
+  SnapshotMeshCache(const SnapshotMeshCache&) = delete;
+  auto operator=(const SnapshotMeshCache&) -> SnapshotMeshCache& = delete;
+
+  struct FrameStats {
+    std::uint32_t hits{0};
+    std::uint32_t loads{0};
+    std::uint32_t bakes{0};
+    std::uint32_t misses{0};
+    std::uint32_t evictions{0};
+  };
+
+  void reset_frame_stats() noexcept {
+    m_frame_stats = {};
+    ++m_frame_index;
+  }
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats& {
+    return m_frame_stats;
+  }
+  void reserve_for_frame(std::size_t expected_entries) {
+    m_entries.reserve(m_entries.size() + expected_entries);
+    trim_to_budget();
+  }
+
+  [[nodiscard]] auto resident_bytes() const noexcept -> std::size_t {
+    return m_resident_bytes;
+  }
+  [[nodiscard]] static auto budget_bytes() noexcept -> std::size_t;
+
+  auto get_or_bake(const Key& key,
+                   const RiggedMeshEntry& source,
+                   std::uint32_t global_frame) -> const SnapshotMeshEntry*;
+  auto get_or_load(const Key& key,
+                   const Render::Creature::Snapshot::SnapshotMeshBlob& source,
+                   std::uint32_t global_frame) -> const SnapshotMeshEntry*;
+
+  void clear() {
+    m_entries.clear();
+    m_resident_bytes = 0;
+  }
+
+  [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
+
+  [[nodiscard]] static auto identity_palette() noexcept -> const QMatrix4x4*;
+
+private:
+  static constexpr std::uint64_t k_eviction_grace_frames = 3;
+
+  auto note_insertion(SnapshotMeshEntry& entry) -> void;
+  void trim_to_budget();
+
+  std::unordered_map<Key, SnapshotMeshEntry, KeyHash> m_entries;
+  FrameStats m_frame_stats;
+  std::size_t m_resident_bytes{0};
+  std::uint64_t m_frame_index{0};
+};
+
+} // namespace Render::GL

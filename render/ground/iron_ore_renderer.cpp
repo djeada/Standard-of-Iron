@@ -1,4 +1,4 @@
-#include "iron_ore_renderer.h"
+#include "render/ground/iron_ore_renderer.h"
 
 #include <QVector3D>
 #include <QVector4D>
@@ -7,16 +7,16 @@
 #include <cmath>
 #include <cstdint>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/scene_renderer.h"
-#include "render/terrain_contact.h"
-#include "scatter_runtime.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/terrain_contact.h"
+#include "render/ground/scatter_runtime.h"
 
 namespace {
 
@@ -50,7 +50,7 @@ void IronOreRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void IronOreRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void IronOreRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::IronOre) ==
       0) {
     return;

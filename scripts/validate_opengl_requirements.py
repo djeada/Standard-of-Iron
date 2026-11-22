@@ -56,7 +56,7 @@ OPTIONAL_GL43_SHADERS = {
 }
 
 
-OPTIONAL_PATH_OWNER = Path("render/gl/backend/rigged_cull_pipeline.cpp")
+OPTIONAL_PATH_OWNER = Path("render/backend/rigged_cull_pipeline.cpp")
 REQUIRED_CAPABILITY_PROBES = (
     "GLCapabilities::has_compute_shaders()",
     "GLCapabilities::has_indirect_draw()",
@@ -122,7 +122,7 @@ GL4_API_PATTERN = re.compile(
     r"|glClearBufferData"
 )
 GL4_API_OWNERS = {
-    Path("render/gl/backend/rigged_cull_pipeline.cpp"),
+    Path("render/backend/rigged_cull_pipeline.cpp"),
     Path("render/gl/platform_gl.h"),
 }
 GL43_INCLUDE_PATTERN = re.compile(

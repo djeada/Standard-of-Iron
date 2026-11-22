@@ -1,4 +1,4 @@
-#include "horse_renderer.h"
+#include "render/entity/horse_renderer.h"
 
 #include "render/creature/pipeline/unit_visual_spec.h"
 namespace Render::GL {

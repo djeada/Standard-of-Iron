@@ -1,12 +1,12 @@
-#include "prepared_submit.h"
+#include "render/creature/pipeline/prepared_submit.h"
 
 #include <algorithm>
 #include <iterator>
 #include <string_view>
 #include <vector>
 
-#include "render/submitter.h"
-#include "shadow_batch.h"
+#include "render/creature/pipeline/shadow_batch.h"
+#include "render/frame/submitter.h"
 
 namespace Render::Creature::Pipeline {
 

@@ -17,7 +17,8 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/world_view.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
@@ -31,7 +32,6 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/tree_renderer.h"
-#include "render/world_view.h"
 
 namespace {
 

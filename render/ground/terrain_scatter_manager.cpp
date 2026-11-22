@@ -1,4 +1,4 @@
-#include "terrain_scatter_manager.h"
+#include "render/ground/terrain_scatter_manager.h"
 
 #include <QVector3D>
 
@@ -6,7 +6,8 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
-#include "render/graphics_settings.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/graphics_settings.h"
 #include "render/ground/abandoned_home_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
@@ -23,7 +24,6 @@
 #include "render/ground/tent_renderer.h"
 #include "render/ground/tree_renderer.h"
 #include "render/ground/weapon_rack_renderer.h"
-#include "render/scene_renderer.h"
 
 namespace Render::GL {
 
@@ -155,7 +155,8 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
   }
 }
 
-void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
+void TerrainScatterManager::submit(FrameSubmitter& renderer,
+                                   ResourceManager* resources) {
   std::lock_guard<std::mutex> const lock(m_mutex);
 
   const std::uint32_t generation = GraphicsSettings::instance().generation();

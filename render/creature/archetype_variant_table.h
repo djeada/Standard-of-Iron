@@ -1,8 +1,8 @@
 #pragma once
 
 #include "animation/selection_manifest.h"
-#include "pose_intent_enum.h"
-#include "render_request.h"
+#include "render/creature/pose_intent_enum.h"
+#include "render/creature/render_request.h"
 
 namespace Render::Creature {
 

@@ -1,4 +1,4 @@
-#include "equipment_archetype_resolver.h"
+#include "render/equipment/equipment_archetype_resolver.h"
 
 #include <QDebug>
 #include <QString>

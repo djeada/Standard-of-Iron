@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "render/entity/formation_instance_layout.h"
+#include "render/creature/humanoid/runtime/formation_instance_layout.h"
 
 namespace {
 

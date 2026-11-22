@@ -1,10 +1,10 @@
-#include "catapult_renderer.h"
+#include "render/entity/catapult_renderer.h"
 
 #include "game/core/component_core.h"
 #include "game/systems/nation_id.h"
-#include "nations/carthage/catapult_renderer.h"
-#include "nations/roman/catapult_renderer.h"
-#include "registry.h"
+#include "render/entity/nations/carthage/catapult_renderer.h"
+#include "render/entity/nations/roman/catapult_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

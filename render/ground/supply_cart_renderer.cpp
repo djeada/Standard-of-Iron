@@ -1,14 +1,14 @@
-#include "supply_cart_renderer.h"
+#include "render/ground/supply_cart_renderer.h"
 
 #include <QVector4D>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/scene_renderer.h"
-#include "scatter_runtime.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
+#include "render/ground/scatter_runtime.h"
 
 namespace {
 
@@ -34,7 +34,7 @@ void SupplyCartRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void SupplyCartRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void SupplyCartRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::SupplyCart);
 }
 

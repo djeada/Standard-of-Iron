@@ -1,6 +1,6 @@
-#include "archer_style.h"
+#include "render/entity/nations/roman/archer_style.h"
 
-#include "render/entity/nations/material_palette.h"
+#include "render/equipment/material_palette.h"
 
 namespace Render::GL::Roman {
 

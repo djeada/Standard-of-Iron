@@ -1,4 +1,4 @@
-#include "building_collapse.h"
+#include "render/entity/building_collapse.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -14,8 +14,8 @@
 #include "game/core/death_sequence.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

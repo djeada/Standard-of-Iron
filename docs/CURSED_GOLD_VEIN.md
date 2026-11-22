@@ -96,7 +96,7 @@ The vein's presentation reinforces the same risk-reward idea as its mechanics.
 
 ### Mesh
 
-`render/gl/backend/cursed_gold_vein_mesh.cpp` builds the mesh through the shared `rock_outcrop_mesh` helpers also used by iron ore. `VegetationPipeline::initialize_cursed_gold_vein_pipeline` uploads it.
+`render/backend/cursed_gold_vein_mesh.cpp` builds the mesh through the shared `rock_outcrop_mesh` helpers also used by iron ore. `VegetationPipeline::initialize_cursed_gold_vein_pipeline` uploads it.
 
 The rock is constructed from jittered, lofted masses rather than stacked frustums. Gold shards are irregular prisms whose facets run along their full length. Rock geometry stays below `k_cursed_gold_vein_rock_crown` (`0.46`); geometry above that height is crystal.
 

@@ -13,19 +13,19 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/i_render_pass.h"
+#include "render/frame/mist_volume.h"
+#include "render/frame/world_chunk.h"
 #include "render/gl/mesh.h"
 #include "render/gl/terrain_noise_atlas.h"
 #include "render/gl/texture.h"
 #include "render/ground/building_ground.h"
 #include "render/ground/ground_ecology.h"
-#include "render/i_render_pass.h"
-#include "render/mist_volume.h"
-#include "render/world_chunk.h"
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 class Mesh;
 class Texture;
@@ -50,7 +50,7 @@ public:
 
   void set_light_direction(const QVector3D& dir);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 

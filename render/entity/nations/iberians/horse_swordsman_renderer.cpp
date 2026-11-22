@@ -1,10 +1,10 @@
-#include "horse_swordsman_renderer.h"
+#include "render/entity/nations/iberians/horse_swordsman_renderer.h"
 
 #include <memory>
 
-#include "palette.h"
 #include "render/entity/mounted_swordsman_renderer_base.h"
-#include "render/submitter.h"
+#include "render/entity/nations/iberians/palette.h"
+#include "render/frame/submitter.h"
 
 namespace Render::GL::Iberians {
 namespace {

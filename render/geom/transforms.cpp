@@ -1,11 +1,11 @@
-#include "transforms.h"
+#include "render/geom/transforms.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 
 #include <cmath>
 
-#include "affine_matrix.h"
+#include "render/geom/affine_matrix.h"
 
 namespace Render::Geom {
 

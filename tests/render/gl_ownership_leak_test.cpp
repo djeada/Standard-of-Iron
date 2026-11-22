@@ -7,8 +7,8 @@
 #include <memory>
 #include <sstream>
 
-#include "render/draw_queue.h"
-#include "render/gl/backend.h"
+#include "render/backend/backend.h"
+#include "render/frame/draw_queue.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/gl_lifetime.h"
 #include "render/gl/resources.h"

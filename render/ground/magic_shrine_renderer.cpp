@@ -1,17 +1,17 @@
-#include "magic_shrine_renderer.h"
+#include "render/ground/magic_shrine_renderer.h"
 
 #include <QVector4D>
 
 #include <algorithm>
 #include <cmath>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/scene_renderer.h"
-#include "scatter_runtime.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
+#include "render/ground/scatter_runtime.h"
 
 namespace {
 
@@ -43,7 +43,7 @@ void MagicShrineRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void MagicShrineRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (submit_prop_common(
           renderer, resources, TerrainScatterCmd::Species::MagicShrine) == 0) {
     return;

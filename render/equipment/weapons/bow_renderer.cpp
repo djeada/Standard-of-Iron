@@ -1,4 +1,4 @@
-#include "bow_renderer.h"
+#include "render/equipment/weapons/bow_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -12,24 +12,24 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "arrow_archetype_utils.h"
-#include "math/math_utils.h"
-#include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/equipment/primitive_archetype_utils.h"
+#include "render/equipment/renderer_constants.h"
+#include "render/equipment/weapons/arrow_archetype_utils.h"
+#include "render/frame/draw_context.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_math.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/static_attachment_spec.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL {
 

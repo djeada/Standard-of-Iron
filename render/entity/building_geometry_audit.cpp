@@ -1,12 +1,13 @@
-#include "building_geometry_audit.h"
+#include "render/entity/building_geometry_audit.h"
 
 #include <QMatrix4x4>
 
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <utility>
 
-#include "building_decay.h"
+#include "render/entity/building_decay.h"
 
 namespace Render::GL {
 namespace {

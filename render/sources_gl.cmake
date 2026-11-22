@@ -1,59 +1,16 @@
-# GL backend layer (Phase 1 owner). Edit ONLY this file for render/gl/* sources.
+# render/gl: GL handles and wrappers. See scripts/check-render-layers.py.
 set(RENDER_GL_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shared_geometry_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_handle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_lifetime.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh_gpu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture_upload.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/terrain_noise_atlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/bootstrap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/instance_draw_guard.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cursed_gold_vein_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/dead_tree_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/iron_ore_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rock_outcrop_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/tent_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/weapon_rack_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_mesh_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_parts.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ring_loft_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/tree_mesh.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/static_mesh_upload.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_natural.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_settlement.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/shader_uniform_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/effects_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/primitive_batch_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/banner_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healing_beam_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healer_aura_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/combat_dust_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ground_marker_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/post_process_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/sky_box_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mode_indicator_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rain_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_instancing_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_character_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_cull_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/scatter_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_linear_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/directional_shadow_pass.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/effects_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_command_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/humanoid/animation/animation_inputs.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh_gpu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shared_geometry_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/terrain_noise_atlas.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture_upload.cpp
 )

@@ -3,7 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "part_graph.h"
+#include "render/creature/part_graph.h"
 
 namespace Render::GL {
 class Mesh;

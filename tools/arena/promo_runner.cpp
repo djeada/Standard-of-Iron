@@ -42,8 +42,8 @@
 #include "promo_camera_export.h"
 #include "promo_casting_overlay.h"
 #include "promo_rpg_hud.h"
-#include "render/graphics_settings.h"
-#include "render/humanoid/runtime/runtime_stats.h"
+#include "render/creature/humanoid/runtime/runtime_stats.h"
+#include "render/frame/graphics_settings.h"
 #include "video_encoder.h"
 
 namespace Arena::Promo {

@@ -11,7 +11,7 @@ auto find_repo_root() -> std::filesystem::path {
   auto has_repo_markers = [](const std::filesystem::path& path) {
     return std::filesystem::exists(path / "CMakeLists.txt") &&
            std::filesystem::exists(path / "ui" / "gl_view.cpp") &&
-           std::filesystem::exists(path / "render" / "scene_renderer.cpp");
+           std::filesystem::exists(path / "render" / "scene" / "scene_renderer.cpp");
   };
 
   auto walk_up = [&](std::filesystem::path path) -> std::filesystem::path {
@@ -77,8 +77,8 @@ TEST(RenderThreadBoundaryTest, GlRendererDoesNotRunTheSimulationOnTheRenderThrea
 TEST(RenderThreadBoundaryTest, RenderSubmitDoesNotCallCombatQuerySearches) {
   const auto root = find_repo_root();
   const std::vector<std::filesystem::path> render_sources = {
-      root / "render" / "scene_renderer.cpp",
-      root / "render" / "gl" / "backend.cpp",
+      root / "render" / "scene" / "scene_renderer.cpp",
+      root / "render" / "backend" / "backend.cpp",
   };
   const std::vector<std::string> forbidden_tokens = {
       "combat_system/combat_utils",

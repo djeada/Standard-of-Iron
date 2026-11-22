@@ -4,11 +4,11 @@
 #include <gtest/gtest.h>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/horse/horse_renderer_base.h"
-#include "render/humanoid/runtime/body_frame_resolver.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/mounted_pose_controller.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/horse/horse_renderer_base.h"
+#include "render/creature/humanoid/runtime/body_frame_resolver.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/mounted_pose_controller.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 
 using namespace Render::GL;
 

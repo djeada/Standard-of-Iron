@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "arena_scenario.h"
-#include "render/mist_volume.h"
-#include "render/mist_volume_builder.h"
+#include "render/frame/mist_volume.h"
+#include "render/ground/mist_volume_builder.h"
 
 namespace Arena {
 

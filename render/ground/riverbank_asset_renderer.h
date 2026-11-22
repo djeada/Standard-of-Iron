@@ -8,13 +8,13 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/i_render_pass.h"
-#include "riverbank_asset_gpu.h"
-#include "scatter_renderer_state.h"
+#include "render/frame/i_render_pass.h"
+#include "render/ground/riverbank_asset_gpu.h"
+#include "render/ground/scatter_renderer_state.h"
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 
 class RiverbankAssetRenderer : public IRenderPass {
 public:
@@ -27,7 +27,7 @@ public:
 
   void set_light_direction(const QVector3D& dir);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   void clear();
 

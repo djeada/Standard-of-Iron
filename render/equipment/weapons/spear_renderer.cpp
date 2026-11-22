@@ -1,4 +1,4 @@
-#include "spear_renderer.h"
+#include "render/equipment/weapons/spear_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -8,20 +8,20 @@
 #include <span>
 #include <string>
 
-#include "render/entity/renderer_constants.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/humanoid/runtime/spear_pose_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/oriented_archetype_utils.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/humanoid/runtime/spear_pose_utils.h"
-#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "render/gl/backend/prop_mesh_builder.h"
+#include "render/backend/prop_mesh_builder.h"
 
 namespace {
 

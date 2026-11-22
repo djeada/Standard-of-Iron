@@ -213,7 +213,7 @@ Prevents rendering bugs caused by naming convention mismatches (camelCase vs sna
 
 - ✓ Scans all `.frag` and `.vert` shader files in `assets/shaders/`
 - ✓ Extracts uniform declarations from shaders
-- ✓ Compares with `uniformHandle()` calls in `render/gl/backend.cpp`
+- ✓ Compares with `uniformHandle()` calls in `render/backend/backend.cpp`
 - ✓ Detects camelCase/snake_case mismatches
 - ✓ Reports exact line numbers of issues
 - ✓ Exit code 0 if valid, 1 if errors found (CI-friendly)

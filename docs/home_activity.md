@@ -116,7 +116,7 @@ is attached to the draw context.
 ## Night
 
 Night is not a clock. `mediterranean_summer` still reports a primary intensity
-of 0.44 at 21:00 and only the colour goes dim, so `render/scene_walk.cpp`
+of 0.44 at 21:00 and only the colour goes dim, so `render/scene/scene_walk.cpp`
 measures the light the scene actually casts (`luma(primary_color) *
 primary_intensity`) and feeds `HomeActivity::set_night` a 0-1 factor. That one
 factor drives the lamps, the shutters, the laundry and the meal-time bias.

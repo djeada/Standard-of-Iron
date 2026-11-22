@@ -1,4 +1,4 @@
-#include "production_completion_renderer.h"
+#include "render/entity/production_completion_renderer.h"
 
 #include <QtGlobal>
 
@@ -12,10 +12,10 @@
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
-#include "render/draw_commands.h"
-#include "render/local_lighting.h"
-#include "render/scene_renderer.h"
-#include "render/world_view.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/local_lighting.h"
+#include "render/frame/world_view.h"
 
 namespace Render::GL {
 
@@ -51,7 +51,7 @@ auto palette_for(Engine::Core::SpawnFlareStyle style) -> FlarePalette {
   return {k_gold, k_pale_gold};
 }
 
-void submit_ground_disc(Renderer* renderer,
+void submit_ground_disc(FrameSubmitter* renderer,
                         const QVector3D& ground,
                         float radius,
                         float alpha,
@@ -68,7 +68,7 @@ void submit_ground_disc(Renderer* renderer,
   renderer->ground_marker(disc);
 }
 
-void submit_ground_ring(Renderer* renderer,
+void submit_ground_ring(FrameSubmitter* renderer,
                         const QVector3D& ground,
                         float radius,
                         float ring_age,
@@ -88,7 +88,7 @@ void submit_ground_ring(Renderer* renderer,
   renderer->ground_marker(ring);
 }
 
-void submit_glow_light(Renderer* renderer,
+void submit_glow_light(FrameSubmitter* renderer,
                        const QVector3D& position,
                        float radius,
                        float intensity,
@@ -104,7 +104,7 @@ void submit_glow_light(Renderer* renderer,
 
 } // namespace
 
-void render_production_completions(Renderer* renderer,
+void render_production_completions(FrameSubmitter* renderer,
                                    Engine::Core::World* world,
                                    int local_owner_id,
                                    bool reduced_motion) {
@@ -204,7 +204,7 @@ void render_production_completions(Renderer* renderer,
   }
 }
 
-void render_ripe_fields(Renderer* renderer,
+void render_ripe_fields(FrameSubmitter* renderer,
                         Engine::Core::World* world,
                         int local_owner_id,
                         bool reduced_motion) {

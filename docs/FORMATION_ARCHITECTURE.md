@@ -727,7 +727,7 @@ A deployment also sets each troop's file count (`formation_files_override`), whi
 changes its internal rank/file layout at once. The humanoid renderer eases that
 change: when a soldier's local offset jumps by more than 0.25 m in one frame, the
 drawn soldier walks to the new offset at 2.5 m/s (`ease_soldier_offsets` in
-`render/humanoid/runtime/instance_prepare.cpp`). Smaller per-frame changes are
+`render/creature/humanoid/runtime/instance_prepare.cpp`). Smaller per-frame changes are
 tracked exactly, so bodies stay on their selection rings while formed. Changes
 beyond 12 m, a new soldier count, or an about-face still snap. Without this, every
 soldier of a reshaped troop jumped 1–4 m in the frame after the order.

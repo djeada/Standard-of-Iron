@@ -25,12 +25,12 @@
 #include "game/systems/nation_id.h"
 #include "render/entity/building_state.h"
 #include "render/entity/registry.h"
+#include "render/frame/render_archetype.h"
+#include "render/frame/submitter.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/render_archetype.h"
 #include "render/software/software_rasterizer.h"
-#include "render/submitter.h"
 
 namespace {
 

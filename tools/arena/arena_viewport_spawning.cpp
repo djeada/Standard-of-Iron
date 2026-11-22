@@ -32,10 +32,10 @@
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_system.h"
+#include "render/creature/combat_animation_diagnostics.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
-#include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_continuity_analyzer.h"
 #include "unit_spawn_options.h"
 

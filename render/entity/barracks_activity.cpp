@@ -1,4 +1,4 @@
-#include "barracks_activity.h"
+#include "render/entity/barracks_activity.h"
 
 #include <QMatrix4x4>
 
@@ -8,17 +8,17 @@
 #include <cstdint>
 
 #include "animation/clip_manifest.h"
-#include "building_archetype_desc.h"
-#include "building_render_common.h"
-#include "building_state.h"
-#include "civilian_actor.h"
 #include "game/core/component.h"
-#include "home_activity.h"
-#include "registry.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/home_activity.h"
+#include "render/entity/registry.h"
+#include "render/frame/local_lighting.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/local_lighting.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

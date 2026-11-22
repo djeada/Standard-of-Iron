@@ -11,11 +11,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "render/draw_queue.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/local_lighting.h"
 #include "render/gl/shader.h"
 #include "render/gl/ubo_bindings.h"
 #include "render/ground/firecamp_renderer.h"
-#include "render/local_lighting.h"
 
 TEST(LocalLightingTest, SelectsTheMostRelevantLightsDeterministically) {
   std::vector<Render::LocalLight> lights;

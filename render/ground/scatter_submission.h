@@ -1,12 +1,12 @@
 #pragma once
 
-#include "render/scene_renderer.h"
-#include "scatter_renderer_state.h"
+#include "render/frame/frame_submitter.h"
+#include "render/ground/scatter_renderer_state.h"
 
 namespace Render::Ground::Scatter {
 
 template <typename Instance, typename Params>
-void submit_visible_chunks(Render::GL::Renderer& renderer,
+void submit_visible_chunks(Render::GL::FrameSubmitter& renderer,
                            const FilteredRendererState<Instance, Params>& state,
                            Render::GL::TerrainScatterCmd command) {
   for (const auto& chunk : state.spatial_chunks) {
@@ -26,7 +26,7 @@ void submit_visible_chunks(Render::GL::Renderer& renderer,
 }
 
 template <typename Instance, typename Params, typename ChunkBudget>
-void submit_visible_chunks_lod(Render::GL::Renderer& renderer,
+void submit_visible_chunks_lod(Render::GL::FrameSubmitter& renderer,
                                const FilteredRendererState<Instance, Params>& state,
                                Render::GL::TerrainScatterCmd command,
                                ChunkBudget chunk_budget) {

@@ -1,9 +1,9 @@
-#include "farm_renderer.h"
+#include "render/entity/farm_renderer.h"
 
-#include "building_render_common.h"
-#include "nations/carthage/farm_renderer.h"
-#include "nations/roman/farm_renderer.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/farm_renderer.h"
+#include "render/entity/nations/roman/farm_renderer.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

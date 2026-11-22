@@ -1,21 +1,21 @@
-#include "creature_asset.h"
+#include "render/creature/pipeline/creature_asset.h"
 
 #include <algorithm>
 #include <limits>
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
-#include "creature_visual_definition.h"
+#include "render/cache/static_attachment_spec.h"
 #include "render/creature/archetype_registry.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/horse/horse_spec.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_pose_diagnostics.h"
-#include "render/humanoid/schema/blend_profile.h"
-#include "render/static_attachment_spec.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wildlife_variant.h"
-#include "render/wildlife/wolf_spec.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_pose_diagnostics.h"
+#include "render/creature/humanoid/schema/blend_profile.h"
+#include "render/creature/pipeline/creature_visual_definition.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wildlife_variant.h"
+#include "render/creature/wildlife/wolf_spec.h"
 
 namespace Render::Creature::Pipeline {
 

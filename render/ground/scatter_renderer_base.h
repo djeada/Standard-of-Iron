@@ -11,11 +11,11 @@
 #include "game/map/biome_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
-#include "i_scatter_pass.h"
-#include "render/decoration_gpu.h"
-#include "render/scene_renderer.h"
-#include "scatter_renderer_state.h"
-#include "scatter_submission.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
+#include "render/ground/i_scatter_pass.h"
+#include "render/ground/scatter_renderer_state.h"
+#include "render/ground/scatter_submission.h"
 
 namespace Render::GL {
 
@@ -94,7 +94,7 @@ protected:
   }
 
   template <bool CopyTimeToParams>
-  auto submit_filtered_common(Renderer& renderer,
+  auto submit_filtered_common(FrameSubmitter& renderer,
                               ResourceManager* resources,
                               TerrainScatterCmd::Species species,
                               void (*assign_params)(TerrainScatterCmd&,
@@ -127,7 +127,7 @@ protected:
     return visible_count;
   }
 
-  auto submit_prop_common(Renderer& renderer,
+  auto submit_prop_common(FrameSubmitter& renderer,
                           ResourceManager* resources,
                           TerrainScatterCmd::Species species) -> std::size_t {
     m_state.params.time = renderer.get_animation_time();

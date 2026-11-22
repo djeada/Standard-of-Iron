@@ -1,4 +1,4 @@
-#include "map_boundary_fog_renderer.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 
 #include <QMatrix4x4>
 
@@ -13,8 +13,9 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
-#include "render/scene_renderer.h"
-#include "terrain_renderer.h"
+#include "render/frame/frame_submitter.h"
+#include "render/gl/resources.h"
+#include "render/ground/terrain_renderer.h"
 
 namespace Render::GL {
 
@@ -452,7 +453,8 @@ void MapBoundaryFogRenderer::configure(int width, int height, float tile_size) {
   build_mountains();
 }
 
-void MapBoundaryFogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void MapBoundaryFogRenderer::submit(FrameSubmitter& renderer,
+                                    ResourceManager* resources) {
   if ((resources == nullptr) || (m_cards.empty() && m_mountain_indices.empty())) {
     return;
   }

@@ -6,12 +6,12 @@
 #include <vector>
 
 #include "game/map/terrain.h"
-#include "render/i_render_pass.h"
-#include "road_network_geometry.h"
+#include "render/frame/i_render_pass.h"
+#include "render/ground/road_network_geometry.h"
 
 namespace Render::GL {
 class Mesh;
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class RoadRenderer : public IRenderPass {
@@ -22,7 +22,7 @@ public:
   void configure(const std::vector<Game::Map::RoadSegment>& road_segments,
                  const Game::Map::TerrainHeightMap& height_map);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 

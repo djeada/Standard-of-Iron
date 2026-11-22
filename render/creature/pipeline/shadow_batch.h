@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "render_pass_intent.h"
+#include "render/creature/pipeline/render_pass_intent.h"
 
 namespace Render::GL {
 class Shader;

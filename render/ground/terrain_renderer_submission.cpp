@@ -8,11 +8,12 @@
 
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/graphics_settings.h"
 #include "render/gl/texture.h"
 #include "render/gl/texture_upload.h"
 #include "render/ground/ground_ecology.h"
-#include "render/scene_renderer.h"
-#include "terrain_renderer.h"
+#include "render/ground/terrain_renderer.h"
 
 namespace {
 
@@ -291,7 +292,8 @@ void TerrainRenderer::bake_terrain_fields() {
 }
 
 void TerrainRenderer::bake_terrain_microdetail() {
-  m_noise_atlas.bake_microdetail();
+  m_noise_atlas.bake_microdetail(Render::GraphicsSettings::instance().quality() ==
+                                 Render::GraphicsQuality::Low);
 }
 
 void TerrainRenderer::bake_terrain_noise_atlas() {
@@ -302,6 +304,8 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
   params.noise_offset =
       m_chunks.empty() ? QVector2D(0.0F, 0.0F) : m_chunks.front().params.noise_offset;
   params.macro_noise_scale = m_biome_settings.terrain_macro_noise_scale;
+  params.low_detail =
+      Render::GraphicsSettings::instance().quality() == Render::GraphicsQuality::Low;
   if (m_noise_atlas.bake_atlas(params)) {
     m_noise_atlas_dirty = false;
   }
@@ -415,7 +419,7 @@ auto TerrainRenderer::update_height_texture(
   return resources;
 }
 
-void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void TerrainRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   if (m_chunks.empty()) {
     return;
   }

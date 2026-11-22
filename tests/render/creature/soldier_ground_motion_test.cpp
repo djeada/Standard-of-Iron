@@ -1,7 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "render/humanoid/runtime/soldier_ground_motion.h"
+#include "render/creature/humanoid/runtime/soldier_ground_motion.h"
 
 namespace {
 

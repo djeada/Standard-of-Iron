@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "render/pipeline/lod_selector.h"
+#include "render/frame/pipeline/lod_selector.h"
 
 using Render::Pipeline::compute_full_detail_max_distance_sq;
 using Render::Pipeline::LodInputs;

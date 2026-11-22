@@ -1,4 +1,4 @@
-#include "allocation_tracker.h"
+#include "render/profiling/allocation_tracker.h"
 
 #if defined(SOI_PROFILE_ALLOCATIONS)
 

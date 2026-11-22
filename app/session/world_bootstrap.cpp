@@ -2,8 +2,8 @@
 
 #include <QCoreApplication>
 
-#include "render/gl/bootstrap.h"
 #include "render/ground/ground_renderer.h"
+#include "render/scene/bootstrap.h"
 
 namespace App::Core {
 

@@ -1,4 +1,4 @@
-#include "resources.h"
+#include "render/gl/resources.h"
 
 #include <QVector3D>
 
@@ -9,12 +9,12 @@
 #include <memory>
 #include <vector>
 
-#include "gl/mesh.h"
-#include "gl/texture.h"
-#include "gl_resource_tracking.h"
-#include "platform_gl.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
-#include "render_constants.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/texture.h"
 
 namespace Render::GL {
 

@@ -1,4 +1,4 @@
-#include "sheet_mesh.h"
+#include "render/equipment/armor/sheet_mesh.h"
 
 namespace Render::GL {
 

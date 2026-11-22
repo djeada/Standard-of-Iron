@@ -1,4 +1,4 @@
-#include "selection_disc.h"
+#include "render/geom/selection_disc.h"
 
 #include <QVector3D>
 
@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-#include "gl/mesh.h"
+#include "render/gl/mesh.h"
 #include "render/gl/shared_geometry_cache.h"
 
 namespace Render::Geom {

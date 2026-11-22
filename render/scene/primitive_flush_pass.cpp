@@ -1,0 +1,49 @@
+#include "render/scene/primitive_flush_pass.h"
+
+#include "render/frame/draw_queue.h"
+#include "render/frame/pass/frame_context.h"
+#include "render/frame/primitive_batch.h"
+
+namespace Render::Pass {
+
+void PrimitiveFlushPass::execute(FrameContext& ctx) {
+  auto* batcher = ctx.primitive_batcher;
+  auto* queue = ctx.queue;
+  if (batcher == nullptr || queue == nullptr) {
+    return;
+  }
+  if (batcher->total_count() == 0) {
+    return;
+  }
+
+  Render::GL::PrimitiveBatchParams params;
+  params.view_proj = ctx.view_proj;
+  params.light_direction = ctx.light_direction;
+  params.ambient_strength = ctx.ambient_strength;
+
+  if (batcher->sphere_count() > 0) {
+    Render::GL::PrimitiveBatchCmd cmd;
+    cmd.type = Render::GL::PrimitiveType::Sphere;
+    cmd.instances = batcher->sphere_data();
+    cmd.params = params;
+    queue->submit(std::move(cmd));
+  }
+
+  if (batcher->cylinder_count() > 0) {
+    Render::GL::PrimitiveBatchCmd cmd;
+    cmd.type = Render::GL::PrimitiveType::Cylinder;
+    cmd.instances = batcher->cylinder_data();
+    cmd.params = params;
+    queue->submit(std::move(cmd));
+  }
+
+  if (batcher->cone_count() > 0) {
+    Render::GL::PrimitiveBatchCmd cmd;
+    cmd.type = Render::GL::PrimitiveType::Cone;
+    cmd.instances = batcher->cone_data();
+    cmd.params = params;
+    queue->submit(std::move(cmd));
+  }
+}
+
+} // namespace Render::Pass

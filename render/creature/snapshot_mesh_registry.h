@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-#include "snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_asset.h"
 
 namespace Render::Creature::Snapshot {
 

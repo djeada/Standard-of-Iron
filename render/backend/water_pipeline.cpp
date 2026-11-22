@@ -1,0 +1,234 @@
+#include "render/backend/water_pipeline.h"
+
+#include <QDebug>
+#include <qglobal.h>
+
+#include <array>
+
+#include "render/gl/shader_cache.h"
+
+namespace Render::GL::BackendPipelines {
+
+auto WaterPipeline::initialize() -> bool {
+  if (m_shader_cache == nullptr) {
+    qWarning() << "WaterPipeline::initialize: null ShaderCache";
+    return false;
+  }
+
+  m_water_shader = m_shader_cache->get("river");
+  m_riverbank_shader = m_shader_cache->get("riverbank");
+  m_bridge_shader = m_shader_cache->get("bridge");
+  m_road_shader = m_shader_cache->get("road");
+
+  if (m_water_shader == nullptr) {
+    qWarning() << "WaterPipeline: Failed to load shared water shader";
+  }
+  if (m_riverbank_shader == nullptr) {
+    qWarning() << "WaterPipeline: Failed to load riverbank shader";
+  }
+  if (m_bridge_shader == nullptr) {
+    qWarning() << "WaterPipeline: Failed to load bridge shader";
+  }
+  if (m_road_shader == nullptr) {
+    qWarning() << "WaterPipeline: Failed to load road shader";
+  }
+
+  cache_uniforms();
+
+  return is_initialized();
+}
+
+void WaterPipeline::shutdown() {
+  m_water_shader = nullptr;
+  m_riverbank_shader = nullptr;
+  m_bridge_shader = nullptr;
+  m_road_shader = nullptr;
+}
+
+void WaterPipeline::cache_uniforms() {
+  cache_water_uniforms();
+  cache_riverbank_uniforms();
+  cache_bridge_uniforms();
+  cache_road_uniforms();
+}
+
+auto WaterPipeline::is_initialized() const -> bool {
+  return m_water_shader != nullptr && m_riverbank_shader != nullptr &&
+         m_bridge_shader != nullptr && m_road_shader != nullptr;
+}
+
+void WaterPipeline::cache_water_uniforms() {
+  if (m_water_shader == nullptr) {
+    return;
+  }
+
+  m_water_uniforms.soil_color = m_water_shader->optional_uniform_handle("u_soil_color");
+  m_water_uniforms.moisture =
+      m_water_shader->optional_uniform_handle("u_moisture_level");
+  m_water_uniforms.snow_coverage =
+      m_water_shader->optional_uniform_handle("u_snow_coverage");
+  m_water_uniforms.model = m_water_shader->uniform_handle("model");
+  m_water_uniforms.view = m_water_shader->uniform_handle("view");
+  m_water_uniforms.projection = m_water_shader->uniform_handle("projection");
+  m_water_uniforms.time = m_water_shader->uniform_handle("time");
+  m_water_uniforms.visibility_texture =
+      m_water_shader->optional_uniform_handle("u_visibility_tex");
+  m_water_uniforms.visibility_size =
+      m_water_shader->optional_uniform_handle("u_visibility_size");
+  m_water_uniforms.visibility_tile_size =
+      m_water_shader->optional_uniform_handle("u_visibility_tile_size");
+  m_water_uniforms.explored_alpha =
+      m_water_shader->optional_uniform_handle("u_explored_alpha");
+  m_water_uniforms.has_visibility =
+      m_water_shader->optional_uniform_handle("u_has_visibility");
+  m_water_uniforms.segment_visibility =
+      m_water_shader->optional_uniform_handle("u_segment_visibility");
+  m_water_uniforms.surface_kind =
+      m_water_shader->optional_uniform_handle("u_water_surface_kind");
+  m_water_uniforms.camera_position =
+      m_water_shader->optional_uniform_handle("u_camera_pos");
+  m_water_uniforms.light_direction =
+      m_water_shader->optional_uniform_handle("u_light_dir");
+  m_water_uniforms.ford_a[0] = m_water_shader->optional_uniform_handle("u_ford_a[0]");
+  m_water_uniforms.ford_a[1] = m_water_shader->optional_uniform_handle("u_ford_a[1]");
+  m_water_uniforms.ford_b[0] = m_water_shader->optional_uniform_handle("u_ford_b[0]");
+  m_water_uniforms.ford_b[1] = m_water_shader->optional_uniform_handle("u_ford_b[1]");
+  m_water_uniforms.ford_count = m_water_shader->optional_uniform_handle("u_ford_count");
+  static constexpr std::array<const char*, 4> k_neighbor_segment_names{
+      "u_water_neighbor_segment[0]",
+      "u_water_neighbor_segment[1]",
+      "u_water_neighbor_segment[2]",
+      "u_water_neighbor_segment[3]"};
+  static constexpr std::array<const char*, 4> k_neighbor_radius_names{
+      "u_water_neighbor_radius[0]",
+      "u_water_neighbor_radius[1]",
+      "u_water_neighbor_radius[2]",
+      "u_water_neighbor_radius[3]"};
+  for (std::size_t slot = 0; slot < k_neighbor_segment_names.size(); ++slot) {
+    m_water_uniforms.neighbor_segment[slot] =
+        m_water_shader->optional_uniform_handle(k_neighbor_segment_names[slot]);
+    m_water_uniforms.neighbor_radius[slot] =
+        m_water_shader->optional_uniform_handle(k_neighbor_radius_names[slot]);
+  }
+  m_water_uniforms.neighbor_count =
+      m_water_shader->optional_uniform_handle("u_water_neighbor_count");
+}
+
+void WaterPipeline::cache_riverbank_uniforms() {
+  if (m_riverbank_shader == nullptr) {
+    return;
+  }
+
+  m_riverbank_uniforms.model = m_riverbank_shader->uniform_handle("model");
+  m_riverbank_uniforms.view = m_riverbank_shader->uniform_handle("view");
+  m_riverbank_uniforms.projection = m_riverbank_shader->uniform_handle("projection");
+  m_riverbank_uniforms.time = m_riverbank_shader->uniform_handle("time");
+  m_riverbank_uniforms.visibility_texture =
+      m_riverbank_shader->uniform_handle("u_visibility_tex");
+  m_riverbank_uniforms.visibility_size =
+      m_riverbank_shader->uniform_handle("u_visibility_size");
+  m_riverbank_uniforms.visibility_tile_size =
+      m_riverbank_shader->uniform_handle("u_visibility_tile_size");
+  m_riverbank_uniforms.explored_alpha =
+      m_riverbank_shader->uniform_handle("u_explored_alpha");
+  m_riverbank_uniforms.has_visibility =
+      m_riverbank_shader->uniform_handle("u_has_visibility");
+  m_riverbank_uniforms.segment_visibility =
+      m_riverbank_shader->uniform_handle("u_segment_visibility");
+  m_riverbank_uniforms.surface_kind =
+      m_riverbank_shader->optional_uniform_handle("u_water_surface_kind");
+  m_riverbank_uniforms.ground_type =
+      m_riverbank_shader->optional_uniform_handle("u_ground_type");
+  m_riverbank_uniforms.ground_color =
+      m_riverbank_shader->optional_uniform_handle("u_ground_color");
+  m_riverbank_uniforms.grass_secondary =
+      m_riverbank_shader->optional_uniform_handle("u_grass_secondary");
+  m_riverbank_uniforms.grass_dry =
+      m_riverbank_shader->optional_uniform_handle("u_grass_dry");
+  m_riverbank_uniforms.soil_color =
+      m_riverbank_shader->optional_uniform_handle("u_soil_color");
+  m_riverbank_uniforms.rock_low =
+      m_riverbank_shader->optional_uniform_handle("u_rock_low");
+  m_riverbank_uniforms.rock_high =
+      m_riverbank_shader->optional_uniform_handle("u_rock_high");
+  m_riverbank_uniforms.snow_color =
+      m_riverbank_shader->optional_uniform_handle("u_snow_color");
+  m_riverbank_uniforms.moisture =
+      m_riverbank_shader->optional_uniform_handle("u_moisture_level");
+  m_riverbank_uniforms.rock_exposure =
+      m_riverbank_shader->optional_uniform_handle("u_rock_exposure");
+  m_riverbank_uniforms.snow_coverage =
+      m_riverbank_shader->optional_uniform_handle("u_snow_coverage");
+  m_riverbank_uniforms.ambient_boost =
+      m_riverbank_shader->optional_uniform_handle("u_ambient_boost");
+  m_riverbank_uniforms.camera_position =
+      m_riverbank_shader->optional_uniform_handle("u_camera_pos");
+  m_riverbank_uniforms.light_direction =
+      m_riverbank_shader->optional_uniform_handle("u_light_dir");
+}
+
+void WaterPipeline::cache_bridge_uniforms() {
+  if (m_bridge_shader == nullptr) {
+    return;
+  }
+
+  m_bridge_uniforms.mvp = m_bridge_shader->uniform_handle("u_mvp");
+  m_bridge_uniforms.model = m_bridge_shader->uniform_handle("u_model");
+  m_bridge_uniforms.color = m_bridge_shader->uniform_handle("u_color");
+  m_bridge_uniforms.light_direction =
+      m_bridge_shader->optional_uniform_handle("u_light_direction");
+  m_bridge_uniforms.camera_position =
+      m_bridge_shader->optional_uniform_handle("u_camera_pos");
+  m_bridge_uniforms.visibility_texture =
+      m_bridge_shader->optional_uniform_handle("u_visibility_tex");
+  m_bridge_uniforms.visibility_size =
+      m_bridge_shader->optional_uniform_handle("u_visibility_size");
+  m_bridge_uniforms.visibility_tile_size =
+      m_bridge_shader->optional_uniform_handle("u_visibility_tile_size");
+  m_bridge_uniforms.explored_alpha =
+      m_bridge_shader->optional_uniform_handle("u_explored_alpha");
+  m_bridge_uniforms.has_visibility =
+      m_bridge_shader->optional_uniform_handle("u_has_visibility");
+  m_bridge_uniforms.fog_mask_texture =
+      m_bridge_shader->optional_uniform_handle("u_fog_mask_tex");
+  m_bridge_uniforms.fog_mask_size =
+      m_bridge_shader->optional_uniform_handle("u_fog_mask_size");
+  m_bridge_uniforms.fog_mask_tile_size =
+      m_bridge_shader->optional_uniform_handle("u_fog_mask_tile_size");
+  m_bridge_uniforms.has_fog_mask =
+      m_bridge_shader->optional_uniform_handle("u_has_fog_mask");
+}
+
+void WaterPipeline::cache_road_uniforms() {
+  if (m_road_shader == nullptr) {
+    return;
+  }
+
+  m_road_uniforms.verge_grass = m_road_shader->uniform_handle("u_verge_grass");
+  m_road_uniforms.verge_soil = m_road_shader->uniform_handle("u_verge_soil");
+  m_road_uniforms.ground_type = m_road_shader->uniform_handle("u_ground_type");
+  m_road_uniforms.mvp = m_road_shader->uniform_handle("u_mvp");
+  m_road_uniforms.model = m_road_shader->uniform_handle("u_model");
+  m_road_uniforms.color = m_road_shader->uniform_handle("u_color");
+  m_road_uniforms.light_direction =
+      m_road_shader->optional_uniform_handle("u_light_direction");
+  m_road_uniforms.camera_position =
+      m_road_shader->optional_uniform_handle("u_camera_pos");
+  m_road_uniforms.alpha = m_road_shader->uniform_handle("u_alpha");
+  m_road_uniforms.surface_kind = m_road_shader->uniform_handle("u_surface_kind");
+  m_road_uniforms.visibility_texture =
+      m_road_shader->optional_uniform_handle("u_visibility_tex");
+  m_road_uniforms.visibility_size =
+      m_road_shader->optional_uniform_handle("u_visibility_size");
+  m_road_uniforms.visibility_tile_size =
+      m_road_shader->optional_uniform_handle("u_visibility_tile_size");
+  m_road_uniforms.explored_alpha =
+      m_road_shader->optional_uniform_handle("u_explored_alpha");
+  m_road_uniforms.has_visibility =
+      m_road_shader->optional_uniform_handle("u_has_visibility");
+  m_road_uniforms.snow_coverage =
+      m_road_shader->optional_uniform_handle("u_snow_coverage");
+  m_road_uniforms.snow_color = m_road_shader->optional_uniform_handle("u_snow_color");
+}
+
+} // namespace Render::GL::BackendPipelines

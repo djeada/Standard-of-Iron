@@ -6,7 +6,7 @@
 #include <QString>
 #include <QTimer>
 
-#include "frame_profile.h"
+#include "render/profiling/frame_profile.h"
 
 namespace Render::Profiling {
 

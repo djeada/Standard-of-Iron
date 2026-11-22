@@ -1,9 +1,9 @@
-#include "anatomy_bake.h"
+#include "render/creature/anatomy_bake.h"
 
-#include "render/elephant/dimensions.h"
-#include "render/elephant/elephant_motion.h"
-#include "render/horse/dimensions.h"
-#include "render/horse/horse_motion.h"
+#include "render/creature/elephant/dimensions.h"
+#include "render/creature/elephant/elephant_motion.h"
+#include "render/creature/horse/dimensions.h"
+#include "render/creature/horse/horse_motion.h"
 
 namespace Render::Creature {
 

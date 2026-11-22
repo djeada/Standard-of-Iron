@@ -4,9 +4,9 @@
 #include <optional>
 #include <utility>
 
-#include "render/adaptive_quality_governor.h"
-#include "render/gl/adapter_class.h"
-#include "render/graphics_settings.h"
+#include "render/backend/adapter_class.h"
+#include "render/frame/graphics_settings.h"
+#include "render/scene/adaptive_quality_governor.h"
 
 namespace {
 

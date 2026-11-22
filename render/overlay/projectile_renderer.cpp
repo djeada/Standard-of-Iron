@@ -1,0 +1,1372 @@
+#include "render/overlay/projectile_renderer.h"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <numbers>
+
+#include "game/systems/arrow_projectile.h"
+#include "game/systems/render_effects_frame.h"
+#include "game/systems/stone_projectile.h"
+#include "render/backend/backend.h"
+#include "render/entity/barracks_flag_renderer.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/entity_appearance.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/submission_visibility.h"
+#include "render/geom/arrow.h"
+#include "render/geom/stone.h"
+#include "render/geom/transforms.h"
+#include "render/gl/mesh_prewarmer.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
+#include "render/overlay/raft_renderer.h"
+
+namespace Render::GL {
+
+auto fireball_impact_envelope(float progress) -> float {
+
+  float const t = std::clamp((progress - 0.25F) / 0.75F, 0.0F, 1.0F);
+  return 1.0F - t * t * (3.0F - 2.0F * t);
+}
+
+auto prewarm_projectile_geometry() -> bool {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    return false;
+  }
+  std::array meshes{Geom::Arrow::get_shaft(),
+                    Geom::Arrow::get_tip(),
+                    Geom::Arrow::get_fletching(),
+                    Geom::Stone::get(),
+                    get_unit_sphere()};
+  return prewarm_mesh_buffers(meshes, [](auto* mesh) { return mesh; });
+}
+
+auto classify_projectile_relation(int local_owner_id,
+                                  int attacker_owner_id,
+                                  int target_owner_id) -> ProjectileRelation {
+  if (local_owner_id <= 0) {
+    return ProjectileRelation::Neutral;
+  }
+  if (attacker_owner_id == local_owner_id) {
+    return ProjectileRelation::Outgoing;
+  }
+  if (target_owner_id == local_owner_id) {
+    return ProjectileRelation::Incoming;
+  }
+  return ProjectileRelation::Neutral;
+}
+
+auto ProjectileViewContext::relation_for_owners(
+    int attacker_owner, int target_owner) const -> ProjectileRelation {
+  if (local_owner_id <= 0) {
+    return ProjectileRelation::Neutral;
+  }
+  return classify_projectile_relation(local_owner_id, attacker_owner, target_owner);
+}
+
+namespace {
+
+const QVector3D k_incoming_glow(1.0F, 0.34F, 0.22F);
+const QVector3D k_outgoing_glow(1.0F, 0.92F, 0.70F);
+
+[[nodiscard]] auto relation_glow(const QVector3D& glow,
+                                 ProjectileRelation relation) -> QVector3D {
+  switch (relation) {
+  case ProjectileRelation::Incoming:
+    return glow * 0.35F + k_incoming_glow * 0.65F;
+  case ProjectileRelation::Outgoing:
+    return glow * 0.55F + k_outgoing_glow * 0.45F;
+  case ProjectileRelation::Neutral:
+    break;
+  }
+  return glow;
+}
+
+[[nodiscard]] auto relation_brightness(ProjectileRelation relation) -> float {
+  switch (relation) {
+  case ProjectileRelation::Incoming:
+    return 1.30F;
+  case ProjectileRelation::Outgoing:
+    return 1.15F;
+  case ProjectileRelation::Neutral:
+    break;
+  }
+  return 0.90F;
+}
+
+[[nodiscard]] auto relation_trail_boost(ProjectileRelation relation) -> float {
+  switch (relation) {
+  case ProjectileRelation::Incoming:
+    return 1.6F;
+  case ProjectileRelation::Outgoing:
+    return 1.25F;
+  case ProjectileRelation::Neutral:
+    break;
+  }
+  return 1.0F;
+}
+
+const QVector3D k_night_glint_steel(0.55F, 0.80F, 1.0F);
+const QVector3D k_night_glint_cursed(0.42F, 0.12F, 0.80F);
+
+[[nodiscard]] auto projectile_night_amount(const FrameSubmitter* renderer) -> float {
+  return renderer->environment_lighting().darkness_amount();
+}
+
+[[nodiscard]] auto
+flight_tangent(const Game::Systems::ProjectileView& projectile) -> QVector3D {
+  QVector3D tangent = projectile.end - projectile.start;
+  tangent.setY(tangent.y() +
+               projectile.arc_height * 4.0F * (1.0F - 2.0F * projectile.progress));
+  if (tangent.lengthSquared() <= 1.0e-6F) {
+    return {0.0F, 0.0F, 1.0F};
+  }
+  return tangent.normalized();
+}
+
+void draw_night_glint(FrameSubmitter* renderer,
+                      const QVector3D& position,
+                      const QVector3D& direction,
+                      const QVector3D& tint,
+                      float radius,
+                      float intensity,
+                      float phase) {
+  renderer->metal_spark(position, tint, radius, intensity, phase, direction);
+}
+
+void add_night_projectile_light(FrameSubmitter* renderer,
+                                const QVector3D& position,
+                                const QVector3D& tint,
+                                float radius,
+                                float intensity) {
+
+  if (!renderer->submission_visibility().accepts_sphere(
+          position, 0.25F, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
+    return;
+  }
+  Render::LocalLight light;
+  light.position = position;
+  light.color = tint;
+  light.radius = radius;
+  light.intensity = intensity;
+  renderer->local_light(light);
+}
+
+constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
+constexpr float k_streak_xy_scale = 0.62F;
+constexpr float k_bolt_z_scale = Geom::Arrow::k_arrow_z_scale * 3.0F;
+constexpr float k_bolt_xy_scale = Geom::Arrow::k_arrow_xy_scale * 3.0F;
+constexpr int k_bolt_trail_segments = 5;
+constexpr float k_bolt_trail_step = 0.02F;
+
+[[nodiscard]] auto scaled_color(const QVector3D& color, float scale) -> QVector3D {
+  return {std::clamp(color.x() * scale, 0.0F, 1.0F),
+          std::clamp(color.y() * scale, 0.0F, 1.0F),
+          std::clamp(color.z() * scale, 0.0F, 1.0F)};
+}
+
+void draw_arrow_glow(FrameSubmitter* renderer,
+                     GL::Mesh* shaft,
+                     GL::Mesh* tip,
+                     const QMatrix4x4& model,
+                     const QVector3D& glow,
+                     float alpha_scale) {
+  using Geom::Arrow;
+
+  QMatrix4x4 sheath = model;
+  sheath.scale(Arrow::k_shaft_glow_xy_scale, Arrow::k_shaft_glow_xy_scale, 1.0F);
+  renderer->mesh(shaft, sheath, glow, nullptr, Arrow::k_shaft_glow_alpha * alpha_scale);
+
+  QMatrix4x4 head = model;
+  head.translate(0.0F, 0.0F, Arrow::k_head_center_z);
+  head.scale(Arrow::k_head_glow_xy_scale,
+             Arrow::k_head_glow_xy_scale,
+             Arrow::k_head_glow_z_scale);
+  head.translate(0.0F, 0.0F, -Arrow::k_head_center_z);
+  renderer->mesh(tip, head, glow, nullptr, Arrow::k_head_glow_alpha * alpha_scale);
+}
+
+[[nodiscard]] auto projectile_model_at(const QVector3D& position,
+                                       const QVector3D& direction) -> QMatrix4x4 {
+  QVector3D dir = direction;
+  if (dir.lengthSquared() <= 1.0e-6F) {
+    dir = QVector3D(0.0F, 0.0F, 1.0F);
+  } else {
+    dir.normalize();
+  }
+  QMatrix4x4 model;
+  model.translate(position);
+  model.rotate(std::atan2(dir.x(), dir.z()) * k_rad_to_deg, QVector3D(0, 1, 0));
+  float const horizontal = std::hypot(dir.x(), dir.z());
+  model.rotate(-std::atan2(dir.y(), horizontal) * k_rad_to_deg, QVector3D(1, 0, 0));
+  return model;
+}
+
+void render_aimed_arrow_impact(FrameSubmitter* renderer,
+                               const Game::Systems::ProjectileImpactEvent& impact,
+                               float progress,
+                               float fade) {
+
+  float const flash = std::clamp(1.0F - (progress * 4.5F), 0.0F, 1.0F);
+  float const burst = 1.0F - std::pow(1.0F - progress, 2.6F);
+  float const scale = std::max(0.55F, impact.scale);
+  float const time = renderer->get_animation_time();
+
+  QVector3D const incoming = impact.incoming_direction;
+  QVector3D lateral = QVector3D::crossProduct(incoming, QVector3D(0.0F, 1.0F, 0.0F));
+  if (lateral.lengthSquared() < 1.0e-5F) {
+    lateral = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  lateral.normalize();
+  QVector3D const vertical =
+      QVector3D::crossProduct(lateral, incoming).normalized() * 1.0F;
+
+  constexpr int k_spark_count = 14;
+  for (int spark = 0; spark < k_spark_count; ++spark) {
+    float const seed = static_cast<float>(spark) * 2.399963F;
+    float const cone = 0.32F + (0.55F * std::abs(std::sin(seed * 1.7F)));
+
+    QVector3D const spray =
+        ((-incoming) + (lateral * std::cos(seed) * cone) +
+         (vertical * std::sin(seed) * cone) + QVector3D(0.0F, 0.22F, 0.0F))
+            .normalized();
+    float const reach = (0.30F + (0.85F * std::abs(std::cos(seed * 2.3F)))) * scale;
+    renderer->metal_spark(impact.position + (spray * reach * burst),
+                          impact.hit_target ? QVector3D(0.86F, 0.16F, 0.11F)
+                                            : QVector3D(1.0F, 0.86F, 0.55F),
+                          (0.052F + (0.028F * std::sin(seed))) * scale,
+                          1.45F * fade * fade,
+                          impact.age + (seed * 0.03F),
+                          spray);
+  }
+
+  if (impact.hit_target) {
+
+    renderer->combat_dust(impact.position - (incoming * 0.12F * scale),
+                          QVector3D(0.44F, 0.07F, 0.05F),
+                          (0.24F + (0.42F * burst)) * scale,
+                          1.30F * fade * fade,
+                          time + impact.age);
+    renderer->combat_dust(impact.position + QVector3D(0.0F, 0.16F * burst, 0.0F) -
+                              (incoming * 0.30F * scale),
+                          QVector3D(0.52F, 0.10F, 0.08F),
+                          (0.14F + (0.34F * burst)) * scale,
+                          0.85F * fade,
+                          time * 1.21F + impact.age);
+  } else {
+    renderer->combat_dust(impact.position,
+                          QVector3D(0.62F, 0.56F, 0.46F),
+                          (0.18F + (0.36F * burst)) * scale,
+                          0.95F * fade,
+                          time + impact.age);
+  }
+
+  if (flash > 0.0F) {
+
+    float const flash_radius =
+        impact.hit_target ? (0.045F + (0.040F * flash)) : (0.085F + (0.085F * flash));
+    renderer->fireball(impact.position,
+                       impact.hit_target ? QVector3D(1.0F, 0.46F, 0.36F)
+                                         : QVector3D(1.0F, 0.94F, 0.76F),
+                       flash_radius * scale,
+                       (impact.hit_target ? 1.5F : 2.2F) * flash * flash,
+                       time * 1.7F);
+
+    Render::LocalLight spark_light;
+    spark_light.position = impact.position + QVector3D(0.0F, 0.12F, 0.0F);
+    spark_light.color = impact.hit_target ? QVector3D(1.0F, 0.44F, 0.30F)
+                                          : QVector3D(1.0F, 0.90F, 0.68F);
+    spark_light.radius = 2.6F * scale;
+    spark_light.intensity = (impact.hit_target ? 0.85F : 1.35F) * flash;
+    renderer->local_light(spark_light);
+  }
+}
+
+void render_plain_arrow_impact(FrameSubmitter* renderer,
+                               const Game::Systems::ProjectileImpactEvent& impact,
+                               ProjectileRelation relation,
+                               bool reduced_effects,
+                               float progress,
+                               float fade) {
+  float const time = renderer->get_animation_time();
+  float const scale = std::max(0.5F, impact.scale);
+  bool const connected = impact.hit_target && impact.damage_applied;
+
+  if (connected) {
+    float const flash = std::clamp(1.0F - (progress * 5.0F), 0.0F, 1.0F);
+    QVector3D const color = relation == ProjectileRelation::Incoming
+                                ? QVector3D(1.0F, 0.30F, 0.20F)
+                                : QVector3D(1.0F, 0.62F, 0.34F);
+    if (flash > 0.0F) {
+      renderer->fireball(impact.position,
+                         color,
+                         (0.05F + 0.06F * flash) * scale,
+                         (reduced_effects ? 1.0F : 1.6F) * flash,
+                         time * 1.5F);
+    }
+    if (!reduced_effects) {
+      QVector3D const incoming = impact.incoming_direction;
+      QVector3D lateral =
+          QVector3D::crossProduct(incoming, QVector3D(0.0F, 1.0F, 0.0F));
+      if (lateral.lengthSquared() < 1.0e-5F) {
+        lateral = QVector3D(1.0F, 0.0F, 0.0F);
+      }
+      lateral.normalize();
+      float const burst = 1.0F - std::pow(1.0F - progress, 2.2F);
+      constexpr int k_spark_count = 5;
+      for (int spark = 0; spark < k_spark_count; ++spark) {
+        float const seed = static_cast<float>(spark) * 2.399963F;
+        QVector3D const spray = ((-incoming) + lateral * std::cos(seed) * 0.5F +
+                                 QVector3D(0.0F, 0.35F + 0.25F * std::sin(seed), 0.0F))
+                                    .normalized();
+        renderer->metal_spark(impact.position + spray * (0.25F + 0.45F * burst) * scale,
+                              color,
+                              0.04F * scale,
+                              1.1F * fade * fade,
+                              impact.age + seed * 0.03F,
+                              spray);
+      }
+    }
+    renderer->combat_dust(impact.position - impact.incoming_direction * 0.10F * scale,
+                          QVector3D(0.46F, 0.09F, 0.06F),
+                          (0.14F + 0.22F * progress) * scale,
+                          0.75F * fade,
+                          time + impact.age);
+    return;
+  }
+
+  if (impact.hit_target || reduced_effects) {
+    return;
+  }
+
+  renderer->combat_dust(impact.position,
+                        QVector3D(0.60F, 0.55F, 0.45F),
+                        (0.12F + 0.26F * progress) * scale,
+                        0.70F * fade,
+                        time + impact.age);
+}
+
+void render_projectile_impact(FrameSubmitter* renderer,
+                              const Game::Systems::ProjectileImpactEvent& impact,
+                              ProjectileRelation relation = ProjectileRelation::Neutral,
+                              bool reduced_effects = false) {
+  float const progress =
+      std::clamp(impact.age / std::max(impact.lifetime, 1.0e-4F), 0.0F, 1.0F);
+  float const fade = 1.0F - progress;
+
+  if (impact.kind == Game::Systems::ProjectileKind::Stone) {
+    renderer->stone_impact(impact.position + QVector3D(0.0F, 0.08F, 0.0F),
+                           QVector3D(0.72F, 0.60F, 0.42F),
+                           0.82F * impact.scale,
+                           1.65F,
+                           impact.age);
+    return;
+  }
+
+  if (impact.kind == Game::Systems::ProjectileKind::FlamingStone) {
+    renderer->stone_impact(impact.position + QVector3D(0.0F, 0.08F, 0.0F),
+                           QVector3D(0.78F, 0.52F, 0.30F),
+                           0.86F * impact.scale,
+                           1.80F,
+                           impact.age);
+    float const burst = 0.22F + 0.85F * std::sin(progress * std::numbers::pi_v<float>);
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.18F, 0.0F),
+                       QVector3D(1.0F, 0.32F, 0.05F),
+                       burst * impact.scale * 0.6F,
+                       1.45F * fade,
+                       renderer->get_animation_time() + impact.age * 2.1F);
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.34F, 0.0F),
+                       QVector3D(1.0F, 0.70F, 0.22F),
+                       burst * impact.scale * 0.28F,
+                       1.70F * fade,
+                       renderer->get_animation_time() * 1.31F);
+    return;
+  }
+
+  if (impact.kind == Game::Systems::ProjectileKind::Fireball) {
+
+    float const flame_envelope = fireball_impact_envelope(progress);
+    float const growth = 1.0F - std::pow(1.0F - progress, 2.4F);
+    float const cooling = 1.0F - progress;
+    float const flash_life = std::clamp(1.0F - progress * 3.2F, 0.0F, 1.0F);
+    float const scale = std::max(0.35F, impact.scale);
+    float const time = renderer->get_animation_time();
+
+    float const outer_radius = (0.22F + 0.82F * growth) * scale;
+
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.26F * growth, 0.0F),
+                       QVector3D(0.34F, 0.085F, 0.02F),
+                       outer_radius * 1.12F,
+                       (0.40F + 1.05F * cooling * cooling) * 1.25F * flame_envelope,
+                       time + impact.age * 1.9F);
+
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.22F * growth, 0.0F),
+                       QVector3D(0.92F, 0.30F, 0.05F),
+                       outer_radius,
+                       (0.45F + 1.25F * cooling * cooling) * 1.35F * flame_envelope,
+                       time * 1.13F + impact.age * 2.3F);
+
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.14F * growth, 0.0F),
+                       QVector3D(1.0F, 0.52F, 0.10F),
+                       outer_radius * 0.58F,
+                       (0.35F + 1.55F * cooling) * 1.25F * flame_envelope,
+                       time * 1.37F + impact.age);
+
+    if (flash_life > 0.0F) {
+
+      QVector3D const heart_offset(0.10F * scale * std::sin(impact.age * 9.0F),
+                                   0.08F + 0.16F * growth * scale,
+                                   0.10F * scale * std::cos(impact.age * 7.0F));
+      renderer->fireball(impact.position + heart_offset,
+                         QVector3D(1.0F, 0.82F, 0.44F),
+                         outer_radius * (0.14F + 0.14F * flash_life),
+                         2.1F * flash_life * flash_life,
+                         time * 1.71F);
+    }
+
+    constexpr int k_ember_count = 9;
+    for (int ember = 0; ember < k_ember_count; ++ember) {
+      float const seed = static_cast<float>(ember) * 2.399963F;
+      float const spread = (0.55F + 0.75F * std::sin(seed * 3.1F)) * scale;
+      float const travel = growth * (0.9F + 0.5F * std::cos(seed * 1.7F));
+      QVector3D const offset(std::cos(seed) * spread * travel,
+                             (0.40F + 0.60F * std::sin(seed * 2.3F)) * travel * scale,
+                             std::sin(seed) * spread * travel);
+      renderer->metal_spark(impact.position + offset,
+                            QVector3D(1.0F, 0.42F, 0.09F),
+                            0.085F * scale,
+                            1.15F * cooling,
+                            impact.age + seed * 0.05F,
+                            offset);
+    }
+
+    float const smoke = std::clamp((progress - 0.12F) * 1.7F, 0.0F, 1.0F);
+    if (smoke > 0.0F) {
+      renderer->combat_dust(
+          impact.position + QVector3D(0.0F, (0.30F + 0.95F * progress) * scale, 0.0F),
+          QVector3D(0.30F, 0.26F, 0.24F),
+          (0.70F + 1.25F * progress) * scale,
+          1.25F * smoke * cooling,
+          impact.age);
+      renderer->combat_dust(impact.position +
+                                QVector3D(0.28F * scale,
+                                          (0.55F + 1.20F * progress) * scale,
+                                          -0.20F * scale),
+                            QVector3D(0.24F, 0.21F, 0.20F),
+                            (0.45F + 0.95F * progress) * scale,
+                            0.85F * smoke * cooling,
+                            impact.age * 1.3F + 0.7F);
+    }
+
+    Render::LocalLight blast;
+    blast.position = impact.position + QVector3D(0.0F, 0.35F * scale, 0.0F);
+    blast.color = QVector3D(1.0F, 0.42F, 0.13F);
+    blast.radius = std::clamp((3.2F + 2.4F * growth) * scale, 3.0F, 7.5F);
+    blast.intensity = (0.35F + 1.25F * flash_life) * cooling;
+    renderer->local_light(blast);
+    return;
+  }
+
+  if (impact.aimed_shot) {
+    render_aimed_arrow_impact(renderer, impact, progress, fade);
+    return;
+  }
+
+  if (!impact.ballista_bolt) {
+    if (relation != ProjectileRelation::Neutral) {
+      render_plain_arrow_impact(
+          renderer, impact, relation, reduced_effects, progress, fade);
+    }
+    return;
+  }
+
+  renderer->combat_dust(impact.position,
+                        QVector3D(0.58F, 0.52F, 0.42F),
+                        0.30F * impact.scale,
+                        0.62F * fade,
+                        renderer->get_animation_time() + impact.age);
+}
+
+void render_spent_projectile(FrameSubmitter* renderer,
+                             const Game::Systems::SpentProjectile& spent) {
+  float const alpha = Game::Systems::spent_projectile_alpha(spent);
+  if (alpha <= 0.01F) {
+    return;
+  }
+
+  auto* shaft = Geom::Arrow::get_shaft();
+  auto* tip = Geom::Arrow::get_tip();
+  auto* fletching = Geom::Arrow::get_fletching();
+  if (shaft == nullptr || tip == nullptr || fletching == nullptr) {
+    return;
+  }
+
+  float const z_scale =
+      (spent.ballista_bolt ? k_bolt_z_scale : Geom::Arrow::k_arrow_z_scale) *
+      spent.scale;
+  float const xy_scale =
+      (spent.ballista_bolt ? k_bolt_xy_scale : Geom::Arrow::k_arrow_xy_scale) *
+      spent.scale;
+
+  float const above_ground =
+      (1.0F - spent.embed) * Geom::Arrow::k_total_length * z_scale;
+  QMatrix4x4 model = projectile_model_at(
+      spent.position - spent.direction * above_ground, spent.direction);
+  model.rotate(spent.roll_deg, QVector3D(0, 0, 1));
+  model.scale(xy_scale, xy_scale, z_scale);
+
+  bool const cursed = spent.kind == Game::Systems::ProjectileKind::CursedArrow;
+  QVector3D const shaft_color =
+      cursed ? QVector3D(0.34F, 0.15F, 0.47F)
+             : scaled_color(Geom::Arrow::shaft_color(spent.color), 0.86F);
+  QVector3D const fletch_color =
+      cursed ? QVector3D(0.48F, 0.19F, 0.68F)
+             : scaled_color(Geom::Arrow::fletch_color(spent.color), 0.80F);
+
+  renderer->mesh(shaft, model, shaft_color, nullptr, alpha);
+  renderer->mesh(fletching, model, fletch_color, nullptr, alpha);
+
+  constexpr float k_head_fraction =
+      Geom::Arrow::k_tip_length / Geom::Arrow::k_total_length;
+  if (spent.embed < k_head_fraction) {
+    renderer->mesh(tip, model, Geom::Arrow::tip_color(0.82F), nullptr, alpha);
+  }
+}
+
+} // namespace
+
+void render_arrow_projectile(FrameSubmitter* renderer,
+                             ResourceManager* resources,
+                             const Game::Systems::ProjectileView& projectile,
+                             const QVector3D& pos,
+                             const QMatrix4x4& base_model,
+                             ProjectileRelation relation,
+                             bool reduced_effects) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
+    return;
+  }
+
+  auto* arrow_shaft_mesh = Geom::Arrow::get_shaft();
+  auto* arrow_tip_mesh = Geom::Arrow::get_tip();
+  auto* arrow_fletching_mesh = Geom::Arrow::get_fletching();
+  if ((arrow_shaft_mesh == nullptr) || (arrow_tip_mesh == nullptr) ||
+      (arrow_fletching_mesh == nullptr)) {
+    return;
+  }
+
+  const QVector3D delta = projectile.end - projectile.start;
+  const float dist = std::max(0.001F, delta.length());
+
+  QMatrix4x4 model = base_model;
+
+  constexpr float k_arc_height_multiplier = 8.0F;
+  constexpr float k_arc_center_offset = 0.5F;
+  float const vy = (projectile.end.y() - projectile.start.y()) / dist;
+  float const pitch_deg =
+      -std::atan2(vy - (k_arc_height_multiplier * projectile.arc_height *
+                        (projectile.progress - k_arc_center_offset) / dist),
+                  1.0F) *
+      (180.0F / std::numbers::pi_v<float>);
+  model.rotate(pitch_deg, QVector3D(1, 0, 0));
+
+  if (projectile.kind == Game::Systems::ProjectileKind::SlingStone) {
+    QMatrix4x4 stone;
+    stone.translate(pos);
+    stone.rotate(projectile.progress * 720.0F, 0.3F, 1.0F, 0.2F);
+    stone.scale(0.060F, 0.045F, 0.075F);
+    renderer->mesh(
+        Geom::Stone::get(), stone, QVector3D(0.55F, 0.52F, 0.44F), nullptr, 1.0F);
+    return;
+  }
+  if (projectile.kind == Game::Systems::ProjectileKind::Javelin) {
+    QVector3D const direction = flight_tangent(projectile);
+    renderer->mesh(get_unit_cylinder(),
+                   Geom::cylinder_between(
+                       pos - direction * 0.48F, pos + direction * 0.32F, 0.012F),
+                   QVector3D(0.52F, 0.34F, 0.17F),
+                   nullptr,
+                   1.0F);
+    renderer->mesh(
+        get_unit_cone(),
+        Geom::cone_from_to(pos + direction * 0.32F, pos + direction * 0.52F, 0.030F),
+        QVector3D(0.75F, 0.77F, 0.79F),
+        nullptr,
+        1.0F);
+    return;
+  }
+
+  if (projectile.kind == Game::Systems::ProjectileKind::Fireball) {
+    auto* fireball_mesh = get_unit_sphere();
+    if (fireball_mesh == nullptr) {
+      return;
+    }
+
+    float const animation_time = renderer->get_animation_time();
+    float const pulse =
+        0.94F + 0.08F * std::sin(animation_time * 12.0F + projectile.progress * 32.0F);
+    float const spell_phase = animation_time + projectile.progress * 3.7F;
+
+    renderer->fireball(
+        pos, QVector3D(0.34F, 0.09F, 0.02F), 0.205F * pulse, 0.72F, spell_phase);
+    renderer->fireball(pos,
+                       QVector3D(1.0F, 0.42F, 0.07F),
+                       0.128F * pulse,
+                       1.25F,
+                       spell_phase * 1.37F + 1.9F);
+    renderer->fireball(pos,
+                       QVector3D(1.0F, 0.88F, 0.55F),
+                       0.058F * pulse,
+                       2.15F,
+                       spell_phase * 1.83F + 4.4F);
+
+    constexpr int k_trail_segments = 18;
+    for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
+      float const trail_t =
+          projectile.progress - static_cast<float>(trail_idx) * 0.013F;
+      if (trail_t < 0.0F) {
+        continue;
+      }
+
+      QVector3D trail_pos = projectile.start + delta * trail_t;
+      float const trail_h = projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t);
+      float const age =
+          static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
+      trail_pos.setY(trail_pos.y() + trail_h + age * 0.055F);
+
+      float const heat = (1.0F - age) * (1.0F - age);
+      QVector3D const trail_color = QVector3D(0.95F, 0.30F, 0.05F) * heat +
+                                    QVector3D(0.075F, 0.065F, 0.060F) * (1.0F - heat);
+      renderer->fireball(trail_pos,
+                         trail_color,
+                         (0.105F + 0.155F * age) * pulse,
+                         std::max(0.09F, 0.85F * heat),
+                         spell_phase - static_cast<float>(trail_idx) * 0.13F);
+    }
+
+    QMatrix4x4 core_model = model;
+    core_model.scale(0.026F * pulse, 0.026F * pulse, 0.026F * pulse);
+    renderer->mesh(
+        fireball_mesh, core_model, QVector3D(1.0F, 0.96F, 0.80F), nullptr, 1.0F);
+
+    for (int spark_idx = 0; spark_idx < 3; ++spark_idx) {
+      float const seed = spell_phase * (5.2F + static_cast<float>(spark_idx) * 1.7F) +
+                         static_cast<float>(spark_idx) * 2.1F;
+      QVector3D const orbit(std::sin(seed) * 0.070F,
+                            std::cos(seed * 0.83F) * 0.042F + 0.02F,
+                            std::cos(seed * 1.13F) * 0.070F);
+      renderer->metal_spark(
+          pos + orbit,
+          QVector3D(1.0F, 0.50F, 0.12F),
+          0.045F,
+          0.9F,
+          std::fmod(spell_phase * 0.7F + static_cast<float>(spark_idx), 0.28F));
+    }
+
+    Render::LocalLight spell_light;
+    spell_light.position = pos;
+    spell_light.color = QVector3D(1.0F, 0.46F, 0.15F);
+    spell_light.radius = 3.4F;
+    spell_light.intensity = 0.85F * pulse;
+    renderer->local_light(spell_light);
+    return;
+  }
+
+  if (projectile.ballista_bolt) {
+
+    float const spin_speed = 190.0F;
+    float const spin_angle = projectile.progress * spin_speed;
+    model.rotate(spin_angle, QVector3D(0, 0, 1));
+
+    QMatrix4x4 bolt_model = model;
+    bolt_model.translate(
+        0.0F, 0.0F, -k_bolt_z_scale * Geom::Arrow::k_arrow_z_translate_factor);
+    bolt_model.scale(k_bolt_xy_scale, k_bolt_xy_scale, k_bolt_z_scale);
+
+    QVector3D const base_color = projectile.color;
+    QVector3D const wood_color =
+        scaled_color(Geom::Arrow::shaft_color(base_color), 0.84F);
+    QVector3D const iron_color = Geom::Arrow::tip_color(0.94F);
+    QVector3D const vane_color =
+        scaled_color(Geom::Arrow::fletch_color(base_color), 0.86F);
+
+    renderer->mesh(arrow_shaft_mesh, bolt_model, wood_color, nullptr, 1.0F);
+    renderer->mesh(arrow_tip_mesh, bolt_model, iron_color, nullptr, 1.0F);
+    renderer->mesh(arrow_fletching_mesh, bolt_model, vane_color, nullptr, 1.0F);
+    draw_arrow_glow(renderer,
+                    arrow_shaft_mesh,
+                    arrow_tip_mesh,
+                    bolt_model,
+                    Geom::Arrow::glow_color(base_color),
+                    1.15F);
+
+    for (int trail_idx = 1; trail_idx <= k_bolt_trail_segments; trail_idx++) {
+      float const trail_t = projectile.progress - (trail_idx * k_bolt_trail_step);
+      if (trail_t <= 0.0F) {
+        continue;
+      }
+      QVector3D trail_pos = projectile.start + delta * trail_t;
+      trail_pos.setY(trail_pos.y() +
+                     projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
+
+      QVector3D tangent = delta;
+      tangent.setY(tangent.y() +
+                   projectile.arc_height * 4.0F * (1.0F - 2.0F * trail_t));
+      QMatrix4x4 trail_model = projectile_model_at(trail_pos, tangent);
+      trail_model.rotate(trail_t * spin_speed, QVector3D(0, 0, 1));
+      trail_model.translate(
+          0.0F, 0.0F, -k_bolt_z_scale * Geom::Arrow::k_arrow_z_translate_factor);
+      trail_model.scale(k_bolt_xy_scale * k_streak_xy_scale,
+                        k_bolt_xy_scale * k_streak_xy_scale,
+                        k_bolt_z_scale);
+      renderer->mesh(arrow_shaft_mesh,
+                     trail_model,
+                     wood_color,
+                     nullptr,
+                     0.40F - (0.07F * static_cast<float>(trail_idx)));
+    }
+
+    if (float const night = projectile_night_amount(renderer); night > 0.02F) {
+      QVector3D const tangent = flight_tangent(projectile);
+      draw_night_glint(renderer,
+                       pos,
+                       tangent,
+                       k_night_glint_steel,
+                       0.22F,
+                       3.0F * night,
+                       projectile.progress * 0.3F);
+      for (int streak = 1; streak <= (reduced_effects ? 0 : 3); ++streak) {
+        draw_night_glint(renderer,
+                         pos - tangent * (0.22F * static_cast<float>(streak)),
+                         tangent,
+                         k_night_glint_steel *
+                             (1.0F - 0.25F * static_cast<float>(streak)),
+                         0.12F,
+                         1.3F * night,
+                         0.05F * static_cast<float>(streak));
+      }
+      add_night_projectile_light(
+          renderer, pos, QVector3D(0.55F, 0.78F, 1.0F), 3.4F, 0.55F * night);
+    }
+  } else {
+    bool const commander_shot =
+        projectile.visual_style == Game::Systems::ArrowVisualStyle::Commander;
+    bool const signature_shot =
+        projectile.visual_style == Game::Systems::ArrowVisualStyle::CommanderSignature;
+    bool const aimed =
+        projectile.visual_style == Game::Systems::ArrowVisualStyle::Aimed ||
+        commander_shot || signature_shot;
+    int const trail_segments = signature_shot ? 8 : (aimed ? 6 : 2);
+    float const trail_step = aimed ? 0.17F : 0.38F;
+    if (projectile.trail_alpha > 0.001F && projectile.trail_length > 0.0F) {
+      for (int segment = 1; segment <= trail_segments; ++segment) {
+        float const trail_t = projectile.progress -
+                              projectile.trail_length *
+                                  (0.55F + trail_step * static_cast<float>(segment));
+        if (trail_t <= 0.0F) {
+          continue;
+        }
+        QVector3D trail_pos = projectile.start + delta * trail_t;
+        trail_pos.setY(trail_pos.y() +
+                       projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
+        QVector3D tangent = delta;
+        tangent.setY(tangent.y() +
+                     projectile.arc_height * 4.0F * (1.0F - 2.0F * trail_t));
+        QMatrix4x4 trail_model = projectile_model_at(trail_pos, tangent);
+        trail_model.rotate(projectile.roll_deg + trail_t * projectile.spin_rate_deg,
+                           QVector3D(0, 0, 1));
+        float const trail_scale = projectile.scale * (1.0F - 0.06F * segment);
+        trail_model.translate(0.0F,
+                              0.0F,
+                              -Geom::Arrow::k_arrow_z_scale * trail_scale *
+                                  Geom::Arrow::k_arrow_z_translate_factor);
+        float const streak_xy = aimed ? k_streak_xy_scale * 0.72F : k_streak_xy_scale;
+        trail_model.scale(Geom::Arrow::k_arrow_xy_scale * trail_scale * streak_xy,
+                          Geom::Arrow::k_arrow_xy_scale * trail_scale * streak_xy,
+                          Geom::Arrow::k_arrow_z_scale * trail_scale *
+                              projectile.length_scale * (aimed ? 1.35F : 1.0F));
+        float const falloff = 1.0F - (static_cast<float>(segment) /
+                                      static_cast<float>(trail_segments + 1));
+        float const alpha =
+            (aimed ? projectile.trail_alpha * falloff * falloff
+                   : projectile.trail_alpha *
+                         (0.55F - 0.16F * static_cast<float>(segment))) *
+            relation_trail_boost(relation);
+        renderer->mesh(arrow_shaft_mesh,
+                       trail_model,
+                       scaled_color(Geom::Arrow::shaft_color(projectile.color),
+                                    aimed ? 1.10F : 0.88F),
+                       nullptr,
+                       alpha);
+      }
+    }
+
+    if (aimed) {
+
+      float const flight = std::clamp(projectile.progress, 0.0F, 1.0F);
+      float const settle = std::clamp(flight * 6.0F, 0.0F, 1.0F);
+      QVector3D const glow_color = Geom::Arrow::glow_color(projectile.color);
+      QVector3D const head_color = signature_shot ? QVector3D(1.0F, 0.72F, 0.38F)
+                                                  : QVector3D(1.0F, 0.92F, 0.72F);
+
+      renderer->metal_spark(pos,
+                            head_color,
+                            (signature_shot ? 0.085F : 0.055F) * projectile.scale,
+                            (signature_shot ? 2.1F : 1.35F) * settle,
+                            projectile.progress * 0.24F,
+                            delta.normalized());
+      if (signature_shot) {
+        for (int ember = 1; ember <= 3; ++ember) {
+          float const ember_t =
+              projectile.progress - 0.045F * static_cast<float>(ember);
+          if (ember_t <= 0.0F) {
+            continue;
+          }
+          QVector3D ember_pos = projectile.start + delta * ember_t;
+          ember_pos.setY(ember_pos.y() +
+                         projectile.arc_height * 4.0F * ember_t * (1.0F - ember_t));
+          renderer->metal_spark(
+              ember_pos,
+              QVector3D(1.0F, 0.55F, 0.22F),
+              0.05F * projectile.scale,
+              1.2F * settle,
+              std::fmod(projectile.progress * 0.6F + static_cast<float>(ember) * 0.07F,
+                        0.26F),
+              delta.normalized());
+        }
+      }
+
+      Render::LocalLight flight_light;
+      flight_light.position = pos;
+      flight_light.color =
+          signature_shot
+              ? (glow_color * 0.35F) + (QVector3D(1.0F, 0.62F, 0.30F) * 0.65F)
+              : (glow_color * 0.45F) + (QVector3D(1.0F, 0.90F, 0.66F) * 0.55F);
+      flight_light.radius = signature_shot ? 3.4F : 2.6F;
+      flight_light.intensity =
+          (signature_shot ? 0.95F : 0.65F) * settle * projectile.brightness;
+      renderer->local_light(flight_light);
+    }
+    model.rotate(projectile.roll_deg + projectile.progress * projectile.spin_rate_deg,
+                 QVector3D(0, 0, 1));
+    constexpr float arrow_z_scale = Geom::Arrow::k_arrow_z_scale;
+    constexpr float arrow_xy_scale = Geom::Arrow::k_arrow_xy_scale;
+    constexpr float arrow_z_translate_factor = Geom::Arrow::k_arrow_z_translate_factor;
+    model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
+    model.scale(arrow_xy_scale * projectile.scale,
+                arrow_xy_scale * projectile.scale,
+                arrow_z_scale * projectile.scale * projectile.length_scale);
+
+    QVector3D const team_color = projectile.color;
+    float const brightness = projectile.brightness * relation_brightness(relation);
+    QVector3D shaft_color =
+        scaled_color(Geom::Arrow::shaft_color(team_color), brightness);
+    QVector3D tip_color = scaled_color(Geom::Arrow::tip_color(), brightness);
+    QVector3D fletch_color =
+        scaled_color(Geom::Arrow::fletch_color(team_color), brightness);
+    if (projectile.kind == Game::Systems::ProjectileKind::CursedArrow) {
+      shaft_color = QVector3D(0.42F, 0.18F, 0.58F);
+      tip_color = QVector3D(0.72F, 0.32F, 0.92F);
+      fletch_color = QVector3D(0.58F, 0.22F, 0.82F);
+    } else if (signature_shot) {
+      shaft_color = scaled_color(QVector3D(0.62F, 0.44F, 0.22F), brightness);
+      tip_color = scaled_color(QVector3D(1.0F, 0.86F, 0.55F), brightness);
+      fletch_color = scaled_color(QVector3D(0.92F, 0.20F, 0.16F), brightness);
+    } else if (commander_shot) {
+      shaft_color = scaled_color(QVector3D(0.58F, 0.46F, 0.30F), brightness);
+      tip_color = scaled_color(QVector3D(0.96F, 0.90F, 0.72F), brightness);
+      fletch_color =
+          scaled_color(fletch_color * 0.55F + QVector3D(0.45F, 0.38F, 0.18F), 1.0F);
+    }
+    renderer->mesh(arrow_shaft_mesh, model, shaft_color, nullptr, 1.0F);
+    renderer->mesh(arrow_tip_mesh, model, tip_color, nullptr, 1.0F);
+
+    QVector3D const glow =
+        projectile.kind == Game::Systems::ProjectileKind::CursedArrow
+            ? QVector3D(0.78F, 0.35F, 1.0F)
+            : (signature_shot
+                   ? QVector3D(1.0F, 0.62F, 0.28F)
+                   : relation_glow(Geom::Arrow::glow_color(team_color), relation));
+    draw_arrow_glow(renderer,
+                    arrow_shaft_mesh,
+                    arrow_tip_mesh,
+                    model,
+                    aimed ? (glow * 0.55F) + (QVector3D(1.0F, 0.94F, 0.74F) * 0.45F)
+                          : glow,
+                    brightness * (aimed ? 1.6F : 1.0F));
+
+    QMatrix4x4 fletch_model = model;
+    fletch_model.translate(
+        0.0F, 0.0F, -arrow_z_scale * Geom::Arrow::k_fletch_z_offset_factor);
+    fletch_model.scale(Geom::Arrow::k_fletch_xy_scale,
+                       Geom::Arrow::k_fletch_xy_scale,
+                       Geom::Arrow::k_fletch_z_scale);
+    renderer->mesh(arrow_fletching_mesh, fletch_model, fletch_color, nullptr, 1.0F);
+
+    if (float const night = projectile_night_amount(renderer);
+        night > 0.02F && !aimed) {
+      bool const cursed = projectile.kind == Game::Systems::ProjectileKind::CursedArrow;
+
+      QVector3D const head_position =
+          model.map(QVector3D(0.0F, 0.0F, Geom::Arrow::k_head_center_z));
+      draw_night_glint(renderer,
+                       head_position,
+                       flight_tangent(projectile),
+                       cursed ? k_night_glint_cursed : QVector3D(0.10F, 0.38F, 0.85F),
+                       0.035F * projectile.scale,
+                       0.48F * night * relation_brightness(relation),
+                       projectile.progress * 0.3F);
+    }
+  }
+}
+
+void render_stone_projectile(FrameSubmitter* renderer,
+                             ResourceManager* resources,
+                             const Game::Systems::ProjectileView& projectile,
+                             const QVector3D& position,
+                             const QMatrix4x4& base_model,
+                             bool reduced_effects) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
+    return;
+  }
+
+  auto* stone_mesh = Geom::Stone::get();
+  if (stone_mesh == nullptr) {
+    return;
+  }
+
+  QMatrix4x4 model = base_model;
+
+  float const tumble_speed = 720.0F;
+  float const tumble_angle = projectile.progress * tumble_speed;
+  model.rotate(tumble_angle, QVector3D(1, 0.5F, 0.3F).normalized());
+
+  float const stone_scale = projectile.scale;
+  float const mesh_scale = stone_scale * Geom::Stone::k_projectile_radius;
+  model.scale(mesh_scale, mesh_scale, mesh_scale);
+
+  bool const flaming = projectile.kind == Game::Systems::ProjectileKind::FlamingStone;
+  QVector3D const stone_color =
+      flaming ? QVector3D(0.32F, 0.24F, 0.20F) : QVector3D(0.45F, 0.42F, 0.38F);
+  renderer->mesh(stone_mesh, model, stone_color, nullptr, 1.0F);
+
+  if (!flaming) {
+    if (float const night = projectile_night_amount(renderer); night > 0.02F) {
+      QVector3D const tangent = flight_tangent(projectile);
+      QVector3D const trail_delta = projectile.end - projectile.start;
+      draw_night_glint(renderer,
+                       position,
+                       tangent,
+                       k_night_glint_steel,
+                       0.30F * stone_scale,
+                       1.7F * night,
+                       projectile.progress * 0.3F);
+      for (int streak = 1; streak <= (reduced_effects ? 1 : 4); ++streak) {
+        float const trail_t = projectile.progress - static_cast<float>(streak) * 0.04F;
+        if (trail_t < 0.0F) {
+          continue;
+        }
+        QVector3D trail_pos = projectile.start + trail_delta * trail_t;
+        trail_pos.setY(trail_pos.y() +
+                       projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
+        float const fade = 1.0F - static_cast<float>(streak) / 5.0F;
+        draw_night_glint(renderer,
+                         trail_pos,
+                         tangent,
+                         k_night_glint_steel * fade,
+                         0.22F * stone_scale * fade,
+                         1.1F * night * fade,
+                         0.06F * static_cast<float>(streak));
+      }
+      add_night_projectile_light(
+          renderer, position, QVector3D(0.55F, 0.78F, 1.0F), 4.0F, 0.5F * night);
+    }
+    return;
+  }
+
+  float const animation_time = renderer->get_animation_time();
+  float const pulse =
+      0.92F + 0.10F * std::sin(animation_time * 11.0F + projectile.progress * 27.0F);
+  float const core_radius = 0.20F * stone_scale * pulse;
+  renderer->fireball(position,
+                     QVector3D(0.95F, 0.26F, 0.04F),
+                     core_radius,
+                     0.92F,
+                     animation_time + projectile.progress * 3.1F);
+  renderer->fireball(position,
+                     QVector3D(1.0F, 0.66F, 0.18F),
+                     core_radius * 0.55F,
+                     1.28F,
+                     animation_time * 1.29F + 1.4F);
+
+  const QVector3D delta = projectile.end - projectile.start;
+  constexpr int k_trail_segments = 4;
+  for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
+    float const trail_t = projectile.progress - static_cast<float>(trail_idx) * 0.045F;
+    if (trail_t < 0.0F) {
+      continue;
+    }
+
+    QVector3D trail_pos = projectile.start + delta * trail_t;
+    trail_pos.setY(trail_pos.y() +
+                   projectile.arc_height * 4.0F * trail_t * (1.0F - trail_t));
+
+    float const falloff =
+        1.0F - static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
+    renderer->fireball(trail_pos,
+                       QVector3D(0.86F, 0.20F, 0.03F) * (0.35F + 0.65F * falloff),
+                       core_radius * (0.30F + 0.42F * falloff),
+                       0.72F * falloff,
+                       animation_time * 1.13F + static_cast<float>(trail_idx));
+  }
+}
+
+void render_projectiles(FrameSubmitter* renderer,
+                        ResourceManager* resources,
+                        const Game::Systems::RenderEffectsFrame& effects,
+                        const ProjectileViewContext* view) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
+    return;
+  }
+  auto relation_of = [&](int attacker_owner, int target_owner) {
+    return view != nullptr ? view->relation_for_owners(attacker_owner, target_owner)
+                           : ProjectileRelation::Neutral;
+  };
+  bool const reduced_effects = view != nullptr && view->reduced_effects;
+
+  for (const auto& projectile : effects.projectiles) {
+    const QVector3D delta = projectile.end - projectile.start;
+    QVector3D pos = projectile.start + delta * projectile.progress;
+
+    float const h = projectile.arc_height * 4.0F * projectile.progress *
+                    (1.0F - projectile.progress);
+    pos.setY(pos.y() + h);
+
+    QMatrix4x4 model;
+    model.translate(pos.x(), pos.y(), pos.z());
+
+    QVector3D const dir = delta.normalized();
+    float const yaw_deg = std::atan2(dir.x(), dir.z()) * k_rad_to_deg;
+    model.rotate(yaw_deg, QVector3D(0, 1, 0));
+
+    if (projectile.shape == Game::Systems::ProjectileShape::Arrow) {
+      render_arrow_projectile(
+          renderer,
+          resources,
+          projectile,
+          pos,
+          model,
+          relation_of(projectile.attacker_owner, projectile.target_owner),
+          reduced_effects);
+    } else {
+      render_stone_projectile(
+          renderer, resources, projectile, pos, model, reduced_effects);
+    }
+  }
+
+  for (auto const& spent : effects.spent_projectiles) {
+    render_spent_projectile(renderer, spent);
+  }
+
+  int plain_impact_budget = k_projectile_impact_effect_budget;
+  for (std::size_t index = 0; index < effects.projectile_impacts.size(); ++index) {
+    auto const& impact = effects.projectile_impacts[index];
+    ProjectileRelation relation = ProjectileRelation::Neutral;
+    if (!impact.aimed_shot && !impact.ballista_bolt &&
+        (impact.kind == Game::Systems::ProjectileKind::Arrow ||
+         impact.kind == Game::Systems::ProjectileKind::CursedArrow)) {
+      if (plain_impact_budget <= 0) {
+        continue;
+      }
+      relation = relation_of(effects.impact_attacker_owners[index],
+                             effects.impact_target_owners[index]);
+      if (relation != ProjectileRelation::Neutral) {
+        --plain_impact_budget;
+      }
+    }
+    render_projectile_impact(renderer, impact, relation, reduced_effects);
+  }
+}
+
+namespace {
+
+const QVector3D k_granite(0.88F, 0.85F, 0.79F);
+const QVector3D k_dark_granite(0.68F, 0.65F, 0.60F);
+const QVector3D k_lichen(0.56F, 0.60F, 0.44F);
+const QVector3D k_timber(0.38F, 0.27F, 0.16F);
+const QVector3D k_timber_light(0.52F, 0.39F, 0.24F);
+const QVector3D k_unclaimed_cloth(0.62F, 0.58F, 0.50F);
+const QVector3D k_banner_metal(0.55F, 0.52F, 0.46F);
+const QVector3D k_rockfall_dust_color(0.74F, 0.68F, 0.58F);
+const QVector3D k_threat_color(1.0F, 0.34F, 0.14F);
+constexpr float k_rockfall_dust_intensity = 1.7F;
+constexpr float k_rad_to_deg_f = 180.0F / std::numbers::pi_v<float>;
+
+[[nodiscard]] auto rock_hash(std::uint32_t seed, std::uint32_t salt) -> float {
+  std::uint32_t value = seed * 0x9e3779b9U ^ (salt * 0x85ebca6bU);
+  value ^= value >> 15U;
+  value *= 0x2c1b3c6dU;
+  value ^= value >> 12U;
+  return static_cast<float>(value & 0xffffU) / 65535.0F;
+}
+
+[[nodiscard]] auto rock_color(std::uint32_t seed) -> QVector3D {
+  float const shade = rock_hash(seed, 1U);
+  QVector3D color = k_dark_granite + (k_granite - k_dark_granite) * shade;
+  if (rock_hash(seed, 2U) > 0.72F) {
+    color = color * 0.75F + k_lichen * 0.25F;
+  }
+  return color;
+}
+
+[[nodiscard]] auto rock_shape(std::uint32_t seed) -> QVector3D {
+  return {0.92F + 0.20F * rock_hash(seed, 3U),
+          0.78F + 0.18F * rock_hash(seed, 4U),
+          0.90F + 0.18F * rock_hash(seed, 5U)};
+}
+
+void draw_rock(FrameSubmitter* renderer,
+               Mesh* mesh,
+               const QMatrix4x4& placement,
+               float radius,
+               std::uint32_t seed) {
+  QMatrix4x4 model = placement;
+  QVector3D const shape = rock_shape(seed) * (radius / Geom::Stone::k_mean_radius);
+  model.scale(shape);
+  renderer->mesh(mesh, model, rock_color(seed), nullptr, 1.0F);
+}
+
+void draw_log(FrameSubmitter* renderer,
+              Mesh* cylinder,
+              const QVector3D& a,
+              const QVector3D& b,
+              float radius,
+              const QVector3D& color) {
+  renderer->mesh(cylinder, Geom::cylinder_between(a, b, radius), color, nullptr, 1.0F);
+}
+
+void draw_chevron(FrameSubmitter* renderer,
+                  Mesh* cube,
+                  const QVector3D& tip,
+                  const QVector3D& downhill,
+                  const QVector3D& color,
+                  float size,
+                  float alpha) {
+
+  float const yaw = std::atan2(downhill.x(), downhill.z()) * k_rad_to_deg_f;
+  float const arm = 0.62F * size;
+  for (float side : {-1.0F, 1.0F}) {
+    QMatrix4x4 model;
+    model.translate(tip);
+    model.rotate(yaw + side * 135.0F, 0.0F, 1.0F, 0.0F);
+    model.translate(0.0F, 0.0F, arm * 0.5F);
+    model.scale(0.065F * size, 0.015F, arm * 0.5F);
+    renderer->mesh(cube, model, color, nullptr, alpha);
+  }
+}
+
+void draw_cache_banner(FrameSubmitter* renderer,
+                       const QVector3D& pole_base,
+                       float yaw,
+                       const QVector3D& cloth) {
+  auto* resources = renderer->resources();
+  Mesh* unit = resources != nullptr ? resources->unit() : nullptr;
+  if (unit == nullptr) {
+    unit = get_unit_cube();
+  }
+  Texture* white = resources != nullptr ? resources->white() : nullptr;
+
+  DrawContext context;
+  context.resources = resources;
+  context.backend = renderer->backend();
+  context.animation_time = renderer->get_animation_time();
+
+  context.model.translate(pole_base);
+  context.model.rotate(yaw + 180.0F, 0.0F, 1.0F, 0.0F);
+
+  BarracksFlagRenderer::ClothBannerResources cloth_resources;
+  if (context.backend != nullptr) {
+    cloth_resources.cloth_mesh = context.backend->banner_mesh();
+    cloth_resources.banner_shader = context.backend->banner_shader();
+  }
+  QVector3D const trim = cloth * 0.5F + k_banner_metal * 0.5F;
+  BarracksFlagRenderer::draw_hanging_banner(
+      context,
+      *renderer,
+      unit,
+      white,
+      cloth,
+      trim,
+      {.pole_base = QVector3D(0.0F, 0.0F, 0.0F),
+       .pole_height = 2.7F,
+       .pole_radius = 0.045F,
+       .banner_width = 0.8F,
+       .banner_height = 0.55F,
+       .pole_color = k_timber,
+       .beam_color = k_timber_light,
+       .connector_color = k_banner_metal,
+       .ornament_offset = QVector3D(0.22F, 2.85F, 0.03F),
+       .ornament_size = QVector3D(0.3F, 0.03F, 0.015F),
+       .ornament_color = k_banner_metal,
+       .ring_count = 3,
+       .ring_y_start = 0.4F,
+       .ring_spacing = 0.55F,
+       .ring_height = 0.025F,
+       .ring_radius_scale = 2.0F,
+       .ring_color = k_banner_metal},
+      &cloth_resources);
+}
+
+void draw_cache(FrameSubmitter* renderer,
+                const Game::Systems::RockfallCacheView& cache,
+                const ProjectileViewContext* view) {
+  auto* stone = Geom::Stone::get();
+  auto* cylinder = get_unit_cylinder();
+  auto* cube = get_unit_cube();
+  if (stone == nullptr || cylinder == nullptr || cube == nullptr) {
+    return;
+  }
+  float const time = renderer->get_animation_time();
+  QVector3D const up(0.0F, 1.0F, 0.0F);
+  QVector3D const forward = cache.downhill;
+  QVector3D const lateral(-forward.z(), 0.0F, forward.x());
+  float const r = cache.boulder_radius;
+  float const yaw = std::atan2(forward.x(), forward.z()) * k_rad_to_deg_f;
+  float const push = std::max(cache.push_progress, 0.0F);
+
+  QMatrix4x4 pile;
+  QVector3D const pivot = cache.position + forward * (r * 1.1F);
+  pile.translate(pivot);
+  if (cache.push_progress >= 0.0F) {
+    float const tip = push * push * 14.0F + std::sin(time * 26.0F) * 2.2F * push;
+    pile.rotate(tip, lateral);
+  }
+  pile.translate(-pivot);
+
+  int const left = std::max(0, cache.boulders_left);
+  int const bottom = std::min(left, 3);
+  int const top = std::max(0, left - bottom);
+  for (int i = 0; i < left; ++i) {
+    bool const upper = i >= bottom;
+    int const row_count = upper ? top : bottom;
+    int const slot = upper ? i - bottom : i;
+    float const across =
+        (static_cast<float>(slot) - 0.5F * static_cast<float>(row_count - 1)) * r *
+        1.9F;
+    std::uint32_t const seed = cache.seed + static_cast<std::uint32_t>(i) * 7919U;
+    QVector3D centre = cache.position + lateral * across +
+                       forward * ((upper ? -0.35F : 0.0F) * r) +
+                       up * (upper ? r * 2.3F : r * 0.85F);
+    QMatrix4x4 placement = pile;
+    placement.translate(centre);
+    placement.rotate(360.0F * rock_hash(seed, 6U), up);
+    placement.rotate(30.0F * rock_hash(seed, 7U), QVector3D(1.0F, 0.0F, 0.3F));
+    draw_rock(
+        renderer, stone, placement, r * (0.85F + 0.25F * rock_hash(seed, 8U)), seed);
+  }
+
+  float const half_width = r * 2.6F;
+  float const lean = push * 0.55F * r;
+  for (float side : {-1.0F, 1.0F}) {
+    QVector3D const foot =
+        cache.position + forward * (r * 1.25F) + lateral * (side * half_width);
+    QVector3D const head = foot + up * (r * 2.6F) + forward * lean;
+    draw_log(renderer, cylinder, foot - up * 0.2F, head, 0.07F, k_timber);
+  }
+  QVector3D const log_a =
+      cache.position + forward * (r * 1.3F) - lateral * half_width + up * (r * 1.0F);
+  QVector3D const log_b =
+      cache.position + forward * (r * 1.3F) + lateral * half_width + up * (r * 1.0F);
+  draw_log(renderer,
+           cylinder,
+           log_a + forward * (lean * 0.4F),
+           log_b + forward * (lean * 0.4F),
+           0.09F,
+           k_timber_light);
+
+  bool const claimed = cache.owner_id >= 0;
+  QVector3D const cloth =
+      claimed ? Render::team_color(cache.owner_id) : k_unclaimed_cloth;
+  draw_cache_banner(renderer,
+                    cache.position - forward * (r * 2.4F) +
+                        lateral * (half_width + 0.4F),
+                    yaw,
+                    cloth);
+
+  bool const own = view != nullptr && claimed && cache.owner_id == view->local_owner_id;
+  if (!own || !cache.armed || cache.push_progress >= 0.0F) {
+    return;
+  }
+  QVector3D const start = cache.position + forward * (r * 2.6F);
+  QVector3D const end = cache.zone_target + forward * (cache.zone_radius * 0.5F);
+  constexpr int k_chevrons = 4;
+  float const pulse = 0.5F + 0.5F * std::sin(time * 6.0F);
+  for (int i = 0; i < k_chevrons; ++i) {
+    float const t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_chevrons);
+    QVector3D tip = start + (end - start) * t;
+    tip.setY(tip.y() + 0.12F);
+    QVector3D color = cloth;
+    float alpha = 0.35F;
+    if (cache.threatened) {
+      float const wave =
+          0.5F + 0.5F * std::sin(time * 8.0F - static_cast<float>(i) * 1.2F);
+      color = k_threat_color;
+      alpha = 0.45F + 0.45F * wave * (0.6F + 0.4F * pulse);
+    }
+    draw_chevron(renderer, cube, tip, forward, color, 1.1F, alpha);
+  }
+}
+
+} // namespace
+
+void render_rockfall(FrameSubmitter* renderer,
+                     const Game::Systems::RenderEffectsFrame& effects,
+                     const ProjectileViewContext* view) {
+  if (renderer == nullptr) {
+    return;
+  }
+
+  for (auto const& cache : effects.rockfall_caches) {
+    draw_cache(renderer, cache, view);
+  }
+
+  if (!effects.rockfall_boulders.empty()) {
+    if (auto* mesh = Geom::Stone::get(); mesh != nullptr) {
+      for (auto const& boulder : effects.rockfall_boulders) {
+        QMatrix4x4 placement;
+        placement.translate(boulder.position - QVector3D(0.0F, boulder.sink, 0.0F));
+        placement.rotate(boulder.orientation);
+        draw_rock(renderer, mesh, placement, boulder.radius, boulder.seed);
+      }
+    }
+  }
+
+  for (auto const& dust : effects.rockfall_dust) {
+    renderer->stone_impact(dust.position,
+                           k_rockfall_dust_color,
+                           dust.scale,
+                           k_rockfall_dust_intensity,
+                           dust.age);
+  }
+}
+
+void render_rafts(FrameSubmitter* renderer,
+                  const Game::Systems::RenderEffectsFrame& effects) {
+  if (effects.rafts.empty()) {
+    return;
+  }
+  std::vector<RaftDrawable> drawables;
+  drawables.reserve(effects.rafts.size());
+  for (auto const& raft : effects.rafts) {
+    drawables.push_back({.position = raft.position,
+                         .across = raft.across,
+                         .docks = raft.docks,
+                         .half_length = raft.half_length,
+                         .half_width = raft.half_width,
+                         .moving = raft.moving,
+                         .seed = raft.seed});
+  }
+  draw_rafts(renderer, drawables);
+}
+
+} // namespace Render::GL

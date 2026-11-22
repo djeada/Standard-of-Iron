@@ -2,9 +2,9 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "render/wildlife/wildlife_gait.h"
-#include "render/wildlife/wildlife_rig.h"
-#include "render/wildlife/wolf_spec.h"
+#include "render/creature/wildlife/wildlife_gait.h"
+#include "render/creature/wildlife/wildlife_rig.h"
+#include "render/creature/wildlife/wolf_spec.h"
 
 namespace {
 

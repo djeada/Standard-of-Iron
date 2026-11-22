@@ -1,4 +1,4 @@
-#include "render_archetype_registry.h"
+#include "render/equipment/render_archetype_registry.h"
 
 #include <cstddef>
 #include <utility>

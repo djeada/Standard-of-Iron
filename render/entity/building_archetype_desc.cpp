@@ -1,15 +1,16 @@
-#include "building_archetype_desc.h"
+#include "render/entity/building_archetype_desc.h"
 
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 #include <limits>
 #include <type_traits>
 #include <utility>
 
-#include "building_decay.h"
+#include "render/entity/building_decay.h"
+#include "render/frame/material_classification.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/material_classification.h"
 
 namespace Render::GL {
 namespace {

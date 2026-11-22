@@ -9,9 +9,9 @@
 #include <string_view>
 #include <utility>
 
+#include "render/frame/render_archetype.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/render_archetype.h"
 
 namespace Render::GL {
 

@@ -10,14 +10,14 @@
 #include <limits>
 #include <span>
 
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/gpu/rigged_mesh_bake.h"
+#include "render/creature/horse/horse_spec.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
-#include "render/elephant/elephant_spec.h"
 #include "render/gl/garment_shell.h"
 #include "render/gl/primitives.h"
-#include "render/horse/horse_spec.h"
-#include "render/rigged_mesh.h"
-#include "render/rigged_mesh_bake.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace {
 

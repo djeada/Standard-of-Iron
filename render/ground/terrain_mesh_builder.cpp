@@ -1,4 +1,4 @@
-#include "terrain_mesh_builder.h"
+#include "render/ground/terrain_mesh_builder.h"
 
 #include <algorithm>
 #include <cmath>
@@ -11,8 +11,8 @@
 
 #include "game/map/terrain_surface.h"
 #include "render/gl/render_constants.h"
-#include "terrain_quad_tessellation.h"
-#include "terrain_vertex_masks.h"
+#include "render/ground/terrain_quad_tessellation.h"
+#include "render/ground/terrain_vertex_masks.h"
 
 namespace {
 

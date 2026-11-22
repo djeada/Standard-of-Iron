@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-#include "building_collapse.h"
+#include "render/entity/building_collapse.h"
 
 namespace Render::GL {
 

@@ -1,4 +1,4 @@
-#include "asset_counters.h"
+#include "render/profiling/asset_counters.h"
 
 #include <array>
 #include <cstdio>

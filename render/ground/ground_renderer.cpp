@@ -1,4 +1,4 @@
-#include "ground_renderer.h"
+#include "render/ground/ground_renderer.h"
 
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <cmath>
 
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/world_chunk.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
-#include "world_chunk.h"
 
 namespace Render::GL {
 
@@ -154,7 +154,7 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   return params;
 }
 
-void GroundRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void GroundRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   sync_biome_from_service();
 
   if (resources == nullptr) {

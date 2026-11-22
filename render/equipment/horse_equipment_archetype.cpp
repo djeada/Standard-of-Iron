@@ -1,4 +1,4 @@
-#include "horse_equipment_archetype.h"
+#include "render/equipment/horse_equipment_archetype.h"
 
 namespace Render::GL {
 namespace {

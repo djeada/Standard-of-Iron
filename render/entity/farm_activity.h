@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "civilian_actor.h"
 #include "render/creature/spec.h"
+#include "render/entity/civilian_actor.h"
 
 namespace Engine::Core {
 class World;

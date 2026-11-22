@@ -4,9 +4,9 @@
 
 #include <cstdint>
 
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render_pass_intent.h"
-#include "unit_visual_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/pipeline/render_pass_intent.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 
 namespace Render::GL {
 struct DrawContext;

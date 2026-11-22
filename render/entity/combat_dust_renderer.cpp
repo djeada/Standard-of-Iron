@@ -1,4 +1,4 @@
-#include "combat_dust_renderer.h"
+#include "render/entity/combat_dust_renderer.h"
 
 #include <QMatrix4x4>
 
@@ -6,7 +6,6 @@
 #include <cmath>
 #include <numbers>
 
-#include "building_collapse.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
@@ -18,9 +17,10 @@
 #include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
-#include "render/camera_visibility.h"
-#include "render/combat_dust_defaults.h"
-#include "render/scene_renderer.h"
+#include "render/entity/building_collapse.h"
+#include "render/frame/camera_visibility.h"
+#include "render/frame/combat_dust_defaults.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -42,7 +42,7 @@ auto commander_strike_accent(Engine::Core::Entity* commander) -> QVector3D {
 }
 
 void draw_commander_swing(
-    Render::GL::Renderer* renderer,
+    Render::GL::FrameSubmitter* renderer,
     const Engine::Core::CommanderSignaturePresentationComponent::Entry& entry,
     const QVector3D& contact,
     const QVector3D& forward,
@@ -308,7 +308,7 @@ void StoneImpactTracker::update(float current_time) {
                   m_impacts.end());
 }
 
-void render_blood_stains(Renderer* renderer,
+void render_blood_stains(FrameSubmitter* renderer,
                          ResourceManager*,
                          Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
@@ -380,7 +380,7 @@ struct GroundDustAppearance {
   float intensity_scale{1.0F};
 };
 
-auto ground_dust_appearance(const Renderer& renderer) -> GroundDustAppearance {
+auto ground_dust_appearance(const FrameSubmitter& renderer) -> GroundDustAppearance {
   GroundDustAppearance result;
   float wetness = renderer.environment_lighting().wetness;
   const auto* terrain = renderer.world_view().terrain();
@@ -424,7 +424,7 @@ void accumulate_ground_dust(std::vector<GroundDustCluster>& clusters,
   clusters.push_back({world_x, world_z, 1.0F, cell_x, cell_z});
 }
 
-void emit_ground_dust(Renderer* renderer,
+void emit_ground_dust(FrameSubmitter* renderer,
                       std::vector<GroundDustCluster>& clusters,
                       float animation_time) {
   namespace Defaults = Render::CombatDustDefaults;
@@ -468,7 +468,7 @@ void emit_ground_dust(Renderer* renderer,
   }
 }
 
-void render_combat_dust(Renderer* renderer,
+void render_combat_dust(FrameSubmitter* renderer,
                         ResourceManager*,
                         Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
@@ -1283,7 +1283,7 @@ inline auto marker_style(RpgMarkerRole role) -> RpgMarkerStyle {
   return {Game::Accessibility::TeamPattern::Solid, false};
 }
 
-inline void submit_marker(Render::GL::Renderer* renderer,
+inline void submit_marker(Render::GL::FrameSubmitter* renderer,
                           RpgMarkerRole role,
                           float px,
                           float py,
@@ -1342,7 +1342,7 @@ public:
     m_rings.push_back(ring);
   }
 
-  void submit(Render::GL::Renderer* renderer) const {
+  void submit(Render::GL::FrameSubmitter* renderer) const {
     for (auto const& ring : m_rings) {
       submit_marker(renderer,
                     ring.role,
@@ -1368,7 +1368,7 @@ void RpgTelegraphRenderer::clear() {
   m_strike_flashes.clear();
 }
 
-void RpgTelegraphRenderer::render(Renderer* renderer,
+void RpgTelegraphRenderer::render(FrameSubmitter* renderer,
                                   Engine::Core::World* world,
                                   Engine::Core::EntityID commander_id,
                                   Engine::Core::EntityID locked_target_id,

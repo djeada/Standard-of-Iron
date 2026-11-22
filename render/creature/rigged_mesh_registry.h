@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include "rigged_mesh_asset.h"
+#include "render/creature/rigged_mesh_asset.h"
 
 namespace Render::Creature::Rigged {
 

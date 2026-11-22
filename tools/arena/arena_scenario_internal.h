@@ -56,8 +56,8 @@
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_species.h"
-#include "render/graphics_settings.h"
-#include "render/profiling/combat_animation_diagnostics.h"
+#include "render/creature/combat_animation_diagnostics.h"
+#include "render/frame/graphics_settings.h"
 #include "render/profiling/frame_profile.h"
 #include "render/profiling/performance_report.h"
 

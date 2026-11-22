@@ -19,7 +19,7 @@
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/tree_renderer.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 
 namespace App::Session {
 

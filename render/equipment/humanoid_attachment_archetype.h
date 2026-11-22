@@ -4,10 +4,10 @@
 #include <QVector3D>
 
 #include "animation/rig/instance_transform.h"
-#include "equipment_submit.h"
-#include "render/entity/registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/static_attachment_spec.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
 
 namespace Render::GL {
 

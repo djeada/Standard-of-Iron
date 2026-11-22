@@ -116,7 +116,7 @@ def find_naming_mismatches(
 def main():
     project_root = Path(__file__).parent.parent
     shader_dir = project_root / "assets" / "shaders"
-    backend_file = project_root / "render" / "gl" / "backend.cpp"
+    backend_file = project_root / "render" / "backend" / "backend.cpp"
 
     if not shader_dir.exists():
         print(f"{Colors.RED}Error: Shader directory not found: {shader_dir}{Colors.NC}")

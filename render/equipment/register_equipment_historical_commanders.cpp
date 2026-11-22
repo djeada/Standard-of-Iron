@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "armor/cloak_renderer.h"
-#include "helmets/commander_helmets.h"
-#include "register_equipment_internal.h"
-#include "render_archetype_registry.h"
+#include "render/equipment/armor/cloak_renderer.h"
+#include "render/equipment/helmets/commander_helmets.h"
+#include "render/equipment/register_equipment_internal.h"
+#include "render/equipment/render_archetype_registry.h"
 
 namespace Render::GL::EquipmentRegistration {
 namespace {

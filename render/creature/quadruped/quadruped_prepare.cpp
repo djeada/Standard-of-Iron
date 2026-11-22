@@ -1,4 +1,4 @@
-#include "quadruped_prepare.h"
+#include "render/creature/quadruped/quadruped_prepare.h"
 
 #include <QtMath>
 
@@ -6,7 +6,7 @@
 
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/preparation_common.h"
-#include "render/entity/registry.h"
+#include "render/frame/draw_context.h"
 #include "scene/camera.h"
 
 namespace Render::Creature::Quadruped {

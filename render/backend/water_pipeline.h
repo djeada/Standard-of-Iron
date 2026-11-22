@@ -1,0 +1,144 @@
+#pragma once
+
+#include <array>
+
+#include "render/backend/pipeline_interface.h"
+#include "render/gl/shader.h"
+
+namespace Render::GL {
+class ShaderCache;
+
+namespace BackendPipelines {
+
+class WaterPipeline final : public IPipeline {
+public:
+  explicit WaterPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
+  ~WaterPipeline() override { shutdown(); }
+
+  auto initialize() -> bool override;
+  void shutdown() override;
+  void cache_uniforms() override;
+  [[nodiscard]] auto is_initialized() const -> bool override;
+
+  struct WaterUniforms {
+    GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle moisture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle view{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle projection{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 2> ford_a{GL::Shader::InvalidUniform,
+                                                    GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 2> ford_b{GL::Shader::InvalidUniform,
+                                                    GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ford_count{GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 4> neighbor_segment{
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform};
+    std::array<GL::Shader::UniformHandle, 4> neighbor_radius{
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform,
+        GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle neighbor_count{GL::Shader::InvalidUniform};
+  };
+
+  struct RiverbankUniforms {
+    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle view{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle projection{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_low{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_high{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle moisture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_exposure{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+  };
+
+  struct BridgeUniforms {
+    GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_mask_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_mask_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_mask_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_fog_mask{GL::Shader::InvalidUniform};
+  };
+
+  struct RoadUniforms {
+    GL::Shader::UniformHandle verge_grass{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle verge_soil{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ground_type{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
+  };
+
+  GL::Shader* m_water_shader = nullptr;
+  GL::Shader* m_riverbank_shader = nullptr;
+  GL::Shader* m_bridge_shader = nullptr;
+  GL::Shader* m_road_shader = nullptr;
+
+  WaterUniforms m_water_uniforms;
+  RiverbankUniforms m_riverbank_uniforms;
+  BridgeUniforms m_bridge_uniforms;
+  RoadUniforms m_road_uniforms;
+
+private:
+  GL::ShaderCache* m_shader_cache = nullptr;
+
+  void cache_water_uniforms();
+  void cache_riverbank_uniforms();
+  void cache_bridge_uniforms();
+  void cache_road_uniforms();
+};
+
+} // namespace BackendPipelines
+} // namespace Render::GL

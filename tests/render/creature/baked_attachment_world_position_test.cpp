@@ -11,6 +11,10 @@
 #include <limits>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/gpu/rigged_mesh_bake.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
 #include "render/equipment/armor/cloak_renderer.h"
 #include "render/equipment/armor/roman_greaves.h"
 #include "render/equipment/armor/roman_shoulder_cover.h"
@@ -27,12 +31,8 @@
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
-#include "render/gl/humanoid/humanoid_types.h"
+#include "render/frame/render_archetype.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/render_archetype.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/static_attachment_spec.h"
 
 namespace {
 

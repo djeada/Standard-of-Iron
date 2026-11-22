@@ -30,7 +30,7 @@ import re
 import sys
 from pathlib import Path
 
-SEAM = "render/world_view.cpp"
+SEAM = "render/frame/world_view.cpp"
 
 AMBIENT = re.compile(
     r"""

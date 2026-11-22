@@ -1,9 +1,9 @@
-#include "swordsman_style.h"
+#include "render/entity/nations/carthage/swordsman_style.h"
 
 #include <array>
 
-#include "render/entity/nations/material_palette.h"
-#include "render/entity/nations/sepulcher/palette.h"
+#include "render/equipment/material_palette.h"
+#include "render/equipment/sepulcher/palette.h"
 
 namespace Render::GL::Carthage {
 

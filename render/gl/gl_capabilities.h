@@ -5,7 +5,7 @@
 #include <QOpenGLExtraFunctions>
 #include <QString>
 
-#include "context_requirements.h"
+#include "render/gl/context_requirements.h"
 
 namespace Render::GL {
 

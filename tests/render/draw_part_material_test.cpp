@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "render/draw_part.h"
-#include "render/draw_queue.h"
-#include "render/material.h"
-#include "render/submitter.h"
+#include "render/frame/draw_part.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/material.h"
+#include "render/frame/submitter.h"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "rigged_mesh_gpu.h"
+#include "render/gl/rigged_mesh_gpu.h"
 
 #include <QOpenGLContext>
 #include <QOpenGLVersionFunctionsFactory>
@@ -6,9 +6,9 @@
 #include <cstddef>
 #include <utility>
 
-#include "gl_resource_tracking.h"
-#include "platform_gl.h"
-#include "render/rigged_mesh.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace Render::GL {
 

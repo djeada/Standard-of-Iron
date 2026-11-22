@@ -6,11 +6,11 @@
 #include <gtest/gtest.h>
 #include <utility>
 
+#include "render/cache/static_attachment_spec.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/render_request.h"
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
+#include "render/frame/render_archetype.h"
 
 namespace {
 

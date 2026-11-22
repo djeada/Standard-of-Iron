@@ -6,16 +6,16 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/creature/gpu/snapshot_mesh_cache.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_submission_context.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/shadow_batch.h"
-#include "render/entity/unseen_submitter.h"
-#include "render/primitive_batch.h"
-#include "render/rigged_mesh_cache.h"
-#include "render/scene_renderer.h"
-#include "render/snapshot_mesh_cache.h"
-#include "render/submitter.h"
+#include "render/frame/primitive_batch.h"
+#include "render/frame/submitter.h"
+#include "render/frame/unseen_submitter.h"
+#include "render/scene/scene_renderer.h"
 
 namespace {
 

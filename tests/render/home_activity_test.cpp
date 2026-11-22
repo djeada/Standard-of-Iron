@@ -11,8 +11,8 @@
 #include "render/entity/civilian_actor.h"
 #include "render/entity/home_activity.h"
 #include "render/entity/registry.h"
-#include "render/graphics_settings.h"
-#include "render/local_lighting.h"
+#include "render/frame/graphics_settings.h"
+#include "render/frame/local_lighting.h"
 
 namespace {
 using namespace Render::GL;

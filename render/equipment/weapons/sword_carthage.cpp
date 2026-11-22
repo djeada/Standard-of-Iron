@@ -1,4 +1,4 @@
-#include "sword_carthage.h"
+#include "render/equipment/weapons/sword_carthage.h"
 
 namespace Render::GL {
 

@@ -9,10 +9,10 @@
 #include <cstddef>
 #include <cstring>
 
-#include "gl_handle.h"
-#include "gl_resource_tracking.h"
-#include "platform_gl.h"
-#include "render_constants.h"
+#include "render/gl/gl_handle.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/render_constants.h"
 
 namespace Render::GL {
 

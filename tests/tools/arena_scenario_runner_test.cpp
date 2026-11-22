@@ -26,7 +26,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/units/spawn_type.h"
-#include "render/profiling/combat_animation_diagnostics.h"
+#include "render/creature/combat_animation_diagnostics.h"
 #include "tools/arena/arena_scenario.h"
 #include "tools/arena/arena_scenarios.h"
 

@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "gl_handle.h"
+#include "render/gl/gl_handle.h"
 
 namespace Render::GL {
 

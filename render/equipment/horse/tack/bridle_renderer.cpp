@@ -1,4 +1,4 @@
-#include "bridle_renderer.h"
+#include "render/equipment/horse/tack/bridle_renderer.h"
 
 #include <array>
 

@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/mounted_swordsman_renderer_base.h"
-#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 using namespace Render::GL;
 

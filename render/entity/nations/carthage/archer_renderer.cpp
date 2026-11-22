@@ -1,11 +1,11 @@
-#include "archer_renderer.h"
+#include "render/entity/nations/carthage/archer_renderer.h"
 
 #include <array>
 
-#include "archer_style.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/schema/humanoid_proportion_profiles.h"
+#include "render/entity/nations/carthage/archer_style.h"
 
 namespace Render::GL::Carthage {
 namespace {

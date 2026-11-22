@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "building_archetype_desc.h"
-#include "building_state.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_state.h"
 
 namespace Render::GL {
 

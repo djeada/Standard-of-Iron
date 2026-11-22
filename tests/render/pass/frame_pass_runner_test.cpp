@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "render/pass/frame_context.h"
-#include "render/pass/frame_pass_runner.h"
-#include "render/pass/i_pass.h"
+#include "render/frame/pass/frame_context.h"
+#include "render/frame/pass/frame_pass_runner.h"
+#include "render/frame/pass/i_pass.h"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "home_props.h"
+#include "render/entity/home_props.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -8,15 +8,15 @@
 #include <cstdint>
 #include <vector>
 
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/equipment/render_archetype_registry.h"
-#include "render/gl/humanoid/humanoid_types.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace Render::GL {
 namespace {

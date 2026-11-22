@@ -1,4 +1,4 @@
-#include "river_renderer.h"
+#include "render/ground/river_renderer.h"
 
 #include <QVector2D>
 #include <QVector3D>
@@ -16,15 +16,15 @@
 #include "game/map/bridge_geometry.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/visibility_service.h"
-#include "linear_feature_geometry.h"
-#include "linear_feature_visibility.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/frame_submitter.h"
 #include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
+#include "render/ground/linear_feature_geometry.h"
+#include "render/ground/linear_feature_visibility.h"
 
 namespace Render::GL {
 
@@ -277,7 +277,7 @@ void WaterRenderer::build_meshes() {
   }
 }
 
-void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void WaterRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_meshes.empty()) {

@@ -1,4 +1,4 @@
-#include "commander_aura_renderer.h"
+#include "render/entity/commander_aura_renderer.h"
 
 #include <algorithm>
 #include <cmath>
@@ -7,9 +7,9 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
-#include "render/draw_commands.h"
-#include "render/scene_renderer.h"
-#include "render/selection_ring_layout.h"
+#include "render/entity/selection_ring_layout.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -40,7 +40,7 @@ constexpr float k_buff_ring_pulse = 0.05F;
 
 } // namespace
 
-void render_commander_auras(Renderer* renderer,
+void render_commander_auras(FrameSubmitter* renderer,
                             ResourceManager*,
                             Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {

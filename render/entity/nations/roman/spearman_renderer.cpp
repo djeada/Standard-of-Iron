@@ -1,9 +1,9 @@
-#include "spearman_renderer.h"
+#include "render/entity/nations/roman/spearman_renderer.h"
 
 #include <array>
 
+#include "render/entity/nations/roman/spearman_style.h"
 #include "render/entity/spearman_renderer_common.h"
-#include "spearman_style.h"
 
 namespace Render::GL::Roman {
 namespace {

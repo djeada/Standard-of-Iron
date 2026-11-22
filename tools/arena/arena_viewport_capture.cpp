@@ -23,7 +23,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/visuals/team_colors.h"
 #include "render/profiling/frame_continuity_analyzer.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 auto ArenaViewport::casting_snapshot() const -> Arena::ArenaCastingSnapshot {

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/render_view_state.h"
+#include "render/frame/render_view_state.h"
 
 namespace {
 

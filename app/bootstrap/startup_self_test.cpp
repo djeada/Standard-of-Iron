@@ -8,8 +8,8 @@
 #include <array>
 
 #include "app/audio/audio_resource_loader.h"
-#include "render/graphics_settings.h"
-#include "render/horse/horse_source_asset.h"
+#include "render/creature/horse/horse_source_asset.h"
+#include "render/frame/graphics_settings.h"
 
 namespace App::Bootstrap {
 

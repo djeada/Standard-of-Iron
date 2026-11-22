@@ -9,7 +9,7 @@
 #include <span>
 #include <string_view>
 
-#include "render/gl/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/humanoid_types.h"
 
 namespace Render::Creature {
 

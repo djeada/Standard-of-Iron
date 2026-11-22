@@ -1,4 +1,4 @@
-#include "snapshot_mesh_registry.h"
+#include "render/creature/snapshot_mesh_registry.h"
 
 #include <QCoreApplication>
 

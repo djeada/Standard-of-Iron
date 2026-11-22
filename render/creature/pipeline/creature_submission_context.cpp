@@ -1,7 +1,7 @@
-#include "creature_submission_context.h"
+#include "render/creature/pipeline/creature_submission_context.h"
 
-#include "render/rigged_mesh_cache.h"
-#include "render/submitter.h"
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/frame/submitter.h"
 
 namespace Render::Creature::Pipeline {
 

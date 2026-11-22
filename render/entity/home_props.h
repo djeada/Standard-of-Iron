@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render/equipment/equipment_registry.h"
-#include "render/render_archetype.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL {
 

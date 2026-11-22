@@ -34,7 +34,7 @@
 #include "game/units/troop_type.h"
 #include "promo_camera_export.h"
 #include "promo_spec.h"
-#include "render/mist_volume.h"
+#include "render/frame/mist_volume.h"
 
 class QOpenGLShaderProgram;
 class QOpenGLVertexArrayObject;

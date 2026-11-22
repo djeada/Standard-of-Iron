@@ -1,0 +1,52 @@
+#pragma once
+
+#include <QMatrix4x4>
+
+#include <cstddef>
+#include <span>
+#include <string>
+#include <string_view>
+
+#include "render/creature/assets/compiled_creature_asset_status.h"
+#include "render/creature/horse/dimensions.h"
+#include "render/creature/quadruped/mesh_graph.h"
+#include "render/creature/skeleton.h"
+
+namespace Render::GL {
+struct MountedAttachmentFrame;
+}
+
+namespace Render::Horse {
+
+inline constexpr std::size_t k_horse_source_bone_count = 50U;
+inline constexpr float k_horse_length_scale = 0.85F;
+
+inline constexpr float k_horse_mesh_scale_x = 0.59F * Render::GL::k_horse_scale;
+inline constexpr float k_horse_mesh_scale_y = 0.59F * Render::GL::k_horse_scale;
+inline constexpr float k_horse_mesh_scale_z = 0.5015F * Render::GL::k_horse_scale;
+inline constexpr float k_horse_mesh_ground_y = -0.0112192873F;
+
+inline constexpr int k_horse_full_subdivision_levels = 1;
+inline constexpr float k_horse_full_volume_keep = 1.0F;
+
+[[nodiscard]] auto horse_source_mesh_nodes() noexcept
+    -> std::span<const Render::Creature::Quadruped::MeshNode>;
+
+[[nodiscard]] auto horse_source_bind_palette() noexcept -> std::span<const QMatrix4x4>;
+
+[[nodiscard]] auto
+horse_source_bone_defs() noexcept -> std::span<const Render::Creature::BoneDef>;
+
+[[nodiscard]] auto horse_source_sample_clip(std::string_view source_clip,
+                                            float normalized_phase,
+                                            std::span<QMatrix4x4> out) noexcept -> bool;
+
+[[nodiscard]] auto horse_source_pose_mount_frame(
+    std::string_view source_clip,
+    float normalized_phase,
+    Render::GL::MountedAttachmentFrame& frame) noexcept -> bool;
+
+[[nodiscard]] auto horse_source_asset_status() noexcept
+    -> const Render::Creature::CompiledCreatureAssetStatus&;
+
+} // namespace Render::Horse

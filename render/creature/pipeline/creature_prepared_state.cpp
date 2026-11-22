@@ -1,4 +1,4 @@
-#include "creature_prepared_state.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
 
 #include <QVector2D>
 #include <QtMath>
@@ -10,14 +10,14 @@
 #include "game/core/entity.h"
 #include "game/map/terrain_service.h"
 #include "game/units/spawn_type.h"
-#include "render/contact_shadow.h"
-#include "render/entity/registry.h"
-#include "render/gl/backend.h"
-#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/backend/backend.h"
+#include "render/creature/combat_animation_diagnostics.h"
+#include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/frame/contact_shadow.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/graphics_settings.h"
+#include "render/frame/visibility_budget.h"
 #include "render/gl/resources.h"
-#include "render/graphics_settings.h"
-#include "render/profiling/combat_animation_diagnostics.h"
-#include "render/visibility_budget.h"
 #include "scene/camera.h"
 
 namespace Render::Creature::Pipeline {

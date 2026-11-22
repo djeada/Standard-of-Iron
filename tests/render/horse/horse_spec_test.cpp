@@ -9,16 +9,16 @@
 #include <vector>
 
 #include "animation/rig/horse_gait.h"
+#include "render/creature/horse/horse_layout.h"
+#include "render/creature/horse/horse_manifest.h"
+#include "render/creature/horse/horse_profile_data.h"
+#include "render/creature/horse/horse_renderer_base.h"
+#include "render/creature/horse/horse_spec.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/spec.h"
+#include "render/frame/submitter.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/horse/horse_layout.h"
-#include "render/horse/horse_manifest.h"
-#include "render/horse/horse_profile_data.h"
-#include "render/horse/horse_renderer_base.h"
-#include "render/horse/horse_spec.h"
-#include "render/submitter.h"
 
 namespace {
 

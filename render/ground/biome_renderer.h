@@ -10,12 +10,12 @@
 #include "game/map/biome_settings.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain.h"
-#include "i_scatter_pass.h"
-#include "render/decoration_gpu.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/ground/i_scatter_pass.h"
 
 namespace Render::GL {
 class Buffer;
-class Renderer;
+class FrameSubmitter;
 
 class BiomeRenderer : public IScatterPass {
 public:
@@ -27,7 +27,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   void refresh_grass();
   [[nodiscard]] auto grass_matches_graphics_profile() const noexcept -> bool;

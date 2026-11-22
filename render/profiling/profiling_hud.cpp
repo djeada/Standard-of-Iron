@@ -1,4 +1,4 @@
-#include "profiling_hud.h"
+#include "render/profiling/profiling_hud.h"
 
 #include <qglobal.h>
 

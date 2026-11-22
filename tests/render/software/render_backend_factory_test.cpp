@@ -4,9 +4,9 @@
 
 #include <gtest/gtest.h>
 
-#include "render/render_backend_factory.h"
-#include "render/scene_renderer.h"
-#include "render/software_backend.h"
+#include "render/backend/render_backend_factory.h"
+#include "render/backend/software_backend.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 using Render::RenderBackendFactory;

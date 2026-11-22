@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/contact_shadow.h"
+#include "render/frame/contact_shadow.h"
 
 namespace {
 

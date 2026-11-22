@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "render/gl/mesh.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -14,14 +14,14 @@
 #include <sstream>
 #include <vector>
 
-#include "gl/buffer.h"
-#include "gl_lifetime.h"
-#include "platform_gl.h"
+#include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
+#include "render/gl/gl_lifetime.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/vertex_attrib_layout.h"
 #include "render/profiling/asset_counters.h"
 #include "render/profiling/gl_creation_trace.h"
-#include "render_constants.h"
-#include "vertex_attrib_layout.h"
 
 namespace Render::GL {
 

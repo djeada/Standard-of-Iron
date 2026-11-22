@@ -3,12 +3,12 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "building_archetype_desc.h"
-#include "building_decay.h"
-#include "building_state.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/building_state.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 

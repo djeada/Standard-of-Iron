@@ -11,13 +11,13 @@
 
 #include "animation/elephant_gait_manifest.h"
 #include "animation/elephant_motion_manifest.h"
+#include "render/creature/elephant/elephant_manifest.h"
+#include "render/creature/elephant/elephant_motion.h"
+#include "render/creature/elephant/elephant_profile_data.h"
+#include "render/creature/elephant/elephant_source_asset.h"
+#include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/creature/skeleton.h"
-#include "render/elephant/elephant_manifest.h"
-#include "render/elephant/elephant_motion.h"
-#include "render/elephant/elephant_profile_data.h"
-#include "render/elephant/elephant_source_asset.h"
-#include "render/elephant/elephant_spec.h"
 
 namespace {
 

@@ -15,9 +15,9 @@
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
 #include "render/creature/runtime_bake_guard.h"
-#include "render/graphics_settings.h"
+#include "render/frame/graphics_settings.h"
 #include "render/profiling/frame_profile.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
 

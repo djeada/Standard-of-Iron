@@ -9,8 +9,8 @@
 #include <span>
 #include <string_view>
 
-#include "part_graph.h"
-#include "skeleton.h"
+#include "render/creature/part_graph.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::GL {
 class ISubmitter;

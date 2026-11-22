@@ -1,4 +1,4 @@
-#include "equipment_registry.h"
+#include "render/equipment/equipment_registry.h"
 
 #include <limits>
 

@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "buffer.h"
+#include "render/gl/buffer.h"
 
 namespace Render::GL {
 

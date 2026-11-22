@@ -1,4 +1,4 @@
-#include "catapult_renderer.h"
+#include "render/entity/nations/carthage/catapult_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -11,16 +11,16 @@
 #include "game/core/component_gameplay.h"
 #include "game/systems/projectile_kind.h"
 #include "game/visuals/team_colors.h"
-#include "math/math_utils.h"
 #include "render/entity/nations/siege_anim_types.h"
 #include "render/entity/registry.h"
 #include "render/entity/siege_renderer_common.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/submitter.h"
 #include "render/geom/stone.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
-#include "render/submitter.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -424,7 +424,7 @@ void draw_throwing_arm(const DrawContext& p,
                  white);
       }
 
-      auto* scene_renderer = dynamic_cast<Renderer*>(out.unwrap_submitter());
+      auto* scene_renderer = dynamic_cast<FrameSubmitter*>(out.unwrap_submitter());
       if (scene_renderer != nullptr) {
         QVector3D const flame_origin =
             (arm_matrix * QVector4D(seat, 1.0F)).toVector3D();

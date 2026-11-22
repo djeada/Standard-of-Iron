@@ -1,4 +1,4 @@
-#include "humanoid_transition_continuity.h"
+#include "render/creature/pipeline/humanoid_transition_continuity.h"
 
 #include <algorithm>
 #include <array>

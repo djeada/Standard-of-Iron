@@ -9,9 +9,9 @@
 #include <string>
 #include <string_view>
 
-#include "registry.h"
+#include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/humanoid/schema/humanoid_proportion_profiles.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

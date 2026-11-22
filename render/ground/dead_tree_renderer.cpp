@@ -1,20 +1,20 @@
-#include "dead_tree_renderer.h"
+#include "render/ground/dead_tree_renderer.h"
 
 #include <QVector4D>
 
 #include <algorithm>
 #include <cmath>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
 #include "game/map/scatter/spawn_validator.h"
-#include "gl/render_constants.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
-#include "render/scene_renderer.h"
-#include "scatter_runtime.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
+#include "render/gl/render_constants.h"
+#include "render/ground/scatter_runtime.h"
 
 namespace {
 
@@ -55,7 +55,7 @@ void DeadTreeRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void DeadTreeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::DeadTree);
 }
 

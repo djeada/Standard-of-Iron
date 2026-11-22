@@ -12,7 +12,7 @@ class World;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 struct StoneImpactEffect {
@@ -44,11 +44,11 @@ private:
   std::vector<StoneImpactEffect> m_impacts;
 };
 
-void render_combat_dust(Renderer* renderer,
+void render_combat_dust(FrameSubmitter* renderer,
                         ResourceManager* resources,
                         Engine::Core::World* world);
 
-void render_blood_stains(Renderer* renderer,
+void render_blood_stains(FrameSubmitter* renderer,
                          ResourceManager* resources,
                          Engine::Core::World* world);
 
@@ -70,7 +70,7 @@ struct StrikeFlash {
 
 class RpgTelegraphRenderer {
 public:
-  void render(Renderer* renderer,
+  void render(FrameSubmitter* renderer,
               Engine::Core::World* world,
               Engine::Core::EntityID commander_id,
               Engine::Core::EntityID locked_target_id,

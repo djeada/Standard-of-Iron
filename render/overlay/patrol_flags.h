@@ -1,0 +1,30 @@
+#pragma once
+
+#include <QVector3D>
+
+#include <optional>
+
+namespace Engine::Core {
+class World;
+}
+namespace Render::GL {
+class FrameSubmitter;
+class ResourceManager;
+} // namespace Render::GL
+
+namespace Render::GL {
+
+void render_patrol_flags(
+    FrameSubmitter* renderer,
+    ResourceManager* resources,
+    Engine::Core::World& world,
+    const std::optional<QVector3D>& preview_waypoint = std::nullopt);
+
+void render_commander_rally_flags(
+    FrameSubmitter* renderer,
+    ResourceManager* resources,
+    Engine::Core::World* world,
+    int preview_owner_id,
+    const std::optional<QVector3D>& preview_pos = std::nullopt);
+
+} // namespace Render::GL

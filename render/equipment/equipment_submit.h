@@ -10,8 +10,8 @@
 #include <span>
 #include <vector>
 
-#include "render/render_archetype.h"
-#include "render/submitter.h"
+#include "render/frame/render_archetype.h"
+#include "render/frame/submitter.h"
 
 namespace Render::GL {
 

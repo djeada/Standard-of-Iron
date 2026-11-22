@@ -3,7 +3,7 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QString>
 
-#include "gl_handle.h"
+#include "render/gl/gl_handle.h"
 
 namespace Render::GL {
 

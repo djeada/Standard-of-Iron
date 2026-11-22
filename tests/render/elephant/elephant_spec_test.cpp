@@ -11,15 +11,15 @@
 #include <string_view>
 #include <vector>
 
+#include "render/creature/elephant/elephant_bake_recipe.h"
+#include "render/creature/elephant/elephant_manifest.h"
+#include "render/creature/elephant/elephant_renderer_base.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/spec.h"
-#include "render/elephant/elephant_bake_recipe.h"
-#include "render/elephant/elephant_manifest.h"
-#include "render/elephant/elephant_renderer_base.h"
-#include "render/elephant/elephant_spec.h"
+#include "render/frame/submitter.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/submitter.h"
 
 namespace {
 

@@ -61,7 +61,7 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 #include "tests/support/ai_quiesce.h"
 

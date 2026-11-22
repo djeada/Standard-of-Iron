@@ -1,10 +1,10 @@
-#include "performance_report.h"
+#include "render/profiling/performance_report.h"
 
 #include <QJsonArray>
 #include <QString>
 
-#include "asset_counters.h"
 #include "game/core/nav_profile.h"
+#include "render/profiling/asset_counters.h"
 
 namespace Render::Profiling {
 

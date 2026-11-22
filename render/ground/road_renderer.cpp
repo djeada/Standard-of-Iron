@@ -1,4 +1,4 @@
-#include "road_renderer.h"
+#include "render/ground/road_renderer.h"
 
 #include <QVector2D>
 #include <QVector3D>
@@ -16,12 +16,12 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/frame_submitter.h"
 #include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
-#include "render/scene_renderer.h"
-#include "road_network_geometry.h"
+#include "render/ground/road_network_geometry.h"
 
 namespace Render::GL {
 
@@ -82,7 +82,7 @@ void RoadRenderer::build_meshes() {
   m_surfaces = Ground::build_road_network_surfaces(m_road_segments, settings);
 }
 
-void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void RoadRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_surfaces.empty()) {

@@ -1,4 +1,4 @@
-#include "equipment_loadout_catalog.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 
 #include <QFile>
 #include <QJsonArray>

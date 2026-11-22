@@ -5,7 +5,7 @@
 #include "game/core/entity.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
-#include "render/unit_render_cache.h"
+#include "render/scene/unit_render_cache.h"
 
 namespace {
 

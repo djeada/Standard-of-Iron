@@ -1,4 +1,4 @@
-#include "work_apron_renderer.h"
+#include "render/equipment/armor/work_apron_renderer.h"
 
 #include <array>
 #include <cmath>
@@ -6,11 +6,11 @@
 #include <numbers>
 #include <string>
 
+#include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
-#include "render/humanoid/asset/humanoid_spec.h"
 
 namespace Render::GL {
 

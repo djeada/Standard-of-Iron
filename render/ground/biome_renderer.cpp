@@ -1,4 +1,4 @@
-#include "biome_renderer.h"
+#include "render/ground/biome_renderer.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -17,18 +17,18 @@
 #include <random>
 #include <vector>
 
-#include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/spawn_validator.h"
-#include "gl/resources.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/graphics_settings.h"
 #include "render/gl/buffer.h"
 #include "render/gl/render_constants.h"
-#include "render/graphics_settings.h"
-#include "render/scene_renderer.h"
-#include "scatter_runtime.h"
-#include "scatter_submission.h"
+#include "render/gl/resources.h"
+#include "render/ground/scatter_runtime.h"
+#include "render/ground/scatter_submission.h"
 
 namespace {
 
@@ -198,7 +198,7 @@ auto BiomeRenderer::prewarm_gpu_resources() -> bool {
       });
 }
 
-void BiomeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
   const auto visible_count = Scatter::sync_filtered_state(
       m_grass_state,

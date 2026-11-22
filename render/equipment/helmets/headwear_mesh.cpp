@@ -1,4 +1,4 @@
-#include "headwear_mesh.h"
+#include "render/equipment/helmets/headwear_mesh.h"
 
 #include <QVector3D>
 
@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "helmet_alignment.h"
 #include "render/equipment/armor/sheet_mesh.h"
+#include "render/equipment/helmets/helmet_alignment.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shared_geometry_cache.h"
 

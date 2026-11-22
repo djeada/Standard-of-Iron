@@ -5,11 +5,11 @@
 #include <span>
 #include <string_view>
 
-#include "building_render_common.h"
-#include "building_state.h"
-#include "building_torches.h"
-#include "registry.h"
-#include "render/render_archetype.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/building_torches.h"
+#include "render/entity/registry.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL {
 

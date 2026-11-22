@@ -5,10 +5,10 @@ class World;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
-void render_healer_auras(Renderer* renderer,
+void render_healer_auras(FrameSubmitter* renderer,
                          ResourceManager* resources,
                          Engine::Core::World* world);
 

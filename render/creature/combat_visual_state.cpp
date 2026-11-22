@@ -1,6 +1,6 @@
-#include "combat_visual_state.h"
+#include "render/creature/combat_visual_state.h"
 
-#include "animation_core_bridge.h"
+#include "render/creature/animation_core_bridge.h"
 
 namespace Render::Creature {
 

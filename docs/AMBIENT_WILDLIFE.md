@@ -347,7 +347,7 @@ Pelt variation includes brown and near-black coats.
 
 ### Birds
 
-`render/wildlife/bird_flock_renderer.cpp` draws body, flapping wings, tail, and beak directly from flock data during the scene walk.
+`render/creature/wildlife/bird_flock_renderer.cpp` draws body, flapping wings, tail, and beak directly from flock data during the scene walk.
 
 Ground species keep fine features such as eyes, inner ears, extra fleece tufts, and limb masses in the full LOD. Minimal LODs preserve the silhouette-defining shapes.
 
@@ -451,7 +451,7 @@ Both species contain eight baked clips. Sheep includes `startle` and `alert`; wo
 
 The full sheep body is 3024 triangles and the full wolf body is 3612. Minimal LODs are 1380 and 1600 triangles respectively. Silhouette-critical wool clumps and wolf limb masses remain in the minimal meshes.
 
-At runtime, `render/wildlife/wildlife_prepare.cpp` resolves animation state, clip phase, grounded transform, and role colors, then submits a `CreatureRenderRequest` to the shared creature pipeline.
+At runtime, `render/creature/wildlife/wildlife_prepare.cpp` resolves animation state, clip phase, grounded transform, and role colors, then submits a `CreatureRenderRequest` to the shared creature pipeline.
 
 `render/entity/wildlife/{sheep,wolf}_renderer.cpp` contains color and clip selection rather than runtime mesh construction.
 

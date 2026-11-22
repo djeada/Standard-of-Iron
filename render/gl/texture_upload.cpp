@@ -1,4 +1,4 @@
-#include "texture_upload.h"
+#include "render/gl/texture_upload.h"
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -6,7 +6,7 @@
 
 #include <cstddef>
 
-#include "gl_resource_tracking.h"
+#include "render/gl/gl_resource_tracking.h"
 
 namespace Render::GL {
 

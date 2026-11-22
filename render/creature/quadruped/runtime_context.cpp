@@ -1,4 +1,4 @@
-#include "runtime_context.h"
+#include "render/creature/quadruped/runtime_context.h"
 
 namespace Render::Creature::Quadruped {
 

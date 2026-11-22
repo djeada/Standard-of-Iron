@@ -7,12 +7,12 @@
 #include <vector>
 
 #include "game/map/map_definition.h"
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/i_render_pass.h"
 #include "render/gl/buffer.h"
-#include "render/i_render_pass.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class AmbientFogRenderer : public IRenderPass {
@@ -35,7 +35,7 @@ public:
 
   [[nodiscard]] auto is_point_in_fog(float world_x, float world_z) const -> bool;
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
 private:
   void build_instances();

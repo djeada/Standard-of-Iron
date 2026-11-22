@@ -85,7 +85,7 @@
       "id": "rpg_escort_crowd",
       "status": "required_green",
       "gate": "3",
-      "notes": "Green since 2 Sep 2026, in the same run that added nation-wide creature prewarm (render/template_prewarm_runner.cpp warms every assigned player nation, not only nations with a unit already on the field). The 1.4-1.6 m render-root jump at 0.23 s was consistent with soldiers whose rigged assets were still loading; pinned green rather than left red on a guess, so a regression is caught immediately."
+      "notes": "Green since 2 Sep 2026, in the same run that added nation-wide creature prewarm (render/scene/template_prewarm_runner.cpp warms every assigned player nation, not only nations with a unit already on the field). The 1.4-1.6 m render-root jump at 0.23 s was consistent with soldiers whose rigged assets were still loading; pinned green rather than left red on a guess, so a regression is caught immediately."
     },
     {
       "id": "rpg_locomotion",

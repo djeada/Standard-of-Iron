@@ -106,9 +106,8 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
-#include "render/camera_visibility.h"
 #include "render/entity/building_archetype_library.h"
-#include "render/geom/projectile_renderer.h"
+#include "render/frame/camera_visibility.h"
 #include "render/gl/shared_geometry_cache.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -117,10 +116,11 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
+#include "render/overlay/projectile_renderer.h"
 #include "render/profiling/frame_profile.h"
 #include "render/profiling/performance_report.h"
-#include "render/scene_renderer.h"
-#include "render/terrain_scene_proxy.h"
+#include "render/scene/scene_renderer.h"
+#include "render/scene/terrain_scene_proxy.h"
 
 namespace {
 

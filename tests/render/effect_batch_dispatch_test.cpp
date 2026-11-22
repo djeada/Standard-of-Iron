@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "render/draw_queue.h"
+#include "render/frame/draw_queue.h"
 
 namespace {
 

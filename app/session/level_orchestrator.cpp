@@ -25,8 +25,8 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
-#include "render/scene_renderer.h"
-#include "render/world_view.h"
+#include "render/frame/world_view.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 #include "utils/resource_utils.h"
 

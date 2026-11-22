@@ -106,7 +106,7 @@ python3 scripts/drama/contact_sheet.py --plan $OUT/plan --clips $OUT/clips --out
 Costumes are renderer keys under `troops/roman/dead_company/` and
 `troops/carthage/dead_company/`, with loadouts in
 `assets/visuals/unit_equipment_loadouts.json` and colours in
-`render/humanoid/runtime/style_palette.cpp`. `troops/iron_sepulcher/skeleton_legionary`
+`render/creature/humanoid/runtime/style_palette.cpp`. `troops/iron_sepulcher/skeleton_legionary`
 is a skeleton in Roman kit. `skeleton_legionary_bare` drops the helmet and wears
 `skull_face`, a cartoon skull, because the skeleton body's own head is a
 featureless egg. In a stage, `look` takes a short name (`felix`,

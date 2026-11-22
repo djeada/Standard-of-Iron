@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/gl/backend/sky_box_transition.h"
+#include "render/backend/sky_box_transition.h"
 
 namespace {
 

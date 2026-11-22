@@ -7,10 +7,10 @@
 #include <cmath>
 #include <string>
 
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/equipment/equipment_cache_key.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

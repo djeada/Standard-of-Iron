@@ -1,4 +1,4 @@
-#include "healing_waves_renderer.h"
+#include "render/entity/healing_waves_renderer.h"
 
 #include <QVector3D>
 
@@ -9,7 +9,7 @@
 #include "game/systems/healing_colors.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/render_effects_frame.h"
-#include "render/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -26,7 +26,7 @@ constexpr float k_spiral_twist_rate = 8.0F;
 constexpr float k_edge_fade_factor = 1.5F;
 } // namespace
 
-void render_healing_waves(Renderer* renderer,
+void render_healing_waves(FrameSubmitter* renderer,
                           ResourceManager*,
                           const std::vector<Game::Systems::HealingBeamView>& beams) {
   if (renderer == nullptr || beams.empty()) {

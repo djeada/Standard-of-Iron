@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include "render/gl/backend/dead_tree_mesh.h"
+#include "render/backend/dead_tree_mesh.h"
 
 namespace {
 

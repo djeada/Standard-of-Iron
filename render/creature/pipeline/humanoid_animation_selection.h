@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <optional>
 
+#include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/pose_intent.h"
-#include "unit_visual_spec.h"
 
 namespace Render::GL {
 struct AnimationInputs;

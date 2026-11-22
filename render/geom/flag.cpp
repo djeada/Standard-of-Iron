@@ -1,4 +1,4 @@
-#include "flag.h"
+#include "render/geom/flag.h"
 
 #include <qmatrix4x4.h>
 #include <qvectornd.h>

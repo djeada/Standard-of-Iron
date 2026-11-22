@@ -19,18 +19,18 @@
 
 #include "game/session/session_context.h"
 #include "render/creature/bake/creature_bake_recipe.h"
+#include "render/creature/elephant/elephant_bake_recipe.h"
+#include "render/creature/gpu/rigged_mesh_bake.h"
+#include "render/creature/gpu/snapshot_mesh_bake.h"
+#include "render/creature/horse/horse_bake_recipe.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
-#include "render/elephant/elephant_bake_recipe.h"
-#include "render/horse/horse_bake_recipe.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/snapshot_mesh_bake.h"
+#include "render/creature/wildlife/sheep_manifest.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wildlife_rig.h"
+#include "render/creature/wildlife/wolf_manifest.h"
+#include "render/creature/wildlife/wolf_spec.h"
 #include "render/software/software_rasterizer.h"
-#include "render/wildlife/sheep_manifest.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wildlife_rig.h"
-#include "render/wildlife/wolf_manifest.h"
-#include "render/wildlife/wolf_spec.h"
 
 namespace fs = std::filesystem;
 

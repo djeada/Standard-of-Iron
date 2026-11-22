@@ -1,4 +1,4 @@
-#include "wall_gate_renderer_common.h"
+#include "render/entity/wall_gate_renderer_common.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -10,12 +10,12 @@
 #include <numbers>
 #include <string>
 
-#include "building_archetype_desc.h"
-#include "building_archetype_library.h"
-#include "building_decay.h"
-#include "building_render_common.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/building_render_common.h"
 #include "render/gl/resources.h"
 
 namespace Render::GL {

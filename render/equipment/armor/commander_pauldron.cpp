@@ -1,12 +1,12 @@
-#include "commander_pauldron.h"
+#include "render/equipment/armor/commander_pauldron.h"
 
 #include <array>
 #include <cmath>
 #include <numbers>
 
+#include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "sheet_mesh.h"
 
 namespace Render::GL {
 

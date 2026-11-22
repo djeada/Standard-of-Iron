@@ -1,4 +1,4 @@
-#include "terrain_noise_atlas.h"
+#include "render/gl/terrain_noise_atlas.h"
 
 #include <QDebug>
 #include <QOpenGLContext>
@@ -11,9 +11,8 @@
 #include <array>
 #include <cstddef>
 
-#include "gl_resource_tracking.h"
-#include "render/graphics_settings.h"
-#include "shader.h"
+#include "render/gl/gl_resource_tracking.h"
+#include "render/gl/shader.h"
 
 namespace Render::GL {
 
@@ -24,10 +23,6 @@ constexpr int k_microdetail_size_low = 512;
 constexpr int k_max_atlas_size_full = 4096;
 constexpr int k_max_atlas_size_low = 2048;
 constexpr float k_microdetail_cells = 32.0F;
-
-auto low_graphics_tier() -> bool {
-  return Render::GraphicsSettings::instance().quality() == Render::GraphicsQuality::Low;
-}
 
 struct BakeState {
   GLint framebuffer = 0;
@@ -84,7 +79,7 @@ void allocate_rgba16f_texture(QOpenGLFunctions* gl,
 TerrainNoiseAtlas::TerrainNoiseAtlas() = default;
 TerrainNoiseAtlas::~TerrainNoiseAtlas() = default;
 
-void TerrainNoiseAtlas::bake_microdetail() {
+void TerrainNoiseAtlas::bake_microdetail(bool low_detail) {
   if (m_microdetail_texture) {
     return;
   }
@@ -109,7 +104,7 @@ void TerrainNoiseAtlas::bake_microdetail() {
   }
 
   const int microdetail_size =
-      low_graphics_tier() ? k_microdetail_size_low : k_microdetail_size_full;
+      low_detail ? k_microdetail_size_low : k_microdetail_size_full;
   TextureHandle texture = TextureHandle::create();
   allocate_rgba16f_texture(gl, texture, microdetail_size, GL_REPEAT);
 
@@ -161,7 +156,7 @@ auto TerrainNoiseAtlas::bake_atlas(const AtlasBakeParams& params) -> bool {
 
   constexpr int k_texels_per_tile = 2;
   const int max_atlas_size =
-      low_graphics_tier() ? k_max_atlas_size_low : k_max_atlas_size_full;
+      params.low_detail ? k_max_atlas_size_low : k_max_atlas_size_full;
   const int requested = std::max(params.width, params.height) * k_texels_per_tile;
   const int atlas_size = std::clamp(requested, 256, max_atlas_size);
 

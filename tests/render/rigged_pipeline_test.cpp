@@ -9,8 +9,8 @@
 #include <memory>
 #include <variant>
 
-#include "render/draw_queue.h"
-#include "render/submitter.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/submitter.h"
 
 namespace {
 

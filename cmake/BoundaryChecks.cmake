@@ -30,7 +30,7 @@ if(Python3_Interpreter_FOUND)
     # The renderer draws the match it was handed and does not resolve the
     # ambient session for itself. That is the precondition for a client
     # rendering state it received rather than state it simulated, so it is a
-    # build failure rather than a review comment. See render/world_view.h.
+    # build failure rather than a review comment. See render/frame/world_view.h.
     add_custom_target(
         check_render_boundary
         ALL

@@ -5,11 +5,11 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/creature/movement_state.h"
 #include "render/creature/pose_intent.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
 
 using namespace Render::Humanoid;
 using Render::GL::AnimationInputs;

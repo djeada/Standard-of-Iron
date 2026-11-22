@@ -1,11 +1,11 @@
-#include "crupper_renderer.h"
+#include "render/equipment/horse/armor/crupper_renderer.h"
 
 #include <array>
 
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/horse_attachment_archetype.h"
+#include "render/frame/render_archetype.h"
 #include "render/gl/primitives.h"
-#include "render/render_archetype.h"
 
 namespace Render::GL {
 

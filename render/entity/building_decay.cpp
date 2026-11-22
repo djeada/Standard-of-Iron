@@ -1,4 +1,4 @@
-#include "building_decay.h"
+#include "render/entity/building_decay.h"
 
 #include <algorithm>
 #include <cmath>

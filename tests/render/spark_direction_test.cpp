@@ -3,9 +3,9 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "render/draw_queue.h"
-#include "render/effects_submitter.h"
-#include "render/gl/backend/spark_orientation.h"
+#include "render/backend/spark_orientation.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/effects_submitter.h"
 
 namespace {
 

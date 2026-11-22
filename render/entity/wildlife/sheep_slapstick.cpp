@@ -1,10 +1,10 @@
-#include "sheep_slapstick.h"
+#include "render/entity/wildlife/sheep_slapstick.h"
 
 #include <algorithm>
 #include <cmath>
 
+#include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
-#include "render/submitter.h"
 
 namespace Render::GL::Wildlife {
 

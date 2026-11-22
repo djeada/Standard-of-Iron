@@ -1,0 +1,274 @@
+#include "render/scene/unit_render_cache.h"
+
+#include <QMatrix4x4>
+
+#include <string_view>
+
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/systems/troop_profile_service.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_config.h"
+#include "render/entity/building_render_common.h"
+#include "render/geom/mode_indicator.h"
+
+namespace Render {
+
+namespace {
+
+[[nodiscard]] auto
+resolve_indicator_height(const Render::WorldView& world,
+                         const Engine::Core::UnitComponent& unit) -> float {
+  float ring_size = 1.0F;
+  float render_scale = 1.0F;
+
+  auto const troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+  const auto* profile = troop_type.has_value()
+                            ? world.find_troop_profile(unit.nation_id, *troop_type)
+                            : nullptr;
+  if (profile != nullptr) {
+    ring_size = profile->visuals.selection_ring_size;
+    render_scale = profile->visuals.render_scale;
+  } else {
+    ring_size = world.troop_config()->get_selection_ring_size(unit.spawn_type);
+  }
+
+  return Render::Geom::indicator_height_for_unit(ring_size, render_scale);
+}
+
+} // namespace
+
+auto resolve_profile_unit_renderer_key(
+    const WorldView& world, const Engine::Core::UnitComponent& unit) -> std::string {
+  auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+  const auto* profile = troop_type.has_value()
+                            ? world.find_troop_profile(unit.nation_id, *troop_type)
+                            : nullptr;
+  if (profile != nullptr && !profile->visuals.renderer_id.empty()) {
+    return profile->visuals.renderer_id;
+  }
+  return Game::Units::spawn_typeToString(unit.spawn_type);
+}
+
+auto resolve_unit_renderer_key(const WorldView& world,
+                               const Engine::Core::UnitComponent& unit,
+                               const Engine::Core::RenderableComponent* renderable)
+    -> std::string {
+  const std::string spawn_key = Game::Units::spawn_typeToString(unit.spawn_type);
+  if (renderable != nullptr && !renderable->renderer_id.empty() &&
+      renderable->renderer_id != spawn_key) {
+    return std::string(
+        Render::GL::canonicalize_building_renderer_key(renderable->renderer_id));
+  }
+  return resolve_profile_unit_renderer_key(world, unit);
+}
+
+auto UnitRenderCache::get_or_create(const WorldView& world,
+                                    Engine::Core::EntityID entity_id,
+                                    Engine::Core::Entity* entity,
+                                    std::uint32_t frame) -> CachedUnitData& {
+  auto [it, inserted] = m_cache.emplace(entity_id, CachedUnitData{});
+  auto& data = it->second;
+
+  data.entity_id = entity_id;
+  data.last_seen_frame = frame;
+
+  if (inserted) {
+    data.model_matrix_valid = false;
+  }
+  data.entity = entity;
+
+  if (entity == nullptr) {
+    data.transform = nullptr;
+    data.unit = nullptr;
+    data.renderable = nullptr;
+    data.movement = nullptr;
+    data.presentation = nullptr;
+    data.renderer_key.clear();
+    data.has_renderer_handle = false;
+    data.renderer_key_valid = false;
+    data.last_renderable_renderer_id.clear();
+    return data;
+  }
+
+  auto* new_transform = entity->get_component<Engine::Core::TransformComponent>();
+  auto* new_unit = entity->get_component<Engine::Core::UnitComponent>();
+  auto* new_renderable = entity->get_component<Engine::Core::RenderableComponent>();
+  auto* new_movement = entity->get_component<Engine::Core::MovementComponent>();
+  data.presentation =
+      entity->get_component<Engine::Core::CommanderPresentationSampleComponent>();
+  auto* previous_unit = data.unit;
+  auto* previous_renderable = data.renderable;
+
+  if (new_transform == nullptr) {
+    data.model_matrix_valid = false;
+  }
+
+  data.transform = new_transform;
+  data.unit = new_unit;
+  data.renderable = new_renderable;
+  data.movement = new_movement;
+
+  const bool is_building =
+      entity->get_component<Engine::Core::BuildingComponent>() != nullptr;
+  const std::string_view current_renderable_renderer_id =
+      (data.renderable != nullptr) ? std::string_view(data.renderable->renderer_id)
+                                   : std::string_view{};
+  const bool renderer_key_changed =
+      !data.renderer_key_valid ||
+      ((previous_unit == nullptr) != (new_unit == nullptr)) ||
+      ((previous_renderable == nullptr) != (new_renderable == nullptr)) ||
+      (data.last_is_building != is_building) ||
+      ((data.unit != nullptr) && (data.last_spawn_type != data.unit->spawn_type ||
+                                  data.last_nation_id != data.unit->nation_id)) ||
+      (data.last_renderable_renderer_id != current_renderable_renderer_id);
+  if (renderer_key_changed) {
+    if (data.unit != nullptr) {
+      if (is_building) {
+        data.renderer_key = Render::GL::resolve_building_renderer_key(
+            current_renderable_renderer_id,
+            Game::Units::spawn_typeToString(data.unit->spawn_type),
+            data.unit->nation_id);
+      } else {
+        data.renderer_key =
+            resolve_unit_renderer_key(world, *data.unit, data.renderable);
+      }
+      data.indicator_height = resolve_indicator_height(world, *data.unit);
+      data.last_spawn_type = data.unit->spawn_type;
+      data.last_nation_id = data.unit->nation_id;
+    } else if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
+      data.renderer_key = std::string(
+          Render::GL::canonicalize_building_renderer_key(data.renderable->renderer_id));
+    } else {
+      data.renderer_key.clear();
+    }
+
+    data.has_renderer_handle = false;
+    data.renderer_key_valid = true;
+    data.last_is_building = is_building;
+    data.last_renderable_renderer_id = current_renderable_renderer_id;
+  }
+
+  return data;
+}
+
+void UnitRenderCache::prune(std::uint32_t current_frame, std::uint32_t max_age) {
+  auto it = m_cache.begin();
+  while (it != m_cache.end()) {
+    if (current_frame - it->second.last_seen_frame > max_age) {
+      it = m_cache.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+auto UnitRenderCache::update_model_matrix(CachedUnitData& data,
+                                          float frame_delta_seconds) -> bool {
+  if (data.transform == nullptr) {
+    return false;
+  }
+
+  auto pos = data.transform->position;
+  auto rot = data.transform->rotation;
+  const auto& sc = data.transform->scale;
+
+  auto const* sample = data.presentation;
+  if (sample != nullptr && sample->valid) {
+    if (sample->presented_valid) {
+
+      pos = sample->presented_position;
+      rot.y = sample->presented_yaw;
+    } else {
+      const float age = data.presentation_clock.advance(*sample, frame_delta_seconds);
+      const auto pose = Engine::Core::resolve_presentation_pose(*sample, age);
+      pos = pose.position;
+      rot.y = pose.yaw;
+    }
+  }
+
+  if (data.model_matrix_valid && pos.x == data.last_pos_x && pos.y == data.last_pos_y &&
+      pos.z == data.last_pos_z && rot.x == data.last_rot_x &&
+      rot.y == data.last_rot_y && rot.z == data.last_rot_z &&
+      sc.x == data.last_scale_x && sc.y == data.last_scale_y &&
+      sc.z == data.last_scale_z) {
+    return false;
+  }
+
+  QMatrix4x4 m;
+  m.translate(pos.x, pos.y, pos.z);
+  m.rotate(rot.x, 1.0F, 0.0F, 0.0F);
+  m.rotate(rot.y, 0.0F, 1.0F, 0.0F);
+  m.rotate(rot.z, 0.0F, 0.0F, 1.0F);
+  m.scale(sc.x, sc.y, sc.z);
+  data.model_matrix = m;
+  data.foundation_valid = false;
+
+  data.last_pos_x = pos.x;
+  data.last_pos_y = pos.y;
+  data.last_pos_z = pos.z;
+  data.last_rot_x = rot.x;
+  data.last_rot_y = rot.y;
+  data.last_rot_z = rot.z;
+  data.last_scale_x = sc.x;
+  data.last_scale_y = sc.y;
+  data.last_scale_z = sc.z;
+  data.model_matrix_valid = true;
+  return true;
+}
+
+auto ModelMatrixCache::get_or_create(Engine::Core::EntityID entity_id,
+                                     Engine::Core::TransformComponent* transform,
+                                     std::uint32_t frame) -> const QMatrix4x4& {
+  auto& entry = m_cache[entity_id];
+  entry.last_seen_frame = frame;
+
+  if (transform == nullptr) {
+    return entry.matrix;
+  }
+
+  const auto& pos = transform->position;
+  const auto& rot = transform->rotation;
+  const auto& sc = transform->scale;
+
+  if (entry.valid && pos.x == entry.last_pos_x && pos.y == entry.last_pos_y &&
+      pos.z == entry.last_pos_z && rot.x == entry.last_rot_x &&
+      rot.y == entry.last_rot_y && rot.z == entry.last_rot_z &&
+      sc.x == entry.last_scale_x && sc.y == entry.last_scale_y &&
+      sc.z == entry.last_scale_z) {
+    return entry.matrix;
+  }
+
+  QMatrix4x4 m;
+  m.translate(pos.x, pos.y, pos.z);
+  m.rotate(rot.x, 1.0F, 0.0F, 0.0F);
+  m.rotate(rot.y, 0.0F, 1.0F, 0.0F);
+  m.rotate(rot.z, 0.0F, 0.0F, 1.0F);
+  m.scale(sc.x, sc.y, sc.z);
+  entry.matrix = m;
+
+  entry.last_pos_x = pos.x;
+  entry.last_pos_y = pos.y;
+  entry.last_pos_z = pos.z;
+  entry.last_rot_x = rot.x;
+  entry.last_rot_y = rot.y;
+  entry.last_rot_z = rot.z;
+  entry.last_scale_x = sc.x;
+  entry.last_scale_y = sc.y;
+  entry.last_scale_z = sc.z;
+  entry.valid = true;
+  return entry.matrix;
+}
+
+void ModelMatrixCache::prune(std::uint32_t current_frame, std::uint32_t max_age) {
+  auto it = m_cache.begin();
+  while (it != m_cache.end()) {
+    if (current_frame - it->second.last_seen_frame > max_age) {
+      it = m_cache.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+} // namespace Render

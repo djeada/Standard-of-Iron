@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
-#include "render/rigged_mesh.h"
-#include "render_request.h"
+#include "render/creature/render_request.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace Render::Creature::Snapshot {
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render/creature/animation_state_components.h"
-#include "wildlife_draw_state.h"
+#include "render/entity/wildlife/wildlife_draw_state.h"
 
 namespace Render::GL {
 class EntityRendererRegistry;

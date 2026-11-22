@@ -4,10 +4,9 @@
 
 #include <memory>
 
-#include "gl_handle.h"
-#include "mesh.h"
-#include "render/geom/arrow.h"
-#include "texture.h"
+#include "render/gl/gl_handle.h"
+#include "render/gl/mesh.h"
+#include "render/gl/texture.h"
 
 namespace Render::GL {
 

@@ -1,4 +1,4 @@
-#include "healer_renderer.h"
+#include "render/entity/nations/carthage/healer_renderer.h"
 
 #include <QMatrix4x4>
 #include <QString>
@@ -21,83 +21,43 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
-#include "healer_style.h"
-#include "math/math_utils.h"
+#include "render/backend/backend.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/asset/bind_skeleton.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
+#include "render/creature/humanoid/runtime/pose_controller.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
+#include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/healer_renderer_common.h"
+#include "render/entity/nations/carthage/healer_style.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/equipment/renderer_constants.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/palette.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
-#include "render/gl/backend.h"
 #include "render/gl/garment_shell.h"
 #include "render/gl/primitives.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
-#include "render/humanoid/asset/bind_skeleton.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/humanoid/runtime/humanoid_math.h"
-#include "render/humanoid/runtime/humanoid_renderer.h"
-#include "render/humanoid/runtime/pose_controller.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/humanoid/schema/humanoid_proportion_profiles.h"
-#include "render/palette.h"
-#include "render/scene_renderer.h"
-#include "render/submitter.h"
+#include "render/math/math_utils.h"
 
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
 namespace Render::GL::Carthage {
-
-void apply_grave_priest_cast_pose(const Render::GL::HumanoidAnimationContext& anim,
-                                  HumanoidPose& io_pose) {
-  Render::Humanoid::apply_skeleton_proportion_pose(io_pose);
-
-  if (!anim.inputs.is_casting || anim.inputs.cast_kind != CastVisualKind::Fireball) {
-    return;
-  }
-
-  float const phase = std::clamp(anim.attack_phase, 0.0F, 1.0F);
-  auto ease = [](float t) {
-    t = std::clamp(t, 0.0F, 1.0F);
-    return t * t * (3.0F - 2.0F * t);
-  };
-  float const gather = ease(phase / 0.30F);
-  float const release = ease((phase - 0.30F) / 0.22F);
-  float const recover = 1.0F - ease((phase - 0.60F) / 0.40F);
-  float const intensity = gather * recover;
-  float const reach = release * recover;
-  if (intensity <= 0.0F) {
-    return;
-  }
-
-  HumanoidPoseController controller(io_pose, anim);
-  controller.tilt_torso(-0.13F * intensity, -0.18F * intensity);
-
-  QVector3D const forward = anim.heading_forward();
-  QVector3D const right = anim.heading_right();
-  QVector3D const up = anim.heading_up();
-
-  io_pose.hand_r += forward * (0.12F * intensity + 0.27F * reach) +
-                    up * (0.21F * intensity) - right * (0.09F * intensity);
-  io_pose.elbow_r += forward * (0.05F * intensity + 0.07F * reach) +
-                     up * (0.12F * intensity) + right * (0.05F * intensity);
-  io_pose.hand_l += forward * (0.12F * intensity + 0.10F * reach) +
-                    up * (0.18F * intensity) + right * (0.10F * intensity);
-  io_pose.elbow_l += forward * (0.01F * intensity + 0.04F * reach) +
-                     up * (0.09F * intensity) - right * (0.07F * intensity);
-  io_pose.head_pos += up * (0.015F * intensity) + forward * (0.025F * intensity);
-}
 
 namespace {
 

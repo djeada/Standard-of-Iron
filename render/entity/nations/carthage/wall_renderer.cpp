@@ -1,8 +1,8 @@
-#include "wall_renderer.h"
+#include "render/entity/nations/carthage/wall_renderer.h"
 
-#include "building_palette.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_render_common.h"
+#include "render/entity/nations/carthage/building_palette.h"
 #include "render/entity/registry.h"
 #include "render/entity/wall_gate_renderer_common.h"
 #include "render/entity/wall_renderer_common.h"

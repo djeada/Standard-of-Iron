@@ -1,12 +1,12 @@
-#include "healing_beam_renderer.h"
+#include "render/entity/healing_beam_renderer.h"
 
 #include "game/systems/healing_colors.h"
 #include "game/systems/render_effects_frame.h"
-#include "render/scene_renderer.h"
+#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
-void render_healing_beams(Renderer* renderer,
+void render_healing_beams(FrameSubmitter* renderer,
                           ResourceManager*,
                           const std::vector<Game::Systems::HealingBeamView>& beams) {
   if (renderer == nullptr || beams.empty()) {

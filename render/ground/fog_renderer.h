@@ -7,14 +7,14 @@
 #include <memory>
 #include <vector>
 
-#include "render/draw_commands.h"
+#include "render/frame/draw_commands.h"
+#include "render/frame/i_render_pass.h"
 #include "render/gl/buffer.h"
 #include "render/gl/texture.h"
-#include "render/i_render_pass.h"
-#include "visibility_mask_encoder.h"
+#include "render/ground/visibility_mask_encoder.h"
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class FogRenderer : public IRenderPass {
@@ -34,11 +34,11 @@ public:
                    float tile_size,
                    const std::vector<std::uint8_t>& cells);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 
-  auto prepare_mask(Renderer& renderer) -> FogMaskResources;
+  auto prepare_mask(FrameSubmitter& renderer) -> FogMaskResources;
 
   void advance_reveal(float dt_seconds);
 
@@ -51,7 +51,7 @@ public:
 
 private:
   void rebuild_patches();
-  void upload_mask(Renderer& renderer);
+  void upload_mask(FrameSubmitter& renderer);
   void upload_instances();
   void clear_state();
 

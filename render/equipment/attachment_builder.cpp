@@ -1,14 +1,14 @@
 
 
-#include "attachment_builder.h"
+#include "render/equipment/attachment_builder.h"
 
 #include <QVector4D>
 
 #include <algorithm>
 #include <cmath>
 
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::Equipment {
 

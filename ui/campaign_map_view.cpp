@@ -31,11 +31,11 @@
 #include <vector>
 
 #include "../game/util/asset_text.h"
-#include "../render/gl/shader.h"
 #include "../utils/resource_utils.h"
 #include "campaign_map_film.h"
 #include "campaign_map_render_utils.h"
 #include "render/gl/gl_resource_tracking.h"
+#include "render/gl/shader.h"
 
 namespace {
 

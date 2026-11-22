@@ -4,15 +4,15 @@
 
 #include <cstdint>
 
-#include "render/i_render_pass.h"
-#include "render/rain_gpu.h"
+#include "render/frame/i_render_pass.h"
+#include "render/frame/rain_gpu.h"
 
 namespace Game::Systems {
 class RainManager;
 }
 
 namespace Render::GL {
-class Renderer;
+class FrameSubmitter;
 
 class RainRenderer : public IRenderPass {
 public:
@@ -33,7 +33,7 @@ public:
   void set_wind_direction_deg(float degrees);
   void set_camera_position(const QVector3D& position);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   void clear();
 

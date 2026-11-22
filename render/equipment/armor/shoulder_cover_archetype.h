@@ -10,10 +10,10 @@
 #include <string>
 #include <string_view>
 
-#include "render/entity/registry.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/render_archetype.h"
 #include "render/gl/primitives.h"
-#include "render/render_archetype.h"
 
 namespace Render::GL {
 

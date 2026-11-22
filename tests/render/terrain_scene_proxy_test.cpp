@@ -13,7 +13,7 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
-#include "render/terrain_scene_proxy.h"
+#include "render/scene/terrain_scene_proxy.h"
 
 namespace {
 

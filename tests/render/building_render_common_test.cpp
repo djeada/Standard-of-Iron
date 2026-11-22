@@ -7,12 +7,13 @@
 
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
+#include "render/cache/static_building_batch.h"
 #include "render/entity/building_collapse.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"
 #include "render/entity/wall_renderer_common.h"
+#include "render/frame/submitter.h"
 #include "render/gl/mesh.h"
-#include "render/submitter.h"
 
 namespace {
 

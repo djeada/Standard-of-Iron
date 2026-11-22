@@ -1,4 +1,4 @@
-#include "stone.h"
+#include "render/geom/stone.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -8,11 +8,9 @@
 #include <numbers>
 #include <vector>
 
-#include "render/entity/registry.h"
 #include "render/gl/mesh.h"
 #include "render/gl/resources.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/scene_renderer.h"
 
 namespace Render {
 namespace Geom {

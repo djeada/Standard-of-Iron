@@ -9,8 +9,8 @@
 #include "game/core/entity.h"
 #include "render/entity/marketplace_renderer_common.h"
 #include "render/entity/registry.h"
+#include "render/frame/submitter.h"
 #include "render/gl/mesh.h"
-#include "render/submitter.h"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "arm_guards_renderer.h"
+#include "render/equipment/armor/arm_guards_renderer.h"
 
 #include <array>
 #include <cmath>
@@ -6,16 +6,16 @@
 #include <deque>
 #include <string>
 
-#include "render/entity/registry.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/render_archetype.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/asset/humanoid_spec.h"
-#include "render/render_archetype.h"
-#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

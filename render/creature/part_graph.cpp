@@ -1,11 +1,11 @@
-#include "part_graph.h"
+#include "render/creature/part_graph.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "primitive_geometry.h"
+#include "render/creature/primitive_geometry.h"
+#include "render/frame/submitter.h"
 #include "render/gl/mesh.h"
-#include "render/submitter.h"
 
 namespace Render::Creature {
 

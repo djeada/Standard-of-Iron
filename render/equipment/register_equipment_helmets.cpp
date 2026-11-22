@@ -1,12 +1,12 @@
-#include "helmets/carthage_heavy_helmet.h"
-#include "helmets/carthage_light_helmet.h"
-#include "helmets/commander_helmets.h"
-#include "helmets/hair_bun.h"
-#include "helmets/headwrap.h"
-#include "helmets/historical_helmets.h"
-#include "helmets/roman_heavy_helmet.h"
-#include "helmets/roman_light_helmet.h"
-#include "register_equipment_internal.h"
+#include "render/equipment/helmets/carthage_heavy_helmet.h"
+#include "render/equipment/helmets/carthage_light_helmet.h"
+#include "render/equipment/helmets/commander_helmets.h"
+#include "render/equipment/helmets/hair_bun.h"
+#include "render/equipment/helmets/headwrap.h"
+#include "render/equipment/helmets/historical_helmets.h"
+#include "render/equipment/helmets/roman_heavy_helmet.h"
+#include "render/equipment/helmets/roman_light_helmet.h"
+#include "render/equipment/register_equipment_internal.h"
 
 namespace Render::GL::EquipmentRegistration {
 

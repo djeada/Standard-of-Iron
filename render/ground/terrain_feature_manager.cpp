@@ -1,4 +1,4 @@
-#include "terrain_feature_manager.h"
+#include "render/ground/terrain_feature_manager.h"
 
 #include "render/ground/bridge_renderer.h"
 #include "render/ground/fog_renderer.h"
@@ -47,7 +47,8 @@ void TerrainFeatureManager::set_fog_renderer(FogRenderer* fog) {
   }
 }
 
-void TerrainFeatureManager::submit(Renderer& renderer, ResourceManager* resources) {
+void TerrainFeatureManager::submit(FrameSubmitter& renderer,
+                                   ResourceManager* resources) {
   for (auto* pass : m_passes) {
     if (pass != nullptr) {
       pass->submit(renderer, resources);

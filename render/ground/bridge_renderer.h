@@ -6,13 +6,13 @@
 #include <vector>
 
 #include "game/map/terrain.h"
-#include "linear_feature_visibility.h"
-#include "render/i_render_pass.h"
+#include "render/frame/i_render_pass.h"
+#include "render/ground/linear_feature_visibility.h"
 
 namespace Render::GL {
 class FogRenderer;
 class Mesh;
-class Renderer;
+class FrameSubmitter;
 class ResourceManager;
 
 class BridgeRenderer : public IRenderPass {
@@ -26,7 +26,7 @@ public:
 
   void set_fog_renderer(FogRenderer* fog);
 
-  void submit(Renderer& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
   [[nodiscard]] auto prewarm_gpu_resources() -> bool;
 

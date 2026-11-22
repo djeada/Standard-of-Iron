@@ -1,13 +1,13 @@
-#include "civilian_actor_prewarm.h"
+#include "render/entity/civilian_actor_prewarm.h"
 
 #include <algorithm>
 #include <initializer_list>
 
-#include "civilian_actor.h"
-#include "farm_activity.h"
-#include "home_activity.h"
 #include "render/creature/archetype_variant_table.h"
-#include "render/humanoid/asset/facial_hair_catalog.h"
+#include "render/creature/humanoid/asset/facial_hair_catalog.h"
+#include "render/entity/civilian_actor.h"
+#include "render/entity/farm_activity.h"
+#include "render/entity/home_activity.h"
 
 namespace Render::GL {
 

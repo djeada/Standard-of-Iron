@@ -9,9 +9,11 @@
 #include <utility>
 #include <vector>
 
+#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
 #include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"
 #include "render/equipment/weapons/roman_scutum.h"
@@ -21,9 +23,7 @@
 #include "render/equipment/weapons/sword_carthage.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/equipment/weapons/sword_roman.h"
-#include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/runtime/skeleton_evaluator.h"
-#include "render/palette.h"
+#include "render/frame/palette.h"
 
 namespace {
 

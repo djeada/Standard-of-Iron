@@ -1,13 +1,13 @@
-#include "creature_asset_prewarmer.h"
+#include "render/creature/assets/creature_asset_prewarmer.h"
 
 #include "animation/bpat/bpat_reader.h"
+#include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/creature/horse/horse_spec.h"
 #include "render/creature/pipeline/creature_asset_init.h"
 #include "render/creature/schema/skeleton_schema_hash.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/horse/horse_spec.h"
-#include "render/rigged_mesh_cache.h"
-#include "render/wildlife/sheep_spec.h"
-#include "render/wildlife/wolf_spec.h"
+#include "render/creature/wildlife/sheep_spec.h"
+#include "render/creature/wildlife/wolf_spec.h"
 
 namespace Render::Creature {
 

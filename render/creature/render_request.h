@@ -13,9 +13,9 @@
 
 #include "animation/bpat/bpat_playback.h"
 #include "animation/clip_manifest.h"
-#include "pipeline/render_pass_intent.h"
+#include "render/creature/pipeline/render_pass_intent.h"
 #include "render/creature/spec.h"
-#include "render/role_color_palette.h"
+#include "render/frame/role_color_palette.h"
 
 namespace Render::Creature {
 

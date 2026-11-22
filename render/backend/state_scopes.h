@@ -1,0 +1,128 @@
+#pragma once
+#include <QOpenGLFunctions_3_3_Core>
+
+#include "render/gl/platform_gl.h"
+
+namespace Render::GL {
+
+struct DepthMaskScope {
+  GLboolean prev{};
+  explicit DepthMaskScope(bool enable_write) {
+    glGetBooleanv(GL_DEPTH_WRITEMASK, &prev);
+    glDepthMask(enable_write ? GL_TRUE : GL_FALSE);
+  }
+  ~DepthMaskScope() { glDepthMask(prev); }
+};
+
+struct PolygonOffsetScope {
+  GLboolean prev_enable;
+  float factor, units;
+  PolygonOffsetScope(float f, float u)
+      : prev_enable(glIsEnabled(GL_POLYGON_OFFSET_FILL))
+      , factor(f)
+      , units(u) {
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(factor, units);
+  }
+  ~PolygonOffsetScope() {
+    if (prev_enable == 0U) {
+      glDisable(GL_POLYGON_OFFSET_FILL);
+    }
+    glPolygonOffset(0.0F, 0.0F);
+  }
+};
+
+struct PolygonModeScope {
+  GLint prev_mode[2]{GL_FILL, GL_FILL};
+  explicit PolygonModeScope(GLenum mode) {
+    glGetIntegerv(GL_POLYGON_MODE, prev_mode);
+    glPolygonMode(GL_FRONT_AND_BACK, mode);
+  }
+  ~PolygonModeScope() {
+    if (prev_mode[0] == prev_mode[1]) {
+      glPolygonMode(GL_FRONT_AND_BACK, static_cast<GLenum>(prev_mode[0]));
+      return;
+    }
+    glPolygonMode(GL_FRONT, static_cast<GLenum>(prev_mode[0]));
+    glPolygonMode(GL_BACK, static_cast<GLenum>(prev_mode[1]));
+  }
+};
+
+struct BlendScope {
+  GLboolean prev_enable;
+  GLint prev_src_rgb{GL_ONE};
+  GLint prev_dst_rgb{GL_ZERO};
+  GLint prev_equation_rgb{GL_FUNC_ADD};
+  BlendScope(bool enable = true)
+      : prev_enable(glIsEnabled(GL_BLEND)) {
+
+    glGetIntegerv(GL_BLEND_SRC_RGB, &prev_src_rgb);
+    glGetIntegerv(GL_BLEND_DST_RGB, &prev_dst_rgb);
+    glGetIntegerv(GL_BLEND_EQUATION_RGB, &prev_equation_rgb);
+
+    if (enable) {
+      glEnable(GL_BLEND);
+    } else {
+      glDisable(GL_BLEND);
+    }
+  }
+  ~BlendScope() {
+    glBlendFunc(static_cast<GLenum>(prev_src_rgb), static_cast<GLenum>(prev_dst_rgb));
+    Platform::set_blend_equation(static_cast<GLenum>(prev_equation_rgb));
+    if (prev_enable != 0U) {
+      glEnable(GL_BLEND);
+    } else {
+      glDisable(GL_BLEND);
+    }
+  }
+};
+
+struct CullFaceScope {
+  GLboolean prev_enable;
+  explicit CullFaceScope(bool enable)
+      : prev_enable(glIsEnabled(GL_CULL_FACE)) {
+    if (enable) {
+      glEnable(GL_CULL_FACE);
+    } else {
+      glDisable(GL_CULL_FACE);
+    }
+  }
+  ~CullFaceScope() {
+    if (prev_enable != 0U) {
+      glEnable(GL_CULL_FACE);
+    } else {
+      glDisable(GL_CULL_FACE);
+    }
+  }
+};
+
+struct DepthFuncScope {
+  GLint prev{GL_LESS};
+  explicit DepthFuncScope(GLenum func) {
+    glGetIntegerv(GL_DEPTH_FUNC, &prev);
+    glDepthFunc(func);
+  }
+  ~DepthFuncScope() { glDepthFunc(static_cast<GLenum>(prev)); }
+};
+
+struct DepthTestScope {
+  GLboolean prev_enable;
+  explicit DepthTestScope(bool enable)
+      : prev_enable(glIsEnabled(GL_DEPTH_TEST)) {
+
+    if (enable) {
+      glEnable(GL_DEPTH_TEST);
+    } else {
+      glDisable(GL_DEPTH_TEST);
+    }
+  }
+  ~DepthTestScope() {
+    if (prev_enable != 0U) {
+      glEnable(GL_DEPTH_TEST);
+    } else {
+      glDisable(GL_DEPTH_TEST);
+    }
+  }
+};
+} // namespace Render::GL

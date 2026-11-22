@@ -11,9 +11,9 @@
 #include <string_view>
 
 #include "animation/bpat/bpat_playback.h"
-#include "pipeline/unit_visual_spec.h"
-#include "render/static_attachment_spec.h"
-#include "render_request.h"
+#include "render/cache/static_attachment_spec.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/render_request.h"
 
 namespace Render::Creature {
 

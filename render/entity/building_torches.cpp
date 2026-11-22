@@ -1,4 +1,4 @@
-#include "building_torches.h"
+#include "render/entity/building_torches.h"
 
 #include <QMatrix4x4>
 
@@ -6,14 +6,14 @@
 #include <cmath>
 #include <cstdint>
 
-#include "building_render_common.h"
-#include "building_state.h"
-#include "home_activity.h"
-#include "registry.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/home_activity.h"
+#include "render/entity/registry.h"
+#include "render/frame/local_lighting.h"
+#include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/local_lighting.h"
-#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

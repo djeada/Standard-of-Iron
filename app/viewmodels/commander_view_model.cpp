@@ -33,7 +33,7 @@
 #include "game/systems/match_snapshot.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace App::ViewModels {

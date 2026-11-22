@@ -2,8 +2,8 @@
 
 #include <string>
 
+#include "render/entity/nations/carthage/spearman_style.h"
 #include "render/entity/registry.h"
-#include "spearman_style.h"
 
 namespace Render::GL::Carthage {
 

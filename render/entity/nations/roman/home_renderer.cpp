@@ -1,4 +1,4 @@
-#include "home_renderer.h"
+#include "render/entity/nations/roman/home_renderer.h"
 
 #include <QVector3D>
 
@@ -7,10 +7,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "building_architecture.h"
-#include "building_palette.h"
 #include "game/core/component.h"
-#include "math/math_utils.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
@@ -19,8 +16,11 @@
 #include "render/entity/building_state.h"
 #include "render/entity/home_activity.h"
 #include "render/entity/home_renderer_common.h"
+#include "render/entity/nations/roman/building_architecture.h"
+#include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/registry.h"
-#include "render/submitter.h"
+#include "render/frame/submitter.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL::Roman {
 namespace {

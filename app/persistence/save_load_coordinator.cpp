@@ -31,7 +31,7 @@
 #include "game/systems/victory_service.h"
 #include "game/systems/world_restore.h"
 #include "game/units/factory.h"
-#include "render/scene_renderer.h"
+#include "render/scene/scene_renderer.h"
 #include "utils/resource_utils.h"
 
 namespace App::Core {

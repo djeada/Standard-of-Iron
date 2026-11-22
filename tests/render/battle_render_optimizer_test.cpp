@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/battle_render_optimizer.h"
+#include "render/scene/battle_render_optimizer.h"
 
 using namespace Render;
 

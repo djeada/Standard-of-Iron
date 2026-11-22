@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <tuple>
 
-#include "render/humanoid/runtime/soldier_turn_smoothing.h"
+#include "render/creature/humanoid/runtime/soldier_turn_smoothing.h"
 
 namespace {
 

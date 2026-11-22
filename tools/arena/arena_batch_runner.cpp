@@ -24,7 +24,7 @@
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
-#include "render/gl/bootstrap.h"
+#include "render/scene/bootstrap.h"
 #include "utils/resource_utils.h"
 
 namespace Arena::Batch {

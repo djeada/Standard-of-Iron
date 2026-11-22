@@ -7,8 +7,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "render/draw_queue.h"
-#include "render/frame_budget.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/frame_budget.h"
 
 namespace {
 

@@ -1,4 +1,4 @@
-#include "mounted_swordsman_renderer_base.h"
+#include "render/entity/mounted_swordsman_renderer_base.h"
 
 #include <QVector3D>
 
@@ -10,18 +10,18 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
-#include "mounted_swordsman_pose.h"
-#include "nations/equipment_loadout_catalog.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
+#include "render/creature/humanoid/runtime/style_palette.h"
+#include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/creature/pipeline/creature_asset.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/humanoid/runtime/humanoid_math.h"
-#include "render/humanoid/runtime/style_palette.h"
-#include "render/humanoid/schema/humanoid_proportion_profiles.h"
-#include "render/palette.h"
-#include "renderer_constants.h"
+#include "render/equipment/renderer_constants.h"
+#include "render/frame/palette.h"
 
 namespace Render::GL {
 

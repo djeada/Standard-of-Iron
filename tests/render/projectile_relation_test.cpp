@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "render/geom/projectile_renderer.h"
+#include "render/overlay/projectile_renderer.h"
 
 using Render::GL::classify_projectile_relation;
 using Render::GL::ProjectileRelation;

@@ -1,4 +1,4 @@
-#include "register_equipment_internal.h"
+#include "render/equipment/register_equipment_internal.h"
 
 namespace Render::GL::EquipmentRegistration {
 
