@@ -25,6 +25,7 @@
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/humanoid_body_state.h"
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_asset_init.h"
@@ -251,7 +252,7 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   CreaturePreparationResult prep;
   for (const auto& request : batch.requests()) {
@@ -414,7 +415,7 @@ TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
   state.graph = output;
 
   CreatureRenderBatch batch;
-  batch.add_humanoid(state);
+  add_humanoid(batch, state);
   ASSERT_EQ(batch.requests().size(), 1U);
 
   EXPECT_EQ(batch.requests().front().pass, RenderPassIntent::Shadow);

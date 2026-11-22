@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "render/gl/buffer.h"
 
@@ -30,8 +31,8 @@ public:
   // for.
   auto resolve(const InstanceBlock* block) -> Buffer*;
 
-  // Creates the buffer and its reserved storage ahead of the first draw.
-  // False if there is no context to create it on.
+  // Creates the buffer, with its reserved storage and current contents, ahead
+  // of the first draw. False if there is no context to create it on.
   auto prewarm(const InstanceBlock& block) -> bool;
 
   // Releases the buffers of blocks that no longer exist.
@@ -50,6 +51,7 @@ private:
   auto entry_for(const InstanceBlock& block) -> Entry&;
 
   std::unordered_map<std::uint64_t, Entry> m_entries;
+  std::vector<std::byte> m_scratch;
 };
 
 // Prewarms every block `visit_blocks` reports into `table`. `visit_blocks`

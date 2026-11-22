@@ -12,13 +12,11 @@
 #include "render/entity/building_render_common.h"
 #include "render/entity/building_state.h"
 #include "render/entity/building_torches.h"
+#include "render/entity/farm_field.h"
 #include "render/entity/registry.h"
 #include "render/frame/render_archetype.h"
 
 namespace Render::GL {
-
-inline constexpr int k_farm_render_stage_count = 5;
-static_assert(k_farm_render_stage_count == Engine::Core::k_farm_growth_stage_count);
 
 using FarmArchetypeResolver = const RenderArchetype& (*)(BuildingState, int stage);
 
@@ -31,48 +29,6 @@ struct FarmRendererConfig {
 
 void register_farm_renderer_variant(EntityRendererRegistry& registry,
                                     const FarmRendererConfig& config);
-
-struct FarmFieldPalette {
-  QVector3D soil{0.34F, 0.27F, 0.19F};
-  QVector3D soil_dark{0.24F, 0.19F, 0.14F};
-  QVector3D soil_light{0.43F, 0.35F, 0.25F};
-  QVector3D sprout{0.39F, 0.56F, 0.27F};
-  QVector3D leaf{0.35F, 0.49F, 0.24F};
-  QVector3D leaf_dark{0.26F, 0.37F, 0.19F};
-  QVector3D stalk_green{0.51F, 0.58F, 0.32F};
-  QVector3D stalk_gold{0.78F, 0.71F, 0.48F};
-  QVector3D stalk_gold_dark{0.59F, 0.52F, 0.34F};
-  QVector3D head_green{0.55F, 0.60F, 0.34F};
-  QVector3D head_gold{0.82F, 0.72F, 0.45F};
-  QVector3D head_gold_light{0.91F, 0.83F, 0.59F};
-  QVector3D head_gold_dark{0.65F, 0.55F, 0.34F};
-  QVector3D awn{0.88F, 0.81F, 0.59F};
-  QVector3D stubble{0.70F, 0.61F, 0.41F};
-  QVector3D ash{0.16F, 0.14F, 0.12F};
-};
-
-struct FarmFieldSpec {
-  QVector3D center{0.0F, 0.0F, 0.0F};
-  float half_x{0.90F};
-  float half_z{0.62F};
-  float ground_y{0.0F};
-  int rows{7};
-  int stalks_per_row{15};
-  int seed{7};
-  bool rows_along_x{true};
-  bool worker_clearings{false};
-};
-
-void add_farm_field(BuildingArchetypeDesc& desc,
-                    const FarmFieldSpec& spec,
-                    const FarmFieldPalette& palette,
-                    int stage);
-
-void add_farm_scarecrow(BuildingArchetypeDesc& desc,
-                        const QVector3D& base,
-                        const QVector3D& timber,
-                        const QVector3D& cloth,
-                        const QVector3D& straw);
 
 auto farm_stage_archetype(std::string_view nation_slug,
                           BuildingState state,

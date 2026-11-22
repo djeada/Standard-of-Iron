@@ -3,19 +3,12 @@
 #include <string_view>
 
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/wall_gate_authoring.h"
 #include "render/entity/wall_renderer_common.h"
 #include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
 
 namespace Render::GL {
-
-auto build_wall_gate_desc(std::string_view name_prefix,
-                          const WallPalette& palette,
-                          const WallGeometry& geometry) -> BuildingArchetypeDesc;
-
-auto build_wall_gate_leaf_desc(std::string_view name_prefix,
-                               const WallPalette& palette,
-                               const WallGeometry& geometry) -> BuildingArchetypeDesc;
 
 auto wall_gate_archetype(std::string_view name_prefix) -> const BuildingArchetypeSet&;
 auto wall_gate_leaf_archetype(std::string_view name_prefix)

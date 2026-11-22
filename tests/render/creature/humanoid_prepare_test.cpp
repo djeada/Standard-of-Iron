@@ -106,7 +106,7 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 #include "render/scene/template_recorder.h"
 #include "tests/support/movement_test_access.h"
 

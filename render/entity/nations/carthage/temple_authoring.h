@@ -1,0 +1,27 @@
+#pragma once
+
+#include <QVector3D>
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_archetype_library.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/building_ornaments.h"
+#include "render/entity/building_state.h"
+#include "render/entity/nations/carthage/building_palette.h"
+#include "render/entity/temple_layout.h"
+#include "render/frame/render_archetype.h"
+
+// The temple geometry, authored as BuildingArchetypeDescs and baked by
+// the building archetype catalog. Nothing here draws or reads frame state.
+namespace Render::GL::Carthage {
+
+// Palette and layout shared by the authoring and the temple renderer.
+namespace temple_detail {} // namespace temple_detail
+
+auto build_temple_desc(BuildingState state) -> BuildingArchetypeDesc;
+
+} // namespace Render::GL::Carthage

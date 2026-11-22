@@ -9,11 +9,11 @@
 #include "animation/locomotion_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/creature/humanoid/humanoid_constants.h"
 #include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/humanoid/runtime/pose_controller.h"
 #include "render/creature/humanoid/runtime/pose_primitives.h"
-#include "render/gl/humanoid/humanoid_constants.h"
 
 namespace Render::GL {
 

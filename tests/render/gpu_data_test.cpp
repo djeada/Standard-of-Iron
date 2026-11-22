@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "render/geom/instance_block.h"
@@ -89,6 +90,32 @@ TEST(InstanceBlock, ReservationOnlyGrows) {
   block.reserve_bytes(64);
   block.reserve_bytes(16);
   EXPECT_EQ(block.reserved_bytes(), 64U);
+}
+
+TEST(InstanceBlock, AGeneratedBlockWritesItsBytesOnlyWhenAsked) {
+  InstanceBlock block;
+  int writes = 0;
+  block.set_target(InstanceBlock::Target::Uniform);
+  block.assign_generated(8, [&writes](std::span<std::byte> out) {
+    ++writes;
+    for (std::size_t i = 0; i < out.size(); ++i) {
+      out[i] = static_cast<std::byte>(i + 1);
+    }
+  });
+  EXPECT_EQ(block.size_bytes(), 8U);
+  EXPECT_EQ(block.data(), nullptr) << "a generated block keeps no copy";
+  EXPECT_EQ(writes, 0) << "nothing is produced until a backend uploads it";
+
+  std::array<std::byte, 8> out{};
+  block.write_to(out);
+  EXPECT_EQ(writes, 1);
+  EXPECT_EQ(out[7], std::byte{8});
+  EXPECT_EQ(block.target(), InstanceBlock::Target::Uniform);
+
+  const std::vector<float> plain{1.0F};
+  block.assign(plain);
+  EXPECT_NE(block.data(), nullptr) << "assigning bytes replaces the writer";
+  EXPECT_EQ(block.size_bytes(), sizeof(float));
 }
 
 } // namespace

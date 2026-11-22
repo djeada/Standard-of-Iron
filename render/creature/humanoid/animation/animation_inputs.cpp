@@ -11,9 +11,9 @@
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "render/creature/combat_animation_diagnostics.h"
 #include "render/creature/humanoid/humanoid_animation_state.h"
+#include "render/creature/humanoid/humanoid_constants.h"
 #include "render/creature/movement_animation.h"
 #include "render/frame/draw_context.h"
-#include "render/gl/humanoid/humanoid_constants.h"
 #include "render/profiling/frame_profile.h"
 
 namespace Render::GL {

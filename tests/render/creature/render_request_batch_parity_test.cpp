@@ -5,9 +5,12 @@
 #include <gtest/gtest.h>
 
 #include "render/creature/archetype_registry.h"
+#include "render/creature/elephant/elephant_render_batch.h"
 #include "render/creature/elephant/elephant_spec.h"
+#include "render/creature/horse/horse_render_batch.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 
 namespace {
@@ -40,7 +43,7 @@ TEST(CreatureRenderBatch, RequestMirrorsHumanoidAdd) {
   anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
   anim.gait.cycle_phase = 0.42F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   EXPECT_TRUE(batch.rows().empty());
   ASSERT_EQ(batch.requests().size(), 1U);
@@ -69,7 +72,7 @@ TEST(CreatureRenderBatch, RequestMirrorsPassIntent) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].pass,
             Render::Creature::Pipeline::RenderPassIntent::Shadow);
@@ -86,7 +89,7 @@ TEST(CreatureRenderBatch, RiderArchetypeStillUsesAbsoluteRequestWorld) {
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1U);
   auto const expected_key =
@@ -106,7 +109,7 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidHoldAndAttack) {
   anim.inputs.is_in_hold_mode = true;
   anim.inputs.hold_entry_progress = 1.0F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
   EXPECT_FALSE(batch.requests()[0].full_body_blend.active());
@@ -122,7 +125,7 @@ TEST(CreatureRenderBatch, HoldEntryBlendsTheKneelOverTheStandingClip) {
   anim.inputs.is_in_hold_mode = true;
   anim.inputs.hold_entry_progress = 0.5F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Idle);
 
@@ -142,7 +145,7 @@ TEST(CreatureRenderBatch, HoldExitUnwindsTheKneelBlendInsteadOfCutting) {
   anim.inputs.is_exiting_hold = true;
   anim.inputs.hold_exit_progress = 0.25F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Idle);
 
@@ -155,8 +158,8 @@ TEST(CreatureRenderBatch, HoldExitUnwindsTheKneelBlendInsteadOfCutting) {
   Render::GL::HumanoidAnimationContext late_anim{};
   late_anim.inputs.is_exiting_hold = true;
   late_anim.inputs.hold_exit_progress = 0.75F;
-  later.add_humanoid(
-      make_output(CreatureKind::Humanoid, 6U, 0.0F), pose, variant, late_anim);
+  add_humanoid(
+      later, make_output(CreatureKind::Humanoid, 6U, 0.0F), pose, variant, late_anim);
   ASSERT_EQ(later.requests().size(), 1U);
   EXPECT_LT(later.requests()[0].full_body_blend.weight, layer.weight);
 }
@@ -171,7 +174,7 @@ TEST(CreatureRenderBatch, FullHoldLoopsSettledHoldClip) {
   anim.inputs.is_in_hold_mode = true;
   anim.inputs.hold_entry_progress = 1.0F;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
   EXPECT_GE(batch.requests()[0].phase, 0.0F);
@@ -191,7 +194,7 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidMeleeAttack) {
   anim.inputs.is_melee = true;
   anim.inputs.attack_variant = 1U;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   const auto& req = batch.requests()[0];
   EXPECT_EQ(req.state, AnimationStateId::AttackSword);
@@ -211,7 +214,7 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidRangedAttack) {
   anim.inputs.is_attacking = true;
   anim.inputs.is_melee = false;
 
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1U);
   const auto& req = batch.requests()[0];
   EXPECT_EQ(req.state, AnimationStateId::AttackBow);
@@ -225,9 +228,9 @@ TEST(CreatureRenderBatch, RequestMirrorsHorseQuadrupedState) {
 
   Render::GL::HorseVariant const variant{};
 
-  batch.add_quadruped(output, variant, AnimationStateId::Run, 0.25F);
-  batch.add_quadruped(output, variant, AnimationStateId::Walk, 0.0F);
-  batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
+  add_quadruped(batch, output, variant, AnimationStateId::Run, 0.25F);
+  add_quadruped(batch, output, variant, AnimationStateId::Walk, 0.0F);
+  add_quadruped(batch, output, variant, AnimationStateId::Idle, 0.0F);
 
   ASSERT_EQ(batch.requests().size(), 3U);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::k_horse_base);
@@ -243,8 +246,8 @@ TEST(CreatureRenderBatch, RequestMirrorsElephantQuadrupedState) {
 
   Render::GL::ElephantVariant const variant{};
 
-  batch.add_quadruped(output, variant, AnimationStateId::Run, 0.7F);
-  batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
+  add_quadruped(batch, output, variant, AnimationStateId::Run, 0.7F);
+  add_quadruped(batch, output, variant, AnimationStateId::Idle, 0.0F);
 
   ASSERT_EQ(batch.requests().size(), 2U);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::k_elephant_base);
@@ -260,7 +263,7 @@ TEST(CreatureRenderBatch, CulledOutputDoesNotEmitRequest) {
   Render::GL::HumanoidPose const pose{};
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   EXPECT_TRUE(batch.rows().empty());
   EXPECT_TRUE(batch.requests().empty());
@@ -287,7 +290,7 @@ TEST(CreatureRenderBatch, ClearResetsRequestsAndRows) {
   Render::GL::HumanoidPose const pose{};
   Render::GL::HumanoidVariant const variant{};
   Render::GL::HumanoidAnimationContext const anim{};
-  batch.add_humanoid(output, pose, variant, anim);
+  add_humanoid(batch, output, pose, variant, anim);
 
   ASSERT_FALSE(batch.requests().empty());
   batch.clear();

@@ -1,74 +1,18 @@
-#include "render/equipment/weapons/sword_renderer.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <numbers>
 #include <string>
+#include <utility>
 
-#include "animation/rig/humanoid_proportions.h"
-#include "render/cache/static_attachment_spec.h"
-#include "render/creature/humanoid/asset/bind_skeleton.h"
-#include "render/creature/humanoid/asset/humanoid_spec.h"
-#include "render/creature/humanoid/runtime/humanoid_math.h"
-#include "render/creature/humanoid/runtime/humanoid_renderer.h"
-#include "render/creature/humanoid/runtime/skeleton_evaluator.h"
-#include "render/creature/humanoid/runtime/style_palette.h"
-#include "render/equipment/attachment_builder.h"
-#include "render/equipment/equipment_cache_key.h"
-#include "render/equipment/equipment_submit.h"
-#include "render/equipment/oriented_archetype_utils.h"
-#include "render/equipment/primitive_archetype_utils.h"
-#include "render/equipment/renderer_constants.h"
-#include "render/frame/render_archetype.h"
-#include "render/geom/primitives.h"
-#include "render/geom/transforms.h"
-#include "render/math/math_utils.h"
+#include "render/equipment/weapons/sword_renderer_internal.h"
 
 namespace Render::GL {
 
-using Render::Geom::clamp01;
-using Render::Geom::clamp_f;
-using Render::Geom::cylinder_between;
-using Render::Geom::ease_in_out_cubic;
-using Render::Geom::lerp;
-using Render::Geom::nlerp;
-using Render::Geom::smoothstep;
-using Render::Geom::sphere_at;
-
-namespace {
-
-enum SwordPaletteSlot : std::uint8_t {
-  k_metal_slot = 0U,
-  k_metal_dark_slot = 1U,
-  k_fuller_slot = 2U,
-  k_leather_slot = 3U,
-};
-
-struct SwordArchetypeKey {
-  int sword_length_key{0};
-  int sword_width_key{0};
-  int guard_half_width_key{0};
-  int handle_radius_key{0};
-  int pommel_radius_key{0};
-  int pommel_length_key{0};
-  int blade_ricasso_key{0};
-  int blade_taper_bias_key{0};
-  int blade_mid_width_scale_key{0};
-  int blade_tip_width_scale_key{0};
-  int blade_curve_key{0};
-  int guard_curve_key{0};
-  int guard_spike_length_key{0};
-  int blade_back_spike_count{0};
-  int blade_back_spike_length_key{0};
-  int material_id{0};
-  bool has_hooked_pommel{false};
-};
+namespace sword_renderer_detail {
 
 auto operator==(const SwordArchetypeKey& lhs, const SwordArchetypeKey& rhs) -> bool {
   return lhs.sword_length_key == rhs.sword_length_key &&
@@ -98,9 +42,7 @@ auto oriented_box_between(const QVector3D& start,
                           const QVector3D& end,
                           float half_width,
                           float half_depth,
-                          QVector3D right_hint = QVector3D(1.0F,
-                                                           0.0F,
-                                                           0.0F)) -> QMatrix4x4 {
+                          QVector3D right_hint) -> QMatrix4x4 {
   QVector3D y_axis = end - start;
   float const length = y_axis.length();
   if (length <= 1e-5F) {
@@ -137,9 +79,7 @@ auto oriented_cone_between(const QVector3D& start,
                            const QVector3D& end,
                            float half_width,
                            float half_depth,
-                           QVector3D right_hint = QVector3D(1.0F,
-                                                            0.0F,
-                                                            0.0F)) -> QMatrix4x4 {
+                           QVector3D right_hint) -> QMatrix4x4 {
   QMatrix4x4 local =
       oriented_box_between(start, end, half_width, half_depth, right_hint);
   local.setColumn(1, local.column(1) * 2.0F);
@@ -199,11 +139,6 @@ uses_authored_rpg_sword_blade(const HumanoidAnimationContext& anim) noexcept -> 
 [[nodiscard]] auto authored_sword_blade_dir() noexcept -> QVector3D {
   return k_sword_blade_axis_in_grip;
 }
-
-struct SwordTrailWindow {
-  float start{0.28F};
-  float end{0.68F};
-};
 
 [[nodiscard]] auto sword_trail_window(const HumanoidAnimationContext& anim,
                                       bool authored) noexcept -> SwordTrailWindow {
@@ -470,15 +405,6 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
   return cache.back().archetype;
 }
 
-enum ScabbardPaletteSlot : std::uint8_t {
-  k_scabbard_leather_slot = 0U,
-  k_scabbard_metal_slot = 1U,
-};
-
-struct ScabbardKey {
-  int sheath_r_key{0};
-};
-
 auto operator==(const ScabbardKey& a, const ScabbardKey& b) -> bool {
   return a.sheath_r_key == b.sheath_r_key;
 }
@@ -530,7 +456,9 @@ auto scabbard_archetype(float sheath_r) -> const RenderArchetype& {
   return cache.back().archetype;
 }
 
-} // namespace
+} // namespace sword_renderer_detail
+
+using namespace sword_renderer_detail;
 
 SwordRenderer::SwordRenderer(SwordRenderConfig config)
     : m_base(config) {
@@ -877,138 +805,6 @@ auto scabbard_make_static_attachment(float sheath_r,
   spec.palette_role_remap[k_scabbard_metal_slot] =
       static_cast<std::uint8_t>(base_role_byte + 1U);
   return spec;
-}
-
-namespace {
-
-auto held_prop_attachment(const RenderArchetype& archetype)
-    -> Render::Creature::StaticAttachmentSpec {
-  constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandR;
-  QMatrix4x4 const bind_bone =
-      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
-  auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_r;
-  return Render::Equipment::build_socket_static_attachment({
-      .archetype = &archetype,
-      .socket_bone_index = static_cast<std::uint16_t>(k_bone),
-      .bind_bone_transform = bind_bone,
-      .bind_socket_transform = hand_basis_transform(QMatrix4x4{}, bind_grip),
-      .mesh_from_socket = sword_local_pose(k_sword_blade_axis_in_grip),
-  });
-}
-
-auto scroll_archetype() -> const RenderArchetype& {
-  static const RenderArchetype archetype = [] {
-    RenderArchetypeBuilder builder{"held_scroll"};
-    builder.add_palette_mesh(
-        get_unit_cylinder(),
-        Render::Geom::cylinder_between(
-            QVector3D(0.0F, -0.12F, 0.0F), QVector3D(0.0F, 0.12F, 0.0F), 0.034F),
-        0U);
-    for (float y : {-0.13F, 0.13F}) {
-      builder.add_palette_mesh(
-          get_unit_sphere(),
-          Render::Geom::sphere_at(QVector3D(0.0F, y, 0.0F), 0.022F),
-          1U);
-    }
-    return std::move(builder).build();
-  }();
-  return archetype;
-}
-
-auto wax_tablet_archetype() -> const RenderArchetype& {
-  static const RenderArchetype archetype = [] {
-    RenderArchetypeBuilder builder{"held_wax_tablet"};
-    builder.add_palette_box(
-        QVector3D(0.0F, 0.07F, 0.03F), QVector3D(0.012F, 0.11F, 0.085F), 1U);
-    builder.add_palette_box(
-        QVector3D(0.008F, 0.07F, 0.03F), QVector3D(0.008F, 0.095F, 0.07F), 0U);
-    return std::move(builder).build();
-  }();
-  return archetype;
-}
-
-auto cuff_archetype(bool left) -> RenderArchetype {
-  using Render::Humanoid::HumanoidBone;
-  auto const palette = Render::Humanoid::humanoid_bind_palette();
-  QVector3D const hand = palette[static_cast<std::size_t>(left ? HumanoidBone::HandL
-                                                               : HumanoidBone::HandR)]
-                             .column(3)
-                             .toVector3D();
-  QVector3D const forearm =
-      palette[static_cast<std::size_t>(left ? HumanoidBone::ForearmL
-                                            : HumanoidBone::ForearmR)]
-          .column(3)
-          .toVector3D();
-  QVector3D const axis = forearm - hand;
-  RenderArchetypeBuilder builder{left ? "manacle_l" : "manacle_r"};
-  builder.add_palette_mesh(
-      get_unit_cylinder(),
-      Render::Geom::cylinder_between(hand + axis * 0.10F, hand + axis * 0.24F, 0.05F),
-      0U);
-  QVector3D const ring = hand + axis * 0.17F + QVector3D(0.0F, -0.045F, 0.0F);
-  for (int link = 0; link < 3; ++link) {
-    builder.add_palette_mesh(
-        get_unit_sphere(),
-        Render::Geom::sphere_at(
-            ring + QVector3D(0.0F, -0.03F * static_cast<float>(link), 0.0F), 0.018F),
-        0U);
-  }
-  return std::move(builder).build();
-}
-
-} // namespace
-
-auto held_scroll_make_static_attachment(std::uint8_t base_role_byte)
-    -> Render::Creature::StaticAttachmentSpec {
-  auto spec = held_prop_attachment(scroll_archetype());
-  spec.palette_role_remap[0] = base_role_byte;
-  spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
-  return spec;
-}
-
-auto held_wax_tablet_make_static_attachment(std::uint8_t base_role_byte)
-    -> Render::Creature::StaticAttachmentSpec {
-  auto spec = held_prop_attachment(wax_tablet_archetype());
-  spec.palette_role_remap[0] = base_role_byte;
-  spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
-  return spec;
-}
-
-auto manacles_make_static_attachments(std::uint8_t base_role_byte)
-    -> std::vector<Render::Creature::StaticAttachmentSpec> {
-  using Render::Humanoid::HumanoidBone;
-  static const RenderArchetype left = cuff_archetype(true);
-  static const RenderArchetype right = cuff_archetype(false);
-  std::vector<Render::Creature::StaticAttachmentSpec> out;
-  for (auto const& [archetype, bone] : {std::pair{&left, HumanoidBone::HandL},
-                                        std::pair{&right, HumanoidBone::HandR}}) {
-    auto spec = Render::Equipment::build_static_attachment({
-        .archetype = archetype,
-        .socket_bone_index = static_cast<std::uint16_t>(bone),
-    });
-    spec.palette_role_remap[0] = base_role_byte;
-    out.push_back(spec);
-  }
-  return out;
-}
-
-auto held_prop_fill_role_colors(bool tablet,
-                                QVector3D* out,
-                                std::size_t max) -> std::uint32_t {
-  if (max < 2U) {
-    return 0U;
-  }
-  out[0] = tablet ? QVector3D(0.17F, 0.13F, 0.09F) : QVector3D(0.86F, 0.79F, 0.62F);
-  out[1] = tablet ? QVector3D(0.45F, 0.30F, 0.16F) : QVector3D(0.34F, 0.21F, 0.11F);
-  return 2U;
-}
-
-auto manacles_fill_role_colors(QVector3D* out, std::size_t max) -> std::uint32_t {
-  if (max < 1U) {
-    return 0U;
-  }
-  out[0] = QVector3D(0.22F, 0.22F, 0.24F);
-  return 1U;
 }
 
 } // namespace Render::GL

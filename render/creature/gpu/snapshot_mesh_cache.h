@@ -9,7 +9,7 @@
 
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace Render::Creature::Bpat {
 class BpatBlob;

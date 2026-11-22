@@ -27,26 +27,9 @@ class TransformComponent;
 namespace Render::GL {
 struct DrawContext;
 struct AnimationInputs;
-struct HumanoidPose;
-struct HumanoidVariant;
-struct HumanoidAnimationContext;
-struct HorseProfile;
-struct HorseVariant;
-struct MountedAttachmentFrame;
-struct HorseMotionSample;
-struct ReinState;
-struct ElephantProfile;
-struct ElephantVariant;
-struct HowdahAttachmentFrame;
-struct ElephantMotionSample;
 } // namespace Render::GL
 
 namespace Render::Creature::Pipeline {
-
-struct PreparedHumanoidBodyState;
-struct PreparedHorseBodyState;
-struct PreparedElephantBodyState;
-struct PreparedWildlifeBodyState;
 
 struct CreatureGraphInputs {
   const Render::GL::DrawContext* ctx{nullptr};
@@ -117,36 +100,27 @@ evaluate_creature_lod(const CreatureGraphInputs& inputs,
     const CreatureGraphInputs& inputs,
     const CreatureLodDecision& lod_decision) noexcept -> CreatureGraphOutput;
 
+// The bodies one preparation pass draws: rows for the shadow pass and render
+// requests for the creature pipeline. It names no species; each species adds
+// its bodies through free functions in its own folder (add_humanoid in
+// humanoid/pipeline/humanoid_render_batch.h, add_quadruped in the horse,
+// elephant and wildlife render_batch headers).
 class CreatureRenderBatch {
 public:
+  // The asset handle and role colours the last request resolved, so a run of
+  // identical bodies skips both lookups. Cleared with the batch.
+  struct RequestReuseCache {
+    const void* variant{nullptr};
+    CreatureAssetId asset{k_invalid_creature_asset};
+    Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
+    Render::Creature::CreatureRenderAssetHandleId handle{
+        Render::Creature::k_invalid_creature_render_asset_handle};
+    std::shared_ptr<const Render::RoleColorPalette> role_colors{};
+  };
+
   void clear() noexcept;
 
   void reserve(std::size_t n);
-
-  void add_humanoid(const CreatureGraphOutput& output,
-                    const Render::GL::HumanoidPose& pose,
-                    const Render::GL::HumanoidVariant& variant,
-                    const Render::GL::HumanoidAnimationContext& anim);
-
-  void add_humanoid(const PreparedHumanoidBodyState& state);
-
-  void add_quadruped(const CreatureGraphOutput& output,
-                     const Render::GL::HorseVariant& variant,
-                     Render::Creature::AnimationStateId state,
-                     float phase,
-                     std::uint32_t clip_variant = 0U);
-
-  void add_quadruped(const PreparedHorseBodyState& state);
-
-  void add_quadruped(const CreatureGraphOutput& output,
-                     const Render::GL::ElephantVariant& variant,
-                     Render::Creature::AnimationStateId state,
-                     float phase,
-                     std::uint32_t clip_variant = 0U);
-
-  void add_quadruped(const PreparedElephantBodyState& state);
-
-  void add_quadruped(const PreparedWildlifeBodyState& state);
 
   void add_request(const Render::Creature::CreatureRenderRequest& request);
 
@@ -159,6 +133,16 @@ public:
 
   [[nodiscard]] auto
   requests() const noexcept -> std::span<const Render::Creature::CreatureRenderRequest>;
+  // The requests already added, for an entry point that layers onto the one it
+  // just added.
+  [[nodiscard]] auto
+  mutable_requests() noexcept -> std::span<Render::Creature::CreatureRenderRequest> {
+    return requests_;
+  }
+
+  [[nodiscard]] auto reuse_cache() noexcept -> RequestReuseCache& {
+    return reuse_cache_;
+  }
 
   [[nodiscard]] auto size() const noexcept -> std::size_t;
 
@@ -167,13 +151,7 @@ public:
 private:
   std::vector<PreparedCreatureRenderRow> rows_{};
   std::vector<Render::Creature::CreatureRenderRequest> requests_{};
-  const void* cached_humanoid_variant_{nullptr};
-  CreatureAssetId cached_humanoid_asset_{k_invalid_creature_asset};
-  Render::Creature::ArchetypeId cached_humanoid_archetype_{
-      Render::Creature::k_invalid_archetype};
-  Render::Creature::CreatureRenderAssetHandleId cached_humanoid_handle_{
-      Render::Creature::k_invalid_creature_render_asset_handle};
-  std::shared_ptr<const Render::RoleColorPalette> cached_humanoid_role_colors_{};
+  RequestReuseCache reuse_cache_{};
 };
 
 struct CreaturePreparationResult {

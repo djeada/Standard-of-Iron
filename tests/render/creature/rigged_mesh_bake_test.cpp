@@ -17,7 +17,7 @@
 #include "render/creature/skeleton.h"
 #include "render/geom/garment_shell.h"
 #include "render/geom/primitives.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace {
 

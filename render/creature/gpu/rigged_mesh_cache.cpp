@@ -17,7 +17,6 @@
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
 #include "render/frame/bone_palette_arena.h"
-#include "render/gl/rigged_mesh_gpu.h"
 
 namespace Render::GL {
 
@@ -39,7 +38,7 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
     return;
   }
   auto& atlas = *entry.skin_atlas;
-  if (atlas.palette_ubo.valid()) {
+  if (atlas.palette_block != nullptr) {
     return;
   }
   if (atlas.palettes.empty() || atlas.frame_total == 0 || atlas.bone_count == 0) {
@@ -51,39 +50,39 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
         "skin palette UBO missing for rigged mesh entry");
     return;
   }
-  if (!palette_ubo_available()) {
-    return;
-  }
 
   const std::size_t stride = BonePaletteArena::k_palette_bytes;
-  std::vector<float> staging(static_cast<std::size_t>(atlas.frame_total) *
-                                 BonePaletteArena::k_palette_floats,
-                             0.0F);
-  for (std::uint32_t f = 0; f < atlas.frame_total; ++f) {
-    const QMatrix4x4* frame_src =
-        atlas.palettes.data() + static_cast<std::size_t>(f) * atlas.bone_count;
-
-    float* frame_dst = staging.data() +
-                       static_cast<std::size_t>(f) * BonePaletteArena::k_palette_floats;
-    for (std::uint32_t b = 0; b < atlas.bone_count; ++b) {
-      std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
-                  frame_src[b].constData(),
-                  sizeof(float) * BonePaletteArena::k_matrix_floats);
+  const std::size_t bytes = static_cast<std::size_t>(atlas.frame_total) * stride;
+  // The block writes the padded palettes straight from the atlas storage when a
+  // backend uploads it, so the atlas is never held twice on the CPU.
+  auto writer = [storage = atlas.palette_storage,
+                 palettes = atlas.palettes,
+                 frame_total = atlas.frame_total,
+                 bone_count = atlas.bone_count](std::span<std::byte> destination) {
+    (void)storage;
+    auto* floats = reinterpret_cast<float*>(destination.data());
+    const std::size_t frames = std::min<std::size_t>(
+        frame_total, destination.size() / BonePaletteArena::k_palette_bytes);
+    QMatrix4x4 const ident;
+    for (std::size_t f = 0; f < frames; ++f) {
+      const QMatrix4x4* frame_src = palettes.data() + (f * bone_count);
+      float* frame_dst = floats + (f * BonePaletteArena::k_palette_floats);
+      for (std::uint32_t b = 0; b < bone_count; ++b) {
+        std::memcpy(frame_dst + (b * BonePaletteArena::k_matrix_floats),
+                    frame_src[b].constData(),
+                    sizeof(float) * BonePaletteArena::k_matrix_floats);
+      }
+      for (std::size_t b = bone_count; b < BonePaletteArena::k_palette_width; ++b) {
+        std::memcpy(frame_dst + (b * BonePaletteArena::k_matrix_floats),
+                    ident.constData(),
+                    sizeof(float) * BonePaletteArena::k_matrix_floats);
+      }
     }
-
-    for (std::uint32_t b = atlas.bone_count; b < BonePaletteArena::k_palette_width;
-         ++b) {
-      QMatrix4x4 const ident;
-      std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
-                  ident.constData(),
-                  sizeof(float) * BonePaletteArena::k_matrix_floats);
-    }
-  }
-  BufferHandle ubo = create_palette_ubo(staging);
-  if (!ubo) {
-    return;
-  }
-  atlas.palette_ubo = std::move(ubo);
+  };
+  auto block = std::make_shared<InstanceBlock>();
+  block->set_target(InstanceBlock::Target::Uniform);
+  block->assign_generated(bytes, std::move(writer));
+  atlas.palette_block = std::move(block);
   atlas.frame_stride_bytes = stride;
 }
 
@@ -285,7 +284,7 @@ void RiggedMeshCache::recount_residency() {
                                          sizeof(QMatrix4x4))
             : 0U;
     const auto ubo_bytes =
-        atlas->palette_ubo.valid()
+        atlas->palette_block != nullptr
             ? static_cast<std::uint64_t>(atlas->frame_total) * atlas->frame_stride_bytes
             : 0U;
     atlases += palette_bytes + ubo_bytes;
@@ -355,7 +354,7 @@ auto RiggedMeshCache::evict_unused_over_budget() -> std::uint64_t {
 void RiggedMeshCache::release_skin_atlases() {
   for (auto& [_, atlas] : m_skin_atlases) {
     if (atlas != nullptr) {
-      atlas->palette_ubo.reset();
+      atlas->palette_block.reset();
     }
   }
 }
@@ -364,26 +363,18 @@ RiggedMeshCache::~RiggedMeshCache() {
   release_skin_atlases();
 }
 
-auto RiggedMeshCache::prewarm_gpu_resources() -> bool {
-  if (!palette_ubo_available()) {
+auto RiggedMeshCache::prepare_gpu_data() -> bool {
+  if (!m_palette_blocks_enabled) {
     return false;
   }
   Render::Creature::RuntimeBakeAllowScope const loading_scope;
   bool ready = true;
   for (auto& [_, entry] : m_entries) {
-    if (entry.mesh != nullptr) {
-      ready = entry.mesh->ensure_gl_buffers() && ready;
-    }
-    for (const auto& attachment : entry.attachment_meshes) {
-      if (attachment != nullptr) {
-        ready = attachment->ensure_gl_buffers() && ready;
-      }
-    }
     const auto* atlas = entry.skin_atlas.get();
-    if (atlas != nullptr && !atlas->palette_ubo.valid() && !atlas->palettes.empty() &&
-        atlas->frame_total > 0 && atlas->bone_count > 0) {
+    if (atlas != nullptr && atlas->palette_block == nullptr &&
+        !atlas->palettes.empty() && atlas->frame_total > 0 && atlas->bone_count > 0) {
       rigged_entry_ensure_skin_ubo(entry);
-      if (atlas->palette_ubo.valid()) {
+      if (atlas->palette_block != nullptr) {
         record_skin_ubo_upload(static_cast<std::uint64_t>(atlas->frame_total) *
                                BonePaletteArena::k_palette_bytes);
       } else {
@@ -394,22 +385,44 @@ auto RiggedMeshCache::prewarm_gpu_resources() -> bool {
   return ready;
 }
 
+void RiggedMeshCache::for_each_mesh(
+    const std::function<void(const RiggedMesh&)>& visit) const {
+  for (const auto& [_, entry] : m_entries) {
+    if (entry.mesh != nullptr) {
+      visit(*entry.mesh);
+    }
+    for (const auto& attachment : entry.attachment_meshes) {
+      if (attachment != nullptr) {
+        visit(*attachment);
+      }
+    }
+  }
+}
+
+void RiggedMeshCache::for_each_palette_block(const InstanceBlockVisitor& visit) const {
+  for (const auto& [_, entry] : m_entries) {
+    if (entry.skin_atlas != nullptr && entry.skin_atlas->palette_block != nullptr) {
+      visit(*entry.skin_atlas->palette_block);
+    }
+  }
+}
+
 void RiggedMeshCache::upload_pending_skin_ubos() {
-  if (!m_has_pending_skin_ubo_uploads || !palette_ubo_available()) {
+  if (!m_has_pending_skin_ubo_uploads || !m_palette_blocks_enabled) {
     return;
   }
 
   Render::Creature::RuntimeBakeAllowScope const initialization_scope;
   m_has_pending_skin_ubo_uploads = false;
   for (auto& [_, entry] : m_entries) {
-    if (entry.skin_atlas == nullptr || entry.skin_atlas->palette_ubo.valid() ||
+    if (entry.skin_atlas == nullptr || entry.skin_atlas->palette_block != nullptr ||
         entry.skin_atlas->palettes.empty() || entry.skin_atlas->frame_total == 0U ||
         entry.skin_atlas->bone_count == 0U) {
       continue;
     }
 
     rigged_entry_ensure_skin_ubo(entry);
-    if (!entry.skin_atlas->palette_ubo.valid()) {
+    if (entry.skin_atlas->palette_block == nullptr) {
       m_has_pending_skin_ubo_uploads = true;
       continue;
     }
@@ -428,8 +441,8 @@ void rigged_entry_ensure_skin_atlas_from_blob(
   if (storage == nullptr || storage->empty() || atlas.palette_storage == storage) {
     return;
   }
-  if (atlas.palette_ubo.valid()) {
-    atlas.palette_ubo.reset();
+  if (atlas.palette_block != nullptr) {
+    atlas.palette_block.reset();
     atlas.frame_stride_bytes = 0;
   }
   atlas.palette_storage = std::move(storage);

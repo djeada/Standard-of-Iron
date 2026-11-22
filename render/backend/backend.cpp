@@ -57,6 +57,7 @@
 #include "render/frame/rain_gpu.h"
 #include "render/geom/mesh.h"
 #include "render/geom/mode_indicator.h"
+#include "render/geom/rigged_mesh.h"
 #include "render/geom/selection_disc.h"
 #include "render/geom/shared_geometry_cache.h"
 #include "render/gl/buffer.h"
@@ -66,7 +67,6 @@
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/resources.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
 #include "render/gl/ubo_bindings.h"
@@ -184,6 +184,10 @@ auto Backend::initialize() -> bool {
   }
   m_rigged_cull_pipeline = std::make_unique<BackendPipelines::RiggedCullPipeline>();
   m_rigged_cull_pipeline->set_shader_cache(m_context.shaders());
+  m_rigged_cull_pipeline->set_gpu_tables(&m_context.rigged_meshes(),
+                                         &m_context.instances());
+  m_rigged_character_pipeline->set_gpu_tables(&m_context.rigged_meshes(),
+                                              &m_context.instances());
   if (!m_rigged_cull_pipeline->initialize()) {
     m_rigged_cull_pipeline.reset();
   }
@@ -305,87 +309,6 @@ auto Backend::initialize() -> bool {
   return true;
 }
 
-void Backend::sync_frame_resources(const DrawQueue& queue) {
-  auto& instances = m_context.instances();
-  auto& textures = m_context.textures();
-  const auto sync_height =
-      [&textures](const TerrainSurfaceCmd::HeightResources& height) {
-        (void)textures.resolve(height.texture);
-        (void)textures.resolve(height.field_texture);
-        (void)textures.resolve(height.cover_texture);
-      };
-  for (const DrawCmd& cmd : queue.items()) {
-    switch (cmd.index()) {
-    case TerrainScatterCmdIndex: {
-      const auto& scatter = std::get<TerrainScatterCmdIndex>(cmd);
-      (void)instances.resolve(scatter.instances);
-      (void)textures.resolve(scatter.visibility.texture);
-      break;
-    }
-    case FogBatchCmdIndex: {
-      const auto& fog = std::get<FogBatchCmdIndex>(cmd);
-      (void)instances.resolve(fog.instance_block);
-      (void)textures.resolve(fog.mask.texture);
-      break;
-    }
-    case TerrainSurfaceCmdIndex: {
-      const auto& surface = std::get<TerrainSurfaceCmdIndex>(cmd);
-      sync_height(surface.height);
-      if (m_terrain_pipeline != nullptr) {
-        m_terrain_pipeline->sync_noise_atlas(surface.height.noise);
-      }
-      (void)textures.resolve(surface.visibility.texture);
-      break;
-    }
-    case TerrainFeatureCmdIndex: {
-      const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
-      (void)textures.resolve(feature.visibility.texture);
-      (void)textures.resolve(feature.fog_mask.texture);
-      break;
-    }
-    case GroundMarkerCmdIndex:
-      sync_height(std::get<GroundMarkerCmdIndex>(cmd).height);
-      break;
-    default:
-      break;
-    }
-  }
-  // Uploads bind buffers and texture unit 0 behind the state cache's back.
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, 0);
-  m_gl_state.forget_bindings();
-}
-
-void Backend::refresh_draw_resources() {
-  DrawResources::Parts parts;
-  if (const auto* stock = m_context.resources(); stock != nullptr) {
-    parts.quad = stock->quad();
-    parts.ground = stock->ground();
-    parts.unit = stock->unit();
-    parts.white = stock->white();
-    parts.wear_volume = stock->wear_volume();
-  }
-  parts.banner_mesh = banner_mesh();
-  parts.banner_shader = banner_shader();
-  parts.troop_shadow_shader = m_shadow_shader;
-  m_draw_resources = DrawResources(parts);
-}
-
-auto Backend::banner_mesh() const -> Mesh* {
-  if (m_banner_pipeline != nullptr) {
-    return m_banner_pipeline->get_banner_mesh();
-  }
-  return nullptr;
-}
-
-auto Backend::banner_shader() const -> Shader* {
-  if (m_banner_pipeline != nullptr) {
-    return m_banner_pipeline->shader();
-  }
-  return nullptr;
-}
-
 namespace {
 
 auto shader_tier_defines(Render::ShaderTier tier) -> QString {
@@ -473,6 +396,7 @@ void Backend::begin_frame() {
   m_context.meshes().collect_retired();
   m_context.instances().collect_retired();
   m_context.textures().collect_retired();
+  m_context.rigged_meshes().collect_retired();
   m_frame.surface.ground_cover = {};
 
   sync_graphics_profile();
@@ -599,144 +523,6 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
         GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo.id());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
-}
-
-auto Backend::try_collect_frame_slot(FrameGpuTiming& slot) -> bool {
-  if (!slot.pending) {
-    return true;
-  }
-  auto const wait_start = std::chrono::steady_clock::now();
-  const GLenum polled = glClientWaitSync(
-      static_cast<GLsync>(slot.fence.get()), GL_SYNC_FLUSH_COMMANDS_BIT, 0);
-  m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
-                                          std::chrono::steady_clock::now() - wait_start)
-                                          .count();
-  if (polled == GL_TIMEOUT_EXPIRED) {
-    ++m_last_playback_stats.gpu_samples_deferred;
-    return false;
-  }
-  if (polled == GL_WAIT_FAILED) {
-    qWarning() << "Backend: glClientWaitSync failed while collecting GPU timing; "
-                  "dropping this frame's queries";
-    slot.fence.reset();
-    slot.pending = false;
-    slot.mark_count = 0;
-    m_last_playback_stats.gpu_shadow_ms = 0.0;
-    m_last_playback_stats.gpu_color_ms = 0.0;
-    return true;
-  }
-  collect_frame_slot(slot);
-  return true;
-}
-
-void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
-  if (!slot.pending) {
-    return;
-  }
-  auto const wait_start = std::chrono::steady_clock::now();
-  constexpr GLuint64 k_wait_timeout_ns = 1'000'000'000ULL;
-  constexpr int k_max_wait_attempts = 4;
-  bool signaled = false;
-  for (int attempt = 0; attempt < k_max_wait_attempts && !signaled; ++attempt) {
-    const GLenum waited = glClientWaitSync(static_cast<GLsync>(slot.fence.get()),
-                                           GL_SYNC_FLUSH_COMMANDS_BIT,
-                                           k_wait_timeout_ns);
-    if (waited == GL_ALREADY_SIGNALED || waited == GL_CONDITION_SATISFIED) {
-      signaled = true;
-    } else if (waited == GL_WAIT_FAILED) {
-      qWarning() << "Backend: glClientWaitSync failed while collecting GPU timing; "
-                    "dropping this frame's queries";
-      break;
-    }
-  }
-  m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
-                                          std::chrono::steady_clock::now() - wait_start)
-                                          .count();
-  if (!signaled) {
-    qWarning() << "Backend: GPU timing fence never signaled after"
-               << k_max_wait_attempts << "waits; discarding the frame's timing slot";
-    slot.fence.reset();
-    slot.pending = false;
-    slot.mark_count = 0;
-    m_last_playback_stats.gpu_shadow_ms = 0.0;
-    m_last_playback_stats.gpu_color_ms = 0.0;
-    return;
-  }
-  collect_frame_slot(slot);
-}
-
-void Backend::collect_frame_slot(FrameGpuTiming& slot) {
-  slot.fence.reset();
-  m_last_playback_stats.gpu_sample_frame = slot.frame_index;
-  m_last_playback_stats.gpu_sample_age_frames =
-      m_frame_timing_index > slot.frame_index ? m_frame_timing_index - slot.frame_index
-                                              : 0;
-  std::array<GLuint64, 4> ticks{};
-  for (std::size_t i = 0; i < ticks.size(); ++i) {
-    if (slot.timestamps[i]) {
-      glGetQueryObjectui64v(slot.timestamps[i].id(), GL_QUERY_RESULT, &ticks[i]);
-    }
-  }
-  m_last_playback_stats.gpu_shadow_ms =
-      static_cast<double>(ticks[1] - ticks[0]) / 1.0e6;
-  m_last_playback_stats.gpu_color_ms = static_cast<double>(ticks[2] - ticks[1]) / 1.0e6;
-  if (ticks[3] >= ticks[2]) {
-    m_gpu_breakdown_post_ms += static_cast<double>(ticks[3] - ticks[2]) / 1.0e6;
-  }
-
-  if (m_gpu_breakdown_enabled && slot.mark_count > 0) {
-    GLuint64 previous = ticks[1];
-    for (std::size_t i = 0; i < slot.mark_count; ++i) {
-      GLuint64 tick = 0;
-      glGetQueryObjectui64v(slot.marks[i].id(), GL_QUERY_RESULT, &tick);
-      const std::uint8_t type = slot.mark_types[i];
-      if (type < m_gpu_breakdown_ms.size() && tick >= previous) {
-        m_gpu_breakdown_ms[type] += static_cast<double>(tick - previous) / 1.0e6;
-      }
-      previous = tick;
-    }
-    ++m_gpu_breakdown_frames;
-    if (m_gpu_breakdown_frames >= 120) {
-      QString report = QStringLiteral("SOI_GPU_BREAKDOWN per frame:");
-      for (std::size_t type = 0; type < m_gpu_breakdown_ms.size(); ++type) {
-        if (m_gpu_breakdown_ms[type] <= 0.0) {
-          continue;
-        }
-        report += QStringLiteral(" %1=%2ms")
-                      .arg(type)
-                      .arg(m_gpu_breakdown_ms[type] /
-                               static_cast<double>(m_gpu_breakdown_frames),
-                           0,
-                           'f',
-                           3);
-        m_gpu_breakdown_ms[type] = 0.0;
-      }
-      report += QStringLiteral(" post=%1ms")
-                    .arg(m_gpu_breakdown_post_ms /
-                             static_cast<double>(m_gpu_breakdown_frames),
-                         0,
-                         'f',
-                         3);
-      m_gpu_breakdown_post_ms = 0.0;
-      qInfo().noquote() << report;
-      m_gpu_breakdown_frames = 0;
-    }
-  }
-  slot.mark_count = 0;
-  slot.pending = false;
-}
-
-void Backend::gpu_breakdown_mark(FrameGpuTiming& slot, std::uint8_t type) {
-  if (!m_gpu_breakdown_enabled || slot.mark_count >= k_gpu_breakdown_marks) {
-    return;
-  }
-  QueryHandle& mark = slot.marks[slot.mark_count];
-  if (!mark) {
-    mark = QueryHandle::create();
-  }
-  slot.mark_types[slot.mark_count] = type;
-  glQueryCounter(mark.id(), GL_TIMESTAMP);
-  ++slot.mark_count;
 }
 
 void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {

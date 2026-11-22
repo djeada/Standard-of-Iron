@@ -96,10 +96,18 @@ public:
     std::size_t instances{0};
     std::size_t cpu_bytes{0};
     std::size_t gpu_reserved_bytes{0};
+    // The layer's instance budget, whether the generator reached it, and the
+    // bytes one instance takes (budget x stride bounds the layer's memory).
+    std::size_t budget{0};
+    bool budget_hit{false};
+    std::size_t instance_stride{0};
   };
   [[nodiscard]] auto memory() const -> std::vector<LayerMemory>;
 
 private:
+  // Hands every layer its share of the map's instance budget (scatter_budget.h).
+  void apply_instance_budgets();
+
   struct ScatterSourceEntry {
     ScatterSpeciesId species{ScatterSpeciesId::Grass};
     IScatterSource* source{nullptr};

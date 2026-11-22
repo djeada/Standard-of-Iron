@@ -20,6 +20,7 @@
 #include "game/session/session_context.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/horse/dimensions.h"
+#include "render/creature/horse/horse_clip_contact.h"
 #include "render/creature/horse/horse_motion.h"
 #include "render/creature/horse/horse_renderer_base.h"
 #include "render/creature/horse/horse_spec.h"

@@ -14,6 +14,7 @@
 #include "render/creature/horse/horse_motion.h"
 #include "render/creature/horse/prepare.h"
 #include "render/creature/humanoid/pipeline/humanoid_playback.h"
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 #include "render/creature/humanoid/runtime/body_frame_resolver.h"
 #include "render/creature/humanoid/runtime/frame_control.h"
 #include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
@@ -314,7 +315,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
           ? *resolved_selection
           : RCP::resolve_humanoid_animation_selection(
                 rider_output.spec, anim_ctx, rider_output.seed, &variant);
-  out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);
+  add_humanoid(out.bodies, rider_output, pose, variant, anim_ctx);
 }
 
 } // namespace Render::GL

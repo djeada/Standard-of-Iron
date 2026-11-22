@@ -32,7 +32,6 @@ public:
 
 private:
   void rebuild_boulder_instances();
-  void append_world_prop_boulders();
 };
 
 } // namespace Render::GL

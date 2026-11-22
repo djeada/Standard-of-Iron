@@ -37,7 +37,7 @@
 #include "render/frame/draw_commands.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace {
 

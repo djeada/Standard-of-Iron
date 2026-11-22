@@ -7,8 +7,8 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh_gpu_table.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/render_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh_gpu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh_gpu_table.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/terrain_noise_atlas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp

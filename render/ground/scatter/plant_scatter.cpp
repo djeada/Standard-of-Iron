@@ -1,0 +1,299 @@
+#include <QVector2D>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+#include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/spawn_validator.h"
+#include "map/biome_settings.h"
+#include "map/terrain.h"
+#include "map/terrain_service.h"
+#include "render/frame/decoration_gpu.h"
+#include "render/frame/terrain_contact.h"
+#include "render/ground/ground_ecology.h"
+#include "render/ground/scatter/scatter_generators.h"
+#include "render/ground/scatter_runtime.h"
+#include "render/ground/scatter_submission.h"
+#include "render/math/render_constants.h"
+
+namespace Render::Ground::Scatter {
+
+namespace {
+
+using Render::GL::PlantInstanceGpu;
+using namespace Render::GL;
+
+using std::uint32_t;
+using namespace Render::Ground;
+
+constexpr int k_plant_cell_span = 2;
+constexpr float k_plant_density_area_scale = 4.0F / 9.0F;
+constexpr float k_plant_edge_padding_scale = 0.35F;
+constexpr float k_reference_scatter_extent = 220.0F;
+constexpr float k_plant_yard_clearance = 2.8F;
+
+constexpr float k_plant_type_shrub = 0.0F;
+constexpr float k_plant_type_rosette = 1.0F;
+constexpr float k_plant_type_frond = 2.0F;
+constexpr float k_upland_plant_type_count = 3.0F;
+constexpr float k_plant_type_reeds = 3.0F;
+
+auto bed_plant_base(const Game::Map::TerrainService& terrain,
+                    float world_x,
+                    float world_z,
+                    float surface_y,
+                    float scale) -> float {
+  return Render::bedded_prop_world_y(
+      terrain, world_x, world_z, surface_y, scale * 0.25F, scale * 0.20F);
+}
+
+} // namespace
+
+auto generate_plants(const ScatterRequest& request) -> std::vector<PlantInstanceGpu> {
+  std::vector<PlantInstanceGpu> instances;
+  if (request.grid.empty()) {
+    return instances;
+  }
+  const int grid_width = request.grid.width;
+  const int grid_height = request.grid.height;
+  const float tile_size = request.grid.tile_size;
+  const auto& height_data = *request.grid.heights;
+  const auto& terrain_types = *request.grid.types;
+  const auto& world_props = request.world_props;
+  const std::uint32_t noise_seed = request.biome.seed;
+  const GroundEcologyField* ecology_field = request.ecology;
+  auto& plant_instances = instances;
+
+  plant_instances.clear();
+
+  {
+    const auto& terrain_service = request.terrain;
+    const auto prop_profile = Game::Map::make_scatter_profile(request.biome);
+    for (const auto& prop : world_props) {
+      if (prop.type != Game::Map::WorldProp::Type::Plant) {
+        continue;
+      }
+      const auto [wx, wz] = terrain_service.world_prop_world_xz(prop);
+      const QVector3D pos =
+          terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+
+      uint32_t var_state = hash_coords(static_cast<int>(std::round(prop.x)),
+                                       static_cast<int>(std::round(prop.z)),
+                                       noise_seed ^ 0xC2E84B6AU);
+      const float color_var = rand_01(var_state);
+      const QVector3D base_color = prop_profile.grass_primary * 0.64F;
+      const QVector3D var_color = prop_profile.grass_secondary * 0.66F;
+      const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
+      const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
+      const float plant_type =
+          std::floor(rand_01(var_state) * k_upland_plant_type_count);
+
+      const float plant_scale = prop.scale * Game::Map::world_prop_render_scale(
+                                                 Game::Map::WorldProp::Type::Plant);
+      PlantInstanceGpu inst;
+      inst.pos_scale = QVector4D(
+          pos.x(),
+          bed_plant_base(terrain_service, pos.x(), pos.z(), pos.y(), plant_scale),
+          pos.z(),
+          plant_scale);
+      inst.color_sway = QVector4D(tint.x(), tint.y(), tint.z(), sway_phase);
+      inst.type_params = QVector4D(plant_type, prop.rotation, 1.0F, 1.0F);
+      plant_instances.push_back(inst);
+    }
+  }
+
+  if (grid_width < 2 || grid_height < 2 || height_data.empty()) {
+    return instances;
+  }
+
+  const auto scatter_profile = Game::Map::make_scatter_profile(request.biome);
+  const float plant_density = std::clamp(scatter_profile.plant_density, 0.0F, 2.0F);
+
+  if (plant_density < 0.01F) {
+    return instances;
+  }
+
+  const float tile_safe = std::max(0.001F, tile_size);
+
+  SpawnTerrainCache terrain_cache;
+  terrain_cache.build_from_height_map(
+      height_data, terrain_types, grid_width, grid_height, tile_size);
+
+  SpawnValidationConfig config = make_plant_spawn_config();
+  config.grid_width = grid_width;
+  config.grid_height = grid_height;
+  config.tile_size = tile_size;
+  config.edge_padding = scatter_profile.spawn_edge_padding * k_plant_edge_padding_scale;
+  config.building_clearance = k_plant_yard_clearance;
+
+  SpawnValidator validator(terrain_cache, config);
+  ScatterCompositionContext composition(
+      terrain_cache, grid_width, grid_height, tile_size, request.biome, world_props);
+
+  static const GroundEcologyField k_no_ecology;
+  const GroundEcologyField& ecology = ecology_field ? *ecology_field : k_no_ecology;
+  auto scrub_growth = [&](float gx, float gz) {
+    return std::min(2.0F * ecology.sample(ecology.margin, gx, gz) +
+                        0.6F * ecology.sample(ecology.talus, gx, gz),
+                    2.2F);
+  };
+
+  auto add_plant = [&](float gx, float gz, uint32_t& state) -> bool {
+    if (!validator.can_spawn_at_grid(gx, gz)) {
+      return false;
+    }
+
+    auto const scene = composition.sample_grid(gx, gz, 0x4BE531F0U);
+    if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Plant, scene)) {
+      return false;
+    }
+
+    float const sgx = std::clamp(gx, 0.0F, float(grid_width - 1));
+    float const sgz = std::clamp(gz, 0.0F, float(grid_height - 1));
+
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    validator.grid_to_world(gx, gz, world_x, world_z);
+    float const world_y = terrain_cache.sample_height_at(sgx, sgz);
+
+    float const scale = remap(rand_01(state), 0.15F, 0.40F) * tile_safe *
+                        scatter_scale_bias(ScatterRuleSpecies::Plant, scene) *
+                        (1.0F + scrub_growth(sgx, sgz));
+
+    float plant_type = 0.0F;
+    if (scene.archetype == ScatterSceneArchetype::RiverFringe) {
+      plant_type = rand_01(state) < 0.72F ? k_plant_type_reeds : k_plant_type_frond;
+    } else if (scene.archetype == ScatterSceneArchetype::FertilePatch) {
+      plant_type = rand_01(state) < 0.45F ? k_plant_type_shrub : k_plant_type_frond;
+    } else if (scene.archetype == ScatterSceneArchetype::DryClearing ||
+               scene.dryness > 0.65F) {
+      plant_type = rand_01(state) < 0.55F ? k_plant_type_rosette : k_plant_type_shrub;
+    } else {
+      plant_type = std::floor(rand_01(state) * k_upland_plant_type_count);
+    }
+
+    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
+    QVector3D const base_color =
+        scatter_profile.grass_primary * (0.55F + scene.fertility * 0.25F);
+    QVector3D const var_color =
+        scatter_profile.grass_secondary * (0.55F + (1.0F - scene.dryness) * 0.25F);
+    QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
+    tint_color =
+        tint_color * (1.0F - scene.dryness) +
+        scatter_profile.grass_dry * (0.70F + scene.dryness * 0.20F) * scene.dryness;
+
+    float const brown_mix = remap(
+        rand_01(state), 0.08F + scene.dryness * 0.10F, 0.22F + scene.rockiness * 0.12F);
+    QVector3D const brown_tint(0.40F, 0.37F, 0.28F);
+    tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
+
+    float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
+    float const sway_strength = remap(rand_01(state), 0.6F, 1.2F);
+    float const sway_speed = remap(rand_01(state), 0.8F, 1.3F);
+
+    float const rotation = rand_01(state) * MathConstants::k_two_pi;
+
+    PlantInstanceGpu instance;
+
+    instance.pos_scale =
+        QVector4D(world_x,
+                  bed_plant_base(request.terrain, world_x, world_z, world_y, scale),
+                  world_z,
+                  scale);
+    instance.color_sway =
+        QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
+    instance.type_params = QVector4D(plant_type, rotation, sway_strength, sway_speed);
+    plant_instances.push_back(instance);
+    return true;
+  };
+
+  float const area_scale =
+      std::sqrt(static_cast<float>(std::max(grid_width, 1) * std::max(grid_height, 1)) /
+                (k_reference_scatter_extent * k_reference_scatter_extent));
+  int const sampling_scale = std::max(1, static_cast<int>(std::round(area_scale)));
+  int const cell_span = k_plant_cell_span * sampling_scale;
+  float const ecology_norm = ecology_density_normaliser(
+      ecology,
+      terrain_cache,
+      grid_width,
+      grid_height,
+      cell_span,
+      [](const GroundEcologyField& field,
+         const SpawnTerrainCache& cache,
+         int x,
+         int z) { return plant_ecology_density(field, cache, x, z); });
+  for (int z = 0; z < grid_height; z += cell_span) {
+    for (int x = 0; x < grid_width; x += cell_span) {
+      int const sample_x = std::min(x + cell_span / 2, grid_width - 1);
+      int const sample_z = std::min(z + cell_span / 2, grid_height - 1);
+      int const idx = sample_z * grid_width + sample_x;
+
+      Game::Map::TerrainType const terrain_type =
+          terrain_cache.get_terrain_type_at(sample_x, sample_z);
+      if (terrain_type == Game::Map::TerrainType::Mountain ||
+          Game::Map::is_water_terrain(terrain_type)) {
+        continue;
+      }
+
+      float const slope = terrain_cache.get_slope_at(sample_x, sample_z);
+      if (slope > 0.65F) {
+        continue;
+      }
+
+      uint32_t state =
+          hash_coords(x, z, noise_seed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
+      auto const cell_scene = composition.sample_grid(
+          static_cast<float>(sample_x), static_cast<float>(sample_z), 0x4BE531F0U);
+
+      float density_mult = 1.0F;
+      if (terrain_type == Game::Map::TerrainType::Hill) {
+        density_mult = 0.6F;
+      }
+      density_mult *= scatter_density_multiplier(ScatterRuleSpecies::Plant, cell_scene);
+      density_mult *=
+          plant_ecology_density(ecology, terrain_cache, sample_x, sample_z) *
+          ecology_norm;
+      float const cluster_mult = scatter_patch_multiplier(cell_scene.cluster_bias);
+
+      float const effective_density = plant_density * density_mult * cluster_mult *
+                                      0.47F * k_plant_density_area_scale;
+      if (effective_density < 0.05F) {
+        continue;
+      }
+      (void)rand_01(state);
+      int plant_count = static_cast<int>(std::floor(effective_density));
+      float const frac = effective_density - float(plant_count);
+      if (rand_01(state) < frac) {
+        plant_count += 1;
+      }
+
+      for (int i = 0; i < plant_count; ++i) {
+        float const gx = float(x) + rand_01(state) * float(cell_span);
+        float const gz = float(z) + rand_01(state) * float(cell_span);
+        if (!add_plant(gx, gz, state)) {
+          continue;
+        }
+
+        auto const leader_scene = composition.sample_grid(gx, gz, 0x4BE531F0U);
+        int const satellite_count = scatter_cluster_satellite_count(
+            ScatterRuleSpecies::Plant, leader_scene, state);
+        for (int satellite = 0; satellite < satellite_count; ++satellite) {
+          float const angle = rand_01(state) * MathConstants::k_two_pi;
+          float const radius_tiles = scatter_cluster_radius_tiles(
+              ScatterRuleSpecies::Plant, leader_scene, state);
+          add_plant(gx + std::cos(angle) * radius_tiles,
+                    gz + std::sin(angle) * radius_tiles,
+                    state);
+        }
+      }
+    }
+  }
+  return instances;
+}
+
+} // namespace Render::Ground::Scatter

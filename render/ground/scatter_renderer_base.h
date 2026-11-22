@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "game/map/biome_settings.h"
@@ -13,6 +14,7 @@
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
 #include "render/ground/i_scatter_source.h"
+#include "render/ground/scatter/scatter_request.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_submission.h"
 
@@ -33,12 +35,22 @@ public:
     return m_state.instances.size() * sizeof(Instance);
   }
 
+  [[nodiscard]] auto instance_stride() const -> std::size_t override {
+    return sizeof(Instance);
+  }
+
   [[nodiscard]] auto
   last_sync_stats() const -> Render::Ground::Scatter::SyncStats override {
     return m_state.last_sync_stats;
   }
 
   void clear() override { m_state.reset_instances(); }
+
+  void set_instance_budget(std::size_t budget) override { m_instance_budget = budget; }
+  [[nodiscard]] auto instance_budget() const -> std::size_t override {
+    return m_instance_budget;
+  }
+  [[nodiscard]] auto budget_hit() const -> bool override { return m_budget_hit; }
 
   [[nodiscard]] static auto
   instance_position(const Instance& instance) -> const QVector4D& {
@@ -80,6 +92,19 @@ protected:
   void configure_biome_common(const Game::Map::BiomeSettings& biome_settings) {
     m_biome_settings = biome_settings;
     m_state.reset_instances();
+  }
+
+  // The terrain grid copied at configure, for a generator request.
+  [[nodiscard]] auto scatter_grid() const -> Render::Ground::Scatter::ScatterGrid {
+    return {m_width, m_height, m_tile_size, &m_height_data, &m_terrain_types};
+  }
+
+  // Takes a generator's output as the layer's instances, cut to the budget.
+  void adopt_generated(std::vector<Instance> instances) {
+    m_budget_hit =
+        Render::Ground::Scatter::apply_instance_budget(instances, m_instance_budget);
+    m_state.instances = std::move(instances);
+    finish_instance_rebuild();
   }
 
   void finish_instance_rebuild() {
@@ -153,6 +178,8 @@ protected:
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
 
   State m_state;
+  std::size_t m_instance_budget = Render::Ground::Scatter::k_unbounded_instances;
+  bool m_budget_hit = false;
 };
 
 } // namespace Render::GL

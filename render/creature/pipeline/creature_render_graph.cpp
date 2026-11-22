@@ -144,11 +144,7 @@ auto build_base_graph_output(const CreatureGraphInputs& inputs,
 void CreatureRenderBatch::clear() noexcept {
   rows_.clear();
   requests_.clear();
-  cached_humanoid_variant_ = nullptr;
-  cached_humanoid_asset_ = k_invalid_creature_asset;
-  cached_humanoid_archetype_ = Render::Creature::k_invalid_archetype;
-  cached_humanoid_handle_ = Render::Creature::k_invalid_creature_render_asset_handle;
-  cached_humanoid_role_colors_.reset();
+  reuse_cache_ = {};
 }
 
 void CreatureRenderBatch::reserve(std::size_t n) {

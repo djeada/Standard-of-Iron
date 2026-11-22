@@ -2,15 +2,10 @@
 
 #pragma once
 
-#include <QOpenGLFunctions_3_3_Core>
-
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
-
-#include "render/gl/buffer.h"
-#include "render/gl/rigged_mesh_gpu.h"
 
 namespace Render::GL {
 
@@ -24,17 +19,24 @@ struct RiggedVertex {
   std::array<std::uint8_t, 3> padding{};
 };
 
+// A skinned mesh: bone-local vertices, indices with the rigidly skinned
+// triangles first, and a process-unique id. It holds no GL object; each backend
+// uploads its own copy through its RiggedMeshGpuTable, keyed by id(), and drops
+// it once the mesh is destroyed.
 class RiggedMesh {
 public:
   RiggedMesh(std::vector<RiggedVertex> vertices, std::vector<std::uint32_t> indices);
   ~RiggedMesh();
 
+  RiggedMesh(const RiggedMesh&) = delete;
+  auto operator=(const RiggedMesh&) -> RiggedMesh& = delete;
+  RiggedMesh(RiggedMesh&&) = delete;
+  auto operator=(RiggedMesh&&) -> RiggedMesh& = delete;
+
   [[nodiscard]] auto id() const noexcept -> std::uint64_t { return m_id; }
-
-  auto bind_vao() -> bool;
-  void unbind_vao();
-
-  void draw();
+  [[nodiscard]] auto lifetime() const noexcept -> std::weak_ptr<const void> {
+    return m_lifetime;
+  }
 
   [[nodiscard]] auto get_vertices() const noexcept -> const std::vector<RiggedVertex>& {
     return m_vertices;
@@ -42,7 +44,6 @@ public:
   [[nodiscard]] auto get_indices() const noexcept -> const std::vector<std::uint32_t>& {
     return m_indices;
   }
-
   [[nodiscard]] auto vertex_count() const noexcept -> std::size_t {
     return m_vertices.size();
   }
@@ -56,24 +57,13 @@ public:
     return !m_indices.empty() && m_rigid_index_count == m_indices.size();
   }
 
-  auto ensure_gl_buffers() -> bool;
-  [[nodiscard]] auto vertex_buffer() noexcept -> Buffer* { return m_vbo.get(); }
-  [[nodiscard]] auto index_buffer() noexcept -> Buffer* { return m_ebo.get(); }
-
 private:
   std::uint64_t m_id = next_id();
   static auto next_id() noexcept -> std::uint64_t;
-
   std::vector<RiggedVertex> m_vertices;
   std::vector<std::uint32_t> m_indices;
   std::size_t m_rigid_index_count{0};
-
-  RiggedMeshGpu m_gpu;
-  std::unique_ptr<VertexArray> m_vao;
-  std::unique_ptr<Buffer> m_vbo;
-  std::unique_ptr<Buffer> m_ebo;
-
-  void setup_buffers();
+  std::shared_ptr<const int> m_lifetime;
 };
 
 } // namespace Render::GL

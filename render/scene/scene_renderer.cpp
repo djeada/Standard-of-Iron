@@ -192,6 +192,7 @@ auto Renderer::initialize() -> bool {
                    " rendering is disabled.";
     return false;
   }
+  m_rigged_mesh_cache.set_palette_blocks_enabled(m_gl_backend != nullptr);
   m_contact_shadow_shader =
       m_gl_backend != nullptr ? m_gl_backend->troop_shadow_shader() : nullptr;
   if (m_gl_backend != nullptr) {
@@ -254,6 +255,7 @@ void Renderer::shutdown() {
   set_forbids_runtime_bake(false);
   m_unit_cylinder_mesh = nullptr;
   m_gl_backend = nullptr;
+  m_rigged_mesh_cache.set_palette_blocks_enabled(false);
   m_backend.reset();
 }
 

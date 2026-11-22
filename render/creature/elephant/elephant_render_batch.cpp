@@ -1,4 +1,6 @@
-// CreatureRenderBatch's elephant entry points, with the outgoing clip blend.
+// The CreatureRenderBatch elephant entry points, with the outgoing clip blend.
+
+#include "render/creature/elephant/elephant_render_batch.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -38,13 +40,14 @@ auto elephant_role_color_cache() -> BatchSupport::RoleColorCache& {
 
 } // namespace
 
-void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
-                                        const Render::GL::ElephantVariant& variant,
-                                        Render::Creature::AnimationStateId state,
-                                        float phase,
-                                        std::uint32_t clip_variant) {
+void add_quadruped(CreatureRenderBatch& batch,
+                   const CreatureGraphOutput& output,
+                   const Render::GL::ElephantVariant& variant,
+                   Render::Creature::AnimationStateId state,
+                   float phase,
+                   std::uint32_t clip_variant) {
   Render::Creature::CreatureRenderRequest req;
-  if (!BatchSupport::build_quadruped_body(*this,
+  if (!BatchSupport::build_quadruped_body(batch,
                                           output,
                                           CreatureKind::Elephant,
                                           state,
@@ -56,20 +59,21 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
   }
   BatchSupport::populate_role_colors(
       elephant_role_color_cache(), req, &variant, variant_hash(variant));
-  requests_.push_back(req);
+  batch.add_request(req);
 }
 
-void CreatureRenderBatch::add_quadruped(const PreparedElephantBodyState& state) {
-  std::size_t const before = requests_.size();
-  add_quadruped(state.graph,
+void add_quadruped(CreatureRenderBatch& batch, const PreparedElephantBodyState& state) {
+  std::size_t const before = batch.requests().size();
+  add_quadruped(batch,
+                state.graph,
                 state.variant,
                 state.animation_state,
                 state.phase,
                 state.clip_variant);
-  if (state.outgoing_weight <= 0.0F || requests_.size() == before) {
+  if (state.outgoing_weight <= 0.0F || batch.requests().size() == before) {
     return;
   }
-  auto& req = requests_.back();
+  auto& req = batch.mutable_requests().back();
   req.full_body_blend.archetype = req.archetype;
   req.full_body_blend.state = state.outgoing_state;
   req.full_body_blend.phase = state.outgoing_phase;

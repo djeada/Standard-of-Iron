@@ -31,9 +31,6 @@ pass_intent_from_ctx(const Render::GL::DrawContext& ctx) noexcept -> RenderPassI
 derive_unit_seed(const Render::GL::DrawContext& ctx,
                  const Engine::Core::UnitComponent* unit) noexcept -> std::uint32_t;
 
-[[nodiscard]] auto horse_clip_contact_y(std::uint16_t clip_id,
-                                        float phase) noexcept -> std::optional<float>;
-
 [[nodiscard]] auto
 bind_palette_for_kind(CreatureKind kind) noexcept -> std::span<const QMatrix4x4>;
 

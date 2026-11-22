@@ -23,6 +23,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_manifest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_motion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_profile_data.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_clip_contact.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_render_batch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_species.cpp
@@ -37,9 +38,12 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/asset/humanoid_derived_meshes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/asset/humanoid_face_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/asset/humanoid_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/asset/humanoid_manifest_bake.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/asset/humanoid_manifest_weapon_poses.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/asset/humanoid_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/humanoid_species.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/pipeline/humanoid_animation_selection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/pipeline/humanoid_animation_layers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/pipeline/humanoid_playback.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/pipeline/humanoid_render_batch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/animation_runtime.cpp
@@ -51,8 +55,13 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/humanoid_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/humanoid_renderer_frames.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/instance_prepare.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/instance_prepare_motion.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/instance_prepare_soldier.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/instance_prepare_unit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/mounted_pose_controller.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/mounted_pose_controller_attacks.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/pose_controller.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/pose_controller_actions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/pose_primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/poser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/humanoid/runtime/runtime_context.cpp
@@ -68,6 +77,8 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_asset_init.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_bone_probe.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_submit_paths.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_palette_blend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_prepared_state.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_render_graph.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_render_state.cpp
@@ -83,6 +94,8 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/primitive_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/attachment_resolver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/compiled_source_assets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/compiled_source_sampling.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/compiled_source_parse.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/mount_scale.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/quadruped_asset_key.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/quadruped_prepare.cpp
@@ -103,6 +116,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/bird_flock_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/sheep_manifest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/sheep_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/sheep_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_gait.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_prepare.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_render_batch.cpp
@@ -110,4 +124,5 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wildlife_species.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wolf_manifest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wolf_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/wildlife/wolf_mesh.cpp
 )

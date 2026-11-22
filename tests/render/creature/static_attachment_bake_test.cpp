@@ -26,7 +26,7 @@
 #include "render/frame/render_archetype.h"
 #include "render/geom/mesh.h"
 #include "render/geom/primitives.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace {
 

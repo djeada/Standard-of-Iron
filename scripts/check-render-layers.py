@@ -33,10 +33,15 @@ species only through its SpeciesContract (pipeline/species_contract.h).
 render/creature/species/ is the one place that names every species and may
 include them all.
 
-The GL-free layers (math, geom, frame, cache, ground, equipment, entity,
-overlay) include nothing from render/gl or render/backend and no Qt OpenGL
-header: they build plain data and point commands at it, and the backend owns
+Every layer except gl, backend and scene is GL-free: it includes nothing from
+render/gl or render/backend and no Qt OpenGL header: they build plain data and point commands at it, and the backend owns
 and uploads every GPU object (GL-free rule).
+
+Entity geometry authoring (every render/entity/**/*_authoring.{h,cpp} and the
+shared authoring modules in ENTITY_AUTHORING) never reaches a frame submitter,
+a DrawContext or the scene, not even through another header: it builds
+BuildingArchetypeDescs for the catalog to bake and draws nothing (entity
+authoring rule).
 
   usage: check-render-layers.py [repo-root]
 """
@@ -70,10 +75,13 @@ SOURCE_SUFFIXES = (".h", ".cpp")
 
 GL_FREE: tuple[str, ...] = (
     "math",
+    "profiling",
+    "software",
     "geom",
     "frame",
     "cache",
     "ground",
+    "creature",
     "equipment",
     "entity",
     "overlay",
@@ -170,9 +178,79 @@ def check(root: Path) -> list[str]:
     return problems
 
 
+ENTITY_AUTHORING: tuple[str, ...] = (
+    "render/entity/building_archetype_catalog.h",
+    "render/entity/building_archetype_catalog.cpp",
+    "render/entity/building_archetype_desc.h",
+    "render/entity/building_archetype_desc.cpp",
+    "render/entity/farm_field.h",
+    "render/entity/farm_field.cpp",
+    "render/entity/home_yard.h",
+    "render/entity/home_yard.cpp",
+    "render/entity/market_goods.h",
+    "render/entity/market_goods.cpp",
+    "render/entity/temple_layout.h",
+)
+AUTHORING_FORBIDDEN: tuple[str, ...] = (
+    "render/frame/submitter.h",
+    "render/frame/frame_submitter.h",
+    "render/frame/draw_context.h",
+)
+ANY_INCLUDE = re.compile(r'^\s*#\s*include\s*"([^"]+)"', re.M)
+
+
+def check_entity_authoring(root: Path) -> list[str]:
+    entity = root / "render" / "entity"
+    if not entity.is_dir():
+        return []
+    sources = {
+        source.relative_to(root).as_posix()
+        for source in entity.rglob("*_authoring.*")
+        if source.suffix in SOURCE_SUFFIXES
+    }
+    sources.update(path for path in ENTITY_AUTHORING if (root / path).is_file())
+    cache: dict[str, list[str]] = {}
+
+    def direct(path: str) -> list[str]:
+        if path not in cache:
+            file = root / path
+            cache[path] = (
+                ANY_INCLUDE.findall(file.read_text(errors="replace"))
+                if file.is_file()
+                else []
+            )
+        return cache[path]
+
+    problems: list[str] = []
+    for source in sorted(sources):
+        parent: dict[str, str] = {}
+        stack = [source]
+        while stack:
+            current = stack.pop()
+            for include in direct(current):
+                if include in parent or include == source:
+                    continue
+                parent[include] = current
+                stack.append(include)
+        for include in sorted(parent):
+            if include in AUTHORING_FORBIDDEN or include.startswith("render/scene/"):
+                chain = [include]
+                while chain[-1] in parent and parent[chain[-1]] != source:
+                    chain.append(parent[chain[-1]])
+                problems.append(
+                    f"{source}: reaches {' <- '.join(chain)}; geometry authoring "
+                    "must not see frame submission (entity authoring rule)"
+                )
+    return problems
+
+
 def main(argv: list[str]) -> int:
     root = Path(argv[1]) if len(argv) > 1 else Path(__file__).resolve().parent.parent
-    problems = check(root.resolve()) + check_creature_species(root.resolve())
+    problems = (
+        check(root.resolve())
+        + check_creature_species(root.resolve())
+        + check_entity_authoring(root.resolve())
+    )
     if problems:
         print("render/ layer violations:")
         for problem in problems:

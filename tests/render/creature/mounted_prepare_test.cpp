@@ -18,6 +18,7 @@
 #include "game/units/spawn_type.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/humanoid_constants.h"
 #include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/humanoid/runtime/frame_control.h"
 #include "render/creature/humanoid/runtime/instance_state.h"
@@ -50,7 +51,6 @@
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
-#include "render/gl/humanoid/humanoid_constants.h"
 #include "render/scene/template_recorder.h"
 #include "tests/render/test_asset_paths.h"
 

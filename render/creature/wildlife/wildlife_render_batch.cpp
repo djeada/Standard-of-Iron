@@ -1,4 +1,6 @@
-// CreatureRenderBatch's sheep and wolf entry point, with the outgoing clip blend.
+// The CreatureRenderBatch sheep and wolf entry point, with the outgoing clip blend.
+
+#include "render/creature/wildlife/wildlife_render_batch.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -33,10 +35,10 @@ auto wildlife_role_color_cache() -> BatchSupport::RoleColorCache& {
 
 } // namespace
 
-void CreatureRenderBatch::add_quadruped(const PreparedWildlifeBodyState& state) {
+void add_quadruped(CreatureRenderBatch& batch, const PreparedWildlifeBodyState& state) {
   const CreatureGraphOutput& output = state.graph;
   Render::Creature::CreatureRenderRequest req;
-  if (!BatchSupport::build_quadruped_body(*this,
+  if (!BatchSupport::build_quadruped_body(batch,
                                           output,
                                           state.kind,
                                           state.animation_state,
@@ -55,7 +57,7 @@ void CreatureRenderBatch::add_quadruped(const PreparedWildlifeBodyState& state) 
   }
   BatchSupport::populate_role_colors(
       wildlife_role_color_cache(), req, &state.variant, variant_hash(state.variant));
-  requests_.push_back(req);
+  batch.add_request(req);
 }
 
 } // namespace Render::Creature::Pipeline

@@ -18,6 +18,7 @@
 #include "render/ground/magic_shrine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/ruins_renderer.h"
+#include "render/ground/scatter/scatter_budget.h"
 #include "render/ground/statue_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/supply_cart_renderer.h"
@@ -88,6 +89,7 @@ void TerrainScatterManager::configure(
   m_height_map = &height_map;
   m_biome_settings = biome_settings;
   m_scatter_seed_world_props = scatter_seed_world_props;
+  apply_instance_budgets();
 
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, m_scatter_seed_world_props);
@@ -108,6 +110,19 @@ void TerrainScatterManager::configure(
   m_cursed_gold_vein->configure(height_map, biome_settings, runtime_world_props);
   m_abandoned_home->configure(height_map, biome_settings, runtime_world_props);
   m_statue->configure(height_map, biome_settings, runtime_world_props);
+}
+
+void TerrainScatterManager::apply_instance_budgets() {
+  const std::size_t grid_cells =
+      m_height_map == nullptr
+          ? 0U
+          : static_cast<std::size_t>(std::max(m_height_map->get_width(), 0)) *
+                static_cast<std::size_t>(std::max(m_height_map->get_height(), 0));
+  const float grass_density = GraphicsSettings::instance().profile().grass_density;
+  for (const auto& entry : m_scatter_sources) {
+    entry.source->set_instance_budget(Render::Ground::Scatter::scatter_instance_budget(
+        entry.species, grid_cells, grass_density));
+  }
 }
 
 void TerrainScatterManager::refresh_runtime_world_props(
@@ -163,6 +178,7 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
   if (generation != m_applied_graphics_generation) {
     m_applied_graphics_generation = generation;
     if (m_biome != nullptr && !m_biome->grass_matches_graphics_profile()) {
+      apply_instance_budgets();
       m_biome->refresh_grass();
     }
   }
@@ -308,6 +324,9 @@ auto TerrainScatterManager::memory() const -> std::vector<LayerMemory> {
     layer.species = entry.species;
     layer.instances = entry.source->instance_count();
     layer.cpu_bytes = entry.source->instance_bytes();
+    layer.budget = entry.source->instance_budget();
+    layer.budget_hit = entry.source->budget_hit();
+    layer.instance_stride = entry.source->instance_stride();
     entry.source->for_each_instance_block([&layer](const InstanceBlock& block) {
       layer.gpu_reserved_bytes += block.reserved_bytes();
     });

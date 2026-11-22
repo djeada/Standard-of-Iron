@@ -1,5 +1,7 @@
-// CreatureRenderBatch's humanoid entry points: the body request with its
+// The CreatureRenderBatch humanoid entry points: the body request with its
 // animation selection, blend layers, role colours and wear.
+
+#include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 
 #include <QVector4D>
 
@@ -60,11 +62,11 @@ auto humanoid_role_color_cache() -> BatchSupport::RoleColorCache& {
 
 } // namespace
 
-void CreatureRenderBatch::add_humanoid(
-    const CreatureGraphOutput& output,
-    const Render::GL::HumanoidPose& pose,
-    const Render::GL::HumanoidVariant& variant,
-    const Render::GL::HumanoidAnimationContext& anim) {
+void add_humanoid(CreatureRenderBatch& batch,
+                  const CreatureGraphOutput& output,
+                  const Render::GL::HumanoidPose& pose,
+                  const Render::GL::HumanoidVariant& variant,
+                  const Render::GL::HumanoidAnimationContext& anim) {
   if (output.culled) {
     return;
   }
@@ -88,19 +90,18 @@ void CreatureRenderBatch::add_humanoid(
                                           output.lod,
                                           output.entity_id,
                                           output.pass_intent);
-    rows_.push_back(std::move(row));
+    batch.add_row(std::move(row));
   }
 
   auto req = BatchSupport::build_request(
       output, selection.resolved_archetype, selection.state, selection.phase);
   req.creature_asset_id = asset->id;
+  auto& reuse = batch.reuse_cache();
   const bool cached_asset =
-      cached_humanoid_asset_ == asset->id &&
-      cached_humanoid_archetype_ == selection.resolved_archetype &&
-      cached_humanoid_handle_ !=
-          Render::Creature::k_invalid_creature_render_asset_handle;
+      reuse.asset == asset->id && reuse.archetype == selection.resolved_archetype &&
+      reuse.handle != Render::Creature::k_invalid_creature_render_asset_handle;
   if (cached_asset) {
-    req.render_asset_handle = cached_humanoid_handle_;
+    req.render_asset_handle = reuse.handle;
     if (output.pass_intent == RenderPassIntent::Main) {
       ++Render::Profiling::global_profile().render_asset_cache_hits;
     }
@@ -121,21 +122,20 @@ void CreatureRenderBatch::add_humanoid(
         ++profile.render_asset_cache_hits;
       }
     }
-    cached_humanoid_asset_ = asset->id;
-    cached_humanoid_archetype_ = selection.resolved_archetype;
-    cached_humanoid_handle_ = req.render_asset_handle;
+    reuse.asset = asset->id;
+    reuse.archetype = selection.resolved_archetype;
+    reuse.handle = req.render_asset_handle;
   }
   req.clip_variant = selection.clip_variant;
   req.clip_id = selection.clip_id.value_or(Animation::k_unmapped_clip);
-  if (cached_asset && cached_humanoid_variant_ == &variant &&
-      cached_humanoid_role_colors_ != nullptr) {
-    req.role_colors = cached_humanoid_role_colors_;
-    req.role_color_count = cached_humanoid_role_colors_->count;
+  if (cached_asset && reuse.variant == &variant && reuse.role_colors != nullptr) {
+    req.role_colors = reuse.role_colors;
+    req.role_color_count = reuse.role_colors->count;
   } else {
     BatchSupport::populate_role_colors(
         humanoid_role_color_cache(), req, &variant, variant_hash(variant));
-    cached_humanoid_variant_ = &variant;
-    cached_humanoid_role_colors_ = req.role_colors;
+    reuse.variant = &variant;
+    reuse.role_colors = req.role_colors;
   }
   req.wear_params = QVector4D(
       variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
@@ -158,11 +158,11 @@ void CreatureRenderBatch::add_humanoid(
       selection.upper_body_overlay.clip_id.value_or(Animation::k_unmapped_clip);
   req.upper_body_overlay.mode = selection.upper_body_overlay.mode;
   req.transition = selection.transition;
-  requests_.push_back(req);
+  batch.add_request(req);
 }
 
-void CreatureRenderBatch::add_humanoid(const PreparedHumanoidBodyState& state) {
-  add_humanoid(state.graph, state.pose, state.variant, state.animation);
+void add_humanoid(CreatureRenderBatch& batch, const PreparedHumanoidBodyState& state) {
+  add_humanoid(batch, state.graph, state.pose, state.variant, state.animation);
 }
 
 } // namespace Render::Creature::Pipeline

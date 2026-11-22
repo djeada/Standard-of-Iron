@@ -11,12 +11,12 @@
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain.h"
 #include "render/frame/decoration_gpu.h"
-#include "render/ground/i_scatter_source.h"
+#include "render/ground/scatter_renderer_base.h"
 
 namespace Render::GL {
 class FrameSubmitter;
 
-class BiomeRenderer : public IScatterSource {
+class BiomeRenderer : public ScatterRendererBase<GrassInstanceGpu, GrassBatchParams> {
 public:
   BiomeRenderer();
   ~BiomeRenderer() override;
@@ -31,67 +31,11 @@ public:
   void refresh_grass();
   [[nodiscard]] auto grass_matches_graphics_profile() const noexcept -> bool;
 
-  void clear() override;
-
-  [[nodiscard]] auto is_gpu_ready() const -> bool override {
-    return m_grass_state.is_gpu_ready();
-  }
-
-  [[nodiscard]] auto instance_bytes() const -> std::size_t override {
-    return m_grass_state.instances.size() * sizeof(GrassInstanceGpu);
-  }
-  [[nodiscard]] auto instance_count() const -> std::size_t override {
-    return m_grass_state.instances.size();
-  }
-  [[nodiscard]] auto
-  last_sync_stats() const -> Render::Ground::Scatter::SyncStats override {
-    return m_grass_state.last_sync_stats;
-  }
-
-  void prepare_instance_blocks() override;
-  void for_each_instance_block(const InstanceBlockVisitor& visit) const override;
-
 private:
-  struct GrassScatterContext {
-    const Game::Map::TerrainScatterProfile& scatter_profile;
-    const Render::Ground::SpawnTerrainCache& terrain_cache;
-    float tile_safe;
-    int chunk_size;
-    std::size_t cluster_count_per_chunk;
-    std::size_t background_blades_per_cell;
-    const std::function<bool(float, float, std::uint32_t&)>& add_grass_blade;
-    const std::function<bool(
-        float, float, const QVector3D&, float, float, std::uint32_t&)>& add_flower;
-    float flower_density_scale;
-    const std::function<int(Game::Map::TerrainType,
-                            Game::Map::TerrainType,
-                            Game::Map::TerrainType,
-                            Game::Map::TerrainType)>& quad_section;
-  };
-
   void generate_grass_instances();
-
-  void scatter_grass_clusters(const GrassScatterContext& ctx);
-
-  void scatter_background_grass(const GrassScatterContext& ctx);
-
-  void scatter_flowers(const GrassScatterContext& ctx);
-
-  int m_width = 0;
-  int m_height = 0;
-  float m_tile_size = 1.0F;
-
-  std::vector<float> m_height_data;
-  std::vector<Game::Map::TerrainType> m_terrain_types;
-  Game::Map::BiomeSettings m_biome_settings;
-  std::uint32_t m_noise_seed = 0U;
 
   float m_generated_grass_density{-1.0F};
   float m_typical_blade_height = 0.0F;
-  QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
-
-  Render::Ground::Scatter::FilteredRendererState<GrassInstanceGpu, GrassBatchParams>
-      m_grass_state;
 };
 
 } // namespace Render::GL

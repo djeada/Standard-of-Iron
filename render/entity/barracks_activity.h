@@ -4,8 +4,6 @@
 
 namespace Render::GL {
 
-struct DrawContext;
-class ISubmitter;
 class BuildingArchetypeDesc;
 
 struct BarracksGrounds {
@@ -33,10 +31,5 @@ struct BarracksGroundsStyle {
 void add_barracks_grounds(BuildingArchetypeDesc& desc,
                           const BarracksGrounds& grounds,
                           const BarracksGroundsStyle& style);
-
-void submit_barracks_activity(const DrawContext& ctx,
-                              ISubmitter& out,
-                              bool carthage,
-                              const BarracksGrounds& grounds);
 
 } // namespace Render::GL

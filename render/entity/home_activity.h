@@ -12,8 +12,6 @@ namespace Engine::Core {
 class World;
 }
 namespace Render::GL {
-struct DrawContext;
-class ISubmitter;
 
 struct HomeSmokeAnchor {
   QVector3D vent{0.0F, 0.0F, 0.0F};
@@ -129,8 +127,6 @@ struct HomeActivity {
   std::uint64_t gag_home{0};
   bool gag_seen{false};
 };
-
-void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage);
 
 namespace Spill {
 inline constexpr float k_emerge_end = 1.6F;

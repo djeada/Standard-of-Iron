@@ -1,6 +1,8 @@
 # render/backend: GL and software backends, pipelines, executors. See scripts/check-render-layers.py.
 set(RENDER_BACKEND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/backend_frame_timing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/backend_resources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/banner_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/combat_dust_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/cursed_gold_vein_mesh.cpp

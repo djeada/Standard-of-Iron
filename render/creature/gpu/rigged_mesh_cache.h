@@ -16,8 +16,8 @@
 
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/part_graph.h"
-#include "render/gl/gl_handle.h"
-#include "render/gl/rigged_mesh.h"
+#include "render/geom/instance_block.h"
+#include "render/geom/rigged_mesh.h"
 
 namespace Render::Creature {
 struct CreatureSpec;
@@ -30,7 +30,10 @@ struct RiggedSkinAtlas {
   std::span<const QMatrix4x4> palettes;
   std::uint32_t frame_total{0};
   std::uint32_t bone_count{0};
-  BufferHandle palette_ubo;
+  // Every frame's palette, padded to the palette width, as uniform data the
+  // backend uploads once. Built lazily from palette_storage; null until a GL
+  // backend is attached (see RiggedMeshCache::set_palette_blocks_enabled).
+  std::shared_ptr<InstanceBlock> palette_block;
   std::size_t frame_stride_bytes{0};
 };
 
@@ -119,7 +122,22 @@ public:
 
   void upload_pending_skin_ubos();
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  // Builds the palette blocks of every cached entry ahead of the first frame.
+  // False while palette blocks are disabled or a block could not be built.
+  [[nodiscard]] auto prepare_gpu_data() -> bool;
+  // Every cached skinned mesh and palette block, for prewarming a backend.
+  void for_each_mesh(const std::function<void(const RiggedMesh&)>& visit) const;
+  void for_each_palette_block(const InstanceBlockVisitor& visit) const;
+
+  // Whether baked palettes become uniform blocks. The scene renderer turns it
+  // on when it has a GL backend; without one, creatures upload their palette
+  // per draw, as before.
+  void set_palette_blocks_enabled(bool enabled) noexcept {
+    m_palette_blocks_enabled = enabled;
+  }
+  [[nodiscard]] auto palette_blocks_enabled() const noexcept -> bool {
+    return m_palette_blocks_enabled;
+  }
 
   auto get_or_bake(const Render::Creature::CreatureSpec& spec,
                    Render::Creature::CreatureLOD lod,
@@ -276,6 +294,7 @@ private:
 
   mutable FrameStats m_frame_stats;
   bool m_has_pending_skin_ubo_uploads{false};
+  bool m_palette_blocks_enabled{false};
   std::uint64_t m_runtime_attachment_bakes{0};
   std::uint64_t m_frame_index{0};
   Residency m_residency;

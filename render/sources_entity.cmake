@@ -5,6 +5,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/ballista_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/ballista_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_activity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_activity_submit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_stockpile.cpp
@@ -22,6 +23,8 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/catapult_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/civilian_actor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/civilian_actor_prewarm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/combat_dust_commander.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/combat_dust_marks.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/combat_dust_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/commander_aura_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/cursed_gold_vein_flag_renderer.cpp
@@ -29,6 +32,8 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/elephant_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_activity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_activity_submit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_field.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_worker_props.cpp
@@ -37,12 +42,15 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/healing_beam_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/healing_waves_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_activity.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_activity_submit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_props.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_yard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_archer_renderer_base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/horse_spearman_renderer_base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/market_goods.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/marketplace_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/marketplace_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/mounted_humanoid_renderer_base.cpp
@@ -51,24 +59,32 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/archer_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/ballista_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/barracks_authoring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/barracks_greenery_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/barracks_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/builder_parts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/builder_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/builder_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/catapult_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/defense_tower_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/defense_tower_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/elephant_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/farm_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/farm_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/healer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/healer_style.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/home_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/home_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/horse_archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/horse_spearman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/horse_swordsman_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/marketplace_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/marketplace_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/spearman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/spearman_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/swordsman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/swordsman_style.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/temple_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/temple_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/equipment_loadout_catalog.cpp
@@ -80,29 +96,37 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/archer_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/ballista_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/barracks_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/barracks_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/builder_parts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/builder_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/builder_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/catapult_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/defense_tower_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/defense_tower_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/farm_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/farm_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/healer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/healer_style.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/home_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/home_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_spearman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/horse_swordsman_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/marketplace_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/marketplace_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/spearman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/spearman_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/swordsman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/swordsman_style.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/temple_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/temple_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/sepulcher/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/production_completion_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/rig_dsl/rig_interpreter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/rpg_telegraph_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_assault_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_crew.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_renderer_common.cpp
@@ -113,6 +137,8 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wading_effects_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_authoring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_gate_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_gate_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer_common.cpp

@@ -8,11 +8,10 @@
 #include "render/entity/building_state.h"
 #include "render/entity/building_torches.h"
 #include "render/entity/registry.h"
+#include "render/entity/temple_layout.h"
 #include "render/frame/render_archetype.h"
 
 namespace Render::GL {
-
-inline constexpr float k_temple_mesh_scale = 2.0F;
 
 using TempleArchetypeResolver = const RenderArchetype& (*)(BuildingState);
 

@@ -59,8 +59,6 @@ public:
 
 private:
   void rebuild_instances();
-  void append_world_prop_trees();
-  void append_anchored_trees();
 
   Game::Map::TreeSpecies m_species;
   const Render::Ground::TreeScatterProfile* m_profile;

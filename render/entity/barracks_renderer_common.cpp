@@ -3,6 +3,7 @@
 #include <array>
 
 #include "game/core/component_core.h"
+#include "render/entity/barracks_activity_submit.h"
 #include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
 #include "render/geom/primitives.h"

@@ -4,6 +4,7 @@
 
 #include "render/gl/instance_buffer_table.h"
 #include "render/gl/mesh_gpu_table.h"
+#include "render/gl/rigged_mesh_gpu_table.h"
 #include "render/gl/texture_table.h"
 
 namespace Render::GL {
@@ -41,6 +42,9 @@ public:
     return m_instances;
   }
   [[nodiscard]] auto textures() noexcept -> TextureTable& { return m_textures; }
+  [[nodiscard]] auto rigged_meshes() noexcept -> RiggedMeshGpuTable& {
+    return m_rigged_meshes;
+  }
 
 private:
   // Destroyed bottom-up: textures, instance buffers and uploaded meshes, then
@@ -51,6 +55,7 @@ private:
   MeshGpuTable m_meshes;
   InstanceBufferTable m_instances;
   TextureTable m_textures;
+  RiggedMeshGpuTable m_rigged_meshes;
 };
 
 } // namespace Render::GL

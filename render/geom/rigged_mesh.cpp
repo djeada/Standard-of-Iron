@@ -1,17 +1,10 @@
-#include "render/gl/rigged_mesh.h"
-
-#include <QDebug>
-#include <QOpenGLContext>
-#include <qopenglext.h>
+#include "render/geom/rigged_mesh.h"
 
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <utility>
 
-#include "render/gl/draw_tally.h"
-#include "render/gl/gl_lifetime.h"
-#include "render/gl/platform_gl.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::GL {
@@ -24,7 +17,8 @@ auto RiggedMesh::next_id() noexcept -> std::uint64_t {
 RiggedMesh::RiggedMesh(std::vector<RiggedVertex> vertices,
                        std::vector<std::uint32_t> indices)
     : m_vertices(std::move(vertices))
-    , m_indices(std::move(indices)) {
+    , m_indices(std::move(indices))
+    , m_lifetime(std::make_shared<const int>(0)) {
   Render::Profiling::count_asset(
       Render::Profiling::AssetCounter::RiggedMeshConstructed);
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::RiggedMeshVertexBytes,
@@ -70,73 +64,5 @@ RiggedMesh::RiggedMesh(std::vector<RiggedVertex> vertices,
 }
 
 RiggedMesh::~RiggedMesh() = default;
-
-void RiggedMesh::setup_buffers() {
-  if (!gl_objects_can_be_released()) {
-    qWarning() << "RiggedMesh::setup_buffers called without current GL "
-                  "context; skipping VAO/VBO creation";
-    return;
-  }
-  m_gpu.initialize();
-  if (const auto stale = m_gpu.drain_gl_errors(); stale != 0U) {
-    qWarning() << "RiggedMesh::setup_buffers inherited GL error" << stale
-               << "from an earlier call";
-  }
-
-  m_vao = std::make_unique<VertexArray>();
-  m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);
-  m_ebo = std::make_unique<Buffer>(Buffer::Type::Index);
-
-  m_vao->bind();
-  m_vbo->set_data(m_vertices);
-  m_ebo->set_data(m_indices);
-
-  m_gpu.configure_vertex_attributes();
-
-  m_vao->unbind();
-
-  if (const auto err = m_gpu.current_gl_error(); err != 0U) {
-    qWarning() << "RiggedMesh::setup_buffers GL error" << err;
-  }
-}
-
-auto RiggedMesh::bind_vao() -> bool {
-  if (!m_vao) {
-    setup_buffers();
-  }
-  if (!m_vao || !gl_objects_can_be_released()) {
-    return false;
-  }
-  m_vao->bind();
-  return true;
-}
-
-auto RiggedMesh::ensure_gl_buffers() -> bool {
-  if (!m_vao) {
-    setup_buffers();
-  }
-  return m_vbo != nullptr && m_ebo != nullptr;
-}
-
-void RiggedMesh::unbind_vao() {
-  if (m_vao) {
-    m_vao->unbind();
-  }
-}
-
-void RiggedMesh::draw() {
-  if (!bind_vao()) {
-    return;
-  }
-  m_gpu.draw_triangles(m_indices.size());
-  Render::GL::tally_draw(m_indices.size());
-  m_vao->unbind();
-
-#ifndef NDEBUG
-  if (const auto err = m_gpu.current_gl_error(); err != 0U) {
-    qWarning() << "RiggedMesh::draw GL error" << err << "indices" << m_indices.size();
-  }
-#endif
-}
 
 } // namespace Render::GL

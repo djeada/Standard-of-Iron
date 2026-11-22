@@ -12,6 +12,7 @@ set(RENDER_SCENE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/scene_walk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_catalog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_runner.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_prewarm_units.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/template_recorder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/unit_render_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene/world_frame.cpp

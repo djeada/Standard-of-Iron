@@ -46,6 +46,7 @@
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
 #include "render/entity/production_completion_renderer.h"
+#include "render/entity/rpg_telegraph_renderer.h"
 #include "render/entity/wading_effects_renderer.h"
 #include "render/frame/camera_visibility.h"
 #include "render/geom/arrow.h"

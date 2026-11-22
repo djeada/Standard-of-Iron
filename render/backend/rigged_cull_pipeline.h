@@ -13,6 +13,8 @@
 
 #include "render/frame/role_color_palette.h"
 #include "render/gl/gl_handle.h"
+#include "render/gl/instance_buffer_table.h"
+#include "render/gl/rigged_mesh_gpu_table.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -41,6 +43,12 @@ public:
   auto operator=(const RiggedCullPipeline&) -> RiggedCullPipeline& = delete;
 
   void set_shader_cache(ShaderCache* cache) { m_shader_cache = cache; }
+  // The backend's GPU copies of skinned meshes and palette atlases.
+  void set_gpu_tables(RiggedMeshGpuTable* meshes,
+                      InstanceBufferTable* blocks) noexcept {
+    m_meshes = meshes;
+    m_blocks = blocks;
+  }
 
   auto initialize() -> bool;
   void shutdown();
@@ -83,6 +91,8 @@ public:
   [[nodiscard]] auto full_mesh_shader() -> Shader* { return m_full_mesh_shader; }
 
 private:
+  RiggedMeshGpuTable* m_meshes = nullptr;
+  InstanceBufferTable* m_blocks = nullptr;
   BorrowedGlName m_wear_volume = 0U;
 
   enum class Pass : std::uint8_t {

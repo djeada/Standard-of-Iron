@@ -6,15 +6,18 @@
 #include <array>
 #include <gtest/gtest.h>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "render/geom/instance_block.h"
 #include "render/geom/mesh.h"
+#include "render/geom/rigged_mesh.h"
 #include "render/geom/texture_image.h"
 #include "render/gl/gl_lifetime.h"
 #include "render/gl/instance_buffer_table.h"
 #include "render/gl/mesh_gpu_table.h"
 #include "render/gl/resources.h"
+#include "render/gl/rigged_mesh_gpu_table.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
 #include "render/gl/texture_table.h"
@@ -214,4 +217,28 @@ TEST(GlContextLifetime, AnInstanceTableReuploadsOnlyWhenTheBlockChanges) {
   }
   table.collect_retired();
   EXPECT_EQ(table.size(), 0U) << "the buffer of a destroyed block was kept";
+}
+
+TEST(GlContextLifetime, ARiggedMeshTableUploadsOnceAndDropsTheCopyWithTheMesh) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::RiggedMeshGpuTable table;
+  {
+    std::vector<Render::GL::RiggedVertex> vertices(3);
+    for (auto& vertex : vertices) {
+      vertex.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+    }
+    const Render::GL::RiggedMesh mesh(std::move(vertices), {0U, 1U, 2U});
+    ASSERT_TRUE(table.ensure(mesh));
+    Render::GL::Buffer* vertex_buffer = table.vertex_buffer(mesh);
+    ASSERT_NE(vertex_buffer, nullptr);
+    ASSERT_TRUE(table.ensure(mesh));
+    EXPECT_EQ(table.vertex_buffer(mesh), vertex_buffer)
+        << "a second ensure must reuse the uploaded copy";
+    EXPECT_EQ(table.size(), 1U);
+  }
+  table.collect_retired();
+  EXPECT_EQ(table.size(), 0U) << "the GPU copy of a destroyed rigged mesh was kept";
 }

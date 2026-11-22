@@ -1,4 +1,6 @@
-// CreatureRenderBatch's horse entry points.
+// The CreatureRenderBatch horse entry points.
+
+#include "render/creature/horse/horse_render_batch.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -41,23 +43,25 @@ auto horse_role_color_cache() -> BatchSupport::RoleColorCache& {
 
 } // namespace
 
-void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
-                                        const Render::GL::HorseVariant& variant,
-                                        Render::Creature::AnimationStateId state,
-                                        float phase,
-                                        std::uint32_t clip_variant) {
+void add_quadruped(CreatureRenderBatch& batch,
+                   const CreatureGraphOutput& output,
+                   const Render::GL::HorseVariant& variant,
+                   Render::Creature::AnimationStateId state,
+                   float phase,
+                   std::uint32_t clip_variant) {
   Render::Creature::CreatureRenderRequest req;
   if (!BatchSupport::build_quadruped_body(
-          *this, output, CreatureKind::Horse, state, phase, clip_variant, true, req)) {
+          batch, output, CreatureKind::Horse, state, phase, clip_variant, true, req)) {
     return;
   }
   BatchSupport::populate_role_colors(
       horse_role_color_cache(), req, &variant, variant_hash(variant));
-  requests_.push_back(req);
+  batch.add_request(req);
 }
 
-void CreatureRenderBatch::add_quadruped(const PreparedHorseBodyState& state) {
-  add_quadruped(state.graph,
+void add_quadruped(CreatureRenderBatch& batch, const PreparedHorseBodyState& state) {
+  add_quadruped(batch,
+                state.graph,
                 state.variant,
                 state.animation_state,
                 state.phase,

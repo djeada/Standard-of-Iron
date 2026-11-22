@@ -319,7 +319,9 @@ struct RiggedCreatureCmd {
   const QMatrix4x4* bone_palette_next = nullptr;
   std::shared_ptr<std::array<QMatrix4x4, k_max_owned_bones>> owned_bone_palette{};
 
-  std::uint32_t palette_ubo = 0;
+  // The baked palette atlas the offsets index; the backend keeps the uniform
+  // buffer for it. Null when the palette is uploaded per draw.
+  const InstanceBlock* palette_block = nullptr;
   std::uint32_t palette_offset = 0;
   std::uint32_t palette_next_offset = 0;
   float palette_lerp = 0.0F;

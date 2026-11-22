@@ -12,8 +12,8 @@
 #include "render/backend/character_wear_binding.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/draw_commands.h"
+#include "render/geom/rigged_mesh.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/texture.h"
 #include "render/gl/ubo_bindings.h"
@@ -249,10 +249,13 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
   auto* fn = gl_funcs();
   if (fn != nullptr) {
 
-    if (cmd.palette_ubo != 0 && cmd.bone_palette == nullptr) {
+    Buffer* const baked_palette = (m_blocks != nullptr && cmd.bone_palette == nullptr)
+                                      ? m_blocks->resolve(cmd.palette_block)
+                                      : nullptr;
+    if (baked_palette != nullptr) {
       fn->glBindBufferRange(GL_UNIFORM_BUFFER,
                             k_bone_palette_binding_point,
-                            static_cast<GLuint>(cmd.palette_ubo),
+                            baked_palette->id(),
                             static_cast<GLintptr>(cmd.palette_offset),
                             static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes));
     } else {
@@ -314,7 +317,9 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
     }
   }
 
-  cmd.mesh->draw();
+  if (m_meshes != nullptr) {
+    m_meshes->draw(*cmd.mesh);
+  }
   return true;
 }
 
