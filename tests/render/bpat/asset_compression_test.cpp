@@ -1,6 +1,7 @@
 #include <QTemporaryDir>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -50,6 +51,58 @@ TEST(AssetCompression, CompressedAssetReadsBackByteForByte) {
       original.begin(),
       original.end(),
       [](std::uint8_t a, char b) { return a == static_cast<std::uint8_t>(b); }));
+}
+
+TEST(AssetCompression, MatchingCacheLeavesFrameAndSidecarUntouched) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  std::filesystem::path const path = dir.filePath("cached.bpat").toStdString();
+  std::filesystem::path const sidecar =
+      dir.filePath("cached.bpat.sha256").toStdString();
+  auto const original = patterned_bytes(65536U);
+  std::string error;
+  ASSERT_TRUE(write_cached_asset(path, sidecar, original, error, 3)) << error;
+
+  auto const old =
+      std::filesystem::file_time_type::clock::now() - std::chrono::hours(1);
+  std::filesystem::last_write_time(path, old);
+  std::filesystem::last_write_time(sidecar, old);
+  auto const frame_time = std::filesystem::last_write_time(path);
+  auto const sidecar_time = std::filesystem::last_write_time(sidecar);
+
+  ASSERT_TRUE(write_cached_asset(path, sidecar, original, error, 3)) << error;
+  EXPECT_EQ(std::filesystem::last_write_time(path), frame_time);
+  EXPECT_EQ(std::filesystem::last_write_time(sidecar), sidecar_time);
+
+  ASSERT_TRUE(
+      write_cached_asset(path, sidecar, original, error, k_asset_compression_level))
+      << error;
+  EXPECT_NE(std::filesystem::last_write_time(path), frame_time);
+  EXPECT_NE(std::filesystem::last_write_time(sidecar), sidecar_time);
+}
+
+TEST(AssetCompression, StaleCacheIsReplacedWhenInputOrFrameChanges) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  std::filesystem::path const path = dir.filePath("cached.bpat").toStdString();
+  std::filesystem::path const sidecar =
+      dir.filePath("cached.bpat.sha256").toStdString();
+  auto const original = patterned_bytes(65536U);
+  auto changed = original;
+  changed.back() = 'x';
+  std::string error;
+  ASSERT_TRUE(write_cached_asset(path, sidecar, original, error, 3)) << error;
+  ASSERT_TRUE(write_cached_asset(path, sidecar, changed, error, 3)) << error;
+
+  std::vector<std::uint8_t> read;
+  ASSERT_TRUE(read_asset_file(path.string(), read, error)) << error;
+  EXPECT_EQ(std::string(read.begin(), read.end()), changed);
+
+  // Simulate a restored sidecar paired with a damaged frame of the right size.
+  std::ofstream(path, std::ios::binary) << std::string(size_on_disk(path), 'x');
+  ASSERT_TRUE(write_cached_asset(path, sidecar, changed, error, 3)) << error;
+  ASSERT_TRUE(read_asset_file(path.string(), read, error)) << error;
+  EXPECT_EQ(std::string(read.begin(), read.end()), changed);
 }
 
 TEST(AssetCompression, UncompressedAssetsStillLoad) {

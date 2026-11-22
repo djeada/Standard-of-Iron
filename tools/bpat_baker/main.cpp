@@ -55,19 +55,28 @@
 
 namespace {
 
-auto write_asset(const std::filesystem::path& path,
-                 const std::string& bytes,
-                 int level = Render::Creature::Bpat::k_asset_compression_level)
-    -> bool {
-  std::string error;
-  if (!Render::Creature::Bpat::write_compressed_asset(path, bytes, error, level)) {
-    std::cerr << "[bpat_baker] " << error << "\n";
-    return false;
-  }
-  return true;
-}
-
 namespace bpat = Render::Creature::Bpat;
+
+struct AssetWriter {
+  bool release_compression;
+  std::filesystem::path metadata_dir;
+
+  auto write(const std::filesystem::path& path,
+             std::string_view bytes,
+             int release_level = bpat::k_asset_compression_level) const -> bool {
+    int const level = release_compression ? release_level : 3;
+    auto sidecar = metadata_dir / path.filename();
+    sidecar += ".sha256";
+    std::string error;
+    bool const ok = metadata_dir.empty()
+                        ? bpat::write_compressed_asset(path, bytes, error, level)
+                        : bpat::write_cached_asset(path, sidecar, bytes, error, level);
+    if (!ok) {
+      std::cerr << "[bpat_baker] " << error << "\n";
+    }
+    return ok;
+  }
+};
 
 constexpr int k_mesh_pack_compression_level = 6;
 namespace snapshot = Render::Creature::Snapshot;
@@ -131,7 +140,8 @@ auto build_clip_variant_table(std::uint32_t species_id,
 
 auto write_body_meshes(const std::filesystem::path& out_dir,
                        const Render::Creature::CreatureSpec& spec,
-                       std::span<const QMatrix4x4> bind_palette) -> bool {
+                       std::span<const QMatrix4x4> bind_palette,
+                       const AssetWriter& assets) -> bool {
   auto const body_name = spec.species_name;
   for (auto const lod :
        {Render::Creature::CreatureLOD::Full, Render::Creature::CreatureLOD::Minimal}) {
@@ -154,17 +164,18 @@ auto write_body_meshes(const std::filesystem::path& out_dir,
       std::cerr << "[bpat_baker] write failed for " << body_path << "\n";
       return false;
     }
-    if (!write_asset(body_path, body_out.str())) {
+    if (!assets.write(body_path, body_out.str())) {
       return false;
     }
-    std::cout << "[bpat_baker] wrote " << body_path << " (" << body.vertices.size()
+    std::cout << "[bpat_baker] ready " << body_path << " (" << body.vertices.size()
               << " verts, " << body.indices.size() / 3U << " tris)\n";
   }
   return true;
 }
 
 bool bake_species_manifest(const std::filesystem::path& out_dir,
-                           const Render::Creature::CreatureBakeRecipe& recipe) {
+                           const Render::Creature::CreatureBakeRecipe& recipe,
+                           const AssetWriter& assets) {
   if (!recipe.complete()) {
     std::cerr << "[bpat_baker] bake recipe is incomplete\n";
     return false;
@@ -266,14 +277,14 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     std::cerr << "[bpat_baker] write failed for " << out_path << "\n";
     return false;
   }
-  if (!write_asset(out_path, out.str())) {
+  if (!assets.write(out_path, out.str())) {
     return false;
   }
-  std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
+  std::cout << "[bpat_baker] ready " << out_path << " (" << writer.frame_total()
             << " frames, " << recipe.clips.size() << " clips, " << bind_palette.size()
             << " bones, " << recipe.sockets.size() << " sockets)\n";
 
-  if (!write_body_meshes(out_dir, manifest.creature_spec(), bind_palette)) {
+  if (!write_body_meshes(out_dir, manifest.creature_spec(), bind_palette, assets)) {
     return false;
   }
 
@@ -331,17 +342,18 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     std::cerr << "[bpat_baker] write failed for " << snapshot_out_path << "\n";
     return false;
   }
-  if (!write_asset(snapshot_out_path, snapshot_out.str())) {
+  if (!assets.write(snapshot_out_path, snapshot_out.str())) {
     return false;
   }
-  std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
+  std::cout << "[bpat_baker] ready " << snapshot_out_path << " ("
             << source.vertices.size() << " verts/frame, " << source.indices.size()
             << " indices, " << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
             << " lod)\n";
   return true;
 }
 
-auto write_building_meshes(const std::filesystem::path& out_dir) -> bool {
+auto write_building_meshes(const std::filesystem::path& out_dir,
+                           const AssetWriter& assets) -> bool {
   std::vector<Render::GL::StaticMeshPackEntry> entries =
       Render::GL::bake_building_meshes();
   bool ok = true;
@@ -363,14 +375,15 @@ auto write_building_meshes(const std::filesystem::path& out_dir) -> bool {
   }
   std::error_code ec;
   std::filesystem::create_directories(out_dir, ec);
-  return write_asset(out_dir / std::string(Render::GL::k_building_mesh_pack),
-                     Render::GL::serialize_static_mesh_pack(entries),
-                     k_mesh_pack_compression_level) &&
+  return assets.write(out_dir / std::string(Render::GL::k_building_mesh_pack),
+                      Render::GL::serialize_static_mesh_pack(entries),
+                      k_mesh_pack_compression_level) &&
          ok;
 }
 
 auto write_attachment_meshes(Game::Session::SessionContext& session,
-                             const std::filesystem::path& out_dir) -> bool {
+                             const std::filesystem::path& out_dir,
+                             const AssetWriter& assets) -> bool {
   auto& nations = session.nations();
   Game::Systems::initialize_default_content(nations);
   Game::Systems::TroopProfileService::instance().clear();
@@ -430,9 +443,9 @@ auto write_attachment_meshes(Game::Session::SessionContext& session,
   std::error_code ec;
   std::filesystem::create_directories(out_dir, ec);
   return !entries.empty() &&
-         write_asset(out_dir / std::string(Render::GL::k_attachment_mesh_pack),
-                     Render::GL::serialize_attachment_mesh_pack(entries),
-                     k_mesh_pack_compression_level);
+         assets.write(out_dir / std::string(Render::GL::k_attachment_mesh_pack),
+                      Render::GL::serialize_attachment_mesh_pack(entries),
+                      k_mesh_pack_compression_level);
 }
 
 } // namespace
@@ -482,11 +495,19 @@ int main(int argc, char** argv) {
   if (argc >= 3) {
     mesh_dir = argv[2];
   }
+  std::string_view const compression = argc >= 4 ? argv[3] : "release";
+  if (compression != "development" && compression != "release") {
+    std::cerr << "[bpat_baker] expected development or release, got " << compression
+              << '\n';
+    return EXIT_FAILURE;
+  }
+  AssetWriter const assets{.release_compression = compression == "release",
+                           .metadata_dir = argc >= 5 ? argv[4] : ""};
 
   bool ok = true;
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
-    ok = bake_species_manifest(out_dir,
-                               Render::Humanoid::humanoid_bake_recipe(profile)) &&
+    ok = bake_species_manifest(
+             out_dir, Render::Humanoid::humanoid_bake_recipe(profile), assets) &&
          ok;
   }
   for (std::size_t variant = 1;
@@ -495,14 +516,19 @@ int main(int argc, char** argv) {
     const auto* spec = Render::Humanoid::humanoid_creature_spec_for_body_variant(
         static_cast<std::uint8_t>(variant));
     ok = spec != nullptr &&
-         write_body_meshes(out_dir, *spec, Render::Humanoid::humanoid_bind_palette()) &&
+         write_body_meshes(
+             out_dir, *spec, Render::Humanoid::humanoid_bind_palette(), assets) &&
          ok;
   }
-  ok = bake_species_manifest(out_dir, Render::Horse::horse_bake_recipe()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Elephant::elephant_bake_recipe()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Wildlife::sheep_bake_recipe()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Wildlife::wolf_bake_recipe()) && ok;
-  ok = write_building_meshes(mesh_dir) && ok;
-  ok = write_attachment_meshes(session, mesh_dir) && ok;
+  ok = bake_species_manifest(out_dir, Render::Horse::horse_bake_recipe(), assets) && ok;
+  ok = bake_species_manifest(
+           out_dir, Render::Elephant::elephant_bake_recipe(), assets) &&
+       ok;
+  ok = bake_species_manifest(out_dir, Render::Wildlife::sheep_bake_recipe(), assets) &&
+       ok;
+  ok = bake_species_manifest(out_dir, Render::Wildlife::wolf_bake_recipe(), assets) &&
+       ok;
+  ok = write_building_meshes(mesh_dir, assets) && ok;
+  ok = write_attachment_meshes(session, mesh_dir, assets) && ok;
   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }

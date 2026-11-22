@@ -113,6 +113,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DDEFAULT_LANG=en \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON \
+            -DSOI_RELEASE_ASSET_COMPRESSION=ON \
             -DSOI_RELEASE_DEBUG_INFO=${{ inputs.debug-symbols && 'ON' || 'OFF' }} \
             -DBUILD_TESTING=OFF
           cmake --build build --config ${BUILD_TYPE} --target standard_of_iron
