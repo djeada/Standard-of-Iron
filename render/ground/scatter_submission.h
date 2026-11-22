@@ -10,14 +10,14 @@ void submit_visible_chunks(Render::GL::FrameSubmitter& renderer,
                            const FilteredRendererState<Instance, Params>& state,
                            Render::GL::TerrainScatterCmd command) {
   for (const auto& chunk : state.spatial_chunks) {
-    if (chunk.visible_count == 0 || chunk.buffer == nullptr) {
+    if (chunk.visible_count == 0 || chunk.block == nullptr) {
       continue;
     }
     if (!renderer.submission_visibility().accepts_sphere(
             chunk.center, chunk.radius, Render::GL::SubmissionFogMode::Ignore)) {
       continue;
     }
-    command.instance_buffer = chunk.buffer.get();
+    command.instances = chunk.block.get();
     command.instance_count = chunk.visible_count;
     command.bounds_center = chunk.center;
     command.bounds_radius = chunk.radius;
@@ -31,7 +31,7 @@ void submit_visible_chunks_lod(Render::GL::FrameSubmitter& renderer,
                                Render::GL::TerrainScatterCmd command,
                                ChunkBudget chunk_budget) {
   for (const auto& chunk : state.spatial_chunks) {
-    if (chunk.visible_count == 0 || chunk.buffer == nullptr) {
+    if (chunk.visible_count == 0 || chunk.block == nullptr) {
       continue;
     }
     if (!renderer.submission_visibility().accepts_sphere(
@@ -42,7 +42,7 @@ void submit_visible_chunks_lod(Render::GL::FrameSubmitter& renderer,
     if (budget == 0) {
       continue;
     }
-    command.instance_buffer = chunk.buffer.get();
+    command.instances = chunk.block.get();
     command.instance_count = std::min(budget, chunk.visible_count);
     command.bounds_center = chunk.center;
     command.bounds_radius = chunk.radius;

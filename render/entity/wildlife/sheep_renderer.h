@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/creature/animation_state_components.h"
+#include "render/creature/species/animation_state_components.h"
 #include "render/entity/wildlife/wildlife_draw_state.h"
 
 namespace Render::GL {

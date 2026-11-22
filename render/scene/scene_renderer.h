@@ -29,6 +29,7 @@
 #include "render/entity/registry.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/draw_queue.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_budget.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/i_render_backend.h"
@@ -39,8 +40,7 @@
 #include "render/frame/submitter.h"
 #include "render/frame/world_render_mode.h"
 #include "render/frame/world_view.h"
-#include "render/gl/mesh.h"
-#include "render/gl/resources.h"
+#include "render/geom/mesh.h"
 #include "render/gl/texture.h"
 #include "render/ground/building_ground.h"
 #include "render/scene/async_template_prewarm.h"
@@ -119,7 +119,7 @@ public:
   void set_camera(Camera* camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
   auto camera() const -> Camera* override { return m_camera; }
-  auto backend() -> Backend* override { return m_gl_backend; }
+  auto backend() -> Backend* { return m_gl_backend; }
 
   void update_animation_time(float delta_time) {
     m_accumulated_time += delta_time;
@@ -134,8 +134,8 @@ public:
     m_animation_time_cache.clear();
   }
 
-  auto resources() const -> ResourceManager* override {
-    return m_backend ? m_backend->resources() : nullptr;
+  auto resources() const -> const DrawResources* override {
+    return m_backend ? m_backend->draw_resources() : nullptr;
   }
   [[nodiscard]] auto is_ready() const -> bool {
     return m_backend && m_backend->is_ready();
@@ -217,25 +217,21 @@ public:
   }
 
   auto get_mesh_quad() const -> Mesh* {
-    return m_backend && (m_backend->resources() != nullptr)
-               ? m_backend->resources()->quad()
-               : nullptr;
+    const DrawResources* shared = resources();
+    return shared != nullptr ? shared->quad() : nullptr;
   }
   auto get_mesh_plane() const -> Mesh* {
-    return m_backend && (m_backend->resources() != nullptr)
-               ? m_backend->resources()->ground()
-               : nullptr;
+    const DrawResources* shared = resources();
+    return shared != nullptr ? shared->ground() : nullptr;
   }
   auto get_mesh_cube() const -> Mesh* override {
-    return m_backend && (m_backend->resources() != nullptr)
-               ? m_backend->resources()->unit()
-               : nullptr;
+    const DrawResources* shared = resources();
+    return shared != nullptr ? shared->unit() : nullptr;
   }
 
   auto get_white_texture() const -> Texture* override {
-    return m_backend && (m_backend->resources() != nullptr)
-               ? m_backend->resources()->white()
-               : nullptr;
+    const DrawResources* shared = resources();
+    return shared != nullptr ? shared->white() : nullptr;
   }
 
   auto get_shader(const QString& name) const -> Shader* override {
@@ -467,7 +463,7 @@ public:
   void fog_batch(const FogInstanceData* instances,
                  std::size_t count,
                  const FogMaskResources& mask = {}) override;
-  void fog_batch(Buffer* instance_buffer,
+  void fog_batch(const InstanceBlock* instance_block,
                  std::size_t count,
                  const FogMaskResources& mask = {}) override;
   void rain_batch(const RainBatchParams& params) override;
@@ -528,7 +524,7 @@ private:
 
   void submit_non_unit_entry(const RenderEntry& entry,
                              Engine::Core::World* world,
-                             ResourceManager* res);
+                             const DrawResources* res);
 
   auto plan_unit_entry(UnitRenderEntry& entry,
                        const UnitSubmitContext& ctx) -> UnitDrawPlan;

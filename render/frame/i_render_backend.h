@@ -23,7 +23,7 @@ namespace Render::GL {
 
 class DrawQueue;
 class Camera;
-class ResourceManager;
+class DrawResources;
 class Shader;
 
 class IRenderBackend {
@@ -39,8 +39,12 @@ public:
   virtual void set_animation_time(float time) noexcept = 0;
   virtual void set_frame_budget(const Render::FrameBudgetConfig& config) = 0;
 
-  [[nodiscard]] virtual auto resources() const -> ResourceManager* = 0;
-  [[nodiscard]] virtual auto is_ready() const -> bool { return resources() != nullptr; }
+  // The shared meshes, textures and shaders domain renderers point commands
+  // at; null when the backend has none.
+  [[nodiscard]] virtual auto draw_resources() const -> const DrawResources* = 0;
+  [[nodiscard]] virtual auto is_ready() const -> bool {
+    return draw_resources() != nullptr;
+  }
   [[nodiscard]] virtual auto presented_frame() const -> const QImage* {
     return nullptr;
   }

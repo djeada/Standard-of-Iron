@@ -16,7 +16,7 @@
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_render_common.h"
-#include "render/gl/resources.h"
+#include "render/frame/draw_resources.h"
 
 namespace Render::GL {
 namespace {

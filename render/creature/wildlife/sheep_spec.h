@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <span>
 
-#include "render/creature/quadruped/mesh_graph.h"
+#include "render/creature/schema/mesh_graph.h"
 #include "render/creature/spec.h"
 #include "render/creature/wildlife/wildlife_rig.h"
 

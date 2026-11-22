@@ -129,8 +129,8 @@ TEST(HumanoidLayering, CreaturePipelineKnowsNothingAboutHumanoidBones) {
   EXPECT_FALSE(contains(source, "humanoid/asset/"))
       << "the generic creature pipeline includes humanoid asset code";
 
-  EXPECT_TRUE(contains(source, "render/creature/humanoid/runtime/frame_control.h"))
-      << "if this include is gone, drop the exception rather than widening it";
+  EXPECT_FALSE(contains(source, "render/creature/humanoid/"))
+      << "the generic creature pipeline includes a humanoid header";
 }
 
 TEST(HumanoidLayering, RendererOwnsNoMutableRuntimeState) {

@@ -41,7 +41,7 @@ void StatueRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void StatueRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void StatueRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::Statue) ==
       0) {
     return;

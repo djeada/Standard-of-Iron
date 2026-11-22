@@ -72,7 +72,7 @@ auto has_selected_local_barracks(Engine::Core::World* world,
 
 void render_attack_targeting(
     Render::GL::Renderer* renderer,
-    Render::GL::ResourceManager* resources,
+    const Render::GL::DrawResources* resources,
     const Game::Systems::AttackTargetingHighlights& targeting) {
   if (targeting.markers.empty()) {
     return;
@@ -119,7 +119,7 @@ auto glyph_for_interaction(const Game::Systems::InteractionTargetMarker& marker)
 
 void render_interaction_targeting(
     Render::GL::Renderer* renderer,
-    Render::GL::ResourceManager* resources,
+    const Render::GL::DrawResources* resources,
     const Game::Systems::InteractionTargetingHighlights& targeting) {
   if (targeting.markers.empty()) {
     return;
@@ -184,7 +184,7 @@ auto focus_visual_role(Game::Systems::TargetFocusRole role)
 }
 
 void render_target_focus(Render::GL::Renderer* renderer,
-                         Render::GL::ResourceManager* resources,
+                         const Render::GL::DrawResources* resources,
                          const std::vector<Game::Systems::TargetFocusMarker>& markers) {
   if (markers.empty()) {
     return;

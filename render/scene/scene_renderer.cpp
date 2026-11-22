@@ -59,6 +59,7 @@
 #include "render/equipment/render_archetype_registry.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/draw_queue.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/effects_submitter.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/material_classification.h"
@@ -70,9 +71,8 @@
 #include "render/frame/visibility_budget.h"
 #include "render/frame/world_chunk.h"
 #include "render/geom/mode_indicator.h"
+#include "render/geom/primitives.h"
 #include "render/gl/buffer.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 #include "render/ground/visibility_texture_helper.h"
 #include "render/profiling/frame_profile.h"
 #include "render/scene/battle_render_optimizer.h"
@@ -604,14 +604,14 @@ void Renderer::fog_batch(const FogInstanceData* instances,
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::fog_batch(Buffer* instance_buffer,
+void Renderer::fog_batch(const InstanceBlock* instance_block,
                          std::size_t count,
                          const FogMaskResources& mask) {
-  if ((instance_buffer == nullptr) || count == 0 || (m_active_queue == nullptr)) {
+  if ((instance_block == nullptr) || count == 0 || (m_active_queue == nullptr)) {
     return;
   }
   FogBatchCmd cmd;
-  cmd.instance_buffer = instance_buffer;
+  cmd.instance_block = instance_block;
   cmd.count = count;
   cmd.mask = mask;
   m_active_queue->submit(std::move(cmd));
@@ -662,7 +662,7 @@ void Renderer::local_light(const Render::LocalLight& light) {
 }
 
 void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
-  if ((cmd.instance_buffer == nullptr) || cmd.instance_count == 0 ||
+  if ((cmd.instances == nullptr) || cmd.instance_count == 0 ||
       (m_active_queue == nullptr)) {
     return;
   }

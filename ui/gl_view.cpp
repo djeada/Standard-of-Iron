@@ -831,6 +831,7 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
                 Render::Profiling::asset_counters_json());
   report.insert(QStringLiteral("simulation_profile"),
                 m_engine->simulation_profile_report());
+  report.insert(QStringLiteral("scatter_memory"), m_engine->scatter_memory_report());
   QJsonObject playable_assets;
   for (std::size_t i = 0; i < m_playable_asset_baseline.size(); ++i) {
     const auto counter = static_cast<Render::Profiling::AssetCounter>(i);

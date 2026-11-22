@@ -9,7 +9,7 @@
 #include "game/wildlife/bird_flock.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 #include "scene/camera.h"
 
 namespace Render::GL::Wildlife {

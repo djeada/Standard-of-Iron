@@ -33,21 +33,22 @@ auto AmbientFogRenderer::is_point_in_fog(float world_x, float world_z) const -> 
   return false;
 }
 
-void AmbientFogRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void AmbientFogRenderer::submit(FrameSubmitter& renderer,
+                                const DrawResources* resources) {
   if (!m_enabled || m_instances.empty()) {
     return;
   }
   (void)resources;
 
   if (m_dirty) {
-    if (!m_instance_buffer) {
-      m_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+    if (!m_instance_block) {
+      m_instance_block = std::make_unique<InstanceBlock>();
     }
-    m_instance_buffer->set_data(m_instances, Buffer::Usage::Static);
+    m_instance_block->assign(m_instances);
     m_dirty = false;
   }
 
-  renderer.fog_batch(m_instance_buffer.get(), m_instances.size());
+  renderer.fog_batch(m_instance_block.get(), m_instances.size());
 }
 
 void AmbientFogRenderer::build_instances() {

@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <initializer_list>
 #include <span>
 #include <string_view>
 
@@ -17,6 +18,16 @@ enum class CreatureMeshLod : std::uint8_t {
   Full = 0,
   Minimal = 1,
 };
+
+// One bit per CreatureMeshLod.
+[[nodiscard]] constexpr auto
+mesh_lod_mask(std::initializer_list<CreatureMeshLod> lods) noexcept -> std::uint8_t {
+  std::uint8_t mask = 0;
+  for (const CreatureMeshLod lod : lods) {
+    mask = static_cast<std::uint8_t>(mask | (1U << static_cast<std::uint8_t>(lod)));
+  }
+  return mask;
+}
 
 enum class CreatureLegIndex : std::uint8_t {
   FrontLeft = 0,
@@ -143,14 +154,6 @@ struct CreatureVisualDefinition {
   std::uint8_t role_color_count{0};
 };
 
-[[nodiscard]] auto
-horse_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
-[[nodiscard]] auto
-elephant_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
-[[nodiscard]] auto
-sheep_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
-[[nodiscard]] auto
-wolf_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
 [[nodiscard]] auto resolve_creature_visual_definition(
     const UnitVisualSpec& spec) noexcept -> const CreatureVisualDefinition*;
 

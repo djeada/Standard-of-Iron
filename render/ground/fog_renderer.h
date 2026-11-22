@@ -9,13 +9,13 @@
 
 #include "render/frame/draw_commands.h"
 #include "render/frame/i_draw_source.h"
-#include "render/gl/buffer.h"
-#include "render/gl/texture.h"
+#include "render/geom/instance_block.h"
+#include "render/geom/texture_image.h"
 #include "render/ground/visibility_mask_encoder.h"
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 class FogRenderer : public IDrawSource {
 public:
@@ -34,9 +34,7 @@ public:
                    float tile_size,
                    const std::vector<std::uint8_t>& cells);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
-
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   auto prepare_mask(FrameSubmitter& renderer) -> FogMaskResources;
 
@@ -75,10 +73,11 @@ private:
   float m_last_time = -1.0F;
 
   std::vector<FogInstance> m_instances;
-  std::unique_ptr<Buffer> m_instance_buffer;
+  std::unique_ptr<InstanceBlock> m_instance_block;
   bool m_instances_dirty = false;
 
-  std::unique_ptr<Texture> m_mask_texture;
+  // The fog mask texels; backends upload the changed region.
+  std::unique_ptr<TextureImage> m_mask_texture;
   std::vector<unsigned char> m_mask_texels;
   std::vector<float> m_mask_filter_rows;
   int m_mask_texture_width = 0;

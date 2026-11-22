@@ -16,8 +16,6 @@ class UnitComponent;
 
 namespace Render::GL {
 struct DrawContext;
-struct HumanoidAnimationContext;
-struct HumanoidPose;
 } // namespace Render::GL
 
 namespace Game::Map {
@@ -32,52 +30,6 @@ pass_intent_from_ctx(const Render::GL::DrawContext& ctx) noexcept -> RenderPassI
 [[nodiscard]] auto
 derive_unit_seed(const Render::GL::DrawContext& ctx,
                  const Engine::Core::UnitComponent* unit) noexcept -> std::uint32_t;
-
-[[nodiscard]] auto
-humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
-    -> Render::Creature::AnimationStateId;
-
-[[nodiscard]] auto humanoid_state_for_intent(
-    Render::Creature::PoseIntent intent) noexcept -> Render::Creature::AnimationStateId;
-
-[[nodiscard]] auto
-humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
-                         Render::Creature::AnimationStateId state) noexcept -> float;
-
-[[nodiscard]] auto humanoid_phase_for_anim(
-    const Render::GL::HumanoidAnimationContext& anim) noexcept -> float;
-
-[[nodiscard]] auto
-humanoid_idle_breath_phase_for_lod(float sample_time,
-                                   std::uint32_t inst_seed,
-                                   Render::Creature::CreatureLOD lod,
-                                   bool template_prewarm) noexcept -> float;
-
-[[nodiscard]] auto humanoid_clip_variant_for_state(
-    Render::Creature::ArchetypeId archetype_id,
-    const Render::GL::HumanoidAnimationContext& anim,
-    Render::Creature::AnimationStateId state) noexcept -> std::uint8_t;
-
-[[nodiscard]] auto humanoid_clip_variant_for_anim(
-    Render::Creature::ArchetypeId archetype_id,
-    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::uint8_t;
-
-[[nodiscard]] auto humanoid_bpat_playback_for_anim(
-    Render::Creature::ArchetypeId archetype_id,
-    std::uint32_t species_id,
-    const Render::GL::HumanoidAnimationContext& anim) noexcept
-    -> std::optional<BpatPlayback>;
-
-[[nodiscard]] auto humanoid_clip_contact_y(
-    Render::Creature::ArchetypeId archetype_id,
-    std::uint32_t species_id,
-    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::optional<float>;
-
-[[nodiscard]] auto grounded_humanoid_contact_y(
-    Render::Creature::ArchetypeId archetype_id,
-    std::uint32_t species_id,
-    const Render::GL::HumanoidPose& pose,
-    const Render::GL::HumanoidAnimationContext& anim) noexcept -> float;
 
 [[nodiscard]] auto horse_clip_contact_y(std::uint16_t clip_id,
                                         float phase) noexcept -> std::optional<float>;

@@ -13,8 +13,8 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/resources.h"
 #include "render/ground/terrain_renderer.h"
 
 namespace Render::GL {
@@ -454,7 +454,7 @@ void MapBoundaryFogRenderer::configure(int width, int height, float tile_size) {
 }
 
 void MapBoundaryFogRenderer::submit(FrameSubmitter& renderer,
-                                    ResourceManager* resources) {
+                                    const DrawResources* resources) {
   if ((resources == nullptr) || (m_cards.empty() && m_mountain_indices.empty())) {
     return;
   }

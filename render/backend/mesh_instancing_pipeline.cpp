@@ -9,9 +9,9 @@
 #include <cstring>
 
 #include "render/cache/static_building_batch.h"
+#include "render/geom/mesh.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/mesh.h"
 #include "render/gl/mesh_gpu_table.h"
 
 namespace Render::GL::BackendPipelines {

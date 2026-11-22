@@ -17,7 +17,7 @@
 #include "game/units/spawn_type.h"
 #include "render/entity/building_render_common.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 namespace {

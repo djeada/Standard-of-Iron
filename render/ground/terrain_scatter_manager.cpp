@@ -156,7 +156,7 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
 }
 
 void TerrainScatterManager::submit(FrameSubmitter& renderer,
-                                   ResourceManager* resources) {
+                                   const DrawResources* resources) {
   std::lock_guard<std::mutex> const lock(m_mutex);
 
   const std::uint32_t generation = GraphicsSettings::instance().generation();
@@ -178,13 +178,19 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
       previous_filter);
 }
 
-auto TerrainScatterManager::prewarm_gpu_resources() -> bool {
+void TerrainScatterManager::prepare_instance_blocks() {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  bool ready = true;
   for (const auto& entry : m_scatter_sources) {
-    ready = entry.source->prewarm_gpu_resources() && ready;
+    entry.source->prepare_instance_blocks();
   }
-  return ready;
+}
+
+void TerrainScatterManager::for_each_instance_block(
+    const InstanceBlockVisitor& visit) const {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  for (const auto& entry : m_scatter_sources) {
+    entry.source->for_each_instance_block(visit);
+  }
 }
 
 void TerrainScatterManager::clear() {
@@ -289,6 +295,23 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
                    entry.source->instance_count(),
                    entry.source->is_gpu_ready(),
                    entry.source->last_sync_stats()});
+  }
+  return out;
+}
+
+auto TerrainScatterManager::memory() const -> std::vector<LayerMemory> {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  std::vector<LayerMemory> out;
+  out.reserve(m_scatter_sources.size());
+  for (const auto& entry : m_scatter_sources) {
+    LayerMemory layer;
+    layer.species = entry.species;
+    layer.instances = entry.source->instance_count();
+    layer.cpu_bytes = entry.source->instance_bytes();
+    entry.source->for_each_instance_block([&layer](const InstanceBlock& block) {
+      layer.gpu_reserved_bytes += block.reserved_bytes();
+    });
+    out.push_back(layer);
   }
   return out;
 }

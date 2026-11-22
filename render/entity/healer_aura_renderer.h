@@ -6,10 +6,10 @@ class World;
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 void render_healer_auras(FrameSubmitter* renderer,
-                         ResourceManager* resources,
+                         const DrawResources* resources,
                          Engine::Core::World* world);
 
 } // namespace Render::GL

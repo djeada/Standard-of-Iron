@@ -10,8 +10,8 @@
 #include "render/frame/material.h"
 #include "render/frame/material_classification.h"
 #include "render/frame/unseen_submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 namespace {

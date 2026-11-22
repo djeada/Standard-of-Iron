@@ -25,9 +25,9 @@
 #include "render/creature/spec.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/submitter.h"
-#include "render/gl/garment_shell.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
+#include "render/geom/garment_shell.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 
 namespace Render::Humanoid {
 

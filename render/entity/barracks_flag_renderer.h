@@ -9,14 +9,13 @@
 #include "game/visuals/team_colors.h"
 #include "render/equipment/renderer_constants.h"
 #include "render/frame/draw_context.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/submitter.h"
 #include "render/geom/banner_cloth.h"
 #include "render/geom/flag.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
-#include "render/gl/shader.h"
 
 namespace Render::GL {
 

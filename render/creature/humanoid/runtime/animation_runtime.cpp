@@ -4,9 +4,10 @@
 
 #include "animation/locomotion_manifest.h"
 #include "animation/micro_variation_manifest.h"
+#include "game/core/entity.h"
 #include "render/creature/animation_core_bridge.h"
-#include "render/creature/animation_state_components.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/creature/humanoid/humanoid_animation_state.h"
 #include "render/creature/humanoid/runtime/humanoid_runtime_types.h"
 #include "render/creature/pose_intent.h"
 #include "render/gl/humanoid/humanoid_constants.h"

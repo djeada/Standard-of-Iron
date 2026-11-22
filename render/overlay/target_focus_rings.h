@@ -7,7 +7,7 @@
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 enum class TargetFocusVisualRole : std::uint8_t {
   Inspected,
@@ -29,7 +29,7 @@ struct TargetFocusStyle {
 };
 
 void render_target_focus_rings(FrameSubmitter* renderer,
-                               ResourceManager* resources,
+                               const DrawResources* resources,
                                std::span<const TargetFocusVisual> visuals,
                                const TargetFocusStyle& style = {});
 

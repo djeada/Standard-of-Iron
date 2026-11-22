@@ -27,7 +27,7 @@ constexpr float k_edge_fade_factor = 1.5F;
 } // namespace
 
 void render_healing_waves(FrameSubmitter* renderer,
-                          ResourceManager*,
+                          const DrawResources*,
                           const std::vector<Game::Systems::HealingBeamView>& beams) {
   if (renderer == nullptr || beams.empty()) {
     return;

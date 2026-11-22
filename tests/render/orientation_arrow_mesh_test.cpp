@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 
 namespace {
 

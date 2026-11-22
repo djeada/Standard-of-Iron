@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QOpenGLContext>
 #include <QVector3D>
 #include <QVector4D>
 
@@ -30,6 +29,10 @@ public:
     return m_state.instances.size();
   }
 
+  [[nodiscard]] auto instance_bytes() const -> std::size_t override {
+    return m_state.instances.size() * sizeof(Instance);
+  }
+
   [[nodiscard]] auto
   last_sync_stats() const -> Render::Ground::Scatter::SyncStats override {
     return m_state.last_sync_stats;
@@ -48,11 +51,12 @@ public:
     }
   }
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool override {
-    if (QOpenGLContext::currentContext() == nullptr) {
-      return false;
-    }
-    return Render::Ground::Scatter::prewarm_filtered_state(m_state, &instance_position);
+  void prepare_instance_blocks() override {
+    Render::Ground::Scatter::prepare_filtered_blocks(m_state, &instance_position);
+  }
+
+  void for_each_instance_block(const InstanceBlockVisitor& visit) const override {
+    Render::Ground::Scatter::for_each_filtered_block(m_state, visit);
   }
 
 protected:
@@ -95,7 +99,7 @@ protected:
 
   template <bool CopyTimeToParams>
   auto submit_filtered_common(FrameSubmitter& renderer,
-                              ResourceManager* resources,
+                              const DrawResources* resources,
                               TerrainScatterCmd::Species species,
                               void (*assign_params)(TerrainScatterCmd&,
                                                     const Params&)) -> std::size_t {
@@ -128,7 +132,7 @@ protected:
   }
 
   auto submit_prop_common(FrameSubmitter& renderer,
-                          ResourceManager* resources,
+                          const DrawResources* resources,
                           TerrainScatterCmd::Species species) -> std::size_t {
     m_state.params.time = renderer.get_animation_time();
     return submit_filtered_common<false>(

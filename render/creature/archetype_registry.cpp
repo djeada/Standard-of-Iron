@@ -5,10 +5,7 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
-#include "render/creature/elephant/elephant_spec.h"
-#include "render/creature/humanoid/asset/humanoid_spec.h"
-#include "render/creature/wildlife/sheep_spec.h"
-#include "render/creature/wildlife/wolf_spec.h"
+#include "render/creature/pipeline/species_contract.h"
 
 namespace Render::Creature {
 
@@ -89,11 +86,18 @@ ArchetypeRegistry::ArchetypeRegistry() {
 
 void ArchetypeRegistry::seed_baseline() {
 
-  constexpr std::uint8_t k_humanoid_base_roles =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
-  constexpr std::uint8_t k_horse_base_roles = 9U;
-  constexpr std::uint8_t k_elephant_base_roles =
-      static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count + 1U);
+  // A baseline archetype has the species' body roles plus one.
+  auto const base_roles = [](Render::Creature::Pipeline::CreatureKind kind) {
+    const auto* contract = Render::Creature::Pipeline::species_contract(kind);
+    return static_cast<std::uint8_t>((contract != nullptr ? contract->role_count : 0U) +
+                                     1U);
+  };
+  std::uint8_t const k_humanoid_base_roles =
+      base_roles(Render::Creature::Pipeline::CreatureKind::Humanoid);
+  std::uint8_t const k_horse_base_roles =
+      base_roles(Render::Creature::Pipeline::CreatureKind::Horse);
+  std::uint8_t const k_elephant_base_roles =
+      base_roles(Render::Creature::Pipeline::CreatureKind::Elephant);
 
   static constexpr auto k_humanoid_manifest = make_humanoid_animation_manifest();
   static constexpr auto k_horse_manifest = make_horse_animation_manifest();
@@ -126,12 +130,12 @@ void ArchetypeRegistry::seed_baseline() {
       "sheep_base",
       Render::Creature::Pipeline::CreatureKind::Sheep,
       k_sheep_manifest,
-      static_cast<std::uint8_t>(Render::Wildlife::k_sheep_role_count + 1U)));
+      base_roles(Render::Creature::Pipeline::CreatureKind::Sheep)));
   register_archetype(make_baseline_archetype(
       "wolf_base",
       Render::Creature::Pipeline::CreatureKind::Wolf,
       k_wolf_manifest,
-      static_cast<std::uint8_t>(Render::Wildlife::k_wolf_role_count + 1U)));
+      base_roles(Render::Creature::Pipeline::CreatureKind::Wolf)));
 }
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc) -> ArchetypeId {

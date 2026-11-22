@@ -22,7 +22,6 @@
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
-#include "render/backend/backend.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid/asset/bind_skeleton.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
@@ -50,12 +49,11 @@
 #include "render/frame/frame_submitter.h"
 #include "render/frame/palette.h"
 #include "render/frame/submitter.h"
+#include "render/geom/garment_shell.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/garment_shell.h"
-#include "render/gl/primitives.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/shader.h"
 #include "render/math/math_utils.h"
+#include "render/math/render_constants.h"
 
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;

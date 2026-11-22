@@ -54,7 +54,7 @@ void BoulderRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, StoneBatchParams::default_light_direction());
 }
 
-void BoulderRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void BoulderRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   submit_filtered_common<false>(
       renderer,
       resources,

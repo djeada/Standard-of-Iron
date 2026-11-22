@@ -63,6 +63,7 @@ inline constexpr CreatureAssetId k_caster_humanoid_asset = 6;
 inline constexpr CreatureAssetId k_stave_caster_humanoid_asset = 7;
 inline constexpr CreatureAssetId k_sheep_asset = 8;
 inline constexpr CreatureAssetId k_wolf_asset = 9;
+inline constexpr std::size_t k_creature_asset_count = 10;
 
 inline constexpr std::uint32_t k_no_snapshot_mesh_species = 0xFFFFFFFFu;
 
@@ -194,16 +195,8 @@ public:
 private:
   CreatureAssetRegistry();
 
-  CreatureAsset m_humanoid{};
-  CreatureAsset m_horse{};
-  CreatureAsset m_elephant{};
-  CreatureAsset m_humanoid_sword{};
-  CreatureAsset m_humanoid_spear{};
-  CreatureAsset m_skeleton_humanoid{};
-  CreatureAsset m_caster_humanoid{};
-  CreatureAsset m_stave_caster_humanoid{};
-  CreatureAsset m_sheep{};
-  CreatureAsset m_wolf{};
+  // Indexed by CreatureAssetId; filled by each species' contract.
+  std::array<CreatureAsset, k_creature_asset_count> m_assets{};
 };
 
 [[nodiscard]] auto resolve_creature_render_asset_handle(

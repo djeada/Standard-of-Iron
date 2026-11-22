@@ -13,7 +13,7 @@ class World;
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 struct StoneImpactEffect {
   QVector3D position;
@@ -45,11 +45,11 @@ private:
 };
 
 void render_combat_dust(FrameSubmitter* renderer,
-                        ResourceManager* resources,
+                        const DrawResources* resources,
                         Engine::Core::World* world);
 
 void render_blood_stains(FrameSubmitter* renderer,
-                         ResourceManager* resources,
+                         const DrawResources* resources,
                          Engine::Core::World* world);
 
 struct TelegraphEntry {

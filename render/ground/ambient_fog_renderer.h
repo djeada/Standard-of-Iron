@@ -9,11 +9,11 @@
 #include "game/map/map_definition.h"
 #include "render/frame/draw_commands.h"
 #include "render/frame/i_draw_source.h"
-#include "render/gl/buffer.h"
+#include "render/geom/instance_block.h"
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 class AmbientFogRenderer : public IDrawSource {
 public:
@@ -35,7 +35,7 @@ public:
 
   [[nodiscard]] auto is_point_in_fog(float world_x, float world_z) const -> bool;
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
 private:
   void build_instances();
@@ -43,7 +43,7 @@ private:
   bool m_enabled = true;
   std::vector<Game::Map::FogZone> m_zones;
   std::vector<FogInstanceData> m_instances;
-  std::unique_ptr<Buffer> m_instance_buffer;
+  std::unique_ptr<InstanceBlock> m_instance_block;
   bool m_dirty = false;
 };
 

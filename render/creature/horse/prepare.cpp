@@ -11,7 +11,9 @@
 #include <optional>
 
 #include "game/core/component.h"
-#include "render/creature/animation_state_components.h"
+#include "game/core/entity.h"
+#include "render/creature/horse/horse_body_state.h"
+#include "render/creature/horse/horse_components.h"
 #include "render/creature/horse/horse_motion.h"
 #include "render/creature/horse/horse_renderer_base.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"

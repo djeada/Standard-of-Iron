@@ -14,7 +14,7 @@
 #include "render/equipment/horse/tack/blanket_renderer.h"
 #include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/horse/tack/reins_renderer.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 using namespace Render::GL;
 

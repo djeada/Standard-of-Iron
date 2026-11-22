@@ -7,15 +7,15 @@
 #include <cmath>
 #include <numbers>
 
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/selection_disc.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 
 namespace Render::GL {
 
 void render_formation_arrow(FrameSubmitter* renderer,
-                            ResourceManager* resources,
+                            const DrawResources* resources,
                             const FormationPlacementInfo& placement) {
   if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {
     return;
@@ -87,7 +87,7 @@ void render_formation_arrow(FrameSubmitter* renderer,
 }
 
 void render_formation_slot_preview(FrameSubmitter* renderer,
-                                   ResourceManager* resources,
+                                   const DrawResources* resources,
                                    const FormationPlacementInfo& placement) {
   if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {
     return;

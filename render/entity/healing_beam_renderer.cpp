@@ -7,7 +7,7 @@
 namespace Render::GL {
 
 void render_healing_beams(FrameSubmitter* renderer,
-                          ResourceManager*,
+                          const DrawResources*,
                           const std::vector<Game::Systems::HealingBeamView>& beams) {
   if (renderer == nullptr || beams.empty()) {
     return;

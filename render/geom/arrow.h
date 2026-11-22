@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render {
 namespace Geom {

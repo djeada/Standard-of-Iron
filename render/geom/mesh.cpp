@@ -1,4 +1,4 @@
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 #include <QVector3D>
 
@@ -10,11 +10,7 @@
 #include <memory>
 #include <vector>
 
-#include "render/gl/render_constants.h"
-
 namespace Render::GL {
-
-using namespace Render::GL::ComponentCount;
 
 namespace {
 

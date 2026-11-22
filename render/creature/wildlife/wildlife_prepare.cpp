@@ -12,6 +12,8 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/wildlife/wildlife_body_state.h"
+#include "render/creature/wildlife/wildlife_species.h"
 #include "render/frame/draw_context.h"
 #include "scene/camera.h"
 

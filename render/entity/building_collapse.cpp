@@ -15,7 +15,7 @@
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 namespace {

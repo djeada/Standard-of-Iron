@@ -11,12 +11,12 @@
 #include "game/map/terrain.h"
 #include "render/frame/i_draw_source.h"
 #include "render/frame/terrain_scene_types.h"
-#include "render/gl/mesh_gpu_table.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
 class Mesh;
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 class WaterRenderer : public IDrawSource {
 public:
@@ -28,9 +28,10 @@ public:
                  const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
+  // Every mesh this renderer draws, for prewarming a backend's MeshGpuTable.
+  void for_each_mesh(const MeshVisitor& visit) const;
 
 private:
   void build_meshes();

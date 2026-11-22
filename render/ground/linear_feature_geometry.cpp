@@ -14,7 +14,7 @@
 #include "game/map/river_ribbon.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain_surface.h"
-#include "render/gl/render_constants.h"
+#include "render/math/render_constants.h"
 
 namespace {
 

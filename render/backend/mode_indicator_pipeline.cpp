@@ -6,8 +6,8 @@
 #include "render/backend/gl_error_check.h"
 #include "render/backend/mesh_instancing_pipeline.h"
 #include "render/backend/state_scopes.h"
+#include "render/geom/mesh.h"
 #include "render/geom/mode_indicator.h"
-#include "render/gl/mesh.h"
 #include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {

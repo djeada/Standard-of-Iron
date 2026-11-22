@@ -8,6 +8,7 @@ add_executable(
     render/gl_deferred_delete_test.cpp
     render/gl_context_lifetime_test.cpp
     render/gl_ownership_leak_test.cpp
+    render/gpu_data_test.cpp
     render/asset_counters_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp

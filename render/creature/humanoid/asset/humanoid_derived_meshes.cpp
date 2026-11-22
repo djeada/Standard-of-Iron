@@ -6,8 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include "render/gl/primitives.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/primitives.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::Humanoid {
 

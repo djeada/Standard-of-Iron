@@ -1,5 +1,4 @@
 #include <QMatrix4x4>
-#include <QOpenGLContext>
 #include <QtGlobal>
 
 #include <algorithm>
@@ -10,8 +9,6 @@
 #include "game/map/visibility_service.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/graphics_settings.h"
-#include "render/gl/texture.h"
-#include "render/gl/texture_upload.h"
 #include "render/ground/ground_ecology.h"
 #include "render/ground/terrain_renderer.h"
 
@@ -291,24 +288,19 @@ void TerrainRenderer::bake_terrain_fields() {
   }
 }
 
-void TerrainRenderer::bake_terrain_microdetail() {
-  m_noise_atlas.bake_microdetail(Render::GraphicsSettings::instance().quality() ==
-                                 Render::GraphicsQuality::Low);
-}
-
-void TerrainRenderer::bake_terrain_noise_atlas() {
-  TerrainNoiseAtlas::AtlasBakeParams params;
-  params.width = m_width;
-  params.height = m_height;
-  params.tile_size = m_tile_size;
-  params.noise_offset =
+auto TerrainRenderer::noise_request() const -> TerrainNoiseRequest {
+  TerrainNoiseRequest request;
+  request.width = m_width;
+  request.height = m_height;
+  request.tile_size = m_tile_size;
+  request.noise_offset =
       m_chunks.empty() ? QVector2D(0.0F, 0.0F) : m_chunks.front().params.noise_offset;
-  params.macro_noise_scale = m_biome_settings.terrain_macro_noise_scale;
-  params.low_detail =
+  request.macro_noise_scale = m_biome_settings.terrain_macro_noise_scale;
+  request.low_detail =
       Render::GraphicsSettings::instance().quality() == Render::GraphicsQuality::Low;
-  if (m_noise_atlas.bake_atlas(params)) {
-    m_noise_atlas_dirty = false;
-  }
+  request.revision = m_noise_revision;
+  request.enabled = true;
+  return request;
 }
 
 auto TerrainRenderer::update_height_texture(
@@ -319,93 +311,51 @@ auto TerrainRenderer::update_height_texture(
     return resources;
   }
 
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return resources;
-  }
-
-  const bool size_changed = m_height_texture == nullptr ||
-                            m_height_texture->get_width() != m_width ||
-                            m_height_texture->get_height() != m_height;
-  if (size_changed) {
-    m_height_texture = std::make_unique<Texture>();
-    if (!m_height_texture->create_empty(m_width, m_height, Texture::Format::R32F)) {
-      m_height_texture.reset();
-      return resources;
+  const auto resize_if_needed = [this](TextureImage& image,
+                                       TextureImage::Format format) -> bool {
+    if (image.width() == m_width && image.height() == m_height &&
+        image.format() == format) {
+      return false;
     }
-    m_height_texture->set_filter(Texture::Filter::Linear, Texture::Filter::Linear);
-    m_height_texture->set_wrap(Texture::Wrap::ClampToEdge, Texture::Wrap::ClampToEdge);
+    image.reset(m_width, m_height, format);
+    return true;
+  };
+
+  if (resize_if_needed(m_height_texture, TextureImage::Format::R32F)) {
     m_height_texture_dirty = true;
   }
-
   if (m_height_texture_dirty) {
-    m_height_texture->bind();
-    upload_bound_texture_float(
-        m_width, m_height, FloatTexelLayout::Red, m_height_data.data());
+    m_height_texture.assign(m_height_data.data());
     m_height_texture_dirty = false;
   }
 
-  const bool field_size_changed = m_terrain_field_texture == nullptr ||
-                                  m_terrain_field_texture->get_width() != m_width ||
-                                  m_terrain_field_texture->get_height() != m_height;
-  if (field_size_changed) {
-    m_terrain_field_texture = std::make_unique<Texture>();
-    if (!m_terrain_field_texture->create_empty(
-            m_width, m_height, Texture::Format::RGBA16F)) {
-      m_terrain_field_texture.reset();
-    } else {
-      m_terrain_field_texture->set_filter(Texture::Filter::Linear,
-                                          Texture::Filter::Linear);
-      m_terrain_field_texture->set_wrap(Texture::Wrap::ClampToEdge,
-                                        Texture::Wrap::ClampToEdge);
-      m_terrain_fields_dirty = true;
-    }
+  if (resize_if_needed(m_terrain_field_texture, TextureImage::Format::Rgba16F)) {
+    m_terrain_fields_dirty = true;
   }
-
-  if (m_terrain_field_texture != nullptr && m_terrain_fields_dirty) {
+  if (m_terrain_fields_dirty) {
     bake_terrain_fields();
-    m_terrain_field_texture->bind();
-    upload_bound_texture_float(
-        m_width, m_height, FloatTexelLayout::Rgba, m_terrain_field_data.data());
+    m_terrain_field_texture.assign(m_terrain_field_data.data());
     m_terrain_fields_dirty = false;
   }
 
-  const bool cover_size_changed = m_cover_texture == nullptr ||
-                                  m_cover_texture->get_width() != m_width ||
-                                  m_cover_texture->get_height() != m_height;
-  if (cover_size_changed) {
-    m_cover_texture = std::make_unique<Texture>();
-    if (!m_cover_texture->create_empty(m_width, m_height, Texture::Format::RGBA16F)) {
-      m_cover_texture.reset();
-    } else {
-      m_cover_texture->set_filter(Texture::Filter::Linear, Texture::Filter::Linear);
-      m_cover_texture->set_wrap(Texture::Wrap::ClampToEdge, Texture::Wrap::ClampToEdge);
-      m_cover_dirty = true;
-    }
+  if (resize_if_needed(m_cover_texture, TextureImage::Format::Rgba16F)) {
+    m_cover_dirty = true;
   }
   if (building_ground.revision != m_building_ground_revision) {
     m_building_ground_revision = building_ground.revision;
     m_building_footprints = building_ground.footprints;
     m_cover_dirty = true;
   }
-  if (m_cover_texture != nullptr && m_cover_dirty) {
+  if (m_cover_dirty) {
     bake_cover_mask();
-    m_cover_texture->bind();
-    upload_bound_texture_float(
-        m_width, m_height, FloatTexelLayout::Rgba, m_cover_data.data());
+    m_cover_texture.assign(m_cover_data.data());
     m_cover_dirty = false;
   }
 
-  bake_terrain_microdetail();
-  if (m_noise_atlas_dirty) {
-    bake_terrain_noise_atlas();
-  }
-
-  resources.texture = m_height_texture.get();
-  resources.field_texture = m_terrain_field_texture.get();
-  resources.cover_texture = m_cover_texture.get();
-  resources.noise_atlas = m_noise_atlas.atlas_texture();
-  resources.noise_atlas_detail = m_noise_atlas.atlas_detail_texture();
-  resources.microdetail = m_noise_atlas.microdetail_texture();
+  resources.texture = &m_height_texture;
+  resources.field_texture = &m_terrain_field_texture;
+  resources.cover_texture = &m_cover_texture;
+  resources.noise = noise_request();
   resources.noise_atlas_world_size =
       QVector2D(static_cast<float>(m_width) * m_tile_size,
                 static_cast<float>(m_height) * m_tile_size);
@@ -419,7 +369,7 @@ auto TerrainRenderer::update_height_texture(
   return resources;
 }
 
-void TerrainRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void TerrainRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   if (m_chunks.empty()) {
     return;
   }

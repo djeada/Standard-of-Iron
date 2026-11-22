@@ -14,7 +14,6 @@
 #include "render/ground/i_scatter_source.h"
 
 namespace Render::GL {
-class Buffer;
 class FrameSubmitter;
 
 class BiomeRenderer : public IScatterSource {
@@ -27,7 +26,7 @@ public:
 
   void set_light_direction(const QVector3D& dir) override;
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   void refresh_grass();
   [[nodiscard]] auto grass_matches_graphics_profile() const noexcept -> bool;
@@ -38,6 +37,9 @@ public:
     return m_grass_state.is_gpu_ready();
   }
 
+  [[nodiscard]] auto instance_bytes() const -> std::size_t override {
+    return m_grass_state.instances.size() * sizeof(GrassInstanceGpu);
+  }
   [[nodiscard]] auto instance_count() const -> std::size_t override {
     return m_grass_state.instances.size();
   }
@@ -46,7 +48,8 @@ public:
     return m_grass_state.last_sync_stats;
   }
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool override;
+  void prepare_instance_blocks() override;
+  void for_each_instance_block(const InstanceBlockVisitor& visit) const override;
 
 private:
   struct GrassScatterContext {

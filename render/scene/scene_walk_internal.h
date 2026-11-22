@@ -9,10 +9,10 @@
 #include "game/units/spawn_type.h"
 #include "render/entity/building_collapse.h"
 #include "render/entity/registry.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/pipeline/screen_metrics.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/submitter.h"
-#include "render/gl/resources.h"
 #include "render/scene/battle_render_optimizer.h"
 #include "render/scene/scene_renderer.h"
 #include "render/scene/unit_render_cache.h"
@@ -61,7 +61,7 @@ struct RenderEntry {
 
 struct UnitSubmitContext {
   Engine::Core::World* world{nullptr};
-  ResourceManager* resources{nullptr};
+  const DrawResources* resources{nullptr};
   ISubmitter* batch_submitter{nullptr};
 
   const Render::BattleRenderOptimizer::FrameSnapshot* optimizer{nullptr};

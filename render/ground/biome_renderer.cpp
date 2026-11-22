@@ -1,7 +1,6 @@
 #include "render/ground/biome_renderer.h"
 
 #include <QDebug>
-#include <QOpenGLContext>
 #include <QVector2D>
 #include <qglobal.h>
 #include <qvectornd.h>
@@ -22,13 +21,12 @@
 #include "map/biome_settings.h"
 #include "map/terrain.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/graphics_settings.h"
-#include "render/gl/buffer.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/resources.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
+#include "render/math/render_constants.h"
 
 namespace {
 
@@ -188,17 +186,18 @@ void BiomeRenderer::set_light_direction(const QVector3D& dir) {
   m_grass_state.params.light_direction = m_light_direction;
 }
 
-auto BiomeRenderer::prewarm_gpu_resources() -> bool {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return false;
-  }
-  return Scatter::prewarm_filtered_state(
+void BiomeRenderer::prepare_instance_blocks() {
+  Scatter::prepare_filtered_blocks(
       m_grass_state, [](const GrassInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_height;
       });
 }
 
-void BiomeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void BiomeRenderer::for_each_instance_block(const InstanceBlockVisitor& visit) const {
+  Scatter::for_each_filtered_block(m_grass_state, visit);
+}
+
+void BiomeRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   Q_UNUSED(resources);
   const auto visible_count = Scatter::sync_filtered_state(
       m_grass_state,

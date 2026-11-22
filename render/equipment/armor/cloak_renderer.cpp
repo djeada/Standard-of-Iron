@@ -23,8 +23,8 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
-#include "render/gl/primitives.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/primitives.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::GL {
 

@@ -7,7 +7,7 @@
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -37,11 +37,11 @@ struct FormationPlacementInfo {
 };
 
 void render_formation_arrow(FrameSubmitter* renderer,
-                            ResourceManager* resources,
+                            const DrawResources* resources,
                             const FormationPlacementInfo& placement);
 
 void render_formation_slot_preview(FrameSubmitter* renderer,
-                                   ResourceManager* resources,
+                                   const DrawResources* resources,
                                    const FormationPlacementInfo& placement);
 
 } // namespace Render::GL

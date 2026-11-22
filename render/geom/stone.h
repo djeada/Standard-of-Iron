@@ -2,7 +2,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render {
 namespace Geom {

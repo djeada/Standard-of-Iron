@@ -1,10 +1,8 @@
-#include "render/gl/shared_geometry_cache.h"
-
-#include <QOpenGLContext>
+#include "render/geom/shared_geometry_cache.h"
 
 #include <utility>
 
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
 
@@ -27,13 +25,11 @@ auto SharedGeometryCache::get_or_build(std::uint64_t key,
   return m_meshes.emplace(key, std::move(mesh)).first->second.get();
 }
 
-auto SharedGeometryCache::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
+void SharedGeometryCache::for_each_mesh(const MeshVisitor& visit) const {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  bool ready = true;
-  for (auto& [key, mesh] : m_meshes) {
-    ready = meshes.prewarm(*mesh) && ready;
+  for (const auto& [key, mesh] : m_meshes) {
+    visit(*mesh);
   }
-  return ready;
 }
 
 auto SharedGeometryCache::size() const -> std::size_t {

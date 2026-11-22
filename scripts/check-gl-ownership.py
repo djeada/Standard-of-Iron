@@ -19,7 +19,7 @@ That only holds while nobody bypasses the handles, so three things are checked:
   * no process-wide singleton (a header declaring `instance()`) holds a GL
     object: GL state belongs to a backend's RenderContext, created on its
     context and destroyed with it, so two renderers never share or outlive it.
-    Mesh (render/gl/mesh.h) is geometry and holds no GL object either; each
+    Mesh (render/geom/mesh.h) is geometry and holds no GL object either; each
     backend uploads its own copy through its MeshGpuTable.
 
   usage: check-gl-ownership.py [repo-root]
@@ -83,7 +83,7 @@ def strip_strings(line: str) -> str:
     return re.sub(r'"(?:\\.|[^"\\])*"', '""', line)
 
 
-GEOMETRY_ONLY = ("render/gl/mesh.h",)
+GEOMETRY_ONLY = ("render/geom/mesh.h",)
 
 
 def check(root: Path) -> list[str]:

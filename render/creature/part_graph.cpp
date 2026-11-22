@@ -5,7 +5,7 @@
 
 #include "render/creature/primitive_geometry.h"
 #include "render/frame/submitter.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::Creature {
 

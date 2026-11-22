@@ -7,11 +7,9 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "render/gl/mesh_gpu_table.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
-
-class Mesh;
 
 [[nodiscard]] constexpr auto
 geometry_key(std::string_view name,
@@ -33,8 +31,9 @@ public:
 
   [[nodiscard]] auto get_or_build(std::uint64_t key, const Builder& build) -> Mesh*;
 
-  // Uploads every cached mesh into `meshes`.
-  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
+  // Visits every cached mesh, under the cache lock; used to prewarm a
+  // backend's MeshGpuTable.
+  void for_each_mesh(const MeshVisitor& visit) const;
 
   [[nodiscard]] auto size() const -> std::size_t;
 

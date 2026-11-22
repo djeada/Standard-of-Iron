@@ -12,6 +12,8 @@
 
 namespace Render::GL {
 
+class ResourceManager;
+
 class SoftwareBackend : public IRenderBackend {
 public:
   [[nodiscard]] auto initialize() -> bool override { return true; }
@@ -32,7 +34,10 @@ public:
   void set_animation_time(float) noexcept override {}
   void set_frame_budget(const Render::FrameBudgetConfig&) override {}
 
-  [[nodiscard]] auto resources() const -> ResourceManager* override { return nullptr; }
+  [[nodiscard]] auto resources() const -> ResourceManager* { return nullptr; }
+  [[nodiscard]] auto draw_resources() const -> const DrawResources* override {
+    return nullptr;
+  }
   [[nodiscard]] auto is_ready() const -> bool override { return true; }
   [[nodiscard]] auto presented_frame() const -> const QImage* override {
     return m_image.isNull() ? nullptr : &m_image;

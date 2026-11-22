@@ -10,14 +10,12 @@
 #include "game/core/entity.h"
 #include "game/map/terrain_service.h"
 #include "game/units/spawn_type.h"
-#include "render/backend/backend.h"
 #include "render/creature/combat_animation_diagnostics.h"
-#include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/frame/contact_shadow.h"
 #include "render/frame/draw_context.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/visibility_budget.h"
-#include "render/gl/resources.h"
 #include "scene/camera.h"
 
 namespace Render::Creature::Pipeline {
@@ -40,8 +38,7 @@ auto contact_shadow_opacity(const Render::GL::DrawContext& ctx,
   const Render::ContactShadowInputs inputs{.camera_distance = camera_distance,
                                            .fade_distance =
                                                graphics.shadow_max_distance()};
-  return Render::contact_shadow_placement(ctx.backend->environment_lighting(), inputs)
-      .opacity;
+  return Render::contact_shadow_placement(*ctx.environment_lighting, inputs).opacity;
 }
 
 auto admits_contact_shadow(const Render::GL::DrawContext& ctx,
@@ -89,19 +86,6 @@ auto build_contact_shadow_model(const Game::Map::TerrainService& terrain,
 }
 
 } // namespace
-
-auto resolve_humanoid_animation_state(const Render::GL::DrawContext& ctx)
-    -> PreparedAnimationState {
-  PreparedAnimationState state;
-  state.used_override = (ctx.animation_override != nullptr);
-  state.inputs = Render::GL::sample_anim_state(ctx);
-  return state;
-}
-
-auto resolve_elephant_animation_state(const Render::GL::DrawContext& ctx)
-    -> PreparedAnimationState {
-  return resolve_humanoid_animation_state(ctx);
-}
 
 auto resolve_humanoid_lod_state(const HumanoidLodStateInputs& inputs)
     -> PreparedCreatureLodState {
@@ -154,11 +138,11 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
 
   const auto& ctx = *inputs.ctx;
   const auto& graph = *inputs.graph;
-  if (ctx.backend == nullptr || ctx.resources == nullptr) {
+  if (ctx.resources == nullptr || ctx.environment_lighting == nullptr) {
     return state;
   }
 
-  state.shader = ctx.backend->troop_shadow_shader();
+  state.shader = ctx.resources->troop_shadow_shader();
   state.mesh = ctx.resources->quad();
   if (state.shader == nullptr || state.mesh == nullptr) {
     state.shader = nullptr;
@@ -216,11 +200,11 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
 
   const auto& ctx = *inputs.ctx;
   const auto& graph = *inputs.graph;
-  if (ctx.backend == nullptr || ctx.resources == nullptr) {
+  if (ctx.resources == nullptr || ctx.environment_lighting == nullptr) {
     return state;
   }
 
-  state.shader = ctx.backend->troop_shadow_shader();
+  state.shader = ctx.resources->troop_shadow_shader();
   state.mesh = ctx.resources->quad();
   if (state.shader == nullptr || state.mesh == nullptr) {
     state.shader = nullptr;

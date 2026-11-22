@@ -13,13 +13,13 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/terrain_contact.h"
-#include "render/gl/primitives.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/resources.h"
+#include "render/geom/primitives.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/scatter_submission.h"
+#include "render/math/render_constants.h"
 
 namespace {
 
@@ -49,7 +49,8 @@ void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   generate_firecamp_instances();
 }
 
-void FireCampRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void FireCampRenderer::submit(FrameSubmitter& renderer,
+                              const DrawResources* resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_state(

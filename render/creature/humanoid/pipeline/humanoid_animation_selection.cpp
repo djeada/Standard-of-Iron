@@ -14,6 +14,7 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid/asset/facial_hair_catalog.h"
 #include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/humanoid/pipeline/humanoid_playback.h"
 #include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/preparation_common.h"

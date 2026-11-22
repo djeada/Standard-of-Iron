@@ -43,7 +43,8 @@ void MagicShrineRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void MagicShrineRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void MagicShrineRenderer::submit(FrameSubmitter& renderer,
+                                 const DrawResources* resources) {
   if (submit_prop_common(
           renderer, resources, TerrainScatterCmd::Species::MagicShrine) == 0) {
     return;

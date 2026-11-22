@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <string>
 
-#include "render/creature/animation_state_components.h"
 #include "render/creature/pipeline/corpse_sink.h"
+#include "render/creature/species/animation_state_components.h"
 #include "render/creature/wildlife/wildlife_prepare.h"
 #include "render/creature/wildlife/wolf_spec.h"
 #include "render/entity/registry.h"

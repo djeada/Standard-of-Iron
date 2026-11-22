@@ -11,7 +11,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/schema/skeleton_schema.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::Humanoid {
 

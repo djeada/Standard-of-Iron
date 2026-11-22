@@ -21,8 +21,8 @@
 #include "render/backend/rigged_cull_pipeline.h"
 #include "render/backend/shadow_cascade_fit.h"
 #include "render/frame/draw_queue.h"
+#include "render/geom/mesh.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/rigged_mesh.h"
 #include "render/gl/shader.h"
@@ -708,8 +708,12 @@ void Backend::render_shadow_cascade_scatter(const DrawQueue& queue,
   shadow_frame.banner_wind_strength = 0.0F;
   GlStateCache shadow_state = m_gl_state;
   shadow_state.polygon_offset_enabled = true;
-  PipelineDrawContext shadow_context{
-      queue, shadow_frame, shadow_state, m_context.meshes()};
+  PipelineDrawContext shadow_context{queue,
+                                     shadow_frame,
+                                     shadow_state,
+                                     m_context.meshes(),
+                                     m_context.instances(),
+                                     m_context.textures()};
 
   upload_frame_data(frame.light_view_projection, true);
   for (const PreparedBatch& prepared : queue.prepared_batches()) {

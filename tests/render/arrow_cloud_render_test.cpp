@@ -106,8 +106,9 @@ TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
   const auto& arrow = system.arrows().front();
 
   RecordingRenderer renderer;
-  Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
+  Render::GL::render_arrows(&renderer,
+                            reinterpret_cast<const Render::GL::DrawResources*>(0x1),
+                            system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* tip_mesh = Render::Geom::Arrow::get_tip();
@@ -163,8 +164,9 @@ TEST(ArrowCloudRender, VolleyArrowTrailsAreShaftOnlyStreaks) {
   ASSERT_EQ(system.arrows().size(), 1U);
 
   RecordingRenderer renderer;
-  Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
+  Render::GL::render_arrows(&renderer,
+                            reinterpret_cast<const Render::GL::DrawResources*>(0x1),
+                            system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* tip_mesh = Render::Geom::Arrow::get_tip();
@@ -214,8 +216,9 @@ TEST(ArrowCloudRender, ArrowGlowHugsTheShaftInsteadOfSwallowingIt) {
   ASSERT_EQ(system.arrows().size(), 1U);
 
   RecordingRenderer renderer;
-  Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
+  Render::GL::render_arrows(&renderer,
+                            reinterpret_cast<const Render::GL::DrawResources*>(0x1),
+                            system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   const RecordedMeshDraw* body = find_draw(renderer.meshes, shaft_mesh);
@@ -253,8 +256,9 @@ TEST(ArrowCloudRender, MarkerArrowTipUsesBrightMetallicColor) {
   const auto& arrow = system.arrows().front();
 
   RecordingRenderer renderer;
-  Render::GL::render_arrows(
-      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system.arrows());
+  Render::GL::render_arrows(&renderer,
+                            reinterpret_cast<const Render::GL::DrawResources*>(0x1),
+                            system.arrows());
 
   auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
   auto* tip_mesh = Render::Geom::Arrow::get_tip();

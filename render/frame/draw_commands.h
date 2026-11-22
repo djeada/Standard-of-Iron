@@ -26,7 +26,8 @@ namespace Render::GL {
 class Mesh;
 class RiggedMesh;
 class Texture;
-class Buffer;
+class InstanceBlock;
+class TextureImage;
 class Shader;
 struct Material;
 } // namespace Render::GL
@@ -69,7 +70,7 @@ struct FogInstanceData {
 };
 
 struct VisibilityMaskResources {
-  Texture* texture = nullptr;
+  const TextureImage* texture = nullptr;
   QVector2D size{0.0F, 0.0F};
   float tile_size = 1.0F;
   float explored_alpha = 0.82F;
@@ -77,7 +78,7 @@ struct VisibilityMaskResources {
 };
 
 struct FogMaskResources {
-  Texture* texture = nullptr;
+  const TextureImage* texture = nullptr;
   QVector2D size{0.0F, 0.0F};
   float tile_size = 1.0F;
   bool enabled = false;
@@ -85,7 +86,8 @@ struct FogMaskResources {
 
 struct FogBatchCmd {
   const FogInstanceData* instances = nullptr;
-  Buffer* instance_buffer = nullptr;
+  // Instead of `instances`: fog kept in a block the backend uploads once.
+  const InstanceBlock* instance_block = nullptr;
   std::size_t count = 0;
   FogMaskResources mask{};
   CommandPriority priority{CommandPriority::Low};
@@ -116,7 +118,8 @@ struct TerrainScatterCmd {
 
   Species species = Species::Grass;
   const Material* material = nullptr;
-  Buffer* instance_buffer = nullptr;
+  // The chunk's instances; the backend keeps its own buffer for the block.
+  const InstanceBlock* instances = nullptr;
   std::size_t instance_count = 0;
   QVector3D bounds_center;
   float bounds_radius = 0.0F;
@@ -136,14 +139,26 @@ struct RainBatchCmd {
   CommandPriority priority{CommandPriority::Low};
 };
 
+// What a backend bakes the terrain noise atlas and microdetail from. The
+// backend owns the baked textures and bakes the atlas once per `revision`,
+// which moves whenever the terrain is configured again.
+struct TerrainNoiseRequest {
+  int width = 0;
+  int height = 0;
+  float tile_size = 1.0F;
+  QVector2D noise_offset{0.0F, 0.0F};
+  float macro_noise_scale = 1.0F;
+  bool low_detail = false;
+  std::uint64_t revision = 0;
+  bool enabled = false;
+};
+
 struct TerrainSurfaceCmd {
   struct HeightResources {
-    Texture* texture = nullptr;
-    Texture* field_texture = nullptr;
-    Texture* cover_texture = nullptr;
-    unsigned int noise_atlas = 0U;
-    unsigned int noise_atlas_detail = 0U;
-    unsigned int microdetail = 0U;
+    const TextureImage* texture = nullptr;
+    const TextureImage* field_texture = nullptr;
+    const TextureImage* cover_texture = nullptr;
+    TerrainNoiseRequest noise{};
     QVector2D noise_atlas_world_size{0.0F, 0.0F};
     QVector2D texel_size{0.0F, 0.0F};
     QVector2D uv_scale{0.0F, 0.0F};

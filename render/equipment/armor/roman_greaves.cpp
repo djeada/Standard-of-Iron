@@ -15,7 +15,7 @@
 #include "render/equipment/equipment_submit.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/render_archetype.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::GL {
 

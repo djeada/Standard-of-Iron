@@ -9,7 +9,7 @@ class QOpenGLContext;
 namespace Render::GL {
 class Renderer;
 class Camera;
-class ResourceManager;
+class DrawResources;
 
 class RenderBootstrap {
 public:

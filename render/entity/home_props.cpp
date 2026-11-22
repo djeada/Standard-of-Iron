@@ -16,7 +16,7 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/equipment/render_archetype_registry.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 namespace {

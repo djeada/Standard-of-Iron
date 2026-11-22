@@ -5,7 +5,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/shared_geometry_cache.h"
 
 namespace Render::Geom {
 

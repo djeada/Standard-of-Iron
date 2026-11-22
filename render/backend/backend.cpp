@@ -55,19 +55,19 @@
 #include "render/frame/material.h"
 #include "render/frame/primitive_batch.h"
 #include "render/frame/rain_gpu.h"
+#include "render/geom/mesh.h"
 #include "render/geom/mode_indicator.h"
 #include "render/geom/selection_disc.h"
+#include "render/geom/shared_geometry_cache.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_lifetime.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/resources.h"
 #include "render/gl/rigged_mesh.h"
 #include "render/gl/shader.h"
-#include "render/gl/shared_geometry_cache.h"
 #include "render/gl/texture.h"
 #include "render/gl/ubo_bindings.h"
 #include "render/profiling/frame_profile.h"
@@ -301,7 +301,75 @@ auto Backend::initialize() -> bool {
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
 
   apply_graphics_profile(Render::GraphicsSettings::instance().profile(), false);
+  refresh_draw_resources();
   return true;
+}
+
+void Backend::sync_frame_resources(const DrawQueue& queue) {
+  auto& instances = m_context.instances();
+  auto& textures = m_context.textures();
+  const auto sync_height =
+      [&textures](const TerrainSurfaceCmd::HeightResources& height) {
+        (void)textures.resolve(height.texture);
+        (void)textures.resolve(height.field_texture);
+        (void)textures.resolve(height.cover_texture);
+      };
+  for (const DrawCmd& cmd : queue.items()) {
+    switch (cmd.index()) {
+    case TerrainScatterCmdIndex: {
+      const auto& scatter = std::get<TerrainScatterCmdIndex>(cmd);
+      (void)instances.resolve(scatter.instances);
+      (void)textures.resolve(scatter.visibility.texture);
+      break;
+    }
+    case FogBatchCmdIndex: {
+      const auto& fog = std::get<FogBatchCmdIndex>(cmd);
+      (void)instances.resolve(fog.instance_block);
+      (void)textures.resolve(fog.mask.texture);
+      break;
+    }
+    case TerrainSurfaceCmdIndex: {
+      const auto& surface = std::get<TerrainSurfaceCmdIndex>(cmd);
+      sync_height(surface.height);
+      if (m_terrain_pipeline != nullptr) {
+        m_terrain_pipeline->sync_noise_atlas(surface.height.noise);
+      }
+      (void)textures.resolve(surface.visibility.texture);
+      break;
+    }
+    case TerrainFeatureCmdIndex: {
+      const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
+      (void)textures.resolve(feature.visibility.texture);
+      (void)textures.resolve(feature.fog_mask.texture);
+      break;
+    }
+    case GroundMarkerCmdIndex:
+      sync_height(std::get<GroundMarkerCmdIndex>(cmd).height);
+      break;
+    default:
+      break;
+    }
+  }
+  // Uploads bind buffers and texture unit 0 behind the state cache's back.
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  m_gl_state.forget_bindings();
+}
+
+void Backend::refresh_draw_resources() {
+  DrawResources::Parts parts;
+  if (const auto* stock = m_context.resources(); stock != nullptr) {
+    parts.quad = stock->quad();
+    parts.ground = stock->ground();
+    parts.unit = stock->unit();
+    parts.white = stock->white();
+    parts.wear_volume = stock->wear_volume();
+  }
+  parts.banner_mesh = banner_mesh();
+  parts.banner_shader = banner_shader();
+  parts.troop_shadow_shader = m_shadow_shader;
+  m_draw_resources = DrawResources(parts);
 }
 
 auto Backend::banner_mesh() const -> Mesh* {
@@ -401,7 +469,10 @@ void Backend::update_contact_shadow_uniforms() {
 void Backend::begin_frame() {
 
   drain_deferred_gl_deletes();
+  refresh_draw_resources();
   m_context.meshes().collect_retired();
+  m_context.instances().collect_retired();
+  m_context.textures().collect_retired();
   m_frame.surface.ground_cover = {};
 
   sync_graphics_profile();
@@ -716,6 +787,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_sky_box_blend_time = m_animation_time;
   upload_frame_uniform_buffers(view_proj, queue, cam);
   update_contact_shadow_uniforms();
+  sync_frame_resources(queue);
   {
     Render::Profiling::PhaseScope const shadow_scope(
         &Render::Profiling::global_profile(), Render::Profiling::Phase::Shadow);
@@ -789,7 +861,12 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_frame.ambient_strength = m_ambient_strength;
 
   const auto& prepared_batches = queue.prepared_batches();
-  PipelineDrawContext context{queue, m_frame, m_gl_state, m_context.meshes()};
+  PipelineDrawContext context{queue,
+                              m_frame,
+                              m_gl_state,
+                              m_context.meshes(),
+                              m_context.instances(),
+                              m_context.textures()};
 
   m_rigged_drawn_this_frame = 0;
   auto& draw_tally = DrawTally::instance();

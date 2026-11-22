@@ -52,7 +52,7 @@ auto range_ring_pattern_for(Game::Systems::RangeWeaponClass weapon_class)
 }
 
 void render_attack_range_rings(FrameSubmitter* renderer,
-                               ResourceManager* resources,
+                               const DrawResources* resources,
                                std::span<const Game::Systems::AttackRangeRing> rings) {
   if (rings.empty()) {
     return;
@@ -79,7 +79,7 @@ void render_attack_range_rings(FrameSubmitter* renderer,
 }
 
 void render_range_rings(FrameSubmitter* renderer,
-                        ResourceManager* resources,
+                        const DrawResources* resources,
                         std::span<const RangeRingSpec> rings) {
   if ((renderer == nullptr) || (resources == nullptr) || rings.empty()) {
     return;

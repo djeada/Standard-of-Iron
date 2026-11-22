@@ -13,7 +13,7 @@
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 class Mesh;
 class Texture;
 
@@ -53,7 +53,7 @@ public:
     invalidate_params_cache();
   }
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
 private:
   void recompute_model();

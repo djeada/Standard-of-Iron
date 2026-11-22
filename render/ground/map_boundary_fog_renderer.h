@@ -8,11 +8,11 @@
 #include <vector>
 
 #include "render/frame/i_draw_source.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 class MapBoundaryFogRenderer : public IDrawSource {
 public:
@@ -35,7 +35,7 @@ public:
     return m_mountain_max_height - m_mountain_min_height;
   }
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
 private:
   struct BoundaryCard {

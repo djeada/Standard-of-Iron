@@ -102,6 +102,51 @@ enum class ScatterSpeciesId {
   CursedGoldVein
 };
 
+[[nodiscard]] constexpr auto scatter_species_name(ScatterSpeciesId species) -> const
+    char* {
+  switch (species) {
+  case ScatterSpeciesId::Grass:
+    return "grass";
+  case ScatterSpeciesId::Stone:
+    return "stone";
+  case ScatterSpeciesId::Plant:
+    return "plant";
+  case ScatterSpeciesId::Pine:
+    return "pine";
+  case ScatterSpeciesId::Olive:
+    return "olive";
+  case ScatterSpeciesId::Cypress:
+    return "cypress";
+  case ScatterSpeciesId::Palm:
+    return "palm";
+  case ScatterSpeciesId::FireCamp:
+    return "firecamp";
+  case ScatterSpeciesId::Tent:
+    return "tent";
+  case ScatterSpeciesId::SupplyCart:
+    return "supply_cart";
+  case ScatterSpeciesId::WeaponRack:
+    return "weapon_rack";
+  case ScatterSpeciesId::Ruins:
+    return "ruins";
+  case ScatterSpeciesId::DeadTree:
+    return "dead_tree";
+  case ScatterSpeciesId::Boulder:
+    return "boulder";
+  case ScatterSpeciesId::IronOre:
+    return "iron_ore";
+  case ScatterSpeciesId::MagicShrine:
+    return "magic_shrine";
+  case ScatterSpeciesId::AbandonedHome:
+    return "abandoned_home";
+  case ScatterSpeciesId::Statue:
+    return "statue";
+  case ScatterSpeciesId::CursedGoldVein:
+    return "cursed_gold_vein";
+  }
+  return "unknown";
+}
+
 enum class ScatterVisibilityMode {
   None,
   InstanceFiltered

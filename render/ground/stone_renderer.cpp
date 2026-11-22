@@ -18,13 +18,12 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/buffer.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/resources.h"
 #include "render/ground/ground_ecology.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_ground_fit.h"
+#include "render/math/render_constants.h"
 
 namespace {
 
@@ -59,7 +58,7 @@ void StoneRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, QVector3D(0.35F, 0.8F, 0.45F));
 }
 
-void StoneRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void StoneRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   submit_filtered_common<false>(
       renderer,
       resources,

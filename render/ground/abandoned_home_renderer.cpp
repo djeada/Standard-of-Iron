@@ -35,7 +35,7 @@ void AbandonedHomeRenderer::set_light_direction(const QVector3D& dir) {
 }
 
 void AbandonedHomeRenderer::submit(FrameSubmitter& renderer,
-                                   ResourceManager* resources) {
+                                   const DrawResources* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::AbandonedHome);
 }
 

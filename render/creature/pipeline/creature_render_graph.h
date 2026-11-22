@@ -150,6 +150,8 @@ public:
 
   void add_request(const Render::Creature::CreatureRenderRequest& request);
 
+  void add_row(PreparedCreatureRenderRow row);
+
   void fade_requests_from(std::size_t first, float alpha) noexcept;
 
   [[nodiscard]] auto

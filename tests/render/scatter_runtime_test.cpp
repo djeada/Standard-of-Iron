@@ -19,6 +19,7 @@
 #include "game/session/session_context.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/world_view.h"
+#include "render/geom/instance_block.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
@@ -65,19 +66,6 @@ auto make_tree_map_definition(Game::Map::GroundType ground_type,
   map_def.biome.irregularity_amplitude =
       std::max(0.65F, map_def.biome.irregularity_amplitude);
   return map_def;
-}
-
-TEST(ScatterRuntimeTest, DirectUploadDecisionRequiresDirtyOrMissingBuffer) {
-  using Render::Ground::Scatter::direct_needs_buffer_upload;
-
-  EXPECT_FALSE(direct_needs_buffer_upload(true, false, true))
-      << "Empty scatter chunks should not upload in stable or dirty frames.";
-  EXPECT_TRUE(direct_needs_buffer_upload(false, false, false))
-      << "A populated chunk without a GPU buffer needs one initial upload.";
-  EXPECT_TRUE(direct_needs_buffer_upload(false, true, true))
-      << "Dirty populated chunks need an upload.";
-  EXPECT_FALSE(direct_needs_buffer_upload(false, true, false))
-      << "Stable populated chunks with a buffer must not upload.";
 }
 
 TEST(ScatterRuntimeTest, DryGrassColorKeepsContrastOnMediterraneanSoil) {
@@ -128,33 +116,43 @@ TEST(ScatterRuntimeTest, GrassBladeToningDiffersBetweenBiomes) {
   EXPECT_GT((alpine - dry).length(), 0.02F);
 }
 
-TEST(ScatterRuntimeTest, DirectGpuReadyAllowsEmptyScatterBuffers) {
-  std::vector<Render::GL::StoneInstanceGpu> instances;
-  std::unique_ptr<Render::GL::Buffer> const buffer;
-
-  EXPECT_TRUE(Render::Ground::Scatter::is_direct_gpu_ready(instances, buffer));
-
-  instances.push_back(
-      {QVector4D(0.0F, 0.0F, 0.0F, 1.0F), QVector4D(1.0F, 1.0F, 1.0F, 0.0F)});
-  EXPECT_FALSE(Render::Ground::Scatter::is_direct_gpu_ready(instances, buffer));
-}
-
-TEST(ScatterRuntimeTest, DirectRendererStateResetClearsCpuTrackingState) {
-  Render::Ground::Scatter::DirectRendererState<Render::GL::StoneInstanceGpu,
-                                               Render::GL::StoneBatchParams>
-      state;
-  state.instances.push_back(
-      {QVector4D(0.0F, 0.0F, 0.0F, 1.0F), QVector4D(1.0F, 1.0F, 1.0F, 0.0F)});
-  state.instance_count = 1;
+TEST(ScatterRuntimeTest, SyncPacksVisibleInstancesIntoEachChunkBlockWithoutGl) {
+  Render::Ground::Scatter::FilteredRendererState<QVector3D, int> state;
+  state.instances = {QVector3D{1.0F, 0.0F, 1.0F},
+                     QVector3D{2.0F, 0.0F, 2.0F},
+                     QVector3D{100.0F, 0.0F, 100.0F}};
+  state.instance_count = state.instances.size();
   state.instances_dirty = true;
+  const auto position = [](const QVector3D& p) {
+    return p;
+  };
 
-  state.reset_instances();
+  Render::Ground::Scatter::prepare_filtered_blocks(state, position);
+  ASSERT_EQ(state.spatial_chunks.size(), 2U);
+  std::size_t reserved = 0;
+  Render::Ground::Scatter::for_each_filtered_block(
+      state, [&](const Render::GL::InstanceBlock& block) {
+        reserved += block.reserved_bytes();
+        EXPECT_TRUE(block.empty()) << "preparing reserves; it fills nothing yet";
+      });
+  EXPECT_EQ(reserved, 3U * sizeof(QVector3D));
 
-  EXPECT_TRUE(state.instances.empty());
-  EXPECT_EQ(state.instance_count, 0U);
-  EXPECT_FALSE(state.instances_dirty);
-  EXPECT_TRUE(state.is_gpu_ready());
-  EXPECT_FALSE(state.last_sync_stats.did_upload_or_rebuild());
+  EXPECT_EQ(Render::Ground::Scatter::sync_filtered_state(state, position, nullptr), 3U);
+  std::size_t packed = 0;
+  std::vector<std::uint64_t> versions;
+  for (const auto& chunk : state.spatial_chunks) {
+    ASSERT_NE(chunk.block, nullptr);
+    EXPECT_EQ(chunk.block->size_bytes(), chunk.visible_count * sizeof(QVector3D));
+    packed += chunk.block->size_bytes();
+    versions.push_back(chunk.block->version());
+  }
+  EXPECT_EQ(packed, 3U * sizeof(QVector3D));
+
+  (void)Render::Ground::Scatter::sync_filtered_state(state, position, nullptr);
+  for (std::size_t i = 0; i < state.spatial_chunks.size(); ++i) {
+    EXPECT_EQ(state.spatial_chunks[i].block->version(), versions[i])
+        << "an unchanged frame must not hand the backend new bytes";
+  }
 }
 
 TEST(ScatterRuntimeTest, FilteredRendererStateResetClearsVisibilityState) {
@@ -836,7 +834,7 @@ TEST(StoneGroundFit, RockFieldsAreNotOneColour) {
       << "iron stains and lichen greys should split the palette";
 }
 
-TEST(ScatterRuntimeTest, HidingAChunkRetainsItsBufferWithoutDrawingStaleInstances) {
+TEST(ScatterRuntimeTest, HidingAChunkRetainsItsBlockWithoutDrawingStaleInstances) {
   Render::Ground::Scatter::FilteredRendererState<QVector3D, int> state;
   state.instances = {QVector3D{0, 0, 0}};
   state.visible_instances = state.instances;
@@ -848,8 +846,8 @@ TEST(ScatterRuntimeTest, HidingAChunkRetainsItsBufferWithoutDrawingStaleInstance
   chunk.accepted = {1};
   chunk.visible_count = 1;
   chunk.all_accepted = true;
-  chunk.buffer = std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
-  auto* retained_buffer = chunk.buffer.get();
+  chunk.block = std::make_unique<Render::GL::InstanceBlock>();
+  auto* retained_block = chunk.block.get();
 
   Game::Map::VisibilityService::Snapshot hidden;
   hidden.initialized = true;
@@ -864,6 +862,46 @@ TEST(ScatterRuntimeTest, HidingAChunkRetainsItsBufferWithoutDrawingStaleInstance
   EXPECT_EQ(count, 0U);
   EXPECT_TRUE(state.visible_instances.empty());
   EXPECT_EQ(chunk.visible_count, 0U);
-  EXPECT_EQ(chunk.buffer.get(), retained_buffer);
+  EXPECT_EQ(chunk.block.get(), retained_block);
   EXPECT_EQ(state.last_sync_stats.buffer_resets, 0U);
+}
+
+TEST(ScatterRuntimeTest, ScatterMemoryReportsEveryLayerAndReservesExactlyItsInstances) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 64;
+  map_def.grid.height = 64;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.seed = 4242U;
+  Game::Map::apply_ground_type_defaults(map_def.biome,
+                                        Game::Map::GroundType::SoilRocky);
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = 20.0F, .z = 20.0F});
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::Boulder, .x = 24.0F, .z = 24.0F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  Render::GL::TerrainScatterManager scatter;
+  scatter.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
+  scatter.configure(*height_map,
+                    terrain.biome_settings(),
+                    terrain.authored_world_props(),
+                    terrain.world_props());
+  scatter.prepare_instance_blocks();
+
+  std::size_t total_instances = 0;
+  for (const auto& layer : scatter.memory()) {
+    total_instances += layer.instances;
+    EXPECT_EQ(layer.gpu_reserved_bytes, layer.cpu_bytes)
+        << Render::GL::scatter_species_name(layer.species)
+        << ": every placed instance needs exactly one reserved GPU slot";
+    if (layer.instances > 0) {
+      EXPECT_GT(layer.cpu_bytes, 0U) << Render::GL::scatter_species_name(layer.species);
+    }
+  }
+  EXPECT_GT(total_instances, 0U) << "a rocky meadow should scatter something";
 }

@@ -32,7 +32,7 @@
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/frame/render_archetype.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace {
 

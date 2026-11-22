@@ -6,12 +6,9 @@
 
 #include <cstdint>
 
-#include "render/creature/elephant/dimensions.h"
-#include "render/creature/horse/dimensions.h"
-#include "render/creature/humanoid/humanoid_types.h"
+#include "render/creature/animation_inputs.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/render_request.h"
-#include "render/creature/wildlife/wildlife_variant.h"
 
 namespace Engine::Core {
 class UnitComponent;
@@ -23,51 +20,6 @@ class Shader;
 } // namespace Render::GL
 
 namespace Render::Creature::Pipeline {
-
-struct PreparedHumanoidBodyState {
-  CreatureGraphOutput graph{};
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext animation{};
-};
-
-struct PreparedHorseBodyState {
-  CreatureGraphOutput graph{};
-  Render::GL::HorseVariant variant{};
-  Render::Creature::AnimationStateId animation_state{
-      Render::Creature::AnimationStateId::Idle};
-  float phase{0.0F};
-  std::uint32_t clip_variant{0U};
-};
-
-struct PreparedElephantBodyState {
-  CreatureGraphOutput graph{};
-  Render::GL::ElephantVariant variant{};
-  Render::Creature::AnimationStateId animation_state{
-      Render::Creature::AnimationStateId::Idle};
-  float phase{0.0F};
-  std::uint32_t clip_variant{0U};
-  Render::Creature::AnimationStateId outgoing_state{
-      Render::Creature::AnimationStateId::Idle};
-  float outgoing_phase{0.0F};
-  float outgoing_weight{0.0F};
-};
-
-struct PreparedWildlifeBodyState {
-  CreatureGraphOutput graph{};
-  Render::GL::WildlifeVariant variant{};
-  Render::Creature::Pipeline::CreatureKind kind{
-      Render::Creature::Pipeline::CreatureKind::Sheep};
-  Render::Creature::AnimationStateId animation_state{
-      Render::Creature::AnimationStateId::Idle};
-  float phase{0.0F};
-  std::uint32_t clip_variant{0U};
-
-  Render::Creature::AnimationStateId outgoing_state{
-      Render::Creature::AnimationStateId::Idle};
-  float outgoing_phase{0.0F};
-  float outgoing_weight{0.0F};
-};
 
 struct PreparedRenderPassIntent {
   RenderPassIntent pass{RenderPassIntent::Main};
@@ -139,12 +91,6 @@ pass_intent_for(const CreatureGraphOutput& graph) noexcept -> PreparedRenderPass
   intent.emits_body = !graph.culled;
   return intent;
 }
-
-[[nodiscard]] auto resolve_humanoid_animation_state(const Render::GL::DrawContext& ctx)
-    -> PreparedAnimationState;
-
-[[nodiscard]] auto resolve_elephant_animation_state(const Render::GL::DrawContext& ctx)
-    -> PreparedAnimationState;
 
 [[nodiscard]] auto resolve_humanoid_lod_state(const HumanoidLodStateInputs& inputs)
     -> PreparedCreatureLodState;

@@ -44,7 +44,7 @@ void CursedGoldVeinRenderer::set_light_direction(const QVector3D& dir) {
 }
 
 void CursedGoldVeinRenderer::submit(FrameSubmitter& renderer,
-                                    ResourceManager* resources) {
+                                    const DrawResources* resources) {
   if (submit_prop_common(
           renderer, resources, TerrainScatterCmd::Species::CursedGoldVein) == 0) {
     return;

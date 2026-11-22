@@ -1,7 +1,5 @@
-#include "render/creature/anatomy_bake.h"
+#include "render/creature/horse/horse_anatomy_bake.h"
 
-#include "render/creature/elephant/dimensions.h"
-#include "render/creature/elephant/elephant_motion.h"
 #include "render/creature/horse/dimensions.h"
 #include "render/creature/horse/horse_motion.h"
 
@@ -23,11 +21,6 @@ inline auto horse_inputs_match(const HorseAnatomyComponent& c,
          color_close(c.cloth_base, cloth);
 }
 
-inline auto elephant_inputs_match(const ElephantAnatomyComponent& c,
-                                  std::uint32_t seed) -> bool {
-  return c.seed == seed;
-}
-
 void bake_horse(HorseAnatomyComponent& c,
                 std::uint32_t seed,
                 const QVector3D& leather,
@@ -41,16 +34,6 @@ void bake_horse(HorseAnatomyComponent& c,
     Render::GL::scale_horse_dimensions(c.profile.dims, mount_scale);
   }
   c.mount_frame = Render::GL::compute_mount_frame(c.profile);
-  c.baked = true;
-}
-
-void bake_elephant(ElephantAnatomyComponent& c,
-                   std::uint32_t seed,
-                   const QVector3D& fabric,
-                   const QVector3D& metal) {
-  c.seed = seed;
-  c.profile = Render::GL::make_elephant_profile(seed, fabric, metal);
-  c.howdah_frame = Render::GL::compute_howdah_frame(c.profile);
   c.baked = true;
 }
 
@@ -73,26 +56,6 @@ auto get_or_bake_horse_anatomy(Engine::Core::Entity* entity,
       *Engine::Core::get_or_add_component<HorseAnatomyComponent>(entity);
   if (!c.baked || !horse_inputs_match(c, seed, leather_base, cloth_base)) {
     bake_horse(c, seed, leather_base, cloth_base, mount_scale);
-  }
-  return c;
-}
-
-auto get_or_bake_elephant_anatomy(Engine::Core::Entity* entity,
-                                  std::uint32_t seed,
-                                  const QVector3D& fabric_base,
-                                  const QVector3D& metal_base)
-    -> ElephantAnatomyComponent& {
-  if (entity == nullptr) {
-    thread_local ElephantAnatomyComponent scratch;
-    if (!scratch.baked || !elephant_inputs_match(scratch, seed)) {
-      bake_elephant(scratch, seed, fabric_base, metal_base);
-    }
-    return scratch;
-  }
-  ElephantAnatomyComponent& c =
-      *Engine::Core::get_or_add_component<ElephantAnatomyComponent>(entity);
-  if (!c.baked || !elephant_inputs_match(c, seed)) {
-    bake_elephant(c, seed, fabric_base, metal_base);
   }
   return c;
 }

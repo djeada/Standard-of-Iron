@@ -26,7 +26,7 @@
 #include "render/creature/pipeline/creature_bone_probe.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/frame/palette.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 #include "render/profiling/frame_profile.h"
 #include "render/scene/scene_renderer.h"
 #include "scene/camera.h"

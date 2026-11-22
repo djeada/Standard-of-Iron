@@ -5,9 +5,9 @@
 #include <cstddef>
 #include <sstream>
 
+#include "render/geom/mesh.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_lifetime.h"
-#include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/vertex_attrib_layout.h"
 #include "render/profiling/gl_creation_trace.h"

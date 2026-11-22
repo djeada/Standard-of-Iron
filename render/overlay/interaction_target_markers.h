@@ -8,7 +8,7 @@
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 struct InteractionTargetMarkerVisual {
   QVector3D position{0.0F, 0.0F, 0.0F};
@@ -19,7 +19,7 @@ struct InteractionTargetMarkerVisual {
 
 void render_interaction_target_markers(
     FrameSubmitter* renderer,
-    ResourceManager* resources,
+    const DrawResources* resources,
     std::span<const InteractionTargetMarkerVisual> markers,
     bool reduced_motion = false);
 

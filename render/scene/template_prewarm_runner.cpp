@@ -67,6 +67,7 @@
 #include "render/equipment/render_archetype_registry.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/draw_queue.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/graphics_settings.h"
 #include "render/frame/pass/frame_context.h"
 #include "render/frame/pass/frame_pass_runner.h"
@@ -76,9 +77,8 @@
 #include "render/frame/visibility_budget.h"
 #include "render/frame/world_chunk.h"
 #include "render/geom/mode_indicator.h"
+#include "render/geom/primitives.h"
 #include "render/gl/buffer.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 #include "render/profiling/asset_counters.h"
 #include "render/profiling/frame_profile.h"
 #include "render/scene/battle_render_optimizer.h"
@@ -143,7 +143,9 @@ auto make_template_prewarm_draw_context(Renderer& renderer,
   DrawContext ctx{
       renderer.resources(), &entity, nullptr, renderer.world_view(), QMatrix4x4()};
   ctx.renderer_id = renderer_id;
-  ctx.backend = renderer.backend();
+  ctx.environment_lighting = renderer.backend() != nullptr
+                                 ? &renderer.backend()->environment_lighting()
+                                 : nullptr;
   ctx.camera = nullptr;
   ctx.allow_template_cache = allow_template_cache;
   ctx.template_prewarm = true;

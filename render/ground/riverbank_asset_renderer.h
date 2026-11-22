@@ -27,7 +27,7 @@ public:
 
   void set_light_direction(const QVector3D& dir);
 
-  void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
+  void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
   void clear();
 

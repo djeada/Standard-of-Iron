@@ -26,7 +26,7 @@
 
 namespace Render::GL {
 
-class ResourceManager;
+class DrawResources;
 
 struct TerrainSceneSubmitOptions {
   bool include_scatters = true;
@@ -81,7 +81,7 @@ public:
   }
 
   void submit(Renderer& renderer,
-              ResourceManager* resources,
+              const DrawResources* resources,
               TerrainSceneSubmitOptions options = {}) const {
     set_world_view(renderer.world_view());
     submit_surfaces(renderer, resources);
@@ -206,19 +206,19 @@ public:
   }
 
 private:
-  void submit_surfaces(Renderer& renderer, ResourceManager* resources) const {
+  void submit_surfaces(Renderer& renderer, const DrawResources* resources) const {
     if (m_surface != nullptr) {
       m_surface->submit(renderer, resources);
     }
   }
 
-  void submit_features(Renderer& renderer, ResourceManager* resources) const {
+  void submit_features(Renderer& renderer, const DrawResources* resources) const {
     if (m_features != nullptr) {
       m_features->submit(renderer, resources);
     }
   }
 
-  void submit_scatters(Renderer& renderer, ResourceManager* resources) const {
+  void submit_scatters(Renderer& renderer, const DrawResources* resources) const {
     if (m_scatter != nullptr) {
       m_scatter->submit(renderer, resources);
     }

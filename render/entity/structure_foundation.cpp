@@ -9,7 +9,7 @@
 #include "game/map/terrain_service.h"
 #include "game/units/building_body.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 
 namespace Render::GL {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/gl/garment_shell.h"
+#include "render/geom/garment_shell.h"
 
 namespace Render::GL {
 

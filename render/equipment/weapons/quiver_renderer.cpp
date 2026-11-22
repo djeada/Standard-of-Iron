@@ -14,9 +14,9 @@
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/equipment/weapons/arrow_archetype_utils.h"
 #include "render/frame/draw_context.h"
-#include "render/gl/render_constants.h"
 #include "render/math/creature_math_utils.h"
 #include "render/math/math_utils.h"
+#include "render/math/render_constants.h"
 
 namespace Render::GL {
 

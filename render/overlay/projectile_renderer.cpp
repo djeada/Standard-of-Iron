@@ -8,18 +8,16 @@
 #include "game/systems/arrow_projectile.h"
 #include "game/systems/render_effects_frame.h"
 #include "game/systems/stone_projectile.h"
-#include "render/backend/backend.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/frame/draw_context.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/entity_appearance.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/submission_visibility.h"
 #include "render/geom/arrow.h"
+#include "render/geom/primitives.h"
 #include "render/geom/stone.h"
 #include "render/geom/transforms.h"
-#include "render/gl/mesh_prewarmer.h"
-#include "render/gl/primitives.h"
-#include "render/gl/resources.h"
 #include "render/overlay/raft_renderer.h"
 
 namespace Render::GL {
@@ -30,13 +28,17 @@ auto fireball_impact_envelope(float progress) -> float {
   return 1.0F - t * t * (3.0F - 2.0F * t);
 }
 
-auto prewarm_projectile_geometry(MeshGpuTable& table) -> bool {
-  std::array meshes{Geom::Arrow::get_shaft(),
-                    Geom::Arrow::get_tip(),
-                    Geom::Arrow::get_fletching(),
-                    Geom::Stone::get(),
-                    get_unit_sphere()};
-  return prewarm_mesh_buffers(table, meshes, [](auto* mesh) { return mesh; });
+void for_each_projectile_mesh(const MeshVisitor& visit) {
+  const std::array meshes{Geom::Arrow::get_shaft(),
+                          Geom::Arrow::get_tip(),
+                          Geom::Arrow::get_fletching(),
+                          Geom::Stone::get(),
+                          get_unit_sphere()};
+  for (const Mesh* mesh : meshes) {
+    if (mesh != nullptr) {
+      visit(*mesh);
+    }
+  }
 }
 
 auto classify_projectile_relation(int local_owner_id,
@@ -534,7 +536,7 @@ void render_spent_projectile(FrameSubmitter* renderer,
 } // namespace
 
 void render_arrow_projectile(FrameSubmitter* renderer,
-                             ResourceManager* resources,
+                             const DrawResources* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& pos,
                              const QMatrix4x4& base_model,
@@ -918,7 +920,7 @@ void render_arrow_projectile(FrameSubmitter* renderer,
 }
 
 void render_stone_projectile(FrameSubmitter* renderer,
-                             ResourceManager* resources,
+                             const DrawResources* resources,
                              const Game::Systems::ProjectileView& projectile,
                              const QVector3D& position,
                              const QMatrix4x4& base_model,
@@ -1019,7 +1021,7 @@ void render_stone_projectile(FrameSubmitter* renderer,
 }
 
 void render_projectiles(FrameSubmitter* renderer,
-                        ResourceManager* resources,
+                        const DrawResources* resources,
                         const Game::Systems::RenderEffectsFrame& effects,
                         const ProjectileViewContext* view) {
   if ((renderer == nullptr) || (resources == nullptr)) {
@@ -1175,16 +1177,15 @@ void draw_cache_banner(FrameSubmitter* renderer,
 
   DrawContext context;
   context.resources = resources;
-  context.backend = renderer->backend();
   context.animation_time = renderer->get_animation_time();
 
   context.model.translate(pole_base);
   context.model.rotate(yaw + 180.0F, 0.0F, 1.0F, 0.0F);
 
   BarracksFlagRenderer::ClothBannerResources cloth_resources;
-  if (context.backend != nullptr) {
-    cloth_resources.cloth_mesh = context.backend->banner_mesh();
-    cloth_resources.banner_shader = context.backend->banner_shader();
+  if (context.resources != nullptr) {
+    cloth_resources.cloth_mesh = context.resources->banner_mesh();
+    cloth_resources.banner_shader = context.resources->banner_shader();
   }
   QVector3D const trim = cloth * 0.5F + k_banner_metal * 0.5F;
   BarracksFlagRenderer::draw_hanging_banner(

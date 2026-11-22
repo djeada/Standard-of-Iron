@@ -11,7 +11,9 @@
 #include <vector>
 
 #include "game/map/visibility_service.h"
+#include "render/geom/instance_block.h"
 #include "render/gl/buffer.h"
+#include "render/gl/instance_buffer_table.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/profiling/asset_counters.h"
 
@@ -134,11 +136,15 @@ auto make_state() -> State {
   return state;
 }
 
-auto retained_buffer_bytes(const State& state) -> std::size_t {
+// The backend keeps the GPU copy of each chunk's instance block in an
+// InstanceBufferTable; these helpers read and drive it the way the resources
+// stage does every frame.
+auto retained_buffer_bytes(const State& state,
+                           Render::GL::InstanceBufferTable& table) -> std::size_t {
   std::size_t bytes = 0;
   for (const auto& chunk : state.spatial_chunks) {
-    if (chunk.buffer != nullptr) {
-      bytes += chunk.buffer->size_bytes();
+    if (const auto* buffer = table.resolve(chunk.block.get()); buffer != nullptr) {
+      bytes += buffer->size_bytes();
     }
   }
   return bytes;
@@ -147,14 +153,14 @@ auto retained_buffer_bytes(const State& state) -> std::size_t {
 auto chunks_with_buffers(const State& state) -> std::size_t {
   return static_cast<std::size_t>(std::count_if(
       state.spatial_chunks.begin(), state.spatial_chunks.end(), [](const auto& chunk) {
-        return chunk.buffer != nullptr;
+        return chunk.block != nullptr;
       }));
 }
 
 auto submitted_instances(const State& state) -> std::size_t {
   std::size_t submitted = 0;
   for (const auto& chunk : state.spatial_chunks) {
-    if (chunk.visible_count == 0 || chunk.buffer == nullptr) {
+    if (chunk.visible_count == 0 || chunk.block == nullptr) {
       continue;
     }
     submitted += chunk.visible_count;
@@ -162,22 +168,23 @@ auto submitted_instances(const State& state) -> std::size_t {
   return submitted;
 }
 
-void prewarm_chunk_buffers(State& state) {
-  for (auto& chunk : state.spatial_chunks) {
-    if (chunk.buffer == nullptr) {
-      chunk.buffer =
-          std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
-    }
-    chunk.buffer->bind();
-    chunk.buffer->unbind();
-  }
+void prewarm_chunk_buffers(State& state, Render::GL::InstanceBufferTable& table) {
+  Render::Ground::Scatter::prepare_filtered_blocks(state, position_of);
+  Render::Ground::Scatter::for_each_filtered_block(
+      state,
+      [&table](const Render::GL::InstanceBlock& block) { (void)table.prewarm(block); });
 }
 
 auto sync(State& state,
+          Render::GL::InstanceBufferTable& table,
           const Game::Map::VisibilityService::Snapshot& snapshot,
           ScatterMemoryMode mode) -> std::uint32_t {
-  return Render::Ground::Scatter::sync_filtered_state(
-      state, position_of, &snapshot, mode);
+  const auto visible =
+      Render::Ground::Scatter::sync_filtered_state(state, position_of, &snapshot, mode);
+  for (const auto& chunk : state.spatial_chunks) {
+    (void)table.resolve(chunk.block.get());
+  }
+  return visible;
 }
 
 class ScatterGpuRetention : public ::testing::Test {
@@ -200,6 +207,7 @@ protected:
   }
 
   OffscreenGl m_gl;
+  Render::GL::InstanceBufferTable m_table;
 };
 
 TEST_F(ScatterGpuRetention, RevealHideRevealRetainsBuffersAndHidesInstances) {
@@ -207,12 +215,13 @@ TEST_F(ScatterGpuRetention, RevealHideRevealRetainsBuffersAndHidesInstances) {
   auto snapshot = make_snapshot();
 
   reveal_world_band(snapshot, -80.0F, 80.0F);
-  const std::uint32_t revealed = sync(state, snapshot, ScatterMemoryMode::VisibleOnly);
+  const std::uint32_t revealed =
+      sync(state, m_table, snapshot, ScatterMemoryMode::VisibleOnly);
   ASSERT_EQ(revealed, state.instances.size());
   const std::uint64_t created_after_reveal = buffers_created();
   const std::uint64_t transferred_after_reveal = transfer_bytes();
   const std::size_t resident_chunks = chunks_with_buffers(state);
-  const std::size_t resident_bytes = retained_buffer_bytes(state);
+  const std::size_t resident_bytes = retained_buffer_bytes(state, m_table);
   EXPECT_EQ(resident_chunks, state.spatial_chunks.size());
   EXPECT_GT(created_after_reveal, 0U);
   EXPECT_EQ(transferred_after_reveal, state.instances.size() * sizeof(TestInstance));
@@ -220,25 +229,26 @@ TEST_F(ScatterGpuRetention, RevealHideRevealRetainsBuffersAndHidesInstances) {
   EXPECT_EQ(submitted_instances(state), revealed);
 
   hide_everything(snapshot);
-  const std::uint32_t hidden = sync(state, snapshot, ScatterMemoryMode::VisibleOnly);
+  const std::uint32_t hidden =
+      sync(state, m_table, snapshot, ScatterMemoryMode::VisibleOnly);
   EXPECT_EQ(hidden, 0U);
   EXPECT_EQ(submitted_instances(state), 0U)
       << "hidden chunks must not submit their retained instances";
   EXPECT_EQ(chunks_with_buffers(state), resident_chunks)
       << "hiding must retain the allocated chunk buffers";
-  EXPECT_EQ(retained_buffer_bytes(state), resident_bytes)
+  EXPECT_EQ(retained_buffer_bytes(state, m_table), resident_bytes)
       << "hiding must not shrink or free retained chunk memory";
   EXPECT_EQ(buffers_created(), created_after_reveal) << "hiding must not allocate";
   EXPECT_EQ(transfer_bytes(), transferred_after_reveal) << "hiding must not upload";
 
   reveal_world_band(snapshot, -80.0F, 80.0F);
   const std::uint32_t revealed_again =
-      sync(state, snapshot, ScatterMemoryMode::VisibleOnly);
+      sync(state, m_table, snapshot, ScatterMemoryMode::VisibleOnly);
   EXPECT_EQ(revealed_again, revealed);
   EXPECT_EQ(submitted_instances(state), revealed);
   EXPECT_EQ(buffers_created(), created_after_reveal)
       << "re-revealing known chunks must reuse the retained buffers";
-  EXPECT_EQ(retained_buffer_bytes(state), resident_bytes);
+  EXPECT_EQ(retained_buffer_bytes(state, m_table), resident_bytes);
 }
 
 TEST_F(ScatterGpuRetention, PrewarmedChunksSubmitNothingUntilTheyAreRevealed) {
@@ -246,13 +256,13 @@ TEST_F(ScatterGpuRetention, PrewarmedChunksSubmitNothingUntilTheyAreRevealed) {
   auto snapshot = make_snapshot();
 
   reveal_world_band(snapshot, -80.0F, 80.0F);
-  sync(state, snapshot, ScatterMemoryMode::VisibleOnly);
+  sync(state, m_table, snapshot, ScatterMemoryMode::VisibleOnly);
   hide_everything(snapshot);
-  sync(state, snapshot, ScatterMemoryMode::VisibleOnly);
+  sync(state, m_table, snapshot, ScatterMemoryMode::VisibleOnly);
   ASSERT_EQ(submitted_instances(state), 0U);
 
   asset_counters().reset();
-  prewarm_chunk_buffers(state);
+  prewarm_chunk_buffers(state, m_table);
   EXPECT_EQ(buffers_created(), 0U)
       << "prewarming already-resident chunks must not allocate again";
   EXPECT_EQ(storage_bytes(), 0U) << "prewarming must not reallocate chunk storage";
@@ -261,7 +271,8 @@ TEST_F(ScatterGpuRetention, PrewarmedChunksSubmitNothingUntilTheyAreRevealed) {
 
   const float narrow_min = static_cast<float>(k_first_chunk) * k_chunk;
   reveal_world_band(snapshot, narrow_min, narrow_min + 4.0F);
-  const std::uint32_t narrow = sync(state, snapshot, ScatterMemoryMode::VisibleOnly);
+  const std::uint32_t narrow =
+      sync(state, m_table, snapshot, ScatterMemoryMode::VisibleOnly);
   EXPECT_GT(narrow, 0U);
   EXPECT_LT(narrow, state.instances.size());
   EXPECT_EQ(submitted_instances(state), narrow)
@@ -277,7 +288,7 @@ TEST_F(ScatterGpuRetention, RepeatedChunkTraversalStopsAllocating) {
     for (int step = k_first_chunk; step <= k_last_chunk; ++step) {
       const float centre = static_cast<float>(step) * k_chunk;
       reveal_world_band(snapshot, centre - k_chunk, centre + k_chunk);
-      seen = std::max(seen, sync(state, snapshot, mode));
+      seen = std::max(seen, sync(state, m_table, snapshot, mode));
     }
     return seen;
   };
@@ -285,7 +296,7 @@ TEST_F(ScatterGpuRetention, RepeatedChunkTraversalStopsAllocating) {
   const std::uint32_t first_pass = traverse(ScatterMemoryMode::VisibleOnly);
   ASSERT_GT(first_pass, 0U);
   const std::uint64_t created_after_first = buffers_created();
-  const std::size_t bytes_after_first = retained_buffer_bytes(state);
+  const std::size_t bytes_after_first = retained_buffer_bytes(state, m_table);
   EXPECT_EQ(chunks_with_buffers(state), state.spatial_chunks.size())
       << "a full traversal should have made every chunk resident";
 
@@ -295,7 +306,7 @@ TEST_F(ScatterGpuRetention, RepeatedChunkTraversalStopsAllocating) {
   EXPECT_EQ(second_pass, first_pass);
   EXPECT_EQ(buffers_created(), created_after_first)
       << "a repeated traversal must not allocate new chunk buffers";
-  EXPECT_EQ(retained_buffer_bytes(state), bytes_after_first)
+  EXPECT_EQ(retained_buffer_bytes(state, m_table), bytes_after_first)
       << "retained chunk memory must be stable across traversals";
 
   const std::uint64_t transferred_before_third = transfer_bytes();
@@ -315,13 +326,13 @@ TEST_F(ScatterGpuRetention, RememberedTraversalConvergesToNoGpuWork) {
     for (int step = k_first_chunk; step <= k_last_chunk; ++step) {
       const float centre = static_cast<float>(step) * k_chunk;
       reveal_world_band(snapshot, centre - k_chunk, centre + k_chunk);
-      sync(state, snapshot, ScatterMemoryMode::Remembered);
+      sync(state, m_table, snapshot, ScatterMemoryMode::Remembered);
     }
   };
 
   traverse();
   const std::uint64_t created_after_first = buffers_created();
-  const std::size_t bytes_after_first = retained_buffer_bytes(state);
+  const std::size_t bytes_after_first = retained_buffer_bytes(state, m_table);
   ASSERT_GT(created_after_first, 0U);
 
   const std::uint64_t transferred_before_second = transfer_bytes();
@@ -330,7 +341,7 @@ TEST_F(ScatterGpuRetention, RememberedTraversalConvergesToNoGpuWork) {
       << "remembered chunks must not reallocate on a second traversal";
   EXPECT_EQ(transfer_bytes(), transferred_before_second)
       << "fully remembered chunks must not re-upload";
-  EXPECT_EQ(retained_buffer_bytes(state), bytes_after_first);
+  EXPECT_EQ(retained_buffer_bytes(state, m_table), bytes_after_first);
   EXPECT_EQ(submitted_instances(state), state.instances.size())
       << "remembered scatter stays submitted once explored";
 }

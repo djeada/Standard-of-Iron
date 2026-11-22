@@ -22,15 +22,18 @@ namespace Render::Creature::Pipeline {
 struct CreaturePreparationResult;
 }
 
+namespace Render {
+struct EnvironmentLightingState;
+}
+
 namespace Render::Humanoid {
 struct HumanoidRuntimeContext;
 }
 
 namespace Render::GL {
-class ResourceManager;
+class DrawResources;
 class Mesh;
 class Texture;
-class Backend;
 class Camera;
 struct AnimationInputs;
 } // namespace Render::GL
@@ -46,7 +49,7 @@ struct FarmActivity;
 struct HomeActivity;
 
 struct DrawContext {
-  ResourceManager* resources = nullptr;
+  const DrawResources* resources = nullptr;
   Engine::Core::Entity* entity = nullptr;
   Engine::Core::World* world = nullptr;
 
@@ -58,7 +61,8 @@ struct DrawContext {
   float distance_sq = 0.0F;
   std::string renderer_id;
   RendererHandle renderer_handle = k_invalid_renderer_handle;
-  class Backend* backend = nullptr;
+  // The backend's sun and sky, for contact shadows; null without a GL backend.
+  const Render::EnvironmentLightingState* environment_lighting = nullptr;
   const Camera* camera = nullptr;
 
   Render::Pipeline::ScreenMetrics screen_metrics{};

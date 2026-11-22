@@ -8,7 +8,6 @@
 #include <numbers>
 
 #include "game/core/component.h"
-#include "render/backend/backend.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
@@ -20,7 +19,7 @@
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/registry.h"
 #include "render/frame/submitter.h"
-#include "render/gl/primitives.h"
+#include "render/geom/primitives.h"
 #include "render/math/math_utils.h"
 
 namespace Render::GL::Roman {
@@ -382,9 +381,9 @@ void draw_tower_banner(const DrawContext& p,
   style.ring_color = palette.gold;
 
   BarracksFlagRenderer::ClothBannerResources cloth;
-  if (p.backend != nullptr) {
-    cloth.cloth_mesh = p.backend->banner_mesh();
-    cloth.banner_shader = p.backend->banner_shader();
+  if (p.resources != nullptr) {
+    cloth.cloth_mesh = p.resources->banner_mesh();
+    cloth.banner_shader = p.resources->banner_shader();
   }
 
   BarracksFlagRenderer::draw_hanging_banner(

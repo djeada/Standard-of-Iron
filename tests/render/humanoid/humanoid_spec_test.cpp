@@ -165,9 +165,9 @@ TEST(HumanoidSpecTest, SpecReferenceIsStable) {
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/part_graph.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
 
 namespace {
 

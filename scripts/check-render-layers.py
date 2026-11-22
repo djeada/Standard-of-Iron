@@ -6,9 +6,10 @@ headers from its own folder or from any folder on a lower layer, never from a
 higher one, so no two folders include each other. The order, lowest first:
 
   math, profiling, software   plain values, counters, the CPU rasteriser
-  gl                          GL handles and wrappers: buffers, meshes, textures,
-                              shaders
-  geom                        procedural meshes and tessellation
+  geom                        CPU geometry: Mesh, primitives, procedural meshes
+                              and tessellation; no GL
+  gl                          GL handles and wrappers: buffers, textures, shaders,
+                              the per-backend MeshGpuTable
   frame                       what a frame is made of: draw commands, the draw
                               queue, submitter interfaces, render archetypes,
                               per-frame settings
@@ -26,6 +27,17 @@ higher one, so no two folders include each other. The order, lowest first:
 
 Nothing may live in the render/ root except build files.
 
+Inside render/creature, the generic creature code (everything outside the
+species folders below) includes nothing from a species folder: it reaches a
+species only through its SpeciesContract (pipeline/species_contract.h).
+render/creature/species/ is the one place that names every species and may
+include them all.
+
+The GL-free layers (math, geom, frame, cache, ground, equipment, entity,
+overlay) include nothing from render/gl or render/backend and no Qt OpenGL
+header: they build plain data and point commands at it, and the backend owns
+and uploads every GPU object (GL-free rule).
+
   usage: check-render-layers.py [repo-root]
 """
 
@@ -37,8 +49,8 @@ from pathlib import Path
 
 LAYERS: tuple[tuple[str, ...], ...] = (
     ("math", "profiling", "software"),
-    ("gl",),
     ("geom",),
+    ("gl",),
     ("frame",),
     ("cache",),
     ("backend",),
@@ -55,6 +67,62 @@ RANK = {folder: rank for rank, group in enumerate(LAYERS) for folder in group}
 INCLUDE = re.compile(r'^\s*#\s*include\s*"render/([^"/]+)/[^"]+"')
 
 SOURCE_SUFFIXES = (".h", ".cpp")
+
+GL_FREE: tuple[str, ...] = (
+    "math",
+    "geom",
+    "frame",
+    "cache",
+    "ground",
+    "equipment",
+    "entity",
+    "overlay",
+)
+GL_LAYERS: tuple[str, ...] = ("gl", "backend")
+QT_GL_INCLUDE = re.compile(
+    r"^\s*#\s*include\s*<(QOpenGL\w*|QtOpenGL\w*|qopengl\w*)(\.h)?>"
+)
+
+CREATURE_SPECIES: tuple[str, ...] = (
+    "humanoid",
+    "horse",
+    "elephant",
+    "wildlife",
+    "quadruped",
+)
+CREATURE_SPECIES_REGISTRY = "species"
+
+SPECIES_INCLUDE = re.compile(
+    r'^\s*#\s*include\s*"render/creature/(' + "|".join(CREATURE_SPECIES) + r')/[^"]+"'
+)
+
+
+def check_creature_species(root: Path) -> list[str]:
+    creature = root / "render" / "creature"
+    problems: list[str] = []
+    if not creature.is_dir():
+        return problems
+    for source in sorted(creature.rglob("*")):
+        if source.suffix not in SOURCE_SUFFIXES:
+            continue
+        parts = source.relative_to(creature).parts
+        if len(parts) > 1 and parts[0] in (
+            *CREATURE_SPECIES,
+            CREATURE_SPECIES_REGISTRY,
+        ):
+            continue
+        relative = source.relative_to(root).as_posix()
+        for number, line in enumerate(
+            source.read_text(errors="replace").splitlines(), 1
+        ):
+            match = SPECIES_INCLUDE.match(line)
+            if match is not None:
+                problems.append(
+                    f"{relative}:{number}: generic creature code includes the "
+                    f"{match.group(1)} species; go through its SpeciesContract "
+                    "(creature species rule)"
+                )
+    return problems
 
 
 def check(root: Path) -> list[str]:
@@ -75,9 +143,18 @@ def check(root: Path) -> list[str]:
             source.read_text(errors="replace").splitlines(), 1
         ):
             match = INCLUDE.match(line)
+            target = match.group(1) if match is not None else None
+            if folder in GL_FREE:
+                qt_gl = QT_GL_INCLUDE.match(line)
+                if target in GL_LAYERS or qt_gl is not None:
+                    what = f"render/{target}" if qt_gl is None else qt_gl.group(1)
+                    problems.append(
+                        f"{relative}:{number}: render/{folder} includes {what}; "
+                        "it must stay GL-free (GL-free rule)"
+                    )
+                    continue
             if match is None:
                 continue
-            target = match.group(1)
             if target == folder or target not in RANK:
                 continue
             if RANK[target] > RANK[folder]:
@@ -95,7 +172,7 @@ def check(root: Path) -> list[str]:
 
 def main(argv: list[str]) -> int:
     root = Path(argv[1]) if len(argv) > 1 else Path(__file__).resolve().parent.parent
-    problems = check(root.resolve())
+    problems = check(root.resolve()) + check_creature_species(root.resolve())
     if problems:
         print("render/ layer violations:")
         for problem in problems:

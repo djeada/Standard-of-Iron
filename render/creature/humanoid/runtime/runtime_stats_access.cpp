@@ -1,15 +1,10 @@
-#include <atomic>
-
 #include "render/creature/humanoid/runtime/frame_control.h"
 #include "render/creature/humanoid/runtime/runtime_context.h"
 #include "render/creature/humanoid/runtime/runtime_stats.h"
 #include "render/creature/humanoid/runtime/runtime_stats_shim.h"
+#include "render/creature/runtime_frame.h"
 
 namespace Render::GL {
-
-namespace {
-std::atomic<std::uint32_t> g_runtime_generation{0U};
-} // namespace
 
 auto humanoid_current_frame() -> std::uint32_t {
   return Render::Humanoid::humanoid_frame_serial();
@@ -22,11 +17,11 @@ void begin_humanoid_frame() {
 void reset_humanoid_runtime_context() {
   Render::Humanoid::current_humanoid_runtime_context().reset();
   Render::Humanoid::advance_humanoid_frame_serial();
-  g_runtime_generation.fetch_add(1U, std::memory_order_relaxed);
+  Render::Creature::advance_creature_runtime_generation();
 }
 
 auto humanoid_runtime_generation() -> std::uint32_t {
-  return g_runtime_generation.load(std::memory_order_relaxed);
+  return Render::Creature::creature_runtime_generation();
 }
 
 auto get_humanoid_render_stats() -> const HumanoidRenderStats& {

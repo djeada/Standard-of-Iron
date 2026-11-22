@@ -9,10 +9,10 @@
 #include <vector>
 
 #include "game/systems/arrow_instance.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/geom/arrow.h"
-#include "render/gl/mesh.h"
-#include "render/gl/resources.h"
+#include "render/geom/mesh.h"
 
 namespace Render {
 
@@ -160,7 +160,7 @@ void draw_arrow_mesh(FrameSubmitter* renderer,
 } // namespace
 
 void render_arrows(FrameSubmitter* renderer,
-                   ResourceManager* resources,
+                   const DrawResources* resources,
                    const std::vector<Game::Systems::ArrowInstance>& arrows) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;

@@ -88,6 +88,10 @@ private:
   std::shared_ptr<const int> m_lifetime;
 };
 
+// Reports meshes to a caller without handing over ownership; a backend uses it
+// to upload the meshes a domain renderer will draw before the first frame.
+using MeshVisitor = std::function<void(const Mesh&)>;
+
 auto create_quad_mesh() -> std::unique_ptr<Mesh>;
 auto create_cube_mesh() -> std::unique_ptr<Mesh>;
 auto create_plane_mesh(float width,

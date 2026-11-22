@@ -274,17 +274,17 @@ auto DrawQueue::compute_sort_entry(const DrawCmd& cmd,
   case DrawCmdType::TerrainScatter: {
     const auto& deco = std::get<TerrainScatterCmdIndex>(cmd);
     identity.material = pack_12(sort_id(deco.material));
-    identity.mesh = pack_16(sort_id(deco.instance_buffer));
-    resources = {ptr_value(deco.material), ptr_value(deco.instance_buffer), 0U, 0U};
+    identity.mesh = pack_16(sort_id(deco.instances));
+    resources = {ptr_value(deco.material), ptr_value(deco.instances), 0U, 0U};
     break;
   }
   case DrawCmdType::FogBatch: {
     const auto& fog = std::get<FogBatchCmdIndex>(cmd);
-    identity.mesh = pack_16(sort_id(fog.instance_buffer != nullptr
-                                        ? static_cast<const void*>(fog.instance_buffer)
+    identity.mesh = pack_16(sort_id(fog.instance_block != nullptr
+                                        ? static_cast<const void*>(fog.instance_block)
                                         : static_cast<const void*>(fog.instances)));
     resources = {
-        ptr_value(fog.instance_buffer), ptr_value(fog.instances), fog.count, 0U};
+        ptr_value(fog.instance_block), ptr_value(fog.instances), fog.count, 0U};
     break;
   }
   case DrawCmdType::TerrainSurface: {

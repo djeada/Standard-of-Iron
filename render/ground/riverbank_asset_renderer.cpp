@@ -16,9 +16,8 @@
 #include "game/map/visibility_service.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/buffer.h"
-#include "render/gl/resources.h"
 #include "render/ground/riverbank_asset_gpu.h"
 #include "render/ground/scatter_runtime.h"
 
@@ -63,7 +62,7 @@ void RiverbankAssetRenderer::set_light_direction(const QVector3D& dir) {
   m_asset_state.params.light_direction = normalized;
 }
 
-void RiverbankAssetRenderer::submit(FrameSubmitter&, ResourceManager* resources) {
+void RiverbankAssetRenderer::submit(FrameSubmitter&, const DrawResources* resources) {
   Q_UNUSED(resources);
 }
 

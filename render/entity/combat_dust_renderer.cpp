@@ -309,7 +309,7 @@ void StoneImpactTracker::update(float current_time) {
 }
 
 void render_blood_stains(FrameSubmitter* renderer,
-                         ResourceManager*,
+                         const DrawResources*,
                          Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
     return;
@@ -469,7 +469,7 @@ void emit_ground_dust(FrameSubmitter* renderer,
 }
 
 void render_combat_dust(FrameSubmitter* renderer,
-                        ResourceManager*,
+                        const DrawResources*,
                         Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
     return;

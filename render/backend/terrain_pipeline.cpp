@@ -59,6 +59,27 @@ void TerrainPipeline::shutdown() {
   m_terrain_baked_shader = nullptr;
 }
 
+void TerrainPipeline::sync_noise_atlas(const TerrainNoiseRequest& request) {
+  if (!request.enabled) {
+    return;
+  }
+  m_noise_atlas.bake_microdetail(request.low_detail);
+  if (m_noise_baked && request.revision == m_baked_noise_revision) {
+    return;
+  }
+  GL::TerrainNoiseAtlas::AtlasBakeParams params;
+  params.width = request.width;
+  params.height = request.height;
+  params.tile_size = request.tile_size;
+  params.noise_offset = request.noise_offset;
+  params.macro_noise_scale = request.macro_noise_scale;
+  params.low_detail = request.low_detail;
+  if (m_noise_atlas.bake_atlas(params)) {
+    m_noise_baked = true;
+    m_baked_noise_revision = request.revision;
+  }
+}
+
 void TerrainPipeline::cache_uniforms() {
   cache_grass_uniforms();
   cache_ground_uniforms();

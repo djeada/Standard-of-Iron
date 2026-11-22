@@ -8,12 +8,12 @@
 #include <algorithm>
 #include <cstddef>
 
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 #include "render/gl/buffer.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
-#include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
-#include "render/gl/primitives.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
 

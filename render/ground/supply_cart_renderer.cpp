@@ -34,7 +34,8 @@ void SupplyCartRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void SupplyCartRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void SupplyCartRenderer::submit(FrameSubmitter& renderer,
+                                const DrawResources* resources) {
   submit_prop_common(renderer, resources, TerrainScatterCmd::Species::SupplyCart);
 }
 

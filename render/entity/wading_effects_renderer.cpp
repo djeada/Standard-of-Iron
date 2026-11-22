@@ -65,7 +65,7 @@ auto body_size_for(Engine::Core::World& world,
 } // namespace
 
 void render_wading_effects(FrameSubmitter* renderer,
-                           ResourceManager*,
+                           const DrawResources*,
                            Engine::Core::World* world) {
   if (renderer == nullptr || world == nullptr) {
     return;

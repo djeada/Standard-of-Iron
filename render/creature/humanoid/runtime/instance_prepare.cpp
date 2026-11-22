@@ -26,6 +26,7 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/combat_animation_diagnostics.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
+#include "render/creature/humanoid/pipeline/humanoid_playback.h"
 #include "render/creature/humanoid/runtime/formation_instance_layout.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/humanoid/runtime/humanoid_runtime_types.h"

@@ -22,23 +22,21 @@
 #include "game/map/terrain_service.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/combat_animation_diagnostics.h"
-#include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/gpu/snapshot_mesh_cache.h"
-#include "render/creature/horse/horse_spec.h"
-#include "render/creature/humanoid/runtime/frame_control.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_asset_init.h"
 #include "render/creature/pipeline/creature_bone_probe.h"
 #include "render/creature/pipeline/creature_submission_context.h"
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
+#include "render/creature/pipeline/species_contract.h"
 #include "render/creature/runtime_bake_guard.h"
+#include "render/creature/runtime_frame.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/skeleton_blend_profile.h"
 #include "render/creature/snapshot_mesh_registry.h"
 #include "render/creature/spec.h"
-#include "render/creature/wildlife/wildlife_rig.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/graphics_settings.h"
@@ -129,19 +127,8 @@ auto make_snapshot_key(const CreatureRenderAssetHandle& handle,
 }
 
 auto material_id_for_species(CreatureKind species) noexcept -> std::int32_t {
-  switch (species) {
-  case CreatureKind::Horse:
-    return Render::Horse::k_horse_material_id;
-  case CreatureKind::Elephant:
-    return Render::Elephant::k_elephant_material_id;
-  case CreatureKind::Sheep:
-  case CreatureKind::Wolf:
-    return Render::Wildlife::k_wildlife_material_id;
-  case CreatureKind::Humanoid:
-  case CreatureKind::Mounted:
-    break;
-  }
-  return 0;
+  const SpeciesContract* contract = species_contract(species);
+  return contract != nullptr ? contract->material_id : 0;
 }
 
 auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
@@ -506,7 +493,7 @@ class PaletteBlendCache {
 public:
   template <typename Compute>
   auto get_or_compute(const PaletteBlendKey& key, Compute&& compute) -> OwnedPalette {
-    if (std::uint32_t const now = Render::GL::humanoid_current_frame();
+    if (std::uint32_t const now = Render::Creature::creature_frame_serial();
         now != m_frame) {
       m_frame = now;
     }
@@ -570,8 +557,8 @@ public:
                      const LocalPose& base,
                      const LocalPose& layer,
                      std::uint32_t bone_count) -> std::uint64_t {
-    std::uint32_t const now = Render::GL::humanoid_current_frame();
-    std::uint32_t const generation = Render::GL::humanoid_runtime_generation();
+    std::uint32_t const now = Render::Creature::creature_frame_serial();
+    std::uint32_t const generation = Render::Creature::creature_runtime_generation();
     std::lock_guard<std::mutex> const lock(m_mutex);
     if (m_layers.size() > k_max_layers) {
       std::erase_if(m_layers, [now](const auto& item) {

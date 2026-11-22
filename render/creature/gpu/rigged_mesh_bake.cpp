@@ -15,16 +15,15 @@
 #include <utility>
 #include <vector>
 
-#include "render/creature/elephant/elephant_spec.h"
-#include "render/creature/horse/horse_spec.h"
 #include "render/creature/part_graph.h"
+#include "render/creature/pipeline/species_contract.h"
 #include "render/creature/primitive_geometry.h"
 #include "render/creature/skeleton.h"
 #include "render/frame/render_archetype.h"
+#include "render/geom/mesh.h"
 #include "render/geom/parts.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
 #include "render/profiling/asset_counters.h"
 
 namespace Render::Creature {
@@ -188,41 +187,45 @@ auto blend_leg_chain(const QVector3D& pos, const LegChain& leg) -> VertexBoneBle
   return make_two_bone_blend(leg.knee, leg.foot, t);
 }
 
+auto whole_mesh_bones(Pipeline::CreatureKind kind) noexcept
+    -> const Pipeline::WholeMeshBones* {
+  const Pipeline::SpeciesContract* contract = Pipeline::species_contract(kind);
+  return contract != nullptr ? contract->whole_mesh_bones : nullptr;
+}
+
 auto horse_whole_mesh_blend(const QVector3D& pos,
-                            std::span<const BoneWorldMatrix> bind_pose)
-    -> VertexBoneBlend {
-  using Bone = Render::Horse::HorseBone;
-  auto const root = static_cast<std::uint8_t>(Bone::Root);
-  QVector3D const root_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
-  QVector3D const neck_pos =
-      bone_origin(bind_pose, static_cast<BoneIndex>(Bone::NeckTop));
-  QVector3D const head_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Head));
+                            std::span<const BoneWorldMatrix> bind_pose,
+                            const Pipeline::WholeMeshBones& b) -> VertexBoneBlend {
+  auto const root = b.root;
+  QVector3D const root_pos = bone_origin(bind_pose, static_cast<BoneIndex>(b.root));
+  QVector3D const neck_pos = bone_origin(bind_pose, static_cast<BoneIndex>(b.neck));
+  QVector3D const head_pos = bone_origin(bind_pose, static_cast<BoneIndex>(b.head));
 
   std::array<LegChain, 4> const legs{{
-      {static_cast<std::uint8_t>(Bone::ShoulderFL),
-       static_cast<std::uint8_t>(Bone::KneeFL),
-       static_cast<std::uint8_t>(Bone::FootFL),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderFL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeFL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootFL))},
-      {static_cast<std::uint8_t>(Bone::ShoulderFR),
-       static_cast<std::uint8_t>(Bone::KneeFR),
-       static_cast<std::uint8_t>(Bone::FootFR),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderFR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeFR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootFR))},
-      {static_cast<std::uint8_t>(Bone::ShoulderBL),
-       static_cast<std::uint8_t>(Bone::KneeBL),
-       static_cast<std::uint8_t>(Bone::FootBL),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderBL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBL))},
-      {static_cast<std::uint8_t>(Bone::ShoulderBR),
-       static_cast<std::uint8_t>(Bone::KneeBR),
-       static_cast<std::uint8_t>(Bone::FootBR),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderBR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBR))},
+      {b.legs[0].shoulder,
+       b.legs[0].knee,
+       b.legs[0].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[0].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[0].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[0].foot))},
+      {b.legs[1].shoulder,
+       b.legs[1].knee,
+       b.legs[1].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[1].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[1].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[1].foot))},
+      {b.legs[2].shoulder,
+       b.legs[2].knee,
+       b.legs[2].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[2].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[2].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[2].foot))},
+      {b.legs[3].shoulder,
+       b.legs[3].knee,
+       b.legs[3].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[3].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[3].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[3].foot))},
   }};
   if (auto const* leg = select_horse_leg_chain(pos, legs); leg != nullptr) {
     return blend_leg_chain(pos, *leg);
@@ -232,54 +235,51 @@ auto horse_whole_mesh_blend(const QVector3D& pos,
   if (pos.z() > neck_start) {
     if (pos.z() < neck_pos.z()) {
       float const t = projection_factor(pos, root_pos, neck_pos);
-      return make_two_bone_blend(root, static_cast<std::uint8_t>(Bone::NeckTop), t);
+      return make_two_bone_blend(root, b.neck, t);
     }
     float const t = projection_factor(pos, neck_pos, head_pos);
-    return make_two_bone_blend(static_cast<std::uint8_t>(Bone::NeckTop),
-                               static_cast<std::uint8_t>(Bone::Head),
-                               t);
+    return make_two_bone_blend(b.neck, b.head, t);
   }
 
   return make_single_blend(root);
 }
 
 auto elephant_whole_mesh_blend(const QVector3D& pos,
-                               std::span<const BoneWorldMatrix> bind_pose)
-    -> VertexBoneBlend {
-  using Bone = Render::Elephant::ElephantBone;
-  auto const root = static_cast<std::uint8_t>(Bone::Root);
-  auto const head = static_cast<std::uint8_t>(Bone::Head);
-  auto const trunk_tip = static_cast<std::uint8_t>(Bone::TrunkTip);
-  QVector3D const root_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
-  QVector3D const head_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Head));
+                               std::span<const BoneWorldMatrix> bind_pose,
+                               const Pipeline::WholeMeshBones& b) -> VertexBoneBlend {
+  auto const root = b.root;
+  auto const head = b.head;
+  auto const trunk_tip = b.trunk_tip;
+  QVector3D const root_pos = bone_origin(bind_pose, static_cast<BoneIndex>(b.root));
+  QVector3D const head_pos = bone_origin(bind_pose, static_cast<BoneIndex>(b.head));
   QVector3D const trunk_pos =
-      bone_origin(bind_pose, static_cast<BoneIndex>(Bone::TrunkTip));
+      bone_origin(bind_pose, static_cast<BoneIndex>(b.trunk_tip));
 
   std::array<LegChain, 4> const legs{{
-      {static_cast<std::uint8_t>(Bone::ShoulderFL),
-       static_cast<std::uint8_t>(Bone::KneeFL),
-       static_cast<std::uint8_t>(Bone::FootFL),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderFL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeFL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootFL))},
-      {static_cast<std::uint8_t>(Bone::ShoulderFR),
-       static_cast<std::uint8_t>(Bone::KneeFR),
-       static_cast<std::uint8_t>(Bone::FootFR),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderFR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeFR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootFR))},
-      {static_cast<std::uint8_t>(Bone::ShoulderBL),
-       static_cast<std::uint8_t>(Bone::KneeBL),
-       static_cast<std::uint8_t>(Bone::FootBL),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderBL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBL)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBL))},
-      {static_cast<std::uint8_t>(Bone::ShoulderBR),
-       static_cast<std::uint8_t>(Bone::KneeBR),
-       static_cast<std::uint8_t>(Bone::FootBR),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::ShoulderBR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBR)),
-       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBR))},
+      {b.legs[0].shoulder,
+       b.legs[0].knee,
+       b.legs[0].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[0].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[0].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[0].foot))},
+      {b.legs[1].shoulder,
+       b.legs[1].knee,
+       b.legs[1].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[1].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[1].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[1].foot))},
+      {b.legs[2].shoulder,
+       b.legs[2].knee,
+       b.legs[2].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[2].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[2].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[2].foot))},
+      {b.legs[3].shoulder,
+       b.legs[3].knee,
+       b.legs[3].foot,
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[3].shoulder)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[3].knee)),
+       bone_origin(bind_pose, static_cast<BoneIndex>(b.legs[3].foot))},
   }};
   if (auto const* leg = select_leg_chain(pos, legs); leg != nullptr) {
     return blend_leg_chain(pos, *leg);
@@ -308,13 +308,20 @@ auto resolve_mesh_blend(const PrimitiveInstance& prim,
                         std::span<const BoneWorldMatrix> bind_pose) -> VertexBoneBlend {
   switch (prim.mesh_skinning) {
   case MeshSkinning::HorseWhole:
-    return horse_whole_mesh_blend(world_pos, bind_pose);
+    if (const auto* bones = whole_mesh_bones(Pipeline::CreatureKind::Horse)) {
+      return horse_whole_mesh_blend(world_pos, bind_pose, *bones);
+    }
+    break;
   case MeshSkinning::ElephantWhole:
-    return elephant_whole_mesh_blend(world_pos, bind_pose);
+    if (const auto* bones = whole_mesh_bones(Pipeline::CreatureKind::Elephant)) {
+      return elephant_whole_mesh_blend(world_pos, bind_pose, *bones);
+    }
+    break;
   case MeshSkinning::Rigid:
   default:
-    return make_single_blend(static_cast<std::uint8_t>(prim.params.anchor_bone));
+    break;
   }
+  return make_single_blend(static_cast<std::uint8_t>(prim.params.anchor_bone));
 }
 
 auto transform_normal(const QMatrix3x3& m, const QVector3D& n) -> QVector3D {

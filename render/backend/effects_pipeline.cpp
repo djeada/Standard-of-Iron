@@ -4,7 +4,7 @@
 #include <qglobal.h>
 
 #include "render/backend/state_scopes.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/gl/shader_cache.h"
 #include "scene/camera.h"
 

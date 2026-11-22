@@ -18,12 +18,11 @@ TerrainFeatureManager::TerrainFeatureManager()
 
 TerrainFeatureManager::~TerrainFeatureManager() = default;
 
-auto TerrainFeatureManager::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  bool ready = m_water->prewarm_gpu_resources(meshes);
-  ready = m_road->prewarm_gpu_resources(meshes) && ready;
-  ready = m_shoreline->prewarm_gpu_resources(meshes) && ready;
-  ready = m_bridge->prewarm_gpu_resources(meshes) && ready;
-  return ready;
+void TerrainFeatureManager::for_each_mesh(const MeshVisitor& visit) const {
+  m_water->for_each_mesh(visit);
+  m_road->for_each_mesh(visit);
+  m_shoreline->for_each_mesh(visit);
+  m_bridge->for_each_mesh(visit);
 }
 
 void TerrainFeatureManager::configure(
@@ -48,7 +47,7 @@ void TerrainFeatureManager::set_fog_renderer(FogRenderer* fog) {
 }
 
 void TerrainFeatureManager::submit(FrameSubmitter& renderer,
-                                   ResourceManager* resources) {
+                                   const DrawResources* resources) {
   for (auto* source : m_sources) {
     if (source != nullptr) {
       source->submit(renderer, resources);

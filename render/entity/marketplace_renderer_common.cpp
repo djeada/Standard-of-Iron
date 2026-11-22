@@ -9,8 +9,8 @@
 
 #include "render/entity/civilian_actor.h"
 #include "render/frame/entity_appearance.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 
 namespace Render::GL {
 namespace {

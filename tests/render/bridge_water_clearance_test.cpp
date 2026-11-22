@@ -17,7 +17,7 @@
 #include "game/map/bridge_geometry.h"
 #include "game/map/map_loader.h"
 #include "game/map/terrain.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/ground/linear_feature_geometry.h"
 
 namespace {

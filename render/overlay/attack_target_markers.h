@@ -6,7 +6,7 @@
 
 namespace Render::GL {
 class FrameSubmitter;
-class ResourceManager;
+class DrawResources;
 
 struct AttackTargetMarkerVisual {
   QVector3D position{0.0F, 0.0F, 0.0F};
@@ -16,7 +16,7 @@ struct AttackTargetMarkerVisual {
 };
 
 void render_attack_target_markers(FrameSubmitter* renderer,
-                                  ResourceManager* resources,
+                                  const DrawResources* resources,
                                   std::span<const AttackTargetMarkerVisual> markers);
 
 } // namespace Render::GL

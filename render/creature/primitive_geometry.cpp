@@ -4,8 +4,8 @@
 #include <array>
 
 #include "render/geom/parts.h"
+#include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 
 namespace Render::Creature {
 

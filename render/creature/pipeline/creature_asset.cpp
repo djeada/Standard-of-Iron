@@ -7,91 +7,9 @@
 #include "animation/bpat/bpat_registry.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/archetype_registry.h"
-#include "render/creature/elephant/elephant_spec.h"
-#include "render/creature/horse/horse_spec.h"
-#include "render/creature/humanoid/asset/humanoid_spec.h"
-#include "render/creature/humanoid/runtime/humanoid_pose_diagnostics.h"
-#include "render/creature/humanoid/schema/blend_profile.h"
-#include "render/creature/pipeline/creature_visual_definition.h"
-#include "render/creature/wildlife/sheep_spec.h"
-#include "render/creature/wildlife/wildlife_variant.h"
-#include "render/creature/wildlife/wolf_spec.h"
+#include "render/creature/pipeline/species_contract.h"
 
 namespace Render::Creature::Pipeline {
-
-namespace {
-
-auto humanoid_bind() noexcept -> std::span<const QMatrix4x4> {
-  return Render::Humanoid::humanoid_bind_palette();
-}
-
-auto horse_bind() noexcept -> std::span<const QMatrix4x4> {
-  return Render::Horse::horse_bind_palette();
-}
-
-auto elephant_bind() noexcept -> std::span<const QMatrix4x4> {
-  return Render::Elephant::elephant_bind_palette();
-}
-
-auto sheep_bind() noexcept -> std::span<const QMatrix4x4> {
-  return Render::Wildlife::sheep_bind_palette();
-}
-
-auto wolf_bind() noexcept -> std::span<const QMatrix4x4> {
-  return Render::Wildlife::wolf_bind_palette();
-}
-
-auto wildlife_fill_roles(const void* variant,
-                         QVector3D* out,
-                         std::size_t max_roles) -> std::uint32_t {
-  const auto& v = *static_cast<const Render::GL::WildlifeVariant*>(variant);
-  const auto n = std::min(static_cast<std::size_t>(v.role_count), max_roles);
-  for (std::size_t i = 0; i < n; ++i) {
-    out[i] = v.roles[i];
-  }
-  return static_cast<std::uint32_t>(n);
-}
-
-auto humanoid_fill_roles(const void* variant,
-                         QVector3D* out,
-                         std::size_t max_roles) -> std::uint32_t {
-  const auto& v = *static_cast<const Render::GL::HumanoidVariant*>(variant);
-  std::array<QVector3D, Render::Humanoid::k_humanoid_role_count> filled{};
-  Render::Humanoid::fill_humanoid_role_colors(v, filled);
-  const auto n = std::min(filled.size(), max_roles);
-  for (std::size_t i = 0; i < n; ++i) {
-    out[i] = filled[i];
-  }
-  return static_cast<std::uint32_t>(n);
-}
-
-auto horse_fill_roles(const void* variant,
-                      QVector3D* out,
-                      std::size_t max_roles) -> std::uint32_t {
-  const auto& v = *static_cast<const Render::GL::HorseVariant*>(variant);
-  std::array<QVector3D, 8> filled{};
-  Render::Horse::fill_horse_role_colors(v, filled);
-  const auto n = std::min<std::size_t>(filled.size(), max_roles);
-  for (std::size_t i = 0; i < n; ++i) {
-    out[i] = filled[i];
-  }
-  return static_cast<std::uint32_t>(n);
-}
-
-auto elephant_fill_roles(const void* variant,
-                         QVector3D* out,
-                         std::size_t max_roles) -> std::uint32_t {
-  const auto& v = *static_cast<const Render::GL::ElephantVariant*>(variant);
-  std::array<QVector3D, Render::Elephant::k_elephant_role_count> filled{};
-  Render::Elephant::fill_elephant_role_colors(v, filled);
-  const auto n = std::min(filled.size(), max_roles);
-  for (std::size_t i = 0; i < n; ++i) {
-    out[i] = filled[i];
-  }
-  return static_cast<std::uint32_t>(n);
-}
-
-} // namespace
 
 auto CreatureAssetRegistry::instance() noexcept -> const CreatureAssetRegistry& {
   static const CreatureAssetRegistry registry;
@@ -99,172 +17,19 @@ auto CreatureAssetRegistry::instance() noexcept -> const CreatureAssetRegistry& 
 }
 
 CreatureAssetRegistry::CreatureAssetRegistry() {
-  m_humanoid.id = k_humanoid_asset;
-  m_humanoid.debug_name = "humanoid.v1";
-  m_humanoid.kind = CreatureKind::Humanoid;
-  m_humanoid.bpat_species_id = Render::Creature::Bpat::k_species_humanoid;
-  m_humanoid.spec = &Render::Humanoid::humanoid_creature_spec();
-  m_humanoid.body_variant_spec =
-      &Render::Humanoid::humanoid_creature_spec_for_body_variant;
-  m_humanoid.topology = &m_humanoid.spec->topology;
-  m_humanoid.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
-  m_humanoid.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
-  m_humanoid.role_count =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
-  m_humanoid.max_bones = static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
-  m_humanoid.bind_palette = &humanoid_bind;
-  m_humanoid.fill_role_colors = &humanoid_fill_roles;
-
-  m_horse.id = k_horse_asset;
-  m_horse.debug_name = "horse.v1";
-  m_horse.kind = CreatureKind::Horse;
-  m_horse.bpat_species_id = Render::Creature::Bpat::k_species_horse;
-  m_horse.spec = &Render::Horse::horse_creature_spec();
-  m_horse.topology = &m_horse.spec->topology;
-  m_horse.role_count = 8;
-  m_horse.max_bones = static_cast<std::uint8_t>(Render::Horse::k_horse_bone_count);
-  m_horse.bind_palette = &horse_bind;
-  m_horse.fill_role_colors = &horse_fill_roles;
-  m_horse.snapshot_mesh_species_id = Render::Creature::Bpat::k_species_horse;
-  m_horse.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
-      1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
-  m_horse.visual_definition = &horse_creature_visual_definition();
-
-  m_elephant.id = k_elephant_asset;
-  m_elephant.debug_name = "elephant.v1";
-  m_elephant.kind = CreatureKind::Elephant;
-  m_elephant.bpat_species_id = Render::Creature::Bpat::k_species_elephant;
-  m_elephant.spec = &Render::Elephant::elephant_creature_spec();
-  m_elephant.topology = &m_elephant.spec->topology;
-  m_elephant.role_count =
-      static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count);
-  m_elephant.max_bones =
-      static_cast<std::uint8_t>(Render::Elephant::k_elephant_bone_count);
-  m_elephant.bind_palette = &elephant_bind;
-  m_elephant.fill_role_colors = &elephant_fill_roles;
-  m_elephant.snapshot_mesh_species_id = Render::Creature::Bpat::k_species_elephant;
-  m_elephant.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
-      1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
-  m_elephant.visual_definition = &elephant_creature_visual_definition();
-
-  m_sheep.id = k_sheep_asset;
-  m_sheep.debug_name = "sheep.v1";
-  m_sheep.kind = CreatureKind::Sheep;
-  m_sheep.bpat_species_id = Render::Creature::Bpat::k_species_sheep;
-  m_sheep.spec = &Render::Wildlife::sheep_creature_spec();
-  m_sheep.topology = &m_sheep.spec->topology;
-  m_sheep.role_count = static_cast<std::uint8_t>(Render::Wildlife::k_sheep_role_count);
-  m_sheep.max_bones = static_cast<std::uint8_t>(Render::Wildlife::k_bone_count);
-  m_sheep.bind_palette = &sheep_bind;
-  m_sheep.fill_role_colors = &wildlife_fill_roles;
-  m_sheep.snapshot_mesh_species_id = Render::Creature::Bpat::k_species_sheep;
-  m_sheep.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
-      1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
-  m_sheep.visual_definition = &sheep_creature_visual_definition();
-
-  m_wolf.id = k_wolf_asset;
-  m_wolf.debug_name = "wolf.v1";
-  m_wolf.kind = CreatureKind::Wolf;
-  m_wolf.bpat_species_id = Render::Creature::Bpat::k_species_wolf;
-  m_wolf.spec = &Render::Wildlife::wolf_creature_spec();
-  m_wolf.topology = &m_wolf.spec->topology;
-  m_wolf.role_count = static_cast<std::uint8_t>(Render::Wildlife::k_wolf_role_count);
-  m_wolf.max_bones = static_cast<std::uint8_t>(Render::Wildlife::k_bone_count);
-  m_wolf.bind_palette = &wolf_bind;
-  m_wolf.fill_role_colors = &wildlife_fill_roles;
-  m_wolf.snapshot_mesh_species_id = Render::Creature::Bpat::k_species_wolf;
-  m_wolf.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
-      1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
-  m_wolf.visual_definition = &wolf_creature_visual_definition();
-
-  m_humanoid_sword.id = k_humanoid_sword_asset;
-  m_humanoid_sword.debug_name = "humanoid.sword_ready.v1";
-  m_humanoid_sword.kind = CreatureKind::Humanoid;
-  m_humanoid_sword.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_sword;
-  m_humanoid_sword.spec = &Render::Humanoid::humanoid_creature_spec();
-  m_humanoid_sword.body_variant_spec =
-      &Render::Humanoid::humanoid_creature_spec_for_body_variant;
-  m_humanoid_sword.topology = &m_humanoid_sword.spec->topology;
-  m_humanoid_sword.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
-  m_humanoid_sword.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
-  m_humanoid_sword.role_count =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
-  m_humanoid_sword.max_bones =
-      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
-  m_humanoid_sword.bind_palette = &humanoid_bind;
-  m_humanoid_sword.fill_role_colors = &humanoid_fill_roles;
-
-  m_humanoid_spear.id = k_humanoid_spear_asset;
-  m_humanoid_spear.debug_name = "humanoid.spear_ready.v1";
-  m_humanoid_spear.kind = CreatureKind::Humanoid;
-  m_humanoid_spear.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_spear;
-  m_humanoid_spear.spec = &Render::Humanoid::humanoid_creature_spec();
-  m_humanoid_spear.body_variant_spec =
-      &Render::Humanoid::humanoid_creature_spec_for_body_variant;
-  m_humanoid_spear.topology = &m_humanoid_spear.spec->topology;
-  m_humanoid_spear.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
-  m_humanoid_spear.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
-  m_humanoid_spear.role_count =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
-  m_humanoid_spear.max_bones =
-      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
-  m_humanoid_spear.bind_palette = &humanoid_bind;
-  m_humanoid_spear.fill_role_colors = &humanoid_fill_roles;
-
-  m_skeleton_humanoid.id = k_skeleton_humanoid_asset;
-  m_skeleton_humanoid.debug_name = "humanoid.skeleton.v1";
-  m_skeleton_humanoid.kind = CreatureKind::Humanoid;
-  m_skeleton_humanoid.bpat_species_id =
-      Render::Creature::Bpat::k_species_humanoid_skeleton;
-  m_skeleton_humanoid.spec = &Render::Humanoid::skeleton_humanoid_creature_spec();
-  m_skeleton_humanoid.topology = &m_skeleton_humanoid.spec->topology;
-  m_skeleton_humanoid.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
-  m_skeleton_humanoid.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
-  m_skeleton_humanoid.role_count =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
-  m_skeleton_humanoid.max_bones =
-      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
-  m_skeleton_humanoid.bind_palette = &humanoid_bind;
-  m_skeleton_humanoid.fill_role_colors = &humanoid_fill_roles;
-
-  m_caster_humanoid = m_humanoid;
-  m_caster_humanoid.id = k_caster_humanoid_asset;
-  m_caster_humanoid.debug_name = "humanoid.caster.v1";
-  m_caster_humanoid.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_caster;
-
-  m_stave_caster_humanoid = m_humanoid;
-  m_stave_caster_humanoid.id = k_stave_caster_humanoid_asset;
-  m_stave_caster_humanoid.debug_name = "humanoid.stave_caster.v1";
-  m_stave_caster_humanoid.bpat_species_id =
-      Render::Creature::Bpat::k_species_humanoid_stave_caster;
+  for (const SpeciesContract* contract : registered_species()) {
+    if (contract != nullptr && contract->describe_assets != nullptr) {
+      contract->describe_assets(m_assets);
+    }
+  }
 }
 
 auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
     -> const CreatureAsset* {
-  switch (id) {
-  case k_humanoid_asset:
-    return &m_humanoid;
-  case k_horse_asset:
-    return &m_horse;
-  case k_elephant_asset:
-    return &m_elephant;
-  case k_humanoid_sword_asset:
-    return &m_humanoid_sword;
-  case k_humanoid_spear_asset:
-    return &m_humanoid_spear;
-  case k_skeleton_humanoid_asset:
-    return &m_skeleton_humanoid;
-  case k_caster_humanoid_asset:
-    return &m_caster_humanoid;
-  case k_stave_caster_humanoid_asset:
-    return &m_stave_caster_humanoid;
-  case k_sheep_asset:
-    return &m_sheep;
-  case k_wolf_asset:
-    return &m_wolf;
-  default:
+  if (id >= m_assets.size() || m_assets[id].id != id) {
     return nullptr;
   }
+  return &m_assets[id];
 }
 
 auto CreatureAssetRegistry::resolve(const UnitVisualSpec& spec) const noexcept
@@ -279,21 +44,8 @@ auto CreatureAssetRegistry::resolve(const UnitVisualSpec& spec) const noexcept
 
 auto CreatureAssetRegistry::for_species(CreatureKind kind) const noexcept
     -> const CreatureAsset* {
-  switch (kind) {
-  case CreatureKind::Humanoid:
-    return &m_humanoid;
-  case CreatureKind::Horse:
-    return &m_horse;
-  case CreatureKind::Elephant:
-    return &m_elephant;
-  case CreatureKind::Sheep:
-    return &m_sheep;
-  case CreatureKind::Wolf:
-    return &m_wolf;
-  case CreatureKind::Mounted:
-    return nullptr;
-  }
-  return nullptr;
+  const SpeciesContract* contract = species_contract(kind);
+  return contract != nullptr ? get(contract->default_asset) : nullptr;
 }
 
 auto resolve_creature_render_asset_handle(CreatureAssetId asset_id,

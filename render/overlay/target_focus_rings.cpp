@@ -77,7 +77,7 @@ void draw_glyph(FrameSubmitter* renderer,
 } // namespace
 
 void render_target_focus_rings(FrameSubmitter* renderer,
-                               ResourceManager* resources,
+                               const DrawResources* resources,
                                std::span<const TargetFocusVisual> visuals,
                                const TargetFocusStyle& style) {
   if ((renderer == nullptr) || (resources == nullptr) || visuals.empty()) {

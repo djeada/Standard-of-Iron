@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "game/wildlife/wildlife_species.h"
-#include "render/creature/animation_state_components.h"
+#include "render/creature/species/animation_state_components.h"
 #include "render/entity/registry.h"
 
 namespace Render::GL::Wildlife {

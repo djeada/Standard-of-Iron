@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "render/creature/part_graph.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 
 namespace Render::Creature::Quadruped {
 

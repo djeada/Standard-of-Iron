@@ -14,10 +14,9 @@
 
 #include "game/map/visibility_service.h"
 #include "map/terrain.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/mesh_prewarmer.h"
-#include "render/gl/resources.h"
+#include "render/geom/mesh.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/linear_feature_geometry.h"
 #include "render/ground/linear_feature_submission.h"
@@ -25,9 +24,12 @@
 
 namespace Render::GL {
 
-auto BridgeRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(
-      meshes, m_meshes, [](auto& entry) { return entry.get(); });
+void BridgeRenderer::for_each_mesh(const MeshVisitor& visit) const {
+  for (const auto& entry : m_meshes) {
+    if (entry != nullptr) {
+      visit(*entry);
+    }
+  }
 }
 
 BridgeRenderer::BridgeRenderer() = default;
@@ -75,7 +77,7 @@ auto BridgeRenderer::segment_cull_options(float longest_segment) const
   return options;
 }
 
-void BridgeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void BridgeRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   Q_UNUSED(resources);
 
   float longest_segment = 0.0F;

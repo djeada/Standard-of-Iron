@@ -15,11 +15,11 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/terrain_contact.h"
-#include "render/gl/render_constants.h"
-#include "render/gl/resources.h"
 #include "render/ground/scatter_runtime.h"
+#include "render/math/render_constants.h"
 
 namespace {
 
@@ -192,7 +192,7 @@ void TreeRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, QVector3D(0.35F, 0.8F, 0.45F));
 }
 
-void TreeRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void TreeRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   submit_filtered_common<true>(
       renderer,
       resources,

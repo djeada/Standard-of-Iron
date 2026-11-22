@@ -50,7 +50,7 @@ void IronOreRenderer::set_light_direction(const QVector3D& dir) {
   set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
-void IronOreRenderer::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void IronOreRenderer::submit(FrameSubmitter& renderer, const DrawResources* resources) {
   if (submit_prop_common(renderer, resources, TerrainScatterCmd::Species::IronOre) ==
       0) {
     return;

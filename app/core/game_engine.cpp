@@ -108,7 +108,8 @@
 #include "game/units/troop_type.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/frame/camera_visibility.h"
-#include "render/gl/shared_geometry_cache.h"
+#include "render/geom/shared_geometry_cache.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
@@ -463,6 +464,33 @@ void GameEngine::note_dropped_simulation_ticks(std::uint64_t dropped, float real
   qWarning() << "Simulation could not keep up at" << m_runtime.time_scale
              << "x speed: dropped" << dropped << "tick(s) this frame,"
              << m_dropped_simulation_ticks << "since the mission started";
+}
+
+auto GameEngine::scatter_memory_report() -> QJsonObject {
+  const auto frame_lock = lock_frame();
+  if (m_scatter == nullptr) {
+    return {};
+  }
+  QJsonObject layers;
+  qint64 total_instances = 0;
+  qint64 total_cpu_bytes = 0;
+  qint64 total_gpu_bytes = 0;
+  for (const auto& layer : m_scatter->memory()) {
+    const auto instances = static_cast<qint64>(layer.instances);
+    const auto cpu_bytes = static_cast<qint64>(layer.cpu_bytes);
+    const auto gpu_bytes = static_cast<qint64>(layer.gpu_reserved_bytes);
+    layers.insert(QString::fromLatin1(Render::GL::scatter_species_name(layer.species)),
+                  QJsonObject{{QStringLiteral("instances"), instances},
+                              {QStringLiteral("cpu_bytes"), cpu_bytes},
+                              {QStringLiteral("gpu_reserved_bytes"), gpu_bytes}});
+    total_instances += instances;
+    total_cpu_bytes += cpu_bytes;
+    total_gpu_bytes += gpu_bytes;
+  }
+  return QJsonObject{{QStringLiteral("instances"), total_instances},
+                     {QStringLiteral("cpu_bytes"), total_cpu_bytes},
+                     {QStringLiteral("gpu_reserved_bytes"), total_gpu_bytes},
+                     {QStringLiteral("layers"), layers}};
 }
 
 auto GameEngine::simulation_profile_report() -> QJsonObject {
@@ -827,7 +855,14 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
     if (m_terrain_scene) {
       m_terrain_scene->submit(renderer, renderer.resources());
       if (m_loading_overlay.active() && m_scatter != nullptr) {
-        (void)m_scatter->prewarm_gpu_resources();
+        m_scatter->prepare_instance_blocks();
+        if (auto* backend = renderer.backend(); backend != nullptr) {
+          (void)Render::GL::prewarm_instance_blocks(
+              backend->render_context().instances(),
+              [this](const Render::GL::InstanceBlockVisitor& visit) {
+                m_scatter->for_each_instance_block(visit);
+              });
+        }
       }
     }
   };
@@ -888,22 +923,27 @@ void GameEngine::apply_presentation_camera(
 
 void GameEngine::prewarm_overlay_gpu_resources() {
   (void)m_renderer->rigged_mesh_cache().prewarm_gpu_resources();
-  if (m_fog != nullptr) {
-    (void)m_fog->prewarm_gpu_resources();
-  }
   auto* backend = m_renderer->backend();
   if (backend == nullptr) {
     return;
   }
   (void)backend->prewarm_static_meshes(Render::GL::requested_building_meshes());
   auto& meshes = backend->render_context().meshes();
-  (void)Render::GL::prewarm_projectile_geometry(meshes);
-  (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources(meshes);
+  using Render::GL::MeshVisitor;
+  (void)Render::GL::prewarm_meshes(meshes, [](const MeshVisitor& visit) {
+    Render::GL::for_each_projectile_mesh(visit);
+  });
+  (void)Render::GL::prewarm_meshes(meshes, [](const MeshVisitor& visit) {
+    Render::GL::SharedGeometryCache::instance().for_each_mesh(visit);
+  });
   if (m_features != nullptr) {
-    (void)m_features->prewarm_gpu_resources(meshes);
+    (void)Render::GL::prewarm_meshes(
+        meshes, [this](const MeshVisitor& visit) { m_features->for_each_mesh(visit); });
   }
   if (m_surface != nullptr && m_surface->terrain() != nullptr) {
-    (void)m_surface->terrain()->prewarm_gpu_resources(meshes);
+    (void)Render::GL::prewarm_meshes(meshes, [this](const MeshVisitor& visit) {
+      m_surface->terrain()->for_each_mesh(visit);
+    });
   }
 }
 

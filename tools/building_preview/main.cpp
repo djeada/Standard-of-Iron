@@ -25,10 +25,11 @@
 #include "game/systems/nation_id.h"
 #include "render/entity/building_state.h"
 #include "render/entity/registry.h"
+#include "render/frame/draw_resources.h"
 #include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
-#include "render/gl/mesh.h"
-#include "render/gl/primitives.h"
+#include "render/geom/mesh.h"
+#include "render/geom/primitives.h"
 #include "render/gl/resources.h"
 #include "render/software/software_rasterizer.h"
 
@@ -192,7 +193,7 @@ float g_animation_time = 0.0F;
 float g_gate_open = 0.0F;
 
 auto render_building(EntityRendererRegistry& registry,
-                     Render::GL::ResourceManager* resources,
+                     const Render::GL::DrawResources* resources,
                      const std::string& nation,
                      const std::string& type,
                      const std::string& key_suffix,
@@ -344,6 +345,12 @@ auto main(int argc, char** argv) -> int {
     std::cerr << "Failed to initialize building preview resources\n";
     return 4;
   }
+  const Render::GL::DrawResources draw_resources(
+      Render::GL::DrawResources::Parts{.quad = resources.quad(),
+                                       .ground = resources.ground(),
+                                       .unit = resources.unit(),
+                                       .white = resources.white(),
+                                       .wear_volume = resources.wear_volume()});
 
   std::vector<std::string> types = {"home",
                                     "farm",
@@ -414,7 +421,7 @@ auto main(int argc, char** argv) -> int {
       for (std::size_t i = 0; i < types.size(); ++i) {
         Bounds bounds;
         (void)render_building(registry,
-                              &resources,
+                              &draw_resources,
                               nation,
                               types[i],
                               keys[i],
@@ -456,7 +463,7 @@ auto main(int argc, char** argv) -> int {
       const std::string& nation = nations[c / static_cast<int>(views.size())];
       const View& view = views[c % static_cast<int>(views.size())];
       QImage const tile = render_building(registry,
-                                          &resources,
+                                          &draw_resources,
                                           nation,
                                           types[r],
                                           keys[r],

@@ -16,9 +16,9 @@
 #include "game/systems/resource_types.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/submitter.h"
+#include "render/geom/primitives.h"
 #include "render/geom/stone.h"
 #include "render/geom/transforms.h"
-#include "render/gl/primitives.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

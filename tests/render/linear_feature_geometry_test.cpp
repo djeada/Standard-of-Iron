@@ -4,7 +4,7 @@
 #include <limits>
 
 #include "game/map/terrain.h"
-#include "render/gl/mesh.h"
+#include "render/geom/mesh.h"
 #include "render/ground/linear_feature_geometry.h"
 
 namespace {

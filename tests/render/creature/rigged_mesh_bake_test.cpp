@@ -15,8 +15,8 @@
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
-#include "render/gl/garment_shell.h"
-#include "render/gl/primitives.h"
+#include "render/geom/garment_shell.h"
+#include "render/geom/primitives.h"
 #include "render/gl/rigged_mesh.h"
 
 namespace {
