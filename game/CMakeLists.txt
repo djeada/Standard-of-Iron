@@ -507,6 +507,7 @@ add_library(
     command/command_queue.cpp
     command/command_system.cpp
     command/command_validator.cpp
+    command/json_u64.cpp
     command/replay.cpp
     map/match_loader.cpp
     systems/forest_cover_system.cpp

@@ -1,5 +1,7 @@
 #include <QJsonObject>
 
+#include <array>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <limits>
 
@@ -93,6 +95,40 @@ TEST(GameSpeedTest, ASaveCarryingAnImpossibleSpeedLoadsAtAPlayableOne) {
     EXPECT_TRUE(Speed::is_supported(effective)) << stored;
     EXPECT_GE(effective, Speed::k_min) << stored;
     EXPECT_LE(effective, Speed::k_max) << stored;
+  }
+}
+
+TEST(GameStateSerializerTest, RuntimeU64FieldsRoundTripEveryBoundary) {
+  constexpr std::array<std::uint64_t, 8> k_values = {
+      0ULL,
+      1ULL,
+      (1ULL << 53U) - 1ULL,
+      (1ULL << 53U) + 1ULL,
+      static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),
+      static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1ULL,
+      std::numeric_limits<std::uint64_t>::max(),
+      0x5EED5EED5EED5EEDULL,
+  };
+
+  Engine::Core::World world;
+  Game::Systems::LevelSnapshot level;
+
+  for (const std::uint64_t value : k_values) {
+    Game::Systems::RuntimeSnapshot saved;
+    saved.simulation_tick = value;
+    saved.rng_seed = value ^ 0xA5A5A5A5A5A5A5A5ULL;
+    saved.rng_draw_count = value;
+
+    const QJsonObject metadata = Game::Systems::GameStateSerializer::build_metadata(
+        world, nullptr, level, saved);
+
+    Game::Systems::RuntimeSnapshot restored;
+    Game::Systems::GameStateSerializer::restore_runtime_from_metadata(metadata,
+                                                                      restored);
+
+    EXPECT_EQ(restored.simulation_tick, saved.simulation_tick) << value;
+    EXPECT_EQ(restored.rng_seed, saved.rng_seed) << value;
+    EXPECT_EQ(restored.rng_draw_count, saved.rng_draw_count) << value;
   }
 }
 

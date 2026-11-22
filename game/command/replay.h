@@ -18,7 +18,7 @@ namespace Game::Command {
 
 class CommandQueue;
 
-inline constexpr int k_replay_format_version = 6;
+inline constexpr int k_replay_format_version = 7;
 
 [[nodiscard]] auto simulation_build_id() -> QString;
 

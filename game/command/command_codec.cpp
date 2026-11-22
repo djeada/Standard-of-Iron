@@ -8,6 +8,7 @@
 
 #include "../systems/resource_types.h"
 #include "../units/troop_type.h"
+#include "json_u64.h"
 
 namespace Game::Command {
 
@@ -603,7 +604,7 @@ auto to_json(const Command& command) -> QJsonObject {
   object["type"] = QLatin1String(payload_name(command.payload));
   object["source"] = QLatin1String(source_name(command.source));
   object["owner"] = command.owner_id;
-  object["tick"] = static_cast<qint64>(command.submitted_tick);
+  object["tick"] = u64_to_json(command.submitted_tick);
   QJsonObject body;
   std::visit([&body](const auto& payload) { encode(body, payload); }, command.payload);
   object["payload"] = body;
@@ -614,10 +615,10 @@ auto from_json(const QJsonObject& object) -> std::optional<Command> {
   const auto type = object.value(QLatin1String("type"));
   const auto source = object.value(QLatin1String("source"));
   const auto owner = object.value(QLatin1String("owner"));
-  const auto tick = object.value(QLatin1String("tick"));
+  const auto tick = u64_from_json(object.value(QLatin1String("tick")));
   const auto body = object.value(QLatin1String("payload"));
-  if (!type.isString() || !source.isString() || !owner.isDouble() || !tick.isDouble() ||
-      !body.isObject()) {
+  if (!type.isString() || !source.isString() || !owner.isDouble() ||
+      !tick.has_value() || !body.isObject()) {
     return std::nullopt;
   }
   const auto parsed_source = source_from_name(source.toString().toStdString());
@@ -633,7 +634,7 @@ auto from_json(const QJsonObject& object) -> std::optional<Command> {
   Command command;
   command.source = *parsed_source;
   command.owner_id = owner.toInt();
-  command.submitted_tick = static_cast<std::uint64_t>(tick.toDouble());
+  command.submitted_tick = *tick;
   command.payload = std::move(*payload);
   return command;
 }
