@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "pipeline_interface.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"
 #include "render/mist_volume.h"
@@ -57,8 +58,8 @@ public:
 
 private:
   struct RenderTarget {
-    unsigned int fbo{0};
-    unsigned int color{0};
+    FramebufferHandle fbo;
+    TextureHandle color;
     int width{0};
     int height{0};
   };
@@ -106,7 +107,7 @@ private:
   Render::GroundFogSettings m_ground_fog{};
   QVector2D m_sun_screen{0.5F, 0.5F};
   float m_sun_visibility{0.0F};
-  unsigned int m_scene_depth{0};
+  TextureHandle m_scene_depth;
   float m_near_plane{1.0F};
   float m_far_plane{200.0F};
   QMatrix4x4 m_inverse_view_proj;
@@ -116,7 +117,7 @@ private:
   std::vector<Render::MistVolume> m_mist_volumes;
   float m_mist_time{0.0F};
   bool m_mist_dirty{false};
-  unsigned int m_empty_vao{0};
+  VertexArrayHandle m_empty_vao;
 
   int m_output_fbo{0};
   std::array<int, 4> m_output_viewport{{0, 0, 0, 0}};

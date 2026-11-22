@@ -18,7 +18,7 @@
 #include <variant>
 #include <vector>
 
-#include "gl_lifetime.h"
+#include "gl_handle.h"
 
 namespace Render::GL {
 
@@ -101,16 +101,16 @@ private:
     Compute
   };
 
-  GLuint m_program = 0;
-  GlShareGroup m_share_group = k_unknown_share_group;
+  ProgramHandle m_program;
   std::uint64_t m_defines_generation = 0;
   QString m_debug_name;
-  auto compile_shader(const QString& source, GLenum type) -> GLuint;
-  auto link_program(GLuint vertex_shader, GLuint fragment_shader) -> GLuint;
-  auto link_compute_program(GLuint compute_shader) -> GLuint;
+  auto compile_shader(const QString& source, GLenum type) -> ShaderHandle;
+  auto link_program(const ShaderHandle& vertex_shader,
+                    const ShaderHandle& fragment_shader) -> ProgramHandle;
+  auto link_compute_program(const ShaderHandle& compute_shader) -> ProgramHandle;
   auto build_graphics_program(const QString& vertex_source,
-                              const QString& fragment_source) -> GLuint;
-  void adopt_program(GLuint program);
+                              const QString& fragment_source) -> ProgramHandle;
+  void adopt_program(ProgramHandle program);
   void bind_standard_blocks();
   void replay_uniform_state();
   [[nodiscard]] auto location_for(UniformHandle handle) const noexcept -> GLint;

@@ -181,7 +181,6 @@ Shader::~Shader() {
     auto& shaders = live_shaders();
     shaders.erase(std::remove(shaders.begin(), shaders.end(), this), shaders.end());
   }
-  release_gl_object(DeferredGlObject::Program, m_program, m_share_group);
 }
 
 void Shader::set_global_defines(const QString& defines) {
@@ -213,8 +212,8 @@ auto Shader::reload_all() -> std::size_t {
         shader->m_defines_generation == generation) {
       continue;
     }
-    if (shader->m_share_group != k_unknown_share_group &&
-        shader->m_share_group != current) {
+    const GlShareGroup owner = shader->m_program.share_group();
+    if (owner != k_unknown_share_group && owner != current) {
       continue;
     }
     if (shader->reload()) {
@@ -234,38 +233,38 @@ auto Shader::reload() -> bool {
       qWarning() << "Shader reload: cannot re-read" << m_debug_name;
       return false;
     }
-    const GLuint program = build_graphics_program(
+    ProgramHandle program = build_graphics_program(
         resolve_shader_includes(vertex_source, QFileInfo(m_vertex_path).path()),
         resolve_shader_includes(fragment_source, QFileInfo(m_fragment_path).path()));
-    if (program == 0) {
+    if (!program) {
       qWarning() << "Shader reload: keeping the previous program for" << m_debug_name;
       return false;
     }
-    adopt_program(program);
+    adopt_program(std::move(program));
     return true;
   }
   case SourceKind::Sources: {
-    const GLuint program = build_graphics_program(m_vertex_source, m_fragment_source);
-    if (program == 0) {
+    ProgramHandle program = build_graphics_program(m_vertex_source, m_fragment_source);
+    if (!program) {
       qWarning() << "Shader reload: keeping the previous program for" << m_debug_name;
       return false;
     }
-    adopt_program(program);
+    adopt_program(std::move(program));
     return true;
   }
   case SourceKind::Compute: {
     initializeOpenGLFunctions();
     constexpr GLenum k_compute_shader = 0x91B9;
-    const GLuint compute_shader = compile_shader(m_compute_source, k_compute_shader);
-    if (compute_shader == 0) {
+    const ShaderHandle compute_shader =
+        compile_shader(m_compute_source, k_compute_shader);
+    if (!compute_shader) {
       return false;
     }
-    const GLuint program = link_compute_program(compute_shader);
-    glDeleteShader(compute_shader);
-    if (program == 0) {
+    ProgramHandle program = link_compute_program(compute_shader);
+    if (!program) {
       return false;
     }
-    adopt_program(program);
+    adopt_program(std::move(program));
     return true;
   }
   case SourceKind::None:
@@ -325,29 +324,21 @@ auto Shader::load_from_files(const QString& vertex_path,
 }
 
 auto Shader::build_graphics_program(const QString& vertex_source,
-                                    const QString& fragment_source) -> GLuint {
+                                    const QString& fragment_source) -> ProgramHandle {
   initializeOpenGLFunctions();
-  GLuint const vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
-  GLuint const fragment_shader = compile_shader(fragment_source, GL_FRAGMENT_SHADER);
-  if (vertex_shader == 0 || fragment_shader == 0) {
-    if (vertex_shader != 0) {
-      glDeleteShader(vertex_shader);
-    }
-    if (fragment_shader != 0) {
-      glDeleteShader(fragment_shader);
-    }
-    return 0;
+  const ShaderHandle vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
+  const ShaderHandle fragment_shader =
+      compile_shader(fragment_source, GL_FRAGMENT_SHADER);
+  if (!vertex_shader || !fragment_shader) {
+    return {};
   }
-  const GLuint program = link_program(vertex_shader, fragment_shader);
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-  return program;
+  return link_program(vertex_shader, fragment_shader);
 }
 
 auto Shader::load_from_source(const QString& vertex_source,
                               const QString& fragment_source) -> bool {
-  const GLuint program = build_graphics_program(vertex_source, fragment_source);
-  if (program == 0) {
+  ProgramHandle program = build_graphics_program(vertex_source, fragment_source);
+  if (!program) {
     return false;
   }
 
@@ -356,7 +347,7 @@ auto Shader::load_from_source(const QString& vertex_source,
   m_uniform_locations.clear();
   m_uniform_value_cache.clear();
   m_block_bindings.clear();
-  adopt_program(program);
+  adopt_program(std::move(program));
   m_source_kind = SourceKind::Sources;
   m_vertex_source = vertex_source;
   m_fragment_source = fragment_source;
@@ -368,13 +359,12 @@ auto Shader::load_from_source(const QString& vertex_source,
 auto Shader::load_compute_from_source(const QString& compute_source) -> bool {
   initializeOpenGLFunctions();
   constexpr GLenum k_compute_shader = 0x91B9;
-  GLuint const compute_shader = compile_shader(compute_source, k_compute_shader);
-  if (compute_shader == 0) {
+  const ShaderHandle compute_shader = compile_shader(compute_source, k_compute_shader);
+  if (!compute_shader) {
     return false;
   }
-  const GLuint program = link_compute_program(compute_shader);
-  glDeleteShader(compute_shader);
-  if (program == 0) {
+  ProgramHandle program = link_compute_program(compute_shader);
+  if (!program) {
     return false;
   }
   m_uniform_cache.clear();
@@ -382,17 +372,17 @@ auto Shader::load_compute_from_source(const QString& compute_source) -> bool {
   m_uniform_locations.clear();
   m_uniform_value_cache.clear();
   m_block_bindings.clear();
-  adopt_program(program);
+  adopt_program(std::move(program));
   m_source_kind = SourceKind::Compute;
   m_compute_source = compute_source;
   return true;
 }
 
-auto Shader::link_compute_program(GLuint compute_shader) -> GLuint {
+auto Shader::link_compute_program(const ShaderHandle& compute_shader) -> ProgramHandle {
   initializeOpenGLFunctions();
-  const GLuint program = glCreateProgram();
-  Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlProgramCreated);
-  glAttachShader(program, compute_shader);
+  ProgramHandle handle = ProgramHandle::create();
+  const GLuint program = handle.id();
+  glAttachShader(program, compute_shader.id());
   glLinkProgram(program);
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::ProgramLinked);
 
@@ -402,19 +392,14 @@ auto Shader::link_compute_program(GLuint compute_shader) -> GLuint {
     GLchar info_log[shader_info_log_size];
     glGetProgramInfoLog(program, shader_info_log_size, nullptr, info_log);
     qWarning() << "Shader: compute link failed" << m_debug_name << info_log;
-    glDeleteProgram(program);
-    return 0;
+    return {};
   }
-  return program;
+  return handle;
 }
 
-void Shader::adopt_program(GLuint program) {
+void Shader::adopt_program(ProgramHandle program) {
   initializeOpenGLFunctions();
-  if (m_program != 0 && m_program != program) {
-    glDeleteProgram(m_program);
-  }
-  m_program = program;
-  m_share_group = current_gl_share_group();
+  m_program = std::move(program);
   {
     std::lock_guard const lock(shader_registry_mutex());
     m_defines_generation = global_defines_generation();
@@ -422,16 +407,16 @@ void Shader::adopt_program(GLuint program) {
 
   for (std::size_t i = 0; i < m_uniform_names.size(); ++i) {
     m_uniform_locations[i] =
-        glGetUniformLocation(m_program, m_uniform_names[i].c_str());
+        glGetUniformLocation(m_program.id(), m_uniform_names[i].c_str());
   }
 
   std::erase_if(m_uniform_cache,
                 [](const auto& entry) { return entry.second == InvalidUniform; });
   bind_standard_blocks();
   for (const auto& [block, binding] : m_block_bindings) {
-    const GLuint idx = glGetUniformBlockIndex(m_program, block.c_str());
+    const GLuint idx = glGetUniformBlockIndex(m_program.id(), block.c_str());
     if (idx != GL_INVALID_INDEX) {
-      glUniformBlockBinding(m_program, idx, static_cast<GLuint>(binding));
+      glUniformBlockBinding(m_program.id(), idx, static_cast<GLuint>(binding));
     }
   }
   replay_uniform_state();
@@ -439,9 +424,9 @@ void Shader::adopt_program(GLuint program) {
 
 void Shader::bind_standard_blocks() {
   const auto bind = [this](const char* block, std::uint32_t binding) {
-    const GLuint idx = glGetUniformBlockIndex(m_program, block);
+    const GLuint idx = glGetUniformBlockIndex(m_program.id(), block);
     if (idx != GL_INVALID_INDEX) {
-      glUniformBlockBinding(m_program, idx, static_cast<GLuint>(binding));
+      glUniformBlockBinding(m_program.id(), idx, static_cast<GLuint>(binding));
     }
   };
   bind("FrameData", k_frame_data_binding_point);
@@ -453,7 +438,7 @@ void Shader::bind_standard_blocks() {
 void Shader::replay_uniform_state() {
   GLint previous_program = 0;
   glGetIntegerv(GL_CURRENT_PROGRAM, &previous_program);
-  glUseProgram(m_program);
+  glUseProgram(m_program.id());
 
   const UniformHandle shadow_sampler =
       optional_uniform_handle("u_directional_shadow_map");
@@ -517,7 +502,7 @@ auto Shader::preprocess_source(const QString& source) -> QString {
 }
 
 void Shader::use() {
-  glUseProgram(m_program);
+  glUseProgram(m_program.id());
 }
 
 void Shader::release() {
@@ -562,7 +547,7 @@ auto uniform_handle_impl(QOpenGLFunctions_3_3_Core& fn,
 
 auto Shader::uniform_handle(const char* name) -> Shader::UniformHandle {
   return uniform_handle_impl(*this,
-                             m_program,
+                             m_program.id(),
                              m_uniform_cache,
                              m_uniform_names,
                              m_uniform_locations,
@@ -572,7 +557,7 @@ auto Shader::uniform_handle(const char* name) -> Shader::UniformHandle {
 
 auto Shader::optional_uniform_handle(const char* name) -> Shader::UniformHandle {
   return uniform_handle_impl(*this,
-                             m_program,
+                             m_program.id(),
                              m_uniform_cache,
                              m_uniform_names,
                              m_uniform_locations,
@@ -733,9 +718,10 @@ void Shader::set_uniform(const QString& name, bool value) {
   set_uniform(name, static_cast<int>(value));
 }
 
-auto Shader::compile_shader(const QString& source, GLenum type) -> GLuint {
+auto Shader::compile_shader(const QString& source, GLenum type) -> ShaderHandle {
   initializeOpenGLFunctions();
-  GLuint const shader = glCreateShader(type);
+  ShaderHandle handle = ShaderHandle::create(type);
+  const GLuint shader = handle.id();
 
   QByteArray const source_bytes = inject_defines(source, m_variant_defines).toUtf8();
   const char* source_ptr = source_bytes.constData();
@@ -749,19 +735,19 @@ auto Shader::compile_shader(const QString& source, GLenum type) -> GLuint {
     GLchar info_log[shader_info_log_size];
     glGetShaderInfoLog(shader, shader_info_log_size, nullptr, info_log);
     qWarning() << "Shader compilation failed:" << info_log;
-    glDeleteShader(shader);
-    return 0;
+    return {};
   }
 
-  return shader;
+  return handle;
 }
 
-auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> GLuint {
+auto Shader::link_program(const ShaderHandle& vertex_shader,
+                          const ShaderHandle& fragment_shader) -> ProgramHandle {
   initializeOpenGLFunctions();
-  const GLuint program = glCreateProgram();
-  Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlProgramCreated);
-  glAttachShader(program, vertex_shader);
-  glAttachShader(program, fragment_shader);
+  ProgramHandle handle = ProgramHandle::create();
+  const GLuint program = handle.id();
+  glAttachShader(program, vertex_shader.id());
+  glAttachShader(program, fragment_shader.id());
   glLinkProgram(program);
   Render::Profiling::count_asset(Render::Profiling::AssetCounter::ProgramLinked);
 
@@ -771,40 +757,39 @@ auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> GLuin
     GLchar info_log[shader_info_log_size];
     glGetProgramInfoLog(program, shader_info_log_size, nullptr, info_log);
     qWarning() << "Shader linking failed:" << m_debug_name << info_log;
-    glDeleteProgram(program);
-    return 0;
+    return {};
   }
-  return program;
+  return handle;
 }
 
 auto Shader::bind_uniform_block(const char* block_name,
                                 std::uint32_t binding_point) -> bool {
-  if (m_program == 0 || block_name == nullptr) {
+  if (!m_program || block_name == nullptr) {
     return false;
   }
   initializeOpenGLFunctions();
-  GLuint const idx = glGetUniformBlockIndex(m_program, block_name);
+  GLuint const idx = glGetUniformBlockIndex(m_program.id(), block_name);
   if (idx == GL_INVALID_INDEX) {
     qWarning() << "Shader uniform block not found:" << block_name
-               << "(program:" << m_program << ")";
+               << "(program:" << m_program.id() << ")";
     return false;
   }
-  glUniformBlockBinding(m_program, idx, binding_point);
+  glUniformBlockBinding(m_program.id(), idx, binding_point);
   m_block_bindings.emplace_back(block_name, binding_point);
   return true;
 }
 
 auto Shader::optional_bind_uniform_block(const char* block_name,
                                          std::uint32_t binding_point) -> bool {
-  if (m_program == 0 || block_name == nullptr) {
+  if (!m_program || block_name == nullptr) {
     return false;
   }
   initializeOpenGLFunctions();
-  const GLuint idx = glGetUniformBlockIndex(m_program, block_name);
+  const GLuint idx = glGetUniformBlockIndex(m_program.id(), block_name);
   if (idx == GL_INVALID_INDEX) {
     return false;
   }
-  glUniformBlockBinding(m_program, idx, binding_point);
+  glUniformBlockBinding(m_program.id(), idx, binding_point);
   m_block_bindings.emplace_back(block_name, binding_point);
   return true;
 }

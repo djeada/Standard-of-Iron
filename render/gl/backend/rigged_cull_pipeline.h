@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 #include "render/role_color_palette.h"
 
@@ -82,7 +83,7 @@ public:
   [[nodiscard]] auto full_mesh_shader() -> Shader* { return m_full_mesh_shader; }
 
 private:
-  unsigned int m_wear_volume = 0U;
+  BorrowedGlName m_wear_volume = 0U;
 
   enum class Pass : std::uint8_t {
     Color,
@@ -137,13 +138,13 @@ private:
   Shader* m_full_mesh_shader{nullptr};
   Shader* m_full_mesh_shadow_shader{nullptr};
 
-  GLuint m_palette_ssbo{0};
-  GLuint m_instance_ssbo{0};
-  GLuint m_out_index_buffer{0};
-  GLuint m_command_buffer{0};
-  GLuint m_vao{0};
-  GLuint m_role_color_buffer{0};
-  GLuint m_role_color_texture{0};
+  BufferHandle m_palette_ssbo;
+  BufferHandle m_instance_ssbo;
+  BufferHandle m_out_index_buffer;
+  BufferHandle m_command_buffer;
+  VertexArrayHandle m_vao;
+  BufferHandle m_role_color_buffer;
+  TextureHandle m_role_color_texture;
 
   std::size_t m_palette_capacity_bytes{0};
   std::size_t m_instance_capacity_bytes{0};

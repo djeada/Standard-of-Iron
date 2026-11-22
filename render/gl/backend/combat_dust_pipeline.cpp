@@ -157,7 +157,7 @@ auto CombatDustPipeline::initialize() -> bool {
   if (m_blood_shader != nullptr && !create_blood_geometry()) {
     qWarning() << "CombatDustPipeline: Blood pools disabled; failed to create "
                   "blood geometry";
-    release_mesh_buffers(*this, m_blood_mesh);
+    m_blood_mesh.reset();
     m_blood_shader = nullptr;
     m_blood_uniforms = {};
   }
@@ -172,17 +172,13 @@ void CombatDustPipeline::shutdown() {
 }
 
 void CombatDustPipeline::release_geometry() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    clear_gl_errors();
-  }
   for (StaticMeshBuffers* mesh : {&m_dust_mesh,
                                   &m_hearth_smoke_mesh,
                                   &m_fireball_mesh,
                                   &m_metal_spark_mesh,
                                   &m_weapon_arc_mesh,
                                   &m_blood_mesh}) {
-    release_mesh_buffers(*this, *mesh);
+    mesh->reset();
   }
 }
 
@@ -214,11 +210,11 @@ void CombatDustPipeline::cache_uniforms() {
 }
 
 auto CombatDustPipeline::is_initialized() const -> bool {
-  return m_dust_shader != nullptr && m_dust_mesh.vao != 0 &&
-         m_hearth_smoke_mesh.vao != 0 && m_hearth_smoke_mesh.index_count > 0 &&
-         m_dust_mesh.index_count > 0 && m_fireball_mesh.vao != 0 &&
-         m_fireball_mesh.index_count > 0 && m_metal_spark_mesh.vao != 0 &&
-         m_metal_spark_mesh.index_count > 0 && m_weapon_arc_mesh.vao != 0 &&
+  return m_dust_shader != nullptr && m_dust_mesh.vao.valid() &&
+         m_hearth_smoke_mesh.vao.valid() && m_hearth_smoke_mesh.index_count > 0 &&
+         m_dust_mesh.index_count > 0 && m_fireball_mesh.vao.valid() &&
+         m_fireball_mesh.index_count > 0 && m_metal_spark_mesh.vao.valid() &&
+         m_metal_spark_mesh.index_count > 0 && m_weapon_arc_mesh.vao.valid() &&
          m_weapon_arc_mesh.index_count > 0;
 }
 
@@ -249,7 +245,7 @@ auto upload_dust_mesh(QOpenGLFunctions_3_3_Core& gl,
 
 auto CombatDustPipeline::create_dust_geometry() -> bool {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_dust_mesh);
+  m_dust_mesh.reset();
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -311,7 +307,7 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
 
 auto CombatDustPipeline::create_hearth_smoke_geometry() -> bool {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_hearth_smoke_mesh);
+  m_hearth_smoke_mesh.reset();
   clear_gl_errors();
 
   constexpr int wisp_count = 20;
@@ -342,7 +338,7 @@ auto CombatDustPipeline::create_hearth_smoke_geometry() -> bool {
 
 auto CombatDustPipeline::create_fireball_geometry() -> bool {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_fireball_mesh);
+  m_fireball_mesh.reset();
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -402,7 +398,7 @@ auto CombatDustPipeline::create_fireball_geometry() -> bool {
 
 auto CombatDustPipeline::create_metal_spark_geometry() -> bool {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_metal_spark_mesh);
+  m_metal_spark_mesh.reset();
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -467,7 +463,7 @@ auto CombatDustPipeline::create_metal_spark_geometry() -> bool {
 
 auto CombatDustPipeline::create_weapon_arc_geometry() -> bool {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_weapon_arc_mesh);
+  m_weapon_arc_mesh.reset();
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -516,7 +512,7 @@ auto CombatDustPipeline::create_weapon_arc_geometry() -> bool {
 
 auto CombatDustPipeline::create_blood_geometry() -> bool {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_blood_mesh);
+  m_blood_mesh.reset();
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -625,7 +621,7 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
                           : (inst.effect_type == EffectType::HearthSmoke
                                  ? m_hearth_smoke_mesh
                                  : m_dust_mesh)));
-    GLuint const target_vao = target_mesh.vao;
+    GLuint const target_vao = target_mesh.vao.id();
     GLsizei const target_index_count = target_mesh.index_count;
     if (target_vao == 0 || target_index_count <= 0) {
       continue;
@@ -675,8 +671,7 @@ void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* in
                                                  std::size_t count,
                                                  const QMatrix4x4& view_proj) {
   if (!is_initialized() || instances == nullptr || count == 0 ||
-      m_blood_shader == nullptr || m_blood_mesh.vao == 0 ||
-      m_blood_mesh.index_count <= 0) {
+      m_blood_shader == nullptr || !m_blood_mesh.vao || m_blood_mesh.index_count <= 0) {
     return;
   }
 
@@ -701,7 +696,7 @@ void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* in
   glPolygonOffset(-1.0F, -1.0F);
 
   m_blood_shader->use();
-  glBindVertexArray(m_blood_mesh.vao);
+  glBindVertexArray(m_blood_mesh.vao.id());
 
   for (std::size_t idx = 0; idx < count; ++idx) {
     BloodPoolInstanceData const& blood = instances[idx];

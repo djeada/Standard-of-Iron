@@ -40,7 +40,7 @@ using namespace Render::GL::Geometry;
 
 void VegetationPipeline::initialize_fire_camp_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_firecamp_mesh);
+  m_firecamp_mesh.reset();
 
   struct FireCampVertex {
     QVector3D position;
@@ -101,7 +101,7 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
 
 void VegetationPipeline::initialize_tent_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_tent_mesh);
+  m_tent_mesh.reset();
 
   PropMeshData mesh = build_tent_mesh();
   upload_prop_mesh_impl(mesh.vertices, mesh.indices, m_tent_mesh);
@@ -109,7 +109,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
 
 void VegetationPipeline::initialize_supply_cart_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_supply_cart_mesh);
+  m_supply_cart_mesh.reset();
 
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
@@ -266,7 +266,7 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
 
 void VegetationPipeline::initialize_weapon_rack_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_weapon_rack_mesh);
+  m_weapon_rack_mesh.reset();
 
   WeaponRackMeshData const mesh = build_weapon_rack_mesh();
   upload_prop_mesh_with_surface_impl(
@@ -275,7 +275,7 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
 
 void VegetationPipeline::initialize_ruins_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_ruins_mesh);
+  m_ruins_mesh.reset();
 
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
@@ -291,7 +291,7 @@ void VegetationPipeline::initialize_ruins_pipeline() {
 
 void VegetationPipeline::initialize_abandoned_home_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_abandoned_home_mesh);
+  m_abandoned_home_mesh.reset();
 
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
@@ -319,7 +319,7 @@ void VegetationPipeline::initialize_abandoned_home_pipeline() {
 
 void VegetationPipeline::initialize_statue_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_statue_mesh);
+  m_statue_mesh.reset();
 
   using namespace Render::GL::BackendPipelines::StatueParts;
 
@@ -380,7 +380,7 @@ void VegetationPipeline::initialize_statue_pipeline() {
 
 void VegetationPipeline::initialize_magic_shrine_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_magic_shrine_mesh);
+  m_magic_shrine_mesh.reset();
 
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
@@ -397,7 +397,7 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
 
 void VegetationPipeline::initialize_cursed_gold_vein_pipeline() {
   initializeOpenGLFunctions();
-  release_mesh_buffers(*this, m_cursed_gold_vein_mesh);
+  m_cursed_gold_vein_mesh.reset();
 
   PropMeshData mesh = build_cursed_gold_vein_mesh();
   upload_prop_mesh_impl(mesh.vertices, mesh.indices, m_cursed_gold_vein_mesh);

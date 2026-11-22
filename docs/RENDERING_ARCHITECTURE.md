@@ -704,13 +704,17 @@ Higher layers submit render intent. They should not depend on raw GL state layou
 
 The process has one GL context that is never recreated. The gameplay `GLView` and the commander portrait are both `QQuickFramebufferObject` items in the same window, so they share the scene-graph context and render thread. The portrait still owns a second `Renderer` and `Backend`, and that is why per-renderer state matters even with one context.
 
-Every GL name records the share group it was created in (`current_gl_share_group()`), and is released through one policy in `render/gl/gl_lifetime.*`:
+Every GL object under `render/` is owned by a move-only handle from `render/gl/gl_handle.h`: `BufferHandle`, `VertexArrayHandle`, `TextureHandle`, `ProgramHandle`, `ShaderHandle`, `FramebufferHandle`, `RenderbufferHandle`, `SamplerHandle`, `QueryHandle`, and `FenceHandle` for sync objects. `XHandle::create()` makes the object on the current context and records its share group (`current_gl_share_group()`). `reset()` or the destructor releases it through one policy in `render/gl/gl_lifetime.*`:
 
-- If the owning share group is current, the name is deleted immediately.
-- Otherwise it is queued with `defer_gl_delete`. The queue drains only into its own group, and is discarded (`forget_gl_share_group`) when that group is destroyed.
-- No destructor issues a GL call without a current context.
+- If the owning share group is current, the object is deleted immediately.
+- Otherwise it is queued with `defer_gl_delete`. The queue drains only into its own group, and is discarded (`forget_gl_share_group`) when that group is destroyed. A name released into a group that is already gone is counted as deleted and never queued.
+- No destructor issues a GL call without a current context, so a handle can be destroyed on any thread and a pipeline's `shutdown()` is just a list of `reset()` calls. `Backend::~Backend()` destroys its pipelines whether or not a context is current.
 
-`Buffer`, `VertexArray`, `Texture`, `Shader` (as `DeferredGlObject::Program`) and the resource manager's 3D wear volume all use `release_gl_object`. Pipeline objects in `render/gl/backend/*` still delete their own names. For that reason `Backend::~Backend()`, when it runs without a context, releases (abandons) the pipelines rather than destroying them, but it still clears the shared geometry cache: cached meshes defer their names safely.
+A member that only reads a name owned elsewhere (a shadow cascade's texture, the wear volume a pipeline binds) is declared `BorrowedGlName`.
+
+`gl_lifetime` keeps a live-object census per kind (`gl_object_census`): handles count creation, and the queue counts every deletion or discard. `tests/render/gl_ownership_leak_test.cpp` initialises a `Backend`, draws frames with profiling on (timer queries and fences included), destroys it, does that again, and asserts that every kind is back to its starting count. CI runs it on Mesa under Xvfb with `SOI_REQUIRE_GL=1`, so a missing context fails it instead of skipping it.
+
+`scripts/check-gl-ownership.py` (a PR source-policy gate) keeps it that way. It allows `glGen*`/`glCreate*`/`glDelete*`/`glFenceSync` only in `gl_handle.cpp` and `gl_lifetime.cpp`, no `gl*` call anywhere in `render/` outside `render/gl/`, and no raw `GLuint` member named like an owned object.
 
 `Mesh::prepare_draw` re-uploads when its vertex array belongs to a different share group than the current one. The process-global `SharedGeometryCache` can therefore survive a context change without handing out dead VAO names.
 

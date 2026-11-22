@@ -65,7 +65,7 @@ void TerrainPipeline::cache_uniforms() {
 
 auto TerrainPipeline::is_initialized() const -> bool {
   return m_grass_shader != nullptr && m_ground_shader != nullptr &&
-         m_terrain_shader != nullptr && m_grass_vao != 0;
+         m_terrain_shader != nullptr && m_grass_vao.valid();
 }
 
 void TerrainPipeline::cache_grass_uniforms() {
@@ -300,13 +300,11 @@ void TerrainPipeline::initialize_grass_geometry() {
     }
   }
 
-  gl->glGenVertexArrays(1, &m_grass_vao);
-  note_vertex_arrays_created(1);
-  gl->glBindVertexArray(m_grass_vao);
+  m_grass_vao = VertexArrayHandle::create();
+  gl->glBindVertexArray(m_grass_vao.id());
 
-  gl->glGenBuffers(1, &m_grass_vertex_buffer);
-  note_buffers_created(1);
-  gl->glBindBuffer(GL_ARRAY_BUFFER, m_grass_vertex_buffer);
+  m_grass_vertex_buffer = BufferHandle::create();
+  gl->glBindBuffer(GL_ARRAY_BUFFER, m_grass_vertex_buffer.id());
   gl->glBufferData(
       GL_ARRAY_BUFFER, sizeof(blade_vertices), blade_vertices, GL_STATIC_DRAW);
   note_buffer_storage(static_cast<std::size_t>(sizeof(blade_vertices)),
@@ -341,19 +339,8 @@ void TerrainPipeline::initialize_grass_geometry() {
 }
 
 void TerrainPipeline::shutdown_grass_geometry() {
-  auto* gl = QOpenGLContext::currentContext()->extraFunctions();
-  if (gl == nullptr) {
-    return;
-  }
-
-  if (m_grass_vertex_buffer != 0U) {
-    gl->glDeleteBuffers(1, &m_grass_vertex_buffer);
-    m_grass_vertex_buffer = 0;
-  }
-  if (m_grass_vao != 0U) {
-    gl->glDeleteVertexArrays(1, &m_grass_vao);
-    m_grass_vao = 0;
-  }
+  m_grass_vertex_buffer.reset();
+  m_grass_vao.reset();
   m_grass_vertex_count = 0;
 }
 

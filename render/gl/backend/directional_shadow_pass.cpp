@@ -52,13 +52,11 @@ constexpr float k_shadow_receiver_margin_texels = 16.0F;
 }
 
 auto allocate_shadow_array(QOpenGLFunctions_3_3_Core& gl,
-                           GLuint& texture,
+                           TextureHandle& texture,
                            int resolution,
                            int layers) -> void {
-
-  gl.glGenTextures(1, &texture);
-  note_textures_created(1);
-  gl.glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+  texture = TextureHandle::create();
+  gl.glBindTexture(GL_TEXTURE_2D_ARRAY, texture.id());
   gl.glTexImage3D(GL_TEXTURE_2D_ARRAY,
                   0,
                   GL_DEPTH_COMPONENT24,
@@ -92,43 +90,16 @@ auto near_cascade_split(int cascades, int resolution) -> int {
 } // namespace
 
 void Backend::release_directional_shadow_resources() {
-  if (m_directional_shadow_texture != 0) {
-    glDeleteTextures(1, &m_directional_shadow_texture);
-    m_directional_shadow_texture = 0;
-  }
-  if (m_directional_shadow_far_texture != 0) {
-    glDeleteTextures(1, &m_directional_shadow_far_texture);
-    m_directional_shadow_far_texture = 0;
-  }
-  if (m_directional_shadow_fbo != 0) {
-    glDeleteFramebuffers(1, &m_directional_shadow_fbo);
-    m_directional_shadow_fbo = 0;
-  }
-  if (m_directional_shadow_static_texture != 0) {
-    glDeleteTextures(1, &m_directional_shadow_static_texture);
-    m_directional_shadow_static_texture = 0;
-  }
-  if (m_directional_shadow_static_far_texture != 0) {
-    glDeleteTextures(1, &m_directional_shadow_static_far_texture);
-    m_directional_shadow_static_far_texture = 0;
-  }
-  if (m_directional_shadow_cache_fbo != 0) {
-    glDeleteFramebuffers(1, &m_directional_shadow_cache_fbo);
-    m_directional_shadow_cache_fbo = 0;
-  }
+  m_directional_shadow_texture.reset();
+  m_directional_shadow_far_texture.reset();
+  m_directional_shadow_fbo.reset();
+  m_directional_shadow_static_texture.reset();
+  m_directional_shadow_static_far_texture.reset();
+  m_directional_shadow_cache_fbo.reset();
   m_shadow_static_layers.fill(ShadowStaticLayer{});
-  if (m_directional_shadow_compare_sampler != 0) {
-    glDeleteSamplers(1, &m_directional_shadow_compare_sampler);
-    m_directional_shadow_compare_sampler = 0;
-  }
-  if (m_directional_shadow_depth_sampler != 0) {
-    glDeleteSamplers(1, &m_directional_shadow_depth_sampler);
-    m_directional_shadow_depth_sampler = 0;
-  }
-  if (m_directional_shadow_fallback_texture != 0) {
-    glDeleteTextures(1, &m_directional_shadow_fallback_texture);
-    m_directional_shadow_fallback_texture = 0;
-  }
+  m_directional_shadow_compare_sampler.reset();
+  m_directional_shadow_depth_sampler.reset();
+  m_directional_shadow_fallback_texture.reset();
   m_directional_shadow_resolution = 0;
   m_directional_shadow_far_resolution = 0;
   m_directional_shadow_cascades = 0;
@@ -136,12 +107,11 @@ void Backend::release_directional_shadow_resources() {
 }
 
 auto Backend::directional_shadow_fallback_texture() -> GLuint {
-  if (m_directional_shadow_fallback_texture != 0) {
-    return m_directional_shadow_fallback_texture;
+  if (m_directional_shadow_fallback_texture.valid()) {
+    return m_directional_shadow_fallback_texture.id();
   }
-  glGenTextures(1, &m_directional_shadow_fallback_texture);
-  note_textures_created(1);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_fallback_texture);
+  m_directional_shadow_fallback_texture = TextureHandle::create();
+  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_fallback_texture.id());
   const GLfloat lit_depth = 1.0F;
   glTexImage3D(GL_TEXTURE_2D_ARRAY,
                0,
@@ -160,15 +130,15 @@ auto Backend::directional_shadow_fallback_texture() -> GLuint {
       GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
   glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-  return m_directional_shadow_fallback_texture;
+  return m_directional_shadow_fallback_texture.id();
 }
 
 void Backend::bind_directional_shadow_textures() {
-  const GLuint near_texture = m_directional_shadow_texture != 0
-                                  ? m_directional_shadow_texture
+  const GLuint near_texture = m_directional_shadow_texture.valid()
+                                  ? m_directional_shadow_texture.id()
                                   : directional_shadow_fallback_texture();
-  const GLuint far_texture = m_directional_shadow_far_texture != 0
-                                 ? m_directional_shadow_far_texture
+  const GLuint far_texture = m_directional_shadow_far_texture.valid()
+                                 ? m_directional_shadow_far_texture.id()
                                  : near_texture;
   glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
   glBindTexture(GL_TEXTURE_2D_ARRAY, near_texture);
@@ -197,7 +167,7 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
   const int far_cascades = cascades - near_cascades;
   const int far_resolution = far_cascades > 0 ? std::max(512, resolution / 2) : 0;
 
-  if (m_directional_shadow_texture != 0 &&
+  if (m_directional_shadow_texture.valid() &&
       m_directional_shadow_resolution == resolution &&
       m_directional_shadow_cascades == cascades &&
       m_directional_shadow_near_cascades == near_cascades &&
@@ -217,48 +187,52 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
   }
 
   const std::array<GLfloat, 4> border{1.0F, 1.0F, 1.0F, 1.0F};
-  if (m_directional_shadow_compare_sampler == 0) {
-    glGenSamplers(1, &m_directional_shadow_compare_sampler);
+  if (!m_directional_shadow_compare_sampler) {
+    m_directional_shadow_compare_sampler = SamplerHandle::create();
     glSamplerParameteri(
-        m_directional_shadow_compare_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        m_directional_shadow_compare_sampler.id(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(
-        m_directional_shadow_compare_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(
-        m_directional_shadow_compare_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glSamplerParameteri(
-        m_directional_shadow_compare_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glSamplerParameterfv(
-        m_directional_shadow_compare_sampler, GL_TEXTURE_BORDER_COLOR, border.data());
-    glSamplerParameteri(m_directional_shadow_compare_sampler,
+        m_directional_shadow_compare_sampler.id(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(m_directional_shadow_compare_sampler.id(),
+                        GL_TEXTURE_WRAP_S,
+                        GL_CLAMP_TO_BORDER);
+    glSamplerParameteri(m_directional_shadow_compare_sampler.id(),
+                        GL_TEXTURE_WRAP_T,
+                        GL_CLAMP_TO_BORDER);
+    glSamplerParameterfv(m_directional_shadow_compare_sampler.id(),
+                         GL_TEXTURE_BORDER_COLOR,
+                         border.data());
+    glSamplerParameteri(m_directional_shadow_compare_sampler.id(),
                         GL_TEXTURE_COMPARE_MODE,
                         GL_COMPARE_REF_TO_TEXTURE);
     glSamplerParameteri(
-        m_directional_shadow_compare_sampler, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        m_directional_shadow_compare_sampler.id(), GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
   }
-  if (m_directional_shadow_depth_sampler == 0) {
-    glGenSamplers(1, &m_directional_shadow_depth_sampler);
+  if (!m_directional_shadow_depth_sampler) {
+    m_directional_shadow_depth_sampler = SamplerHandle::create();
     glSamplerParameteri(
-        m_directional_shadow_depth_sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        m_directional_shadow_depth_sampler.id(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glSamplerParameteri(
-        m_directional_shadow_depth_sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        m_directional_shadow_depth_sampler.id(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glSamplerParameteri(
-        m_directional_shadow_depth_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        m_directional_shadow_depth_sampler.id(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glSamplerParameteri(
-        m_directional_shadow_depth_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glSamplerParameterfv(
-        m_directional_shadow_depth_sampler, GL_TEXTURE_BORDER_COLOR, border.data());
+        m_directional_shadow_depth_sampler.id(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glSamplerParameterfv(m_directional_shadow_depth_sampler.id(),
+                         GL_TEXTURE_BORDER_COLOR,
+                         border.data());
     glSamplerParameteri(
-        m_directional_shadow_depth_sampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+        m_directional_shadow_depth_sampler.id(), GL_TEXTURE_COMPARE_MODE, GL_NONE);
   }
   glBindSampler(static_cast<GLuint>(TextureUnit::directional_shadow_map),
-                m_directional_shadow_compare_sampler);
+                m_directional_shadow_compare_sampler.id());
   glBindSampler(static_cast<GLuint>(TextureUnit::directional_shadow_map_far),
-                m_directional_shadow_compare_sampler);
+                m_directional_shadow_compare_sampler.id());
   glBindSampler(static_cast<GLuint>(TextureUnit::directional_shadow_depth),
-                m_directional_shadow_depth_sampler);
+                m_directional_shadow_depth_sampler.id());
 
-  glGenFramebuffers(1, &m_directional_shadow_fbo);
-  glGenFramebuffers(1, &m_directional_shadow_cache_fbo);
+  m_directional_shadow_fbo = FramebufferHandle::create();
+  m_directional_shadow_cache_fbo = FramebufferHandle::create();
   m_shadow_static_layers.fill(ShadowStaticLayer{});
   m_directional_shadow_resolution = resolution;
   m_directional_shadow_far_resolution = far_resolution;
@@ -267,18 +241,19 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
 }
 
 void Backend::upload_directional_shadow_block(const DirectionalShadowBlock& block) {
-  if (m_directional_shadow_ubo == 0) {
+  if (!m_directional_shadow_ubo) {
     return;
   }
   const auto packed = block.packed_std140();
-  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo.id());
   glBufferSubData(GL_UNIFORM_BUFFER,
                   0,
                   static_cast<GLsizeiptr>(sizeof(float) * packed.size()),
                   packed.data());
   note_buffer_transfer(static_cast<std::size_t>(sizeof(float) * packed.size()));
-  glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_directional_shadow_binding_point,
+                   m_directional_shadow_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -313,7 +288,7 @@ void Backend::publish_directional_shadow_block(
   block.cascade_depth_span = cascade_depth_span;
 
   const auto complete = block.packed_std140();
-  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo.id());
   glBufferData(GL_UNIFORM_BUFFER,
                static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
                nullptr,
@@ -324,8 +299,9 @@ void Backend::publish_directional_shadow_block(
                   static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
                   complete.data());
   note_buffer_transfer(static_cast<std::size_t>(sizeof(float) * complete.size()));
-  glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_directional_shadow_binding_point,
+                   m_directional_shadow_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -420,7 +396,7 @@ auto Backend::begin_directional_shadow_pass() -> ShadowPassRestore {
   glGetIntegerv(GL_VIEWPORT, restore.viewport.data());
   restore.blend = glIsEnabled(GL_BLEND) != 0U;
   restore.cull = glIsEnabled(GL_CULL_FACE) != 0U;
-  glBindFramebuffer(GL_FRAMEBUFFER, m_directional_shadow_fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_directional_shadow_fbo.id());
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
   glDisable(GL_BLEND);
@@ -455,10 +431,10 @@ auto Backend::shadow_cascade_target(int cascade) const -> ShadowCascadeTarget {
   target.far = cascade >= m_directional_shadow_near_cascades;
   target.resolution = target.far ? m_directional_shadow_far_resolution
                                  : m_directional_shadow_resolution;
-  target.texture =
-      target.far ? m_directional_shadow_far_texture : m_directional_shadow_texture;
-  target.static_texture = target.far ? m_directional_shadow_static_far_texture
-                                     : m_directional_shadow_static_texture;
+  target.texture = target.far ? m_directional_shadow_far_texture.id()
+                              : m_directional_shadow_texture.id();
+  target.static_texture = target.far ? m_directional_shadow_static_far_texture.id()
+                                     : m_directional_shadow_static_texture.id();
   target.layer = target.far ? cascade - m_directional_shadow_near_cascades : cascade;
   return target;
 }
@@ -587,7 +563,7 @@ void Backend::render_shadow_cascade_static(const ShadowCascadeTarget& target,
 
   glFramebufferTextureLayer(
       GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target.texture, 0, target.layer);
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, m_directional_shadow_cache_fbo);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, m_directional_shadow_cache_fbo.id());
   glFramebufferTextureLayer(
       GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target.static_texture, 0, target.layer);
   glReadBuffer(GL_NONE);
@@ -601,7 +577,7 @@ void Backend::render_shadow_cascade_static(const ShadowCascadeTarget& target,
                     target.resolution,
                     GL_DEPTH_BUFFER_BIT,
                     GL_NEAREST);
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, m_directional_shadow_fbo);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, m_directional_shadow_fbo.id());
 }
 
 void Backend::render_shadow_cascade_rigged(const DrawQueue& queue,
@@ -787,7 +763,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   const int cascade_count =
       std::clamp(settings.cascade_count, 1, k_max_shadow_cascades);
   ensure_directional_shadow_resources(settings.resolution, cascade_count);
-  if (m_directional_shadow_fbo == 0 || m_directional_shadow_texture == 0) {
+  if (!m_directional_shadow_fbo || !m_directional_shadow_texture) {
     bind_directional_shadow_textures();
     return;
   }

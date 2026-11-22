@@ -20,6 +20,7 @@
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
 #include "render/gl/frame_environment.h"
+#include "render/gl/gl_handle.h"
 #include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
@@ -303,8 +304,8 @@ private:
     int cascade{0};
     bool far{false};
     int resolution{0};
-    GLuint texture{0};
-    GLuint static_texture{0};
+    BorrowedGlName texture{0};
+    BorrowedGlName static_texture{0};
     GLint layer{0};
   };
   struct ShadowCascadeRange {
@@ -423,16 +424,16 @@ private:
   float m_animation_time = 0.0F;
   float m_sky_box_blend_time = 0.0F;
   BackendPipelines::SkyBoxTransition m_sky_box_transition;
-  GLuint m_frame_ubo{0};
-  GLuint m_environment_lighting_ubo{0};
-  GLuint m_local_lighting_ubo{0};
+  BufferHandle m_frame_ubo;
+  BufferHandle m_environment_lighting_ubo;
+  BufferHandle m_local_lighting_ubo;
   Render::LocalLightFader m_local_light_fader{};
   std::vector<Render::LocalLight> m_active_local_lights{};
-  GLuint m_directional_shadow_ubo{0};
-  GLuint m_directional_shadow_fbo{0};
-  GLuint m_directional_shadow_static_texture{0};
-  GLuint m_directional_shadow_static_far_texture{0};
-  GLuint m_directional_shadow_cache_fbo{0};
+  BufferHandle m_directional_shadow_ubo;
+  FramebufferHandle m_directional_shadow_fbo;
+  TextureHandle m_directional_shadow_static_texture;
+  TextureHandle m_directional_shadow_static_far_texture;
+  FramebufferHandle m_directional_shadow_cache_fbo;
   struct ShadowStaticLayer {
     QMatrix4x4 light_vp;
     std::uint64_t content{0};
@@ -444,11 +445,11 @@ private:
   bool m_graphics_profile_applied{false};
   Render::ShaderTier m_shader_tier{Render::ShaderTier::High};
   Render::DirectionalShadowSettings m_shadow_settings{};
-  GLuint m_directional_shadow_texture{0};
-  GLuint m_directional_shadow_far_texture{0};
-  GLuint m_directional_shadow_compare_sampler{0};
-  GLuint m_directional_shadow_depth_sampler{0};
-  GLuint m_directional_shadow_fallback_texture{0};
+  TextureHandle m_directional_shadow_texture;
+  TextureHandle m_directional_shadow_far_texture;
+  SamplerHandle m_directional_shadow_compare_sampler;
+  SamplerHandle m_directional_shadow_depth_sampler;
+  TextureHandle m_directional_shadow_fallback_texture;
   int m_directional_shadow_resolution{0};
   int m_directional_shadow_far_resolution{0};
   int m_directional_shadow_cascades{0};
@@ -493,9 +494,9 @@ private:
   static constexpr std::size_t k_frames_in_flight = 3;
   static constexpr std::size_t k_gpu_breakdown_marks = 48;
   struct FrameGpuTiming {
-    GLsync fence{nullptr};
-    std::array<GLuint, 4> timestamps{0U, 0U, 0U, 0U};
-    std::array<GLuint, k_gpu_breakdown_marks> marks{};
+    FenceHandle fence;
+    std::array<QueryHandle, 4> timestamps{};
+    std::array<QueryHandle, k_gpu_breakdown_marks> marks{};
     std::array<std::uint8_t, k_gpu_breakdown_marks> mark_types{};
     std::size_t mark_count{0};
     bool pending{false};

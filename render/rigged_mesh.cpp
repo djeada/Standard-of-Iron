@@ -77,14 +77,10 @@ void RiggedMesh::setup_buffers() {
                   "context; skipping VAO/VBO creation";
     return;
   }
-  initializeOpenGLFunctions();
-  bool reported_stale = false;
-  for (GLenum stale = glGetError(); stale != GL_NO_ERROR; stale = glGetError()) {
-    if (!reported_stale) {
-      reported_stale = true;
-      qWarning() << "RiggedMesh::setup_buffers inherited GL error" << stale
-                 << "from an earlier call";
-    }
+  m_gpu.initialize();
+  if (const auto stale = m_gpu.drain_gl_errors(); stale != 0U) {
+    qWarning() << "RiggedMesh::setup_buffers inherited GL error" << stale
+               << "from an earlier call";
   }
 
   m_vao = std::make_unique<VertexArray>();
@@ -95,41 +91,11 @@ void RiggedMesh::setup_buffers() {
   m_vbo->set_data(m_vertices);
   m_ebo->set_data(m_indices);
 
-  constexpr GLsizei k_stride = sizeof(RiggedVertex);
-  constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
-    return reinterpret_cast<std::size_t>(
-        &(reinterpret_cast<RiggedVertex const*>(0)->*member_ptr));
-  };
-  auto const pos_off = offset_of(&RiggedVertex::position_bone_local);
-  auto const norm_off = offset_of(&RiggedVertex::normal_bone_local);
-  auto const tex_off = offset_of(&RiggedVertex::tex_coord);
-  auto const bi_off = offset_of(&RiggedVertex::bone_indices);
-  auto const bw_off = offset_of(&RiggedVertex::bone_weights);
-  auto const role_off = offset_of(&RiggedVertex::color_role);
-
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(
-      0, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(pos_off));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(
-      1, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(norm_off));
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(
-      2, 2, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(tex_off));
-  glEnableVertexAttribArray(3);
-  glVertexAttribIPointer(
-      3, 4, GL_UNSIGNED_BYTE, k_stride, reinterpret_cast<void*>(bi_off));
-  glEnableVertexAttribArray(4);
-  glVertexAttribPointer(
-      4, 4, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(bw_off));
-  glEnableVertexAttribArray(5);
-  glVertexAttribIPointer(
-      5, 1, GL_UNSIGNED_BYTE, k_stride, reinterpret_cast<void*>(role_off));
+  m_gpu.configure_vertex_attributes();
 
   m_vao->unbind();
 
-  GLenum err = glGetError();
-  if (err != GL_NO_ERROR) {
+  if (const auto err = m_gpu.current_gl_error(); err != 0U) {
     qWarning() << "RiggedMesh::setup_buffers GL error" << err;
   }
 }
@@ -162,14 +128,12 @@ void RiggedMesh::draw() {
   if (!bind_vao()) {
     return;
   }
-  glDrawElements(
-      GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
+  m_gpu.draw_triangles(m_indices.size());
   Render::GL::tally_draw(m_indices.size());
   m_vao->unbind();
 
 #ifndef NDEBUG
-  GLenum err = glGetError();
-  if (err != GL_NO_ERROR) {
+  if (const auto err = m_gpu.current_gl_error(); err != 0U) {
     qWarning() << "RiggedMesh::draw GL error" << err << "indices" << m_indices.size();
   }
 #endif

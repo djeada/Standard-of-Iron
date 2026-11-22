@@ -52,11 +52,7 @@ void HealerAuraPipeline::shutdown() {
 }
 
 void HealerAuraPipeline::release_geometry() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    clear_gl_errors();
-  }
-  release_mesh_buffers(*this, m_mesh);
+  m_mesh.reset();
 }
 
 void HealerAuraPipeline::cache_uniforms() {
@@ -74,7 +70,7 @@ void HealerAuraPipeline::cache_uniforms() {
 }
 
 auto HealerAuraPipeline::is_initialized() const -> bool {
-  return m_aura_shader != nullptr && m_mesh.vao != 0 && m_mesh.index_count > 0;
+  return m_aura_shader != nullptr && m_mesh.vao.valid() && m_mesh.index_count > 0;
 }
 
 struct AuraVertex {
@@ -161,7 +157,7 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_aura_shader->use();
-  glBindVertexArray(m_mesh.vao);
+  glBindVertexArray(m_mesh.vao.id());
 
   QVector4D const eye = view_proj.inverted() * QVector4D(0.0F, 0.0F, 1.0F, 0.0F);
   QVector3D const camera_pos = std::abs(eye.w()) > 1.0e-6F

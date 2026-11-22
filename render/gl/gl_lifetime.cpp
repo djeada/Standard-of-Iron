@@ -7,10 +7,12 @@
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLFunctions>
 
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -24,12 +26,31 @@ struct PendingDelete {
   DeferredGlObject kind;
   unsigned int name;
   GlShareGroup group;
+  void* sync = nullptr;
 };
 
 struct DeferredDeletes {
   std::mutex mutex;
   std::vector<PendingDelete> pending;
+  // Groups whose context is gone: their names died with it, so a name released
+  // into one later is counted as deleted rather than queued for ever.
+  std::unordered_set<GlShareGroup> dead_groups;
 };
+
+struct Census {
+  std::array<std::atomic<std::uint64_t>, k_gl_object_kind_count> created{};
+  std::array<std::atomic<std::uint64_t>, k_gl_object_kind_count> deleted{};
+};
+
+auto census() -> Census& {
+  static Census state;
+  return state;
+}
+
+void note_deleted(DeferredGlObject kind, std::size_t count = 1) noexcept {
+  census().deleted[static_cast<std::size_t>(kind)].fetch_add(count,
+                                                             std::memory_order_relaxed);
+}
 
 auto deferred() -> DeferredDeletes& {
   static DeferredDeletes state;
@@ -86,7 +107,8 @@ auto id_for(const QOpenGLContextGroup* group) -> GlShareGroup {
 
 void delete_now(QOpenGLExtraFunctions& functions,
                 DeferredGlObject kind,
-                unsigned int name) {
+                unsigned int name,
+                void* sync) {
   switch (kind) {
   case DeferredGlObject::Buffer:
     functions.glDeleteBuffers(1, &name);
@@ -100,7 +122,36 @@ void delete_now(QOpenGLExtraFunctions& functions,
   case DeferredGlObject::Program:
     functions.glDeleteProgram(name);
     break;
+  case DeferredGlObject::Shader:
+    functions.glDeleteShader(name);
+    break;
+  case DeferredGlObject::Framebuffer:
+    functions.glDeleteFramebuffers(1, &name);
+    break;
+  case DeferredGlObject::Renderbuffer:
+    functions.glDeleteRenderbuffers(1, &name);
+    break;
+  case DeferredGlObject::Sampler:
+    functions.glDeleteSamplers(1, &name);
+    break;
+  case DeferredGlObject::Query:
+    functions.glDeleteQueries(1, &name);
+    break;
+  case DeferredGlObject::Sync:
+    functions.glDeleteSync(static_cast<GLsync>(sync));
+    break;
   }
+  note_deleted(kind);
+}
+
+void enqueue(const PendingDelete& entry) noexcept {
+  auto& state = deferred();
+  const std::lock_guard<std::mutex> lock(state.mutex);
+  if (entry.group != k_unknown_share_group && state.dead_groups.contains(entry.group)) {
+    note_deleted(entry.kind);
+    return;
+  }
+  state.pending.push_back(entry);
 }
 
 } // namespace
@@ -153,9 +204,7 @@ void defer_gl_delete(DeferredGlObject kind,
   if (name == 0U) {
     return;
   }
-  auto& state = deferred();
-  const std::lock_guard<std::mutex> lock(state.mutex);
-  state.pending.push_back(PendingDelete{.kind = kind, .name = name, .group = group});
+  enqueue(PendingDelete{.kind = kind, .name = name, .group = group});
 }
 
 void forget_gl_share_group(GlShareGroup group) noexcept {
@@ -164,11 +213,14 @@ void forget_gl_share_group(GlShareGroup group) noexcept {
   }
   auto& state = deferred();
   const std::lock_guard<std::mutex> lock(state.mutex);
+  state.dead_groups.insert(group);
   std::vector<PendingDelete> kept;
   kept.reserve(state.pending.size());
   for (const auto& entry : state.pending) {
     if (entry.group != group) {
       kept.push_back(entry);
+    } else {
+      note_deleted(entry.kind);
     }
   }
   state.pending.swap(kept);
@@ -207,7 +259,7 @@ void drain_deferred_gl_deletes() {
   QOpenGLExtraFunctions functions(QOpenGLContext::currentContext());
   functions.initializeOpenGLFunctions();
   for (const auto& entry : batch) {
-    delete_now(functions, entry.kind, entry.name);
+    delete_now(functions, entry.kind, entry.name, entry.sync);
   }
 }
 
@@ -223,7 +275,61 @@ void release_gl_object(DeferredGlObject kind,
   }
   QOpenGLExtraFunctions functions(QOpenGLContext::currentContext());
   functions.initializeOpenGLFunctions();
-  delete_now(functions, kind, name);
+  delete_now(functions, kind, name, nullptr);
+}
+
+void release_gl_sync(void* sync, GlShareGroup group) noexcept {
+  if (sync == nullptr) {
+    return;
+  }
+  if (!gl_objects_can_be_released(group)) {
+    enqueue(PendingDelete{
+        .kind = DeferredGlObject::Sync, .name = 0U, .group = group, .sync = sync});
+    return;
+  }
+  QOpenGLExtraFunctions functions(QOpenGLContext::currentContext());
+  functions.initializeOpenGLFunctions();
+  delete_now(functions, DeferredGlObject::Sync, 0U, sync);
+}
+
+auto gl_object_kind_name(DeferredGlObject kind) noexcept -> const char* {
+  switch (kind) {
+  case DeferredGlObject::Buffer:
+    return "buffer";
+  case DeferredGlObject::VertexArray:
+    return "vertex_array";
+  case DeferredGlObject::Texture:
+    return "texture";
+  case DeferredGlObject::Program:
+    return "program";
+  case DeferredGlObject::Shader:
+    return "shader";
+  case DeferredGlObject::Framebuffer:
+    return "framebuffer";
+  case DeferredGlObject::Renderbuffer:
+    return "renderbuffer";
+  case DeferredGlObject::Sampler:
+    return "sampler";
+  case DeferredGlObject::Query:
+    return "query";
+  case DeferredGlObject::Sync:
+    return "sync";
+  }
+  return "unknown";
+}
+
+auto gl_object_census(DeferredGlObject kind) noexcept -> GlObjectCensus {
+  const auto index = static_cast<std::size_t>(kind);
+  auto& state = census();
+  return GlObjectCensus{
+      .created = state.created[index].load(std::memory_order_relaxed),
+      .deleted = state.deleted[index].load(std::memory_order_relaxed),
+  };
+}
+
+void note_gl_object_created(DeferredGlObject kind, std::size_t count) noexcept {
+  census().created[static_cast<std::size_t>(kind)].fetch_add(count,
+                                                             std::memory_order_relaxed);
 }
 
 auto deferred_gl_delete_count() noexcept -> std::size_t {

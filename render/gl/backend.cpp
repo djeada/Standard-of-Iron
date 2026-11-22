@@ -106,46 +106,10 @@ Backend::Backend(ShaderQuality quality)
 
 Backend::~Backend() {
   const bool last_backend = release_backend() == 0;
-  if (QOpenGLContext::currentContext() == nullptr) {
-    for_each_pipeline_slot([](auto& slot) { (void)slot.release(); });
-    if (last_backend) {
-      SharedGeometryCache::instance().release_all();
+  if (QOpenGLContext::currentContext() != nullptr) {
+    for (FrameGpuTiming& slot : m_frame_timings) {
+      wait_for_frame_slot(slot);
     }
-    return;
-  }
-
-  for (FrameGpuTiming& slot : m_frame_timings) {
-    wait_for_frame_slot(slot);
-  }
-
-  if (m_frame_ubo != 0) {
-    glDeleteBuffers(1, &m_frame_ubo);
-    m_frame_ubo = 0;
-  }
-  if (m_environment_lighting_ubo != 0) {
-    glDeleteBuffers(1, &m_environment_lighting_ubo);
-    m_environment_lighting_ubo = 0;
-  }
-  if (m_local_lighting_ubo != 0) {
-    glDeleteBuffers(1, &m_local_lighting_ubo);
-    m_local_lighting_ubo = 0;
-  }
-  release_directional_shadow_resources();
-  if (m_directional_shadow_ubo != 0) {
-    glDeleteBuffers(1, &m_directional_shadow_ubo);
-    m_directional_shadow_ubo = 0;
-  }
-  for (auto& timing : m_frame_timings) {
-    if (timing.fence != nullptr) {
-      glDeleteSync(timing.fence);
-      timing.fence = nullptr;
-    }
-    if (timing.timestamps[0] != 0U) {
-      glDeleteQueries(static_cast<GLsizei>(timing.timestamps.size()),
-                      timing.timestamps.data());
-      timing.timestamps = {0U, 0U, 0U};
-    }
-    timing.pending = false;
   }
 
   if (last_backend) {
@@ -166,40 +130,36 @@ auto Backend::initialize() -> bool {
 
   apply_graphics_profile(Render::GraphicsSettings::instance().profile(), true);
 
-  glGenBuffers(1, &m_frame_ubo);
-  note_buffers_created(1);
-  glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
+  m_frame_ubo = BufferHandle::create();
+  glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo.id());
   glBufferData(GL_UNIFORM_BUFFER,
                static_cast<GLsizeiptr>(k_frame_data_bytes),
                nullptr,
                GL_DYNAMIC_DRAW);
   note_buffer_storage(k_frame_data_bytes, false);
-  glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  glGenBuffers(1, &m_environment_lighting_ubo);
-  note_buffers_created(1);
-  glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
+  m_environment_lighting_ubo = BufferHandle::create();
+  glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo.id());
   constexpr GLsizeiptr environment_ubo_size =
       sizeof(float) * EnvironmentLightingState::k_packed_float_count;
   glBufferData(GL_UNIFORM_BUFFER, environment_ubo_size, nullptr, GL_DYNAMIC_DRAW);
   note_buffer_storage(static_cast<std::size_t>(environment_ubo_size), false);
   glBindBufferBase(GL_UNIFORM_BUFFER,
                    k_environment_lighting_binding_point,
-                   m_environment_lighting_ubo);
+                   m_environment_lighting_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  glGenBuffers(1, &m_local_lighting_ubo);
-  note_buffers_created(1);
-  glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
+  m_local_lighting_ubo = BufferHandle::create();
+  glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo.id());
   constexpr GLsizeiptr local_lighting_ubo_size =
       sizeof(float) * Render::LocalLightingBlock::k_float_count;
   glBufferData(GL_UNIFORM_BUFFER, local_lighting_ubo_size, nullptr, GL_DYNAMIC_DRAW);
   note_buffer_storage(static_cast<std::size_t>(local_lighting_ubo_size), false);
   glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
+      GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  glGenBuffers(1, &m_directional_shadow_ubo);
-  note_buffers_created(1);
-  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+  m_directional_shadow_ubo = BufferHandle::create();
+  glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo.id());
   glBufferData(GL_UNIFORM_BUFFER,
                sizeof(float) * DirectionalShadowBlock::k_float_count,
                nullptr,
@@ -207,8 +167,9 @@ auto Backend::initialize() -> bool {
   note_buffer_storage(
       static_cast<std::size_t>(sizeof(float) * DirectionalShadowBlock::k_float_count),
       false);
-  glBindBufferBase(
-      GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER,
+                   k_directional_shadow_binding_point,
+                   m_directional_shadow_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
   glEnable(GL_DEPTH_TEST);
@@ -526,17 +487,17 @@ void Backend::set_clear_color(float r, float g, float b, float a) {
 }
 
 void Backend::upload_frame_data(const QMatrix4x4& view_proj, bool depth_only) {
-  if (m_frame_ubo == 0) {
+  if (!m_frame_ubo) {
     return;
   }
   std::array<float, k_frame_data_bytes / sizeof(float)> block{};
   std::memcpy(block.data(), view_proj.constData(), sizeof(float) * 16U);
   block[16] = depth_only ? 1.0F : 0.0F;
-  glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo.id());
   glBufferSubData(
       GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(k_frame_data_bytes), block.data());
   note_buffer_transfer(k_frame_data_bytes);
-  glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo);
+  glBindBufferBase(GL_UNIFORM_BUFFER, k_frame_data_binding_point, m_frame_ubo.id());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -544,11 +505,11 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                                            const DrawQueue& queue,
                                            const Camera& cam) {
   upload_frame_data(view_proj, false);
-  if (m_environment_lighting_ubo != 0) {
+  if (m_environment_lighting_ubo.valid()) {
     EnvironmentLightingState frame_lighting = m_environment_lighting;
     frame_lighting.cloud_time = m_animation_time;
     const auto packed = frame_lighting.packed_std140();
-    glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo.id());
     glBufferSubData(GL_UNIFORM_BUFFER,
                     0,
                     static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
@@ -556,10 +517,10 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
     note_buffer_transfer(static_cast<std::size_t>(packed.size() * sizeof(float)));
     glBindBufferBase(GL_UNIFORM_BUFFER,
                      k_environment_lighting_binding_point,
-                     m_environment_lighting_ubo);
+                     m_environment_lighting_ubo.id());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
-  if (m_local_lighting_ubo != 0) {
+  if (m_local_lighting_ubo.valid()) {
     std::vector<Render::LocalLight> candidates;
     for (const auto& item : queue.items()) {
       const auto* effect = std::get_if<EffectBatchCmd>(&item);
@@ -587,14 +548,14 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
     const auto packed = Render::pack_local_lights_std140(selected);
 
     m_active_local_lights = Render::active_local_lights(selected);
-    glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo.id());
     glBufferSubData(GL_UNIFORM_BUFFER,
                     0,
                     static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
                     packed.data());
     note_buffer_transfer(static_cast<std::size_t>(packed.size() * sizeof(float)));
     glBindBufferBase(
-        GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
+        GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo.id());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 }
@@ -604,7 +565,8 @@ auto Backend::try_collect_frame_slot(FrameGpuTiming& slot) -> bool {
     return true;
   }
   auto const wait_start = std::chrono::steady_clock::now();
-  const GLenum polled = glClientWaitSync(slot.fence, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+  const GLenum polled = glClientWaitSync(
+      static_cast<GLsync>(slot.fence.get()), GL_SYNC_FLUSH_COMMANDS_BIT, 0);
   m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
                                           std::chrono::steady_clock::now() - wait_start)
                                           .count();
@@ -615,8 +577,7 @@ auto Backend::try_collect_frame_slot(FrameGpuTiming& slot) -> bool {
   if (polled == GL_WAIT_FAILED) {
     qWarning() << "Backend: glClientWaitSync failed while collecting GPU timing; "
                   "dropping this frame's queries";
-    glDeleteSync(slot.fence);
-    slot.fence = nullptr;
+    slot.fence.reset();
     slot.pending = false;
     slot.mark_count = 0;
     m_last_playback_stats.gpu_shadow_ms = 0.0;
@@ -636,8 +597,9 @@ void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
   constexpr int k_max_wait_attempts = 4;
   bool signaled = false;
   for (int attempt = 0; attempt < k_max_wait_attempts && !signaled; ++attempt) {
-    const GLenum waited =
-        glClientWaitSync(slot.fence, GL_SYNC_FLUSH_COMMANDS_BIT, k_wait_timeout_ns);
+    const GLenum waited = glClientWaitSync(static_cast<GLsync>(slot.fence.get()),
+                                           GL_SYNC_FLUSH_COMMANDS_BIT,
+                                           k_wait_timeout_ns);
     if (waited == GL_ALREADY_SIGNALED || waited == GL_CONDITION_SATISFIED) {
       signaled = true;
     } else if (waited == GL_WAIT_FAILED) {
@@ -652,8 +614,7 @@ void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
   if (!signaled) {
     qWarning() << "Backend: GPU timing fence never signaled after"
                << k_max_wait_attempts << "waits; discarding the frame's timing slot";
-    glDeleteSync(slot.fence);
-    slot.fence = nullptr;
+    slot.fence.reset();
     slot.pending = false;
     slot.mark_count = 0;
     m_last_playback_stats.gpu_shadow_ms = 0.0;
@@ -664,16 +625,15 @@ void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
 }
 
 void Backend::collect_frame_slot(FrameGpuTiming& slot) {
-  glDeleteSync(slot.fence);
-  slot.fence = nullptr;
+  slot.fence.reset();
   m_last_playback_stats.gpu_sample_frame = slot.frame_index;
   m_last_playback_stats.gpu_sample_age_frames =
       m_frame_timing_index > slot.frame_index ? m_frame_timing_index - slot.frame_index
                                               : 0;
   std::array<GLuint64, 4> ticks{};
   for (std::size_t i = 0; i < ticks.size(); ++i) {
-    if (slot.timestamps[i] != 0U) {
-      glGetQueryObjectui64v(slot.timestamps[i], GL_QUERY_RESULT, &ticks[i]);
+    if (slot.timestamps[i]) {
+      glGetQueryObjectui64v(slot.timestamps[i].id(), GL_QUERY_RESULT, &ticks[i]);
     }
   }
   m_last_playback_stats.gpu_shadow_ms =
@@ -687,7 +647,7 @@ void Backend::collect_frame_slot(FrameGpuTiming& slot) {
     GLuint64 previous = ticks[1];
     for (std::size_t i = 0; i < slot.mark_count; ++i) {
       GLuint64 tick = 0;
-      glGetQueryObjectui64v(slot.marks[i], GL_QUERY_RESULT, &tick);
+      glGetQueryObjectui64v(slot.marks[i].id(), GL_QUERY_RESULT, &tick);
       const std::uint8_t type = slot.mark_types[i];
       if (type < m_gpu_breakdown_ms.size() && tick >= previous) {
         m_gpu_breakdown_ms[type] += static_cast<double>(tick - previous) / 1.0e6;
@@ -729,11 +689,12 @@ void Backend::gpu_breakdown_mark(FrameGpuTiming& slot, std::uint8_t type) {
   if (!m_gpu_breakdown_enabled || slot.mark_count >= k_gpu_breakdown_marks) {
     return;
   }
-  if (slot.marks[slot.mark_count] == 0U) {
-    glGenQueries(1, &slot.marks[slot.mark_count]);
+  QueryHandle& mark = slot.marks[slot.mark_count];
+  if (!mark) {
+    mark = QueryHandle::create();
   }
   slot.mark_types[slot.mark_count] = type;
-  glQueryCounter(slot.marks[slot.mark_count], GL_TIMESTAMP);
+  glQueryCounter(mark.id(), GL_TIMESTAMP);
   ++slot.mark_count;
 }
 
@@ -761,11 +722,12 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_frame_tracker.begin_frame();
   if (m_frame_timing_active) {
     frame_timing.frame_index = m_frame_timing_index;
-    if (frame_timing.timestamps[0] == 0U) {
-      glGenQueries(static_cast<GLsizei>(frame_timing.timestamps.size()),
-                   frame_timing.timestamps.data());
+    if (!frame_timing.timestamps[0]) {
+      for (QueryHandle& query : frame_timing.timestamps) {
+        query = QueryHandle::create();
+      }
     }
-    glQueryCounter(frame_timing.timestamps[0], GL_TIMESTAMP);
+    glQueryCounter(frame_timing.timestamps[0].id(), GL_TIMESTAMP);
   } else {
     m_active_frame_timing = nullptr;
     if (!timing_requested) {
@@ -790,7 +752,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     render_directional_shadows(queue, cam);
   }
   if (m_frame_timing_active) {
-    glQueryCounter(frame_timing.timestamps[1], GL_TIMESTAMP);
+    glQueryCounter(frame_timing.timestamps[1].id(), GL_TIMESTAMP);
   }
   if (m_post_process_pipeline != nullptr && m_post_process_pipeline->is_capturing()) {
     m_post_process_pipeline->set_depth_range(cam.get_near(), cam.get_far());
@@ -1003,7 +965,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     gpu_breakdown_mark(frame_timing, static_cast<std::uint8_t>(breakdown_last_type));
   }
   if (m_frame_timing_active) {
-    glQueryCounter(frame_timing.timestamps[2], GL_TIMESTAMP);
+    glQueryCounter(frame_timing.timestamps[2].id(), GL_TIMESTAMP);
     m_active_frame_timing = &frame_timing;
   }
 
@@ -1017,9 +979,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     m_post_process_pipeline->resolve_scene();
   }
   if (m_active_frame_timing != nullptr) {
-    glQueryCounter(m_active_frame_timing->timestamps[3], GL_TIMESTAMP);
-    m_active_frame_timing->fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    m_active_frame_timing->pending = m_active_frame_timing->fence != nullptr;
+    glQueryCounter(m_active_frame_timing->timestamps[3].id(), GL_TIMESTAMP);
+    m_active_frame_timing->fence = FenceHandle::insert();
+    m_active_frame_timing->pending = m_active_frame_timing->fence.valid();
     m_active_frame_timing = nullptr;
   }
 }

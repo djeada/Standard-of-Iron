@@ -10,6 +10,7 @@
 
 #include "pipeline_interface.h"
 #include "render/gl/frame_environment.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -83,10 +84,10 @@ private:
   [[nodiscard]] static auto variant_for_material(int material_id) -> std::size_t;
 
   GL::Shader* m_last_bound_shader = nullptr;
-  unsigned int m_wear_volume = 0;
+  BorrowedGlName m_wear_volume = 0;
   static constexpr std::size_t k_palette_ring_slots = 1024;
 
-  unsigned int m_palette_ubo = 0;
+  BufferHandle m_palette_ubo;
   std::size_t m_palette_ubo_capacity_bytes = 0;
   std::size_t m_palette_slot_stride_bytes = 0;
   std::size_t m_palette_ring_cursor = 0;

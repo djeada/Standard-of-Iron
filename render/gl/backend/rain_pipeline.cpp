@@ -120,33 +120,10 @@ void RainPipeline::shutdown() {
 }
 
 void RainPipeline::shutdown_geometry() {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    m_vao = 0;
-    m_quad_buffer = 0;
-    m_index_buffer = 0;
-    m_instance_buffer = 0;
-    return;
-  }
-
-  initializeOpenGLFunctions();
-  clear_gl_errors();
-
-  if (m_vao != 0) {
-    glDeleteVertexArrays(1, &m_vao);
-    m_vao = 0;
-  }
-  if (m_quad_buffer != 0) {
-    glDeleteBuffers(1, &m_quad_buffer);
-    m_quad_buffer = 0;
-  }
-  if (m_index_buffer != 0) {
-    glDeleteBuffers(1, &m_index_buffer);
-    m_index_buffer = 0;
-  }
-  if (m_instance_buffer != 0) {
-    glDeleteBuffers(1, &m_instance_buffer);
-    m_instance_buffer = 0;
-  }
+  m_vao.reset();
+  m_quad_buffer.reset();
+  m_index_buffer.reset();
+  m_instance_buffer.reset();
 }
 
 void RainPipeline::cache_uniforms() {
@@ -177,7 +154,7 @@ void RainPipeline::cache_uniforms() {
 }
 
 auto RainPipeline::is_initialized() const -> bool {
-  return m_rain_shader != nullptr && m_vao != 0 && m_instance_buffer != 0;
+  return m_rain_shader != nullptr && m_vao.valid() && m_instance_buffer.valid();
 }
 
 void RainPipeline::generate_particles() {
@@ -216,16 +193,14 @@ auto RainPipeline::create_geometry() -> bool {
       -1.0F, -1.0F, 1.0F, -1.0F, 1.0F, 1.0F, -1.0F, 1.0F};
   constexpr std::array<unsigned int, k_quad_index_count> quad_indices{0, 1, 2, 0, 2, 3};
 
-  glGenVertexArrays(1, &m_vao);
-  note_vertex_arrays_created(1);
-  if (!check_gl_error("glGenVertexArrays") || m_vao == 0) {
+  m_vao = VertexArrayHandle::create();
+  if (!check_gl_error("create vertex array") || !m_vao) {
     return false;
   }
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao.id());
 
-  glGenBuffers(1, &m_quad_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_quad_buffer);
+  m_quad_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_quad_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(quad_corners.size() * sizeof(float)),
                quad_corners.data(),
@@ -237,9 +212,8 @@ auto RainPipeline::create_geometry() -> bool {
   glVertexAttribPointer(
       k_corner_attrib, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-  glGenBuffers(1, &m_index_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
+  m_index_buffer = BufferHandle::create();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer.id());
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(quad_indices.size() * sizeof(unsigned int)),
                quad_indices.data(),
@@ -248,9 +222,8 @@ auto RainPipeline::create_geometry() -> bool {
       static_cast<std::size_t>(quad_indices.size() * sizeof(unsigned int)),
       quad_indices.data() != nullptr);
 
-  glGenBuffers(1, &m_instance_buffer);
-  note_buffers_created(1);
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  m_instance_buffer = BufferHandle::create();
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(m_particles.size() * sizeof(WeatherParticleGpu)),
                m_particles.data(),
@@ -321,7 +294,7 @@ void RainPipeline::render(const Camera& cam, const RainBatchParams& params) {
   glDisable(GL_CULL_FACE);
 
   m_rain_shader->use();
-  glBindVertexArray(m_vao);
+  glBindVertexArray(m_vao.id());
 
   const QVector3D camera_pos = cam.get_position();
   const float camera_height = std::max(0.0F, camera_pos.y());

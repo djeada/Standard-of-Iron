@@ -4,6 +4,7 @@
 #include <QtGui/qopengl.h>
 
 #include "pipeline_interface.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -44,9 +45,9 @@ private:
   GL::ShaderCache* m_shader_cache;
   GL::Shader* m_shader{nullptr};
   Uniforms m_uniforms;
-  GLuint m_vao{0};
-  GLuint m_vertex_buffer{0};
-  GLuint m_index_buffer{0};
+  VertexArrayHandle m_vao;
+  BufferHandle m_vertex_buffer;
+  BufferHandle m_index_buffer;
   bool m_initialized{false};
 };
 

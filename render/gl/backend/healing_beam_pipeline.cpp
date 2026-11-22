@@ -52,11 +52,7 @@ void HealingBeamPipeline::shutdown() {
 }
 
 void HealingBeamPipeline::release_geometry() {
-  if (QOpenGLContext::currentContext() != nullptr) {
-    initializeOpenGLFunctions();
-    clear_gl_errors();
-  }
-  release_mesh_buffers(*this, m_mesh);
+  m_mesh.reset();
 }
 
 void HealingBeamPipeline::cache_uniforms() {
@@ -75,7 +71,7 @@ void HealingBeamPipeline::cache_uniforms() {
 }
 
 auto HealingBeamPipeline::is_initialized() const -> bool {
-  return m_beam_shader != nullptr && m_mesh.vao != 0 && m_mesh.index_count > 0;
+  return m_beam_shader != nullptr && m_mesh.vao.valid() && m_mesh.index_count > 0;
 }
 
 auto HealingBeamPipeline::create_beam_geometry() -> bool {
@@ -158,7 +154,7 @@ void HealingBeamPipeline::render_single_beam(const QVector3D& start,
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   m_beam_shader->use();
-  glBindVertexArray(m_mesh.vao);
+  glBindVertexArray(m_mesh.vao.id());
 
   m_beam_shader->set_uniform(m_uniforms.mvp, view_proj);
   m_beam_shader->set_uniform(m_uniforms.time, time);

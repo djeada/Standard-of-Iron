@@ -12,6 +12,7 @@
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
 #include "render/geom/ground_marker_tessellation.h"
+#include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"
 
@@ -76,7 +77,7 @@ private:
   std::array<GL::Shader::UniformHandle, k_pattern_slots> m_pattern_handles{};
   std::array<StaticMeshBuffers, k_lod_count> m_meshes{};
   std::array<std::vector<InstanceGpu>, k_lod_count> m_scratch{};
-  GLuint m_instance_buffer{0};
+  BufferHandle m_instance_buffer;
   std::size_t m_instance_capacity{0};
   std::size_t m_instances_resident{0};
   bool m_initialized{false};

@@ -52,9 +52,8 @@ auto MeshInstancingPipeline::initialize() -> bool {
 
   initializeOpenGLFunctions();
 
-  glGenBuffers(1, &m_instance_buffer);
-  note_buffers_created(1);
-  if (m_instance_buffer == 0) {
+  m_instance_buffer = BufferHandle::create();
+  if (!m_instance_buffer) {
     qWarning() << "MeshInstancingPipeline: failed to create instance buffer";
     return false;
   }
@@ -62,7 +61,7 @@ auto MeshInstancingPipeline::initialize() -> bool {
   m_instance_capacity = k_max_instances_per_batch;
   m_ring_capacity_bytes = k_ring_instances * sizeof(MeshInstanceGpu);
   m_ring_offset_bytes = 0;
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(m_ring_capacity_bytes),
                nullptr,
@@ -79,18 +78,7 @@ void MeshInstancingPipeline::shutdown() {
     return;
   }
 
-  if (QOpenGLContext::currentContext() != nullptr) {
-    if (m_instance_buffer != 0) {
-      glDeleteBuffers(1, &m_instance_buffer);
-      m_instance_buffer = 0;
-    }
-    for (const auto& [id, buffers] : m_merged) {
-      glDeleteVertexArrays(1, &buffers.vao);
-      glDeleteBuffers(1, &buffers.vertices);
-      glDeleteBuffers(1, &buffers.indices);
-    }
-  }
-
+  m_instance_buffer.reset();
   m_merged.clear();
   m_instances.clear();
   m_instance_capacity = 0;
@@ -174,22 +162,20 @@ auto MeshInstancingPipeline::merged_vao(const MergedBuildingMesh& mesh) -> GLuin
   auto [it, inserted] = m_merged.try_emplace(mesh.id);
   MergedBuffers& buffers = it->second;
   if (!inserted) {
-    return buffers.vao;
+    return buffers.vao.id();
   }
-  glGenVertexArrays(1, &buffers.vao);
-  note_vertex_arrays_created(1);
-  glGenBuffers(1, &buffers.vertices);
-  glGenBuffers(1, &buffers.indices);
-  note_buffers_created(2);
-  glBindVertexArray(buffers.vao);
-  glBindBuffer(GL_ARRAY_BUFFER, buffers.vertices);
+  buffers.vao = VertexArrayHandle::create();
+  buffers.vertices = BufferHandle::create();
+  buffers.indices = BufferHandle::create();
+  glBindVertexArray(buffers.vao.id());
+  glBindBuffer(GL_ARRAY_BUFFER, buffers.vertices.id());
   const std::size_t vertex_bytes = mesh.vertices.size() * sizeof(MergedBuildingVertex);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertex_bytes),
                mesh.vertices.data(),
                GL_STATIC_DRAW);
   note_buffer_storage(vertex_bytes, true);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers.indices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers.indices.id());
   const std::size_t index_bytes = mesh.indices.size() * sizeof(std::uint32_t);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(index_bytes),
@@ -225,7 +211,7 @@ auto MeshInstancingPipeline::merged_vao(const MergedBuildingMesh& mesh) -> GLuin
   }
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  return buffers.vao;
+  return buffers.vao.id();
 }
 
 void MeshInstancingPipeline::draw_merged(const MergedBuildingMesh& mesh,
@@ -241,7 +227,7 @@ void MeshInstancingPipeline::draw_merged(const MergedBuildingMesh& mesh,
     return;
   }
   glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   const auto stride = static_cast<GLsizei>(sizeof(BuildingInstanceGpu));
   for (GLuint slot = 0; slot < k_building_instance_vec4_count; ++slot) {
     glVertexAttribPointer(k_first_instance_loc + slot,
@@ -280,12 +266,12 @@ auto MeshInstancingPipeline::upload(const void* data,
                                     std::size_t bytes,
                                     std::size_t& byte_offset) -> bool {
   byte_offset = 0;
-  if (data == nullptr || bytes == 0 || m_instance_buffer == 0 ||
+  if (data == nullptr || bytes == 0 || !m_instance_buffer ||
       bytes > k_max_ring_instances * sizeof(MeshInstanceGpu)) {
     return false;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer.id());
   if (m_ring_offset_bytes + bytes > m_ring_capacity_bytes) {
     while (m_ring_capacity_bytes < bytes) {
       m_ring_capacity_bytes *= 2U;

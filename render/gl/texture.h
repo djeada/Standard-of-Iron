@@ -3,7 +3,7 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QString>
 
-#include "gl_lifetime.h"
+#include "gl_handle.h"
 
 namespace Render::GL {
 
@@ -45,8 +45,7 @@ public:
   [[nodiscard]] auto get_height() const -> int { return m_height; }
 
 private:
-  GLuint m_texture = 0;
-  GlShareGroup m_share_group = k_unknown_share_group;
+  TextureHandle m_texture;
   int m_width = 0;
   int m_height = 0;
   Format m_format = Format::RGBA;

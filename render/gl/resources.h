@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "gl_lifetime.h"
+#include "gl_handle.h"
 #include "mesh.h"
 #include "render/geom/arrow.h"
 #include "texture.h"
@@ -30,7 +30,7 @@ public:
     return m_material_detail_texture.get();
   }
 
-  [[nodiscard]] auto wear_volume() const -> unsigned int { return m_wear_volume; }
+  [[nodiscard]] auto wear_volume() const -> unsigned int { return m_wear_volume.id(); }
 
 private:
   std::unique_ptr<Mesh> m_quad_mesh;
@@ -39,8 +39,7 @@ private:
 
   std::unique_ptr<Texture> m_white_texture;
   std::unique_ptr<Texture> m_material_detail_texture;
-  unsigned int m_wear_volume = 0U;
-  GlShareGroup m_wear_volume_group = k_unknown_share_group;
+  TextureHandle m_wear_volume;
 };
 
 } // namespace Render::GL
