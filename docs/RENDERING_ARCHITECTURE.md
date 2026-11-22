@@ -203,6 +203,21 @@ set_frame_budget(...)
 
 The scene walk does not need a second gameplay pipeline for software rendering. Both backends consume the same higher-level render submission contract.
 
+## Frame order and pass model
+
+A world frame is built by `Renderer::render_frame(const WorldFrameSources&)`. The host (the game, the arena) supplies the world and two callbacks: `terrain`, which submits the terrain scene, and `overlays`, which submits projectiles, beams and markers. The renderer supplies the order. `build_world_frame_passes()` in `render/scene/world_frame.cpp` is the one place it is written down:
+
+1. **Frame:** `terrain`, `world`, `overlays`, between `begin_frame()` and `end_frame()`.
+2. **World stage:** the scene walk, then `primitive_flush` and `construction_previews`. These run while the render snapshot is still locked.
+
+Every stage is an `IFramePass`, run by a `FramePassRunner` over one `Render::Pass::FrameContext`. `tests/render/pass/world_frame_order_test.cpp` pins the order. The commander portrait previews call `render_world()` alone, which is the world stage without terrain or overlays.
+
+The ground renderers that feed the terrain stage are draw sources, not passes. Each one is an `IDrawSource` (`render/frame/i_draw_source.h`), and a scatter species is an `IScatterSource`. They submit commands into a `FrameSubmitter` when the terrain scene asks.
+
+The backend fills the view half of the same `FrameContext` before it executes the draw queue: camera, view, projection, viewport, animation time, light and banner wind. Data that one pass produces and a later pass reads also lives there. For example, the terrain surface writes `frame.surface.ground_cover` and the grass pass reads it.
+
+Each backend pipeline owns its shaders, uniform tables, meshes and scratch buffers, and draws through its own methods (`WaterPipeline::draw_terrain_features`, `TerrainPipeline::draw_grass`, `CylinderPipeline::draw`, ...). Those methods take a `PipelineDrawContext`: the queue, the `FrameContext`, and the backend's `GlStateCache`, which tracks bound shader, bound texture and polygon offset so pipelines skip redundant binds. `Backend::execute_*_commands` only dispatch a command run to the right pipeline. `scripts/check-pipeline-interface.py` (a PR source-policy gate) fails if a pipeline declares a public data member or anything reaches into one through `m_*_pipeline->m_*`.
+
 ## Shader quality vs graphics preset
 
 Two related concepts exist and should not be conflated.

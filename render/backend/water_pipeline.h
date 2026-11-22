@@ -141,16 +141,15 @@ private:
   void draw_road(const PreparedBatch& prepared,
                  PipelineDrawContext& context,
                  const TerrainFeatureCmd& feature);
-  void draw_feature_models(const PreparedBatch& prepared,
-                           PipelineDrawContext& context,
-                           GL::Shader* shader,
-                           GL::Shader::UniformHandle model_uniform,
-                           GL::Shader::UniformHandle mvp_uniform,
-                           GL::Shader::UniformHandle color_uniform,
-                           GL::Shader::UniformHandle alpha_uniform =
-                               GL::Shader::InvalidUniform,
-                           GL::Shader::UniformHandle road_surface_uniform =
-                               GL::Shader::InvalidUniform);
+  void draw_feature_models(
+      const PreparedBatch& prepared,
+      PipelineDrawContext& context,
+      GL::Shader* shader,
+      GL::Shader::UniformHandle model_uniform,
+      GL::Shader::UniformHandle mvp_uniform,
+      GL::Shader::UniformHandle color_uniform,
+      GL::Shader::UniformHandle alpha_uniform = GL::Shader::InvalidUniform,
+      GL::Shader::UniformHandle road_surface_uniform = GL::Shader::InvalidUniform);
 
   GL::Shader* m_water_shader = nullptr;
   GL::Shader* m_riverbank_shader = nullptr;

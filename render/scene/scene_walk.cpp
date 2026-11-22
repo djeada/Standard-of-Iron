@@ -422,10 +422,7 @@ void Renderer::render_world(Engine::Core::World* world) {
     pass_ctx.light_direction = m_light_dir;
     pass_ctx.ambient_strength = m_ambient_strength;
 
-    Render::Pass::PrimitiveFlushPass primitive_flush;
-    Render::Pass::ConstructionPreviewPass construction_previews;
-    primitive_flush.execute(pass_ctx);
-    construction_previews.execute(pass_ctx);
+    m_world_passes.execute(pass_ctx);
   }
 }
 

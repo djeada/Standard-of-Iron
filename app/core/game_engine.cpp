@@ -815,25 +815,26 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
   if (m_loading_overlay.active()) {
     prewarm_overlay_gpu_resources();
   }
-  m_renderer->begin_frame();
-
-  if (m_terrain_scene) {
-    m_terrain_scene->submit(*m_renderer, m_renderer->resources());
-    if (m_loading_overlay.active() && m_scatter != nullptr) {
-
-      (void)m_scatter->prewarm_gpu_resources();
-    }
-  }
-
   if (m_hover_tracker) {
     m_renderer->set_hovered_entity_id(m_hover_tracker->get_last_hovered_entity());
   }
   m_renderer->set_local_owner_id(presentation->local_owner_id);
   m_renderer->set_order_marker_spectator_mode(presentation->spectator_mode);
 
-  m_renderer->render_world(m_world);
-  render_effects_pass(*presentation);
-  m_renderer->end_frame();
+  Render::GL::WorldFrameSources frame;
+  frame.world = m_world;
+  frame.terrain = [this](Render::GL::Renderer& renderer) {
+    if (m_terrain_scene) {
+      m_terrain_scene->submit(renderer, renderer.resources());
+      if (m_loading_overlay.active() && m_scatter != nullptr) {
+        (void)m_scatter->prewarm_gpu_resources();
+      }
+    }
+  };
+  frame.overlays = [this, &presentation](Render::GL::Renderer&) {
+    render_effects_pass(*presentation);
+  };
+  m_renderer->render_frame(frame);
 
   if (auto& profiler = Engine::Core::StartupProfiler::instance(); profiler.active()) {
     profiler.record_playable_frame(std::chrono::duration<double, std::milli>(

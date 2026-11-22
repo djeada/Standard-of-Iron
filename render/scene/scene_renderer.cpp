@@ -106,6 +106,30 @@ Renderer::Renderer(ShaderQuality quality)
     }
   }
   m_rigged_mesh_cache.set_residency_budget_bytes(budget_mb * 1024U * 1024U);
+  build_world_frame_passes(*this, m_frame_passes, m_world_passes);
+}
+
+void Renderer::render_frame(const WorldFrameSources& sources) {
+  m_frame_sources = &sources;
+  begin_frame();
+  Render::Pass::FrameContext ctx;
+  ctx.renderer = this;
+  ctx.world = sources.world;
+  m_frame_passes.execute(ctx);
+  end_frame();
+  m_frame_sources = nullptr;
+}
+
+void Renderer::run_frame_source_terrain() {
+  if (m_frame_sources != nullptr && m_frame_sources->terrain) {
+    m_frame_sources->terrain(*this);
+  }
+}
+
+void Renderer::run_frame_source_overlays() {
+  if (m_frame_sources != nullptr && m_frame_sources->overlays) {
+    m_frame_sources->overlays(*this);
+  }
 }
 
 Renderer::~Renderer() {

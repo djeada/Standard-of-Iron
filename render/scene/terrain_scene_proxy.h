@@ -96,9 +96,9 @@ public:
       return;
     }
     for (auto* source : {static_cast<IDrawSource*>(m_rain),
-                       static_cast<IDrawSource*>(m_fog),
-                       static_cast<IDrawSource*>(m_boundary_fog),
-                       static_cast<IDrawSource*>(m_ambient_fog)}) {
+                         static_cast<IDrawSource*>(m_fog),
+                         static_cast<IDrawSource*>(m_boundary_fog),
+                         static_cast<IDrawSource*>(m_ambient_fog)}) {
       if (source != nullptr) {
         source->submit(renderer, resources);
       }

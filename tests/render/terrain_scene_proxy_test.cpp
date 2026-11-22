@@ -44,7 +44,8 @@ TEST(TerrainSceneProxyTest, BridgesSubmitBeforeTheFogSheetTheyDissolveWith) {
   ASSERT_NE(bridge_at, sources.end());
   ASSERT_NE(fog_at, sources.end());
   EXPECT_LT(bridge_at - sources.begin(), fog_at - sources.begin())
-      << "the bridge source pulls the fog mask forward; if the fog source ran first the "
+      << "the bridge source pulls the fog mask forward; if the fog source ran first "
+         "the "
          "bridge would dissolve against a frame-old mask";
 }
 

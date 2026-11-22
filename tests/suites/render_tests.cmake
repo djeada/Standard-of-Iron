@@ -95,6 +95,7 @@ add_executable(
     render/pipeline/creature_asset_registry_test.cpp
     render/pipeline/instance_coalescer_test.cpp
     render/pass/frame_pass_runner_test.cpp
+    render/pass/world_frame_order_test.cpp
     render/rig_dsl/barracks_rig_test.cpp
     render/bpat/bpat_format_test.cpp
     render/bpat/asset_compression_test.cpp

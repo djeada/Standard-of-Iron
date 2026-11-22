@@ -1,5 +1,4 @@
 #include "render/backend/cylinder_pipeline.h"
-
 #include "render/backend/pipeline_draw_context.h"
 #include "render/backend/state_scopes.h"
 #include "render/backend/uniform_helpers.h"
@@ -12,7 +11,8 @@ namespace Render::GL::BackendPipelines {
 
 using namespace Render::GL::ColorIndex;
 
-void CylinderPipeline::draw(const PreparedBatch& prepared, PipelineDrawContext& context) {
+void CylinderPipeline::draw(const PreparedBatch& prepared,
+                            PipelineDrawContext& context) {
   const auto& queue = context.queue;
   const QMatrix4x4& view_proj = context.frame.view_proj;
   bool& polygon_offset_enabled = context.state.polygon_offset_enabled;
@@ -47,9 +47,7 @@ void CylinderPipeline::draw(const PreparedBatch& prepared, PipelineDrawContext& 
         context.state.bound_shader = cylinder_shader;
         context.state.bound_texture = nullptr;
       }
-      set_uniform_if_valid(*cylinder_shader,
-                           m_cylinder_uniforms.view_proj,
-                           view_proj);
+      set_uniform_if_valid(*cylinder_shader, m_cylinder_uniforms.view_proj, view_proj);
       upload_cylinder_instances(instance_count);
       draw_cylinders(instance_count);
     }
@@ -75,28 +73,22 @@ void CylinderPipeline::draw(const PreparedBatch& prepared, PipelineDrawContext& 
         context.state.bound_texture = nullptr;
       }
       if (m_fog_uniforms.view_proj != Shader::InvalidUniform) {
-        fog_shader->set_uniform(m_fog_uniforms.view_proj,
-                                view_proj);
+        fog_shader->set_uniform(m_fog_uniforms.view_proj, view_proj);
       }
       if (m_fog_uniforms.time != Shader::InvalidUniform) {
-        fog_shader->set_uniform(m_fog_uniforms.time,
-                                context.frame.animation_time);
+        fog_shader->set_uniform(m_fog_uniforms.time, context.frame.animation_time);
       }
       const auto& mask = batch.mask;
       const bool has_mask = mask.enabled && (mask.texture != nullptr);
       if (m_fog_uniforms.has_mask != Shader::InvalidUniform) {
-        fog_shader->set_uniform(m_fog_uniforms.has_mask,
-                                has_mask ? 1 : 0);
+        fog_shader->set_uniform(m_fog_uniforms.has_mask, has_mask ? 1 : 0);
       }
       if (has_mask) {
         if (m_fog_uniforms.mask_size != Shader::InvalidUniform) {
-          fog_shader->set_uniform(m_fog_uniforms.mask_size,
-                                  mask.size);
+          fog_shader->set_uniform(m_fog_uniforms.mask_size, mask.size);
         }
-        if (m_fog_uniforms.mask_tile_size !=
-            Shader::InvalidUniform) {
-          fog_shader->set_uniform(m_fog_uniforms.mask_tile_size,
-                                  mask.tile_size);
+        if (m_fog_uniforms.mask_tile_size != Shader::InvalidUniform) {
+          fog_shader->set_uniform(m_fog_uniforms.mask_tile_size, mask.tile_size);
         }
         mask.texture->bind(TextureUnit::terrain_visibility);
         context.state.bound_texture = mask.texture;

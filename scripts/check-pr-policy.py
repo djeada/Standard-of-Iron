@@ -41,6 +41,11 @@ CHECKS: tuple[Check, ...] = (
     Check("gl-ownership", "GL object ownership", "scripts/check-gl-ownership.py"),
     Check("render-layers", "Render layer order", "scripts/check-render-layers.py"),
     Check(
+        "pipeline-interface",
+        "Backend pipeline interface",
+        "scripts/check-pipeline-interface.py",
+    ),
+    Check(
         "command-boundary",
         "Client command boundary",
         "scripts/check-command-boundary.py",

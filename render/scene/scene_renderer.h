@@ -32,6 +32,7 @@
 #include "render/frame/frame_budget.h"
 #include "render/frame/frame_submitter.h"
 #include "render/frame/i_render_backend.h"
+#include "render/frame/pass/frame_pass_runner.h"
 #include "render/frame/pipeline/screen_metrics.h"
 #include "render/frame/render_view_state.h"
 #include "render/frame/submission_visibility.h"
@@ -47,6 +48,7 @@
 #include "render/scene/prepare_worker_pool.h"
 #include "render/scene/template_prewarm_catalog.h"
 #include "render/scene/unit_render_cache.h"
+#include "render/scene/world_frame.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
 
@@ -449,7 +451,13 @@ public:
   using TemplatePrewarmProgressCallback =
       std::function<bool(const TemplatePrewarmProgress&)>;
 
+  // Builds a whole world frame: begin_frame, then the stages in the order
+  // build_world_frame_passes() declares, then end_frame.
+  void render_frame(const WorldFrameSources& sources);
+  // The world stage alone: the scene walk and the passes that follow it.
   void render_world(Engine::Core::World* world);
+  void run_frame_source_terrain();
+  void run_frame_source_overlays();
   void prewarm_unit_templates(Engine::Core::World* world = nullptr,
                               TemplatePrewarmProgressCallback progress_callback = {});
 
@@ -487,6 +495,9 @@ public:
   }
 
 private:
+  Render::Pass::FramePassRunner m_frame_passes;
+  Render::Pass::FramePassRunner m_world_passes;
+  const WorldFrameSources* m_frame_sources = nullptr;
   struct VisibilityModeConfig {
     bool filter_non_local_units = true;
     bool filter_static_world = true;

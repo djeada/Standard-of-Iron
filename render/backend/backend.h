@@ -13,8 +13,8 @@
 #include <vector>
 
 #include "render/backend/directional_shadow_block.h"
-#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/frame_environment.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/shader_uniform_cache.h"
 #include "render/backend/shadow_cascade_fit.h"
 #include "render/backend/sky_box_transition.h"
@@ -219,7 +219,6 @@ private:
                                     const DrawQueue& queue,
                                     const Camera& cam);
   void upload_frame_data(const QMatrix4x4& view_proj, bool depth_only);
-
 
   void execute_cylinder_commands(const PreparedBatch& prepared,
                                  PipelineDrawContext& context);
