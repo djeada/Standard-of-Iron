@@ -147,6 +147,8 @@ The main ingredients are:
 - save/replay snapshots that capture authoritative non-entity state for the systems that register a `SessionSnapshot` contributor; and
 - world digests used by replay verification.
 
+Replay format 7 (`k_replay_format_version`) stores unsigned 64-bit `rng_seed` and `tick` values losslessly as decimal strings rather than JSON numbers (which round above 2^53); earlier replay formats are rejected with a version-mismatch error.
+
 ### What the replay digest covers
 
 `subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count and resource stock. It also hashes a `systems` part: the `digest` view of every registered `SessionSnapshot` contributor, serialized as compact JSON. Today those are AI runtime state, undead zones, cursed gold veins, and wildlife groups (without the bird flocks, which are cosmetic and follow the camera).

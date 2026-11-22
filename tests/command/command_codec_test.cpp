@@ -4,13 +4,17 @@
 #include <QTemporaryDir>
 #include <QVector3D>
 
+#include <array>
+#include <cstdint>
 #include <gtest/gtest.h>
+#include <limits>
 #include <variant>
 
 #include "game/command/command.h"
 #include "game/command/command_codec.h"
 #include "game/command/command_queue.h"
 #include "game/command/commander_input.h"
+#include "game/command/json_u64.h"
 #include "game/command/replay.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
@@ -518,4 +522,160 @@ TEST(CommanderInputRecordTest, AnUnknownCommanderActionIsAMalformedReplay) {
   QString error;
   EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
   EXPECT_TRUE(error.contains("commander action")) << error.toStdString();
+}
+
+constexpr std::array<std::uint64_t, 8> k_u64_boundary_values = {
+    0ULL,
+    1ULL,
+    (1ULL << 53U) - 1ULL,
+    (1ULL << 53U) + 1ULL,
+    static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),
+    static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1ULL,
+    std::numeric_limits<std::uint64_t>::max(),
+    0x5EED5EED5EED5EEDULL,
+};
+
+TEST(JsonU64Test, RoundTripsEveryBoundary) {
+  for (const std::uint64_t value : k_u64_boundary_values) {
+    const QJsonValue encoded = Game::Command::u64_to_json(value);
+    EXPECT_TRUE(encoded.isString()) << value;
+    const auto decoded = Game::Command::u64_from_json(encoded);
+    ASSERT_TRUE(decoded.has_value()) << value;
+    EXPECT_EQ(*decoded, value);
+  }
+}
+
+TEST(JsonU64Test, RefusesMalformedValues) {
+  const std::array<QJsonValue, 9> bad_values = {
+      QJsonValue(QStringLiteral("-1")),
+      QJsonValue(QStringLiteral("1.5")),
+      QJsonValue(QStringLiteral(" 1")),
+      QJsonValue(QStringLiteral("0x10")),
+      QJsonValue(QStringLiteral("18446744073709551616")),
+      QJsonValue(QStringLiteral("")),
+      QJsonValue(true),
+      QJsonValue(-1.0),
+      QJsonValue(1.5),
+  };
+  for (const QJsonValue& value : bad_values) {
+    EXPECT_FALSE(Game::Command::u64_from_json(value).has_value());
+    EXPECT_FALSE(Game::Command::u64_from_json(value, true).has_value());
+  }
+}
+
+TEST(JsonU64Test, AcceptsLegacyNonNegativeIntegersWhenAllowed) {
+  EXPECT_EQ(Game::Command::u64_from_json(QJsonValue(0), true), 0ULL);
+  EXPECT_EQ(Game::Command::u64_from_json(QJsonValue(42), true), 42ULL);
+  EXPECT_FALSE(Game::Command::u64_from_json(QJsonValue(42), false).has_value());
+}
+
+TEST(ReplayTest, HeaderSeedRoundTripsThroughTheFile) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  for (std::size_t i = 0; i < k_u64_boundary_values.size(); ++i) {
+    const std::uint64_t seed = k_u64_boundary_values[i];
+    const QString path = dir.filePath(QStringLiteral("seed_%1.soireplay").arg(i));
+    Game::Command::ReplayHeader header;
+    header.kind = QStringLiteral("skirmish");
+    header.reference = QStringLiteral("map");
+    header.rng_seed = seed;
+    ASSERT_TRUE(write_replay(path, header.to_json(), ""));
+
+    QString error;
+    const auto loaded = Game::Command::ReplayFile::load(path, &error);
+    ASSERT_TRUE(loaded.has_value()) << error.toStdString();
+    EXPECT_EQ(loaded->header.rng_seed, seed);
+  }
+}
+
+TEST(ReplayTest, RecordTicksRoundTripThroughTheFile) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString path = dir.filePath("ticks.soireplay");
+
+  Game::Command::CommandQueue queue;
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  header.reference = QStringLiteral("map");
+  header.rng_seed = 0x5EED5EED5EED5EEDULL;
+  header.digest_interval = 1;
+
+  Game::Session::SubsystemDigests digests;
+  digests.root = 12345ULL;
+
+  Game::Command::CommanderInputFrame input;
+  input.commander = 3;
+
+  Game::Command::CommanderActionRecord action;
+  action.action = Game::Command::CommanderAction::EnterControl;
+
+  {
+    Game::Command::ReplayRecorder recorder;
+    ASSERT_TRUE(recorder.begin(path, header, queue));
+    for (const std::uint64_t tick : k_u64_boundary_values) {
+      recorder.record_digest(tick, digests);
+      recorder.record_commander_input(tick, input);
+      recorder.record_commander_action(tick, action);
+
+      Command cmd;
+      cmd.source = Source::AI;
+      cmd.owner_id = 1;
+      cmd.submitted_tick = tick;
+      cmd.payload = Game::Command::Stop{.units = {1}};
+      recorder.record(cmd);
+    }
+    recorder.finish();
+  }
+
+  QString error;
+  const auto loaded = Game::Command::ReplayFile::load(path, &error);
+  ASSERT_TRUE(loaded.has_value()) << error.toStdString();
+  ASSERT_EQ(loaded->digests.size(), k_u64_boundary_values.size());
+  ASSERT_EQ(loaded->commander_inputs.size(), k_u64_boundary_values.size());
+  ASSERT_EQ(loaded->commander_actions.size(), k_u64_boundary_values.size());
+  ASSERT_EQ(loaded->commands.size(), k_u64_boundary_values.size());
+
+  for (std::size_t i = 0; i < k_u64_boundary_values.size(); ++i) {
+    const std::uint64_t expected = k_u64_boundary_values[i];
+    EXPECT_EQ(loaded->digests[i].tick, expected);
+    EXPECT_EQ(loaded->commander_inputs[i].tick, expected);
+    EXPECT_EQ(loaded->commander_actions[i].tick, expected);
+    EXPECT_EQ(loaded->commands[i].submitted_tick, expected);
+  }
+}
+
+TEST(ReplayTest, RefusesANegativeOrFractionalTick) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+
+  const std::array<const char*, 3> bad_lines = {
+      R"({"digest":"123","tick":"-1"})",
+      R"({"commander_input":true,"commander":1,"tick":"1.5"})",
+      R"({"commander_action":"enter_control","tick":1.5})",
+  };
+  for (std::size_t i = 0; i < bad_lines.size(); ++i) {
+    const QString path = dir.filePath(QStringLiteral("bad_tick_%1.soireplay").arg(i));
+    ASSERT_TRUE(write_replay(path, header.to_json(), bad_lines[i]));
+    QString error;
+    EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
+    EXPECT_FALSE(error.isEmpty());
+  }
+}
+
+TEST(ReplayTest, RefusesAnOlderReplayFormat) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString path = dir.filePath("v6.soireplay");
+
+  Game::Command::ReplayHeader header;
+  header.kind = QStringLiteral("skirmish");
+  QJsonObject json = header.to_json();
+  json["replay_format"] = 6;
+  ASSERT_TRUE(write_replay(path, json, ""));
+
+  QString error;
+  EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
+  EXPECT_FALSE(error.isEmpty());
 }

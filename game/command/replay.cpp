@@ -9,9 +9,11 @@
 #include <QTextStream>
 
 #include <algorithm>
+#include <limits>
 
 #include "command_codec.h"
 #include "command_queue.h"
+#include "json_u64.h"
 #include "utils/resource_utils.h"
 
 namespace Game::Command {
@@ -83,7 +85,7 @@ auto ReplayHeader::to_json() const -> QJsonObject {
   object["reference"] = reference;
   object["launch"] = launch;
   object["tick_seconds"] = tick_seconds;
-  object["rng_seed"] = static_cast<qint64>(rng_seed);
+  object["rng_seed"] = u64_to_json(rng_seed);
   object["digest_interval"] = static_cast<int>(digest_interval);
   return object;
 }
@@ -102,10 +104,24 @@ auto ReplayHeader::from_json(const QJsonObject& object) -> std::optional<ReplayH
   header.launch = object.value(QLatin1String("launch")).toObject();
   header.tick_seconds =
       object.value(QLatin1String("tick_seconds")).toDouble(1.0 / 60.0);
-  header.rng_seed =
-      static_cast<std::uint64_t>(object.value(QLatin1String("rng_seed")).toDouble(0.0));
-  header.digest_interval = static_cast<std::uint32_t>(
-      object.value(QLatin1String("digest_interval")).toInt(0));
+  if (object.contains(QLatin1String("rng_seed"))) {
+    const auto parsed_seed = u64_from_json(object.value(QLatin1String("rng_seed")));
+    if (!parsed_seed.has_value()) {
+      return std::nullopt;
+    }
+    header.rng_seed = *parsed_seed;
+  }
+  const auto interval_val = object.value(QLatin1String("digest_interval"));
+  if (!interval_val.isUndefined()) {
+    const qint64 interval = interval_val.toInteger(-1);
+    if (!interval_val.isDouble() || interval < 0 ||
+        interval > std::numeric_limits<std::uint32_t>::max()) {
+      return std::nullopt;
+    }
+    header.digest_interval = static_cast<std::uint32_t>(interval);
+  } else {
+    header.digest_interval = 0;
+  }
   return header;
 }
 
@@ -161,7 +177,7 @@ void ReplayRecorder::record_digest(std::uint64_t tick,
   parts["systems"] = QString::number(digests.systems);
   object["parts"] = parts;
 
-  object["tick"] = static_cast<qint64>(tick);
+  object["tick"] = u64_to_json(tick);
   m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
   m_file->write("\n");
 }
@@ -172,7 +188,7 @@ void ReplayRecorder::record_commander_input(std::uint64_t tick,
     return;
   }
   QJsonObject object = to_json(frame);
-  object["tick"] = static_cast<qint64>(tick);
+  object["tick"] = u64_to_json(tick);
   m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
   m_file->write("\n");
 }
@@ -183,7 +199,7 @@ void ReplayRecorder::record_commander_action(std::uint64_t tick,
     return;
   }
   QJsonObject object = to_json(record);
-  object["tick"] = static_cast<qint64>(tick);
+  object["tick"] = u64_to_json(tick);
   m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
   m_file->write("\n");
 }
@@ -258,8 +274,8 @@ auto ReplayFile::load(const QString& path,
       bool ok = false;
       const auto digest =
           object.value(QLatin1String("digest")).toString().toULongLong(&ok);
-      const auto tick = object.value(QLatin1String("tick"));
-      if (!ok || !tick.isDouble()) {
+      const auto tick = u64_from_json(object.value(QLatin1String("tick")));
+      if (!ok || !tick.has_value()) {
         if (error != nullptr) {
           *error =
               QStringLiteral("%1:%2: malformed digest line").arg(path).arg(line_number);
@@ -267,7 +283,7 @@ auto ReplayFile::load(const QString& path,
         return std::nullopt;
       }
       RecordedDigest recorded;
-      recorded.tick = static_cast<std::uint64_t>(tick.toDouble());
+      recorded.tick = *tick;
       recorded.digest = digest;
       if (const auto parts = object.value(QLatin1String("parts")); parts.isObject()) {
         const auto values = parts.toObject();
@@ -290,8 +306,8 @@ auto ReplayFile::load(const QString& path,
     }
     if (object.contains(QLatin1String("commander_input"))) {
       auto frame = commander_input_from_json(object);
-      const auto tick = object.value(QLatin1String("tick"));
-      if (!frame.has_value() || !tick.isDouble()) {
+      const auto tick = u64_from_json(object.value(QLatin1String("tick")));
+      if (!frame.has_value() || !tick.has_value()) {
         if (error != nullptr) {
           *error = QStringLiteral("%1:%2: malformed commander input line")
                        .arg(path)
@@ -299,14 +315,13 @@ auto ReplayFile::load(const QString& path,
         }
         return std::nullopt;
       }
-      replay.commander_inputs.push_back(
-          {static_cast<std::uint64_t>(tick.toDouble()), *frame});
+      replay.commander_inputs.push_back({*tick, *frame});
       continue;
     }
     if (object.contains(QLatin1String("commander_action"))) {
       auto record = commander_action_from_json(object);
-      const auto tick = object.value(QLatin1String("tick"));
-      if (!record.has_value() || !tick.isDouble()) {
+      const auto tick = u64_from_json(object.value(QLatin1String("tick")));
+      if (!record.has_value() || !tick.has_value()) {
         if (error != nullptr) {
           *error = QStringLiteral("%1:%2: malformed commander action line")
                        .arg(path)
@@ -314,8 +329,7 @@ auto ReplayFile::load(const QString& path,
         }
         return std::nullopt;
       }
-      replay.commander_actions.push_back(
-          {static_cast<std::uint64_t>(tick.toDouble()), *record});
+      replay.commander_actions.push_back({*tick, *record});
       continue;
     }
     auto command = from_json(object);
