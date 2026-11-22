@@ -227,4 +227,22 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
   return parsed_arguments;
 }
 
+[[nodiscard]] std::optional<ArgumentValue>
+get_argument_value(std::vector<Argument>& parsed_arguments, const std::string& name) {
+  if (parsed_arguments.empty()) {
+    throw std::runtime_error("parsed arguments vector is empty");
+  }
+  if (parsed_arguments.empty()) {
+    throw std::runtime_error("argument name is empty");
+  }
+
+  for (auto& parsed_argument : parsed_arguments) {
+    if (parsed_argument.name() == name) {
+      return parsed_argument.value();
+    }
+  }
+
+  return std::nullopt;
+}
+
 } // namespace NinjaReader::CommandLine::Argument

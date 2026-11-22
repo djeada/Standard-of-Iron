@@ -6,6 +6,7 @@
 
 #include <concepts>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -142,6 +143,9 @@ public:
   [[nodiscard]] std::vector<Argument>
   parse_vector(const std::span<char*>& vector) const;
 };
+
+[[nodiscard]] std::optional<ArgumentValue>
+get_argument_value(std::vector<Argument>& parsed_arguments, const std::string& name);
 
 } // namespace NinjaReader::CommandLine::Argument
 
