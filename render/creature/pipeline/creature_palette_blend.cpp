@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+
 #include "render/creature/pipeline/creature_pipeline_internal.h"
 
 namespace Render::Creature::Pipeline {
@@ -52,18 +56,43 @@ auto slerp_in_hemisphere(const QQuaternion& from,
                          const QQuaternion& to,
                          float weight,
                          bool flip) noexcept -> QQuaternion {
-  QQuaternion const target = flip ? -to : to;
-  float const angle =
-      std::acos(std::clamp(QQuaternion::dotProduct(from, target), -1.0F, 1.0F));
+  // Plain float arithmetic: QQuaternion::length()/normalized() go through
+  // double precision and fuzzy compares, which made this the hottest call in
+  // creature preparation.
+  float const sign = flip ? -1.0F : 1.0F;
+  float const tw = to.scalar() * sign;
+  float const tx = to.x() * sign;
+  float const ty = to.y() * sign;
+  float const tz = to.z() * sign;
+  float const fw = from.scalar();
+  float const fx = from.x();
+  float const fy = from.y();
+  float const fz = from.z();
+  float const dot = (fw * tw) + (fx * tx) + (fy * ty) + (fz * tz);
+  float const angle = std::acos(std::clamp(dot, -1.0F, 1.0F));
   float const sine = std::sin(angle);
+  float a = 0.0F;
+  float b = 0.0F;
   if (sine < 1.0e-3F) {
-    QQuaternion const mixed = from * (1.0F - weight) + target * weight;
-    return mixed.length() > 1.0e-4F ? mixed.normalized()
-                                    : (weight < 0.5F ? from : target);
+    a = 1.0F - weight;
+    b = weight;
+  } else {
+    a = std::sin((1.0F - weight) * angle) / sine;
+    b = std::sin(weight * angle) / sine;
   }
-  return (from * (std::sin((1.0F - weight) * angle) / sine) +
-          target * (std::sin(weight * angle) / sine))
-      .normalized();
+  float const w = (fw * a) + (tw * b);
+  float const x = (fx * a) + (tx * b);
+  float const y = (fy * a) + (ty * b);
+  float const z = (fz * a) + (tz * b);
+  float const length_sq = (w * w) + (x * x) + (y * y) + (z * z);
+  if (sine < 1.0e-3F && length_sq <= 1.0e-8F) {
+    return weight < 0.5F ? from : QQuaternion(tw, tx, ty, tz);
+  }
+  if (length_sq <= 0.0F) {
+    return QQuaternion(w, x, y, z);
+  }
+  float const inverse = 1.0F / std::sqrt(length_sq);
+  return {w * inverse, x * inverse, y * inverse, z * inverse};
 }
 
 void lerp_local_pose(LocalPose& io,

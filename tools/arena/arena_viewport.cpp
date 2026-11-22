@@ -323,7 +323,11 @@ void ArenaViewport::paintGL() {
   timings.simulation_ms = elapsed_phase_ms();
 
   if (m_batch_render_suppressed && sampled_frame && !m_capture_active) {
-    m_renderer->update_animation_time(simulation_dt);
+    if (m_frozen_animation_time.has_value()) {
+      m_renderer->set_animation_time(*m_frozen_animation_time);
+    } else {
+      m_renderer->update_animation_time(simulation_dt);
+    }
     if (m_scenario_runner != nullptr) {
       publish_animation_clock();
     }
@@ -362,7 +366,11 @@ void ArenaViewport::paintGL() {
   apply_attack_scrub_override();
   m_renderer->set_hovered_entity_id(m_hovered_entity_id);
   m_renderer->set_local_owner_id(k_local_owner_id);
-  m_renderer->update_animation_time(simulation_dt);
+  if (m_frozen_animation_time.has_value()) {
+    m_renderer->set_animation_time(*m_frozen_animation_time);
+  } else {
+    m_renderer->update_animation_time(simulation_dt);
+  }
 
   m_renderer->set_order_marker_all_owners(m_capture_gameplay_ui_all_owners);
 

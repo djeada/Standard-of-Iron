@@ -56,6 +56,7 @@ include(cmake/GoogleTestSetup.cmake)
 include(cmake/BoundaryChecks.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/zstd.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/meshoptimizer.cmake)
 add_subdirectory(animation)
 
 include(cmake/Translations.cmake)

@@ -355,6 +355,14 @@ void Renderer::render_world(Engine::Core::World* world) {
                                      .full_creature_detail = full_creature_detail,
                                      .visibility_enabled = visibility_enabled};
 
+  // Creatures small on screen draw the simplified copies of their full meshes.
+  // Set before any preparation, which may run on the worker pool.
+  m_creature_submission.set_reduced_geometry(
+      m_camera != nullptr
+          ? Render::Creature::Pipeline::ReducedGeometryRule(
+                m_camera->get_position(), submit_ctx.screen_metrics.focal_length_px)
+          : Render::Creature::Pipeline::ReducedGeometryRule{});
+
   static thread_local std::vector<UnitDrawPlan> unit_plans;
   unit_plans.resize(unit_entries.size());
   for (std::size_t i = 0; i < unit_entries.size(); ++i) {

@@ -49,7 +49,11 @@ vec3 local_lighting(vec3 world_position, vec3 normal) {
     }
     vec3 delta = u_local_position_radius[i].xyz - world_position;
     float radius = max(u_local_position_radius[i].w, 0.001);
-    float distance_to_light = length(delta);
+    float distance_sq = dot(delta, delta);
+    if (distance_sq >= radius * radius) {
+      continue;
+    }
+    float distance_to_light = sqrt(distance_sq);
     vec3 direction = delta / max(distance_to_light, 0.001);
     float falloff = soi_local_falloff(distance_to_light, radius);
     float diffuse =
@@ -80,7 +84,11 @@ vec3 local_lighting_specular(vec3 world_position,
     }
     vec3 delta = u_local_position_radius[i].xyz - world_position;
     float radius = max(u_local_position_radius[i].w, 0.001);
-    float distance_to_light = length(delta);
+    float distance_sq = dot(delta, delta);
+    if (distance_sq >= radius * radius) {
+      continue;
+    }
+    float distance_to_light = sqrt(distance_sq);
     vec3 direction = delta / max(distance_to_light, 0.001);
     float falloff = soi_local_falloff(distance_to_light, radius);
     vec3 half_vector = normalize(direction + view_dir);

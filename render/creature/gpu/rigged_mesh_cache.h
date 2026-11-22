@@ -41,6 +41,14 @@ struct RiggedMeshEntry {
   std::shared_ptr<RiggedMesh> mesh;
   std::vector<std::shared_ptr<RiggedMesh>> attachment_meshes;
 
+  // Full-detail entries only: the copies drawn while the creature is small on
+  // screen (see rigged_mesh_reduce.h). reduced_attachment_meshes runs parallel
+  // to attachment_meshes; a null copy means the full mesh is drawn.
+  std::shared_ptr<RiggedMesh> reduced_mesh;
+  std::vector<std::shared_ptr<RiggedMesh>> reduced_attachment_meshes;
+  // Height of the full mesh in mesh units, for the on-screen size test.
+  float height{0.0F};
+
   std::shared_ptr<RiggedSkinAtlas> skin_atlas;
   mutable std::uint64_t last_used_frame{0};
 };
@@ -182,6 +190,7 @@ public:
     m_skin_atlases.clear();
     m_base_meshes.clear();
     m_attachment_meshes.clear();
+    m_reduced_meshes.clear();
     m_has_pending_skin_ubo_uploads = false;
     m_residency.mesh_bytes = 0;
     m_residency.attachment_bytes = 0;
@@ -279,6 +288,10 @@ private:
 
   void release_skin_atlases();
   void recount_residency();
+  // The small-on-screen copy of `mesh`, simplified once and shared by every
+  // entry drawing it.
+  auto
+  reduced_copy(const std::shared_ptr<RiggedMesh>& mesh) -> std::shared_ptr<RiggedMesh>;
 
   std::unordered_map<Key, RiggedMeshEntry, KeyHash> m_entries;
   std::unordered_map<SkinAtlasKey, std::shared_ptr<RiggedSkinAtlas>, SkinAtlasKeyHash>
@@ -289,6 +302,10 @@ private:
                      std::shared_ptr<RiggedMesh>,
                      AttachmentMeshKeyHash>
       m_attachment_meshes;
+
+  // Small-on-screen copies keyed by the full mesh's id; null when simplifying
+  // that mesh saved too little.
+  std::unordered_map<std::uint64_t, std::shared_ptr<RiggedMesh>> m_reduced_meshes;
 
   std::map<std::string, AttachmentMeshKey, std::less<>> m_attachment_pack_keys;
 

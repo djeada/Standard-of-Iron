@@ -77,17 +77,27 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     return;
   }
   QMatrix4x4 const& draw_world = world_from_unit;
+  // Small on screen: draw the simplified copies, and keep the full meshes for
+  // the shadow so the cast shadow is unchanged.
+  const bool small_on_screen =
+      submission != nullptr &&
+      submission->reduced_geometry().small_on_screen(draw_world, entry->height);
+  const bool reduce_body = small_on_screen && entry->reduced_mesh != nullptr;
 
-  auto cmd = make_rigged_cmd(entry->mesh.get(),
-                             draw_world,
-                             frame_palette,
-                             skin_atlas->bone_count,
-                             std::move(role_colors),
-                             base_color,
-                             wear_params,
-                             material_id_for_species(handle.archetype->species),
-                             alpha,
-                             team_emphasis);
+  auto cmd =
+      make_rigged_cmd(reduce_body ? entry->reduced_mesh.get() : entry->mesh.get(),
+                      draw_world,
+                      frame_palette,
+                      skin_atlas->bone_count,
+                      std::move(role_colors),
+                      base_color,
+                      wear_params,
+                      material_id_for_species(handle.archetype->species),
+                      alpha,
+                      team_emphasis);
+  if (reduce_body) {
+    cmd.shadow_mesh = entry->mesh.get();
+  }
 
   const bool skin_ubo_covers_frame = skin_atlas->palette_block != nullptr &&
                                      skin_atlas->frame_total != 0U &&
@@ -248,13 +258,18 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
         },
         &pose_source);
   }
-  for (const auto& attachment_mesh : entry->attachment_meshes) {
+  for (std::size_t index = 0; index < entry->attachment_meshes.size(); ++index) {
+    const auto& attachment_mesh = entry->attachment_meshes[index];
     if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
       continue;
     }
+    Render::GL::RiggedMesh* reduced =
+        small_on_screen && index < entry->reduced_attachment_meshes.size()
+            ? entry->reduced_attachment_meshes[index].get()
+            : nullptr;
     auto attachment_cmd = cmd;
-    attachment_cmd.mesh = attachment_mesh.get();
-    attachment_cmd.shadow_mesh = nullptr;
+    attachment_cmd.mesh = reduced != nullptr ? reduced : attachment_mesh.get();
+    attachment_cmd.shadow_mesh = reduced != nullptr ? attachment_mesh.get() : nullptr;
     out.rigged(std::move(attachment_cmd));
   }
   out.rigged(std::move(cmd));

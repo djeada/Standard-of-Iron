@@ -445,14 +445,15 @@ fingerprint left.
 
 ## Bundled Libraries
 
-Three libraries are vendored under `third_party/` and compiled directly into
+Four libraries are vendored under `third_party/` and compiled directly into
 the game binary, so their terms travel with every release package.
 
-| Library                                           | Version               | Licence                                                | Used for                         |
-| ------------------------------------------------- | --------------------- | ------------------------------------------------------ | -------------------------------- |
-| [miniaudio](https://github.com/mackron/miniaudio) | v0.11.23 (2025-09-11) | Public domain (Unlicense) **or** MIT-0, at your option | audio device output and mixing   |
-| [stb_vorbis](https://github.com/nothings/stb)     | v1.22                 | Public domain (Unlicense) **or** MIT, at your option   | Ogg Vorbis decoding              |
-| [Zstandard](https://github.com/facebook/zstd)     | 1.5.7                 | BSD 3-Clause **or** GPLv2, at your option              | baked creature cache compression |
+| Library                                                | Version               | Licence                                                | Used for                                   |
+| ------------------------------------------------------ | --------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| [miniaudio](https://github.com/mackron/miniaudio)      | v0.11.23 (2025-09-11) | Public domain (Unlicense) **or** MIT-0, at your option | audio device output and mixing             |
+| [stb_vorbis](https://github.com/nothings/stb)          | v1.22                 | Public domain (Unlicense) **or** MIT, at your option   | Ogg Vorbis decoding                        |
+| [Zstandard](https://github.com/facebook/zstd)          | 1.5.7                 | BSD 3-Clause **or** GPLv2, at your option              | baked creature cache compression           |
+| [meshoptimizer](https://github.com/zeux/meshoptimizer) | 0.22                  | MIT                                                    | simplified small-on-screen creature meshes |
 
 **This project takes the public-domain option for both.** Neither library then
 requires attribution or a licence notice in the binary. They are recorded here
@@ -460,7 +461,7 @@ for the same reason as everything else in this file: what ships should be
 answerable. If a downstream redistributor prefers the MIT option instead, the
 full licence text sits at the bottom of each vendored header.
 
-None of the three is modified. All are permissive enough to impose no
+None of the four is modified. All are permissive enough to impose no
 restriction on commercial use, and no shipped asset restricts it either.
 
 **Zstandard is used under its BSD licence**, which does require its notice to
@@ -498,6 +499,33 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+**meshoptimizer is used under its MIT licence**, whose notice must accompany
+copies of the software, so it lives here too:
+
+```text
+MIT License
+
+Copyright (c) 2016-2024 Arseny Kapoulkine
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
 ## Bundled Fonts

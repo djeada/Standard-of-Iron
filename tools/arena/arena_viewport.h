@@ -226,6 +226,11 @@ public slots:
   [[nodiscard]] auto fog_of_war_enabled() const -> bool { return m_fog_of_war_enabled; }
 
   void set_batch_fixed_step(float seconds);
+  // Holds every frame at one animation time (water, wind, clouds, sway), so two
+  // runs of a capture compare pixel for pixel.
+  void set_frozen_animation_time(std::optional<float> seconds) {
+    m_frozen_animation_time = seconds;
+  }
   void set_scenario_duration_override(float seconds);
 
 public:
@@ -687,6 +692,7 @@ private:
   std::unique_ptr<Render::Profiling::FrameContinuityAnalyzer>
       m_frame_continuity_analyzer;
   float m_batch_fixed_step = 0.0F;
+  std::optional<float> m_frozen_animation_time;
   float m_scenario_duration_override = 0.0F;
   std::size_t m_last_scenario_issue_revision = 0U;
   std::vector<bool> m_presentation_hitches_fired;

@@ -122,6 +122,7 @@ add_executable(
     render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
     render/creature/rigged_mesh_cache_test.cpp
+    render/creature/rigged_mesh_reduce_test.cpp
     render/creature/static_attachment_bake_test.cpp
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp

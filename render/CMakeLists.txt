@@ -57,6 +57,7 @@ target_link_libraries(
         animation_core
         scene_core
         soi_software_raster
+    PRIVATE soi_meshoptimizer
 )
 
 # The name docs/ARCHITECTURE.md gives this layer. See the alias note in

@@ -128,6 +128,12 @@ public:
   [[nodiscard]] auto last_frame_delta() const -> float { return m_last_frame_delta; }
   auto get_animation_time() const -> float override { return m_accumulated_time; }
 
+  // Pins the animation clock, for reproducible captures.
+  void set_animation_time(float seconds) {
+    m_accumulated_time = seconds;
+    m_last_frame_delta = 0.0F;
+  }
+
   void reset_animation_time() {
     m_accumulated_time = 0.0F;
     m_last_frame_delta = 0.0F;

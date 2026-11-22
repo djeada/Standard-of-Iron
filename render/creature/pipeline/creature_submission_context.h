@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
 namespace Render::GL {
 class ISubmitter;
 class RiggedMeshCache;
@@ -8,6 +11,49 @@ class SnapshotMeshCache;
 } // namespace Render::GL
 
 namespace Render::Creature::Pipeline {
+
+// A creature at most this tall on screen draws the reduced copy of its full
+// mesh (see Render::GL::reduce_rigged_mesh); taller ones draw the full mesh.
+inline constexpr float k_reduced_geometry_max_height_px = 60.0F;
+
+// When a creature counts as small on screen this frame. Set once per frame
+// before creatures are prepared, then only read, so prepare workers may share
+// it.
+class ReducedGeometryRule {
+public:
+  // Disabled: every creature draws its full mesh.
+  ReducedGeometryRule() = default;
+  ReducedGeometryRule(const QVector3D& camera_position, float focal_length_px) noexcept
+      : m_camera(camera_position)
+      , m_focal_sq_over_max_height_sq(
+            focal_length_px * focal_length_px /
+            (k_reduced_geometry_max_height_px * k_reduced_geometry_max_height_px))
+      , m_enabled(focal_length_px > 0.0F) {}
+
+  // Whether a mesh `mesh_height` units tall, placed by `world_from_unit`,
+  // projects to at most k_reduced_geometry_max_height_px. Squared throughout,
+  // so it costs no square root per creature.
+  [[nodiscard]] auto small_on_screen(const QMatrix4x4& world_from_unit,
+                                     float mesh_height) const noexcept -> bool {
+    if (!m_enabled || !(mesh_height > 0.0F)) {
+      return false;
+    }
+    const float dx = world_from_unit(0, 3) - m_camera.x();
+    const float dy = world_from_unit(1, 3) - m_camera.y();
+    const float dz = world_from_unit(2, 3) - m_camera.z();
+    const float distance_sq = (dx * dx) + (dy * dy) + (dz * dz);
+    const float up_scale_sq = (world_from_unit(0, 1) * world_from_unit(0, 1)) +
+                              (world_from_unit(1, 1) * world_from_unit(1, 1)) +
+                              (world_from_unit(2, 1) * world_from_unit(2, 1));
+    const float world_height_sq = mesh_height * mesh_height * up_scale_sq;
+    return world_height_sq * m_focal_sq_over_max_height_sq < distance_sq;
+  }
+
+private:
+  QVector3D m_camera;
+  float m_focal_sq_over_max_height_sq{0.0F};
+  bool m_enabled{false};
+};
 
 class CreatureSubmissionContext {
 public:
@@ -39,10 +85,18 @@ public:
     *m_current_shader = shader;
   }
 
+  void set_reduced_geometry(const ReducedGeometryRule& rule) noexcept {
+    m_reduced_geometry = rule;
+  }
+  [[nodiscard]] auto reduced_geometry() const noexcept -> const ReducedGeometryRule& {
+    return m_reduced_geometry;
+  }
+
 private:
   Render::GL::RiggedMeshCache* m_rigged_meshes;
   Render::GL::SnapshotMeshCache* m_snapshot_meshes;
   Render::GL::Shader** m_current_shader;
+  ReducedGeometryRule m_reduced_geometry;
 };
 
 [[nodiscard]] auto resolve_creature_submission(Render::GL::ISubmitter& out) noexcept
