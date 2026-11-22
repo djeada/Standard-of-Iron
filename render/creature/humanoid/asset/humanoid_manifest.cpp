@@ -10,44 +10,6 @@ namespace Render::Humanoid {
 
 namespace humanoid_manifest_detail {
 
-[[nodiscard]] constexpr auto
-is_defensive_shield_hold(BakerHoldType type) noexcept -> bool {
-  return type == BakerHoldType::TestudoFront || type == BakerHoldType::TestudoTop ||
-         type == BakerHoldType::TestudoLeft || type == BakerHoldType::TestudoRight ||
-         type == BakerHoldType::TestudoRear ||
-         type == BakerHoldType::CarthageShieldWallFront ||
-         type == BakerHoldType::CarthageShieldWallLeft ||
-         type == BakerHoldType::CarthageShieldWallRight;
-}
-
-[[nodiscard]] constexpr auto
-defensive_shield_pose(BakerHoldType type) noexcept -> Animation::ShieldFormationPose {
-  switch (type) {
-  case BakerHoldType::TestudoTop:
-    return Animation::ShieldFormationPose::RomanTop;
-  case BakerHoldType::TestudoLeft:
-    return Animation::ShieldFormationPose::RomanLeft;
-  case BakerHoldType::TestudoRight:
-    return Animation::ShieldFormationPose::RomanRight;
-  case BakerHoldType::TestudoRear:
-    return Animation::ShieldFormationPose::RomanRear;
-  case BakerHoldType::CarthageShieldWallFront:
-    return Animation::ShieldFormationPose::CarthageFront;
-  case BakerHoldType::CarthageShieldWallLeft:
-    return Animation::ShieldFormationPose::CarthageLeft;
-  case BakerHoldType::CarthageShieldWallRight:
-    return Animation::ShieldFormationPose::CarthageRight;
-  case BakerHoldType::TestudoFront:
-  case BakerHoldType::None:
-  case BakerHoldType::Spear:
-  case BakerHoldType::Bow:
-  case BakerHoldType::ResourceCarry:
-  case BakerHoldType::Wade:
-    break;
-  }
-  return Animation::ShieldFormationPose::RomanFront;
-}
-
 auto to_showcase_move(BakerShowcaseType t) noexcept -> Animation::HumanoidShowcaseMove {
   switch (t) {
   case BakerShowcaseType::Jump:

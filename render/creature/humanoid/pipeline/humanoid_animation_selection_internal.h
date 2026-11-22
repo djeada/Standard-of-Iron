@@ -59,7 +59,23 @@ void apply_showcase_clip(HumanoidAnimationSelection& selection,
                          const Render::GL::HumanoidAnimationContext& anim) noexcept;
 
 [[nodiscard]] constexpr auto melee_variant_for_combo_step(
-    Animation::SwordAttackAnimation step) noexcept -> std::uint8_t;
+    Animation::SwordAttackAnimation step) noexcept -> std::uint8_t {
+  switch (step) {
+  case Animation::SwordAttackAnimation::RpgSlashLeft:
+  case Animation::SwordAttackAnimation::InfantrySlashA:
+    return 1U;
+  case Animation::SwordAttackAnimation::RpgSlashRight:
+  case Animation::SwordAttackAnimation::RpgOverhead:
+  case Animation::SwordAttackAnimation::InfantrySlashB:
+  case Animation::SwordAttackAnimation::MountedSlash:
+    return 2U;
+  case Animation::SwordAttackAnimation::RpgThrust:
+  case Animation::SwordAttackAnimation::RpgFinisher:
+  case Animation::SwordAttackAnimation::InfantrySlashC:
+    return 0U;
+  }
+  return 0U;
+}
 
 void apply_role_specific_combat_clip(
     HumanoidAnimationSelection& selection,
