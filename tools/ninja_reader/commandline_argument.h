@@ -91,7 +91,7 @@ public:
 class ArgumentValidator {
 public:
   // Checks whether `argument_str` is not empty, starts with the `--` prefix and has
-  // non-empty name: `--<name>`
+  // non-empty name: `--<name>`. Consider that it trims whitespace before checking.
   [[nodiscard]] bool is_argument(std::string_view argument_str) const;
 };
 
