@@ -16,6 +16,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/attachment_mesh_library.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/rigged_mesh_bake.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/rigged_mesh_cache.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/rigged_mesh_reduce.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/snapshot_mesh_bake.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/gpu/snapshot_mesh_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/horse/horse_anatomy.cpp

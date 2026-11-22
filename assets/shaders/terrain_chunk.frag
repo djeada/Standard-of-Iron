@@ -218,11 +218,17 @@ PaintedSward soi_painted_sward(vec2 p, float softness, float sparsity) {
   for (int y = -1; y <= 1; ++y) {
     for (int x = -1; x <= 1; ++x) {
       vec2 offset = vec2(float(x), float(y));
-      vec2 jitter = hash22(cell + offset);
       float seed = fract(sin(dot(cell + offset, vec2(41.3, 289.1))) * 43758.5453);
       if (seed < mix(0.05, 0.20, sparsity)) {
         continue;
       }
+      // Only a higher rank can replace the current winner, so a tuft that
+      // cannot outrank it is never shaded.
+      float rank = seed + 0.001;
+      if (rank <= best_rank) {
+        continue;
+      }
+      vec2 jitter = hash22(cell + offset);
       float angle = k_soi_sward_lean + 0.55 * jitter.x;
       vec2 up = vec2(cos(angle), sin(angle));
       vec2 side = vec2(-up.y, up.x);
@@ -253,8 +259,7 @@ PaintedSward soi_painted_sward(vec2 p, float softness, float sparsity) {
                                        blade_half,
                                        abs(fract(blade_position) - 0.5))) *
                      smoothstep(-0.04, 0.04, t) * (1.0 - step(1.0, blade_t));
-      float rank = seed + 0.001;
-      if (inside > 0.35 && rank > best_rank) {
+      if (inside > 0.35) {
         best_rank = rank;
         sward.tone = clamp(mix(-1.0, 1.0, smoothstep(0.02, 0.92, blade_t)) +
                                (blade_seed - 0.5) * 0.5,

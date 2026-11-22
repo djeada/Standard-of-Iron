@@ -13,6 +13,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
 #include "render/creature/gpu/attachment_mesh_library.h"
+#include "render/creature/gpu/rigged_mesh_reduce.h"
 #include "render/creature/rigged_mesh_registry.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
@@ -235,6 +236,15 @@ auto RiggedMeshCache::create_rigged_asset(
     }
   }
 
+  if (lod == Render::Creature::CreatureLOD::Full && entry.mesh != nullptr) {
+    entry.height = rigged_mesh_height(*entry.mesh);
+    entry.reduced_mesh = reduced_copy(entry.mesh);
+    entry.reduced_attachment_meshes.reserve(entry.attachment_meshes.size());
+    for (const auto& attachment : entry.attachment_meshes) {
+      entry.reduced_attachment_meshes.push_back(reduced_copy(attachment));
+    }
+  }
+
   const SkinAtlasKey atlas_key{&spec, skin_species_id};
   auto [atlas_it, atlas_inserted] = m_skin_atlases.try_emplace(atlas_key);
   if (atlas_inserted || atlas_it->second == nullptr) {
@@ -247,6 +257,18 @@ auto RiggedMeshCache::create_rigged_asset(
   auto [it, _] = m_entries.emplace(key, std::move(entry));
   recount_residency();
   return &it->second;
+}
+
+auto RiggedMeshCache::reduced_copy(const std::shared_ptr<RiggedMesh>& mesh)
+    -> std::shared_ptr<RiggedMesh> {
+  if (mesh == nullptr) {
+    return nullptr;
+  }
+  auto [it, inserted] = m_reduced_meshes.try_emplace(mesh->id());
+  if (inserted) {
+    it->second = reduce_rigged_mesh(*mesh, k_reduced_geometry_max_error);
+  }
+  return it->second;
 }
 
 namespace {
@@ -263,6 +285,11 @@ auto mesh_bytes(const RiggedMesh& mesh) -> std::uint64_t {
 void RiggedMeshCache::recount_residency() {
   std::uint64_t base = 0;
   for (const auto& [_, mesh] : m_base_meshes) {
+    if (mesh != nullptr) {
+      base += mesh_bytes(*mesh);
+    }
+  }
+  for (const auto& [_, mesh] : m_reduced_meshes) {
     if (mesh != nullptr) {
       base += mesh_bytes(*mesh);
     }
@@ -343,6 +370,13 @@ auto RiggedMeshCache::evict_unused_over_budget() -> std::uint64_t {
                ? m_attachment_meshes.erase(it)
                : std::next(it);
     }
+    // A null copy (nothing worth simplifying) stays, so the mesh is not
+    // simplified again when an entry drawing it comes back.
+    for (auto it = m_reduced_meshes.begin(); it != m_reduced_meshes.end();) {
+      it = (it->second != nullptr && it->second.use_count() == 1)
+               ? m_reduced_meshes.erase(it)
+               : std::next(it);
+    }
     recount_residency();
   }
 
@@ -392,6 +426,14 @@ void RiggedMeshCache::for_each_mesh(
       visit(*entry.mesh);
     }
     for (const auto& attachment : entry.attachment_meshes) {
+      if (attachment != nullptr) {
+        visit(*attachment);
+      }
+    }
+    if (entry.reduced_mesh != nullptr) {
+      visit(*entry.reduced_mesh);
+    }
+    for (const auto& attachment : entry.reduced_attachment_meshes) {
       if (attachment != nullptr) {
         visit(*attachment);
       }
