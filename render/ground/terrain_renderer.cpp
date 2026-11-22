@@ -1,4 +1,3 @@
-#include "render/gl/mesh_prewarmer.h"
 #include "render/ground/terrain_renderer.h"
 
 #include <QOpenGLContext>
@@ -7,6 +6,7 @@
 #include <cstddef>
 
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_prewarmer.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -75,7 +75,8 @@ auto TerrainRenderer::compute_ground_fog(const std::vector<float>& heights)
 }
 
 auto TerrainRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(meshes, m_chunks, [](auto& chunk) { return chunk.mesh.get(); });
+  return prewarm_mesh_buffers(
+      meshes, m_chunks, [](auto& chunk) { return chunk.mesh.get(); });
 }
 
 void TerrainRenderer::set_light_direction(const QVector3D& dir) {

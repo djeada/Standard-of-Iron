@@ -26,7 +26,8 @@
 namespace Render::GL {
 
 auto RoadRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(meshes, m_surfaces, [](auto& entry) { return entry.mesh.get(); });
+  return prewarm_mesh_buffers(
+      meshes, m_surfaces, [](auto& entry) { return entry.mesh.get(); });
 }
 
 namespace {

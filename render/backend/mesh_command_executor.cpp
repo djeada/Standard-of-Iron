@@ -49,11 +49,12 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
     if constexpr (std::is_same_v<Cmd, MeshCmd>) {
       if (m_banner_pipeline != nullptr &&
           active_shader == m_banner_pipeline->shader()) {
-        m_banner_pipeline->draw_banners(prepared,
-                                        head,
-                                        is_transparent,
-                                        m_context.resources() != nullptr ? m_context.resources()->white() : nullptr,
-                                        context);
+        m_banner_pipeline->draw_banners(
+            prepared,
+            head,
+            is_transparent,
+            m_context.resources() != nullptr ? m_context.resources()->white() : nullptr,
+            context);
         return;
       }
     }
@@ -123,7 +124,10 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
 void Backend::bind_mesh_texture(Texture* texture) {
   Texture* const tex_to_use =
-      (texture != nullptr) ? texture : (m_context.resources() != nullptr ? m_context.resources()->white() : nullptr);
+      (texture != nullptr)
+          ? texture
+          : (m_context.resources() != nullptr ? m_context.resources()->white()
+                                              : nullptr);
   if ((tex_to_use != nullptr) && tex_to_use != m_gl_state.bound_texture) {
     tex_to_use->bind(0);
     m_gl_state.bound_texture = tex_to_use;

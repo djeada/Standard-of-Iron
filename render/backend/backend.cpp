@@ -82,7 +82,8 @@ using namespace Render::GL::ComponentCount;
 Backend::Backend() = default;
 
 Backend::Backend(ShaderQuality quality)
-    : m_shader_quality(quality) {}
+    : m_shader_quality(quality) {
+}
 
 Backend::~Backend() {
   if (QOpenGLContext::currentContext() != nullptr) {
@@ -161,8 +162,7 @@ auto Backend::initialize() -> bool {
     return false;
   }
 
-  if (!create_subsystem(
-          m_cylinder_pipeline, "CylinderPipeline", m_context.shaders())) {
+  if (!create_subsystem(m_cylinder_pipeline, "CylinderPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
@@ -263,9 +263,9 @@ auto Backend::initialize() -> bool {
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
   m_building_merged_shader =
       m_context.shaders()->load(QStringLiteral("building_merged"),
-                           QStringLiteral(":/assets/shaders/building_merged.vert"),
-                           QStringLiteral(":/assets/shaders/basic_instanced.frag"),
-                           QStringLiteral("#define SOI_OPAQUE_ONLY 1\n"));
+                                QStringLiteral(":/assets/shaders/building_merged.vert"),
+                                QStringLiteral(":/assets/shaders/basic_instanced.frag"),
+                                QStringLiteral("#define SOI_OPAQUE_ONLY 1\n"));
   m_building_ghost_shader = m_context.shaders()->get_or_load(
       QStringLiteral(":/assets/shaders/building_merged.vert"),
       QStringLiteral(":/assets/shaders/basic_instanced.frag"));

@@ -15,7 +15,12 @@ That only holds while nobody bypasses the handles, so three things are checked:
     those are the only layers that talk to the driver;
   * no header under render/ declares a raw GLuint/GLsync member whose name says
     it owns an object (vao, buffer, texture, fbo, ...). A member that only
-    borrows a name owned elsewhere is declared as `BorrowedGlName`.
+    borrows a name owned elsewhere is declared as `BorrowedGlName`;
+  * no process-wide singleton (a header declaring `instance()`) holds a GL
+    object: GL state belongs to a backend's RenderContext, created on its
+    context and destroyed with it, so two renderers never share or outlive it.
+    Mesh (render/gl/mesh.h) is geometry and holds no GL object either; each
+    backend uploads its own copy through its MeshGpuTable.
 
   usage: check-gl-ownership.py [repo-root]
 """
@@ -57,6 +62,15 @@ RAW_HANDLE_MEMBER = re.compile(
 
 COMMENT = re.compile(r"//.*$")
 
+SINGLETON = re.compile(r"\binstance\(\)\s*->")
+
+GL_OWNING_MEMBER = re.compile(
+    r"""\b(?:(?:Buffer|VertexArray|Texture|Program|Shader|Framebuffer|Renderbuffer
+        |Sampler|Query|Fence|Gl)Handle|VertexArray|Buffer|Texture|Shader|RiggedMesh|MeshGpuTable
+        |RenderContext|ResourceManager|ShaderCache)\b[^;()]*\bm_\w+""",
+    re.VERBOSE,
+)
+
 
 def sources(root: Path) -> list[Path]:
     directory = root / "render"
@@ -69,11 +83,27 @@ def strip_strings(line: str) -> str:
     return re.sub(r'"(?:\\.|[^"\\])*"', '""', line)
 
 
+GEOMETRY_ONLY = ("render/gl/mesh.h",)
+
+
 def check(root: Path) -> list[str]:
     problems: list[str] = []
+    for relative in GEOMETRY_ONLY:
+        path = root / relative
+        if not path.exists():
+            continue
+        for number, raw in enumerate(path.read_text(errors="replace").splitlines(), 1):
+            code = COMMENT.sub("", raw)
+            if GL_OWNING_MEMBER.search(code) or "render/gl/buffer.h" in code:
+                problems.append(
+                    f"{relative}:{number}: Mesh is geometry; its GL objects belong "
+                    "in a MeshGpuTable"
+                )
     for source in sources(root):
         relative = source.relative_to(root).as_posix()
         in_backend = relative.startswith(GL_LAYERS)
+        text = source.read_text(errors="replace")
+        singleton = source.suffix == ".h" and SINGLETON.search(text) is not None
         for number, raw in enumerate(
             source.read_text(errors="replace").splitlines(), 1
         ):
@@ -88,6 +118,11 @@ def check(root: Path) -> list[str]:
                 problems.append(
                     f"{where}: gl* call outside render/gl/ and render/backend/; "
                     "move it behind a render/gl interface"
+                )
+            if source.suffix == ".h" and singleton and GL_OWNING_MEMBER.search(code):
+                problems.append(
+                    f"{where}: a process-wide singleton holds a GL object; own it "
+                    "in the backend's RenderContext instead"
                 )
             if source.suffix == ".h" and RAW_HANDLE_MEMBER.search(code):
                 problems.append(

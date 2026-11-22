@@ -1,7 +1,5 @@
 #include "render/backend/mesh_instancing_pipeline.h"
 
-#include "render/gl/mesh_gpu_table.h"
-
 #include <QDebug>
 #include <QOpenGLContext>
 
@@ -14,6 +12,7 @@
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_gpu_table.h"
 
 namespace Render::GL::BackendPipelines {
 

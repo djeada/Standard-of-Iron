@@ -25,7 +25,8 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     break;
   }
   case GridCmdIndex: {
-    Mesh* const ground = (m_context.resources() != nullptr) ? m_context.resources()->ground() : nullptr;
+    Mesh* const ground =
+        (m_context.resources() != nullptr) ? m_context.resources()->ground() : nullptr;
     m_effects_pipeline->draw_grid(std::get<GridCmdIndex>(cmd), ground, context);
     break;
   }

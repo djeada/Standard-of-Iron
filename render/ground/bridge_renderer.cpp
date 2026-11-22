@@ -26,7 +26,8 @@
 namespace Render::GL {
 
 auto BridgeRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
-  return prewarm_mesh_buffers(meshes, m_meshes, [](auto& entry) { return entry.get(); });
+  return prewarm_mesh_buffers(
+      meshes, m_meshes, [](auto& entry) { return entry.get(); });
 }
 
 BridgeRenderer::BridgeRenderer() = default;

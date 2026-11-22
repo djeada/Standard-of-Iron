@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace Render::GL {
 
 struct Vertex {

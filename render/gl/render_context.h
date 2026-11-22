@@ -30,7 +30,9 @@ public:
   [[nodiscard]] auto resources() const noexcept -> ResourceManager* {
     return m_resources.get();
   }
-  [[nodiscard]] auto shaders() const noexcept -> ShaderCache* { return m_shaders.get(); }
+  [[nodiscard]] auto shaders() const noexcept -> ShaderCache* {
+    return m_shaders.get();
+  }
   [[nodiscard]] auto meshes() noexcept -> MeshGpuTable& { return m_meshes; }
 
 private:
