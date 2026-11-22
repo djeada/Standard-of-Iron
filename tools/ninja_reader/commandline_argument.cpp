@@ -125,8 +125,7 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
       std::string argument_value = str;
       if (argument_validator.is_argument(argument_value)) {
         throw VectorParser::Exception(
-            std::format("expected value instead of argument declaration",
-                        argument_name),
+            std::format("expected value instead of option", argument_name),
             Exception::Code::ARGUMENT_EXPECTED_VALUE);
       }
 

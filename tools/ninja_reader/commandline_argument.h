@@ -136,10 +136,9 @@ public:
   // - iteration ends, but one of the arguments has no value;
   // - the argument's integral value is out of bounds (overflow/underflow) of
   //   `ArgumentValue::Integer`;
-  // - the argument's value is declaration of a next argument. Example:
+  // - the argument's value is an option. Example:
   //
-  //   { "--<argA>", "--<argB>" } (Expected a value after "--<argA>", but got argument
-  //   declaration)
+  //   { "--argA", "--argB" } (Expected a value after "--<argA>", but got an option)
   [[nodiscard]] std::vector<Argument>
   parse_vector(const std::span<char*>& vector) const;
 };
