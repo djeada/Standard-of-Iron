@@ -140,7 +140,7 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/overlay/range_rings.h",
       "render/creature/humanoid/animation/animation_inputs.cpp",
       "render/creature/humanoid/runtime/humanoid_renderer.cpp",
-      "render/creature/humanoid/runtime/instance_prepare_internal.h",
+      "render/creature/humanoid/runtime/instance_prepare_stages.h",
       "render/scene/scene_collect.cpp",
       "render/scene/scene_overlays.cpp",
       "render/scene/scene_renderer.cpp",

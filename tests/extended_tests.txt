@@ -131,6 +131,9 @@ CreatureSpeciesPrewarm.EverySpeciesBodyIsReadyBeforePlay
 DrawQueueSortCost.*
 TemplatePrewarmRegression.*
 ScatterRuntimeTest.CampaniaCampaignMaintainsRichNaturalScatter
+# Generates the full scatter of every shipped map to prove no layer reaches its
+# instance budget; 177 s in the pull-request Debug profile.
+ScatterBudget.NoShippedMapReachesAScatterBudget
 
 # app_tests
 AmbienceAssetsTest.NoBedIsLouderInTheHarshBandThanInItsBody

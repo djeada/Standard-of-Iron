@@ -4,7 +4,7 @@
 #include <iterator>
 
 #include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
-#include "render/creature/humanoid/runtime/instance_prepare_internal.h"
+#include "render/creature/humanoid/runtime/instance_prepare_stages.h"
 
 namespace Render::Humanoid {
 

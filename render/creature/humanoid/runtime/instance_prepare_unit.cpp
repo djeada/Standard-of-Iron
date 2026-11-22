@@ -1,4 +1,4 @@
-#include "render/creature/humanoid/runtime/instance_prepare_internal.h"
+#include "render/creature/humanoid/runtime/instance_prepare_stages.h"
 
 namespace Render::Humanoid {
 
