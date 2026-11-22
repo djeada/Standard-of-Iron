@@ -93,14 +93,20 @@ bool ArgumentValidator::is_argument(std::string_view argument_str) const {
 
 // VectorParser
 
-VectorParser::Exception::Exception(const std::string& msg)
-    : std::runtime_error(
+VectorParser::Exception::Exception(const std::string& msg, Code code)
+    : m_code(code)
+    , std::runtime_error(
           std::string("NinjaReader::CommandLine::Argument::VectorParser: ") + msg) {
+}
+
+VectorParser::Exception::Code VectorParser::Exception::code() const noexcept {
+  return m_code;
 }
 
 std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector) const {
   if (vector.empty()) {
-    throw VectorParser::Exception("provided arguments vector is empty");
+    throw VectorParser::Exception("provided arguments vector is empty",
+                                  Exception::Code::EMPTY_VECTOR);
   }
   ArgumentValidator argument_validator;
   std::vector<Argument> parsed_arguments = {};
@@ -108,7 +114,8 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
   bool parsing_argument_value = false;
   for (char* str : vector) {
     if (str == nullptr) {
-      throw VectorParser::Exception("argument cannot be null");
+      throw VectorParser::Exception("argument cannot be null",
+                                    Exception::Code::VECTOR_ARGUMENT_NULL);
     }
 
     // As the argument value is parsed, "parsing_argument_value" must be set to false,
@@ -118,7 +125,9 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
       std::string argument_value = str;
       if (argument_validator.is_argument(argument_value)) {
         throw VectorParser::Exception(
-            std::format("the value of \"{0}\" must not be an argument", argument_name));
+            std::format("expected value instead of argument declaration",
+                        argument_name),
+            Exception::Code::ARGUMENT_EXPECTED_VALUE);
       }
 
       // Since the std::stoi function throws an exception if a conversion failure
@@ -161,7 +170,8 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
             std::format("The integer is out of bounds (min: {}, max: {}): {}",
                         min,
                         max,
-                        argument_value));
+                        argument_value),
+            Exception::Code::INTEGRAL_ARGUMENT_VALUE_OUT_OF_BOUNDS);
       } catch (const std::exception&) {
         // .clang-tidy generates a warning about an empty catch block, therefore, we
         // declare this variable to prevent this warning.
@@ -203,14 +213,16 @@ std::vector<Argument> VectorParser::parse_vector(const std::span<char*>& vector)
     size_t equal_operator_index = argument_str.find("--");
     argument_name = argument_str.substr(equal_operator_index + 2);
     if (argument_name.empty()) {
-      throw VectorParser::Exception("argument name cannot be empty");
+      throw VectorParser::Exception("argument name cannot be empty",
+                                    Exception::Code::EMPTY_VECTOR_ARGUMENT_NAME);
     }
     parsing_argument_value = true;
   }
 
   if (parsing_argument_value) {
     throw VectorParser::Exception(
-        std::format("\"{}\" argument has no value", argument_name));
+        std::format("\"{}\" argument has no value", argument_name),
+        Exception::Code::ARGUMENT_NO_VALUE);
   }
 
   return parsed_arguments;

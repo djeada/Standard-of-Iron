@@ -101,7 +101,23 @@ public:
   // An exception class that is thrown by the methods of VectorParser.
   class Exception : public std::runtime_error {
   public:
-    Exception(const std::string& msg);
+    enum class Code : std::uint8_t {
+      NONE = 0,
+      EMPTY_VECTOR,
+      VECTOR_ARGUMENT_NULL,
+      EMPTY_VECTOR_ARGUMENT_NAME,
+      INTEGRAL_ARGUMENT_VALUE_OUT_OF_BOUNDS,
+      ARGUMENT_NO_VALUE,
+      ARGUMENT_EXPECTED_VALUE
+    };
+
+  private:
+    Code m_code = Code::NONE;
+
+  public:
+    Exception(const std::string& msg, Code code);
+
+    [[nodiscard]] Code code() const noexcept;
   };
 
   // Parses the provided argument vector (a `vector` parameter).
