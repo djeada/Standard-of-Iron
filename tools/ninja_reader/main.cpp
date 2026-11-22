@@ -1,33 +1,47 @@
 // Copyright 2026 dywoq - MIT License
 // https://github.com/djeada/Standard-of-Iron
 
-#include <format>
 #include <iostream>
+#include <optional>
+#include <string>
 
-#include "routines_ninjalog_parser.h"
-#include "routines_sources.h"
+#include "commandline_argument.h"
+#include "commands.h"
 
-int main() {
+using namespace NinjaReader;
+using namespace NinjaReader::CommandLine;
 
-  using namespace NinjaReader::Routines;
+namespace {
 
-  NinjaLogParser parser;
-  auto log = parser.parse(std::filesystem::path("build/.ninja_log"));
+std::optional<std::string> get_command_name(const std::span<char*>& args) noexcept {
+  Argument::ArgumentValidator argument_validator;
+  for (auto it = args.begin(); it != args.end(); ++it) {
+    if (!argument_validator.is_argument(*it)) {
+      return std::string(*it);
+    }
+    if (argument_validator.is_argument(*it)) {
+      // Advance because there is a value after the option.
+      ++it;
+    }
+  }
+  return std::nullopt;
+}
 
-  SourceFilesSorter sorter;
-  auto elements = sorter.sort(log, SourceFilesSorter::Order::FROM_FASTEST_TO_SLOWEST);
+} // namespace
 
-  for (const auto& element : elements) {
-    const auto duration = element.end_time - element.start_time;
-
-    std::cout << std::format("Duration: {}ms, Output File: {}\n",
-                             duration.count(),
-                             element.output_file.string());
+int main(int argc, char* argv[]) {
+  auto command_name = get_command_name(std::span(&argv[1], argc - 1));
+  if (!command_name) {
+    return Commands::help();
   }
 
-  SourceFilesCompilationTimeCalculator calculator;
-  std::cout << "Total time: " << calculator.calculate_total_time(log) << "\n";
-  std::cout << "Average time: " << calculator.calculate_average_time(log) << "\n";
+  if (command_name.value() == "help") {
+    return Commands::help();
+  } else if (command_name.value() == "read") {
+    return Commands::read(std::span(argv, argc));
+  } else {
+    std::cout << "Unknown command: " << command_name.value() << "\n";
+  }
 
   return 0;
 }
