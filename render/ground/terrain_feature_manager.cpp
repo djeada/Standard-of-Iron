@@ -13,16 +13,16 @@ TerrainFeatureManager::TerrainFeatureManager()
     , m_road(std::make_unique<RoadRenderer>())
     , m_shoreline(std::make_unique<ShorelineRenderer>())
     , m_bridge(std::make_unique<BridgeRenderer>())
-    , m_passes{m_water.get(), m_road.get(), m_shoreline.get(), m_bridge.get()} {
+    , m_sources{m_water.get(), m_road.get(), m_shoreline.get(), m_bridge.get()} {
 }
 
 TerrainFeatureManager::~TerrainFeatureManager() = default;
 
-auto TerrainFeatureManager::prewarm_gpu_resources() -> bool {
-  bool ready = m_water->prewarm_gpu_resources();
-  ready = m_road->prewarm_gpu_resources() && ready;
-  ready = m_shoreline->prewarm_gpu_resources() && ready;
-  ready = m_bridge->prewarm_gpu_resources() && ready;
+auto TerrainFeatureManager::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
+  bool ready = m_water->prewarm_gpu_resources(meshes);
+  ready = m_road->prewarm_gpu_resources(meshes) && ready;
+  ready = m_shoreline->prewarm_gpu_resources(meshes) && ready;
+  ready = m_bridge->prewarm_gpu_resources(meshes) && ready;
   return ready;
 }
 
@@ -49,9 +49,9 @@ void TerrainFeatureManager::set_fog_renderer(FogRenderer* fog) {
 
 void TerrainFeatureManager::submit(FrameSubmitter& renderer,
                                    ResourceManager* resources) {
-  for (auto* pass : m_passes) {
-    if (pass != nullptr) {
-      pass->submit(renderer, resources);
+  for (auto* source : m_sources) {
+    if (source != nullptr) {
+      source->submit(renderer, resources);
     }
   }
 }
@@ -94,8 +94,8 @@ auto TerrainFeatureManager::chunks(std::size_t water_count,
            bridge_count}};
 }
 
-auto TerrainFeatureManager::passes() const -> const std::vector<IRenderPass*>& {
-  return m_passes;
+auto TerrainFeatureManager::sources() const -> const std::vector<IDrawSource*>& {
+  return m_sources;
 }
 
 } // namespace Render::GL

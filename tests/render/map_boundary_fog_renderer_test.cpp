@@ -222,7 +222,7 @@ TEST(MapBoundaryFogRendererTest, SatisfiesIRenderPassInterface) {
   MapBoundaryFogRenderer concrete;
   concrete.set_world_view(
       Render::WorldView::of(Game::Session::SessionContext::active()));
-  Render::GL::IRenderPass* pass = static_cast<Render::GL::IRenderPass*>(&concrete);
+  Render::GL::IDrawSource* pass = static_cast<Render::GL::IDrawSource*>(&concrete);
   EXPECT_NE(pass, nullptr);
 }
 

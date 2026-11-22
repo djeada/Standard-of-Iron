@@ -287,6 +287,42 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
   glBindVertexArray(0);
 }
 
+void PrimitiveBatchPipeline::draw_batch(const PrimitiveBatchCmd& batch,
+                                        PipelineDrawContext& context) {
+  if (batch.instance_count() == 0 || !is_initialized()) {
+    return;
+  }
+
+  const QMatrix4x4& view_proj = context.frame.view_proj;
+  const auto* data = batch.instance_data();
+
+  switch (batch.type) {
+  case PrimitiveType::Sphere:
+    upload_sphere_instances(data, batch.instance_count());
+    draw_spheres(batch.instance_count(),
+                 view_proj,
+                 batch.params.light_direction,
+                 batch.params.ambient_strength);
+    break;
+  case PrimitiveType::Cylinder:
+    upload_cylinder_instances(data, batch.instance_count());
+    draw_cylinders(batch.instance_count(),
+                   view_proj,
+                   batch.params.light_direction,
+                   batch.params.ambient_strength);
+    break;
+  case PrimitiveType::Cone:
+    upload_cone_instances(data, batch.instance_count());
+    draw_cones(batch.instance_count(),
+               view_proj,
+               batch.params.light_direction,
+               batch.params.ambient_strength);
+    break;
+  }
+
+  context.state.bound_shader = m_shader;
+}
+
 void PrimitiveBatchPipeline::upload_sphere_instances(
     const GL::PrimitiveInstanceGpu* data, std::size_t count) {
   m_sphere_instances_resident = 0;

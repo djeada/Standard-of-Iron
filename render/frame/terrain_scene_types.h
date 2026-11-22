@@ -5,7 +5,7 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 
 namespace Render::Ground::Scatter {
 
@@ -45,7 +45,7 @@ struct TerrainSurfaceShaderParams {
 
 struct TerrainSurfaceChunk {
   TerrainSurfaceKind kind = TerrainSurfaceKind::GroundPlane;
-  IRenderPass* pass = nullptr;
+  IDrawSource* source = nullptr;
   TerrainSurfaceShaderParams params;
 };
 
@@ -76,7 +76,7 @@ enum class LinearFeatureVisibilityMode {
 struct LinearFeatureChunk {
   LinearFeatureKind kind = LinearFeatureKind::Road;
   LinearFeatureVisibilityMode visibility_mode = LinearFeatureVisibilityMode::None;
-  IRenderPass* pass = nullptr;
+  IDrawSource* source = nullptr;
   std::size_t geometry_count = 0;
 };
 
@@ -110,7 +110,7 @@ enum class ScatterVisibilityMode {
 struct ScatterChunk {
   ScatterSpeciesId species = ScatterSpeciesId::Grass;
   ScatterVisibilityMode visibility_mode = ScatterVisibilityMode::None;
-  IRenderPass* pass = nullptr;
+  IDrawSource* source = nullptr;
   std::size_t instance_count = 0;
   bool gpu_ready = false;
   Render::Ground::Scatter::SyncStats last_sync_stats{};

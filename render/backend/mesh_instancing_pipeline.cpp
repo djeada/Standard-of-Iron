@@ -12,6 +12,7 @@
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_gpu_table.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -116,7 +117,7 @@ void MeshInstancingPipeline::begin_batch(Mesh* mesh) {
   m_current_mesh = mesh;
 }
 
-void MeshInstancingPipeline::flush() {
+void MeshInstancingPipeline::flush(MeshGpuTable& meshes) {
   if (m_instances.empty()) {
     return;
   }
@@ -135,7 +136,7 @@ void MeshInstancingPipeline::flush() {
     return;
   }
 
-  if (!bind_mesh(m_current_mesh)) {
+  if (!bind_mesh(meshes, m_current_mesh)) {
     m_instances.clear();
     return;
   }
@@ -148,11 +149,11 @@ void MeshInstancingPipeline::flush() {
     const std::size_t drawable = m_draw_guard.clamp(chunk, uploaded ? chunk : 0U);
     if (drawable > 0) {
       point_instance_attributes(byte_offset);
-      m_current_mesh->draw_bound(drawable);
+      meshes.draw_bound(*m_current_mesh, drawable);
     }
   }
 
-  m_current_mesh->unbind_vao();
+  meshes.unbind();
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_instances.clear();
@@ -249,11 +250,11 @@ void MeshInstancingPipeline::draw_merged(const MergedBuildingMesh& mesh,
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-auto MeshInstancingPipeline::bind_mesh(Mesh* mesh) -> bool {
-  if (mesh == nullptr || !mesh->bind_vao()) {
+auto MeshInstancingPipeline::bind_mesh(MeshGpuTable& meshes, Mesh* mesh) -> bool {
+  if (mesh == nullptr || !meshes.bind(*mesh)) {
     return false;
   }
-  if (mesh->claim_instance_layout()) {
+  if (meshes.claim_instance_layout(*mesh)) {
     for (GLuint slot = 0; slot < k_instance_vec4_count; ++slot) {
       glEnableVertexAttribArray(k_first_instance_loc + slot);
       glVertexAttribDivisor(k_first_instance_loc + slot, 1);

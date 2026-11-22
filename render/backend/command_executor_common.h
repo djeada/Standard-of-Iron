@@ -47,26 +47,6 @@
 
 namespace Render::GL {
 
-inline void
-bind_visibility_mask(Shader& shader,
-                     const TerrainSurfaceCmd::VisibilityResources& visibility) {
-  const bool has_mask = visibility.enabled && visibility.texture != nullptr;
-  shader.set_uniform(shader.optional_uniform_handle("u_has_visibility"),
-                     has_mask ? 1 : 0);
-  if (!has_mask) {
-    return;
-  }
-  shader.set_uniform(shader.optional_uniform_handle("u_visibility_size"),
-                     visibility.size);
-  shader.set_uniform(shader.optional_uniform_handle("u_visibility_tile_size"),
-                     visibility.tile_size);
-  shader.set_uniform(shader.optional_uniform_handle("u_explored_alpha"),
-                     visibility.explored_alpha);
-  visibility.texture->bind(TextureUnit::terrain_visibility);
-  shader.set_uniform(shader.optional_uniform_handle("u_visibility_tex"),
-                     TextureUnit::terrain_visibility);
-}
-
 inline void bind_material_detail(Shader& shader,
                                  const ShaderUniformCache::BasicUniforms& uniforms,
                                  ResourceManager* resources) {

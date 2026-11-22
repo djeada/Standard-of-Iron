@@ -11,13 +11,13 @@
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain.h"
 #include "render/frame/decoration_gpu.h"
-#include "render/ground/i_scatter_pass.h"
+#include "render/ground/i_scatter_source.h"
 
 namespace Render::GL {
 class Buffer;
 class FrameSubmitter;
 
-class BiomeRenderer : public IScatterPass {
+class BiomeRenderer : public IScatterSource {
 public:
   BiomeRenderer();
   ~BiomeRenderer() override;

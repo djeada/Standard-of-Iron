@@ -47,7 +47,7 @@ TerrainScatterManager::TerrainScatterManager()
     , m_cursed_gold_vein(std::make_unique<CursedGoldVeinRenderer>())
     , m_abandoned_home(std::make_unique<AbandonedHomeRenderer>())
     , m_statue(std::make_unique<StatueRenderer>())
-    , m_scatter_passes{
+    , m_scatter_sources{
           {ScatterSpeciesId::Grass, m_biome.get()},
           {ScatterSpeciesId::Stone, m_stone.get()},
           {ScatterSpeciesId::Plant, m_plant.get()},
@@ -71,9 +71,9 @@ TerrainScatterManager::TerrainScatterManager()
           {ScatterSpeciesId::AbandonedHome, m_abandoned_home.get()},
           {ScatterSpeciesId::Statue, m_statue.get()},
           {ScatterSpeciesId::CursedGoldVein, m_cursed_gold_vein.get()}} {
-  m_passes.reserve(m_scatter_passes.size());
-  for (const auto& entry : m_scatter_passes) {
-    m_passes.push_back(entry.pass);
+  m_sources.reserve(m_scatter_sources.size());
+  for (const auto& entry : m_scatter_sources) {
+    m_sources.push_back(entry.source);
   }
 }
 
@@ -150,8 +150,8 @@ void TerrainScatterManager::set_anchored_trees(const std::vector<AnchoredTree>& 
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  for (const auto& entry : m_scatter_passes) {
-    entry.pass->set_light_direction(dir);
+  for (const auto& entry : m_scatter_sources) {
+    entry.source->set_light_direction(dir);
   }
 }
 
@@ -171,8 +171,8 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
       Render::Ground::Scatter::visibility_filter_enabled_for_current_thread();
   Render::Ground::Scatter::set_visibility_filter_enabled_for_current_thread(
       renderer.static_world_visibility_filter_enabled());
-  for (const auto& entry : m_scatter_passes) {
-    entry.pass->submit(renderer, resources);
+  for (const auto& entry : m_scatter_sources) {
+    entry.source->submit(renderer, resources);
   }
   Render::Ground::Scatter::set_visibility_filter_enabled_for_current_thread(
       previous_filter);
@@ -181,8 +181,8 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
 auto TerrainScatterManager::prewarm_gpu_resources() -> bool {
   std::lock_guard<std::mutex> const lock(m_mutex);
   bool ready = true;
-  for (const auto& entry : m_scatter_passes) {
-    ready = entry.pass->prewarm_gpu_resources() && ready;
+  for (const auto& entry : m_scatter_sources) {
+    ready = entry.source->prewarm_gpu_resources() && ready;
   }
   return ready;
 }
@@ -194,8 +194,8 @@ void TerrainScatterManager::clear() {
   m_biome_settings = Game::Map::BiomeSettings{};
   m_scatter_seed_world_props.clear();
 
-  for (const auto& entry : m_scatter_passes) {
-    entry.pass->clear();
+  for (const auto& entry : m_scatter_sources) {
+    entry.source->clear();
   }
 }
 
@@ -207,9 +207,9 @@ void TerrainScatterManager::refresh_grass() {
 auto TerrainScatterManager::is_gpu_ready() const -> bool {
   std::lock_guard<std::mutex> const lock(m_mutex);
   return std::all_of(
-      m_scatter_passes.begin(),
-      m_scatter_passes.end(),
-      [](const ScatterPassEntry& entry) { return entry.pass->is_gpu_ready(); });
+      m_scatter_sources.begin(),
+      m_scatter_sources.end(),
+      [](const ScatterSourceEntry& entry) { return entry.source->is_gpu_ready(); });
 }
 
 auto TerrainScatterManager::biome() const -> BiomeRenderer* {
@@ -281,14 +281,14 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
   std::lock_guard<std::mutex> const lock(m_mutex);
 
   std::vector<ScatterChunk> out;
-  out.reserve(m_scatter_passes.size());
-  for (const auto& entry : m_scatter_passes) {
+  out.reserve(m_scatter_sources.size());
+  for (const auto& entry : m_scatter_sources) {
     out.push_back({entry.species,
                    ScatterVisibilityMode::InstanceFiltered,
-                   entry.pass,
-                   entry.pass->instance_count(),
-                   entry.pass->is_gpu_ready(),
-                   entry.pass->last_sync_stats()});
+                   entry.source,
+                   entry.source->instance_count(),
+                   entry.source->is_gpu_ready(),
+                   entry.source->last_sync_stats()});
   }
   return out;
 }
@@ -298,14 +298,14 @@ auto TerrainScatterManager::last_sync_stats() const
   std::lock_guard<std::mutex> const lock(m_mutex);
 
   Render::Ground::Scatter::SyncStats stats{};
-  for (const auto& entry : m_scatter_passes) {
-    stats += entry.pass->last_sync_stats();
+  for (const auto& entry : m_scatter_sources) {
+    stats += entry.source->last_sync_stats();
   }
   return stats;
 }
 
-auto TerrainScatterManager::passes() const -> const std::vector<IRenderPass*>& {
-  return m_passes;
+auto TerrainScatterManager::sources() const -> const std::vector<IDrawSource*>& {
+  return m_sources;
 }
 
 } // namespace Render::GL

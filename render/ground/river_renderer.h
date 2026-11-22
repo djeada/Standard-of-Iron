@@ -9,15 +9,16 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/frame/terrain_scene_types.h"
+#include "render/gl/mesh_gpu_table.h"
 
 namespace Render::GL {
 class Mesh;
 class FrameSubmitter;
 class ResourceManager;
 
-class WaterRenderer : public IRenderPass {
+class WaterRenderer : public IDrawSource {
 public:
   WaterRenderer();
   ~WaterRenderer() override;
@@ -29,7 +30,7 @@ public:
 
   void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
 
 private:
   void build_meshes();

@@ -4,6 +4,8 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_handle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_lifetime.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh_gpu_table.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/render_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/rigged_mesh.cpp

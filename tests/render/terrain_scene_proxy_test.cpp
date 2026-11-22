@@ -33,18 +33,19 @@ TEST(TerrainSceneProxyTest, BridgesSubmitBeforeTheFogSheetTheyDissolveWith) {
   Render::GL::TerrainSceneProxy const proxy(
       &surface, &features, &scatter, &rain, &fog, &boundary_fog);
 
-  const auto& passes = proxy.passes();
+  const auto& sources = proxy.sources();
   const auto bridge_at =
-      std::find(passes.begin(),
-                passes.end(),
-                static_cast<Render::GL::IRenderPass*>(proxy.bridge()));
+      std::find(sources.begin(),
+                sources.end(),
+                static_cast<Render::GL::IDrawSource*>(proxy.bridge()));
   const auto fog_at = std::find(
-      passes.begin(), passes.end(), static_cast<Render::GL::IRenderPass*>(&fog));
+      sources.begin(), sources.end(), static_cast<Render::GL::IDrawSource*>(&fog));
 
-  ASSERT_NE(bridge_at, passes.end());
-  ASSERT_NE(fog_at, passes.end());
-  EXPECT_LT(bridge_at - passes.begin(), fog_at - passes.begin())
-      << "the bridge pass pulls the fog mask forward; if the fog pass ran first the "
+  ASSERT_NE(bridge_at, sources.end());
+  ASSERT_NE(fog_at, sources.end());
+  EXPECT_LT(bridge_at - sources.begin(), fog_at - sources.begin())
+      << "the bridge source pulls the fog mask forward; if the fog source ran first "
+         "the "
          "bridge would dissolve against a frame-old mask";
 }
 
@@ -59,9 +60,9 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   Render::GL::TerrainSceneProxy const proxy(
       &surface, &features, &scatter, &rain, &fog, &boundary_fog);
 
-  const auto& passes = proxy.passes();
+  const auto& sources = proxy.sources();
 
-  ASSERT_EQ(passes.size(), 29U);
+  ASSERT_EQ(sources.size(), 29U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -85,37 +86,37 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   auto* shoreline = proxy.shoreline();
   auto* bridge = proxy.bridge();
 
-  EXPECT_EQ(passes[0], static_cast<Render::GL::IRenderPass*>(surface.ground()));
-  EXPECT_EQ(passes[1], static_cast<Render::GL::IRenderPass*>(surface.terrain()));
-  EXPECT_EQ(passes[2], static_cast<Render::GL::IRenderPass*>(water));
-  EXPECT_EQ(passes[3], static_cast<Render::GL::IRenderPass*>(road));
-  EXPECT_EQ(passes[4], static_cast<Render::GL::IRenderPass*>(shoreline));
-  EXPECT_EQ(passes[5], static_cast<Render::GL::IRenderPass*>(bridge));
-  EXPECT_EQ(passes[6], static_cast<Render::GL::IRenderPass*>(proxy.biome()));
-  EXPECT_EQ(passes[7], static_cast<Render::GL::IRenderPass*>(proxy.stone()));
-  EXPECT_EQ(passes[8], static_cast<Render::GL::IRenderPass*>(proxy.plant()));
+  EXPECT_EQ(sources[0], static_cast<Render::GL::IDrawSource*>(surface.ground()));
+  EXPECT_EQ(sources[1], static_cast<Render::GL::IDrawSource*>(surface.terrain()));
+  EXPECT_EQ(sources[2], static_cast<Render::GL::IDrawSource*>(water));
+  EXPECT_EQ(sources[3], static_cast<Render::GL::IDrawSource*>(road));
+  EXPECT_EQ(sources[4], static_cast<Render::GL::IDrawSource*>(shoreline));
+  EXPECT_EQ(sources[5], static_cast<Render::GL::IDrawSource*>(bridge));
+  EXPECT_EQ(sources[6], static_cast<Render::GL::IDrawSource*>(proxy.biome()));
+  EXPECT_EQ(sources[7], static_cast<Render::GL::IDrawSource*>(proxy.stone()));
+  EXPECT_EQ(sources[8], static_cast<Render::GL::IDrawSource*>(proxy.plant()));
   EXPECT_EQ(
-      passes[9],
-      static_cast<Render::GL::IRenderPass*>(proxy.tree(Game::Map::TreeSpecies::Pine)));
+      sources[9],
+      static_cast<Render::GL::IDrawSource*>(proxy.tree(Game::Map::TreeSpecies::Pine)));
   EXPECT_EQ(
-      passes[10],
-      static_cast<Render::GL::IRenderPass*>(proxy.tree(Game::Map::TreeSpecies::Olive)));
-  EXPECT_EQ(passes[11],
-            static_cast<Render::GL::IRenderPass*>(
+      sources[10],
+      static_cast<Render::GL::IDrawSource*>(proxy.tree(Game::Map::TreeSpecies::Olive)));
+  EXPECT_EQ(sources[11],
+            static_cast<Render::GL::IDrawSource*>(
                 proxy.tree(Game::Map::TreeSpecies::Cypress)));
   EXPECT_EQ(
-      passes[12],
-      static_cast<Render::GL::IRenderPass*>(proxy.tree(Game::Map::TreeSpecies::Palm)));
-  EXPECT_EQ(passes[13], static_cast<Render::GL::IRenderPass*>(proxy.firecamp()));
+      sources[12],
+      static_cast<Render::GL::IDrawSource*>(proxy.tree(Game::Map::TreeSpecies::Palm)));
+  EXPECT_EQ(sources[13], static_cast<Render::GL::IDrawSource*>(proxy.firecamp()));
   for (std::size_t i = 14; i <= 23; ++i) {
-    EXPECT_NE(passes[i], nullptr);
+    EXPECT_NE(sources[i], nullptr);
   }
-  EXPECT_EQ(passes[24],
-            static_cast<Render::GL::IRenderPass*>(scatter.cursed_gold_vein()));
-  EXPECT_EQ(passes[25], &rain);
-  EXPECT_EQ(passes[26], &fog);
-  EXPECT_EQ(passes[27], &boundary_fog);
-  EXPECT_EQ(passes[28], nullptr);
+  EXPECT_EQ(sources[24],
+            static_cast<Render::GL::IDrawSource*>(scatter.cursed_gold_vein()));
+  EXPECT_EQ(sources[25], &rain);
+  EXPECT_EQ(sources[26], &fog);
+  EXPECT_EQ(sources[27], &boundary_fog);
+  EXPECT_EQ(sources[28], nullptr);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
@@ -150,12 +151,12 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   const auto surfaces = proxy.surface_chunks();
   ASSERT_EQ(surfaces.size(), 2U);
   EXPECT_EQ(surfaces[0].kind, Render::GL::TerrainSurfaceKind::GroundPlane);
-  EXPECT_EQ(surfaces[0].pass, static_cast<Render::GL::IRenderPass*>(proxy.ground()));
+  EXPECT_EQ(surfaces[0].source, static_cast<Render::GL::IDrawSource*>(proxy.ground()));
   EXPECT_TRUE(surfaces[0].params.is_ground_plane);
   EXPECT_EQ(surfaces[0].params.field, &field);
   EXPECT_NE(surfaces[0].params.biome_settings, nullptr);
   EXPECT_EQ(surfaces[1].kind, Render::GL::TerrainSurfaceKind::TerrainMesh);
-  EXPECT_EQ(surfaces[1].pass, static_cast<Render::GL::IRenderPass*>(proxy.terrain()));
+  EXPECT_EQ(surfaces[1].source, static_cast<Render::GL::IDrawSource*>(proxy.terrain()));
   EXPECT_FALSE(surfaces[1].params.is_ground_plane);
   EXPECT_EQ(surfaces[1].params.field, &field);
 

@@ -2,11 +2,14 @@
 
 #include <array>
 
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;
+struct PreparedBatch;
+struct TerrainFeatureCmd;
 
 namespace BackendPipelines {
 
@@ -21,6 +24,10 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
+  void draw_terrain_features(const PreparedBatch& prepared,
+                             PipelineDrawContext& context);
+
+private:
   struct WaterUniforms {
     GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle moisture{GL::Shader::InvalidUniform};
@@ -121,6 +128,29 @@ public:
     GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
   };
 
+  void draw_water(const PreparedBatch& prepared,
+                  PipelineDrawContext& context,
+                  const TerrainFeatureCmd& feature);
+  void draw_riverbank(const PreparedBatch& prepared,
+                      PipelineDrawContext& context,
+                      const TerrainFeatureCmd& feature,
+                      bool is_transparent);
+  void draw_bridge(const PreparedBatch& prepared,
+                   PipelineDrawContext& context,
+                   const TerrainFeatureCmd& feature);
+  void draw_road(const PreparedBatch& prepared,
+                 PipelineDrawContext& context,
+                 const TerrainFeatureCmd& feature);
+  void draw_feature_models(
+      const PreparedBatch& prepared,
+      PipelineDrawContext& context,
+      GL::Shader* shader,
+      GL::Shader::UniformHandle model_uniform,
+      GL::Shader::UniformHandle mvp_uniform,
+      GL::Shader::UniformHandle color_uniform,
+      GL::Shader::UniformHandle alpha_uniform = GL::Shader::InvalidUniform,
+      GL::Shader::UniformHandle road_surface_uniform = GL::Shader::InvalidUniform);
+
   GL::Shader* m_water_shader = nullptr;
   GL::Shader* m_riverbank_shader = nullptr;
   GL::Shader* m_bridge_shader = nullptr;
@@ -131,7 +161,6 @@ public:
   BridgeUniforms m_bridge_uniforms;
   RoadUniforms m_road_uniforms;
 
-private:
   GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_water_uniforms();

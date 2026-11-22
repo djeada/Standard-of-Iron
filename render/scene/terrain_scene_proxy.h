@@ -51,31 +51,31 @@ public:
       , m_boundary_fog(boundary_fog)
       , m_ambient_fog(ambient_fog) {
     if (m_surface != nullptr) {
-      const auto& surface_passes = m_surface->passes();
-      m_passes.insert(m_passes.end(), surface_passes.begin(), surface_passes.end());
+      const auto& surface_sources = m_surface->sources();
+      m_sources.insert(m_sources.end(), surface_sources.begin(), surface_sources.end());
     }
     if (m_features != nullptr) {
-      const auto& feature_passes = m_features->passes();
-      m_passes.insert(m_passes.end(), feature_passes.begin(), feature_passes.end());
+      const auto& feature_sources = m_features->sources();
+      m_sources.insert(m_sources.end(), feature_sources.begin(), feature_sources.end());
     }
     if (m_scatter != nullptr) {
-      const auto& scatter_passes = m_scatter->passes();
-      m_passes.insert(m_passes.end(), scatter_passes.begin(), scatter_passes.end());
+      const auto& scatter_sources = m_scatter->sources();
+      m_sources.insert(m_sources.end(), scatter_sources.begin(), scatter_sources.end());
     }
     if (m_features != nullptr) {
       m_features->set_fog_renderer(fog);
     }
-    m_passes.push_back(rain);
-    m_passes.push_back(fog);
-    m_passes.push_back(boundary_fog);
-    m_passes.push_back(ambient_fog);
+    m_sources.push_back(rain);
+    m_sources.push_back(fog);
+    m_sources.push_back(boundary_fog);
+    m_sources.push_back(ambient_fog);
   }
 
   void set_world_view(const Render::WorldView& view) const {
     m_world_view = view;
-    for (auto* pass : m_passes) {
-      if (pass != nullptr) {
-        pass->set_world_view(view);
+    for (auto* source : m_sources) {
+      if (source != nullptr) {
+        source->set_world_view(view);
       }
     }
   }
@@ -95,12 +95,12 @@ public:
     if (!options.include_environment) {
       return;
     }
-    for (auto* pass : {static_cast<IRenderPass*>(m_rain),
-                       static_cast<IRenderPass*>(m_fog),
-                       static_cast<IRenderPass*>(m_boundary_fog),
-                       static_cast<IRenderPass*>(m_ambient_fog)}) {
-      if (pass != nullptr) {
-        pass->submit(renderer, resources);
+    for (auto* source : {static_cast<IDrawSource*>(m_rain),
+                         static_cast<IDrawSource*>(m_fog),
+                         static_cast<IDrawSource*>(m_boundary_fog),
+                         static_cast<IDrawSource*>(m_ambient_fog)}) {
+      if (source != nullptr) {
+        source->submit(renderer, resources);
       }
     }
   }
@@ -201,8 +201,8 @@ public:
     return m_scatter->chunks();
   }
 
-  [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>& {
-    return m_passes;
+  [[nodiscard]] auto sources() const -> const std::vector<IDrawSource*>& {
+    return m_sources;
   }
 
 private:
@@ -231,7 +231,7 @@ private:
   FogRenderer* m_fog = nullptr;
   MapBoundaryFogRenderer* m_boundary_fog = nullptr;
   AmbientFogRenderer* m_ambient_fog = nullptr;
-  std::vector<IRenderPass*> m_passes;
+  std::vector<IDrawSource*> m_sources;
 
   mutable Render::WorldView m_world_view;
 };

@@ -750,13 +750,17 @@ void ArenaViewport::render_capture_variants(bool flame_card) {
       m_capture_camera = {};
     } else {
       m_renderer->set_world_view(Render::WorldView::of(m_session));
-      m_renderer->begin_frame();
-      submit_terrain_layers();
-      m_renderer->render_world(m_world.get());
-      if (auto* res = m_renderer->resources(); res != nullptr) {
-        submit_world_effects(res);
-      }
-      m_renderer->end_frame();
+      Render::GL::WorldFrameSources frame;
+      frame.world = m_world.get();
+      frame.terrain = [this](Render::GL::Renderer&) {
+        submit_terrain_layers();
+      };
+      frame.overlays = [this](Render::GL::Renderer& renderer) {
+        if (auto* res = renderer.resources(); res != nullptr) {
+          submit_world_effects(res);
+        }
+      };
+      m_renderer->render_frame(frame);
       m_capture_camera = sample_capture_camera(variant.width, variant.height);
     }
     stamp_capture_alpha_opaque();

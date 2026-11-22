@@ -8,7 +8,7 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/ground/riverbank_asset_gpu.h"
 #include "render/ground/scatter_renderer_state.h"
 
@@ -16,7 +16,7 @@ namespace Render::GL {
 class Buffer;
 class FrameSubmitter;
 
-class RiverbankAssetRenderer : public IRenderPass {
+class RiverbankAssetRenderer : public IDrawSource {
 public:
   RiverbankAssetRenderer();
   ~RiverbankAssetRenderer() override;

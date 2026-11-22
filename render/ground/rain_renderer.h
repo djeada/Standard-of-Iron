@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/frame/rain_gpu.h"
 
 namespace Game::Systems {
@@ -14,7 +14,7 @@ class RainManager;
 namespace Render::GL {
 class FrameSubmitter;
 
-class RainRenderer : public IRenderPass {
+class RainRenderer : public IDrawSource {
 public:
   RainRenderer();
   ~RainRenderer() override;

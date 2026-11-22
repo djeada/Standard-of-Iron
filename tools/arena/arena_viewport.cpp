@@ -369,16 +369,20 @@ void ArenaViewport::paintGL() {
   m_renderer->set_cinematic_mode(hide_gameplay_overlays());
 
   m_renderer->set_world_view(Render::WorldView::of(m_session));
-  m_renderer->begin_frame();
-  submit_terrain_layers();
-  timings.terrain_submit_ms = elapsed_phase_ms();
-  m_renderer->render_world(m_world.get());
-  timings.world_submit_ms = elapsed_phase_ms();
-  if (auto* res = m_renderer->resources(); res != nullptr) {
-    submit_world_effects(res);
-  }
-  timings.effects_submit_ms = elapsed_phase_ms();
-  m_renderer->end_frame();
+  Render::GL::WorldFrameSources frame;
+  frame.world = m_world.get();
+  frame.terrain = [&](Render::GL::Renderer&) {
+    submit_terrain_layers();
+    timings.terrain_submit_ms = elapsed_phase_ms();
+  };
+  frame.overlays = [&](Render::GL::Renderer& renderer) {
+    timings.world_submit_ms = elapsed_phase_ms();
+    if (auto* res = renderer.resources(); res != nullptr) {
+      submit_world_effects(res);
+    }
+    timings.effects_submit_ms = elapsed_phase_ms();
+  };
+  m_renderer->render_frame(frame);
   timings.render_execute_ms = elapsed_phase_ms();
   if (sampled_frame) {
     sample_frame_continuity();

@@ -4,7 +4,9 @@
 #include <QOpenGLContext>
 
 #include "render/backend/gl_error_check.h"
+#include "render/backend/mesh_instancing_pipeline.h"
 #include "render/backend/state_scopes.h"
+#include "render/geom/mode_indicator.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shader_cache.h"
 
@@ -70,7 +72,77 @@ auto ModeIndicatorPipeline::is_initialized() const -> bool {
   return m_indicator_shader != nullptr;
 }
 
-void ModeIndicatorPipeline::render_indicator(Mesh* mesh,
+void ModeIndicatorPipeline::draw_indicators(const PreparedBatch& prepared,
+                                            MeshInstancingPipeline* instancing,
+                                            PipelineDrawContext& context) {
+  if (!is_initialized()) {
+    return;
+  }
+
+  const auto& queue = context.queue;
+  const float animation_time = context.frame.animation_time;
+
+  auto resolve_glyph = [](int mode_type) -> Mesh* {
+    auto const index = static_cast<std::size_t>(mode_type);
+    if (index >= Render::Geom::k_indicator_kind_count) {
+      return nullptr;
+    }
+    return Render::Geom::ModeIndicator::mesh_for(
+        static_cast<Render::Geom::IndicatorKind>(index));
+  };
+
+  if (prepared.kind == PreparedBatchKind::ModeIndicatorInstanced &&
+      instancing != nullptr && instancing->is_initialized() &&
+      m_instanced_shader != nullptr) {
+    const auto& first_mc =
+        std::get<ModeIndicatorCmdIndex>(queue.get_sorted(prepared.start));
+
+    Mesh* const batch_mesh = resolve_glyph(first_mc.mode_type);
+    if (batch_mesh != nullptr) {
+      GL::Shader* inst_shader = m_instanced_shader;
+      inst_shader->use();
+      if (m_instanced_uniforms.time != GL::Shader::InvalidUniform) {
+        inst_shader->set_uniform(m_instanced_uniforms.time, animation_time);
+      }
+
+      instancing->begin_batch(batch_mesh);
+      for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
+           ++idx) {
+        const auto& mc = std::get<ModeIndicatorCmdIndex>(queue.get_sorted(idx));
+        instancing->accumulate(mc.model, mc.color, mc.alpha);
+      }
+
+      DepthMaskScope const depth_mask(false);
+      BlendScope const blend(true);
+      DepthTestScope const depth_test(false);
+      CullFaceScope const cull(false);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      instancing->flush(context.meshes);
+      context.state.bound_shader = nullptr;
+    }
+    return;
+  }
+
+  const auto& mc = std::get<ModeIndicatorCmdIndex>(queue.get_sorted(prepared.start));
+  Mesh* const indicator_mesh = resolve_glyph(mc.mode_type);
+  if (indicator_mesh == nullptr) {
+    return;
+  }
+
+  render_indicator(context.meshes,
+                   indicator_mesh,
+                   mc.model,
+                   context.frame.view_proj,
+                   mc.color,
+                   mc.alpha,
+                   animation_time);
+
+  context.state.bound_shader = nullptr;
+}
+
+void ModeIndicatorPipeline::render_indicator(MeshGpuTable& meshes,
+                                             Mesh* mesh,
                                              const QMatrix4x4& model,
                                              const QMatrix4x4& view_proj,
                                              const QVector3D& color,
@@ -95,7 +167,7 @@ void ModeIndicatorPipeline::render_indicator(Mesh* mesh,
   m_indicator_shader->set_uniform(m_uniforms.alpha, alpha);
   m_indicator_shader->set_uniform(m_uniforms.time, time);
 
-  mesh->draw();
+  meshes.draw(*mesh);
 
   check_gl_error("render_indicator");
 }

@@ -14,10 +14,11 @@
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
 #include "render/frame/draw_commands.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/frame/mist_volume.h"
 #include "render/frame/world_chunk.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_gpu_table.h"
 #include "render/gl/terrain_noise_atlas.h"
 #include "render/gl/texture.h"
 #include "render/ground/building_ground.h"
@@ -40,7 +41,7 @@ make_terrain_chunk_params(const Game::Map::BiomeSettings& biome_settings,
                           Game::Map::TerrainType chunk_type,
                           float tint) -> TerrainChunkParams;
 
-class TerrainRenderer : public IRenderPass {
+class TerrainRenderer : public IDrawSource {
 public:
   TerrainRenderer();
   ~TerrainRenderer() override;
@@ -52,7 +53,7 @@ public:
 
   void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
 
   void set_wireframe(bool enable) { m_wireframe = enable; }
 

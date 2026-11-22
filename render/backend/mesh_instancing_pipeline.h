@@ -20,6 +20,10 @@ class Mesh;
 struct MergedBuildingMesh;
 } // namespace Render::GL
 
+namespace Render::GL {
+class MeshGpuTable;
+}
+
 namespace Render::GL::BackendPipelines {
 
 using Render::GL::MergedBuildingMesh;
@@ -47,7 +51,7 @@ public:
 
   void begin_batch(Mesh* mesh);
 
-  void flush();
+  void flush(MeshGpuTable& meshes);
 
   auto upload(const void* data, std::size_t bytes, std::size_t& byte_offset) -> bool;
 
@@ -68,7 +72,7 @@ private:
     BufferHandle indices;
   };
 
-  auto bind_mesh(Mesh* mesh) -> bool;
+  auto bind_mesh(MeshGpuTable& meshes, Mesh* mesh) -> bool;
   void point_instance_attributes(std::size_t byte_offset);
   auto merged_vao(const MergedBuildingMesh& mesh) -> GLuint;
 

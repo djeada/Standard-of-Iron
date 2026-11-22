@@ -7,6 +7,8 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "render/gl/mesh_gpu_table.h"
+
 namespace Render::GL {
 
 class Mesh;
@@ -31,9 +33,8 @@ public:
 
   [[nodiscard]] auto get_or_build(std::uint64_t key, const Builder& build) -> Mesh*;
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
-
-  void release_all();
+  // Uploads every cached mesh into `meshes`.
+  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
 
   [[nodiscard]] auto size() const -> std::size_t;
 

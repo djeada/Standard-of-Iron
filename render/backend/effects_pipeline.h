@@ -1,10 +1,13 @@
 #pragma once
 
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_commands.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;
+class Mesh;
 
 namespace BackendPipelines {
 
@@ -19,6 +22,12 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
+  void draw_grid(const GridCmd& grid, Mesh* ground, PipelineDrawContext& context);
+  void draw_selection_smoke(const SelectionSmokeCmd& smoke,
+                            Mesh* disc,
+                            PipelineDrawContext& context);
+
+private:
   struct GridUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
@@ -45,6 +54,8 @@ public:
     GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
   };
 
+  GL::ShaderCache* m_shader_cache = nullptr;
+
   GL::Shader* m_basic_shader = nullptr;
   GL::Shader* m_basic_instanced_shader = nullptr;
   GL::Shader* m_grid_shader = nullptr;
@@ -52,9 +63,6 @@ public:
   BasicUniforms m_basic_uniforms;
   BasicInstancedUniforms m_basic_instanced_uniforms;
   GridUniforms m_grid_uniforms;
-
-private:
-  GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_basic_uniforms();
   void cache_basic_instanced_uniforms();

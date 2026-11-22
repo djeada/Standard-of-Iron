@@ -14,6 +14,7 @@
 
 #include "render/backend/directional_shadow_block.h"
 #include "render/backend/frame_environment.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/shader_uniform_cache.h"
 #include "render/backend/shadow_cascade_fit.h"
 #include "render/backend/sky_box_transition.h"
@@ -29,6 +30,7 @@
 #include "render/frame/world_render_mode.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/persistent_buffer.h"
+#include "render/gl/render_context.h"
 #include "render/gl/resources.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"
@@ -143,12 +145,14 @@ public:
     return m_last_playback_stats;
   }
 
+  [[nodiscard]] auto render_context() noexcept -> RenderContext& { return m_context; }
+
   [[nodiscard]] auto resources() const -> ResourceManager* override {
-    return m_resources.get();
+    return m_context.resources();
   }
 
   [[nodiscard]] auto shader(const QString& name) const -> Shader* override {
-    return m_shader_cache ? m_shader_cache->get(name) : nullptr;
+    return m_context.shaders() != nullptr ? m_context.shaders()->get(name) : nullptr;
   }
 
   [[nodiscard]] auto supports_shaders() const -> bool override { return true; }
@@ -159,10 +163,10 @@ public:
   auto get_or_load_shader(const QString& name,
                           const QString& vert_path,
                           const QString& frag_path) -> Shader* {
-    if (!m_shader_cache) {
+    if (m_context.shaders() == nullptr) {
       return nullptr;
     }
-    return m_shader_cache->load(name, vert_path, frag_path);
+    return m_context.shaders()->load(name, vert_path, frag_path);
   }
 
   [[nodiscard]] auto banner_mesh() const -> Mesh*;
@@ -214,42 +218,23 @@ public:
   }
 
 private:
-  struct CommandExecutionContext {
-    const DrawQueue& queue;
-    const Camera& cam;
-    const QMatrix4x4& view;
-    const QMatrix4x4& projection;
-    const QMatrix4x4& view_proj;
-    float banner_wind_strength;
-    bool& polygon_offset_enabled;
-  };
-
   void upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                                     const DrawQueue& queue,
                                     const Camera& cam);
   void upload_frame_data(const QMatrix4x4& view_proj, bool depth_only);
 
-  void set_ground_plane_uniforms(Shader& shader,
-                                 const TerrainSurfaceCmd& single,
-                                 const QMatrix4x4& mvp,
-                                 const QVector3D& camera_position);
-  void set_terrain_chunk_uniforms(Shader& shader,
-                                  const TerrainSurfaceCmd& single,
-                                  const QMatrix4x4& mvp,
-                                  const QVector3D& camera_position);
-
   void execute_cylinder_commands(const PreparedBatch& prepared,
-                                 CommandExecutionContext& context);
+                                 PipelineDrawContext& context);
   void execute_scatter_commands(const PreparedBatch& prepared,
-                                CommandExecutionContext& context);
+                                PipelineDrawContext& context);
   void execute_terrain_commands(const PreparedBatch& prepared,
-                                CommandExecutionContext& context);
+                                PipelineDrawContext& context);
   void execute_water_linear_commands(const PreparedBatch& prepared,
-                                     CommandExecutionContext& context);
+                                     PipelineDrawContext& context);
   void execute_mesh_commands(const PreparedBatch& prepared,
-                             CommandExecutionContext& context);
+                             PipelineDrawContext& context);
   void execute_static_batch(const StaticBuildingBatch& batch,
-                            CommandExecutionContext& context);
+                            PipelineDrawContext& context);
   using ShadowCascadeCull = ::Render::GL::ShadowCascadeCull;
   void draw_static_batch_shadow(const StaticBuildingBatch& batch,
                                 const ShadowCascadeCull& cull);
@@ -267,11 +252,11 @@ private:
                         Texture* texture,
                         int material_id,
                         bool want_instanced,
-                        CommandExecutionContext& context) -> MeshShaderBinding;
+                        PipelineDrawContext& context) -> MeshShaderBinding;
   void execute_effects_commands(const PreparedBatch& prepared,
-                                CommandExecutionContext& context);
+                                PipelineDrawContext& context);
   void execute_rigged_commands(const PreparedBatch& prepared,
-                               CommandExecutionContext& context);
+                               PipelineDrawContext& context);
 
   void sync_graphics_profile();
   void update_contact_shadow_uniforms();
@@ -389,8 +374,7 @@ private:
   int m_viewport_height{0};
 
   std::array<float, 4> m_clear_color{0.055F, 0.065F, 0.05F, 1.0F};
-  std::unique_ptr<ShaderCache> m_shader_cache;
-  std::unique_ptr<ResourceManager> m_resources;
+  RenderContext m_context;
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;
   std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrain_pipeline;
@@ -417,8 +401,8 @@ private:
   Shader* m_shadow_shader = nullptr;
   Shader* m_shadow_instanced_shader = nullptr;
 
-  Shader* m_last_bound_shader = nullptr;
-  Texture* m_last_bound_texture = nullptr;
+  GlStateCache m_gl_state;
+  Render::Pass::FrameContext m_frame;
   bool m_depth_testEnabled = true;
   bool m_blend_enabled = false;
   float m_animation_time = 0.0F;

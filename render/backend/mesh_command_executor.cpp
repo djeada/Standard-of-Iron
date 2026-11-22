@@ -19,9 +19,9 @@ auto world_of(const DrawPartCmd& cmd) -> const QMatrix4x4& {
 } // namespace
 
 void Backend::execute_mesh_commands(const PreparedBatch& prepared,
-                                    CommandExecutionContext& context) {
+                                    PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const QMatrix4x4& view_proj = context.view_proj;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
   const std::size_t batch_end = prepared.end();
 
   const auto execute = [&](const auto& head,
@@ -32,9 +32,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       return;
     }
 
-    if (context.polygon_offset_enabled) {
+    if (context.state.polygon_offset_enabled) {
       glDisable(GL_POLYGON_OFFSET_FILL);
-      context.polygon_offset_enabled = false;
+      context.state.polygon_offset_enabled = false;
     }
 
     const bool is_shadow_shader = (active_shader == m_shadow_shader);
@@ -48,42 +48,13 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
     if constexpr (std::is_same_v<Cmd, MeshCmd>) {
       if (m_banner_pipeline != nullptr &&
-          active_shader == m_banner_pipeline->m_banner_shader) {
-        const auto& banner = m_banner_pipeline->m_banner_uniforms;
-        if (is_transparent) {
-          glDepthFunc(GL_LEQUAL);
-        }
-        CullFaceScope const banner_cull(false);
-        if (m_last_bound_shader != active_shader) {
-          active_shader->use();
-          active_shader->set_uniform(banner.time, m_animation_time);
-          active_shader->set_uniform(banner.wind_strength,
-                                     context.banner_wind_strength);
-          active_shader->set_uniform(banner.light_direction, m_light_dir);
-          active_shader->set_uniform(banner.camera_pos, context.cam.get_position());
-          active_shader->set_uniform(banner.ambient_strength, m_ambient_strength);
-          m_last_bound_shader = active_shader;
-        }
-        bind_mesh_texture(head.texture);
-        active_shader->set_uniform(banner.texture, 0);
-        active_shader->set_uniform(banner.use_texture, head.texture != nullptr);
-        if (head.mesh->bind_vao()) {
-          for (std::size_t j = prepared.start; j < batch_end; ++j) {
-            const auto& single = std::get<MeshCmd>(queue.get_sorted(j));
-            active_shader->set_uniform(banner.mvp, view_proj * single.model);
-            active_shader->set_uniform(banner.model, single.model);
-            active_shader->set_uniform(banner.color, single.color);
-            active_shader->set_uniform(banner.trim_color,
-                                       single.has_trim_color ? single.trim_color
-                                                             : (single.color * 0.7F));
-            active_shader->set_uniform(banner.alpha, single.alpha);
-            head.mesh->draw_bound();
-          }
-          head.mesh->unbind_vao();
-        }
-        if (is_transparent) {
-          glDepthFunc(GL_LESS);
-        }
+          active_shader == m_banner_pipeline->shader()) {
+        m_banner_pipeline->draw_banners(
+            prepared,
+            head,
+            is_transparent,
+            m_context.resources() != nullptr ? m_context.resources()->white() : nullptr,
+            context);
         return;
       }
     }
@@ -114,9 +85,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
         m_mesh_instancing_pipeline->accumulate(
             world_of(single), single.color, single.alpha);
       }
-      m_mesh_instancing_pipeline->flush();
+      m_mesh_instancing_pipeline->flush(context.meshes);
       shader->set_uniform(uniforms->instanced, false);
-    } else if (head.mesh->bind_vao()) {
+    } else if (context.meshes.bind(*head.mesh)) {
       const bool upload_mvp = uniforms->view_proj == Shader::InvalidUniform;
       for (std::size_t j = prepared.start; j < batch_end; ++j) {
         const auto& single = std::get<Cmd>(queue.get_sorted(j));
@@ -126,9 +97,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
         }
         shader->set_uniform(uniforms->color, single.color);
         shader->set_uniform(uniforms->alpha, single.alpha);
-        head.mesh->draw_bound();
+        context.meshes.draw_bound(*head.mesh);
       }
-      head.mesh->unbind_vao();
+      context.meshes.unbind();
     }
 
     if (is_transparent) {
@@ -153,10 +124,13 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
 void Backend::bind_mesh_texture(Texture* texture) {
   Texture* const tex_to_use =
-      (texture != nullptr) ? texture : (m_resources ? m_resources->white() : nullptr);
-  if ((tex_to_use != nullptr) && tex_to_use != m_last_bound_texture) {
+      (texture != nullptr)
+          ? texture
+          : (m_context.resources() != nullptr ? m_context.resources()->white()
+                                              : nullptr);
+  if ((tex_to_use != nullptr) && tex_to_use != m_gl_state.bound_texture) {
     tex_to_use->bind(0);
-    m_last_bound_texture = tex_to_use;
+    m_gl_state.bound_texture = tex_to_use;
   }
 }
 
@@ -164,7 +138,7 @@ auto Backend::bind_mesh_shader(Shader* active_shader,
                                Texture* texture,
                                int material_id,
                                bool want_instanced,
-                               CommandExecutionContext& context) -> MeshShaderBinding {
+                               PipelineDrawContext& context) -> MeshShaderBinding {
   auto* const base_uniforms =
       m_shader_uniform_cache ? m_shader_uniform_cache->resolve_uniforms(active_shader)
                              : nullptr;
@@ -186,15 +160,15 @@ auto Backend::bind_mesh_shader(Shader* active_shader,
   instanced = instanced && (shader != active_shader ||
                             uniforms->instanced != Shader::InvalidUniform);
 
-  if (m_last_bound_shader != shader) {
+  if (m_gl_state.bound_shader != shader) {
     shader->use();
-    shader->set_uniform(uniforms->view_proj, context.view_proj);
+    shader->set_uniform(uniforms->view_proj, context.frame.view_proj);
     shader->set_uniform(uniforms->time, m_animation_time);
     shader->set_uniform(uniforms->light_dir, m_light_dir);
     shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
-    shader->set_uniform(uniforms->camera_pos, context.cam.get_position());
-    bind_material_detail(*shader, *uniforms, m_resources.get());
-    m_last_bound_shader = shader;
+    shader->set_uniform(uniforms->camera_pos, (*context.frame.camera).get_position());
+    bind_material_detail(*shader, *uniforms, m_context.resources());
+    m_gl_state.bound_shader = shader;
   }
 
   bind_mesh_texture(texture);
@@ -227,7 +201,7 @@ auto Backend::prewarm_static_meshes(
 }
 
 void Backend::execute_static_batch(const StaticBuildingBatch& batch,
-                                   CommandExecutionContext& context) {
+                                   PipelineDrawContext& context) {
   const auto& instances = batch.instances();
   std::size_t byte_offset = 0;
   if (instances.empty() || !m_mesh_instancing_pipeline->upload(
@@ -236,9 +210,9 @@ void Backend::execute_static_batch(const StaticBuildingBatch& batch,
                                byte_offset)) {
     return;
   }
-  if (context.polygon_offset_enabled) {
+  if (context.state.polygon_offset_enabled) {
     glDisable(GL_POLYGON_OFFSET_FILL);
-    context.polygon_offset_enabled = false;
+    context.state.polygon_offset_enabled = false;
   }
   for (const StaticBatchDraw& draw : batch.draws()) {
     Shader* const shader =

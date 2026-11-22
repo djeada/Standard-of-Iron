@@ -815,25 +815,26 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
   if (m_loading_overlay.active()) {
     prewarm_overlay_gpu_resources();
   }
-  m_renderer->begin_frame();
-
-  if (m_terrain_scene) {
-    m_terrain_scene->submit(*m_renderer, m_renderer->resources());
-    if (m_loading_overlay.active() && m_scatter != nullptr) {
-
-      (void)m_scatter->prewarm_gpu_resources();
-    }
-  }
-
   if (m_hover_tracker) {
     m_renderer->set_hovered_entity_id(m_hover_tracker->get_last_hovered_entity());
   }
   m_renderer->set_local_owner_id(presentation->local_owner_id);
   m_renderer->set_order_marker_spectator_mode(presentation->spectator_mode);
 
-  m_renderer->render_world(m_world);
-  render_effects_pass(*presentation);
-  m_renderer->end_frame();
+  Render::GL::WorldFrameSources frame;
+  frame.world = m_world;
+  frame.terrain = [this](Render::GL::Renderer& renderer) {
+    if (m_terrain_scene) {
+      m_terrain_scene->submit(renderer, renderer.resources());
+      if (m_loading_overlay.active() && m_scatter != nullptr) {
+        (void)m_scatter->prewarm_gpu_resources();
+      }
+    }
+  };
+  frame.overlays = [this, &presentation](Render::GL::Renderer&) {
+    render_effects_pass(*presentation);
+  };
+  m_renderer->render_frame(frame);
 
   if (auto& profiler = Engine::Core::StartupProfiler::instance(); profiler.active()) {
     profiler.record_playable_frame(std::chrono::duration<double, std::milli>(
@@ -887,19 +888,22 @@ void GameEngine::apply_presentation_camera(
 
 void GameEngine::prewarm_overlay_gpu_resources() {
   (void)m_renderer->rigged_mesh_cache().prewarm_gpu_resources();
-  if (auto* backend = m_renderer->backend(); backend != nullptr) {
-    (void)backend->prewarm_static_meshes(Render::GL::requested_building_meshes());
-  }
-  (void)Render::GL::prewarm_projectile_geometry();
-  (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources();
   if (m_fog != nullptr) {
     (void)m_fog->prewarm_gpu_resources();
   }
+  auto* backend = m_renderer->backend();
+  if (backend == nullptr) {
+    return;
+  }
+  (void)backend->prewarm_static_meshes(Render::GL::requested_building_meshes());
+  auto& meshes = backend->render_context().meshes();
+  (void)Render::GL::prewarm_projectile_geometry(meshes);
+  (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources(meshes);
   if (m_features != nullptr) {
-    (void)m_features->prewarm_gpu_resources();
+    (void)m_features->prewarm_gpu_resources(meshes);
   }
   if (m_surface != nullptr && m_surface->terrain() != nullptr) {
-    (void)m_surface->terrain()->prewarm_gpu_resources();
+    (void)m_surface->terrain()->prewarm_gpu_resources(meshes);
   }
 }
 

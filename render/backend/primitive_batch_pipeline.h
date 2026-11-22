@@ -8,6 +8,7 @@
 
 #include "render/backend/instance_draw_guard.h"
 #include "render/backend/mesh_buffers.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
 #include "render/frame/primitive_batch.h"
 #include "render/gl/persistent_buffer.h"
@@ -27,6 +28,9 @@ public:
 
   void begin_frame();
 
+  void draw_batch(const PrimitiveBatchCmd& batch, PipelineDrawContext& context);
+
+private:
   void upload_sphere_instances(const GL::PrimitiveInstanceGpu* data, std::size_t count);
   void upload_cylinder_instances(const GL::PrimitiveInstanceGpu* data,
                                  std::size_t count);
@@ -45,8 +49,6 @@ public:
                   const QVector3D& light_dir,
                   float ambient_strength);
 
-  [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
-
   struct Uniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
@@ -55,7 +57,6 @@ public:
 
   Uniforms m_uniforms;
 
-private:
   void initialize_sphere_vao();
   void initialize_cylinder_vao();
   void initialize_cone_vao();

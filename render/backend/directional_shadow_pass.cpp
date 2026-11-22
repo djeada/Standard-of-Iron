@@ -482,7 +482,7 @@ void Backend::draw_shadow_casters(const std::vector<const ShadowStaticCaster*>& 
         m_mesh_instancing_pipeline->accumulate(
             *casters[j]->model, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
       }
-      m_mesh_instancing_pipeline->flush();
+      m_mesh_instancing_pipeline->flush(m_context.meshes());
       m_last_playback_stats.shadow_static_instanced_draws += 1;
       m_last_playback_stats.shadow_static_instanced_instances += run;
     } else {
@@ -491,7 +491,7 @@ void Backend::draw_shadow_casters(const std::vector<const ShadowStaticCaster*>& 
       for (std::size_t j = index; j < run_end; ++j) {
         m_directional_shadow_depth_shader->set_uniform(m_shadow_depth_model,
                                                        *casters[j]->model);
-        mesh->draw();
+        m_context.meshes().draw(*mesh);
         m_last_playback_stats.shadow_static_single_draws += 1;
       }
     }
@@ -699,18 +699,19 @@ void Backend::render_shadow_cascade_scatter(const DrawQueue& queue,
                                             const Camera& cam,
                                             const ShadowCascadeFrame& frame,
                                             const ShadowCascadeCull& cull) {
-  bool shadow_polygon_offset_enabled = true;
-  CommandExecutionContext shadow_context{queue,
-                                         cam,
-                                         frame.light_view,
-                                         frame.light_projection,
-                                         frame.light_view_projection,
-                                         0.0F,
-                                         shadow_polygon_offset_enabled};
+  m_gl_state.forget_bindings();
+  Render::Pass::FrameContext shadow_frame = m_frame;
+  shadow_frame.camera = &cam;
+  shadow_frame.view = frame.light_view;
+  shadow_frame.projection = frame.light_projection;
+  shadow_frame.view_proj = frame.light_view_projection;
+  shadow_frame.banner_wind_strength = 0.0F;
+  GlStateCache shadow_state = m_gl_state;
+  shadow_state.polygon_offset_enabled = true;
+  PipelineDrawContext shadow_context{
+      queue, shadow_frame, shadow_state, m_context.meshes()};
 
   upload_frame_data(frame.light_view_projection, true);
-  m_last_bound_shader = nullptr;
-  m_last_bound_texture = nullptr;
   for (const PreparedBatch& prepared : queue.prepared_batches()) {
     if (prepared.count == 0) {
       continue;
@@ -845,8 +846,8 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     cascade_near = cascade_far;
   }
   upload_frame_data(view_projection, false);
-  m_last_bound_shader = nullptr;
-  m_last_bound_texture = nullptr;
+  m_gl_state.bound_shader = nullptr;
+  m_gl_state.bound_texture = nullptr;
   end_directional_shadow_pass(restore);
 
   publish_directional_shadow_block(

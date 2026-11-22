@@ -10,14 +10,14 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 void Backend::execute_rigged_commands(const PreparedBatch& prepared,
-                                      CommandExecutionContext& context) {
+                                      PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const Camera& cam = context.cam;
-  const QMatrix4x4& view = context.view;
-  const QMatrix4x4& projection = context.projection;
-  const QMatrix4x4& view_proj = context.view_proj;
-  const float banner_wind_strength = context.banner_wind_strength;
-  bool& polygon_offset_enabled = context.polygon_offset_enabled;
+  const Camera& cam = *context.frame.camera;
+  const QMatrix4x4& view = context.frame.view;
+  const QMatrix4x4& projection = context.frame.projection;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
+  const float banner_wind_strength = context.frame.banner_wind_strength;
+  bool& polygon_offset_enabled = context.state.polygon_offset_enabled;
   (void)cam;
   (void)view;
   (void)projection;
@@ -60,8 +60,8 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         m_last_playback_stats.rigged_instanced_draws +=
             m_rigged_cull_pipeline->last_stats().draw_calls;
         m_last_playback_stats.rigged_instanced_instances += cull_refs.size();
-        m_last_bound_shader = m_rigged_cull_pipeline->full_mesh_shader();
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = m_rigged_cull_pipeline->full_mesh_shader();
+        m_gl_state.bound_texture = nullptr;
         break;
       }
       if (cull_refs.size() >=
@@ -75,8 +75,8 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         m_rigged_drawn_this_frame += cull_refs.size();
         ++m_last_playback_stats.rigged_instanced_draws;
         m_last_playback_stats.rigged_instanced_instances += cull_refs.size();
-        m_last_bound_shader = m_rigged_cull_pipeline->shader();
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = m_rigged_cull_pipeline->shader();
+        m_gl_state.bound_texture = nullptr;
         break;
       }
     }
@@ -87,8 +87,8 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
         ++m_rigged_drawn_this_frame;
         ++m_last_playback_stats.rigged_single_draws;
-        m_last_bound_shader = m_rigged_character_pipeline->last_bound_shader();
-        m_last_bound_texture = single.texture;
+        m_gl_state.bound_shader = m_rigged_character_pipeline->last_bound_shader();
+        m_gl_state.bound_texture = single.texture;
       }
     }
     break;

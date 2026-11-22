@@ -4,12 +4,12 @@
 
 #include <cstddef>
 
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/ground/scatter_renderer_state.h"
 
 namespace Render::GL {
 
-struct IScatterPass : IRenderPass {
+struct IScatterSource : IDrawSource {
   [[nodiscard]] virtual auto is_gpu_ready() const -> bool = 0;
   [[nodiscard]] virtual auto instance_count() const -> std::size_t = 0;
   [[nodiscard]] virtual auto

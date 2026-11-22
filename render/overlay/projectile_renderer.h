@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "render/gl/mesh_gpu_table.h"
+
 namespace Render {
 namespace GL {
 class FrameSubmitter;
@@ -20,7 +22,7 @@ struct SpentProjectile;
 
 namespace Render::GL {
 
-[[nodiscard]] auto prewarm_projectile_geometry() -> bool;
+[[nodiscard]] auto prewarm_projectile_geometry(MeshGpuTable& meshes) -> bool;
 
 enum class ProjectileRelation : std::uint8_t {
   Neutral,

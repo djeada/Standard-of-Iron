@@ -2,10 +2,62 @@
 
 #include <QDebug>
 
+#include "render/backend/state_scopes.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shader_cache.h"
+#include "render/gl/texture.h"
+#include "scene/camera.h"
 
 namespace Render::GL::BackendPipelines {
+
+void BannerPipeline::draw_banners(const PreparedBatch& prepared,
+                                  const MeshCmd& head,
+                                  bool is_transparent,
+                                  GL::Texture* fallback_texture,
+                                  PipelineDrawContext& context) {
+  Shader* const active_shader = m_banner_shader;
+  const auto& queue = context.queue;
+  const auto& banner = m_banner_uniforms;
+  if (is_transparent) {
+    glDepthFunc(GL_LEQUAL);
+  }
+  CullFaceScope const banner_cull(false);
+  if (context.state.bound_shader != active_shader) {
+    active_shader->use();
+    active_shader->set_uniform(banner.time, context.frame.animation_time);
+    active_shader->set_uniform(banner.wind_strength,
+                               context.frame.banner_wind_strength);
+    active_shader->set_uniform(banner.light_direction, context.frame.light_direction);
+    active_shader->set_uniform(banner.camera_pos, context.frame.camera->get_position());
+    active_shader->set_uniform(banner.ambient_strength, context.frame.ambient_strength);
+    context.state.bound_shader = active_shader;
+  }
+  GL::Texture* const tex_to_use =
+      (head.texture != nullptr) ? head.texture : fallback_texture;
+  if ((tex_to_use != nullptr) && tex_to_use != context.state.bound_texture) {
+    tex_to_use->bind(0);
+    context.state.bound_texture = tex_to_use;
+  }
+  active_shader->set_uniform(banner.texture, 0);
+  active_shader->set_uniform(banner.use_texture, head.texture != nullptr);
+  if (context.meshes.bind(*head.mesh)) {
+    for (std::size_t j = prepared.start; j < prepared.end(); ++j) {
+      const auto& single = std::get<MeshCmd>(queue.get_sorted(j));
+      active_shader->set_uniform(banner.mvp, context.frame.view_proj * single.model);
+      active_shader->set_uniform(banner.model, single.model);
+      active_shader->set_uniform(banner.color, single.color);
+      active_shader->set_uniform(banner.trim_color,
+                                 single.has_trim_color ? single.trim_color
+                                                       : (single.color * 0.7F));
+      active_shader->set_uniform(banner.alpha, single.alpha);
+      context.meshes.draw_bound(*head.mesh);
+    }
+    context.meshes.unbind();
+  }
+  if (is_transparent) {
+    glDepthFunc(GL_LESS);
+  }
+}
 
 auto BannerPipeline::initialize() -> bool {
   if (m_shader_cache == nullptr) {
