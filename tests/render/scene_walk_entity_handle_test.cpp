@@ -58,7 +58,7 @@ auto read_scene_walk_sources(const std::filesystem::path& root) -> std::string {
                            "scene_collect.cpp",
                            "scene_unit_submit.cpp",
                            "scene_overlays.cpp"}) {
-    const auto text = read_text(root / "render" / file);
+    const auto text = read_text(root / "render" / "scene" / file);
     if (text.empty()) {
       return {};
     }

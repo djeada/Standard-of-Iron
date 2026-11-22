@@ -131,7 +131,7 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/entity/nations/roman/healer_renderer.cpp",
       "render/entity/spearman_renderer_common.cpp",
       "render/entity/swordsman_renderer_common.cpp",
-      "render/geom/arrow.cpp",
+      "render/overlay/arrow_renderer.cpp",
       "render/geom/mode_indicator.h",
       "render/overlay/projectile_renderer.cpp",
       "render/overlay/range_rings.h",
