@@ -430,9 +430,7 @@ void Backend::update_contact_shadow_uniforms() {
 void Backend::begin_frame() {
 
   drain_deferred_gl_deletes();
-  if (m_terrain_pipeline != nullptr) {
-    m_terrain_pipeline->m_frame_ground_cover = {};
-  }
+  m_frame.surface.ground_cover = {};
 
   sync_graphics_profile();
   if (m_viewport_width > 0 && m_viewport_height > 0) {
@@ -804,19 +802,22 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   }
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);
 
-  m_last_bound_shader = nullptr;
-  m_last_bound_texture = nullptr;
+  m_gl_state.forget_bindings();
+  m_gl_state.polygon_offset_enabled = (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U);
 
-  bool polygon_offset_enabled = (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U);
+  m_frame.camera = &cam;
+  m_frame.view = view;
+  m_frame.projection = projection;
+  m_frame.view_proj = view_proj;
+  m_frame.viewport_width = m_viewport_width;
+  m_frame.viewport_height = m_viewport_height;
+  m_frame.animation_time = m_animation_time;
+  m_frame.banner_wind_strength = banner_wind_strength;
+  m_frame.light_direction = m_light_dir;
+  m_frame.ambient_strength = m_ambient_strength;
 
   const auto& prepared_batches = queue.prepared_batches();
-  CommandExecutionContext context{queue,
-                                  cam,
-                                  view,
-                                  projection,
-                                  view_proj,
-                                  banner_wind_strength,
-                                  polygon_offset_enabled};
+  PipelineDrawContext context{queue, m_frame, m_gl_state};
 
   m_rigged_drawn_this_frame = 0;
   auto& draw_tally = DrawTally::instance();
@@ -947,9 +948,9 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     ++batch_index;
   }
   draw_pending_static_batch();
-  if (m_last_bound_shader != nullptr) {
-    m_last_bound_shader->release();
-    m_last_bound_shader = nullptr;
+  if (m_gl_state.bound_shader != nullptr) {
+    m_gl_state.bound_shader->release();
+    m_gl_state.bound_shader = nullptr;
   }
 
   draw_tally.set_type(DrawTally::k_other);

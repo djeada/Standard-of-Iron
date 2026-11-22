@@ -19,9 +19,9 @@ auto world_of(const DrawPartCmd& cmd) -> const QMatrix4x4& {
 } // namespace
 
 void Backend::execute_mesh_commands(const PreparedBatch& prepared,
-                                    CommandExecutionContext& context) {
+                                    PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const QMatrix4x4& view_proj = context.view_proj;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
   const std::size_t batch_end = prepared.end();
 
   const auto execute = [&](const auto& head,
@@ -32,9 +32,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       return;
     }
 
-    if (context.polygon_offset_enabled) {
+    if (context.state.polygon_offset_enabled) {
       glDisable(GL_POLYGON_OFFSET_FILL);
-      context.polygon_offset_enabled = false;
+      context.state.polygon_offset_enabled = false;
     }
 
     const bool is_shadow_shader = (active_shader == m_shadow_shader);
@@ -54,15 +54,15 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
           glDepthFunc(GL_LEQUAL);
         }
         CullFaceScope const banner_cull(false);
-        if (m_last_bound_shader != active_shader) {
+        if (m_gl_state.bound_shader != active_shader) {
           active_shader->use();
           active_shader->set_uniform(banner.time, m_animation_time);
           active_shader->set_uniform(banner.wind_strength,
-                                     context.banner_wind_strength);
+                                     context.frame.banner_wind_strength);
           active_shader->set_uniform(banner.light_direction, m_light_dir);
-          active_shader->set_uniform(banner.camera_pos, context.cam.get_position());
+          active_shader->set_uniform(banner.camera_pos, (*context.frame.camera).get_position());
           active_shader->set_uniform(banner.ambient_strength, m_ambient_strength);
-          m_last_bound_shader = active_shader;
+          m_gl_state.bound_shader = active_shader;
         }
         bind_mesh_texture(head.texture);
         active_shader->set_uniform(banner.texture, 0);
@@ -154,9 +154,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 void Backend::bind_mesh_texture(Texture* texture) {
   Texture* const tex_to_use =
       (texture != nullptr) ? texture : (m_resources ? m_resources->white() : nullptr);
-  if ((tex_to_use != nullptr) && tex_to_use != m_last_bound_texture) {
+  if ((tex_to_use != nullptr) && tex_to_use != m_gl_state.bound_texture) {
     tex_to_use->bind(0);
-    m_last_bound_texture = tex_to_use;
+    m_gl_state.bound_texture = tex_to_use;
   }
 }
 
@@ -164,7 +164,7 @@ auto Backend::bind_mesh_shader(Shader* active_shader,
                                Texture* texture,
                                int material_id,
                                bool want_instanced,
-                               CommandExecutionContext& context) -> MeshShaderBinding {
+                               PipelineDrawContext& context) -> MeshShaderBinding {
   auto* const base_uniforms =
       m_shader_uniform_cache ? m_shader_uniform_cache->resolve_uniforms(active_shader)
                              : nullptr;
@@ -186,15 +186,15 @@ auto Backend::bind_mesh_shader(Shader* active_shader,
   instanced = instanced && (shader != active_shader ||
                             uniforms->instanced != Shader::InvalidUniform);
 
-  if (m_last_bound_shader != shader) {
+  if (m_gl_state.bound_shader != shader) {
     shader->use();
-    shader->set_uniform(uniforms->view_proj, context.view_proj);
+    shader->set_uniform(uniforms->view_proj, context.frame.view_proj);
     shader->set_uniform(uniforms->time, m_animation_time);
     shader->set_uniform(uniforms->light_dir, m_light_dir);
     shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
-    shader->set_uniform(uniforms->camera_pos, context.cam.get_position());
+    shader->set_uniform(uniforms->camera_pos, (*context.frame.camera).get_position());
     bind_material_detail(*shader, *uniforms, m_resources.get());
-    m_last_bound_shader = shader;
+    m_gl_state.bound_shader = shader;
   }
 
   bind_mesh_texture(texture);
@@ -227,7 +227,7 @@ auto Backend::prewarm_static_meshes(
 }
 
 void Backend::execute_static_batch(const StaticBuildingBatch& batch,
-                                   CommandExecutionContext& context) {
+                                   PipelineDrawContext& context) {
   const auto& instances = batch.instances();
   std::size_t byte_offset = 0;
   if (instances.empty() || !m_mesh_instancing_pipeline->upload(
@@ -236,9 +236,9 @@ void Backend::execute_static_batch(const StaticBuildingBatch& batch,
                                byte_offset)) {
     return;
   }
-  if (context.polygon_offset_enabled) {
+  if (context.state.polygon_offset_enabled) {
     glDisable(GL_POLYGON_OFFSET_FILL);
-    context.polygon_offset_enabled = false;
+    context.state.polygon_offset_enabled = false;
   }
   for (const StaticBatchDraw& draw : batch.draws()) {
     Shader* const shader =

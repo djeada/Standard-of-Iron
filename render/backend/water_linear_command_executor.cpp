@@ -9,14 +9,14 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
-                                            CommandExecutionContext& context) {
+                                            PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const Camera& cam = context.cam;
-  const QMatrix4x4& view = context.view;
-  const QMatrix4x4& projection = context.projection;
-  const QMatrix4x4& view_proj = context.view_proj;
-  const float banner_wind_strength = context.banner_wind_strength;
-  bool& polygon_offset_enabled = context.polygon_offset_enabled;
+  const Camera& cam = *context.frame.camera;
+  const QMatrix4x4& view = context.frame.view;
+  const QMatrix4x4& projection = context.frame.projection;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
+  const float banner_wind_strength = context.frame.banner_wind_strength;
+  bool& polygon_offset_enabled = context.state.polygon_offset_enabled;
   (void)cam;
   (void)view;
   (void)projection;
@@ -101,7 +101,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         break;
       }
       const auto& visibility = feature.visibility;
-      if (m_last_bound_shader != water_shader) {
+      if (m_gl_state.bound_shader != water_shader) {
         water_shader->use();
         water_shader->set_uniform(m_water_pipeline->m_water_uniforms.view, view);
         water_shader->set_uniform(m_water_pipeline->m_water_uniforms.projection,
@@ -109,8 +109,8 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         water_shader->set_uniform(m_water_pipeline->m_water_uniforms.time,
                                   m_animation_time);
         set_water_environment(water_shader, m_water_pipeline->m_water_uniforms);
-        m_last_bound_shader = water_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = water_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       if (m_water_pipeline->m_water_uniforms.has_visibility != Shader::InvalidUniform) {
         int const has_vis =
@@ -137,7 +137,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         }
         constexpr int k_water_vis_texture_unit = 7;
         visibility.texture->bind(k_water_vis_texture_unit);
-        m_last_bound_texture = visibility.texture;
+        m_gl_state.bound_texture = visibility.texture;
         if (m_water_pipeline->m_water_uniforms.visibility_texture !=
             Shader::InvalidUniform) {
           water_shader->set_uniform(
@@ -222,7 +222,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
       }
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       const auto& visibility = feature.visibility;
-      if (m_last_bound_shader != riverbank_shader) {
+      if (m_gl_state.bound_shader != riverbank_shader) {
         riverbank_shader->use();
         riverbank_shader->set_uniform(m_water_pipeline->m_riverbank_uniforms.view,
                                       view);
@@ -231,7 +231,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         riverbank_shader->set_uniform(m_water_pipeline->m_riverbank_uniforms.time,
                                       m_animation_time);
         set_water_environment(riverbank_shader, m_water_pipeline->m_riverbank_uniforms);
-        m_last_bound_shader = riverbank_shader;
+        m_gl_state.bound_shader = riverbank_shader;
       }
       if (m_water_pipeline->m_riverbank_uniforms.has_visibility !=
           Shader::InvalidUniform) {
@@ -266,7 +266,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
               m_water_pipeline->m_riverbank_uniforms.visibility_texture,
               k_riverbank_vis_texture_unit);
         }
-        m_last_bound_texture = visibility.texture;
+        m_gl_state.bound_texture = visibility.texture;
       }
       {
         PolygonOffsetScope const poly(-1.0F, -1.0F);
@@ -367,11 +367,11 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
       }
       const auto& bridge_uniforms = m_water_pipeline->m_bridge_uniforms;
       const auto& fog_mask = feature.fog_mask;
-      if (m_last_bound_shader != bridge_shader) {
+      if (m_gl_state.bound_shader != bridge_shader) {
         bridge_shader->use();
         set_water_environment(bridge_shader, bridge_uniforms);
-        m_last_bound_shader = bridge_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = bridge_shader;
+        m_gl_state.bound_texture = nullptr;
       }
 
       const bool has_fog_mask = fog_mask.enabled && (fog_mask.texture != nullptr);
@@ -399,7 +399,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
                                      feature.visibility.explored_alpha);
         }
         fog_mask.texture->bind(TextureUnit::terrain_visibility);
-        m_last_bound_texture = fog_mask.texture;
+        m_gl_state.bound_texture = fog_mask.texture;
         if (bridge_uniforms.fog_mask_texture != Shader::InvalidUniform) {
           bridge_shader->set_uniform(bridge_uniforms.fog_mask_texture,
                                      TextureUnit::terrain_visibility);
@@ -418,11 +418,11 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         break;
       }
       const auto& visibility = feature.visibility;
-      if (m_last_bound_shader != road_shader) {
+      if (m_gl_state.bound_shader != road_shader) {
         road_shader->use();
         set_water_environment(road_shader, m_water_pipeline->m_road_uniforms);
-        m_last_bound_shader = road_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = road_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       if (m_water_pipeline->m_road_uniforms.has_visibility != Shader::InvalidUniform) {
         int const has_vis =
@@ -449,7 +449,7 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
         }
         constexpr int k_road_vis_texture_unit = 7;
         visibility.texture->bind(k_road_vis_texture_unit);
-        m_last_bound_texture = visibility.texture;
+        m_gl_state.bound_texture = visibility.texture;
         if (m_water_pipeline->m_road_uniforms.visibility_texture !=
             Shader::InvalidUniform) {
           road_shader->set_uniform(m_water_pipeline->m_road_uniforms.visibility_texture,

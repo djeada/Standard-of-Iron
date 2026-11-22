@@ -61,14 +61,14 @@ auto make_dust_instance(const EffectBatchCmd& eff)
 } // namespace
 
 void Backend::execute_effects_commands(const PreparedBatch& prepared,
-                                       CommandExecutionContext& context) {
+                                       PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const Camera& cam = context.cam;
-  const QMatrix4x4& view = context.view;
-  const QMatrix4x4& projection = context.projection;
-  const QMatrix4x4& view_proj = context.view_proj;
-  const float banner_wind_strength = context.banner_wind_strength;
-  bool const& polygon_offset_enabled = context.polygon_offset_enabled;
+  const Camera& cam = *context.frame.camera;
+  const QMatrix4x4& view = context.frame.view;
+  const QMatrix4x4& projection = context.frame.projection;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
+  const float banner_wind_strength = context.frame.banner_wind_strength;
+  bool const& polygon_offset_enabled = context.state.polygon_offset_enabled;
   (void)cam;
   (void)view;
   (void)projection;
@@ -98,9 +98,9 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     }
     const auto& gc = std::get<GridCmdIndex>(cmd);
 
-    if (m_last_bound_shader != m_effects_pipeline->m_grid_shader) {
+    if (m_gl_state.bound_shader != m_effects_pipeline->m_grid_shader) {
       m_effects_pipeline->m_grid_shader->use();
-      m_last_bound_shader = m_effects_pipeline->m_grid_shader;
+      m_gl_state.bound_shader = m_effects_pipeline->m_grid_shader;
     }
 
     m_effects_pipeline->m_grid_shader->set_uniform(
@@ -136,8 +136,8 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
 
     Shader* marker_shader = m_ground_marker_pipeline->shader();
     marker_shader->use();
-    m_last_bound_shader = marker_shader;
-    m_last_bound_texture = nullptr;
+    m_gl_state.bound_shader = marker_shader;
+    m_gl_state.bound_texture = nullptr;
 
     const auto& uniforms = m_ground_marker_pipeline->uniforms();
     m_ground_marker_pipeline->upload_pattern_table();
@@ -160,7 +160,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     float world_per_cell = 1.0F;
     if (has_height) {
       height.texture->bind(TextureUnit::terrain_height);
-      m_last_bound_texture = height.texture;
+      m_gl_state.bound_texture = height.texture;
       set_uniform_if_valid(
           *marker_shader, uniforms.height_tex, TextureUnit::terrain_height);
       set_uniform_if_valid(*marker_shader, uniforms.height_uv_scale, height.uv_scale);
@@ -223,9 +223,9 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       break;
     }
 
-    if (m_last_bound_shader != m_effects_pipeline->m_basic_shader) {
+    if (m_gl_state.bound_shader != m_effects_pipeline->m_basic_shader) {
       m_effects_pipeline->m_basic_shader->use();
-      m_last_bound_shader = m_effects_pipeline->m_basic_shader;
+      m_gl_state.bound_shader = m_effects_pipeline->m_basic_shader;
     }
     m_effects_pipeline->m_basic_shader->set_uniform(
         m_effects_pipeline->m_basic_uniforms.use_texture, false);
@@ -295,7 +295,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       break;
     }
 
-    m_last_bound_shader = m_primitive_batch_pipeline->shader();
+    m_gl_state.bound_shader = m_primitive_batch_pipeline->shader();
     break;
   }
   case EffectBatchCmdIndex: {
@@ -323,7 +323,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
                                                     eff.time,
                                                     view_proj);
       });
-      m_last_bound_shader = nullptr;
+      m_gl_state.bound_shader = nullptr;
       break;
     }
     case EffectBatchCmd::Kind::HealerAura: {
@@ -339,7 +339,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       });
       m_healer_aura_pipeline->render_aura_batch(
           instances.data(), instances.size(), view_proj);
-      m_last_bound_shader = nullptr;
+      m_gl_state.bound_shader = nullptr;
       break;
     }
     case EffectBatchCmd::Kind::BloodPool: {
@@ -360,7 +360,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       });
       m_combat_dust_pipeline->render_blood_pool_batch(
           instances.data(), instances.size(), view_proj);
-      m_last_bound_shader = nullptr;
+      m_gl_state.bound_shader = nullptr;
       break;
     }
     case EffectBatchCmd::Kind::CombatDust:
@@ -382,7 +382,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       });
       m_combat_dust_pipeline->render_dust_batch(
           instances.data(), instances.size(), view_proj);
-      m_last_bound_shader = nullptr;
+      m_gl_state.bound_shader = nullptr;
       break;
     }
     }
@@ -434,7 +434,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         m_mesh_instancing_pipeline->flush();
-        m_last_bound_shader = nullptr;
+        m_gl_state.bound_shader = nullptr;
       }
       break;
     }
@@ -448,7 +448,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     m_mode_indicator_pipeline->render_indicator(
         indicator_mesh, mc.model, view_proj, mc.color, mc.alpha, m_animation_time);
 
-    m_last_bound_shader = nullptr;
+    m_gl_state.bound_shader = nullptr;
     break;
   }
   default:

@@ -7,14 +7,14 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 void Backend::execute_cylinder_commands(const PreparedBatch& prepared,
-                                        CommandExecutionContext& context) {
+                                        PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const Camera& cam = context.cam;
-  const QMatrix4x4& view = context.view;
-  const QMatrix4x4& projection = context.projection;
-  const QMatrix4x4& view_proj = context.view_proj;
-  const float banner_wind_strength = context.banner_wind_strength;
-  bool& polygon_offset_enabled = context.polygon_offset_enabled;
+  const Camera& cam = *context.frame.camera;
+  const QMatrix4x4& view = context.frame.view;
+  const QMatrix4x4& projection = context.frame.projection;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
+  const float banner_wind_strength = context.frame.banner_wind_strength;
+  bool& polygon_offset_enabled = context.state.polygon_offset_enabled;
   (void)cam;
   (void)view;
   (void)projection;
@@ -50,10 +50,10 @@ void Backend::execute_cylinder_commands(const PreparedBatch& prepared,
         polygon_offset_enabled = false;
       }
       Shader* cylinder_shader = m_cylinder_pipeline->cylinder_shader();
-      if (m_last_bound_shader != cylinder_shader) {
+      if (m_gl_state.bound_shader != cylinder_shader) {
         cylinder_shader->use();
-        m_last_bound_shader = cylinder_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = cylinder_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       set_uniform_if_valid(*cylinder_shader,
                            m_cylinder_pipeline->m_cylinder_uniforms.view_proj,
@@ -80,10 +80,10 @@ void Backend::execute_cylinder_commands(const PreparedBatch& prepared,
         polygon_offset_enabled = false;
       }
       Shader* fog_shader = m_cylinder_pipeline->fog_shader();
-      if (m_last_bound_shader != fog_shader) {
+      if (m_gl_state.bound_shader != fog_shader) {
         fog_shader->use();
-        m_last_bound_shader = fog_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = fog_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       if (m_cylinder_pipeline->m_fog_uniforms.view_proj != Shader::InvalidUniform) {
         fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.view_proj,
@@ -110,7 +110,7 @@ void Backend::execute_cylinder_commands(const PreparedBatch& prepared,
                                   mask.tile_size);
         }
         mask.texture->bind(TextureUnit::terrain_visibility);
-        m_last_bound_texture = mask.texture;
+        m_gl_state.bound_texture = mask.texture;
         if (m_cylinder_pipeline->m_fog_uniforms.mask_tex != Shader::InvalidUniform) {
           fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.mask_tex,
                                   TextureUnit::terrain_visibility);

@@ -82,14 +82,14 @@ auto resolve_prop_draw(const BackendPipelines::VegetationPipeline& veg,
 } // namespace
 
 void Backend::execute_scatter_commands(const PreparedBatch& prepared,
-                                       CommandExecutionContext& context) {
+                                       PipelineDrawContext& context) {
   const auto& queue = context.queue;
-  const Camera& cam = context.cam;
-  const QMatrix4x4& view = context.view;
-  const QMatrix4x4& projection = context.projection;
-  const QMatrix4x4& view_proj = context.view_proj;
-  const float banner_wind_strength = context.banner_wind_strength;
-  bool const& polygon_offset_enabled = context.polygon_offset_enabled;
+  const Camera& cam = *context.frame.camera;
+  const QMatrix4x4& view = context.frame.view;
+  const QMatrix4x4& projection = context.frame.projection;
+  const QMatrix4x4& view_proj = context.frame.view_proj;
+  const float banner_wind_strength = context.frame.banner_wind_strength;
+  bool const& polygon_offset_enabled = context.state.polygon_offset_enabled;
 
   (void)view;
   (void)projection;
@@ -126,10 +126,10 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         glDisable(GL_CULL_FACE);
       }
 
-      if (m_last_bound_shader != m_terrain_pipeline->m_grass_shader) {
+      if (m_gl_state.bound_shader != m_terrain_pipeline->m_grass_shader) {
         m_terrain_pipeline->m_grass_shader->use();
-        m_last_bound_shader = m_terrain_pipeline->m_grass_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = m_terrain_pipeline->m_grass_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       bind_visibility_mask(*m_terrain_pipeline->m_grass_shader, deco_cmd_.visibility);
 
@@ -184,7 +184,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
 
       {
         const auto& grass_uniforms = m_terrain_pipeline->m_grass_uniforms;
-        const auto& cover = m_terrain_pipeline->m_frame_ground_cover;
+        const auto& cover = context.frame.surface.ground_cover;
         const bool cover_ready = cover.texture != nullptr;
         if (grass_uniforms.has_cover_texture != Shader::InvalidUniform) {
           m_terrain_pipeline->m_grass_shader->set_uniform(
@@ -267,10 +267,10 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
       BlendScope const blend(false);
 
       Shader* stone_shader = m_vegetation_pipeline->stone_shader();
-      if (m_last_bound_shader != stone_shader) {
+      if (m_gl_state.bound_shader != stone_shader) {
         stone_shader->use();
-        m_last_bound_shader = stone_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = stone_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       bind_visibility_mask(*stone_shader, deco_cmd_.visibility);
 
@@ -356,10 +356,10 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
       }
 
       Shader* shader = foliage.shader;
-      if (m_last_bound_shader != shader) {
+      if (m_gl_state.bound_shader != shader) {
         shader->use();
-        m_last_bound_shader = shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = shader;
+        m_gl_state.bound_texture = nullptr;
       }
       bind_visibility_mask(*shader, deco_cmd_.visibility);
 
@@ -457,10 +457,10 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
       }
 
       Shader* firecamp_shader = m_vegetation_pipeline->firecamp_shader();
-      if (m_last_bound_shader != firecamp_shader) {
+      if (m_gl_state.bound_shader != firecamp_shader) {
         firecamp_shader->use();
-        m_last_bound_shader = firecamp_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = firecamp_shader;
+        m_gl_state.bound_texture = nullptr;
       }
 
       if (m_vegetation_pipeline->m_firecamp_uniforms.view_proj !=
@@ -590,10 +590,10 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         glDisable(GL_CULL_FACE);
       }
 
-      if (m_last_bound_shader != prop_shader) {
+      if (m_gl_state.bound_shader != prop_shader) {
         prop_shader->use();
-        m_last_bound_shader = prop_shader;
-        m_last_bound_texture = nullptr;
+        m_gl_state.bound_shader = prop_shader;
+        m_gl_state.bound_texture = nullptr;
       }
       bind_visibility_mask(*prop_shader, deco_cmd_.visibility);
 

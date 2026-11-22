@@ -43,12 +43,6 @@ public:
     GL::Shader::UniformHandle cover_uv_offset{GL::Shader::InvalidUniform};
   };
 
-  struct FrameGroundCover {
-    GL::Texture* texture = nullptr;
-    QVector2D uv_scale{0.0F, 0.0F};
-    QVector2D uv_offset{0.5F, 0.5F};
-  };
-
   struct GroundUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
@@ -163,7 +157,6 @@ public:
   GL::Shader* m_terrain_baked_shader = nullptr;
 
   GrassUniforms m_grass_uniforms;
-  FrameGroundCover m_frame_ground_cover;
   GroundUniforms m_ground_uniforms;
   TerrainUniforms m_terrain_uniforms;
   TerrainUniforms m_terrain_baked_uniforms;

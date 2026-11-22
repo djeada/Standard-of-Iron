@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "render/backend/directional_shadow_block.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/frame_environment.h"
 #include "render/backend/shader_uniform_cache.h"
 #include "render/backend/shadow_cascade_fit.h"
@@ -214,16 +215,6 @@ public:
   }
 
 private:
-  struct CommandExecutionContext {
-    const DrawQueue& queue;
-    const Camera& cam;
-    const QMatrix4x4& view;
-    const QMatrix4x4& projection;
-    const QMatrix4x4& view_proj;
-    float banner_wind_strength;
-    bool& polygon_offset_enabled;
-  };
-
   void upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                                     const DrawQueue& queue,
                                     const Camera& cam);
@@ -239,17 +230,17 @@ private:
                                   const QVector3D& camera_position);
 
   void execute_cylinder_commands(const PreparedBatch& prepared,
-                                 CommandExecutionContext& context);
+                                 PipelineDrawContext& context);
   void execute_scatter_commands(const PreparedBatch& prepared,
-                                CommandExecutionContext& context);
+                                PipelineDrawContext& context);
   void execute_terrain_commands(const PreparedBatch& prepared,
-                                CommandExecutionContext& context);
+                                PipelineDrawContext& context);
   void execute_water_linear_commands(const PreparedBatch& prepared,
-                                     CommandExecutionContext& context);
+                                     PipelineDrawContext& context);
   void execute_mesh_commands(const PreparedBatch& prepared,
-                             CommandExecutionContext& context);
+                             PipelineDrawContext& context);
   void execute_static_batch(const StaticBuildingBatch& batch,
-                            CommandExecutionContext& context);
+                            PipelineDrawContext& context);
   using ShadowCascadeCull = ::Render::GL::ShadowCascadeCull;
   void draw_static_batch_shadow(const StaticBuildingBatch& batch,
                                 const ShadowCascadeCull& cull);
@@ -267,11 +258,11 @@ private:
                         Texture* texture,
                         int material_id,
                         bool want_instanced,
-                        CommandExecutionContext& context) -> MeshShaderBinding;
+                        PipelineDrawContext& context) -> MeshShaderBinding;
   void execute_effects_commands(const PreparedBatch& prepared,
-                                CommandExecutionContext& context);
+                                PipelineDrawContext& context);
   void execute_rigged_commands(const PreparedBatch& prepared,
-                               CommandExecutionContext& context);
+                               PipelineDrawContext& context);
 
   void sync_graphics_profile();
   void update_contact_shadow_uniforms();
@@ -417,8 +408,8 @@ private:
   Shader* m_shadow_shader = nullptr;
   Shader* m_shadow_instanced_shader = nullptr;
 
-  Shader* m_last_bound_shader = nullptr;
-  Texture* m_last_bound_texture = nullptr;
+  GlStateCache m_gl_state;
+  Render::Pass::FrameContext m_frame;
   bool m_depth_testEnabled = true;
   bool m_blend_enabled = false;
   float m_animation_time = 0.0F;
