@@ -12,8 +12,13 @@ RiggedMeshGpuTable::RiggedMeshGpuTable() = default;
 RiggedMeshGpuTable::~RiggedMeshGpuTable() = default;
 
 auto RiggedMeshGpuTable::entry_for(const RiggedMesh& mesh) -> Entry* {
+  if (m_last != nullptr && m_last_id == mesh.id()) {
+    return m_last;
+  }
   if (auto it = m_entries.find(mesh.id()); it != m_entries.end()) {
-    return &it->second;
+    m_last_id = mesh.id();
+    m_last = &it->second;
+    return m_last;
   }
   if (!gl_objects_can_be_released()) {
     qWarning() << "RiggedMeshGpuTable: no current GL context; skipping VAO/VBO "
@@ -44,7 +49,9 @@ auto RiggedMeshGpuTable::entry_for(const RiggedMesh& mesh) -> Entry* {
   if (const auto err = m_gpu.current_gl_error(); err != 0U) {
     qWarning() << "RiggedMeshGpuTable: upload GL error" << err;
   }
-  return &m_entries.emplace(mesh.id(), std::move(entry)).first->second;
+  m_last_id = mesh.id();
+  m_last = &m_entries.emplace(mesh.id(), std::move(entry)).first->second;
+  return m_last;
 }
 
 auto RiggedMeshGpuTable::ensure(const RiggedMesh& mesh) -> bool {
@@ -71,16 +78,23 @@ void RiggedMeshGpuTable::draw(const RiggedMesh& mesh) {
 }
 
 auto RiggedMeshGpuTable::vertex_buffer(const RiggedMesh& mesh) -> Buffer* {
+  if (m_last != nullptr && m_last_id == mesh.id()) {
+    return m_last->vbo.get();
+  }
   auto it = m_entries.find(mesh.id());
   return it != m_entries.end() ? it->second.vbo.get() : nullptr;
 }
 
 auto RiggedMeshGpuTable::index_buffer(const RiggedMesh& mesh) -> Buffer* {
+  if (m_last != nullptr && m_last_id == mesh.id()) {
+    return m_last->ebo.get();
+  }
   auto it = m_entries.find(mesh.id());
   return it != m_entries.end() ? it->second.ebo.get() : nullptr;
 }
 
 void RiggedMeshGpuTable::collect_retired() {
+  m_last = nullptr;
   for (auto it = m_entries.begin(); it != m_entries.end();) {
     if (it->second.lifetime.expired()) {
       it = m_entries.erase(it);

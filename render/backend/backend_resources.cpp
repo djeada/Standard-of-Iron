@@ -87,53 +87,60 @@ void Backend::sync_frame_resources(const DrawQueue& queue) {
         (void)textures.resolve(height.field_texture);
         (void)textures.resolve(height.cover_texture);
       };
-  for (const DrawCmd& cmd : queue.items()) {
-    switch (cmd.index()) {
-    case TerrainScatterCmdIndex: {
-      const auto& scatter = std::get<TerrainScatterCmdIndex>(cmd);
-      (void)instances.resolve(scatter.instances);
-      (void)textures.resolve(scatter.visibility.texture);
-      break;
-    }
-    case FogBatchCmdIndex: {
-      const auto& fog = std::get<FogBatchCmdIndex>(cmd);
-      (void)instances.resolve(fog.instance_block);
-      (void)textures.resolve(fog.mask.texture);
-      break;
-    }
-    case TerrainSurfaceCmdIndex: {
-      const auto& surface = std::get<TerrainSurfaceCmdIndex>(cmd);
-      sync_height(surface.height);
-      if (m_terrain_pipeline != nullptr) {
-        m_terrain_pipeline->sync_noise_atlas(surface.height.noise);
+  // The prepared batches hold exactly the commands that will be drawn, in
+  // sorted order, so draws of one mesh or block sit together and the tables'
+  // last-hit caches answer most of these lookups.
+  for (const PreparedBatch& batch : queue.prepared_batches()) {
+    for (std::size_t i = batch.start; i < batch.end(); ++i) {
+      const DrawCmd& cmd = queue.get_sorted(i);
+      switch (cmd.index()) {
+      case TerrainScatterCmdIndex: {
+        const auto& scatter = std::get<TerrainScatterCmdIndex>(cmd);
+        (void)instances.resolve(scatter.instances);
+        (void)textures.resolve(scatter.visibility.texture);
+        break;
       }
-      (void)textures.resolve(surface.visibility.texture);
-      break;
-    }
-    case TerrainFeatureCmdIndex: {
-      const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
-      (void)textures.resolve(feature.visibility.texture);
-      (void)textures.resolve(feature.fog_mask.texture);
-      break;
-    }
-    case RiggedCreatureCmdIndex: {
-      const auto& rigged = std::get<RiggedCreatureCmdIndex>(cmd);
-      (void)instances.resolve(rigged.palette_block);
-      if (rigged.mesh != nullptr) {
-        (void)m_context.rigged_meshes().ensure(*rigged.mesh);
+      case FogBatchCmdIndex: {
+        const auto& fog = std::get<FogBatchCmdIndex>(cmd);
+        (void)instances.resolve(fog.instance_block);
+        (void)textures.resolve(fog.mask.texture);
+        break;
       }
-      if (rigged.shadow_mesh != nullptr) {
-        (void)m_context.rigged_meshes().ensure(*rigged.shadow_mesh);
+      case TerrainSurfaceCmdIndex: {
+        const auto& surface = std::get<TerrainSurfaceCmdIndex>(cmd);
+        sync_height(surface.height);
+        if (m_terrain_pipeline != nullptr) {
+          m_terrain_pipeline->sync_noise_atlas(surface.height.noise);
+        }
+        (void)textures.resolve(surface.visibility.texture);
+        break;
       }
-      break;
-    }
-    case GroundMarkerCmdIndex:
-      sync_height(std::get<GroundMarkerCmdIndex>(cmd).height);
-      break;
-    default:
-      break;
+      case TerrainFeatureCmdIndex: {
+        const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
+        (void)textures.resolve(feature.visibility.texture);
+        (void)textures.resolve(feature.fog_mask.texture);
+        break;
+      }
+      case RiggedCreatureCmdIndex: {
+        const auto& rigged = std::get<RiggedCreatureCmdIndex>(cmd);
+        (void)instances.resolve(rigged.palette_block);
+        if (rigged.mesh != nullptr) {
+          (void)m_context.rigged_meshes().ensure(*rigged.mesh);
+        }
+        if (rigged.shadow_mesh != nullptr) {
+          (void)m_context.rigged_meshes().ensure(*rigged.shadow_mesh);
+        }
+        break;
+      }
+      case GroundMarkerCmdIndex:
+        sync_height(std::get<GroundMarkerCmdIndex>(cmd).height);
+        break;
+      default:
+        break;
+      }
     }
   }
+
   // Uploads bind buffers and texture unit 0 behind the state cache's back.
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);

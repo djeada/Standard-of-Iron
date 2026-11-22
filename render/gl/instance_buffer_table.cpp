@@ -12,7 +12,11 @@ InstanceBufferTable::InstanceBufferTable() = default;
 InstanceBufferTable::~InstanceBufferTable() = default;
 
 auto InstanceBufferTable::entry_for(const InstanceBlock& block) -> Entry& {
-  Entry& entry = m_entries[block.id()];
+  if (m_last == nullptr || m_last_id != block.id()) {
+    m_last = &m_entries[block.id()];
+    m_last_id = block.id();
+  }
+  Entry& entry = *m_last;
   if (entry.buffer == nullptr) {
     entry.lifetime = block.lifetime();
     entry.buffer = std::make_unique<Buffer>(
@@ -63,6 +67,7 @@ auto InstanceBufferTable::prewarm(const InstanceBlock& block) -> bool {
 }
 
 void InstanceBufferTable::collect_retired() {
+  m_last = nullptr;
   for (auto it = m_entries.begin(); it != m_entries.end();) {
     if (it->second.lifetime.expired()) {
       it = m_entries.erase(it);

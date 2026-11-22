@@ -75,7 +75,11 @@ auto MeshGpuTable::upload(const Mesh& mesh, Entry& entry) -> bool {
 }
 
 auto MeshGpuTable::prepare(const Mesh& mesh, const char* caller_name) -> Entry* {
-  Entry& entry = m_entries[mesh.id()];
+  if (m_last == nullptr || m_last_id != mesh.id()) {
+    m_last = &m_entries[mesh.id()];
+    m_last_id = mesh.id();
+  }
+  Entry& entry = *m_last;
   if (entry.vao && entry.vao->id() != 0U) {
     const GlShareGroup owner = entry.vao->share_group();
     const GlShareGroup current = current_gl_share_group();
@@ -91,13 +95,17 @@ auto MeshGpuTable::prepare(const Mesh& mesh, const char* caller_name) -> Entry* 
   }
   if (!entry.vao) {
     m_entries.erase(mesh.id());
+    m_last = nullptr;
     qWarning() << caller_name << "has no vertex array; skipping draw" << "indices"
                << mesh.get_indices().size() << "context"
                << (gl_objects_can_be_released() ? "current" : "absent");
     return nullptr;
   }
   entry.vao->bind();
-  initializeOpenGLFunctions();
+  if (!m_functions_ready) {
+    initializeOpenGLFunctions();
+    m_functions_ready = true;
+  }
 
 #ifndef NDEBUG
   GLenum const pre_err = glGetError();
@@ -167,6 +175,7 @@ auto MeshGpuTable::prewarm(const Mesh& mesh) -> bool {
 }
 
 void MeshGpuTable::collect_retired() {
+  m_last = nullptr;
   for (auto it = m_entries.begin(); it != m_entries.end();) {
     if (it->second.lifetime.expired()) {
       it = m_entries.erase(it);

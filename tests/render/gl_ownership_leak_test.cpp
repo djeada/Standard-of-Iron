@@ -115,6 +115,15 @@ void render_frames(Render::GL::Backend& backend, int frames) {
     queue.submit(cylinder);
     Render::GL::GridCmd grid;
     queue.submit(grid);
+    // Translucent linear features take the water pipeline's blended path.
+    for (const auto kind :
+         {Render::GL::LinearFeatureKind::Road, Render::GL::LinearFeatureKind::Water}) {
+      Render::GL::TerrainFeatureCmd feature;
+      feature.mesh = backend.resources()->quad();
+      feature.kind = kind;
+      feature.alpha = 0.5F;
+      queue.submit(feature);
+    }
     queue.sort_for_batching();
 
     backend.begin_frame();
