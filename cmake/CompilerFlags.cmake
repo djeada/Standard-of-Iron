@@ -16,6 +16,11 @@ option(
     OFF
 )
 
+# Link-time optimisation is what ships, and it makes every relink of the game
+# take minutes. A development tree that is rebuilt after each edit can switch
+# it off; nothing that is packaged should.
+option(SOI_ENABLE_LTO "Link-time optimisation in optimised GCC/Clang builds" ON)
+
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(MSVC)
@@ -73,7 +78,9 @@ else()
         # baseline. CI-runner-specific -march flags can make packaged builds
         # crash on otherwise supported user CPUs.
     endif()
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) # Enable LTO
+    if(MSVC OR SOI_ENABLE_LTO)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) # Enable LTO
+    endif()
 
     # Give the linker per-symbol granularity so unreferenced code is dropped
     # rather than carried, and leave no debug info in the shipped artifact.

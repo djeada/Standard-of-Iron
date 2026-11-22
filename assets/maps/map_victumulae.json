@@ -118,6 +118,87 @@
             "z": 112,
             "style": "milestone",
             "snap": 6
+        },
+        {
+            "from": [
+                80,
+                152
+            ],
+            "id": "siege_road_avenue",
+            "kind": "tree_avenue",
+            "spacing": 9,
+            "to": [
+                80,
+                116
+            ],
+            "tree": "cypress_tree"
+        },
+        {
+            "id": "town_gate_approach",
+            "kind": "gate_approach",
+            "statues": true,
+            "x": 80,
+            "z": 78
+        },
+        {
+            "cols": 7,
+            "gaps": 0.1,
+            "id": "west_windbreak",
+            "kind": "orchard",
+            "rotation": 0,
+            "rows": 2,
+            "spacing": 6.5,
+            "tree": "cypress_tree",
+            "x": 46,
+            "z": 130
+        },
+        {
+            "count": 8,
+            "id": "south_west_thicket",
+            "kind": "copse",
+            "radius": 6,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ],
+            "x": 12,
+            "z": 124
+        },
+        {
+            "count": 8,
+            "id": "south_east_thicket",
+            "kind": "copse",
+            "radius": 6,
+            "trees": [
+                "pine_tree",
+                "pine_tree",
+                "cypress_tree"
+            ],
+            "x": 148,
+            "z": 124
+        },
+        {
+            "count": 6,
+            "id": "west_foot_thicket",
+            "kind": "copse",
+            "radius": 5,
+            "trees": [
+                "pine_tree"
+            ],
+            "x": 32,
+            "z": 100
+        },
+        {
+            "count": 6,
+            "id": "east_foot_thicket",
+            "kind": "copse",
+            "radius": 5,
+            "trees": [
+                "pine_tree"
+            ],
+            "x": 128,
+            "z": 100
         }
     ],
     "environment": {
@@ -2236,6 +2317,334 @@
             "z": 58.0,
             "scale": 0.9,
             "rotation": 3.0
+        },
+        {
+            "type": "cypress_tree",
+            "x": 74.98,
+            "z": 137.95,
+            "scale": 1.06,
+            "rotation": 4.054,
+            "dressing": "siege_road_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 74.21,
+            "z": 129.59,
+            "scale": 0.96,
+            "rotation": 0.284,
+            "dressing": "siege_road_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 85.58,
+            "z": 129.2,
+            "scale": 1.01,
+            "rotation": 4.713,
+            "dressing": "siege_road_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 72.9,
+            "z": 121.78,
+            "scale": 1.08,
+            "rotation": 1.135,
+            "dressing": "siege_road_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 86.59,
+            "z": 121.66,
+            "scale": 0.98,
+            "rotation": 5.023,
+            "dressing": "siege_road_avenue"
+        },
+        {
+            "type": "statue",
+            "x": 89.78,
+            "z": 101.11,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "town_gate_approach"
+        },
+        {
+            "type": "statue",
+            "x": 70.21,
+            "z": 101.13,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "town_gate_approach"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 26.8,
+            "z": 126.57,
+            "scale": 0.93,
+            "rotation": 5.35,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 32.62,
+            "z": 126.73,
+            "scale": 1.05,
+            "rotation": 3.945,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 39.5,
+            "z": 126.31,
+            "scale": 0.88,
+            "rotation": 5.209,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 45.99,
+            "z": 126.72,
+            "scale": 1.04,
+            "rotation": 4.787,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 52.6,
+            "z": 126.68,
+            "scale": 1.09,
+            "rotation": 5.322,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 59.34,
+            "z": 127.09,
+            "scale": 1.01,
+            "rotation": 0.657,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 65.3,
+            "z": 126.51,
+            "scale": 1.03,
+            "rotation": 1.076,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 33.15,
+            "z": 133.32,
+            "scale": 0.89,
+            "rotation": 3.09,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 39.33,
+            "z": 133.33,
+            "scale": 1.0,
+            "rotation": 0.564,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 46.35,
+            "z": 133.45,
+            "scale": 1.0,
+            "rotation": 0.987,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 52.53,
+            "z": 133.7,
+            "scale": 0.91,
+            "rotation": 5.2,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 65.3,
+            "z": 132.85,
+            "scale": 0.88,
+            "rotation": 5.068,
+            "dressing": "west_windbreak"
+        },
+        {
+            "type": "pine_tree",
+            "x": 10.05,
+            "z": 127.57,
+            "scale": 1.24,
+            "rotation": 4.863,
+            "dressing": "south_west_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 9.78,
+            "z": 122.66,
+            "scale": 1.24,
+            "rotation": 0.095,
+            "dressing": "south_west_thicket"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 15.52,
+            "z": 123.08,
+            "scale": 1.13,
+            "rotation": 3.726,
+            "dressing": "south_west_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 12.52,
+            "z": 119.88,
+            "scale": 0.87,
+            "rotation": 0.474,
+            "dressing": "south_west_thicket"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 13.58,
+            "z": 126.18,
+            "scale": 1.01,
+            "rotation": 5.208,
+            "dressing": "south_west_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 7.05,
+            "z": 125.73,
+            "scale": 0.83,
+            "rotation": 5.885,
+            "dressing": "south_west_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 149.39,
+            "z": 121.25,
+            "scale": 1.13,
+            "rotation": 1.843,
+            "dressing": "south_east_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 147.17,
+            "z": 124.31,
+            "scale": 1.09,
+            "rotation": 1.904,
+            "dressing": "south_east_thicket"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 144.08,
+            "z": 124.75,
+            "scale": 0.82,
+            "rotation": 1.654,
+            "dressing": "south_east_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 145.42,
+            "z": 127.2,
+            "scale": 0.86,
+            "rotation": 5.961,
+            "dressing": "south_east_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 149.64,
+            "z": 127.4,
+            "scale": 0.97,
+            "rotation": 5.036,
+            "dressing": "south_east_thicket"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 145.4,
+            "z": 121.11,
+            "scale": 1.04,
+            "rotation": 2.196,
+            "dressing": "south_east_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 31.49,
+            "z": 100.53,
+            "scale": 0.96,
+            "rotation": 4.799,
+            "dressing": "west_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 34.7,
+            "z": 98.26,
+            "scale": 1.15,
+            "rotation": 5.131,
+            "dressing": "west_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 33.93,
+            "z": 102.62,
+            "scale": 0.87,
+            "rotation": 6.069,
+            "dressing": "west_foot_thicket"
+        },
+        {
+            "type": "boulder",
+            "x": 28.32,
+            "z": 94.76,
+            "scale": 0.64,
+            "rotation": 1.497,
+            "dressing": "west_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 125.46,
+            "z": 102.79,
+            "scale": 1.11,
+            "rotation": 2.482,
+            "dressing": "east_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 122.99,
+            "z": 100.06,
+            "scale": 0.93,
+            "rotation": 3.08,
+            "dressing": "east_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 129.1,
+            "z": 102.37,
+            "scale": 0.98,
+            "rotation": 4.612,
+            "dressing": "east_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 132.24,
+            "z": 100.1,
+            "scale": 1.21,
+            "rotation": 6.046,
+            "dressing": "east_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 128.24,
+            "z": 97.35,
+            "scale": 0.95,
+            "rotation": 5.905,
+            "dressing": "east_foot_thicket"
+        },
+        {
+            "type": "pine_tree",
+            "x": 124.25,
+            "z": 96.6,
+            "scale": 0.89,
+            "rotation": 1.984,
+            "dressing": "east_foot_thicket"
         }
     ],
     "hill_rockfall_caches": false,

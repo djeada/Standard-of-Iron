@@ -27,6 +27,7 @@ void main() {
   vec3 color = ground_vegetation_chroma(v_color) *
                mix(1.0, mix(0.82, 1.12, fold), detail_weight);
 
+  color = apply_directional_shadow(color, v_world_pos, vec3(0.0, 1.0, 0.0));
 #if SOI_ULTRA_EFFECTS
 
   vec3 sun_dir = environment_primary_direction();
@@ -34,7 +35,6 @@ void main() {
   float backlit =
       pow(max(dot(view_dir, -sun_dir), 0.0), 3.0) * clamp(sun_dir.y * 2.0, 0.0, 1.0);
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  color = apply_directional_shadow(color, v_world_pos, vec3(0.0, 1.0, 0.0));
   color += v_color * sun * backlit * 0.45 * fold * detail_weight;
 #endif
 

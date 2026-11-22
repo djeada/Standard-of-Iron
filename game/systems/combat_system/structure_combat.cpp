@@ -14,6 +14,7 @@
 #include "../building_collision_registry.h"
 #include "../navigation/nav_grid.h"
 #include "../navigation/pathfinding.h"
+#include "game/util/planar_math.h"
 
 namespace Game::Systems::Combat {
 namespace {
@@ -297,7 +298,7 @@ auto closest_structure_surface(const Engine::Core::Entity& structure,
   } else {
     float const delta_x = local_x - surface_x;
     float const delta_z = local_z - surface_z;
-    float const distance = std::hypot(delta_x, delta_z);
+    float const distance = Game::Systems::planar_length(delta_x, delta_z);
     if (distance > 0.0001F) {
       normal_x = delta_x / distance;
       normal_z = delta_z / distance;
@@ -323,9 +324,10 @@ auto closest_structure_surface(const Engine::Core::Entity& structure,
   return {.point = point,
           .outward_normal = outward,
           .tangent = tangent,
-          .distance = inside ? 0.0F
-                             : std::hypot(query_point.x() - point.x(),
-                                          query_point.z() - point.z()),
+          .distance = inside
+                          ? 0.0F
+                          : Game::Systems::planar_length(query_point.x() - point.x(),
+                                                         query_point.z() - point.z()),
           .tangent_half_extent = tangent_half_extent};
 }
 
@@ -448,8 +450,8 @@ auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
     }
   }
 
-  float const root_distance = std::hypot(result.destination.x() - current.x(),
-                                         result.destination.z() - current.z());
+  float const root_distance = Game::Systems::planar_length(
+      result.destination.x() - current.x(), result.destination.z() - current.z());
   float const arrival_tolerance = 0.08F + std::max(0.0F, extra_tolerance);
   result.reached = current_walkable && root_distance <= arrival_tolerance;
   return result;

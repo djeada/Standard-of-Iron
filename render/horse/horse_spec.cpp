@@ -555,7 +555,6 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions& dims,
 
 #include "render/bone_palette_arena.h"
 #include "render/rigged_mesh_cache.h"
-#include "render/scene_renderer.h"
 
 namespace Render::Horse {
 

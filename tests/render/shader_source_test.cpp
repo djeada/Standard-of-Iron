@@ -781,6 +781,35 @@ TEST(ShaderSource, QualityTierIsCompiledNotBranched) {
   EXPECT_NE(grass.find("#if SOI_ULTRA_EFFECTS"), std::string::npos);
 }
 
+TEST(ShaderSource, GrassTuftsCarryBladeDirectionAndClearBuiltGround) {
+  const auto root = find_repo_root();
+  const auto vert = read_text(root / "assets" / "shaders" / "grass_instanced.vert");
+  ASSERT_FALSE(vert.empty());
+  EXPECT_NE(vert.find("layout(location = 1) in vec4 a_uv;"), std::string::npos)
+      << "the tuft mesh packs each blade's splay direction beside its uv";
+  EXPECT_NE(vert.find("u_cover_tex"), std::string::npos)
+      << "grass and flowers must give way to yards and wall feet";
+  EXPECT_FLOAT_EQ(glsl_float_constant(vert, "k_kind_stride"), 4.0F)
+      << "BiomeRenderer packs the flower kind into the sway strength with this stride";
+
+  const auto frag = read_text(root / "assets" / "shaders" / "grass_instanced.frag");
+  const auto shadow = frag.find("apply_directional_shadow(");
+  const auto ultra = frag.find("#if SOI_ULTRA_EFFECTS");
+  ASSERT_NE(shadow, std::string::npos);
+  ASSERT_NE(ultra, std::string::npos);
+  EXPECT_LT(shadow, ultra)
+      << "a dense sward that ignores cast shadows glows inside every building shadow";
+}
+
+TEST(ShaderSource, ValleyFogStaysAThinPatchyBank) {
+  const auto root = find_repo_root();
+  const auto post = read_text(root / "assets" / "shaders" / "post_composite.frag");
+  ASSERT_FALSE(post.empty());
+  EXPECT_LE(glsl_float_constant(post, "k_ground_fog_max_opacity"), 0.16F)
+      << "a quarter-opaque blanket over all low ground washed river maps teal";
+  EXPECT_LE(glsl_float_constant(post, "k_ground_fog_gain"), 0.08F);
+}
+
 TEST(ShaderSource, WaterShadersReadTexCoordsFromTheMeshVertexLayout) {
   const auto root = find_repo_root();
   for (const char* name : {"river.vert", "riverbank.vert"}) {
@@ -839,8 +868,9 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float material_patch ="), std::string::npos);
   EXPECT_NE(flat.find("float deposited_soil ="), std::string::npos);
   EXPECT_NE(flat.find("uniform int u_ground_type;"), std::string::npos);
-  EXPECT_NE(flat.find("uniform int u_terrain_type;"), std::string::npos);
-  EXPECT_NE(flat.find("float mountain_surface = float(u_terrain_type == 2);"),
+  EXPECT_EQ(flat.find("u_terrain_type"), std::string::npos)
+      << "a per-section landform uniform steps along grid squares at every hill rim";
+  EXPECT_NE(flat.find("float mountain_surface = clamp(v_landform.y, 0.0, 1.0);"),
             std::string::npos);
   EXPECT_NE(flat.find("float mountain_face ="), std::string::npos);
   EXPECT_NE(flat.find("float snowline ="), std::string::npos);

@@ -76,6 +76,12 @@ constexpr float k_crowd_look_drop_share = 0.3F;
 constexpr float k_crowd_side_tuck = 0.55F;
 constexpr float k_threat_bias_side = 0.30F;
 
+constexpr float k_focus_full_cos = 0.6428F;
+constexpr float k_focus_release_cos = 0.0872F;
+
+constexpr float k_zoom_rise_share = 0.85F;
+constexpr float k_zoom_look_drop = 0.55F;
+
 constexpr float k_camera_body_radius = 0.28F;
 
 constexpr float k_camera_depenetration_margin = 0.14F;
@@ -212,7 +218,14 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   CommanderFramingState const previous_framing_state = m_framing_state;
   m_framing_state = select_framing(
       inputs.aiming_bow, inputs.lock_target_active, inputs.fight_context);
-  Framing const framing_target = framing_for(m_framing_state, inputs.close_camera_mode);
+  Framing framing_target = framing_for(m_framing_state, inputs.close_camera_mode);
+  if (m_framing_state != CommanderFramingState::BowAim) {
+
+    float const zoom = Game::Accessibility::CommanderInput::camera_distance_scale();
+    framing_target.back *= zoom;
+    framing_target.up *= 1.0F + ((zoom - 1.0F) * k_zoom_rise_share);
+    framing_target.look_drop += (zoom - 1.0F) * k_zoom_look_drop;
+  }
   if (!m_framing_valid) {
     m_framing_current = framing_target;
     m_framing_velocity = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
@@ -409,9 +422,22 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   float focus_side_nudge_target = 0.0F;
   if (inputs.lock_target_position.has_value()) {
     focus_world = reach_out(*inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F));
-    focus_weight_target = 0.60F * (1.0F - aim_blend);
+
+    QVector3D const to_focus(
+        focus_world->x() - pivot.x(), 0.0F, focus_world->z() - pivot.z());
+    float facing = 1.0F;
+    if (to_focus.lengthSquared() > 1.0e-4F) {
+      float const alignment =
+          QVector3D::dotProduct(to_focus.normalized(), flat_forward);
+      float const t = std::clamp((alignment - k_focus_release_cos) /
+                                     (k_focus_full_cos - k_focus_release_cos),
+                                 0.0F,
+                                 1.0F);
+      facing = t * t * (3.0F - (2.0F * t));
+    }
+    focus_weight_target = 0.60F * (1.0F - aim_blend) * facing;
     focus_side_nudge_target =
-        (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend);
+        (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend) * facing;
   }
 
   if (focus_world.has_value()) {

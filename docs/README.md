@@ -54,6 +54,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 ## Maps and content authoring
 
 - [MAP_OBJECT_PLACEMENT.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MAP_OBJECT_PLACEMENT.md) — placing objects on maps
+- [MAP_REVIEW.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MAP_REVIEW.md) — reviewing and batch-editing maps from the command line
 - [HILL_SHAPES.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/HILL_SHAPES.md) — hills and raised terrain
 
 ## Audio

@@ -1,8 +1,12 @@
+#include <QMatrix4x4>
+#include <QVector2D>
 #include <QVector3D>
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <limits>
 #include <numbers>
 #include <span>
 
@@ -114,4 +118,175 @@ TEST(ShadowCascadeFit, TighterShellsGetSmallerSpheres) {
   EXPECT_LT(near_sphere.radius, far_sphere.radius);
 
   EXPECT_LT(near_sphere.radius, 16.0F);
+}
+
+namespace {
+
+auto texel_offset_in_light_space(const Render::GL::ShadowCascadeFrame& frame,
+                                 const QVector3D& world_point,
+                                 int resolution) -> QVector2D {
+  const QVector3D clip = frame.light_view_projection.map(world_point);
+  const float texels_per_clip_unit = static_cast<float>(resolution) * 0.5F;
+  return {clip.x() * texels_per_clip_unit, clip.y() * texels_per_clip_unit};
+}
+
+auto low_sun() -> QVector3D {
+  return QVector3D(0.7F, 0.35F, 0.4F).normalized();
+}
+
+} // namespace
+
+TEST(ShadowLightBasis, IsOrthonormalForAnObliqueSun) {
+  const auto basis = Render::GL::shadow_light_basis(low_sun());
+  EXPECT_NEAR(basis.right.length(), 1.0F, 1e-5F);
+  EXPECT_NEAR(basis.up.length(), 1.0F, 1e-5F);
+  EXPECT_NEAR(QVector3D::dotProduct(basis.right, basis.up), 0.0F, 1e-5F);
+  EXPECT_NEAR(QVector3D::dotProduct(basis.right, basis.direction), 0.0F, 1e-5F);
+  EXPECT_NEAR(QVector3D::dotProduct(basis.up, basis.direction), 0.0F, 1e-5F);
+}
+
+TEST(ShadowLightBasis, OverheadSunStillGetsAUsableBasis) {
+  const auto basis = Render::GL::shadow_light_basis(QVector3D(0.0F, 1.0F, 0.0F));
+  EXPECT_NEAR(basis.right.length(), 1.0F, 1e-5F);
+  EXPECT_NEAR(basis.up.length(), 1.0F, 1e-5F);
+  EXPECT_NEAR(QVector3D::dotProduct(basis.right, basis.up), 0.0F, 1e-5F);
+}
+
+TEST(ShadowLightFollow, HoldsTheLightThroughSubArcsecondDrift) {
+  const QVector3D held = low_sun();
+  const QVector3D drifted = (held + QVector3D(0.0F, 1.0e-4F, 0.0F)).normalized();
+  EXPECT_EQ(Render::GL::follow_shadow_light_direction(held, drifted), held);
+}
+
+TEST(ShadowLightFollow, FollowsARealSunMoveAndAdoptsTheFirstSun) {
+  const QVector3D held = low_sun();
+  const QVector3D moved = (held + QVector3D(0.0F, 0.05F, 0.0F)).normalized();
+  EXPECT_EQ(Render::GL::follow_shadow_light_direction(held, moved), moved);
+  EXPECT_EQ(Render::GL::follow_shadow_light_direction(QVector3D(), moved), moved);
+}
+
+TEST(ShadowSunThrow, OverheadSunCastsStraightDownAndLowSunIsCapped) {
+  const auto overhead = Render::GL::shadow_sun_throw(QVector3D(0.0F, 1.0F, 0.0F));
+  EXPECT_FLOAT_EQ(overhead.stretch, 0.0F);
+  EXPECT_FLOAT_EQ(overhead.rigged_slack, 6.0F);
+  EXPECT_FLOAT_EQ(overhead.throw_scale, 1.0F);
+
+  const auto grazing =
+      Render::GL::shadow_sun_throw(QVector3D(1.0F, 0.01F, 0.0F).normalized());
+  EXPECT_GT(grazing.stretch, 4.0F);
+  EXPECT_FLOAT_EQ(grazing.rigged_slack, 22.0F);
+  EXPECT_GT(grazing.throw_scale, grazing.stretch);
+}
+
+TEST(ShadowReceiverSlab, EmptyTerrainFallsBackToTheDefaultSlab) {
+  const auto slab = Render::GL::finish_shadow_receiver_slab(
+      std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+  EXPECT_FLOAT_EQ(slab.min_y, Render::GL::k_shadow_default_slab_min);
+  EXPECT_FLOAT_EQ(slab.max_y,
+                  Render::GL::k_shadow_default_slab_max +
+                      Render::GL::k_shadow_caster_height_allowance);
+}
+
+TEST(ShadowReceiverSlab, TerrainSlabGainsHeadroomForCasters) {
+  const auto slab = Render::GL::finish_shadow_receiver_slab(1.5F, 4.0F);
+  EXPECT_FLOAT_EQ(slab.min_y, 1.5F);
+  EXPECT_FLOAT_EQ(slab.max_y, 4.0F + Render::GL::k_shadow_caster_height_allowance);
+}
+
+TEST(ShadowViewRays, CornerRaysAreUnitLengthAndForwardIsPassedThrough) {
+  QMatrix4x4 projection;
+  projection.perspective(45.0F, 16.0F / 9.0F, 0.5F, 300.0F);
+  QMatrix4x4 view;
+  view.lookAt(QVector3D(0.0F, 30.0F, 20.0F), QVector3D(), QVector3D(0.0F, 1.0F, 0.0F));
+  const QVector3D forward = QVector3D(0.0F, -30.0F, -20.0F);
+  const auto rays =
+      Render::GL::shadow_view_rays((projection * view).inverted(), forward);
+  for (std::size_t corner = 0; corner < 4; ++corner) {
+    EXPECT_NEAR(rays[corner].length(), 1.0F, 1e-4F);
+    EXPECT_GT(QVector3D::dotProduct(rays[corner], forward.normalized()), 0.7F);
+  }
+  EXPECT_NEAR((rays[4] - forward.normalized()).length(), 0.0F, 1e-6F);
+}
+
+TEST(ShadowCascadeFrame, CoversTheSphereAndRoundsTheRadiusUp) {
+  const Render::GL::ShadowCascadeSphere sphere{QVector3D(12.0F, 3.0F, -7.0F), 9.97F};
+  const auto light = Render::GL::shadow_light_basis(low_sun());
+  const auto frame = Render::GL::fit_shadow_cascade_frame(sphere, light, 2048);
+
+  EXPECT_GE(frame.radius, sphere.radius);
+  EXPECT_LT(frame.radius, sphere.radius + 1.0F / 16.0F + 1e-5F);
+  EXPECT_FLOAT_EQ(frame.world_texel, frame.radius * 2.0F / 2048.0F);
+  EXPECT_FLOAT_EQ(frame.depth_span, frame.radius * 6.0F - 0.1F);
+
+  const QVector3D center_clip = frame.light_view_projection.map(sphere.center);
+  EXPECT_LT(std::abs(center_clip.x()), 0.01F);
+  EXPECT_LT(std::abs(center_clip.y()), 0.01F);
+  EXPECT_GT(center_clip.z(), -1.0F);
+  EXPECT_LT(center_clip.z(), 1.0F);
+}
+
+TEST(ShadowCascadeFrame, SubTexelCameraMovesShiftTheMapByWholeTexels) {
+  constexpr int k_resolution = 1024;
+  const auto light = Render::GL::shadow_light_basis(low_sun());
+  const QVector3D anchor(3.0F, 0.0F, 5.0F);
+  const Render::GL::ShadowCascadeSphere base{QVector3D(10.0F, 2.0F, 10.0F), 20.0F};
+  const auto base_frame =
+      Render::GL::fit_shadow_cascade_frame(base, light, k_resolution);
+  const QVector2D base_texel =
+      texel_offset_in_light_space(base_frame, anchor, k_resolution);
+
+  for (float step : {0.013F, 0.21F, 0.37F, 1.9F}) {
+    Render::GL::ShadowCascadeSphere moved = base;
+    moved.center += light.right * step + light.up * (step * 0.5F);
+    const auto frame = Render::GL::fit_shadow_cascade_frame(moved, light, k_resolution);
+    const QVector2D shift =
+        texel_offset_in_light_space(frame, anchor, k_resolution) - base_texel;
+    EXPECT_NEAR(shift.x(), std::round(shift.x()), 0.02F) << "step " << step;
+    EXPECT_NEAR(shift.y(), std::round(shift.y()), 0.02F) << "step " << step;
+  }
+}
+
+TEST(ShadowCascadeCull, AcceptsCastersInsideAndRejectsThoseBesideTheCascade) {
+  const auto light = Render::GL::shadow_light_basis(low_sun());
+  const Render::GL::ShadowCascadeCull cull{
+      .center = QVector3D(0.0F, 0.0F, 0.0F),
+      .radius = 10.0F,
+      .light_right = light.right,
+      .light_up = light.up,
+      .camera_position = QVector3D(0.0F, 0.0F, 0.0F),
+      .receiver_near = 0.0F,
+      .receiver_far = 30.0F,
+      .receiver_margin = 0.5F,
+      .ground_height = 0.0F,
+      .shadow_throw = 1.0F,
+  };
+  EXPECT_TRUE(cull.accepts(QVector3D(2.0F, 0.0F, 2.0F), 1.0F));
+  EXPECT_FALSE(cull.accepts(light.right * 25.0F, 1.0F));
+  EXPECT_FALSE(cull.accepts(light.up * -25.0F, 1.0F));
+}
+
+TEST(ShadowCascadeCull, TallCastersReachReceiversThroughTheirShadowThrow) {
+  const auto light = Render::GL::shadow_light_basis(low_sun());
+  Render::GL::ShadowCascadeCull cull{
+      .center = QVector3D(0.0F, 0.0F, 0.0F),
+      .radius = 200.0F,
+      .light_right = light.right,
+      .light_up = light.up,
+      .camera_position = QVector3D(0.0F, 0.0F, 0.0F),
+      .receiver_near = 40.0F,
+      .receiver_far = 80.0F,
+      .receiver_margin = 0.0F,
+      .ground_height = 0.0F,
+      .shadow_throw = 2.0F,
+  };
+  const QVector3D short_caster(0.0F, 0.0F, 30.0F);
+  EXPECT_FALSE(cull.accepts(short_caster, 1.0F))
+      << "a low caster 30 m out cannot shade receivers that start at 40 m";
+
+  const QVector3D tower(0.0F, 8.0F, 30.0F);
+  EXPECT_TRUE(cull.accepts(tower, 1.0F))
+      << "a 9 m tower throws its shadow into the 40-80 m receiver band";
+
+  cull.shadow_throw = 0.0F;
+  EXPECT_FALSE(cull.accepts(tower, 1.0F));
 }

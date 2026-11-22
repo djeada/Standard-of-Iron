@@ -598,7 +598,7 @@ void limit_contact_close_speed(const EntityFrame& frame,
   float const prior_offset_z = continues ? previous->contact_offset_z : 0.0F;
   float const step_x = desired_offset_x - prior_offset_x;
   float const step_z = desired_offset_z - prior_offset_z;
-  float const step = std::hypot(step_x, step_z);
+  float const step = Game::Systems::planar_length(step_x, step_z);
   float const allowed = k_engage_close_speed * std::max(0.0F, frame.delta_time);
   float offset_x = desired_offset_x;
   float offset_z = desired_offset_z;
@@ -652,8 +652,8 @@ auto closed_with_target(const EntityFrame& frame) -> bool {
   auto const* target = frame.world.try_get<Engine::Core::TransformComponent>(
       frame.display_opponent->get_id());
   return target != nullptr &&
-         std::hypot(target->position.x - frame.actor->position.x,
-                    target->position.z - frame.actor->position.z) <=
+         Game::Systems::planar_length(target->position.x - frame.actor->position.x,
+                                      target->position.z - frame.actor->position.z) <=
              k_contact_slot_range;
 }
 
@@ -681,10 +681,10 @@ void walk_slot(const EntityFrame& frame,
                         foreign.scratch);
   }
   float const contact_step =
-      previous != nullptr
-          ? std::hypot(directive.contact_offset_x - previous->contact_offset_x,
-                       directive.contact_offset_z - previous->contact_offset_z)
-          : 0.0F;
+      previous != nullptr ? Game::Systems::planar_length(
+                                directive.contact_offset_x - previous->contact_offset_x,
+                                directive.contact_offset_z - previous->contact_offset_z)
+                          : 0.0F;
   float const crowd_step_budget =
       k_engage_close_speed * std::max(0.0F, frame.delta_time) - contact_step;
   walk_formation_slot(
@@ -869,8 +869,8 @@ void pin_to_wall_walk(const EntityFrame& frame,
 
     auto const& down = walker->exit_chain;
     auto const& top = down.front();
-    float const to_top =
-        std::hypot(top.ax - previous->world_x, top.az - previous->world_z);
+    float const to_top = Game::Systems::planar_length(top.ax - previous->world_x,
+                                                      top.az - previous->world_z);
     bool const on_planks = std::abs(previous->elevation - WW::k_deck_height) < 1.0e-4F;
     if (on_planks && to_top > 0.12F) {
       float allowed = k_wall_run_speed * std::max(0.0F, frame.delta_time);
@@ -977,7 +977,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
       float const from_z = fresh ? start.z : previous->world_z;
       float const dx = start.x - from_x;
       float const dz = start.z - from_z;
-      float const gap = std::hypot(dx, dz);
+      float const gap = Game::Systems::planar_length(dx, dz);
       float const allowed = k_wall_run_speed * std::max(0.0F, frame.delta_time);
       if (gap > allowed) {
         settle(from_x + dx / gap * allowed, from_z + dz / gap * allowed, 0.0F);
@@ -1070,7 +1070,7 @@ void pin_to_wall_walk(const EntityFrame& frame,
   float const from_z = fresh ? target_z : previous->world_z;
   float const dx = target_x - from_x;
   float const dz = target_z - from_z;
-  float const want = std::hypot(dx, dz);
+  float const want = Game::Systems::planar_length(dx, dz);
   float const step_time = std::max(0.0F, frame.delta_time);
   float const allowed = k_wall_run_speed * step_time;
   float x = target_x;
@@ -1104,7 +1104,8 @@ void pin_to_wall_walk(const EntityFrame& frame,
           Game::Systems::yaw_degrees_from_direction(point.face_x, point.face_z);
     }
   }
-  bool const settled = std::hypot(point.x - from_x, point.z - from_z) < 0.01F;
+  bool const settled =
+      Game::Systems::planar_length(point.x - from_x, point.z - from_z) < 0.01F;
   if (walker->watching && settled && directive.opponent_id == 0U) {
     directive.world_yaw = walker->watch_yaw;
   }
@@ -1240,14 +1241,12 @@ auto publish_soldiers(const EntityFrame& frame) -> bool {
   bool soldiers_changed = previous_directive_count != layout.all_slots.size();
   directives.resize(layout.all_slots.size());
   for (auto const& original_slot : layout.all_slots) {
-    std::optional<Soldier> previous_value;
-    if (original_slot.index < previous_directive_count) {
-      previous_value = directives[original_slot.index];
-    }
     SlotContext slot{
         .original = original_slot,
         .live = find_live_slot(layout, original_slot.index),
-        .previous = previous_value.has_value() ? &*previous_value : nullptr,
+        .previous = original_slot.index < previous_directive_count
+                        ? &previous_soldiers[original_slot.index]
+                        : nullptr,
         .traversal_slot = frame.traversal != nullptr
                               ? frame.traversal->slot_for(original_slot.index)
                               : nullptr,

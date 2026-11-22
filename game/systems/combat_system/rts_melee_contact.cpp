@@ -8,6 +8,7 @@
 
 #include "../../core/world.h"
 #include "../formation_combat_geometry.h"
+#include "../rpg_combat_system/rpg_targeting.h"
 #include "action_contact_damage.h"
 #include "authored_action_reaction.h"
 #include "combat_action_predicates.h"
@@ -16,6 +17,7 @@
 #include "commander_signature_effects.h"
 #include "damage_application.h"
 #include "damage_processor.h"
+#include "game/util/planar_math.h"
 #include "melee_exchange.h"
 
 namespace Game::Systems::Combat {
@@ -43,7 +45,7 @@ void present_melee_exchange(Engine::Core::World& world,
 
   float const dx = target_transform.position.x - attacker_transform.position.x;
   float const dz = target_transform.position.z - attacker_transform.position.z;
-  float const distance = std::max(0.001F, std::hypot(dx, dz));
+  float const distance = std::max(0.001F, Game::Systems::planar_length(dx, dz));
   float const contact_reach =
       std::min(distance * 0.72F, std::max(0.35F, reach * 0.55F));
   QVector3D const contact_point(
@@ -126,17 +128,54 @@ void apply_advanced_commander_hit(
   }
 }
 
+struct SwingOrigin {
+  float yaw_degrees{0.0F};
+  float dx{0.0F};
+  float dz{0.0F};
+  float distance{0.0F};
+};
+
+[[nodiscard]] auto
+swing_origin(Engine::Core::World& world,
+             Engine::Core::Entity& attacker,
+             const Engine::Core::Entity& target,
+             const Engine::Core::TransformComponent& attacker_transform,
+             float dx,
+             float dz,
+             float distance) -> SwingOrigin {
+  if (FormationCombat::has_formation_slots(attacker)) {
+    auto const* target_transform =
+        world.try_get<Engine::Core::TransformComponent>(target.get_id());
+    auto const carrier =
+        Game::Systems::RpgCombat::resolve_damage_carrier(attacker, target.get_id());
+    if (carrier.has_value() && target_transform != nullptr) {
+      float const carrier_dx = target_transform->position.x - carrier->position.x();
+      float const carrier_dz = target_transform->position.z - carrier->position.z();
+      return {.yaw_degrees = carrier->yaw_degrees,
+              .dx = carrier_dx,
+              .dz = carrier_dz,
+              .distance = Game::Systems::planar_length(carrier_dx, carrier_dz)};
+    }
+  }
+  return {.yaw_degrees = attacker_transform.rotation.y,
+          .dx = dx,
+          .dz = dz,
+          .distance = distance};
+}
+
 [[nodiscard]] auto
 swing_is_within_facing_cone(Engine::Core::World& world,
-                            const Engine::Core::Entity& attacker,
+                            Engine::Core::Entity& attacker,
                             const Engine::Core::Entity& target,
                             const Engine::Core::TransformComponent& attacker_transform,
                             float dx,
                             float dz,
                             float distance) -> bool {
-  float const yaw = attacker_transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const facing =
-      (std::sin(yaw) * dx + std::cos(yaw) * dz) / std::max(distance, 0.0001F);
+  auto const origin =
+      swing_origin(world, attacker, target, attacker_transform, dx, dz, distance);
+  float const yaw = origin.yaw_degrees * std::numbers::pi_v<float> / 180.0F;
+  float const facing = (std::sin(yaw) * origin.dx + std::cos(yaw) * origin.dz) /
+                       std::max(origin.distance, 0.0001F);
   auto const* attack = world.try_get<Engine::Core::AttackComponent>(attacker.get_id());
   bool const soldiers_face_the_animal =
       world.has<Engine::Core::WildlifeComponent>(target.get_id()) &&
@@ -256,7 +295,7 @@ void deal_rts_melee_contact_damage(
   auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
   float const dx = target_transform->position.x - attacker_transform->position.x;
   float const dz = target_transform->position.z - attacker_transform->position.z;
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   bool const in_range = target_is_in_reach(
       attacker, *target, *attacker_transform, *target_transform, definition, distance);
   if (!in_range ||

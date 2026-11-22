@@ -4244,6 +4244,29 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
 </context>
 <context>
+    <name>GLView</name>
+    <message>
+        <source>The battlefield needs a working OpenGL 3.3 Core graphics context.</source>
+        <translation>Savaş alanı için çalışan bir OpenGL 3.3 Core grafik bağlamı gerekir.</translation>
+    </message>
+    <message>
+        <source>The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.</source>
+        <translation>Savaş alanı OpenGL 3.3 Core gerektirir. Algılanan sürüm OpenGL %1.</translation>
+    </message>
+    <message>
+        <source>The OpenGL graphics context was lost.</source>
+        <translation>OpenGL grafik bağlamı kayboldu.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield framebuffer could not be created.</source>
+        <translation>Savaş alanı için OpenGL kare arabelleği oluşturulamadı.</translation>
+    </message>
+    <message>
+        <source>The OpenGL battlefield renderer failed.</source>
+        <translation>OpenGL savaş alanı işleyicisi başarısız oldu.</translation>
+    </message>
+</context>
+<context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
@@ -4558,6 +4581,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>%1 heard no answer and withdraws the request.</source>
         <translation>%1 yanıt alamadı ve isteğini geri çekiyor.</translation>
+    </message>
+    <message>
+        <source>Timed out waiting for the battlefield to render. The last loading stage was %1.</source>
+        <translation>Savaş alanının görüntülenmesi beklenirken süre doldu. Son yükleme aşaması %1.</translation>
     </message>
 </context>
 <context>
@@ -5583,38 +5610,6 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>ÇARPIŞMA DENETİMLERİ</translation>
     </message>
     <message>
-        <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[Sol tık] Vur  [Sağ tık] Siper</translation>
-    </message>
-    <message>
-        <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Boşluk] Sıyrıl  [Alt] Sıçra</translation>
-    </message>
-    <message>
-        <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Hareket  [Shift] Koş</translation>
-    </message>
-    <message>
-        <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Hedef Değiştir  [3] Aura  [C] Kamera</translation>
-    </message>
-    <message>
-        <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Toplanma Emirleri  [Enter] RTS&apos;ye Dön</translation>
-    </message>
-    <message>
-        <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Vuruş  [1] Hamle  [2] İkinci Nefes</translation>
-    </message>
-    <message>
-        <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Hedef  [1] Hamle  [2] İkinci Nefes  [3] Aura  [F] Vuruş</translation>
-    </message>
-    <message>
-        <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Toplanma Yerleştir  [C] Kamera  [Enter] RTS&apos;ye Dön</translation>
-    </message>
-    <message>
         <source>Rally autopilot engaged until the flag is planted</source>
         <translation>Sancak dikilene kadar toplanma otomatik sürüşte</translation>
     </message>
@@ -5625,6 +5620,38 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>First-person command engaged</source>
         <translation>Birinci şahıs komuta etkin</translation>
+    </message>
+    <message>
+        <source>[%1] Strike  [%2] Guard</source>
+        <translation>[%1] Vur  [%2] Siper</translation>
+    </message>
+    <message>
+        <source>[%1] Dodge  [%2] Jump</source>
+        <translation>[%1] Sıyrıl  [%2] Sıçra</translation>
+    </message>
+    <message>
+        <source>[%1] Move  [%2] Sprint</source>
+        <translation>[%1] Hareket  [%2] Koş</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Aura  [%3] Camera</source>
+        <translation>[%1] Kilitlen  [%2] Aura  [%3] Kamera</translation>
+    </message>
+    <message>
+        <source>[%1] Rally Orders  [%2] Return to RTS</source>
+        <translation>[%1] Toplanma Emirleri  [%2] RTS&apos;ye Dön</translation>
+    </message>
+    <message>
+        <source>[%1] Bash  [%2] Rush  [%3] Second Wind</source>
+        <translation>[%1] Vuruş  [%2] Hamle  [%3] İkinci Nefes</translation>
+    </message>
+    <message>
+        <source>[%1] Lock On  [%2] Rush  [%3] Second Wind  [%4] Aura  [%5] Bash</source>
+        <translation>[%1] Kilitlen  [%2] Hamle  [%3] İkinci Nefes  [%4] Aura  [%5] Vuruş</translation>
+    </message>
+    <message>
+        <source>[%1] Place Rally  [%2] Camera  [%3] Return to RTS</source>
+        <translation>[%1] Toplanma Yerleştir  [%2] Kamera  [%3] RTS&apos;ye Dön</translation>
     </message>
 </context>
 <context>
@@ -7271,6 +7298,22 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Roman field commander</source>
         <translation>Romalı saha komutanı</translation>
+    </message>
+    <message>
+        <source>%1 for the army view</source>
+        <translation>Ordu görünümü için %1</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Çık</translation>
+    </message>
+    <message>
+        <source>Graphics lowered to %1 to keep the battle smooth</source>
+        <translation>Savaşın akıcı kalması için grafikler %1 seviyesine düşürüldü</translation>
+    </message>
+    <message>
+        <source>Pick a preset in Settings to keep your own choice.</source>
+        <translation>Kendi seçiminizi korumak için Ayarlar&apos;dan bir ön ayar seçin.</translation>
     </message>
 </context>
 <context>
@@ -12023,10 +12066,6 @@ Right-click to cancel.</source>
         <translation>Siper al</translation>
     </message>
     <message>
-        <source>Cycle locked target</source>
-        <translation>Kilitli hedefi değiştir</translation>
-    </message>
-    <message>
         <source>Weapon special</source>
         <translation>Silah özel</translation>
     </message>
@@ -12114,6 +12153,22 @@ Right-click to cancel.</source>
         <source>Selects the group. Hold Ctrl to store the current selection in it, hold Shift to add the group to the selection, and press twice quickly to centre the camera on it.</source>
         <translation>Grubu seçer. Geçerli seçimi gruba kaydetmek için Ctrl&apos;yi, grubu seçime eklemek için Shift&apos;i basılı tutun; kamerayı gruba ortalamak için hızlıca iki kez basın.</translation>
     </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the left instead.</source>
+        <translation>Bir hedef kilitliyken, kilidi bunun yerine soldaki bir sonraki düşmana taşır.</translation>
+    </message>
+    <message>
+        <source>While a target is locked, moves the lock to the next enemy on the right instead.</source>
+        <translation>Bir hedef kilitliyken, kilidi bunun yerine sağdaki bir sonraki düşmana taşır.</translation>
+    </message>
+    <message>
+        <source>Lock on to a target, or release it</source>
+        <translation>Bir hedefe kilitlen veya kilidi bırak</translation>
+    </message>
+    <message>
+        <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
+        <translation>Görüşün ortasına en yakın düşmana kilitlenir; bırakmak için yeniden bas. Sola ve sağa dönme, kilidi yandaki düşmana geçirir.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12166,6 +12221,48 @@ Right-click to cancel.</source>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Düşmanlar taşlarının altından tırmanıyor. Yuvarla onları!</translation>
+    </message>
+</context>
+<context>
+    <name>RpgBearingStrip</name>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>Enemy commander</source>
+        <translation>Düşman komutanı</translation>
+    </message>
+    <message>
+        <source>Your army</source>
+        <translation>Ordun</translation>
+    </message>
+    <message>
+        <source>Rally flag</source>
+        <translation>Toplanma sancağı</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Düşman</translation>
+    </message>
+</context>
+<context>
+    <name>RpgFinaleOverlay</name>
+    <message>
+        <source>The field is yours</source>
+        <translation>Meydan senin</translation>
+    </message>
+    <message>
+        <source>%1 has fallen</source>
+        <translation>%1 düştü</translation>
+    </message>
+    <message>
+        <source>Your commander has fallen</source>
+        <translation>Komutanın düştü</translation>
+    </message>
+    <message>
+        <source>The day is lost</source>
+        <translation>Gün kaybedildi</translation>
     </message>
 </context>
 <context>
@@ -13104,6 +13201,50 @@ Right-click to cancel.</source>
     <message>
         <source>The three speeds below scale keyboard panning, zooming and rotation. Mouse drag and minimap movement stay unchanged.</source>
         <translation>Aşağıdaki üç hız, klavyeyle kaydırma, yakınlaştırma ve döndürmeyi ölçekler. Fareyle sürükleme ve mini harita hareketi değişmez.</translation>
+    </message>
+    <message>
+        <source>Leading the commander</source>
+        <translation>Komutanı bizzat yönetirken</translation>
+    </message>
+    <message>
+        <source>Mouse look and camera while you fight as the commander yourself.</source>
+        <translation>Komutan olarak bizzat savaşırken fareyle bakış ve kamera.</translation>
+    </message>
+    <message>
+        <source>Look speed, sideways:</source>
+        <translation>Bakış hızı, yatay:</translation>
+    </message>
+    <message>
+        <source>Look speed, up and down:</source>
+        <translation>Bakış hızı, dikey:</translation>
+    </message>
+    <message>
+        <source>Invert vertical look</source>
+        <translation>Dikey bakışı ters çevir</translation>
+    </message>
+    <message>
+        <source>Pushing the mouse away from you tilts the view down, as on a flight stick.</source>
+        <translation>Fareyi ileri itmek, uçuş kolunda olduğu gibi görüşü aşağı eğer.</translation>
+    </message>
+    <message>
+        <source>Field of view:</source>
+        <translation>Görüş alanı:</translation>
+    </message>
+    <message>
+        <source>Camera distance:</source>
+        <translation>Kamera mesafesi:</translation>
+    </message>
+    <message>
+        <source>How far the camera stands behind the commander. The mouse wheel changes it while you play.</source>
+        <translation>Kameranın komutanın ne kadar gerisinde durduğu. Oyun sırasında fare tekerleğiyle değişir.</translation>
+    </message>
+    <message>
+        <source>Guard stays up until pressed again</source>
+        <translation>Siper, yeniden basılana kadar kalkık kalır</translation>
+    </message>
+    <message>
+        <source>Press the guard button once to raise the shield and once more to lower it, instead of holding it down.</source>
+        <translation>Siper düğmesine basılı tutmak yerine, kalkanı kaldırmak için bir kez, indirmek için bir kez daha bas.</translation>
     </message>
 </context>
 <context>

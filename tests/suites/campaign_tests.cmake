@@ -36,6 +36,7 @@ add_executable(
     # proves the move -- setting a mission up, spawning its forces, stepping the
     # tutorial and firing its waves need no renderer and no view model.
     core/campaign_manager_test.cpp
+    core/campaign_mission_index_test.cpp
     core/commander_speaker_roster_test.cpp
     core/commander_voice_observer_test.cpp
     core/historical_commander_test.cpp

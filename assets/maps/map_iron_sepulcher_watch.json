@@ -353,6 +353,246 @@
       "z": 22,
       "scale": 1.0,
       "rotation": 2.26
+    },
+    {
+      "type": "abandoned_home",
+      "x": 14.5,
+      "z": 32.5,
+      "scale": 1.0,
+      "rotation": 1.571,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "boulder",
+      "x": 6.5,
+      "z": 32.45,
+      "scale": 0.85,
+      "rotation": 0.942,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "boulder",
+      "x": 8.81,
+      "z": 28.47,
+      "scale": 0.78,
+      "rotation": 2.87,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "boulder",
+      "x": 16.06,
+      "z": 27.97,
+      "scale": 0.85,
+      "rotation": 1.464,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "boulder",
+      "x": 18.32,
+      "z": 25.13,
+      "scale": 0.91,
+      "rotation": 3.771,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "boulder",
+      "x": 20.38,
+      "z": 27.08,
+      "scale": 0.9,
+      "rotation": 0.651,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "dead_tree",
+      "x": 5.1,
+      "z": 27.45,
+      "scale": 1.0,
+      "rotation": 2.971,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "supply_cart",
+      "x": 18.5,
+      "z": 37.5,
+      "scale": 1.0,
+      "rotation": 1.971,
+      "dressing": "shepherds_fold"
+    },
+    {
+      "type": "dead_tree",
+      "x": 29.38,
+      "z": 18.15,
+      "scale": 0.84,
+      "rotation": 0.652,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "dead_tree",
+      "x": 32.85,
+      "z": 14.66,
+      "scale": 1.16,
+      "rotation": 5.392,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "dead_tree",
+      "x": 32.6,
+      "z": 9.34,
+      "scale": 0.94,
+      "rotation": 1.489,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "dead_tree",
+      "x": 37.46,
+      "z": 8.47,
+      "scale": 1.07,
+      "rotation": 4.122,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "dead_tree",
+      "x": 27.5,
+      "z": 6.78,
+      "scale": 1.18,
+      "rotation": 0.179,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "ruins",
+      "x": 34.11,
+      "z": 20.72,
+      "scale": 0.84,
+      "rotation": 2.239,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "ruins",
+      "x": 26.72,
+      "z": 12.92,
+      "scale": 0.78,
+      "rotation": 2.581,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "boulder",
+      "x": 37.5,
+      "z": 14.58,
+      "scale": 1.07,
+      "rotation": 3.185,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "boulder",
+      "x": 38.63,
+      "z": 18.8,
+      "scale": 0.89,
+      "rotation": 0.432,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "boulder",
+      "x": 33.16,
+      "z": 5.56,
+      "scale": 0.92,
+      "rotation": 3.14,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "statue",
+      "x": 39.13,
+      "z": 12.06,
+      "scale": 0.9,
+      "rotation": 0.119,
+      "dressing": "north_boneyard"
+    },
+    {
+      "type": "pine_tree",
+      "x": 46.84,
+      "z": 59.3,
+      "scale": 1.24,
+      "rotation": 6.098,
+      "dressing": "south_road_copse"
+    },
+    {
+      "type": "pine_tree",
+      "x": 45.39,
+      "z": 63.54,
+      "scale": 1.09,
+      "rotation": 3.897,
+      "dressing": "south_road_copse"
+    },
+    {
+      "type": "pine_tree",
+      "x": 47.56,
+      "z": 66.33,
+      "scale": 0.98,
+      "rotation": 4.083,
+      "dressing": "south_road_copse"
+    },
+    {
+      "type": "pine_tree",
+      "x": 49.31,
+      "z": 62.42,
+      "scale": 0.81,
+      "rotation": 2.151,
+      "dressing": "south_road_copse"
+    },
+    {
+      "type": "boulder",
+      "x": 38.48,
+      "z": 63.55,
+      "scale": 0.69,
+      "rotation": 5.408,
+      "dressing": "south_road_copse"
+    },
+    {
+      "type": "statue",
+      "x": 62.5,
+      "z": 28.5,
+      "scale": 1.15,
+      "rotation": 0.0,
+      "dressing": "east_marker"
+    },
+    {
+      "type": "boulder",
+      "x": 65.67,
+      "z": 28.91,
+      "scale": 1.24,
+      "rotation": 1.108,
+      "dressing": "east_marker"
+    },
+    {
+      "type": "boulder",
+      "x": 63.15,
+      "z": 31.63,
+      "scale": 1.37,
+      "rotation": 2.086,
+      "dressing": "east_marker"
+    },
+    {
+      "type": "boulder",
+      "x": 59.75,
+      "z": 30.14,
+      "scale": 1.14,
+      "rotation": 6.25,
+      "dressing": "east_marker"
+    },
+    {
+      "type": "boulder",
+      "x": 59.73,
+      "z": 26.9,
+      "scale": 1.31,
+      "rotation": 0.195,
+      "dressing": "east_marker"
+    },
+    {
+      "type": "boulder",
+      "x": 63.01,
+      "z": 25.34,
+      "scale": 1.37,
+      "rotation": 0.629,
+      "dressing": "east_marker"
     }
   ],
   "landmarks": [],
@@ -487,5 +727,46 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  }
+  },
+  "dressing": [
+    {
+      "boulders": 5,
+      "facing": "south",
+      "id": "shepherds_fold",
+      "kind": "sheepfold",
+      "x": 14.5,
+      "z": 32.5
+    },
+    {
+      "boulders": 4,
+      "dead_trees": 5,
+      "id": "north_boneyard",
+      "kind": "boneyard",
+      "radius": 8.5,
+      "ruins": 2,
+      "statues": 1,
+      "x": 35.5,
+      "z": 14.5
+    },
+    {
+      "count": 7,
+      "id": "south_road_copse",
+      "kind": "copse",
+      "radius": 5,
+      "trees": [
+        "pine_tree"
+      ],
+      "x": 45.5,
+      "z": 62.5
+    },
+    {
+      "boulders": 5,
+      "fire": false,
+      "id": "east_marker",
+      "kind": "cairn",
+      "radius": 3.2,
+      "x": 62.5,
+      "z": 28.5
+    }
+  ]
 }

@@ -7,6 +7,7 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/fog_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/map_boundary_fog_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/ambient_fog_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_mesh_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_renderer_submission.cpp

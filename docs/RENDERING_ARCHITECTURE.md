@@ -116,7 +116,14 @@ A `WorldFreeze` coordinates destructive world replacement or rebuild operations 
 
 ## Scene walk
 
-`render/scene_walk.cpp` is the main bridge between snapshot data and renderer submission.
+`render/scene_walk.cpp` is the main bridge between snapshot data and renderer submission. `Renderer::render_world` there orchestrates the frame; the stages it calls live beside it:
+
+- `render/scene_collect.cpp` - world collection: unit and non-unit render entries, frustum and fog classification, cull radii;
+- `render/scene_unit_submit.cpp` - planning and submission: per-unit LOD, batching and preparation plans, prepared and rigged creature submission, non-unit dispatch;
+- `render/scene_overlays.cpp` - selection rings, activity indicators and construction previews;
+- `render/scene_walk_internal.h` - the per-frame entry and plan types shared by those files.
+
+Creature submission reaches the renderer's mesh caches and shader state through `CreatureSubmissionContext` (`render/creature/pipeline/creature_submission_context.h`), which `ISubmitter::creature_submission()` exposes, rather than by downcasting the sink to `Renderer`. Sinks without a context (tests, capture tools) still submit rigged bodies from a per-thread, CPU-only `detached_rigged_mesh_cache()`; a sink that owns its caches can return its own context instead.
 
 The scene walk is responsible for consuming the published world state and deciding which renderer paths receive which entities/environment elements.
 
@@ -243,7 +250,9 @@ Every frame renders the world into the post-process scene target, a single-sampl
 
 Low is the preset that has to run on a GL 3.3 Core driver with no 4.x features. That covers old Intel and AMD integrated GPUs, and Mesa llvmpipe.
 
-- **First run picks Low on weak adapters.** If no graphics preset has been saved, `RenderBootstrap::initialize` switches to Low when the adapter is a software renderer (llvmpipe, softpipe, swrast, SwiftShader, Microsoft Basic Render, GDI Generic, Apple Software Renderer), or, except on macOS, when the context is below GL 4.3. macOS caps OpenGL at 4.1 on every GPU, so the version says nothing about a Mac's speed. `GraphicsSettings::quality_chosen_by_user()` stops a saved choice from being overridden.
+- **First run picks a preset for the adapter.** If no graphics preset has been saved, `RenderBootstrap::initialize` caps the default by `classify_adapter()` (`render/gl/adapter_class.h`): software renderers (llvmpipe, softpipe, swrast, SwiftShader, Microsoft Basic Render, GDI Generic, Apple Software Renderer) and Intel HD/UHD start on Low; Iris Xe, integrated Arc, AMD APUs and GeForce MX start on Medium; anything else keeps High. Except on macOS, a context below GL 4.3 also means Low. macOS caps OpenGL at 4.1 on every GPU, so the version says nothing about a Mac's speed. `GraphicsSettings::quality_chosen_by_user()` stops a saved choice, or an explicit `--graphics-preset`, from being overridden. `SOI_IGNORE_ADAPTER_CLASS=1` skips the cap for testing.
+- **Slow battles step down on their own.** While the player has not picked a preset, `AdaptiveQualityGovernor` (`render/adaptive_quality_governor.h`) watches presented frame intervals during play. After 6 s of warm-up it judges 6 s windows; a median slower than 24 fps lowers the preset one step, then it warms up again. Frames behind the loading screen, in a background window, or during film/benchmark capture do not count. `GraphicsSettingsProxy` saves the settled preset under `graphics/auto_quality_level`, so the next launch starts there, and Main.qml shows a notice. Picking any preset in Settings, including the automatic one, makes it the player's choice and stops the governor.
+- **Low and Medium draw fewer pixels.** `RenderScaleSettings` sizes the gameplay framebuffer below the view: Low draws at 0.8 per axis and at most about one megapixel, Medium at most about 2.1 megapixels (so a HiDPI laptop panel no longer shades 4K on an integrated GPU). Qt stretches it under the full-resolution HUD; input maps through `ViewportState::map_input`, as on HiDPI.
 - **Context.** The entry point still asks for 4.5 Core. On Linux, Qt falls back to what the driver grants, so a 3.3-only Mesa driver still gets a 3.3 Core context. Do not request 3.3 on Linux: the NVIDIA driver then returns exactly 3.3 and the GPU culling path turns off on capable hardware.
 - **4.x features stay behind probes.** The only callers of compute, indirect draw, immutable storage and SSBO entry points are `rigged_cull_pipeline.cpp` and `platform_gl.h`, and 4.30 GLSL includes are used only by the optional 4.30 shaders. `scripts/validate_opengl_requirements.py` check 5 enforces both.
 - **Cheaper Low tier.**
@@ -468,6 +477,8 @@ Every cell scatter already jitters each instance anywhere in its cell, so repeti
 
 ### River mist
 
+Valley fog (`valley_fog()`) is a thin bank that gathers in patches: its opacity is capped at `k_ground_fog_max_opacity` and broken up by the square of a drifting noise field, because a uniform veil over all low ground tinted whole river and forest maps teal.
+
 `post_composite.frag` lays water mist over every pixel within `k_mist_bank_reach` (7 m) of a river or lake and below `k_mist_water_ceiling` (1.7 m) above the bank, at up to `k_water_mist_strength` (0.42). The amount is applied at the surface the pixel shows, so it also has to account for how much mist lies between the lens and that surface: it is scaled by `1 - exp(-view_distance / k_mist_view_reach)` with a 9 m reach. Without that, a chase camera standing on a bridge saw the commander and the men beside him, three metres away, through the same milky veil as the far bank.
 
 ## Environment lighting
@@ -511,6 +522,14 @@ Any change to these constants needs the night and dusk check: the `lighting_moon
 ### Meadow drift
 
 At gameplay zoom (40–90 m) the terrain's fine detail is damped for readability (`ground_tactical_distance()`), and the regional and patch fields vary over hundreds of metres, so a battlefield read as one flat green. `terrain_chunk.frag` blends the grass between a sun-cured and a deep-sward tone using two extra microdetail samples at about 33 m and 12 m wavelengths (`k_soi_meadow_frequency`), warped by the existing `domain_warp`. It changes colour only, never relief, so troops stay as readable as before.
+
+### Painted sward
+
+Low-contrast noise read as green felt from the play camera, so the grass surface is drawn as overlapping tufts instead. `soi_painted_sward()` in `terrain_chunk.frag` places one fan of four to six blades per jittered cell, dark at the root and light at the tip, all leaning along `k_soi_sward_lean` so the tips point up-screen at the default yaw. A coarse layer (`k_soi_sward_frequency`, about half a metre per tuft) carries the look at gameplay zoom and a fine layer adds blades up close; both fade with the pixel footprint. In the dry, rocky and alpine ground types the same fans become straw tufts over open earth (`steppe`), which is what separates those biomes from the green ones at a glance.
+
+### Rock strata
+
+Steep faces multiply the rock colour by two beds of height bands (`k_soi_strata_frequency` and a finer one at 3.3 times that), each layer with its own tone, a light lip and a dark undercut, wandering with two low-frequency noise samples. A slope that faces away from the sun is already unlit, so it takes only `k_soi_unlit_shadow_share` of the cast shadow; applying the full shadow tint on top of an unlit face turned hillsides into black slabs.
 
 ### Rock projection, snow and ground patchwork
 
@@ -593,6 +612,19 @@ The current profile values are:
 - Ultra: `1.00`.
 
 Reducing this density should not alter walkability, cover rules, terrain height, or other simulation facts.
+
+### Ground cover
+
+`BiomeRenderer` fills one instance stream with two kinds of plant, both drawn from the seven-blade tuft mesh built in `TerrainPipeline::initialize_grass_geometry()`:
+
+- grass tufts, a couple per square metre in drifts shaped by `grass_patch_density()`, on flat ground and on hills thinned by slope;
+- wildflowers, gathered into drifts and clumps by `scatter_flowers()` from a small palette per ground type (`flower_palette_for()`).
+
+The kind rides in the integer part of the sway strength (`k_instance_kind_stride`; `k_kind_stride` in `grass_instanced.vert`). For a flower the vertex shader folds the same mesh into a stem and a flat rosette of petals, which is the shape a top-down camera actually sees.
+
+The whole stream is capped at `k_grass_instance_budget` scaled by the profile's grass density, so an 800-cell campaign map thins its sward rather than growing its buffers.
+
+Buildings are placed after the grass is generated. The grass shader therefore samples the terrain cover mask (`u_cover_tex`, stashed per frame in `TerrainPipeline::m_frame_ground_cover`) and collapses any tuft or flower that stands on a yard or at a wall foot.
 
 ## Nation and equipment appearance
 
@@ -781,7 +813,7 @@ Inspect simulation publication and snapshot acquisition first.
 
 Symptoms: snapshot contains the entity but no renderer receives it, wrong culling/visibility class, wrong renderer dispatch.
 
-Inspect `render/scene_walk.cpp` and visibility inputs.
+Inspect `render/scene_collect.cpp` (collection and visibility class), `render/scene_unit_submit.cpp` (renderer dispatch) and the visibility inputs.
 
 ### Draw queue is wrong
 
@@ -853,17 +885,17 @@ The current renderer depends on these invariants:
 
 ## Source map
 
-| Concern                | Source                                               |
-| ---------------------- | ---------------------------------------------------- |
-| Graphics profiles      | `render/graphics_settings.h`                         |
-| Backend interface      | `render/i_render_backend.h`                          |
-| Backend selection      | `render/render_backend_factory.cpp`                  |
-| Scene traversal        | `render/scene_walk.cpp`                              |
-| OpenGL backend/passes  | `render/gl/`                                         |
-| Software backend       | `render/software_backend.*`, `render/software/`      |
-| Scene/environment data | `scene/`                                             |
-| Animation/BPAT         | `animation/`                                         |
-| Shaders                | `assets/shaders/`                                    |
-| Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py` |
+| Concern                | Source                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Graphics profiles      | `render/graphics_settings.h`                                                                                     |
+| Backend interface      | `render/i_render_backend.h`                                                                                      |
+| Backend selection      | `render/render_backend_factory.cpp`                                                                              |
+| Scene traversal        | `render/scene_walk.cpp`, `render/scene_collect.cpp`, `render/scene_unit_submit.cpp`, `render/scene_overlays.cpp` |
+| OpenGL backend/passes  | `render/gl/`                                                                                                     |
+| Software backend       | `render/software_backend.*`, `render/software/`                                                                  |
+| Scene/environment data | `scene/`                                                                                                         |
+| Animation/BPAT         | `animation/`                                                                                                     |
+| Shaders                | `assets/shaders/`                                                                                                |
+| Frame pacing/profiling | `render/profiling/`, `scripts/check-frame-pacing.py`                                                             |
 
 The current implementation is the source of truth for renderer capability and quality behavior. Historical refactor notes, old preset descriptions, and proposed follow-up work are not part of the runtime contract.

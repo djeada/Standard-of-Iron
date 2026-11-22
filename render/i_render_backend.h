@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+class QImage;
 class QString;
 
 namespace Render {
@@ -39,6 +40,10 @@ public:
   virtual void set_frame_budget(const Render::FrameBudgetConfig& config) = 0;
 
   [[nodiscard]] virtual auto resources() const -> ResourceManager* = 0;
+  [[nodiscard]] virtual auto is_ready() const -> bool { return resources() != nullptr; }
+  [[nodiscard]] virtual auto presented_frame() const -> const QImage* {
+    return nullptr;
+  }
   [[nodiscard]] virtual auto shader(const QString& name) const -> Shader* = 0;
   [[nodiscard]] virtual auto supports_shaders() const -> bool = 0;
   [[nodiscard]] virtual auto shader_quality() const -> ShaderQuality = 0;

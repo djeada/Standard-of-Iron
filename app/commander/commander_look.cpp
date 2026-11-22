@@ -33,7 +33,8 @@ void CommanderLook::apply_mouse_delta(double dx, double dy, float sensitivity_sc
   const float user_y = Game::Accessibility::CommanderInput::look_sensitivity_y();
   const float pitch_sign =
       Game::Accessibility::CommanderInput::invert_look_y() ? 1.0F : -1.0F;
-  m_view_yaw +=
+
+  m_view_yaw -=
       static_cast<float>(dx) * k_mouse_yaw_sensitivity * sensitivity_scale * user_x;
   m_view_pitch += pitch_sign * static_cast<float>(dy) * k_mouse_pitch_sensitivity *
                   sensitivity_scale * user_y;
@@ -77,25 +78,26 @@ void CommanderLook::center_mouse(double center_sx,
                             static_cast<int>(std::round(center_sy)));
   m_mouse_center = local_center;
   m_mouse_center_valid = true;
-  const QPoint global_center = window->mapToGlobal(local_center);
-  const QPoint current_global = QCursor::pos();
-  if (current_global == global_center) {
-    m_last_mouse_global = global_center;
-    m_last_mouse_valid = true;
-    m_mouse_warp_supported = true;
-    m_mouse_recentering = false;
-    return;
+  warp_to_centre(window->mapToGlobal(local_center));
+  m_mouse_recentering = false;
+}
+
+void CommanderLook::warp_to_centre(const QPoint& global_center) {
+  if (QCursor::pos() != global_center) {
+    QCursor::setPos(global_center);
   }
 
-  QCursor::setPos(global_center);
-  m_mouse_warp_supported = (QCursor::pos() == global_center);
-  m_last_mouse_global = m_mouse_warp_supported ? global_center : current_global;
+  const QPoint landed = QCursor::pos();
+  m_mouse_warp_supported =
+      (landed - global_center).manhattanLength() <= k_warp_tolerance_pixels;
+  m_last_mouse_global = landed;
   m_last_mouse_valid = true;
-  m_mouse_recentering = false;
 }
 
 void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
   if (window == nullptr || !window->isActive()) {
+
+    m_last_mouse_valid = false;
     return;
   }
 
@@ -103,6 +105,9 @@ void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
   if (!m_last_mouse_valid) {
     m_last_mouse_global = current_global;
     m_last_mouse_valid = true;
+    if (m_mouse_center_valid) {
+      warp_to_centre(window->mapToGlobal(m_mouse_center));
+    }
     return;
   }
 
@@ -111,16 +116,10 @@ void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
     apply_mouse_delta(delta.x(), delta.y(), sensitivity_scale);
   }
 
-  if (m_mouse_warp_supported && m_mouse_center_valid) {
-    const QPoint global_center = window->mapToGlobal(m_mouse_center);
-    if (current_global != global_center) {
-      QCursor::setPos(global_center);
-      m_last_mouse_global = global_center;
-      return;
-    }
-  }
-
   m_last_mouse_global = current_global;
+  if (!delta.isNull() && m_mouse_warp_supported && m_mouse_center_valid) {
+    warp_to_centre(window->mapToGlobal(m_mouse_center));
+  }
 }
 
 auto CommanderLook::sample_frame_intent(const CommanderHeldInput& held)
@@ -132,7 +131,7 @@ auto CommanderLook::sample_frame_intent(const CommanderHeldInput& held)
   }
 
   m_frame_intent.look_delta =
-      QVector2D(signed_angle_delta(m_view_yaw, m_intent_sample_yaw),
+      QVector2D(rightward_look_delta(m_view_yaw, m_intent_sample_yaw),
                 m_view_pitch - m_intent_sample_pitch);
   m_intent_sample_yaw = m_view_yaw;
   m_intent_sample_pitch = m_view_pitch;

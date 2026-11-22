@@ -107,7 +107,7 @@ void GameEngine::on_match_outcome(const QString& state) {
         [this]() {
           if (!m_runtime.victory_state.isEmpty() && m_commander_view_model->active() &&
               !m_commander_view_model->follows_replay()) {
-            m_commander_view_model->exit_mode();
+            m_commander_view_model->conclude_for_outcome(m_runtime.victory_state);
           }
         },
         Qt::QueuedConnection);
@@ -168,8 +168,9 @@ void GameEngine::wire_loading_and_saves() {
               },
           .autosave_allowed =
               [this]() {
-                return m_runtime.initialized && !m_runtime.loading &&
-                       !m_level.map_path.isEmpty() && m_runtime.victory_state.isEmpty();
+                return !renderer_has_failed() && m_runtime.initialized &&
+                       !m_runtime.loading && !m_level.map_path.isEmpty() &&
+                       m_runtime.victory_state.isEmpty();
               },
           .commander_mode_active =
               [this]() {

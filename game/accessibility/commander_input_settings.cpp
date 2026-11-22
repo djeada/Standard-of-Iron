@@ -11,6 +11,8 @@ constexpr float k_min_sensitivity = 0.20F;
 constexpr float k_max_sensitivity = 4.00F;
 constexpr float k_min_fov_scale = 0.75F;
 constexpr float k_max_fov_scale = 1.35F;
+constexpr float k_min_camera_distance_scale = 0.7F;
+constexpr float k_max_camera_distance_scale = 2.4F;
 
 std::atomic<float> g_look_sensitivity_x{1.0F};
 std::atomic<float> g_look_sensitivity_y{1.0F};
@@ -19,6 +21,7 @@ std::atomic<bool> g_camera_impulse_enabled{true};
 std::atomic<bool> g_head_bob_enabled{true};
 std::atomic<float> g_field_of_view_scale{1.0F};
 std::atomic<bool> g_guard_is_toggle{false};
+std::atomic<float> g_camera_distance_scale{1.0F};
 
 } // namespace
 
@@ -73,6 +76,16 @@ auto field_of_view_scale() -> float {
   return g_field_of_view_scale.load(std::memory_order_relaxed);
 }
 
+void set_camera_distance_scale(float scale) {
+  g_camera_distance_scale.store(
+      std::clamp(scale, k_min_camera_distance_scale, k_max_camera_distance_scale),
+      std::memory_order_relaxed);
+}
+
+auto camera_distance_scale() -> float {
+  return g_camera_distance_scale.load(std::memory_order_relaxed);
+}
+
 void set_guard_is_toggle(bool enabled) {
   g_guard_is_toggle.store(enabled, std::memory_order_relaxed);
 }
@@ -88,6 +101,7 @@ void reset_to_defaults() {
   set_camera_impulse_enabled(true);
   set_head_bob_enabled(true);
   set_field_of_view_scale(1.0F);
+  set_camera_distance_scale(1.0F);
   set_guard_is_toggle(false);
 }
 

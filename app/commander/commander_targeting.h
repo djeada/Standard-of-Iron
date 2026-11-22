@@ -57,6 +57,21 @@ public:
                   int local_owner_id,
                   float view_yaw) -> bool;
 
+  enum class LockToggle : std::uint8_t {
+    Locked,
+    Released,
+    NoTarget
+  };
+  auto toggle_lock(Engine::Core::World& world,
+                   Engine::Core::EntityID commander_id,
+                   int local_owner_id,
+                   float view_yaw) -> LockToggle;
+
+  auto switch_lock(Engine::Core::World& world,
+                   Engine::Core::EntityID commander_id,
+                   int local_owner_id,
+                   int direction) -> bool;
+
   [[nodiscard]] auto steer_view_toward_lock(Engine::Core::World& world,
                                             Engine::Core::Entity& commander,
                                             const LockSteerInput& input) -> float;
@@ -93,6 +108,9 @@ private:
                                   float view_yaw) -> std::optional<LockGeometry>;
 
   void drop_lock();
+  void adopt_lock(Engine::Core::Entity& commander,
+                  Engine::Core::EntityID target_id,
+                  std::uint16_t soldier_slot);
 
   void release_lock();
   [[nodiscard]] auto lock_expired(const LockGeometry& geometry, float dt) -> bool;

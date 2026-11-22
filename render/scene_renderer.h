@@ -31,6 +31,7 @@
 #include "prepare_worker_pool.h"
 #include "render/async_template_prewarm.h"
 #include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/creature_submission_context.h"
 #include "render/creature/quadruped/runtime_context.h"
 #include "render/humanoid/runtime/runtime_context.h"
 #include "render/pipeline/screen_metrics.h"
@@ -132,6 +133,12 @@ public:
 
   auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
+  }
+  [[nodiscard]] auto is_ready() const -> bool {
+    return m_backend && m_backend->is_ready();
+  }
+  [[nodiscard]] auto last_software_frame() const -> const QImage* {
+    return m_backend ? m_backend->presented_frame() : nullptr;
   }
 
   [[nodiscard]] auto view() noexcept -> RenderViewState& { return m_view; }
@@ -460,6 +467,11 @@ public:
     render_construction_previews(world, vis, visibility_enabled && vis != nullptr);
   }
 
+  [[nodiscard]] auto creature_submission() noexcept
+      -> Render::Creature::Pipeline::CreatureSubmissionContext* override {
+    return &m_creature_submission;
+  }
+
   auto rigged_mesh_cache() noexcept -> RiggedMeshCache& { return m_rigged_mesh_cache; }
 
   auto snapshot_mesh_cache() noexcept -> SnapshotMeshCache& {
@@ -617,6 +629,8 @@ private:
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;
+  Render::Creature::Pipeline::CreatureSubmissionContext m_creature_submission{
+      m_rigged_mesh_cache, m_snapshot_mesh_cache, m_current_shader};
   Render::Ground::BuildingGroundSet m_building_ground;
   std::uint64_t m_building_ground_signature = 0U;
   StaticBuildingBatch m_static_buildings;
@@ -629,8 +643,13 @@ private:
   AsyncTemplatePrewarm m_async_prewarm;
   bool m_loading_overlay_active = false;
   bool m_forbids_runtime_bake = false;
+  // Graphics preset generation the unit templates were prewarmed for. A
+  // preset change mid-match (Settings, or the automatic step-down) needs
+  // templates at LODs nobody prewarmed, so the bake ban is lifted then.
+  std::uint32_t m_prewarmed_graphics_generation = 0;
 
   void set_forbids_runtime_bake(bool forbidden);
+  void allow_bakes_after_preset_change();
 };
 
 struct FrameScope {

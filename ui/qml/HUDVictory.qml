@@ -30,7 +30,7 @@ Design.IronOutcomeOverlay {
         victoryOverlay.forceHide();
     }
 
-    held: victoryOverlay.game_ready() && game.commander_message && game.commander_message.holds_outcome
+    held: victoryOverlay.game_ready() && ((game.commander_message && game.commander_message.holds_outcome) || (game.commander && game.commander.finale !== undefined && game.commander.finale !== ""))
     victoryState: victoryOverlay.victory_state()
     outcomeReason: victoryOverlay.game_ready() ? game.defeat_reason : ""
     isTutorial: victoryOverlay.game_ready() && !!game.tutorial && game.tutorial.finished

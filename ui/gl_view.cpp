@@ -12,6 +12,8 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
+#include <QOpenGLTextureBlitter>
 #include <QQuickWindow>
 #include <QStringList>
 #include <QSurfaceFormat>
@@ -26,6 +28,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <ctime>
 #include <exception>
 #include <numeric>
@@ -82,31 +85,43 @@ auto distribution_json(const std::vector<double>& samples) -> QJsonObject {
 
 GLView::GLView() {
   setMirrorVertically(true);
+  // The renderer sizes the framebuffer itself (it may be smaller than the item
+  // on the Low preset) and asks for a new one when the item or preset changes.
+  setTextureFollowsItemSize(false);
 }
 
 auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
-
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "GLView::createRenderer() - No valid OpenGL context";
-    qCritical() << "Running in software rendering mode - 3D view not available";
-    return nullptr;
-  }
-
-  const auto fmt = ctx->format();
-  const auto version = fmt.version();
-  if (!Render::GL::GLCapabilities::meets_minimum_version()) {
-    qWarning() << "GLView::createRenderer() - OpenGL" << version.first << "."
-               << version.second
-               << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "non-Core")
-               << "is below the 3.3 Core floor; the renderer will refuse to start "
-                  "and report the driver requirement.";
-  } else {
-    qInfo() << "GLView::createRenderer() - OpenGL" << version.first << "."
-            << version.second << "context OK";
-  }
-
   return new GLRenderer(const_cast<GLView*>(this), m_engine);
+}
+
+auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNode* {
+  if (!m_engine || m_engine->renderer_has_failed()) {
+    return node;
+  }
+  // Qt consumes the renderer and framebuffer factory results immediately.
+  // Check the context before letting Qt create either object.
+  const auto* context = QOpenGLContext::currentContext();
+  if (context == nullptr || !context->isValid()) {
+    m_engine->report_renderer_failure(
+        tr("The battlefield needs a working OpenGL 3.3 Core graphics context."));
+    return node;
+  }
+  if (!Render::GL::GLCapabilities::meets_minimum_version()) {
+    Render::GL::GLCapabilities::report_minimum_version();
+    m_engine->report_renderer_failure(
+        tr("The battlefield needs OpenGL 3.3 Core. Detected OpenGL %1.")
+            .arg(Render::GL::GLCapabilities::describe_version(context->format())));
+    return node;
+  }
+  return QQuickFramebufferObject::updatePaintNode(node, data);
+}
+
+void GLView::itemChange(ItemChange change, const ItemChangeData& value) {
+  QQuickFramebufferObject::itemChange(change, value);
+  if (change == ItemVisibleHasChanged && value.boolValue) {
+    // The renderer stops requesting frames while hidden; wake it up.
+    update();
+  }
 }
 
 auto GLView::engine() const -> QObject* {
@@ -123,7 +138,7 @@ void GLView::set_engine(QObject* eng) {
 }
 
 void GLView::notify_renderer_ready() {
-  if (m_renderer_ready) {
+  if (m_renderer_ready || !m_engine || m_engine->renderer_has_failed()) {
     return;
   }
   m_renderer_ready = true;
@@ -208,14 +223,20 @@ GLView::GLRenderer::~GLRenderer() {
 }
 
 void GLView::GLRenderer::render() {
-  if (m_engine == nullptr) {
-    qWarning() << "GLRenderer::render() - engine is null";
+  if (m_engine == nullptr || m_engine->renderer_has_failed()) {
     return;
   }
 
   QOpenGLContext* ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "GLRenderer::render() - OpenGL context lost";
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL graphics context was lost."));
+    return;
+  }
+  const auto* framebuffer = framebufferObject();
+  if (framebuffer == nullptr || !framebuffer->isValid()) {
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield framebuffer could not be created."));
     return;
   }
 
@@ -248,16 +269,39 @@ void GLView::GLRenderer::render() {
       }
     }
 
-    if (!m_engine->try_begin_render_frame()) {
+    // Behind the front-end screens the battlefield item is hidden, but Qt
+    // still calls render(); each frame then asked for the next one and the
+    // empty world was drawn at full resolution under the main menu forever.
+    // Once the renderer exists, a hidden view draws nothing and stops asking;
+    // GLView::itemChange() restarts it when the view is shown.
+    if (!m_item_visible && m_engine->renderer_initialized()) {
+      return;
+    }
 
-      update();
+    if (!m_engine->try_begin_render_frame()) {
+      if (m_item_visible) {
+        update();
+      }
       return;
     }
     const FrameGate frame_gate{m_engine};
 
     m_engine->ensure_initialized();
     if (!m_engine->renderer_initialized()) {
-      qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";
+      m_engine->report_renderer_failure(
+          GLView::tr("The OpenGL battlefield renderer failed."));
+      return;
+    }
+    if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
+      m_engine->start_simulation_thread();
+    }
+    if (!m_item_visible) {
+      // Initialised behind the menu: report readiness, draw nothing.
+      if (!m_ready_reported && m_view != nullptr) {
+        m_ready_reported = true;
+        QMetaObject::invokeMethod(
+            m_view, "notify_renderer_ready", Qt::QueuedConnection);
+      }
       return;
     }
     if (m_film_fps <= 0 && !m_engine->simulation_thread_running()) {
@@ -287,6 +331,12 @@ void GLView::GLRenderer::render() {
     const std::uint64_t simulation_us = m_engine->take_simulation_tick_us();
     profile.add_phase_us(Render::Profiling::Phase::Simulation, simulation_us);
 
+    double frame_interval_ms = 0.0;
+    if (m_last_frame_time.time_since_epoch().count() != 0) {
+      frame_interval_ms = std::chrono::duration<double, std::milli>(frame_work_start -
+                                                                    m_last_frame_time)
+                              .count();
+    }
     float dt = 1.0F / 60.0F;
     if (m_film_fps > 0) {
       dt = 1.0F / static_cast<float>(m_film_fps);
@@ -295,7 +345,32 @@ void GLView::GLRenderer::render() {
       dt = std::min(dt, 0.1F);
     }
     m_last_frame_time = frame_work_start;
-    m_engine->render(m_size.width(), m_size.height());
+    const quint64 rendered_load = m_engine->render(m_size.width(), m_size.height());
+    if (const QImage* cpu_frame = m_engine->last_software_frame();
+        cpu_frame != nullptr) {
+      QOpenGLTexture texture(*cpu_frame, QOpenGLTexture::DontGenerateMipMaps);
+      if (!texture.isCreated() ||
+          (!m_software_blitter.isCreated() && !m_software_blitter.create())) {
+        m_engine->report_renderer_failure(
+            GLView::tr("The OpenGL battlefield renderer failed."));
+        return;
+      }
+      texture.setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Nearest);
+      ctx->functions()->glViewport(0, 0, m_size.width(), m_size.height());
+      m_software_blitter.bind();
+      m_software_blitter.blit(
+          texture.textureId(), QMatrix4x4(), QOpenGLTextureBlitter::OriginTopLeft);
+      m_software_blitter.release();
+    }
+    m_engine->notify_loading_frame_presented(rendered_load);
+    observe_frame_rate(frame_interval_ms, m_benchmark_seconds > 0.0 || m_film_fps > 0);
+    if (m_item_pixel_size.isValid() && !m_resize_requested &&
+        scaled_framebuffer_size(m_item_pixel_size) != m_size && m_view != nullptr) {
+      // The preset's render scale changed. synchronize() only runs when the
+      // item is dirty, so mark it from the GUI thread.
+      m_resize_requested = true;
+      QMetaObject::invokeMethod(m_view, "update", Qt::QueuedConnection);
+    }
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;
     const double thread_cpu_end_ms = render_thread_cpu_ms();
@@ -320,9 +395,12 @@ void GLView::GLRenderer::render() {
 
   } catch (const std::exception& e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield renderer failed."));
     return;
   } catch (...) {
-    qCritical() << "GLRenderer::render() unknown exception";
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield renderer failed."));
     return;
   }
 
@@ -333,7 +411,28 @@ void GLView::GLRenderer::render() {
       std::this_thread::sleep_for(wait);
     }
   }
-  update();
+  if (m_item_visible) {
+    update();
+  }
+}
+
+void GLView::GLRenderer::observe_frame_rate(double frame_interval_ms,
+                                            bool cadence_exempt) {
+  auto& graphics = Render::GraphicsSettings::instance();
+  const bool eligible = !cadence_exempt && m_cadence.window_active() &&
+                        m_engine->last_render_was_gameplay();
+  const auto lower = m_quality_governor.observe(frame_interval_ms,
+                                                eligible,
+                                                graphics.quality(),
+                                                graphics.quality_chosen_by_user());
+  if (!lower.has_value()) {
+    return;
+  }
+  if (graphics.lower_quality_automatically(*lower)) {
+    qInfo() << "GLView: battle frame rate stayed below"
+            << qRound(1000.0 / m_quality_governor.policy().slow_frame_ms)
+            << "fps; lowering graphics to" << Render::graphics_quality_key(*lower);
+  }
 }
 
 void GLView::GLRenderer::warm_commander_portraits() {
@@ -878,29 +977,73 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
   QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 }
 
-auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
-    -> QOpenGLFramebufferObject* {
-  m_size = size;
+auto GLView::GLRenderer::scaled_framebuffer_size(const QSize& item_pixels) const
+    -> QSize {
+  // Captures (film, benchmarks) always get the full picture.
+  if (m_benchmark_seconds > 0.0 || m_film_fps > 0) {
+    return item_pixels;
+  }
+  const auto extent =
+      Render::scaled_render_extent(Render::GraphicsSettings::instance().render_scale(),
+                                   item_pixels.width(),
+                                   item_pixels.height());
+  return {extent[0], extent[1]};
+}
 
-  QOpenGLContext* ctx = QOpenGLContext::currentContext();
-  if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "GLRenderer::createFramebufferObject() - No valid OpenGL context";
-    return nullptr;
+auto GLView::GLRenderer::createFramebufferObject(const QSize& requested)
+    -> QOpenGLFramebufferObject* {
+  // `requested` is the item's pixel size; Qt stretches whatever we return
+  // over the item, so a smaller framebuffer is a cheaper 3D view under a
+  // full-resolution HUD.
+  m_item_pixel_size = requested;
+  m_resize_requested = false;
+  const QSize size = scaled_framebuffer_size(requested);
+  m_size = size;
+  if (size != requested) {
+    qInfo() << "GLView: drawing the battlefield at" << size << "for a" << requested
+            << "view";
   }
 
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-  return new QOpenGLFramebufferObject(size, fmt);
+  auto framebuffer = std::make_unique<QOpenGLFramebufferObject>(size, fmt);
+  if (framebuffer->isValid()) {
+    return framebuffer.release();
+  }
+  if (m_engine != nullptr) {
+    qCritical() << "Could not allocate gameplay framebuffer of size" << size;
+    m_engine->report_renderer_failure(
+        GLView::tr("The OpenGL battlefield framebuffer could not be created."));
+  }
+  // Qt still needs a framebuffer texture for this scene graph node.
+  framebuffer.reset();
+  return new QOpenGLFramebufferObject(QSize(1, 1));
 }
 
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   auto* view = dynamic_cast<GLView*>(item);
   m_engine = qobject_cast<GameEngine*>(view->engine());
+  m_item_visible = view->isVisible();
   const bool cadence_exempt = m_benchmark_seconds > 0.0 || m_film_fps > 0;
   m_cadence.set_window_active(
       cadence_exempt || (view->window() != nullptr && view->window()->isActive()));
   if (m_engine != nullptr) {
     m_engine->set_input_viewport_size(view->width(), view->height());
+  }
+
+  if (view->window() != nullptr && m_item_pixel_size.isValid()) {
+    // Same arithmetic Qt uses for the size it passes to
+    // createFramebufferObject(), so an unchanged item never looks resized.
+    const QSize item_pixels = QSize(qMax(1, static_cast<int>(view->width())),
+                                    qMax(1, static_cast<int>(view->height()))) *
+                              view->window()->effectiveDevicePixelRatio();
+    const bool resized =
+        std::abs(item_pixels.width() - m_item_pixel_size.width()) > 1 ||
+        std::abs(item_pixels.height() - m_item_pixel_size.height()) > 1;
+    if (resized || scaled_framebuffer_size(m_item_pixel_size) != m_size) {
+      // The item was resized or the preset's render scale changed.
+      invalidateFramebufferObject();
+    }
   }
 
   if (m_engine != nullptr) {

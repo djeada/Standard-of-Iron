@@ -75,9 +75,9 @@ void main() {
 
   float silhouette = 1.0 - abs(dot(geometric_normal, view_dir));
 
-  vec3 leaf_dark_green = vec3(0.060, 0.090, 0.058);
-  vec3 leaf_mid_green = vec3(0.160, 0.215, 0.128);
-  vec3 leaf_light_green = vec3(0.300, 0.360, 0.220);
+  vec3 leaf_dark_green = vec3(0.092, 0.128, 0.082);
+  vec3 leaf_mid_green = vec3(0.205, 0.262, 0.158);
+  vec3 leaf_light_green = vec3(0.345, 0.405, 0.255);
   vec3 leaf_silver = vec3(0.560, 0.610, 0.540);
   vec3 leaf_sun = vec3(0.440, 0.500, 0.300);
 
@@ -138,10 +138,10 @@ void main() {
   float canopy_shape = mix(0.82, 1.08, canopy_edge) * mix(0.90, 1.10, canopy_height);
   float canopy_occlusion = clamp(canopy_shape * mix(1.0, 0.72, canopy_core) *
                                      mix(1.0, 0.84, underside) * clump_shadow,
-                                 0.38,
+                                 0.58,
                                  1.14);
   float ao = mix(1.0, canopy_occlusion, v_foliage_mask) * mix(0.72, 1.0, hemi);
-  ao *= mix(1.0, mix(0.52, 1.06, crevice), v_foliage_mask);
+  ao *= mix(1.0, mix(0.72, 1.06, crevice), v_foliage_mask);
 
   float bark_u = v_tex_coord.x * TWO_PI;
   float bark_v = v_tex_coord.y;

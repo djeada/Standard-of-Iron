@@ -20,6 +20,9 @@ void set_head_bob_enabled(bool enabled);
 void set_field_of_view_scale(float scale);
 [[nodiscard]] auto field_of_view_scale() -> float;
 
+void set_camera_distance_scale(float scale);
+[[nodiscard]] auto camera_distance_scale() -> float;
+
 void set_guard_is_toggle(bool enabled);
 [[nodiscard]] auto guard_is_toggle() -> bool;
 

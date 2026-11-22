@@ -1,3 +1,4 @@
+#include <cmath>
 #include <gtest/gtest.h>
 #include <mutex>
 
@@ -7,6 +8,7 @@
 #include "app/viewmodels/camera_view_model.h"
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -260,6 +262,135 @@ TEST_F(CommanderViewModelInputTest, FocusLossClearsEveryHeldCommanderAction) {
   }
   EXPECT_NEAR(transform->position.z, start_z, 1.0e-3F)
       << "input released on focus loss must not leave the commander walking";
+}
+
+TEST_F(CommanderViewModelInputTest, TakingControlDropsTheCameraInsteadOfCuttingToIt) {
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  Render::GL::Camera army_camera;
+  const QVector3D army_eye(30.0F, 48.0F, -26.0F);
+  army_camera.look_at(
+      army_eye, QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F));
+  m_context.rts_camera = &army_camera;
+
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+  EXPECT_LT((m_commander_camera.get_position() - army_eye).length(), 0.5F)
+      << "the first frame of commander control is still the army view";
+
+  float seconds = 0.0F;
+  float previous_height = m_commander_camera.get_position().y();
+  while (seconds < 1.0F) {
+    m_commander->update_camera_presentation(k_tick);
+    float const height = m_commander_camera.get_position().y();
+    EXPECT_LE(height, previous_height + 0.05F);
+    previous_height = height;
+    seconds += k_tick;
+  }
+  EXPECT_LT(m_commander_camera.get_position().y(), 6.0F)
+      << "a second later the lens is at the commander's shoulder";
+  EXPECT_LT(std::hypot(m_commander_camera.get_position().x(),
+                       m_commander_camera.get_position().z()),
+            8.0F);
+  m_context.rts_camera = nullptr;
+}
+
+TEST_F(CommanderViewModelInputTest, AWonBattleHoldsTheCommandersViewBeforeTheVerdict) {
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+  m_commander->update_control_mode(k_tick);
+  m_commander->update_camera_presentation(k_tick);
+  QVector3D const eye_before = m_commander_camera.get_position();
+
+  m_commander->conclude_for_outcome(QStringLiteral("victory"));
+  EXPECT_TRUE(m_commander->active())
+      << "the verdict used to throw the player out of the commander's view on the "
+         "frame the battle ended";
+  EXPECT_EQ(m_commander->finale(), QStringLiteral("victory"));
+  EXPECT_LT(m_commander->time_effect_scale(k_tick, false), 1.0F)
+      << "the closing beat plays in slow motion";
+
+  m_commander->key_down(Qt::Key_W);
+  m_commander->update_control_mode(k_tick);
+  auto const* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_NEAR(transform->position.z, 0.0F, 1.0e-3F);
+  m_commander->toggle_mode();
+  EXPECT_TRUE(m_commander->active()) << "the beat cannot be skipped into the army view";
+
+  float seconds = 0.0F;
+  while (seconds < App::Core::CommanderFinale::k_duration_seconds + 0.2F) {
+    m_commander->update_camera_presentation(k_tick);
+    seconds += k_tick;
+  }
+  EXPECT_GT((m_commander_camera.get_position() - eye_before).length(), 1.0F)
+      << "the camera has to have made its turn";
+
+  m_commander->finish_finale();
+  EXPECT_FALSE(m_commander->active());
+  EXPECT_TRUE(m_commander->finale().isEmpty());
+  EXPECT_FLOAT_EQ(m_commander->time_effect_scale(k_tick, false), 1.0F);
+}
+
+TEST_F(CommanderViewModelInputTest, TheCommandersDeathIsWatchedNotCutAwayFrom) {
+  auto* commander = spawn_commander(3.0F, -2.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+  m_commander->update_control_mode(k_tick);
+  m_commander->update_camera_presentation(k_tick);
+
+  auto* unit = commander->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->health = 0;
+  m_commander->controlled_commander_fell();
+
+  EXPECT_TRUE(m_commander->active());
+  EXPECT_EQ(m_commander->finale(), QStringLiteral("fallen"));
+
+  for (int tick = 0; tick < 30; ++tick) {
+    m_commander->update_control_mode(k_tick);
+    m_commander->update_camera_presentation(k_tick);
+  }
+  EXPECT_TRUE(m_commander->active());
+
+  m_commander->conclude_for_outcome(QStringLiteral("defeat"));
+  EXPECT_EQ(m_commander->finale(), QStringLiteral("fallen"));
+
+  QVector3D const target = m_commander_camera.get_target();
+  EXPECT_LT(std::hypot(target.x() - 3.0F, target.z() + 2.0F), 4.0F)
+      << "the lens stays with the fallen commander";
+
+  m_commander->finish_finale();
+  EXPECT_FALSE(m_commander->active());
+}
+
+TEST_F(CommanderViewModelInputTest, LeavingByAnyOtherRouteEndsTheClosingBeat) {
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mode();
+  m_commander->conclude_for_outcome(QStringLiteral("defeat"));
+  ASSERT_EQ(m_commander->finale(), QStringLiteral("defeat"));
+
+  m_commander->exit_mode();
+  EXPECT_TRUE(m_commander->finale().isEmpty());
+  EXPECT_FALSE(m_commander->active());
+  m_commander->finish_finale();
+  EXPECT_FALSE(m_commander->active());
+}
+
+TEST_F(CommanderViewModelInputTest, ReducedMotionSkipsTheClosingBeat) {
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mode();
+  Game::Accessibility::MotionSettings::set_reduced_motion(true);
+  m_commander->conclude_for_outcome(QStringLiteral("victory"));
+  Game::Accessibility::MotionSettings::set_reduced_motion(false);
+  EXPECT_TRUE(m_commander->finale().isEmpty());
+  EXPECT_FALSE(m_commander->active())
+      << "with reduced motion the verdict follows at once, as it always did";
 }
 
 TEST_F(CommanderViewModelInputTest, LandingAHitNeverSlowsTheSimulationClock) {

@@ -5,6 +5,7 @@
 -->
 <RCC>
     <qresource prefix="/arena_rpg_hud">
+        <file alias="RpgBearingStrip.qml">../../ui/qml/RpgBearingStrip.qml</file>
         <file alias="RpgFpvOverlay.qml">../../ui/qml/RpgFpvOverlay.qml</file>
         <file alias="RpgMeter.qml">../../ui/qml/RpgMeter.qml</file>
         <file alias="WorldProjector.qml">../../ui/qml/WorldProjector.qml</file>

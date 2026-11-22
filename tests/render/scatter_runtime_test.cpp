@@ -212,6 +212,28 @@ TEST(ScatterRuntimeTest, BiomeRendererConfiguresLargeTerrainWithoutReallocationC
   EXPECT_GT(renderer.instance_count(), 0U);
 }
 
+TEST(ScatterRuntimeTest, MeadowCoverIsDenseOnSmallMapsAndBudgetedOnHugeOnes) {
+  Game::Map::BiomeSettings fertile;
+  Game::Map::apply_ground_type_defaults(fertile, Game::Map::GroundType::SoilFertile);
+  auto const tufts_for = [&](int size) {
+    Game::Map::TerrainHeightMap const height_map(size, size, 1.0F);
+    Render::GL::BiomeRenderer renderer;
+    renderer.set_world_view(
+        Render::WorldView::of(Game::Session::SessionContext::active()));
+    renderer.configure(height_map, fertile);
+    return renderer.instance_count();
+  };
+
+  const auto small = tufts_for(96);
+  EXPECT_GT(small, 96U * 96U)
+      << "a fertile meadow needs more than one tuft a square metre to read as grass";
+
+  const auto huge = tufts_for(800);
+  EXPECT_LT(huge, 1'500'000U)
+      << "the largest campaign maps must stay inside the ground-cover budget";
+  EXPECT_GT(huge, 400'000U);
+}
+
 TEST(ScatterRuntimeTest, LargeRockyMapsGrowBouldersAndLogsAsWorldProps) {
   Game::Map::TerrainHeightMap const height_map(96, 96, 1.0F);
   Game::Map::BiomeSettings biome_settings;

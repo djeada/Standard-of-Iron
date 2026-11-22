@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -221,8 +222,15 @@ auto CommanderTargeting::cycle_lock(Engine::Core::World& world,
   LockCandidate const chosen = m_locked_target_id == 0
                                    ? nearest_to_centre(candidates)
                                    : next_in_sweep(candidates, m_locked_target_id);
-  m_locked_target_id = chosen.id;
-  m_locked_target_slot = chosen.soldier_slot;
+  adopt_lock(*commander, chosen.id, chosen.soldier_slot);
+  return true;
+}
+
+void CommanderTargeting::adopt_lock(Engine::Core::Entity& commander,
+                                    Engine::Core::EntityID target_id,
+                                    std::uint16_t soldier_slot) {
+  m_locked_target_id = target_id;
+  m_locked_target_slot = soldier_slot;
   m_soft_target_id = m_locked_target_id;
   m_soft_target_slot = m_locked_target_slot;
   m_lock_lost_timer = 0.0F;
@@ -230,12 +238,135 @@ auto CommanderTargeting::cycle_lock(Engine::Core::World& world,
 
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
-              commander)) {
+              &commander)) {
     rpg_targets->explicit_lock_target_id = m_locked_target_id;
     rpg_targets->explicit_lock_soldier_slot = m_locked_target_slot;
     rpg_targets->aim_candidate_id = m_soft_target_id;
     rpg_targets->aim_candidate_soldier_slot = m_soft_target_slot;
   }
+}
+
+auto CommanderTargeting::toggle_lock(Engine::Core::World& world,
+                                     Engine::Core::EntityID commander_id,
+                                     int local_owner_id,
+                                     float view_yaw) -> LockToggle {
+  Engine::Core::Timing::ScopedAccumulator const lock_scope(
+      Engine::Core::Timing::commander_targeting());
+  auto* commander = controlled_commander(world, commander_id, local_owner_id);
+  if (commander == nullptr) {
+    return LockToggle::NoTarget;
+  }
+  if (m_locked_target_id != 0) {
+    release_lock();
+    clear_published_lock(*commander);
+    Game::Audio::play_cue(Game::Audio::Cue::k_ui_deselect);
+    return LockToggle::Released;
+  }
+  return cycle_lock(world, commander_id, local_owner_id, view_yaw)
+             ? LockToggle::Locked
+             : LockToggle::NoTarget;
+}
+
+auto CommanderTargeting::switch_lock(Engine::Core::World& world,
+                                     Engine::Core::EntityID commander_id,
+                                     int local_owner_id,
+                                     int direction) -> bool {
+  Engine::Core::Timing::ScopedAccumulator const lock_scope(
+      Engine::Core::Timing::commander_targeting());
+  auto* commander = controlled_commander(world, commander_id, local_owner_id);
+  auto const* transform = world.try_get<Engine::Core::TransformComponent>(commander_id);
+  if (commander == nullptr || transform == nullptr || m_locked_target_id == 0 ||
+      direction == 0) {
+    return false;
+  }
+  auto const locked = locked_position(world);
+  if (!locked.has_value()) {
+    return false;
+  }
+  const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
+
+  float const locked_bearing =
+      std::atan2(locked->x() - origin.x(), locked->z() - origin.z()) *
+      k_radians_to_degrees;
+  constexpr float k_same_bearing_degrees = 1.0F;
+  constexpr float k_switch_arc_degrees = 110.0F;
+  constexpr float k_switch_degrees_per_metre = 8.0F;
+
+  constexpr float k_formation_reach = 14.0F;
+  float const locked_distance =
+      std::hypot(locked->x() - origin.x(), locked->z() - origin.z());
+
+  auto& owners = Game::Session::session_for(world).owners();
+  Engine::Core::EntityID best_id = 0;
+  std::uint16_t best_slot = k_no_slot;
+  float best_score = std::numeric_limits<float>::max();
+  std::vector<Engine::Core::EntityID> nearby;
+  world.spatial_index().refresh(world);
+  world.spatial_index().for_each_in_radius(
+      origin.x(),
+      origin.z(),
+      k_lock_range + k_formation_reach,
+      [&nearby, commander_id](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        if (entry.id != commander_id) {
+          nearby.push_back(entry.id);
+        }
+      });
+  for (Engine::Core::EntityID const candidate_id : nearby) {
+    auto* candidate = world.get_entity(candidate_id);
+    if (candidate == nullptr) {
+      continue;
+    }
+    if (Game::Systems::Combat::evaluate_target(
+            owners,
+            local_owner_id,
+            candidate,
+            {.intent = Game::Systems::Combat::EngagementIntent::AutoAcquired,
+             .allow_buildings = true}) != Game::Systems::Combat::TargetRefusal::None) {
+      continue;
+    }
+    for (auto const& soldier :
+         Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
+      if (candidate->get_id() == m_locked_target_id &&
+          soldier.soldier_slot == m_locked_target_slot) {
+        continue;
+      }
+      float const dx = soldier.position.x() - origin.x();
+      float const dz = soldier.position.z() - origin.z();
+      float const distance_sq = (dx * dx) + (dz * dz);
+      if (distance_sq > k_lock_range_sq) {
+        continue;
+      }
+      float const offset =
+          signed_angle_delta(std::atan2(dx, dz) * k_radians_to_degrees, locked_bearing);
+
+      bool const on_side = direction > 0 ? offset < -k_same_bearing_degrees
+                                         : offset > k_same_bearing_degrees;
+      if (!on_side) {
+        continue;
+      }
+      float const magnitude = std::abs(offset);
+      if (magnitude > k_switch_arc_degrees) {
+        continue;
+      }
+
+      float const deeper = std::max(0.0F, std::sqrt(distance_sq) - locked_distance);
+      float const score = magnitude + (deeper * k_switch_degrees_per_metre);
+      if (score >= best_score) {
+        continue;
+      }
+      if (!Game::Systems::has_clear_building_los(
+              buildings_of(world), origin, soldier.position)) {
+        continue;
+      }
+      best_id = candidate->get_id();
+      best_slot = soldier.soldier_slot;
+      best_score = score;
+    }
+  }
+  if (best_id == 0) {
+    return false;
+  }
+  adopt_lock(*commander, best_id, best_slot);
   return true;
 }
 

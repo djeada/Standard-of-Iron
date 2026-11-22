@@ -23,6 +23,14 @@ The following pipeline modules reduce backend.cpp complexity (2055 → 973 lines
 - ✅ `water_pipeline.h/.cpp` - River, riverbank, and bridge rendering (90 lines)
 - ✅ `effects_pipeline.h/.cpp` - Grid, selection rings, selection smoke (75 lines)
 
+### Pass implementations
+
+- `directional_shadow_pass.cpp` - Cascaded directional shadow pass: shadow-map
+  resource lifetime, receiver slab and cascade fitting, static-caster cache,
+  rigged and scatter casters, GL state save/restore, and the shadow UBO. The pure
+  maths it uses (light basis, texel-snapped cascade frame, caster culling) lives in
+  `../shadow_cascade_fit.h` and is covered by `tests/render/shadow_cascade_fit_test.cpp`.
+
 ### Utilities
 
 - `pipeline_interface.h` - Abstract base class for all pipeline implementations
