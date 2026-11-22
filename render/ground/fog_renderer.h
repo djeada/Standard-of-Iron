@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "render/frame/draw_commands.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/gl/buffer.h"
 #include "render/gl/texture.h"
 #include "render/ground/visibility_mask_encoder.h"
@@ -17,7 +17,7 @@ namespace Render::GL {
 class FrameSubmitter;
 class ResourceManager;
 
-class FogRenderer : public IRenderPass {
+class FogRenderer : public IDrawSource {
 public:
   FogRenderer() = default;
   ~FogRenderer() override = default;

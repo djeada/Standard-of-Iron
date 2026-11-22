@@ -8,7 +8,7 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain_service.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/frame/world_chunk.h"
 
 namespace Render::GL {
@@ -17,7 +17,7 @@ class ResourceManager;
 class Mesh;
 class Texture;
 
-class GroundRenderer : public IRenderPass {
+class GroundRenderer : public IDrawSource {
 public:
   void configure(float tile_size, int width, int height) {
     m_tile_size = tile_size;

@@ -13,14 +13,14 @@
 #include "game/map/terrain.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/frame_submitter.h"
-#include "render/ground/i_scatter_pass.h"
+#include "render/ground/i_scatter_source.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_submission.h"
 
 namespace Render::GL {
 
 template <typename Instance, typename Params>
-class ScatterRendererBase : public IScatterPass {
+class ScatterRendererBase : public IScatterSource {
 public:
   [[nodiscard]] auto is_gpu_ready() const -> bool override {
     return m_state.is_gpu_ready();

@@ -7,14 +7,14 @@
 #include <memory>
 #include <vector>
 
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/gl/mesh.h"
 
 namespace Render::GL {
 class FrameSubmitter;
 class ResourceManager;
 
-class MapBoundaryFogRenderer : public IRenderPass {
+class MapBoundaryFogRenderer : public IDrawSource {
 public:
   MapBoundaryFogRenderer() = default;
   ~MapBoundaryFogRenderer() override = default;

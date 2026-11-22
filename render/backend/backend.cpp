@@ -342,7 +342,7 @@ auto Backend::banner_mesh() const -> Mesh* {
 
 auto Backend::banner_shader() const -> Shader* {
   if (m_banner_pipeline != nullptr) {
-    return m_banner_pipeline->m_banner_shader;
+    return m_banner_pipeline->shader();
   }
   return nullptr;
 }

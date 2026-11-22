@@ -220,14 +220,6 @@ private:
                                     const Camera& cam);
   void upload_frame_data(const QMatrix4x4& view_proj, bool depth_only);
 
-  void set_ground_plane_uniforms(Shader& shader,
-                                 const TerrainSurfaceCmd& single,
-                                 const QMatrix4x4& mvp,
-                                 const QVector3D& camera_position);
-  void set_terrain_chunk_uniforms(Shader& shader,
-                                  const TerrainSurfaceCmd& single,
-                                  const QMatrix4x4& mvp,
-                                  const QVector3D& camera_position);
 
   void execute_cylinder_commands(const PreparedBatch& prepared,
                                  PipelineDrawContext& context);

@@ -6,6 +6,7 @@ set(RENDER_BACKEND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/cursed_gold_vein_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/cylinder_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/cylinder_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/cylinder_pipeline_draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/dead_tree_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/directional_shadow_pass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/effects_command_executor.cpp
@@ -37,11 +38,14 @@ set(RENDER_BACKEND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/tent_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/terrain_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/terrain_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/terrain_pipeline_draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/tree_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline_draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline_natural.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/vegetation_pipeline_settlement.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/water_linear_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/water_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/water_pipeline_draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/backend/weapon_rack_mesh.cpp
 )

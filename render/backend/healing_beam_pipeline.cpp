@@ -132,6 +132,25 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
                                    indices);
 }
 
+void HealingBeamPipeline::draw_beams(const PreparedBatch& prepared,
+                                     PipelineDrawContext& context) {
+  if (!is_initialized()) {
+    return;
+  }
+  for (std::size_t idx = prepared.start; idx < prepared.end(); ++idx) {
+    const auto& eff = std::get<EffectBatchCmdIndex>(context.queue.get_sorted(idx));
+    render_single_beam(eff.position,
+                       eff.end_pos,
+                       eff.color,
+                       eff.progress,
+                       eff.beam_width,
+                       eff.intensity,
+                       eff.time,
+                       context.frame.view_proj);
+  }
+  context.state.bound_shader = nullptr;
+}
+
 void HealingBeamPipeline::render_single_beam(const QVector3D& start,
                                              const QVector3D& end,
                                              const QVector3D& color,

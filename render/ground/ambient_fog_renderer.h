@@ -8,14 +8,14 @@
 
 #include "game/map/map_definition.h"
 #include "render/frame/draw_commands.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/gl/buffer.h"
 
 namespace Render::GL {
 class FrameSubmitter;
 class ResourceManager;
 
-class AmbientFogRenderer : public IRenderPass {
+class AmbientFogRenderer : public IDrawSource {
 public:
   AmbientFogRenderer() = default;
   ~AmbientFogRenderer() override = default;

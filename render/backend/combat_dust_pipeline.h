@@ -7,7 +7,9 @@
 #include <cstddef>
 
 #include "render/backend/mesh_buffers.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_queue.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -71,6 +73,9 @@ public:
   void render_blood_pool_batch(const BloodPoolInstanceData* instances,
                                std::size_t count,
                                const QMatrix4x4& view_proj);
+
+  void draw_dust_effects(const PreparedBatch& prepared, PipelineDrawContext& context);
+  void draw_blood_pools(const PreparedBatch& prepared, PipelineDrawContext& context);
 
 private:
   auto create_dust_geometry() -> bool;

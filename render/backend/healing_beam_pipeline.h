@@ -5,7 +5,9 @@
 #include <QtGui/qopengl.h>
 
 #include "render/backend/mesh_buffers.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_queue.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -32,6 +34,8 @@ public:
                           float intensity,
                           float time,
                           const QMatrix4x4& view_proj);
+
+  void draw_beams(const PreparedBatch& prepared, PipelineDrawContext& context);
 
 private:
   auto create_beam_geometry() -> bool;

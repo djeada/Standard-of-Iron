@@ -8,11 +8,14 @@
 #include <string>
 #include <vector>
 
+#include "render/backend/state_scopes.h"
+#include "render/backend/uniform_helpers.h"
 #include "render/geom/ground_marker_pattern.h"
 #include "render/geom/ground_marker_tessellation.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
+#include "render/gl/texture.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -24,6 +27,22 @@ namespace {
 constexpr int k_radial_segments = 6;
 constexpr std::size_t k_default_instance_capacity = 256;
 constexpr std::size_t k_capacity_growth = 2;
+
+constexpr float k_ground_marker_offset = 0.06F;
+
+constexpr float k_ground_marker_slope_clearance = 0.14F;
+constexpr float k_ground_marker_max_slope_lift = 4.0F;
+
+constexpr float k_ground_marker_min_pixels = 1.6F;
+constexpr float k_ground_marker_max_thickness_gain = 6.0F;
+
+auto ground_marker_world_per_cell(const TerrainSurfaceCmd::HeightResources& height)
+    -> float {
+  if (height.uv_scale.x() <= 0.0F || height.texel_size.x() <= 0.0F) {
+    return 1.0F;
+  }
+  return height.texel_size.x() / height.uv_scale.x();
+}
 
 } // namespace
 
@@ -233,6 +252,101 @@ void GroundMarkerPipeline::build_mesh(StaticMeshBuffers& mesh, int angular_segme
   glVertexAttribDivisor(VertexAttrib::instance_color, 1);
 
   glBindVertexArray(0);
+}
+
+void GroundMarkerPipeline::draw_markers(const PreparedBatch& prepared,
+                                        PipelineDrawContext& context) {
+  if (!is_initialized()) {
+    return;
+  }
+
+  const auto& queue = context.queue;
+  const std::size_t i = prepared.start;
+  const std::size_t batch_end = prepared.end();
+
+  DepthMaskScope const depth_mask(false);
+  DepthTestScope const depth_test(true);
+  PolygonOffsetScope const poly(-1.0F, -1.0F);
+  BlendScope const blend(true);
+  CullFaceScope const cull(false);
+
+  Shader* marker_shader = m_shader;
+  marker_shader->use();
+  context.state.bound_shader = marker_shader;
+  context.state.bound_texture = nullptr;
+
+  const auto& uniforms = m_uniforms;
+  upload_pattern_table();
+  set_uniform_if_valid(*marker_shader, uniforms.time, context.frame.animation_time);
+  set_uniform_if_valid(*marker_shader, uniforms.ground_offset, k_ground_marker_offset);
+  set_uniform_if_valid(
+      *marker_shader,
+      uniforms.half_viewport,
+      QVector2D(static_cast<float>(context.frame.viewport_width) * 0.5F,
+                static_cast<float>(context.frame.viewport_height) * 0.5F));
+  set_uniform_if_valid(
+      *marker_shader, uniforms.min_marker_pixels, k_ground_marker_min_pixels);
+  set_uniform_if_valid(
+      *marker_shader, uniforms.max_thickness_gain, k_ground_marker_max_thickness_gain);
+
+  const auto& height = std::get<GroundMarkerCmdIndex>(queue.get_sorted(i)).height;
+  const bool has_height = height.enabled && height.texture != nullptr;
+  set_uniform_if_valid(*marker_shader, uniforms.has_height_tex, has_height ? 1 : 0);
+  float world_per_cell = 1.0F;
+  if (has_height) {
+    height.texture->bind(TextureUnit::terrain_height);
+    context.state.bound_texture = height.texture;
+    set_uniform_if_valid(
+        *marker_shader, uniforms.height_tex, TextureUnit::terrain_height);
+    set_uniform_if_valid(*marker_shader, uniforms.height_uv_scale, height.uv_scale);
+    set_uniform_if_valid(*marker_shader, uniforms.height_uv_offset, height.uv_offset);
+    set_uniform_if_valid(*marker_shader, uniforms.height_to_world, height.to_world);
+
+    world_per_cell = ground_marker_world_per_cell(height);
+    set_uniform_if_valid(*marker_shader,
+                         uniforms.height_world_per_texel,
+                         QVector2D(world_per_cell, world_per_cell));
+    set_uniform_if_valid(
+        *marker_shader, uniforms.slope_clearance, k_ground_marker_slope_clearance);
+    set_uniform_if_valid(
+        *marker_shader, uniforms.max_slope_lift, k_ground_marker_max_slope_lift);
+  }
+
+  const auto marker_instance = [](const GroundMarkerCmd& marker,
+                                  float alpha) -> InstanceGpu {
+    return {.center_radius = QVector4D(marker.center, marker.outer_radius),
+            .color_alpha = QVector4D(marker.color, alpha),
+            .shape = QVector4D(marker.thickness,
+                               static_cast<float>(marker.pattern),
+                               marker.focused ? 1.0F : 0.0F,
+                               marker.phase)};
+  };
+
+  begin_batch();
+  bool any_occluded = false;
+  for (std::size_t j = i; j < batch_end; ++j) {
+    const auto& marker = std::get<GroundMarkerCmdIndex>(queue.get_sorted(j));
+    any_occluded = any_occluded || marker.occluded_alpha > 0.0F;
+    add_instance(
+        marker_instance(marker, marker.alpha), marker.outer_radius, world_per_cell);
+  }
+  flush_batch();
+
+  if (any_occluded) {
+
+    DepthFuncScope const depth_func(GL_GREATER);
+    begin_batch();
+    for (std::size_t j = i; j < batch_end; ++j) {
+      const auto& marker = std::get<GroundMarkerCmdIndex>(queue.get_sorted(j));
+      if (marker.occluded_alpha <= 0.0F) {
+        continue;
+      }
+      add_instance(marker_instance(marker, marker.alpha * marker.occluded_alpha),
+                   marker.outer_radius,
+                   world_per_cell);
+    }
+    flush_batch();
+  }
 }
 
 void GroundMarkerPipeline::upload_pattern_table() {

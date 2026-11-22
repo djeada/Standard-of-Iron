@@ -10,7 +10,9 @@
 
 #include "render/backend/instance_draw_guard.h"
 #include "render/backend/mesh_buffers.h"
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_queue.h"
 #include "render/geom/ground_marker_tessellation.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
@@ -28,6 +30,9 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
 
+  void draw_markers(const PreparedBatch& prepared, PipelineDrawContext& context);
+
+private:
   struct InstanceGpu {
     QVector4D center_radius;
     QVector4D color_alpha;
@@ -54,9 +59,6 @@ public:
     GL::Shader::UniformHandle max_thickness_gain{GL::Shader::InvalidUniform};
   };
 
-  [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
-  [[nodiscard]] auto uniforms() const -> const Uniforms& { return m_uniforms; }
-
   void upload_pattern_table();
 
   void begin_batch();
@@ -65,7 +67,6 @@ public:
   [[nodiscard]] auto batched_instance_count() const -> std::size_t;
   void flush_batch();
 
-private:
   void build_meshes();
   void build_mesh(StaticMeshBuffers& mesh, int angular_segments);
   void upload_instances(std::size_t lod, std::size_t count);

@@ -563,6 +563,80 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   return upload_dust_mesh(*this, m_blood_mesh, "blood", vertices, indices);
 }
 
+namespace {
+
+auto billboard_effect_type(EffectBatchCmd::Kind kind) -> EffectType {
+  switch (kind) {
+  case EffectBatchCmd::Kind::BuildingFlame:
+    return EffectType::Flame;
+  case EffectBatchCmd::Kind::BurningFlame:
+    return EffectType::BurningFlame;
+  case EffectBatchCmd::Kind::Fireball:
+    return EffectType::Fireball;
+  case EffectBatchCmd::Kind::StoneImpact:
+    return EffectType::StoneImpact;
+  case EffectBatchCmd::Kind::MetalSpark:
+    return EffectType::MetalSpark;
+  case EffectBatchCmd::Kind::WeaponArc:
+    return EffectType::WeaponArc;
+  case EffectBatchCmd::Kind::HearthSmoke:
+    return EffectType::HearthSmoke;
+  default:
+    return EffectType::Dust;
+  }
+}
+
+auto make_dust_instance(const EffectBatchCmd& eff)
+    -> CombatDustPipeline::DustInstanceData {
+  return {.position = eff.position,
+          .color = eff.color,
+          .radius = eff.radius,
+          .intensity = eff.intensity,
+          .time = eff.time,
+          .effect_type = billboard_effect_type(eff.kind),
+          .overlay = false,
+          .direction = eff.direction,
+          .span = eff.span,
+          .tilt = eff.tilt};
+}
+
+} // namespace
+
+void CombatDustPipeline::draw_dust_effects(const PreparedBatch& prepared,
+                                           PipelineDrawContext& context) {
+  if (!is_initialized()) {
+    return;
+  }
+  std::vector<DustInstanceData> instances;
+  instances.reserve(prepared.count);
+  for (std::size_t idx = prepared.start; idx < prepared.end(); ++idx) {
+    instances.push_back(make_dust_instance(
+        std::get<EffectBatchCmdIndex>(context.queue.get_sorted(idx))));
+  }
+  render_dust_batch(instances.data(), instances.size(), context.frame.view_proj);
+  context.state.bound_shader = nullptr;
+}
+
+void CombatDustPipeline::draw_blood_pools(const PreparedBatch& prepared,
+                                          PipelineDrawContext& context) {
+  if (!is_initialized()) {
+    return;
+  }
+  std::vector<BloodPoolInstanceData> instances;
+  instances.reserve(prepared.count);
+  for (std::size_t idx = prepared.start; idx < prepared.end(); ++idx) {
+    const auto& eff = std::get<EffectBatchCmdIndex>(context.queue.get_sorted(idx));
+    instances.push_back({.position = eff.position,
+                         .radius = eff.radius,
+                         .alpha_scale = eff.alpha_scale,
+                         .rotation = eff.rotation,
+                         .aspect_ratio = eff.aspect_ratio,
+                         .seed = eff.seed});
+  }
+  render_blood_pool_batch(instances.data(), instances.size(), context.frame.view_proj);
+  context.state.bound_shader = nullptr;
+}
+
 void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
                                            std::size_t count,
                                            const QMatrix4x4& view_proj) {

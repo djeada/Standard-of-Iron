@@ -48,42 +48,12 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
     if constexpr (std::is_same_v<Cmd, MeshCmd>) {
       if (m_banner_pipeline != nullptr &&
-          active_shader == m_banner_pipeline->m_banner_shader) {
-        const auto& banner = m_banner_pipeline->m_banner_uniforms;
-        if (is_transparent) {
-          glDepthFunc(GL_LEQUAL);
-        }
-        CullFaceScope const banner_cull(false);
-        if (m_gl_state.bound_shader != active_shader) {
-          active_shader->use();
-          active_shader->set_uniform(banner.time, m_animation_time);
-          active_shader->set_uniform(banner.wind_strength,
-                                     context.frame.banner_wind_strength);
-          active_shader->set_uniform(banner.light_direction, m_light_dir);
-          active_shader->set_uniform(banner.camera_pos, (*context.frame.camera).get_position());
-          active_shader->set_uniform(banner.ambient_strength, m_ambient_strength);
-          m_gl_state.bound_shader = active_shader;
-        }
-        bind_mesh_texture(head.texture);
-        active_shader->set_uniform(banner.texture, 0);
-        active_shader->set_uniform(banner.use_texture, head.texture != nullptr);
-        if (head.mesh->bind_vao()) {
-          for (std::size_t j = prepared.start; j < batch_end; ++j) {
-            const auto& single = std::get<MeshCmd>(queue.get_sorted(j));
-            active_shader->set_uniform(banner.mvp, view_proj * single.model);
-            active_shader->set_uniform(banner.model, single.model);
-            active_shader->set_uniform(banner.color, single.color);
-            active_shader->set_uniform(banner.trim_color,
-                                       single.has_trim_color ? single.trim_color
-                                                             : (single.color * 0.7F));
-            active_shader->set_uniform(banner.alpha, single.alpha);
-            head.mesh->draw_bound();
-          }
-          head.mesh->unbind_vao();
-        }
-        if (is_transparent) {
-          glDepthFunc(GL_LESS);
-        }
+          active_shader == m_banner_pipeline->shader()) {
+        m_banner_pipeline->draw_banners(prepared,
+                                        head,
+                                        is_transparent,
+                                        m_resources ? m_resources->white() : nullptr,
+                                        context);
         return;
       }
     }

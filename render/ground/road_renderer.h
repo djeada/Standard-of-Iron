@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "game/map/terrain.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/ground/road_network_geometry.h"
 
 namespace Render::GL {
@@ -14,7 +14,7 @@ class Mesh;
 class FrameSubmitter;
 class ResourceManager;
 
-class RoadRenderer : public IRenderPass {
+class RoadRenderer : public IDrawSource {
 public:
   RoadRenderer();
   ~RoadRenderer() override;

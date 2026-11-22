@@ -8,7 +8,7 @@
 
 #include "game/map/biome_settings.h"
 #include "game/map/terrain.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/frame/terrain_scene_types.h"
 #include "render/gl/texture.h"
 
@@ -17,7 +17,7 @@ class Mesh;
 class FrameSubmitter;
 class ResourceManager;
 
-class ShorelineRenderer : public IRenderPass {
+class ShorelineRenderer : public IDrawSource {
 public:
   ShorelineRenderer();
   ~ShorelineRenderer() override;

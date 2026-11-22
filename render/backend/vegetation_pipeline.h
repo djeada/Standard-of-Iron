@@ -10,7 +10,12 @@
 
 #include "render/backend/mesh_buffers.h"
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_commands.h"
 #include "render/gl/shader_cache.h"
+
+namespace Render::GL {
+struct PipelineDrawContext;
+}
 
 namespace Render::GL::BackendPipelines {
 
@@ -24,6 +29,12 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
 
+  void draw_stone(const TerrainScatterCmd& cmd, PipelineDrawContext& context);
+  void draw_foliage(const TerrainScatterCmd& cmd, PipelineDrawContext& context);
+  void draw_firecamp(const TerrainScatterCmd& cmd, PipelineDrawContext& context);
+  void draw_prop(const TerrainScatterCmd& cmd, PipelineDrawContext& context);
+
+private:
   [[nodiscard]] auto stone_shader() const -> GL::Shader* { return m_stone_shader; }
   [[nodiscard]] auto plant_shader() const -> GL::Shader* { return m_plant_shader; }
   [[nodiscard]] auto pine_shader() const -> GL::Shader* { return m_pine_shader; }
@@ -125,7 +136,24 @@ public:
   StaticMeshBuffers m_abandoned_home_mesh;
   StaticMeshBuffers m_statue_mesh;
 
-private:
+  struct FoliageDraw {
+    GL::Shader* shader{nullptr};
+    const StaticMeshBuffers* mesh{nullptr};
+    const FoliageUniforms* uniforms{nullptr};
+  };
+
+  struct PropDraw {
+    GL::Shader* shader{nullptr};
+    const StaticMeshBuffers* mesh{nullptr};
+    const PropUniforms* uniforms{nullptr};
+    float magic_strength{0.0F};
+  };
+
+  [[nodiscard]] auto
+  resolve_foliage_draw(TerrainScatterCmd::Species species) const -> FoliageDraw;
+  [[nodiscard]] auto
+  resolve_prop_draw(TerrainScatterCmd::Species species) const -> PropDraw;
+
   static constexpr std::size_t k_mesh_count = 17;
 
   auto all_meshes() -> std::array<StaticMeshBuffers*, k_mesh_count>;

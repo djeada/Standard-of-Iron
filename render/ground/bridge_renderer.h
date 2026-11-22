@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "game/map/terrain.h"
-#include "render/frame/i_render_pass.h"
+#include "render/frame/i_draw_source.h"
 #include "render/ground/linear_feature_visibility.h"
 
 namespace Render::GL {
@@ -15,7 +15,7 @@ class Mesh;
 class FrameSubmitter;
 class ResourceManager;
 
-class BridgeRenderer : public IRenderPass {
+class BridgeRenderer : public IDrawSource {
 public:
   BridgeRenderer();
   ~BridgeRenderer() override;

@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <vector>
 
 #include "render/backend/gl_error_check.h"
 #include "render/backend/state_scopes.h"
@@ -141,6 +142,21 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
                                    sizeof(AuraVertex),
                                    k_position_normal_texcoord_layout,
                                    indices);
+}
+
+void HealerAuraPipeline::draw_auras(const PreparedBatch& prepared,
+                                    PipelineDrawContext& context) {
+  if (!is_initialized()) {
+    return;
+  }
+  std::vector<AuraInstanceData> instances;
+  instances.reserve(prepared.count);
+  for (std::size_t idx = prepared.start; idx < prepared.end(); ++idx) {
+    const auto& eff = std::get<EffectBatchCmdIndex>(context.queue.get_sorted(idx));
+    instances.push_back({eff.position, eff.color, eff.radius, eff.intensity, eff.time});
+  }
+  render_aura_batch(instances.data(), instances.size(), context.frame.view_proj);
+  context.state.bound_shader = nullptr;
 }
 
 void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,

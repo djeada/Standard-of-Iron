@@ -5,14 +5,23 @@
 #include <QtOpenGL>
 
 #include <cstddef>
+#include <vector>
 
 #include "render/backend/pipeline_interface.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/shader.h"
 
+namespace Render {
+struct LocalLight;
+}
+
 namespace Render::GL {
 class ShaderCache;
 class Texture;
+struct PipelineDrawContext;
+struct PreparedBatch;
+struct TerrainScatterCmd;
+struct TerrainSurfaceCmd;
 
 namespace BackendPipelines {
 
@@ -151,6 +160,13 @@ public:
     GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
   };
 
+  void draw_grass(const TerrainScatterCmd& cmd, PipelineDrawContext& context);
+
+  void draw_surfaces(const PreparedBatch& prepared,
+                     PipelineDrawContext& context,
+                     const std::vector<Render::LocalLight>& local_lights);
+
+private:
   GL::Shader* m_grass_shader = nullptr;
   GL::Shader* m_ground_shader = nullptr;
   GL::Shader* m_terrain_shader = nullptr;
@@ -171,7 +187,6 @@ public:
   BufferHandle m_grass_vertex_buffer;
   GLsizei m_grass_vertex_count = 0;
 
-private:
   GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_grass_uniforms();
@@ -183,6 +198,21 @@ private:
 
   void initialize_grass_geometry();
   void shutdown_grass_geometry();
+
+  [[nodiscard]] auto
+  surface_shader_for(const TerrainSurfaceCmd& single) const -> GL::Shader*;
+
+  void set_ground_plane_uniforms(GL::Shader& shader,
+                                 const TerrainSurfaceCmd& single,
+                                 const QMatrix4x4& mvp,
+                                 const QVector3D& camera_position);
+
+  void set_terrain_chunk_uniforms(GL::Shader& shader,
+                                  const TerrainSurfaceCmd& single,
+                                  const QMatrix4x4& mvp,
+                                  const QVector3D& camera_position,
+                                  PipelineDrawContext& context,
+                                  const std::vector<Render::LocalLight>& local_lights);
 };
 
 } // namespace BackendPipelines

@@ -12,7 +12,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "render/frame/terrain_scene_types.h"
-#include "render/ground/i_scatter_pass.h"
+#include "render/ground/i_scatter_source.h"
 
 namespace Render::GL {
 
@@ -34,7 +34,7 @@ class TreeRenderer;
 struct AnchoredTree;
 class WeaponRackRenderer;
 
-class TerrainScatterManager : public IRenderPass {
+class TerrainScatterManager : public IDrawSource {
 public:
   TerrainScatterManager();
   ~TerrainScatterManager() override;
@@ -75,21 +75,21 @@ public:
   [[nodiscard]] auto statue() const -> StatueRenderer*;
   [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
   [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats;
-  [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
+  [[nodiscard]] auto sources() const -> const std::vector<IDrawSource*>&;
 
   void set_world_view(const Render::WorldView& view) noexcept override {
-    IRenderPass::set_world_view(view);
-    for (auto* pass : passes()) {
-      if (pass != nullptr) {
-        pass->set_world_view(view);
+    IDrawSource::set_world_view(view);
+    for (auto* source : sources()) {
+      if (source != nullptr) {
+        source->set_world_view(view);
       }
     }
   }
 
 private:
-  struct ScatterPassEntry {
+  struct ScatterSourceEntry {
     ScatterSpeciesId species{ScatterSpeciesId::Grass};
-    IScatterPass* pass{nullptr};
+    IScatterSource* source{nullptr};
   };
 
   std::unique_ptr<BiomeRenderer> m_biome;
@@ -108,9 +108,9 @@ private:
   std::unique_ptr<CursedGoldVeinRenderer> m_cursed_gold_vein;
   std::unique_ptr<AbandonedHomeRenderer> m_abandoned_home;
   std::unique_ptr<StatueRenderer> m_statue;
-  std::vector<ScatterPassEntry> m_scatter_passes;
+  std::vector<ScatterSourceEntry> m_scatter_sources;
   std::vector<AnchoredTree> m_anchored_trees;
-  std::vector<IRenderPass*> m_passes;
+  std::vector<IDrawSource*> m_sources;
   std::uint32_t m_applied_graphics_generation{0U};
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   Game::Map::BiomeSettings m_biome_settings;

@@ -2,7 +2,9 @@
 
 #include <memory>
 
+#include "render/backend/pipeline_draw_context.h"
 #include "render/backend/pipeline_interface.h"
+#include "render/frame/draw_queue.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shader.h"
 
@@ -24,6 +26,15 @@ public:
 
   auto get_banner_mesh(int subdivisions = 16) -> GL::Mesh*;
 
+  [[nodiscard]] auto shader() const -> GL::Shader* { return m_banner_shader; }
+
+  void draw_banners(const PreparedBatch& prepared,
+                    const MeshCmd& head,
+                    bool is_transparent,
+                    GL::Texture* fallback_texture,
+                    PipelineDrawContext& context);
+
+private:
   struct BannerUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
@@ -39,11 +50,10 @@ public:
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
   };
 
+  GL::ShaderCache* m_shader_cache = nullptr;
+
   GL::Shader* m_banner_shader = nullptr;
   BannerUniforms m_banner_uniforms;
-
-private:
-  GL::ShaderCache* m_shader_cache = nullptr;
 
   std::unique_ptr<GL::Mesh> m_banner_mesh16;
   std::unique_ptr<GL::Mesh> m_banner_mesh8;

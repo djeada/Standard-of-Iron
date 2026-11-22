@@ -22,6 +22,8 @@ using namespace Render::GL::ComponentCount;
 using namespace Render::GL::Geometry;
 
 auto TerrainPipeline::initialize() -> bool {
+  initializeOpenGLFunctions();
+
   if (m_shader_cache == nullptr) {
     qWarning() << "TerrainPipeline::initialize: null ShaderCache";
     return false;

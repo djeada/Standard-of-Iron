@@ -13,7 +13,9 @@
 
 namespace Render::GL {
 class Buffer;
-}
+struct PipelineDrawContext;
+struct PreparedBatch;
+} // namespace Render::GL
 
 namespace Render::GL::BackendPipelines {
 
@@ -26,6 +28,8 @@ public:
   void shutdown() override;
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
+
+  void draw(const PreparedBatch& prepared, PipelineDrawContext& context);
 
   void begin_frame();
   void end_frame();
@@ -72,12 +76,12 @@ public:
     float alpha{1.0F};
   };
 
+private:
   CylinderUniforms m_cylinder_uniforms;
   FogUniforms m_fog_uniforms;
   std::vector<CylinderInstanceGpu> m_cylinder_scratch;
   std::vector<FogInstanceGpu> m_fog_scratch;
 
-private:
   void initialize_cylinder_pipeline();
   void shutdown_cylinder_pipeline();
   void initialize_fog_pipeline();
