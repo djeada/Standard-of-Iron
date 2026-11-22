@@ -8,8 +8,10 @@ void register_temple_renderer_variant(EntityRendererRegistry& registry,
       registry,
       config.nation_slug,
       "temple",
-      [config](const DrawContext& ctx, ISubmitter& out) {
-        const BuildingState state = resolve_building_state(ctx);
+      [config](const DrawContext& ctx,
+               const EntityPresentation& presentation,
+               ISubmitter& out) {
+        const BuildingState state = presented_building_state(presentation, ctx);
         submit_building_instance(out, ctx, config.archetype(state));
         submit_building_torches(ctx, out, config.torches);
         submit_temple_incense(ctx, out, config.incense);

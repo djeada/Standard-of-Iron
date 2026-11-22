@@ -258,9 +258,27 @@ void register_nation_variant_renderer(EntityRendererRegistry& registry,
 void register_building_renderer(EntityRendererRegistry& registry,
                                 std::string_view nation_slug,
                                 std::string_view building_type,
-                                RenderFunc func) {
+                                PresentedRenderFunc submit,
+                                PresentationSystems extra) {
+  PresentationSystems presentation{building_state_presentation()};
+  presentation.insert(presentation.end(), extra.begin(), extra.end());
   const std::string canonical_key = building_renderer_key(nation_slug, building_type);
-  registry.register_renderer(canonical_key, std::move(func));
+  registry.register_presented_renderer(
+      canonical_key, std::move(presentation), std::move(submit));
+}
+
+void register_building_renderer(EntityRendererRegistry& registry,
+                                std::string_view nation_slug,
+                                std::string_view building_type,
+                                RenderFunc func) {
+  register_building_renderer(
+      registry,
+      nation_slug,
+      building_type,
+      PresentedRenderFunc(
+          [func = std::move(func)](const DrawContext& ctx,
+                                   const EntityPresentation&,
+                                   ISubmitter& out) { func(ctx, out); }));
 }
 
 } // namespace Render::GL

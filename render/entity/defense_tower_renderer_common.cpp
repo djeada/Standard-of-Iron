@@ -90,7 +90,9 @@ void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
       registry,
       config.nation_slug,
       "defense_tower",
-      [config](const DrawContext& ctx, ISubmitter& out) {
+      [config](const DrawContext& ctx,
+               const EntityPresentation& presentation,
+               ISubmitter& out) {
         if (ctx.entity == nullptr) {
           return;
         }
@@ -101,7 +103,7 @@ void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
         }
 
         const QVector3D team = Render::entity_color(*ctx.entity);
-        const BuildingState state = resolve_building_state(ctx);
+        const BuildingState state = presented_building_state(presentation, ctx);
         submit_building_instance(out, ctx, config.archetype(state));
         config.draw_banner(ctx, out, team, state);
         draw_night_braziers(ctx, out, config, state);

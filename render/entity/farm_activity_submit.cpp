@@ -393,27 +393,51 @@ void apply_clip_blend(Actor& actor, const ActorPose& pose) {
 
 } // namespace
 
-void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage) {
+auto resolve_farm_activity_plan(const DrawContext& ctx,
+                                bool carthage) -> FarmActivityPlan {
+  FarmActivityPlan plan;
   auto* activity = ctx.farm_activity;
   if (activity == nullptr || activity->workers_per_field == 0 ||
       ctx.entity == nullptr || ctx.template_prewarm) {
-    return;
+    return plan;
   }
   const auto& visual = farm_worker_visual(carthage);
   if (!visual.valid()) {
-    return;
+    return plan;
   }
 
   const auto* field = activity->field(ctx.entity->get_id());
   if (field == nullptr) {
-    return;
+    return plan;
   }
   const float scale = ctx.model.column(1).toVector3D().length();
   const float pixels = ctx.screen_metrics.projected_radius_px_from_distance_sq(
       ctx.distance_sq, scale * 0.35F);
   if ((pixels >= 0 && pixels < 7) || ctx.distance_sq > 160.0F * 160.0F) {
+    return plan;
+  }
+  plan.field = field;
+  plan.scale = scale;
+  plan.pixels = pixels;
+  return plan;
+}
+
+void submit_farm_activity(const DrawContext& ctx, ISubmitter& out, bool carthage) {
+  submit_farm_activity(ctx, out, carthage, resolve_farm_activity_plan(ctx, carthage));
+}
+
+void submit_farm_activity(const DrawContext& ctx,
+                          ISubmitter& out,
+                          bool carthage,
+                          const FarmActivityPlan& plan) {
+  if (plan.field == nullptr) {
     return;
   }
+  auto* activity = ctx.farm_activity;
+  const auto& visual = farm_worker_visual(carthage);
+  const auto* field = plan.field;
+  const float scale = plan.scale;
+  const float pixels = plan.pixels;
   const auto seed = field_seed(field->id);
   const bool ripe = field->growth >= 1.0F;
   const float time = ctx.animation_time;

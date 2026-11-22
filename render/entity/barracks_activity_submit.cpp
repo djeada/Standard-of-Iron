@@ -286,18 +286,16 @@ void draw_forge_fire(const DrawContext& ctx,
 
 } // namespace
 
-void submit_barracks_activity(const DrawContext& ctx,
-                              ISubmitter& out,
-                              bool carthage,
-                              const BarracksGrounds& grounds) {
+auto resolve_barracks_activity_plan(const DrawContext& ctx) -> BarracksActivityPlan {
+  BarracksActivityPlan plan;
   if (ctx.entity == nullptr || ctx.template_prewarm) {
-    return;
+    return plan;
   }
   if (resolve_building_state(ctx) != BuildingState::Normal) {
-    return;
+    return plan;
   }
   if (ctx.distance_sq > k_far_metres * k_far_metres) {
-    return;
+    return plan;
   }
 
   const auto* production =
@@ -305,7 +303,28 @@ void submit_barracks_activity(const DrawContext& ctx,
           ? ctx.entity->registry()->try_get<Engine::Core::ProductionComponent>(
                 ctx.entity->get_id())
           : nullptr;
-  const bool training = production != nullptr && production->in_progress;
+  plan.active = true;
+  plan.training = production != nullptr && production->in_progress;
+  return plan;
+}
+
+void submit_barracks_activity(const DrawContext& ctx,
+                              ISubmitter& out,
+                              bool carthage,
+                              const BarracksGrounds& grounds) {
+  submit_barracks_activity(
+      ctx, out, carthage, grounds, resolve_barracks_activity_plan(ctx));
+}
+
+void submit_barracks_activity(const DrawContext& ctx,
+                              ISubmitter& out,
+                              bool carthage,
+                              const BarracksGrounds& grounds,
+                              const BarracksActivityPlan& plan) {
+  if (!plan.active) {
+    return;
+  }
+  const bool training = plan.training;
   const float heat = training ? 1.0F : 0.35F;
   const float time = ctx.animation_time;
   const auto owner = static_cast<std::uint32_t>(ctx.entity->get_id());

@@ -8,6 +8,10 @@
 #include "game/map/bridge_geometry.h"
 #include "game/map/ground_type.h"
 
+namespace Game::Map {
+class ScatterWorld;
+}
+
 namespace Render::Ground {
 
 struct SpawnValidationConfig {
@@ -66,6 +70,12 @@ struct SpawnTerrainCache {
 class SpawnValidator {
 public:
   SpawnValidator(const SpawnTerrainCache& cache, const SpawnValidationConfig& config);
+  // Reads buildings, roads, bridges, water and the world-prop clearance index
+  // from `world` instead of the live services, so it can run on any thread.
+  // A null `world` reads the live services.
+  SpawnValidator(const SpawnTerrainCache& cache,
+                 const SpawnValidationConfig& config,
+                 const Game::Map::ScatterWorld* world);
 
   [[nodiscard]] auto can_spawn_at_grid(float gx, float gz) const -> bool;
 
@@ -78,6 +88,7 @@ public:
 private:
   const SpawnTerrainCache& m_cache;
   SpawnValidationConfig m_config;
+  const Game::Map::ScatterWorld* m_world = nullptr;
 
   float m_edge_margin_x = 0.0F;
   float m_edge_margin_z = 0.0F;

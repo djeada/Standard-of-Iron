@@ -9,6 +9,7 @@
 
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
@@ -77,6 +78,26 @@ void IronOreRenderer::generate_instances(
     const Game::Map::TerrainHeightMap& height_map) {
   adopt_generated(Ground::Scatter::generate_iron_ore(
       {{}, nullptr, m_biome_settings, world().terrain_or_empty(), world_props}));
+}
+
+auto IronOreRenderer::plan_world_props_refresh(
+    std::vector<Game::Map::WorldProp> world_props,
+    std::shared_ptr<const Game::Map::ScatterWorld> world)
+    -> Ground::Scatter::ScatterJob {
+  return [this,
+          biome = m_biome_settings,
+          world_props = std::move(world_props),
+          world = std::move(world)]() mutable -> Ground::Scatter::ScatterAdoption {
+    auto instances = Ground::Scatter::generate_iron_ore(
+        {{}, nullptr, biome, world->terrain(), world_props, world.get()});
+    const float magic_strength =
+        k_arcane_ore_glow +
+        k_haunted_ore_bonus * world->terrain().supernatural_presence();
+    return [this, magic_strength, instances = std::move(instances)]() mutable {
+      m_state.params.magic_strength = magic_strength;
+      adopt_generated(std::move(instances));
+    };
+  };
 }
 
 } // namespace Render::GL

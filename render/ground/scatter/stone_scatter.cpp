@@ -11,6 +11,7 @@
 
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
@@ -74,9 +75,15 @@ auto generate_stones(const ScatterRequest& request) -> std::vector<StoneInstance
   config.max_slope = 0.30F;
   config.allow_hill = true;
 
-  SpawnValidator validator(terrain_cache, config);
+  SpawnValidator validator(terrain_cache, config, request.world);
   ScatterCompositionContext composition(
-      terrain_cache, grid_width, grid_height, tile_size, request.biome, world_props);
+      terrain_cache,
+      grid_width,
+      grid_height,
+      tile_size,
+      request.biome,
+      world_props,
+      request.world != nullptr ? &request.world->terrain() : nullptr);
 
   static const GroundEcologyField k_no_ecology;
   const GroundEcologyField& ecology = ecology_field ? *ecology_field : k_no_ecology;

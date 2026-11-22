@@ -502,7 +502,7 @@ The startup system therefore distinguishes “simulation world exists” from �
 
 Every scatter species (grass, stones, plants, the four tree species, fire camps, boulders and the ten world-prop layers) is one layer with three stages.
 
-- **Generate.** A free function in `render/ground/scatter/<species>_scatter.cpp`, declared in `scatter_generators.h`, turns a `ScatterRequest` into the layer's instances: the terrain grid, the ground-ecology field, the biome (whose `seed` drives placement), the terrain service and the world props. It is GL-free and deterministic. `tests/render/scatter_generator_test.cpp` runs every generator without a GL context and checks determinism, one instance per prop for world-prop layers, seed sensitivity, plant and grass density, and that stones, plants and grass stay off a mountain.
+- **Generate.** A free function in `render/ground/scatter/<species>_scatter.cpp`, declared in `scatter_generators.h`, turns a `ScatterRequest` into the layer's instances: the terrain grid, the ground-ecology field, the biome (whose `seed` drives placement), the terrain service, the world props and, for a worker, the `ScatterWorld` snapshot that replaces every live service. It is GL-free and deterministic. `tests/render/scatter_generator_test.cpp` runs every generator without a GL context and checks determinism, one instance per prop for world-prop layers, seed sensitivity, plant and grass density, and that stones, plants and grass stay off a mountain.
 - **Sync.** `FilteredRendererState` chunks the instances, filters them by fog of war and packs each chunk's visible instances into an `InstanceBlock`.
 - **Submit.** `submit_visible_chunks` (or `submit_visible_chunks_lod` for grass's screen-size LOD) emits a `TerrainScatterCmd` per visible chunk.
 
@@ -510,7 +510,14 @@ Every scatter species (grass, stones, plants, the four tree species, fire camps,
 
 **Instance budget.** `TerrainScatterManager` gives each layer a budget before configuring it (`scatter_budget.h`). Grass gets 4.4 M blades at full grass density, scaled by the profile's grass density with a floor of 10%: Low 1.32 M, Medium 2.86 M, High and Ultra 4.4 M. Stones get 1 per grid cell, plants and each tree species 4, and every world-prop layer 1. No layer gets fewer than 4,096. These are ceilings, not detail settings, and sit well above what the generators produce. `NoShippedMapReachesAScatterBudget` checks that no map in `assets/maps` reaches one, so the cut never changes a shipped map. A layer that would exceed its budget keeps the first instances in generation order (grass is shuffled first, so it thins evenly) and reports `budget_hit()`. The benchmark JSON's `scatter_memory` reports, per layer and in total, the instances, CPU bytes, reserved GPU bytes, the budget in instances and bytes, and whether it was hit.
 
-**Threads.** At map load, generation runs on the loader thread before the renderer resumes. A grass refresh after a graphics-profile change runs inside `submit` on the render thread. It cannot move to a worker yet: the spawn validator behind grass, stones and plants reads `BuildingCollisionRegistry::instance()`, `TerrainService::instance()` roads, bridges and water, and the world-prop clearance index, all written by the simulation without a lock. `TerrainService::world_prop_world_position` also fills a mutable surface cache from a const call. Those inputs have to be snapshotted into the request first.
+**Threads.** At map load, generation runs on the loader thread before the renderer resumes. Every later regeneration runs on a worker.
+
+- **Snapshot.** The live map is written by the simulation without a lock. That covers building footprints (`BuildingCollisionRegistry`), roads, bridges, water and world props (`TerrainService`), and the world-prop clearance index, and `TerrainService` also fills a mutable surface cache from const lookups. So a worker never reads them. `Game::Map::ScatterWorld` (`game/map/scatter/scatter_world.h`) freezes all of it: a `TerrainService::clone()`, a `BuildingFootprintSnapshot`, and the clearance index of that revision. A `ScatterRequest` with `world` set reads only the snapshot. The spawn validator and the composition context take it in place of the live services. Byte-identical output for the same inputs is pinned by `tests/render/scatter_world_test.cpp`.
+- **Capture.** `EnvironmentRuntime::sync_scatter_world_props` runs in `GameEngine::update_presentation`, under the frame lock, so the simulation is not writing the map there. It captures at most one snapshot per call, and only when something changed. It schedules the world-prop refresh (`schedule_runtime_world_props_refresh`), the anchored building trees (`schedule_anchored_trees`), and the grass regeneration the render thread asked for (`wants_world_snapshot` / `provide_world_snapshot`).
+- **Generate and adopt.** `TerrainScatterManager` asks each affected layer to plan its regeneration. A plan is a `ScatterJob` that copies the layer's inputs (the shared grid, biome, props, ecology, anchored trees) and returns a `ScatterAdoption`. All jobs of one request run in a single `QThreadPool::globalInstance()` task, one task at a time. Newer requests merge and run against the newest snapshot afterwards. The adoption runs at the start of the next `submit` on the render thread, in one swap. Until then every layer draws its previous instances, so nothing pops or empties.
+- **Superseded work.** `configure` and `clear` drop a job still in flight; an epoch keeps its result from landing on the new map.
+- **Graphics-profile change.** The render thread notices it in `submit`. It cannot read the live map, so it marks the grass pending and waits for the next sync point to provide a snapshot.
+- **Synchronous calls.** Callers that own the map can still refresh on the spot: `refresh_runtime_world_props`, `set_anchored_trees` and `refresh_grass` (the arena tool, tests, load). A host that never schedules or provides snapshots keeps the synchronous grass refresh.
 
 ## Scatter variation
 
@@ -686,9 +693,34 @@ Buildings are placed after the grass is generated. The grass shader therefore sa
 
 - **Authoring** builds a building's geometry into a `BuildingArchetypeDesc`: the palette and the parts, in plain code, with no draw call and no frame state. Each nation building has a `nations/<nation>/<kind>_authoring.{h,cpp}`. Shared parts live in `market_goods`, `farm_field`, `home_yard`, `wall_authoring`, `wall_gate_authoring` and `temple_layout`. A palette or layout constant that the renderer also needs sits in the authoring header's `<kind>_detail` namespace. `building_archetype_catalog.cpp` lists every description, and `building_archetype_library` is the single baker that turns them into archetype meshes.
 - **Presentation** turns snapshot state into parameters: hearth, lamps and doorstep visits (`HomeActivity`), farm workers (`farm_activity`), the barracks drill (`barracks_activity`), building decay and collapse. These files take a `World` and time and return values; they never see a submitter. `tests/render/home_activity_test.cpp` and `farm_activity_test.cpp` exercise them without a GL context.
-- **Submission** is the per-frame code that reads those outputs and emits commands: `<kind>_renderer.cpp`, `*_activity_submit.cpp`, `combat_dust_renderer.cpp`, `rpg_telegraph_renderer.cpp`. The entity renderer registry maps a kind to its submission function.
+- **Submission** is the per-frame code that reads those outputs and emits commands: `<kind>_renderer.cpp`, `*_activity_submit.cpp`, `combat_dust_renderer.cpp`, `rpg_telegraph_renderer.cpp`.
 
-`scripts/check-render-layers.py` pins the authoring side (entity authoring rule). No `*_authoring` file and no shared authoring module may reach `frame/submitter.h`, `frame/frame_submitter.h`, `frame/draw_context.h` or `render/scene`, not even through another header. The two builder renderers (`nations/*/builder_renderer.cpp`, about 1,200 lines each) are unit equipment definitions whose archetype caches register themselves on first use. They have not been split yet.
+`EntityRendererRegistry` (`render/entity/registry.h`) ties the three together per kind (`troops/<nation>/<type>`, `wildlife/sheep`, and so on):
+
+- **Descriptions.** Every `BuildingArchetypeCatalogEntry` names the kinds that draw it (`kinds`), and `registry.descriptions(kind)` reads them back from the one catalog the baker uses.
+- **Presentation systems.** `EntityPresentationSystem` (`render/entity/entity_presentation.h`) has a name and a `present(ctx, EntityPresentation&)` that writes plain values, with no submitter and no GL. The built-in systems are:
+    - `building_state`: the damage state with its hysteresis. Decay colours, torches, smoke and incense follow it.
+    - `home_activity`: none, the residents who fell, or the live hearth, doorstep and window plan with its screen metrics.
+    - `farm_activity`: the field a farm works and the metrics its workers are drawn at.
+    - `barracks_activity`: whether the yard is alive and whether it is training.
+
+    Every building kind runs `building_state` first. Homes, farms and the Roman and Carthaginian barracks add their activity system. `registry.presentation(kind)` lists them in order.
+
+- **Submission.** `register_presented_renderer` stores a submission that takes the `EntityPresentation`. `registry.get()` returns one function per kind that runs the systems and then the submission. The scene's per-entity path is therefore: look up the kind, present, submit. Kinds registered with a plain `RenderFunc` (units, creatures, siege) submit directly. Units and creatures prepare through their `IParallelPreparer`.
+
+Some presentation stays inside submission, because moving it would reorder what is drawn:
+
+- The per-resident and per-worker choices inside the home and farm activity (doorstep plans, gags, worker rosters) spend the frame's actor and plume budgets as they draw.
+- The stockpile, ambient people and banner code resolve their state while they emit.
+
+Building collapse is resolved once per building in the scene's collect step (`resolve_building_collapse`), because culling and the draw model need it before any kind is looked up. `tests/render/entity_presentation_test.cpp` checks, without GL:
+
+- the kind-to-systems table;
+- that every building kind draws catalog descriptions, and that every catalog entry names a registered kind;
+- that dispatch presents before it submits;
+- each built-in system against a plain `World`.
+
+`scripts/check-render-layers.py` pins the authoring side (entity authoring rule). No `*_authoring` file and no shared authoring module may reach `frame/submitter.h`, `frame/frame_submitter.h`, `frame/draw_context.h` or `render/scene`, not even through another header.
 
 ## Nation and equipment appearance
 

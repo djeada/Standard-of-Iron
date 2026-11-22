@@ -1,7 +1,10 @@
 #include "render/entity/registry.h"
 
+#include <algorithm>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/horse/horse_spec.h"
@@ -10,6 +13,7 @@
 #include "render/creature/wildlife/wolf_spec.h"
 #include "render/entity/ballista_renderer.h"
 #include "render/entity/barracks_renderer.h"
+#include "render/entity/building_archetype_catalog.h"
 #include "render/entity/catapult_renderer.h"
 #include "render/entity/cursed_gold_vein_flag_renderer.h"
 #include "render/entity/defense_tower_renderer.h"
@@ -52,21 +56,75 @@
 
 namespace Render::GL {
 
-void EntityRendererRegistry::register_renderer(
-    const std::string& type,
-    RenderFunc func,
-    std::shared_ptr<const IParallelPreparer> preparer) {
+void EntityRendererRegistry::store(const std::string& type,
+                                   RenderFunc func,
+                                   PresentationSystems presentation,
+                                   std::shared_ptr<const IParallelPreparer> preparer) {
   auto it = m_lookup.find(type);
   if (it != m_lookup.end()) {
     m_renderers[it->second] = std::move(func);
+    m_presentation[it->second] = std::move(presentation);
     m_preparers[it->second] = std::move(preparer);
     return;
   }
 
   const auto handle = static_cast<RendererHandle>(m_renderers.size());
   m_renderers.push_back(std::move(func));
+  m_presentation.push_back(std::move(presentation));
   m_preparers.push_back(std::move(preparer));
   m_lookup.emplace(type, handle);
+}
+
+void EntityRendererRegistry::register_renderer(
+    const std::string& type,
+    RenderFunc func,
+    std::shared_ptr<const IParallelPreparer> preparer) {
+  store(type, std::move(func), {}, std::move(preparer));
+}
+
+void EntityRendererRegistry::register_presented_renderer(
+    const std::string& type,
+    PresentationSystems presentation,
+    PresentedRenderFunc submit,
+    std::shared_ptr<const IParallelPreparer> preparer) {
+  RenderFunc composed = [presentation, submit = std::move(submit)](
+                            const DrawContext& ctx, ISubmitter& out) {
+    EntityPresentation presented;
+    for (const auto& system : presentation) {
+      system->present(ctx, presented);
+    }
+    submit(ctx, presented, out);
+  };
+  store(type, std::move(composed), std::move(presentation), std::move(preparer));
+}
+
+auto EntityRendererRegistry::presentation(std::string_view type) const
+    -> const PresentationSystems& {
+  static const PresentationSystems k_none;
+  const auto handle = get_handle(type);
+  return handle < m_presentation.size() ? m_presentation[handle] : k_none;
+}
+
+auto EntityRendererRegistry::descriptions(std::string_view type) const
+    -> std::vector<std::string> {
+  std::vector<std::string> out;
+  for (const auto& entry : building_archetype_catalog()) {
+    if (std::find(entry.kinds.begin(), entry.kinds.end(), type) != entry.kinds.end()) {
+      out.push_back(entry.name);
+    }
+  }
+  return out;
+}
+
+auto EntityRendererRegistry::kinds() const -> std::vector<std::string> {
+  std::vector<std::string> out;
+  out.reserve(m_lookup.size());
+  for (const auto& [kind, handle] : m_lookup) {
+    (void)handle;
+    out.push_back(kind);
+  }
+  std::sort(out.begin(), out.end());
+  return out;
 }
 
 auto EntityRendererRegistry::get(std::string_view type) const -> RenderFunc {

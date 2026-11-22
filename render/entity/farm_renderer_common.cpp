@@ -35,7 +35,9 @@ void register_farm_renderer_variant(EntityRendererRegistry& registry,
       registry,
       config.nation_slug,
       "farm",
-      [config](const DrawContext& ctx, ISubmitter& out) {
+      [config](const DrawContext& ctx,
+               const EntityPresentation& presentation,
+               ISubmitter& out) {
         if (ctx.entity == nullptr) {
           return;
         }
@@ -44,12 +46,15 @@ void register_farm_renderer_variant(EntityRendererRegistry& registry,
                 ctx.entity->get_component<Engine::Core::FarmComponent>()) {
           stage = farm->growth_stage();
         }
-        const BuildingState state = resolve_building_state(ctx);
+        const BuildingState state = presented_building_state(presentation, ctx);
         submit_building_instance(out, ctx, config.archetype(state, stage));
-        submit_farm_activity(ctx, out, config.nation_slug == "carthage");
+        submit_farm_activity(
+            ctx, out, config.nation_slug == "carthage", presentation.farm);
         submit_building_torches(ctx, out, config.torches);
         draw_building_selection_overlay(out, ctx, config.selection);
-      });
+      },
+      PresentationSystems{
+          farm_activity_presentation(config.nation_slug == "carthage")});
 }
 
 } // namespace Render::GL

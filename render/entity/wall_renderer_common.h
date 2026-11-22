@@ -26,8 +26,6 @@ void submit_wall_ladder(ISubmitter& out,
                         const BuildingArchetypeSet& archetype);
 
 auto wall_archetype_set(std::string_view name_prefix) -> WallArchetypeSet;
-auto wall_renderer_variants()
-    -> const std::array<std::pair<std::string_view, WallVariant>, 7>&;
 void submit_wall_segment_variant(ISubmitter& out,
                                  const DrawContext& ctx,
                                  const WallArchetypeSet& archetypes,

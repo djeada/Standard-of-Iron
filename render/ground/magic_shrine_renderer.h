@@ -22,6 +22,14 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
+
+  // Plans regenerating the layer for new world props against `world`, a
+  // snapshot of the live map. The job runs on a worker and reads only what it
+  // captured; its adoption runs on the render thread.
+  [[nodiscard]] auto
+  plan_world_props_refresh(std::vector<Game::Map::WorldProp> world_props,
+                           std::shared_ptr<const Game::Map::ScatterWorld> world)
+      -> Render::Ground::Scatter::ScatterJob;
   void set_light_direction(const QVector3D& dir) override;
 
   void submit(FrameSubmitter& renderer, const DrawResources* resources) override;

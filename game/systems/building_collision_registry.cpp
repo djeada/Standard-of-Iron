@@ -500,37 +500,6 @@ auto BuildingCollisionRegistry::find_building(Engine::Core::EntityID entity_id) 
   return it == m_entity_to_index.end() ? nullptr : &m_buildings[it->second];
 }
 
-auto BuildingCollisionRegistry::is_point_in_building(
-    float x, float z, Engine::Core::EntityID ignore_entity_id) const -> bool {
-  for (const auto& building : m_buildings) {
-    if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
-      continue;
-    }
-
-    float const half_width = building.width / 2.0F;
-    float const half_depth = building.depth / 2.0F;
-
-    float const min_x = building.center_x - half_width;
-    float const max_x = building.center_x + half_width;
-    float const min_z = building.center_z - half_depth;
-    float const max_z = building.center_z + half_depth;
-
-    if (x >= min_x && x <= max_x && z >= min_z && z <= max_z) {
-      return true;
-    }
-  }
-  for (const auto& obstacle : m_authored_obstacles) {
-    float const half_width = obstacle.width / 2.0F;
-    float const half_depth = obstacle.depth / 2.0F;
-    if (x >= obstacle.center_x - half_width && x <= obstacle.center_x + half_width &&
-        z >= obstacle.center_z - half_depth && z <= obstacle.center_z + half_depth) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 namespace {
 
 [[nodiscard]] auto
@@ -728,14 +697,50 @@ namespace {
   return (dx * dx) + (dz * dz) <= radius * radius;
 }
 
-} // namespace
+// The registry and its snapshots answer these with the same code.
+[[nodiscard]] auto
+point_in_footprints(const std::vector<BuildingFootprint>& buildings,
+                    const std::vector<BuildingFootprint>& obstacles,
+                    float x,
+                    float z,
+                    Engine::Core::EntityID ignore_entity_id) -> bool {
+  for (const auto& building : buildings) {
+    if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
+      continue;
+    }
 
-auto BuildingCollisionRegistry::is_circle_overlapping_building(
-    float x,
-    float z,
-    float radius,
-    Engine::Core::EntityID ignore_entity_id) const -> bool {
-  for (const auto& building : m_buildings) {
+    float const half_width = building.width / 2.0F;
+    float const half_depth = building.depth / 2.0F;
+
+    float const min_x = building.center_x - half_width;
+    float const max_x = building.center_x + half_width;
+    float const min_z = building.center_z - half_depth;
+    float const max_z = building.center_z + half_depth;
+
+    if (x >= min_x && x <= max_x && z >= min_z && z <= max_z) {
+      return true;
+    }
+  }
+  for (const auto& obstacle : obstacles) {
+    float const half_width = obstacle.width / 2.0F;
+    float const half_depth = obstacle.depth / 2.0F;
+    if (x >= obstacle.center_x - half_width && x <= obstacle.center_x + half_width &&
+        z >= obstacle.center_z - half_depth && z <= obstacle.center_z + half_depth) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+[[nodiscard]] auto
+circle_in_footprints(const std::vector<BuildingFootprint>& buildings,
+                     const std::vector<BuildingFootprint>& obstacles,
+                     float x,
+                     float z,
+                     float radius,
+                     Engine::Core::EntityID ignore_entity_id) -> bool {
+  for (const auto& building : buildings) {
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;
     }
@@ -744,13 +749,43 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
     }
   }
 
-  for (const auto& obstacle : m_authored_obstacles) {
+  for (const auto& obstacle : obstacles) {
     if (circle_overlaps_footprint(obstacle, x, z, radius)) {
       return true;
     }
   }
 
   return false;
+}
+
+} // namespace
+
+auto BuildingCollisionRegistry::is_point_in_building(
+    float x, float z, Engine::Core::EntityID ignore_entity_id) const -> bool {
+  return point_in_footprints(m_buildings, m_authored_obstacles, x, z, ignore_entity_id);
+}
+
+auto BuildingCollisionRegistry::is_circle_overlapping_building(
+    float x,
+    float z,
+    float radius,
+    Engine::Core::EntityID ignore_entity_id) const -> bool {
+  return circle_in_footprints(
+      m_buildings, m_authored_obstacles, x, z, radius, ignore_entity_id);
+}
+
+auto BuildingCollisionRegistry::footprint_snapshot() const
+    -> BuildingFootprintSnapshot {
+  return BuildingFootprintSnapshot{m_buildings, m_authored_obstacles};
+}
+
+auto BuildingFootprintSnapshot::is_point_in_building(float x, float z) const -> bool {
+  return point_in_footprints(buildings, obstacles, x, z, 0);
+}
+
+auto BuildingFootprintSnapshot::is_circle_overlapping_building(
+    float x, float z, float radius) const -> bool {
+  return circle_in_footprints(buildings, obstacles, x, z, radius, 0);
 }
 
 auto BuildingCollisionRegistry::point_in_navigation_passage(float x,

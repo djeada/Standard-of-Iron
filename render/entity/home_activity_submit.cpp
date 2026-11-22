@@ -635,26 +635,65 @@ void submit_hens(const DrawContext& ctx,
 
 } // namespace
 
-void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage) {
+auto resolve_home_activity_plan(const DrawContext& ctx,
+                                bool carthage) -> HomeActivityPlan {
+  HomeActivityPlan plan;
   auto* activity = ctx.home_activity;
   if (activity == nullptr || ctx.entity == nullptr || ctx.template_prewarm ||
       activity->max_plumes == 0) {
-    return;
+    return plan;
   }
   const auto id = ctx.entity->get_id();
   const auto& anchor = home_smoke_anchor(carthage);
   if (!activity->inhabited(id)) {
 
     if (!anchor.valid() || resolve_building_state(ctx) != BuildingState::Destroyed) {
-      return;
+      return plan;
     }
     const float fallen_for = building_state_transition_age(
         static_cast<std::uint32_t>(id), ctx.animation_time);
     if (fallen_for < 0.0F || fallen_for > k_resident_fall_stagger +
                                               k_resident_body_linger +
                                               k_resident_body_sink_seconds) {
-      return;
+      return plan;
     }
+    plan.mode = HomeActivityPlan::Mode::FallenResidents;
+    plan.fallen_for = fallen_for;
+    return plan;
+  }
+  if (!anchor.valid()) {
+    return plan;
+  }
+  const float scale = ctx.model.column(1).toVector3D().length();
+  const float pixels = ctx.screen_metrics.projected_radius_px_from_distance_sq(
+      ctx.distance_sq, scale * 0.5F);
+  if ((pixels >= 0 && pixels < 9) ||
+      ctx.distance_sq > k_home_activity_far * k_home_activity_far) {
+    return plan;
+  }
+  plan.mode = HomeActivityPlan::Mode::Live;
+  plan.scale = scale;
+  plan.pixels = pixels;
+  plan.distance = std::sqrt(std::max(ctx.distance_sq, 0.0F));
+  return plan;
+}
+
+void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage) {
+  submit_home_activity(ctx, out, carthage, resolve_home_activity_plan(ctx, carthage));
+}
+
+void submit_home_activity(const DrawContext& ctx,
+                          ISubmitter& out,
+                          bool carthage,
+                          const HomeActivityPlan& plan) {
+  if (plan.mode == HomeActivityPlan::Mode::None) {
+    return;
+  }
+  auto* activity = ctx.home_activity;
+  const auto id = ctx.entity->get_id();
+  const auto& anchor = home_smoke_anchor(carthage);
+  if (plan.mode == HomeActivityPlan::Mode::FallenResidents) {
+    const float fallen_for = plan.fallen_for;
     DrawContext struck = ctx;
     struck.animation_time = ctx.animation_time - fallen_for;
     auto placed = ctx.model;
@@ -663,17 +702,10 @@ void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage
         struck, out, carthage, anchor, id, placed.column(3).toVector3D(), fallen_for);
     return;
   }
-  if (!anchor.valid()) {
-    return;
-  }
-  const float scale = ctx.model.column(1).toVector3D().length();
-  const float pixels = ctx.screen_metrics.projected_radius_px_from_distance_sq(
-      ctx.distance_sq, scale * 0.5F);
-  constexpr float k_far = 190.0F;
-  if ((pixels >= 0 && pixels < 9) || ctx.distance_sq > k_far * k_far) {
-    return;
-  }
-  const float distance = std::sqrt(std::max(ctx.distance_sq, 0.0F));
+  const float scale = plan.scale;
+  const float pixels = plan.pixels;
+  constexpr float k_far = k_home_activity_far;
+  const float distance = plan.distance;
 
   auto to_world = [&](const QVector3D& local) {
     auto placed = ctx.model;

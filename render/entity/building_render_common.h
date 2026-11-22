@@ -68,6 +68,14 @@ void register_nation_variant_renderer(EntityRendererRegistry& registry,
                                       std::string roman_key,
                                       std::string carthage_key,
                                       std::string sepulcher_key = {});
+// Registers a building kind. Every building kind presents its damage state
+// first (building_state_presentation()), then `extra` in order, then submits.
+void register_building_renderer(EntityRendererRegistry& registry,
+                                std::string_view nation_slug,
+                                std::string_view building_type,
+                                PresentedRenderFunc submit,
+                                PresentationSystems extra = {});
+// The same for a submission that resolves everything it draws itself.
 void register_building_renderer(EntityRendererRegistry& registry,
                                 std::string_view nation_slug,
                                 std::string_view building_type,

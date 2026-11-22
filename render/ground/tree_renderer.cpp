@@ -9,6 +9,7 @@
 
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/scatter/tree_scatter_walk.h"
 #include "map/biome_settings.h"
@@ -43,6 +44,21 @@ auto draw_species(Game::Map::TreeSpecies species)
 } // namespace
 
 namespace Render::GL {
+
+namespace {
+
+auto anchored_of_species(const std::vector<AnchoredTree>& trees,
+                         Game::Map::TreeSpecies species) -> std::vector<AnchoredTree> {
+  std::vector<AnchoredTree> own;
+  for (const AnchoredTree& tree : trees) {
+    if (tree.species == species) {
+      own.push_back(tree);
+    }
+  }
+  return own;
+}
+
+} // namespace
 
 TreeRenderer::TreeRenderer(Game::Map::TreeSpecies species)
     : m_species(species)
@@ -88,12 +104,7 @@ void TreeRenderer::rebuild_instances() {
 }
 
 void TreeRenderer::assign_anchored_trees(const std::vector<AnchoredTree>& trees) {
-  m_anchored.clear();
-  for (const AnchoredTree& tree : trees) {
-    if (tree.species == m_species) {
-      m_anchored.push_back(tree);
-    }
-  }
+  m_anchored = anchored_of_species(trees, m_species);
 }
 
 void TreeRenderer::set_anchored_trees(const std::vector<AnchoredTree>& trees) {
@@ -113,6 +124,34 @@ void TreeRenderer::submit(FrameSubmitter& renderer, const DrawResources* resourc
       [](TerrainScatterCmd& cmd, const FoliageBatchParams& params) {
         cmd.foliage = params;
       });
+}
+
+auto TreeRenderer::plan_rebuild(const std::vector<Game::Map::WorldProp>* world_props,
+                                const std::vector<AnchoredTree>* anchored,
+                                std::shared_ptr<const Game::Map::ScatterWorld> world)
+    -> Ground::Scatter::ScatterJob {
+  return [this,
+          grid = shared_grid(),
+          ecology = m_ecology,
+          biome = m_biome_settings,
+          species = m_species,
+          props = world_props != nullptr ? *world_props : m_world_props,
+          own = anchored != nullptr ? anchored_of_species(*anchored, m_species)
+                                    : m_anchored,
+          world = std::move(world)]() mutable -> Ground::Scatter::ScatterAdoption {
+    auto instances = Ground::Scatter::generate_trees(
+        {grid->view(), ecology.get(), biome, world->terrain(), props, world.get()},
+        species,
+        own);
+    return [this,
+            props = std::move(props),
+            own = std::move(own),
+            instances = std::move(instances)]() mutable {
+      m_world_props = std::move(props);
+      m_anchored = std::move(own);
+      adopt_generated(std::move(instances));
+    };
+  };
 }
 
 } // namespace Render::GL

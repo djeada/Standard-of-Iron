@@ -16,7 +16,9 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
       registry,
       config.nation_slug,
       "barracks",
-      [config](const DrawContext& ctx, ISubmitter& out) {
+      [config](const DrawContext& ctx,
+               const EntityPresentation& presentation,
+               ISubmitter& out) {
         if ((ctx.resources == nullptr) || (ctx.entity == nullptr)) {
           return;
         }
@@ -44,14 +46,17 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
         submit_building_instance(
             out,
             ctx,
-            config.archetype(resolve_building_state(ctx), unit, white),
+            config.archetype(presented_building_state(presentation, ctx), unit, white),
             palette);
         config.draw_ornaments(ctx, out, unit, white, team, &cloth);
         submit_building_torches(ctx, out, config.torches);
         submit_cookfire_smoke(ctx, out, config.smoke_vents);
         if (config.grounds != nullptr) {
-          submit_barracks_activity(
-              ctx, out, config.nation_slug == "carthage", *config.grounds);
+          submit_barracks_activity(ctx,
+                                   out,
+                                   config.nation_slug == "carthage",
+                                   *config.grounds,
+                                   presentation.barracks);
         }
         submit_ambient_people(ctx,
                               out,
@@ -59,7 +64,9 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
                               config.people,
                               config.walk_surfaces);
         draw_building_selection_overlay(out, ctx, config.selection);
-      });
+      },
+      config.grounds != nullptr ? PresentationSystems{barracks_activity_presentation()}
+                                : PresentationSystems{});
 }
 
 } // namespace Render::GL

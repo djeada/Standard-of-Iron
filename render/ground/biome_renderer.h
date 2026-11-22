@@ -13,6 +13,10 @@
 #include "render/frame/decoration_gpu.h"
 #include "render/ground/scatter_renderer_base.h"
 
+namespace Render::Ground::Scatter {
+struct GrassScatter;
+}
+
 namespace Render::GL {
 class FrameSubmitter;
 
@@ -24,6 +28,13 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings);
 
+  // Plans regenerating the grass at `density` against `world`, a snapshot of
+  // the live map. The job runs on a worker and reads only what it captured;
+  // its adoption runs on the render thread.
+  [[nodiscard]] auto plan_grass(float density,
+                                std::shared_ptr<const Game::Map::ScatterWorld> world)
+      -> Render::Ground::Scatter::ScatterJob;
+
   void set_light_direction(const QVector3D& dir) override;
 
   void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
@@ -32,6 +43,7 @@ public:
   [[nodiscard]] auto grass_matches_graphics_profile() const noexcept -> bool;
 
 private:
+  void adopt_grass(Ground::Scatter::GrassScatter grass);
   void generate_grass_instances();
 
   float m_generated_grass_density{-1.0F};

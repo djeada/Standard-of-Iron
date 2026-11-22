@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -12,8 +13,10 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/environment_lighting.h"
+#include "game/map/scatter/scatter_world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/rain_manager.h"
 #include "render/entity/home_renderer_common.h"
 #include "render/ground/rain_renderer.h"
@@ -197,19 +200,38 @@ void EnvironmentRuntime::sync_scatter_world_props(
     return;
   }
 
+  // This runs under the GameEngine frame lock, so the simulation is not
+  // writing the live services here. Scatter regenerates on a worker against a
+  // snapshot taken now, at most one per call.
+  std::shared_ptr<const Game::Map::ScatterWorld> snapshot;
+  const auto world_snapshot = [&]() -> std::shared_ptr<const Game::Map::ScatterWorld> {
+    if (snapshot == nullptr) {
+      // The clearance index is built from the session's own terrain, with the
+      // same builder as the shared one.
+      snapshot = Game::Map::ScatterWorld::capture(terrain_service,
+                                                  session.building_collision());
+    }
+    return snapshot;
+  };
+
   auto const revision = terrain_service.world_props_revision();
   if (revision != m_last_world_props_revision) {
     scatter->set_world_view(Render::WorldView::of(session));
-    scatter->refresh_runtime_world_props(terrain_service.world_props());
+    scatter->schedule_runtime_world_props_refresh(terrain_service.world_props(),
+                                                  world_snapshot());
     m_last_world_props_revision = revision;
   }
 
   std::vector<Render::GL::AnchoredTree> trees = collect_building_trees(session);
   if (!m_anchored_trees_synced || trees != m_anchored_trees) {
     scatter->set_world_view(Render::WorldView::of(session));
-    scatter->set_anchored_trees(trees);
+    scatter->schedule_anchored_trees(trees, world_snapshot());
     m_anchored_trees = std::move(trees);
     m_anchored_trees_synced = true;
+  }
+
+  if (scatter->wants_world_snapshot()) {
+    scatter->provide_world_snapshot(world_snapshot());
   }
 }
 

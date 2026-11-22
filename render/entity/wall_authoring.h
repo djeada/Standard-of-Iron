@@ -2,7 +2,9 @@
 
 #include <QVector3D>
 
+#include <array>
 #include <string_view>
+#include <utility>
 
 #include "render/entity/building_archetype_desc.h"
 
@@ -71,5 +73,9 @@ auto build_wall_variant_desc(std::string_view name_prefix,
                              const WallPalette& palette,
                              const WallGeometry& geometry,
                              WallVariant variant) -> BuildingArchetypeDesc;
+
+// The wall segment renderer kinds and the variant each one draws.
+auto wall_renderer_variants()
+    -> const std::array<std::pair<std::string_view, WallVariant>, 7>&;
 
 } // namespace Render::GL
