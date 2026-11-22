@@ -79,41 +79,16 @@ using namespace Render::GL::ColorIndex;
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
-namespace {}
-
-namespace {
-
-std::atomic<int> g_live_backend_count{0};
-
-auto retain_backend() -> int {
-  return g_live_backend_count.fetch_add(1, std::memory_order_acq_rel) + 1;
-}
-
-auto release_backend() -> int {
-  return g_live_backend_count.fetch_sub(1, std::memory_order_acq_rel) - 1;
-}
-
-} // namespace
-
-Backend::Backend() {
-  retain_backend();
-}
+Backend::Backend() = default;
 
 Backend::Backend(ShaderQuality quality)
-    : m_shader_quality(quality) {
-  retain_backend();
-}
+    : m_shader_quality(quality) {}
 
 Backend::~Backend() {
-  const bool last_backend = release_backend() == 0;
   if (QOpenGLContext::currentContext() != nullptr) {
     for (FrameGpuTiming& slot : m_frame_timings) {
       wait_for_frame_slot(slot);
     }
-  }
-
-  if (last_backend) {
-    SharedGeometryCache::instance().release_all();
   }
   for_each_pipeline_slot([](auto& slot) { slot.reset(); });
 }
@@ -180,45 +155,41 @@ auto Backend::initialize() -> bool {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  m_resources = std::make_unique<ResourceManager>();
-  if (!m_resources->initialize()) {
+  if (!m_context.initialize()) {
     qCritical()
         << "Backend::initialize() FAILED: ResourceManager initialization failed";
     return false;
   }
 
-  m_shader_cache = std::make_unique<ShaderCache>();
-  m_shader_cache->initialize_defaults();
-
   if (!create_subsystem(
-          m_cylinder_pipeline, "CylinderPipeline", m_shader_cache.get())) {
+          m_cylinder_pipeline, "CylinderPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_vegetation_pipeline, "VegetationPipeline", m_shader_cache.get())) {
+          m_vegetation_pipeline, "VegetationPipeline", m_context.shaders())) {
     return false;
   }
-  if (!create_subsystem(m_terrain_pipeline, "TerrainPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_terrain_pipeline, "TerrainPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_shader_uniform_cache, "ShaderUniformCache", m_shader_cache.get())) {
+          m_shader_uniform_cache, "ShaderUniformCache", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(m_rigged_character_pipeline,
                         "RiggedCharacterPipeline",
                         this,
-                        m_shader_cache.get())) {
+                        m_context.shaders())) {
     return false;
   }
   m_rigged_cull_pipeline = std::make_unique<BackendPipelines::RiggedCullPipeline>();
-  m_rigged_cull_pipeline->set_shader_cache(m_shader_cache.get());
+  m_rigged_cull_pipeline->set_shader_cache(m_context.shaders());
   if (!m_rigged_cull_pipeline->initialize()) {
     m_rigged_cull_pipeline.reset();
   }
 
   const unsigned int wear_volume =
-      (m_resources != nullptr) ? m_resources->wear_volume() : 0U;
+      (m_context.resources() != nullptr) ? m_context.resources()->wear_volume() : 0U;
   if (m_rigged_character_pipeline) {
     m_rigged_character_pipeline->set_wear_volume(wear_volume);
   }
@@ -226,79 +197,79 @@ auto Backend::initialize() -> bool {
     m_rigged_cull_pipeline->set_wear_volume(wear_volume);
   }
 
-  if (!create_subsystem(m_water_pipeline, "WaterPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_water_pipeline, "WaterPipeline", m_context.shaders())) {
     return false;
   }
-  if (!create_subsystem(m_effects_pipeline, "EffectsPipeline", m_shader_cache.get())) {
-    return false;
-  }
-  if (!create_subsystem(
-          m_primitive_batch_pipeline, "PrimitiveBatchPipeline", m_shader_cache.get())) {
-    return false;
-  }
-  if (!create_subsystem(m_banner_pipeline, "BannerPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_effects_pipeline, "EffectsPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_healing_beam_pipeline, "HealingBeamPipeline", m_shader_cache.get())) {
+          m_primitive_batch_pipeline, "PrimitiveBatchPipeline", m_context.shaders())) {
+    return false;
+  }
+  if (!create_subsystem(m_banner_pipeline, "BannerPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_healer_aura_pipeline, "HealerAuraPipeline", m_shader_cache.get())) {
+          m_healing_beam_pipeline, "HealingBeamPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_combat_dust_pipeline, "CombatDustPipeline", m_shader_cache.get())) {
-    return false;
-  }
-  if (!create_subsystem(m_rain_pipeline, "RainPipeline", this, m_shader_cache.get())) {
+          m_healer_aura_pipeline, "HealerAuraPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_ground_marker_pipeline, "GroundMarkerPipeline", m_shader_cache.get())) {
+          m_combat_dust_pipeline, "CombatDustPipeline", m_context.shaders())) {
+    return false;
+  }
+  if (!create_subsystem(m_rain_pipeline, "RainPipeline", this, m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_mode_indicator_pipeline, "ModeIndicatorPipeline", m_shader_cache.get())) {
+          m_ground_marker_pipeline, "GroundMarkerPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_mesh_instancing_pipeline, "MeshInstancingPipeline", m_shader_cache.get())) {
+          m_mode_indicator_pipeline, "ModeIndicatorPipeline", m_context.shaders())) {
     return false;
   }
   if (!create_subsystem(
-          m_post_process_pipeline, "PostProcessPipeline", m_shader_cache.get())) {
+          m_mesh_instancing_pipeline, "MeshInstancingPipeline", m_context.shaders())) {
+    return false;
+  }
+  if (!create_subsystem(
+          m_post_process_pipeline, "PostProcessPipeline", m_context.shaders())) {
     return false;
   }
   m_sky_box_pipeline =
-      std::make_unique<BackendPipelines::SkyBoxPipeline>(m_shader_cache.get());
+      std::make_unique<BackendPipelines::SkyBoxPipeline>(m_context.shaders());
   if (!m_sky_box_pipeline->initialize()) {
     qWarning() << "Backend: SkyBoxPipeline unavailable, commander view keeps the flat"
                   " sky";
     m_sky_box_pipeline.reset();
   }
 
-  m_basic_shader = m_shader_cache->get(QStringLiteral("basic"));
-  m_grid_shader = m_shader_cache->get(QStringLiteral("grid"));
-  m_shadow_shader = m_shader_cache->get(QStringLiteral("troop_shadow"));
+  m_basic_shader = m_context.shaders()->get(QStringLiteral("basic"));
+  m_grid_shader = m_context.shaders()->get(QStringLiteral("grid"));
+  m_shadow_shader = m_context.shaders()->get(QStringLiteral("troop_shadow"));
   m_shadow_instanced_shader =
-      m_shader_cache->get(QStringLiteral("troop_shadow_instanced"));
-  m_directional_shadow_depth_shader = m_shader_cache->get_or_load(
+      m_context.shaders()->get(QStringLiteral("troop_shadow_instanced"));
+  m_directional_shadow_depth_shader = m_context.shaders()->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_depth.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
   m_gpu_breakdown_enabled = qEnvironmentVariableIntValue("SOI_GPU_BREAKDOWN") != 0;
-  m_directional_shadow_depth_instanced_shader = m_shader_cache->get_or_load(
+  m_directional_shadow_depth_instanced_shader = m_context.shaders()->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_depth_instanced.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
   m_building_merged_shader =
-      m_shader_cache->load(QStringLiteral("building_merged"),
+      m_context.shaders()->load(QStringLiteral("building_merged"),
                            QStringLiteral(":/assets/shaders/building_merged.vert"),
                            QStringLiteral(":/assets/shaders/basic_instanced.frag"),
                            QStringLiteral("#define SOI_OPAQUE_ONLY 1\n"));
-  m_building_ghost_shader = m_shader_cache->get_or_load(
+  m_building_ghost_shader = m_context.shaders()->get_or_load(
       QStringLiteral(":/assets/shaders/building_merged.vert"),
       QStringLiteral(":/assets/shaders/basic_instanced.frag"));
-  m_directional_shadow_rigged_shader = m_shader_cache->get_or_load(
+  m_directional_shadow_rigged_shader = m_context.shaders()->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_rigged.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
   if (m_directional_shadow_depth_shader != nullptr) {
@@ -430,6 +401,7 @@ void Backend::update_contact_shadow_uniforms() {
 void Backend::begin_frame() {
 
   drain_deferred_gl_deletes();
+  m_context.meshes().collect_retired();
   m_frame.surface.ground_cover = {};
 
   sync_graphics_profile();
@@ -817,7 +789,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_frame.ambient_strength = m_ambient_strength;
 
   const auto& prepared_batches = queue.prepared_batches();
-  PipelineDrawContext context{queue, m_frame, m_gl_state};
+  PipelineDrawContext context{queue, m_frame, m_gl_state, m_context.meshes()};
 
   m_rigged_drawn_this_frame = 0;
   auto& draw_tally = DrawTally::instance();

@@ -72,7 +72,7 @@ void EffectsPipeline::draw_grid(const GridCmd& grid,
   m_grid_shader->set_uniform(m_grid_uniforms.thickness, grid.thickness);
 
   if (ground != nullptr) {
-    ground->draw();
+    context.meshes.draw(*ground);
   }
 }
 
@@ -108,7 +108,7 @@ void EffectsPipeline::draw_selection_smoke(const SelectionSmokeCmd& smoke,
     m_basic_shader->set_uniform(m_basic_uniforms.mvp, mvp);
     m_basic_shader->set_uniform(m_basic_uniforms.model, m);
     m_basic_shader->set_uniform(m_basic_uniforms.alpha, a);
-    disc->draw();
+    context.meshes.draw(*disc);
   }
 }
 

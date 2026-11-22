@@ -10,6 +10,10 @@
 #include "render/gl/shader.h"
 
 namespace Render::GL {
+class MeshGpuTable;
+}
+
+namespace Render::GL {
 class ShaderCache;
 class Mesh;
 
@@ -43,7 +47,8 @@ private:
   GL::Shader* m_instanced_shader{nullptr};
   IndicatorInstancedUniforms m_instanced_uniforms;
 
-  void render_indicator(Mesh* mesh,
+  void render_indicator(MeshGpuTable& meshes,
+                        Mesh* mesh,
                         const QMatrix4x4& model,
                         const QMatrix4x4& view_proj,
                         const QVector3D& color,

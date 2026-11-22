@@ -1,5 +1,7 @@
 #include "render/backend/cylinder_pipeline.h"
 
+#include "render/gl/buffer.h"
+
 #include <QOpenGLContext>
 #include <qopenglcontext.h>
 #include <qopenglext.h>

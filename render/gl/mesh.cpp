@@ -1,36 +1,36 @@
 #include "render/gl/mesh.h"
 
-#include <QDebug>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions_3_3_Core>
 #include <QVector3D>
-#include <qopenglext.h>
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <limits>
 #include <memory>
-#include <sstream>
 #include <vector>
 
-#include "render/gl/buffer.h"
-#include "render/gl/draw_tally.h"
-#include "render/gl/gl_lifetime.h"
-#include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
-#include "render/gl/vertex_attrib_layout.h"
-#include "render/profiling/asset_counters.h"
-#include "render/profiling/gl_creation_trace.h"
 
 namespace Render::GL {
 
 using namespace Render::GL::ComponentCount;
 
+namespace {
+
+auto next_mesh_id() -> std::uint64_t {
+  static std::atomic<std::uint64_t> next{1};
+  return next.fetch_add(1, std::memory_order_relaxed);
+}
+
+} // namespace
+
 Mesh::Mesh(const std::vector<Vertex>& vertices,
            const std::vector<unsigned int>& indices)
     : m_vertices(vertices)
-    , m_indices(indices) {
+    , m_indices(indices)
+    , m_id(next_mesh_id())
+    , m_lifetime(std::make_shared<const int>(0)) {
   if (!m_vertices.empty()) {
     QVector3D min_pos(std::numeric_limits<float>::max(),
                       std::numeric_limits<float>::max(),
@@ -59,128 +59,6 @@ Mesh::Mesh(const std::vector<Vertex>& vertices,
 }
 
 Mesh::~Mesh() = default;
-
-void Mesh::setup_buffers() {
-  if (!gl_objects_can_be_released()) {
-    qWarning() << "Mesh::setup_buffers called without current GL context; "
-                  "skipping VAO/VBO creation";
-    return;
-  }
-  initializeOpenGLFunctions();
-  bool reported_stale = false;
-  for (GLenum stale = glGetError(); stale != GL_NO_ERROR; stale = glGetError()) {
-    if (!reported_stale) {
-      reported_stale = true;
-      qWarning() << "Mesh::setup_buffers inherited GL error" << stale
-                 << "from an earlier call";
-    }
-  }
-  if (Render::Profiling::gl_creation_trace_enabled()) {
-    std::ostringstream fingerprint;
-    fingerprint << "vertices=" << m_vertices.size() << " indices=" << m_indices.size()
-                << " radius=" << m_bounds_radius;
-    Render::Profiling::record_mesh_upload(fingerprint.str());
-  }
-  m_instance_layout_ready = false;
-  m_vao = std::make_unique<VertexArray>();
-  m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);
-  m_ebo = std::make_unique<Buffer>(Buffer::Type::Index);
-
-  m_vao->bind();
-
-  m_vbo->set_data(m_vertices);
-
-  m_ebo->set_data(m_indices);
-
-  constexpr GLsizei k_stride = sizeof(Vertex);
-  constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
-    return reinterpret_cast<std::size_t>(
-        &(reinterpret_cast<Vertex const*>(0)->*member_ptr));
-  };
-  auto const pos_off = offset_of(&Vertex::position);
-  auto const norm_off = offset_of(&Vertex::normal);
-  auto const tex_off = offset_of(&Vertex::tex_coord);
-
-  apply_vertex_attrib_layout({{0, 3, GL_FLOAT, GL_FALSE, k_stride, pos_off},
-                              {1, 3, GL_FLOAT, GL_FALSE, k_stride, norm_off},
-                              {2, 2, GL_FLOAT, GL_FALSE, k_stride, tex_off}});
-  m_vao->set_index_buffer(*m_ebo);
-
-  m_vao->unbind();
-
-  GLenum const err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "Mesh::setup_buffers GL error" << err;
-  }
-}
-
-auto Mesh::prepare_draw(const char* caller_name) -> bool {
-  if (m_vao && m_vao->id() != 0U) {
-    const GlShareGroup owner = m_vao->share_group();
-    const GlShareGroup current = current_gl_share_group();
-    if (owner != k_unknown_share_group && current != k_unknown_share_group &&
-        owner != current) {
-      m_vao.reset();
-      m_vbo.reset();
-      m_ebo.reset();
-    }
-  }
-  if (!m_vao) {
-    setup_buffers();
-  }
-  if (!m_vao) {
-    qWarning() << caller_name << "has no vertex array; skipping draw" << "indices"
-               << m_indices.size() << "context"
-               << (gl_objects_can_be_released() ? "current" : "absent");
-    return false;
-  }
-  m_vao->bind();
-  initializeOpenGLFunctions();
-
-#ifndef NDEBUG
-  GLenum const pre_err = glGetError();
-  if (pre_err != GL_NO_ERROR) {
-    qWarning() << caller_name << "pre-draw GL error" << pre_err << "vao"
-               << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
-  }
-#endif
-  return true;
-}
-
-void Mesh::draw() {
-  if (!prepare_draw("Mesh::draw")) {
-    return;
-  }
-  draw_bound();
-  m_vao->unbind();
-}
-
-void Mesh::unbind_vao() {
-  if (m_vao) {
-    m_vao->unbind();
-  }
-}
-
-void Mesh::draw_bound(std::size_t instance_count) {
-  const auto index_count = static_cast<GLsizei>(m_indices.size());
-  if (instance_count == 1U) {
-    glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
-  } else {
-    glDrawElementsInstanced(GL_TRIANGLES,
-                            index_count,
-                            GL_UNSIGNED_INT,
-                            nullptr,
-                            static_cast<GLsizei>(instance_count));
-  }
-  tally_draw(m_indices.size(), instance_count);
-#ifndef NDEBUG
-  GLenum const err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "Mesh::draw_bound GL error" << err << "indices" << m_indices.size()
-               << "instances" << instance_count;
-  }
-#endif
-}
 
 auto create_quad_mesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> const vertices = {

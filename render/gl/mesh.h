@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QOpenGLFunctions_3_3_Core>
 #include <QVector3D>
 
 #include <array>
@@ -10,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "render/gl/buffer.h"
 
 namespace Render::GL {
 
@@ -25,20 +23,22 @@ struct Vertex {
   std::array<float, 4> bone_weights{};
 };
 
-class Mesh : protected QOpenGLFunctions_3_3_Core {
+// Geometry a renderer can draw: vertices, indices and bounds. A Mesh holds no
+// GL objects; each backend uploads its own copy through its MeshGpuTable, keyed
+// by id(), and drops it once the Mesh is destroyed.
+class Mesh {
 public:
   Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
-  ~Mesh() override;
+  ~Mesh();
 
-  void draw();
+  Mesh(const Mesh&) = delete;
+  auto operator=(const Mesh&) -> Mesh& = delete;
+  Mesh(Mesh&&) = delete;
+  auto operator=(Mesh&&) -> Mesh& = delete;
 
-  auto bind_vao() -> bool { return prepare_draw("Mesh::bind_vao"); }
-  void unbind_vao();
-
-  void draw_bound(std::size_t instance_count = 1);
-
-  [[nodiscard]] auto claim_instance_layout() noexcept -> bool {
-    return !std::exchange(m_instance_layout_ready, true);
+  [[nodiscard]] auto id() const noexcept -> std::uint64_t { return m_id; }
+  [[nodiscard]] auto lifetime() const noexcept -> std::weak_ptr<const void> {
+    return m_lifetime;
   }
 
   [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex>& {
@@ -85,15 +85,8 @@ private:
   std::vector<unsigned int> m_indices;
   QVector3D m_bounds_center;
   float m_bounds_radius = 0.0F;
-  bool m_instance_layout_ready = false;
-
-  std::unique_ptr<VertexArray> m_vao;
-  std::unique_ptr<Buffer> m_vbo;
-  std::unique_ptr<Buffer> m_ebo;
-
-  void setup_buffers();
-
-  [[nodiscard]] auto prepare_draw(const char* caller_name) -> bool;
+  std::uint64_t m_id;
+  std::shared_ptr<const int> m_lifetime;
 };
 
 auto create_quad_mesh() -> std::unique_ptr<Mesh>;

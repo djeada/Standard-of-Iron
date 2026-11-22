@@ -888,19 +888,22 @@ void GameEngine::apply_presentation_camera(
 
 void GameEngine::prewarm_overlay_gpu_resources() {
   (void)m_renderer->rigged_mesh_cache().prewarm_gpu_resources();
-  if (auto* backend = m_renderer->backend(); backend != nullptr) {
-    (void)backend->prewarm_static_meshes(Render::GL::requested_building_meshes());
-  }
-  (void)Render::GL::prewarm_projectile_geometry();
-  (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources();
   if (m_fog != nullptr) {
     (void)m_fog->prewarm_gpu_resources();
   }
+  auto* backend = m_renderer->backend();
+  if (backend == nullptr) {
+    return;
+  }
+  (void)backend->prewarm_static_meshes(Render::GL::requested_building_meshes());
+  auto& meshes = backend->render_context().meshes();
+  (void)Render::GL::prewarm_projectile_geometry(meshes);
+  (void)Render::GL::SharedGeometryCache::instance().prewarm_gpu_resources(meshes);
   if (m_features != nullptr) {
-    (void)m_features->prewarm_gpu_resources();
+    (void)m_features->prewarm_gpu_resources(meshes);
   }
   if (m_surface != nullptr && m_surface->terrain() != nullptr) {
-    (void)m_surface->terrain()->prewarm_gpu_resources();
+    (void)m_surface->terrain()->prewarm_gpu_resources(meshes);
   }
 }
 

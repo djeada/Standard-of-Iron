@@ -52,7 +52,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
         m_banner_pipeline->draw_banners(prepared,
                                         head,
                                         is_transparent,
-                                        m_resources ? m_resources->white() : nullptr,
+                                        m_context.resources() != nullptr ? m_context.resources()->white() : nullptr,
                                         context);
         return;
       }
@@ -84,9 +84,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
         m_mesh_instancing_pipeline->accumulate(
             world_of(single), single.color, single.alpha);
       }
-      m_mesh_instancing_pipeline->flush();
+      m_mesh_instancing_pipeline->flush(context.meshes);
       shader->set_uniform(uniforms->instanced, false);
-    } else if (head.mesh->bind_vao()) {
+    } else if (context.meshes.bind(*head.mesh)) {
       const bool upload_mvp = uniforms->view_proj == Shader::InvalidUniform;
       for (std::size_t j = prepared.start; j < batch_end; ++j) {
         const auto& single = std::get<Cmd>(queue.get_sorted(j));
@@ -96,9 +96,9 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
         }
         shader->set_uniform(uniforms->color, single.color);
         shader->set_uniform(uniforms->alpha, single.alpha);
-        head.mesh->draw_bound();
+        context.meshes.draw_bound(*head.mesh);
       }
-      head.mesh->unbind_vao();
+      context.meshes.unbind();
     }
 
     if (is_transparent) {
@@ -123,7 +123,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
 
 void Backend::bind_mesh_texture(Texture* texture) {
   Texture* const tex_to_use =
-      (texture != nullptr) ? texture : (m_resources ? m_resources->white() : nullptr);
+      (texture != nullptr) ? texture : (m_context.resources() != nullptr ? m_context.resources()->white() : nullptr);
   if ((tex_to_use != nullptr) && tex_to_use != m_gl_state.bound_texture) {
     tex_to_use->bind(0);
     m_gl_state.bound_texture = tex_to_use;
@@ -163,7 +163,7 @@ auto Backend::bind_mesh_shader(Shader* active_shader,
     shader->set_uniform(uniforms->light_dir, m_light_dir);
     shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
     shader->set_uniform(uniforms->camera_pos, (*context.frame.camera).get_position());
-    bind_material_detail(*shader, *uniforms, m_resources.get());
+    bind_material_detail(*shader, *uniforms, m_context.resources());
     m_gl_state.bound_shader = shader;
   }
 

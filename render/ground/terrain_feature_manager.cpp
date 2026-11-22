@@ -18,11 +18,11 @@ TerrainFeatureManager::TerrainFeatureManager()
 
 TerrainFeatureManager::~TerrainFeatureManager() = default;
 
-auto TerrainFeatureManager::prewarm_gpu_resources() -> bool {
-  bool ready = m_water->prewarm_gpu_resources();
-  ready = m_road->prewarm_gpu_resources() && ready;
-  ready = m_shoreline->prewarm_gpu_resources() && ready;
-  ready = m_bridge->prewarm_gpu_resources() && ready;
+auto TerrainFeatureManager::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
+  bool ready = m_water->prewarm_gpu_resources(meshes);
+  ready = m_road->prewarm_gpu_resources(meshes) && ready;
+  ready = m_shoreline->prewarm_gpu_resources(meshes) && ready;
+  ready = m_bridge->prewarm_gpu_resources(meshes) && ready;
   return ready;
 }
 

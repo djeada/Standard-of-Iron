@@ -8,6 +8,7 @@
 
 #include "render/gl/gl_lifetime.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_gpu_table.h"
 #include "render/gl/resources.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
@@ -75,7 +76,9 @@ TEST(GlContextLifetime, GlDestructionWithoutCurrentContextNeverCallsGl) {
   texture.reset();
   shader.reset();
   resources.reset();
-  constexpr std::size_t k_resource_manager_names = 3U * 3U + 2U + 1U;
+  // Two textures and the wear volume. Its meshes are geometry only; their GL
+  // objects belong to whichever MeshGpuTable uploaded them.
+  constexpr std::size_t k_resource_manager_names = 2U + 1U;
   EXPECT_EQ(Render::GL::deferred_gl_delete_count(),
             before + 2U + k_resource_manager_names)
       << "an object destroyed without its context either called GL or leaked its "
@@ -105,14 +108,15 @@ TEST(GlContextLifetime, ResourceManagerReleasesWearVolume) {
   EXPECT_EQ(fn.glIsTexture(wear), GL_FALSE) << "the 3D wear texture leaked";
 }
 
-TEST(GlContextLifetime, MeshReuploadsWhenDrawnInAnotherShareGroup) {
+TEST(GlContextLifetime, EachMeshTableUploadsItsOwnCopyOfASharedMesh) {
   OffscreenGl first;
   if (!first.ready) {
     GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
   }
   auto mesh = Render::GL::create_quad_mesh();
-  ASSERT_TRUE(mesh->bind_vao());
-  mesh->unbind_vao();
+  auto first_table = std::make_unique<Render::GL::MeshGpuTable>();
+  ASSERT_TRUE(first_table->bind(*mesh));
+  first_table->unbind();
   first.context.doneCurrent();
 
   OffscreenGl second;
@@ -120,13 +124,35 @@ TEST(GlContextLifetime, MeshReuploadsWhenDrawnInAnotherShareGroup) {
     GTEST_SKIP() << "No second OpenGL context available in this environment";
   }
   ASSERT_NE(first.context.shareGroup(), second.context.shareGroup());
-  QOpenGLFunctions_3_3_Core fn;
-  fn.initializeOpenGLFunctions();
-  ASSERT_TRUE(mesh->bind_vao())
-      << "a cached mesh reused vertex-array names from another share group";
+  auto second_table = std::make_unique<Render::GL::MeshGpuTable>();
+  ASSERT_TRUE(second_table->bind(*mesh))
+      << "a second renderer could not draw a mesh the first one already uploaded";
+  QOpenGLFunctions_3_3_Core second_fn;
+  second_fn.initializeOpenGLFunctions();
   GLint bound = 0;
-  fn.glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &bound);
-  EXPECT_EQ(fn.glIsVertexArray(static_cast<GLuint>(bound)), GL_TRUE);
-  mesh->unbind_vao();
-  mesh.reset();
+  second_fn.glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &bound);
+  EXPECT_EQ(second_fn.glIsVertexArray(static_cast<GLuint>(bound)), GL_TRUE);
+  second_table->unbind();
+  EXPECT_EQ(first_table->size(), 1U);
+  EXPECT_EQ(second_table->size(), 1U);
+
+  second_table.reset();
+  ASSERT_TRUE(first.context.makeCurrent(&first.surface));
+  first_table.reset();
+  Render::GL::drain_deferred_gl_deletes();
+}
+
+TEST(GlContextLifetime, ATableDropsTheCopyOfADestroyedMesh) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  Render::GL::MeshGpuTable table;
+  {
+    auto mesh = Render::GL::create_quad_mesh();
+    ASSERT_TRUE(table.prewarm(*mesh));
+    EXPECT_EQ(table.size(), 1U);
+  }
+  table.collect_retired();
+  EXPECT_EQ(table.size(), 0U) << "the GPU copy of a destroyed mesh was kept";
 }

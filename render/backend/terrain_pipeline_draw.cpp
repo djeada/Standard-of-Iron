@@ -462,9 +462,9 @@ void TerrainPipeline::draw_surfaces(
 
     if (single.depth_bias != 0.0F) {
       PolygonOffsetScope const poly_scope(single.depth_bias, single.depth_bias);
-      single.mesh->draw();
+      context.meshes.draw(*single.mesh);
     } else {
-      single.mesh->draw();
+      context.meshes.draw(*single.mesh);
     }
   };
 

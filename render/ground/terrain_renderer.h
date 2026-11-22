@@ -18,6 +18,7 @@
 #include "render/frame/mist_volume.h"
 #include "render/frame/world_chunk.h"
 #include "render/gl/mesh.h"
+#include "render/gl/mesh_gpu_table.h"
 #include "render/gl/terrain_noise_atlas.h"
 #include "render/gl/texture.h"
 #include "render/ground/building_ground.h"
@@ -52,7 +53,7 @@ public:
 
   void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
 
   void set_wireframe(bool enable) { m_wireframe = enable; }
 

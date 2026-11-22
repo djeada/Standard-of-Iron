@@ -111,7 +111,7 @@ void WaterPipeline::draw_feature_models(const PreparedBatch& prepared,
       shader->set_uniform(road_surface_uniform,
                           static_cast<int>(single.road_surface_kind));
     }
-    single.mesh->draw();
+    context.meshes.draw(*single.mesh);
   }
 }
 
@@ -204,7 +204,7 @@ void WaterPipeline::draw_water(const PreparedBatch& prepared,
     if (uniforms.segment_visibility != Shader::InvalidUniform) {
       water_shader->set_uniform(uniforms.segment_visibility, single.alpha);
     }
-    single.mesh->draw();
+    context.meshes.draw(*single.mesh);
   }
 }
 
@@ -303,7 +303,7 @@ void WaterPipeline::draw_riverbank(const PreparedBatch& prepared,
     if (uniforms.segment_visibility != Shader::InvalidUniform) {
       riverbank_shader->set_uniform(uniforms.segment_visibility, single.alpha);
     }
-    single.mesh->draw();
+    context.meshes.draw(*single.mesh);
   }
 }
 

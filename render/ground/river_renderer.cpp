@@ -28,8 +28,8 @@
 
 namespace Render::GL {
 
-auto WaterRenderer::prewarm_gpu_resources() -> bool {
-  return prewarm_mesh_buffers(m_meshes, [](auto& entry) { return entry.mesh.get(); });
+auto WaterRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
+  return prewarm_mesh_buffers(meshes, m_meshes, [](auto& entry) { return entry.mesh.get(); });
 }
 
 WaterRenderer::WaterRenderer() = default;

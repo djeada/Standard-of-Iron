@@ -30,6 +30,7 @@
 #include "render/frame/world_render_mode.h"
 #include "render/gl/gl_handle.h"
 #include "render/gl/persistent_buffer.h"
+#include "render/gl/render_context.h"
 #include "render/gl/resources.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"
@@ -144,12 +145,14 @@ public:
     return m_last_playback_stats;
   }
 
+  [[nodiscard]] auto render_context() noexcept -> RenderContext& { return m_context; }
+
   [[nodiscard]] auto resources() const -> ResourceManager* override {
-    return m_resources.get();
+    return m_context.resources();
   }
 
   [[nodiscard]] auto shader(const QString& name) const -> Shader* override {
-    return m_shader_cache ? m_shader_cache->get(name) : nullptr;
+    return m_context.shaders() != nullptr ? m_context.shaders()->get(name) : nullptr;
   }
 
   [[nodiscard]] auto supports_shaders() const -> bool override { return true; }
@@ -160,10 +163,10 @@ public:
   auto get_or_load_shader(const QString& name,
                           const QString& vert_path,
                           const QString& frag_path) -> Shader* {
-    if (!m_shader_cache) {
+    if (m_context.shaders() == nullptr) {
       return nullptr;
     }
-    return m_shader_cache->load(name, vert_path, frag_path);
+    return m_context.shaders()->load(name, vert_path, frag_path);
   }
 
   [[nodiscard]] auto banner_mesh() const -> Mesh*;
@@ -371,8 +374,7 @@ private:
   int m_viewport_height{0};
 
   std::array<float, 4> m_clear_color{0.055F, 0.065F, 0.05F, 1.0F};
-  std::unique_ptr<ShaderCache> m_shader_cache;
-  std::unique_ptr<ResourceManager> m_resources;
+  RenderContext m_context;
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;
   std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrain_pipeline;

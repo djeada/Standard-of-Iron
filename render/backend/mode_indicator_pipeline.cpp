@@ -118,7 +118,7 @@ void ModeIndicatorPipeline::draw_indicators(const PreparedBatch& prepared,
       CullFaceScope const cull(false);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-      instancing->flush();
+      instancing->flush(context.meshes);
       context.state.bound_shader = nullptr;
     }
     return;
@@ -130,7 +130,8 @@ void ModeIndicatorPipeline::draw_indicators(const PreparedBatch& prepared,
     return;
   }
 
-  render_indicator(indicator_mesh,
+  render_indicator(context.meshes,
+                   indicator_mesh,
                    mc.model,
                    context.frame.view_proj,
                    mc.color,
@@ -140,7 +141,8 @@ void ModeIndicatorPipeline::draw_indicators(const PreparedBatch& prepared,
   context.state.bound_shader = nullptr;
 }
 
-void ModeIndicatorPipeline::render_indicator(Mesh* mesh,
+void ModeIndicatorPipeline::render_indicator(MeshGpuTable& meshes,
+                                             Mesh* mesh,
                                              const QMatrix4x4& model,
                                              const QMatrix4x4& view_proj,
                                              const QVector3D& color,
@@ -165,7 +167,7 @@ void ModeIndicatorPipeline::render_indicator(Mesh* mesh,
   m_indicator_shader->set_uniform(m_uniforms.alpha, alpha);
   m_indicator_shader->set_uniform(m_uniforms.time, time);
 
-  mesh->draw();
+  meshes.draw(*mesh);
 
   check_gl_error("render_indicator");
 }

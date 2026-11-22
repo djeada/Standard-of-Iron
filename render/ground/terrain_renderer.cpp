@@ -1,3 +1,4 @@
+#include "render/gl/mesh_prewarmer.h"
 #include "render/ground/terrain_renderer.h"
 
 #include <QOpenGLContext>
@@ -73,22 +74,8 @@ auto TerrainRenderer::compute_ground_fog(const std::vector<float>& heights)
   return fog;
 }
 
-auto TerrainRenderer::prewarm_gpu_resources() -> bool {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return false;
-  }
-  bool ready = true;
-  for (auto& chunk : m_chunks) {
-    if (chunk.mesh == nullptr) {
-      continue;
-    }
-    if (chunk.mesh->bind_vao()) {
-      chunk.mesh->unbind_vao();
-    } else {
-      ready = false;
-    }
-  }
-  return ready;
+auto TerrainRenderer::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
+  return prewarm_mesh_buffers(meshes, m_chunks, [](auto& chunk) { return chunk.mesh.get(); });
 }
 
 void TerrainRenderer::set_light_direction(const QVector3D& dir) {

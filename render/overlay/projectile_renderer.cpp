@@ -30,16 +30,13 @@ auto fireball_impact_envelope(float progress) -> float {
   return 1.0F - t * t * (3.0F - 2.0F * t);
 }
 
-auto prewarm_projectile_geometry() -> bool {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return false;
-  }
+auto prewarm_projectile_geometry(MeshGpuTable& table) -> bool {
   std::array meshes{Geom::Arrow::get_shaft(),
                     Geom::Arrow::get_tip(),
                     Geom::Arrow::get_fletching(),
                     Geom::Stone::get(),
                     get_unit_sphere()};
-  return prewarm_mesh_buffers(meshes, [](auto* mesh) { return mesh; });
+  return prewarm_mesh_buffers(table, meshes, [](auto* mesh) { return mesh; });
 }
 
 auto classify_projectile_relation(int local_owner_id,

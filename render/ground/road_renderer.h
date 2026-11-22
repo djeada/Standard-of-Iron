@@ -7,6 +7,7 @@
 
 #include "game/map/terrain.h"
 #include "render/frame/i_draw_source.h"
+#include "render/gl/mesh_gpu_table.h"
 #include "render/ground/road_network_geometry.h"
 
 namespace Render::GL {
@@ -24,7 +25,7 @@ public:
 
   void submit(FrameSubmitter& renderer, ResourceManager* resources) override;
 
-  [[nodiscard]] auto prewarm_gpu_resources() -> bool;
+  [[nodiscard]] auto prewarm_gpu_resources(MeshGpuTable& meshes) -> bool;
 
   [[nodiscard]] auto surface_count() const -> std::size_t { return m_surfaces.size(); }
 

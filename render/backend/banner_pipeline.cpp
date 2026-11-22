@@ -40,7 +40,7 @@ void BannerPipeline::draw_banners(const PreparedBatch& prepared,
   }
   active_shader->set_uniform(banner.texture, 0);
   active_shader->set_uniform(banner.use_texture, head.texture != nullptr);
-  if (head.mesh->bind_vao()) {
+  if (context.meshes.bind(*head.mesh)) {
     for (std::size_t j = prepared.start; j < prepared.end(); ++j) {
       const auto& single = std::get<MeshCmd>(queue.get_sorted(j));
       active_shader->set_uniform(banner.mvp, context.frame.view_proj * single.model);
@@ -50,9 +50,9 @@ void BannerPipeline::draw_banners(const PreparedBatch& prepared,
                                  single.has_trim_color ? single.trim_color
                                                        : (single.color * 0.7F));
       active_shader->set_uniform(banner.alpha, single.alpha);
-      head.mesh->draw_bound();
+      context.meshes.draw_bound(*head.mesh);
     }
-    head.mesh->unbind_vao();
+    context.meshes.unbind();
   }
   if (is_transparent) {
     glDepthFunc(GL_LESS);

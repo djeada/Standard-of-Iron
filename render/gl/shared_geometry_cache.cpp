@@ -27,25 +27,13 @@ auto SharedGeometryCache::get_or_build(std::uint64_t key,
   return m_meshes.emplace(key, std::move(mesh)).first->second.get();
 }
 
-auto SharedGeometryCache::prewarm_gpu_resources() -> bool {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    return false;
-  }
+auto SharedGeometryCache::prewarm_gpu_resources(MeshGpuTable& meshes) -> bool {
   std::lock_guard<std::mutex> const lock(m_mutex);
   bool ready = true;
   for (auto& [key, mesh] : m_meshes) {
-    if (mesh->bind_vao()) {
-      mesh->unbind_vao();
-    } else {
-      ready = false;
-    }
+    ready = meshes.prewarm(*mesh) && ready;
   }
   return ready;
-}
-
-void SharedGeometryCache::release_all() {
-  std::lock_guard<std::mutex> const lock(m_mutex);
-  m_meshes.clear();
 }
 
 auto SharedGeometryCache::size() const -> std::size_t {

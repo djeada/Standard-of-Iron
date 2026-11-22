@@ -171,6 +171,39 @@ TEST_F(GlOwnershipLeakTest, BackendLoadRenderReloadShutdownReleasesEveryGlObject
   EXPECT_EQ(Render::GL::deferred_gl_delete_count(), 0U);
 }
 
+TEST_F(GlOwnershipLeakTest, TwoBackendsCoexistAndReleaseEverythingTheyMade) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    SOI_SKIP_WITHOUT_GL("No OpenGL 3.3 context available in this environment");
+  }
+  Render::GL::drain_deferred_gl_deletes();
+  const LiveCounts before = live_counts();
+
+  auto first = std::make_unique<Render::GL::Backend>();
+  auto second = std::make_unique<Render::GL::Backend>();
+  if (!first->initialize() || !second->initialize()) {
+    SOI_SKIP_WITHOUT_GL("Backend could not initialise here (shaders or GL features)");
+  }
+  first->set_viewport(96, 96);
+  second->set_viewport(64, 64);
+  for (int frame = 0; frame < 3; ++frame) {
+    render_frames(*first, 1);
+    render_frames(*second, 1);
+  }
+  EXPECT_NE(&first->render_context().meshes(), &second->render_context().meshes());
+  EXPECT_GT(first->render_context().meshes().size(), 0U);
+  EXPECT_GT(second->render_context().meshes().size(), 0U);
+
+  first.reset();
+  render_frames(*second, 1);
+  second.reset();
+  Render::GL::drain_deferred_gl_deletes();
+
+  const LiveCounts after = live_counts();
+  EXPECT_EQ(after, before) << "GL objects outlived the two backends:"
+                           << describe_leaks(before, after);
+}
+
 TEST(GlOwnership, HandleCreatedAndDestroyedOnContextIsCountedBothWays) {
   OffscreenGl gl;
   if (!gl.ready) {
