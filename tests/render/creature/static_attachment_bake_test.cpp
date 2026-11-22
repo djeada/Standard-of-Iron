@@ -10,10 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/archetype_registry.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/gpu/snapshot_mesh_cache.h"
@@ -25,8 +23,10 @@
 #include "render/creature/spec.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
+#include "render/frame/render_archetype.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace {
 

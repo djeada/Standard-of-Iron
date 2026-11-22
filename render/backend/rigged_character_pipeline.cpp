@@ -10,13 +10,13 @@
 #include <vector>
 
 #include "render/backend/character_wear_binding.h"
-#include "render/gl/ubo_bindings.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/draw_commands.h"
 #include "render/gl/gl_resource_tracking.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/texture.h"
+#include "render/gl/ubo_bindings.h"
 
 namespace Render::GL::BackendPipelines {
 

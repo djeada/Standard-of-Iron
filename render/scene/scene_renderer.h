@@ -16,6 +16,7 @@
 
 #include "game/systems/unit_activity.h"
 #include "render/backend/backend.h"
+#include "render/cache/static_building_batch.h"
 #include "render/cache/static_mesh_pack.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/gpu/snapshot_mesh_cache.h"
@@ -28,12 +29,11 @@
 #include "render/entity/registry.h"
 #include "render/frame/bone_palette_arena.h"
 #include "render/frame/draw_queue.h"
-#include "render/frame/frame_submitter.h"
 #include "render/frame/frame_budget.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/i_render_backend.h"
 #include "render/frame/pipeline/screen_metrics.h"
 #include "render/frame/render_view_state.h"
-#include "render/cache/static_building_batch.h"
 #include "render/frame/submission_visibility.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_render_mode.h"
@@ -193,7 +193,8 @@ public:
     return m_submission_visibility;
   }
 
-  [[nodiscard]] auto visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources& override;
+  [[nodiscard]] auto
+  visibility_mask() -> const TerrainSurfaceCmd::VisibilityResources& override;
 
   void set_frame_budget(const FrameBudgetConfig& config) {
     if (m_backend) {
@@ -342,7 +343,8 @@ public:
                 float alpha = 1.0F) override;
   void ground_marker(const GroundMarkerCmd& marker) override;
 
-  void set_terrain_height_resources(const TerrainSurfaceCmd::HeightResources& height) override {
+  void set_terrain_height_resources(
+      const TerrainSurfaceCmd::HeightResources& height) override {
     m_terrain_height_resources = height;
   }
 
@@ -479,8 +481,8 @@ public:
     return m_snapshot_mesh_cache;
   }
 
-  [[nodiscard]] auto
-  building_ground() const noexcept -> const Render::Ground::BuildingGroundSet& override {
+  [[nodiscard]] auto building_ground() const noexcept
+      -> const Render::Ground::BuildingGroundSet& override {
     return m_building_ground;
   }
 

@@ -8,9 +8,9 @@
 
 #include "game/accessibility/team_identity.h"
 #include "game/map/terrain_service.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/local_lighting.h"
 #include "render/geom/mode_indicator.h"
-#include "render/frame/frame_submitter.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

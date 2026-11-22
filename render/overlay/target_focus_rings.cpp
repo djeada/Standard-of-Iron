@@ -8,8 +8,8 @@
 
 #include "game/accessibility/team_identity.h"
 #include "game/map/terrain_service.h"
-#include "render/geom/mode_indicator.h"
 #include "render/frame/frame_submitter.h"
+#include "render/geom/mode_indicator.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "render/frame/frame_submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -98,7 +98,9 @@ void draw_raft(FrameSubmitter* renderer,
   draw_cylinder(renderer, cylinder, pole_foot, rope_point - up * 0.05F, 0.05F, k_post);
 }
 
-void draw_guide_rope(FrameSubmitter* renderer, Mesh* cylinder, const RaftDrawable& raft) {
+void draw_guide_rope(FrameSubmitter* renderer,
+                     Mesh* cylinder,
+                     const RaftDrawable& raft) {
   QVector3D const up(0.0F, 1.0F, 0.0F);
   QVector3D const forward = raft.across;
   QVector3D const lateral(-forward.z(), 0.0F, forward.x());

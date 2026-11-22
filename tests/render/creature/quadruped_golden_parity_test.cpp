@@ -32,7 +32,6 @@
 #include "render/creature/elephant/prepare.h"
 #include "render/creature/elephant/runtime/motion_sample.h"
 #include "render/creature/elephant/schema/attachment_schema.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/creature/horse/horse_motion.h"
 #include "render/creature/horse/horse_renderer_base.h"
 #include "render/creature/horse/prepare.h"
@@ -46,6 +45,7 @@
 #include "render/frame/draw_commands.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace {
 

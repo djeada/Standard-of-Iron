@@ -9,11 +9,11 @@
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/visuals/team_colors.h"
+#include "render/backend/backend.h"
+#include "render/frame/frame_submitter.h"
 #include "render/geom/flag.h"
 #include "render/geom/transforms.h"
 #include "render/gl/resources.h"
-#include "render/frame/frame_submitter.h"
-#include "render/backend/backend.h"
 
 namespace Render::GL {
 

@@ -12,15 +12,15 @@
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/frame/draw_context.h"
 #include "render/frame/entity_appearance.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/submission_visibility.h"
 #include "render/geom/arrow.h"
-#include "render/overlay/raft_renderer.h"
 #include "render/geom/stone.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/frame/frame_submitter.h"
+#include "render/overlay/raft_renderer.h"
 
 namespace Render::GL {
 

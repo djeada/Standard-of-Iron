@@ -6,8 +6,8 @@
 
 #include "animation/rig/horse_attachment_frames.h"
 #include "render/cache/static_attachment_spec.h"
-#include "render/frame/draw_context.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
 
 namespace Render::GL {
 

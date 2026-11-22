@@ -6,9 +6,9 @@
 #include <string_view>
 #include <utility>
 
-#include "render/frame/render_archetype.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_render_common.h"
+#include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
 
 namespace Render::GL {

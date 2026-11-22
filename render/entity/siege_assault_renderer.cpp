@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <initializer_list>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -17,12 +18,12 @@
 #include "game/core/world.h"
 #include "render/entity/siege_renderer_common.h"
 #include "render/frame/entity_appearance.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
 #include "render/math/math_utils.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 namespace {
@@ -572,7 +573,8 @@ void register_variant(EntityRendererRegistry& registry, const Variant& v) {
           unit = ctx.resources->unit();
           white = ctx.resources->white();
         }
-        if (auto* scene_renderer = dynamic_cast<FrameSubmitter*>(out.unwrap_submitter())) {
+        if (auto* scene_renderer =
+                dynamic_cast<FrameSubmitter*>(out.unwrap_submitter())) {
           unit = scene_renderer->get_mesh_cube();
           white = scene_renderer->get_white_texture();
         }

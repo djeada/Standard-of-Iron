@@ -6,9 +6,9 @@
 #include <cstddef>
 #include <utility>
 
-#include "render/gl/rigged_mesh.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/platform_gl.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace Render::GL {
 

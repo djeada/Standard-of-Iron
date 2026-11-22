@@ -92,12 +92,14 @@ TEST(CreatureProceduralPose, HasNoProductionCallers) {
 TEST(CreatureProceduralPose, BindPalettesComeFromTheCompiledAsset) {
   const auto root = find_repo_root();
 
-  const auto horse = read_text(root / "render" / "creature" / "horse" / "horse_spec.cpp");
+  const auto horse =
+      read_text(root / "render" / "creature" / "horse" / "horse_spec.cpp");
   ASSERT_FALSE(horse.empty());
   EXPECT_NE(horse.find("return horse_source_bind_palette();"), std::string::npos)
       << "the horse bind palette no longer comes from the compiled asset";
 
-  const auto elephant = read_text(root / "render" / "creature" / "elephant" / "elephant_spec.cpp");
+  const auto elephant =
+      read_text(root / "render" / "creature" / "elephant" / "elephant_spec.cpp");
   ASSERT_FALSE(elephant.empty());
   EXPECT_NE(elephant.find("elephant_source_bind_palette()"), std::string::npos)
       << "the elephant bind palette no longer comes from the compiled asset";

@@ -14,6 +14,7 @@
 
 #include "game/map/visibility_service.h"
 #include "map/terrain.h"
+#include "render/frame/frame_submitter.h"
 #include "render/gl/mesh.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/gl/resources.h"
@@ -21,7 +22,6 @@
 #include "render/ground/linear_feature_geometry.h"
 #include "render/ground/linear_feature_submission.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 

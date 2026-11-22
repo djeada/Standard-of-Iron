@@ -71,7 +71,9 @@ def check(root: Path) -> list[str]:
         if folder not in RANK:
             problems.append(f"{relative}: folder render/{folder} has no layer")
             continue
-        for number, line in enumerate(source.read_text(errors="replace").splitlines(), 1):
+        for number, line in enumerate(
+            source.read_text(errors="replace").splitlines(), 1
+        ):
             match = INCLUDE.match(line)
             if match is None:
                 continue

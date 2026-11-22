@@ -25,9 +25,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "render/gl/ubo_bindings.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
+#include "render/gl/ubo_bindings.h"
 #include "render/profiling/asset_counters.h"
 #include "utils/resource_utils.h"
 

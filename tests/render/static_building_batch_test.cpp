@@ -9,11 +9,11 @@
 #include <span>
 #include <vector>
 
-#include "render/frame/render_archetype.h"
-#include "render/cache/static_mesh_pack.h"
-#include "render/frame/unseen_submitter.h"
-#include "render/frame/material_classification.h"
 #include "render/cache/static_building_batch.h"
+#include "render/cache/static_mesh_pack.h"
+#include "render/frame/material_classification.h"
+#include "render/frame/render_archetype.h"
+#include "render/frame/unseen_submitter.h"
 #include "render/gl/primitives.h"
 
 namespace {

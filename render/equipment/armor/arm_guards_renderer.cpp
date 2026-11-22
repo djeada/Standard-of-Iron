@@ -6,14 +6,14 @@
 #include <deque>
 #include <string>
 
-#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
-#include "render/frame/draw_context.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_archetype_helpers.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/render_archetype.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 

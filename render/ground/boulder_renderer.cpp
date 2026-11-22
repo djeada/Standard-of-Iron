@@ -14,9 +14,9 @@
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_ground_fit.h"
-#include "render/frame/frame_submitter.h"
 
 namespace {
 

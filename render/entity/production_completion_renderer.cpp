@@ -13,9 +13,9 @@
 #include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
 #include "render/frame/draw_commands.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/local_lighting.h"
 #include "render/frame/world_view.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 

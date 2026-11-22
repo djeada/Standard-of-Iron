@@ -6,9 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/equipment/horse/i_horse_equipment_renderer.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL {
 

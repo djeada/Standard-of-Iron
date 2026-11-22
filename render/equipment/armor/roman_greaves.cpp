@@ -8,13 +8,13 @@
 #include <string>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/frame/render_archetype.h"
 #include "render/creature/humanoid/runtime/style_palette.h"
-#include "render/frame/draw_context.h"
 #include "render/equipment/armor/sheet_mesh.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_cache_key.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
+#include "render/frame/render_archetype.h"
 #include "render/gl/shared_geometry_cache.h"
 
 namespace Render::GL {

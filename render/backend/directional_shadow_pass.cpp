@@ -20,13 +20,13 @@
 #include "render/backend/mesh_instancing_pipeline.h"
 #include "render/backend/rigged_cull_pipeline.h"
 #include "render/backend/shadow_cascade_fit.h"
-#include "render/gl/ubo_bindings.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/frame/draw_queue.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
+#include "render/gl/rigged_mesh.h"
 #include "render/gl/shader.h"
+#include "render/gl/ubo_bindings.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

@@ -15,12 +15,12 @@
 #include <utility>
 #include <vector>
 
-#include "render/frame/render_archetype.h"
 #include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/primitive_geometry.h"
 #include "render/creature/skeleton.h"
+#include "render/frame/render_archetype.h"
 #include "render/geom/parts.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"

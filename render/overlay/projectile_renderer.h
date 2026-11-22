@@ -65,7 +65,8 @@ void render_stone_projectile(FrameSubmitter* renderer,
                              const QMatrix4x4& base_model,
                              bool reduced_effects = false);
 
-void render_rafts(FrameSubmitter* renderer, const Game::Systems::RenderEffectsFrame& effects);
+void render_rafts(FrameSubmitter* renderer,
+                  const Game::Systems::RenderEffectsFrame& effects);
 
 void render_rockfall(FrameSubmitter* renderer,
                      const Game::Systems::RenderEffectsFrame& effects,

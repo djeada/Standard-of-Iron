@@ -12,10 +12,10 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "render/frame/decoration_gpu.h"
+#include "render/frame/frame_submitter.h"
 #include "render/ground/i_scatter_pass.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_submission.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 

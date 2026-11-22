@@ -51,5 +51,4 @@ void register_humanoid_renderer(EntityRendererRegistry& registry,
                                 std::string key,
                                 std::shared_ptr<const HumanoidRendererBase> renderer);
 
-
 } // namespace Render::GL

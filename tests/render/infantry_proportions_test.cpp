@@ -11,8 +11,8 @@
 #include "game/core/entity.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/entity/registry.h"
+#include "render/gl/rigged_mesh.h"
 
 using namespace Render::GL;
 

@@ -6,7 +6,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include "render/frame/render_archetype.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
@@ -16,6 +15,7 @@
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/entity/registry.h"
 #include "render/entity/temple_renderer_common.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL::Carthage {
 namespace {

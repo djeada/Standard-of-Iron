@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "render/frame/creature_lod.h"
 #include "animation/action_manifest.h"
 #include "animation/clip_manifest.h"
 #include "animation/guard_manifest.h"
@@ -16,6 +15,7 @@
 #include "game/core/component_combat.h"
 #include "render/creature/combat_visual_state.h"
 #include "render/creature/movement_state.h"
+#include "render/frame/creature_lod.h"
 #include "render/frame/palette.h"
 
 namespace Render::GL {

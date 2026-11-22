@@ -12,9 +12,9 @@
 #include "render/creature/pipeline/creature_submission_context.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/shadow_batch.h"
-#include "render/frame/unseen_submitter.h"
 #include "render/frame/primitive_batch.h"
 #include "render/frame/submitter.h"
+#include "render/frame/unseen_submitter.h"
 #include "render/scene/scene_renderer.h"
 
 namespace {

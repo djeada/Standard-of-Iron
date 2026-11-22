@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "game/map/terrain_service.h"
+#include "render/frame/terrain_scene_types.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/bridge_renderer.h"
@@ -19,7 +20,6 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
-#include "render/frame/terrain_scene_types.h"
 #include "render/ground/terrain_surface_manager.h"
 #include "render/ground/tree_renderer.h"
 #include "render/scene/scene_renderer.h"

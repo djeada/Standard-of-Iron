@@ -122,7 +122,8 @@ TEST(SceneWalkEntityHandleTest, RenderEntriesCarryFullWidthEntityHandles) {
     EXPECT_LT(field, end) << entry << " has no full-width handle field of its own";
   }
 
-  const auto optimizer = read_text(root / "render" / "scene" / "battle_render_optimizer.h");
+  const auto optimizer =
+      read_text(root / "render" / "scene" / "battle_render_optimizer.h");
   ASSERT_FALSE(optimizer.empty());
   EXPECT_EQ(optimizer.find("should_update_animation(std::uint32_t entity_id"),
             std::string::npos)

@@ -2,8 +2,8 @@
 
 #include <QVector3D>
 
-#include "render/equipment/material_palette.h"
 #include "render/entity/swordsman_renderer_common.h"
+#include "render/equipment/material_palette.h"
 
 namespace Render::GL::Gauls {
 

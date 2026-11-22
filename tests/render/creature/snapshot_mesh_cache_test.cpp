@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "render/gl/rigged_mesh.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
 #include "render/creature/gpu/snapshot_mesh_cache.h"
 #include "render/creature/pipeline/creature_asset.h"
@@ -19,6 +18,7 @@
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/frame/bone_palette_arena.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace {
 

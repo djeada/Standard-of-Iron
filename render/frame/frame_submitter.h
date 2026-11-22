@@ -37,7 +37,8 @@ public:
   // What is being drawn and from where.
   [[nodiscard]] virtual auto get_animation_time() const -> float = 0;
   [[nodiscard]] virtual auto camera() const -> Camera* = 0;
-  [[nodiscard]] virtual auto world_view() const noexcept -> const Render::WorldView& = 0;
+  [[nodiscard]] virtual auto
+  world_view() const noexcept -> const Render::WorldView& = 0;
   [[nodiscard]] virtual auto
   submission_visibility() const noexcept -> const SubmissionVisibilityPolicy& = 0;
   [[nodiscard]] virtual auto static_world_visibility_filter_enabled() const -> bool = 0;
@@ -66,8 +67,8 @@ public:
   virtual void terrain_surface(const TerrainSurfaceCmd& cmd) = 0;
   virtual void terrain_feature(const TerrainFeatureCmd& cmd) = 0;
   virtual void terrain_scatter(const TerrainScatterCmd& cmd) = 0;
-  virtual void set_terrain_height_resources(
-      const TerrainSurfaceCmd::HeightResources& height) = 0;
+  virtual void
+  set_terrain_height_resources(const TerrainSurfaceCmd::HeightResources& height) = 0;
   virtual void set_ground_fog(const Render::GroundFogSettings& fog) = 0;
   virtual void fog_batch(const FogInstanceData* instances,
                          std::size_t count,

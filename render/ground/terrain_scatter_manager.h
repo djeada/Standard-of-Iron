@@ -11,8 +11,8 @@
 #include "game/map/biome_settings.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
-#include "render/ground/i_scatter_pass.h"
 #include "render/frame/terrain_scene_types.h"
+#include "render/ground/i_scatter_pass.h"
 
 namespace Render::GL {
 

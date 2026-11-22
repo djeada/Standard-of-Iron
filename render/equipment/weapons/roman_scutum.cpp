@@ -10,16 +10,16 @@
 #include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/frame/render_archetype.h"
 #include "render/creature/humanoid/asset/bind_skeleton.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/humanoid/runtime/humanoid_math.h"
 #include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/humanoid/runtime/style_palette.h"
-#include "render/equipment/material_palette.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/material_palette.h"
 #include "render/equipment/weapons/shield_anchor.h"
+#include "render/frame/render_archetype.h"
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"

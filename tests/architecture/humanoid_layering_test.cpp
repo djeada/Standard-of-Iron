@@ -103,7 +103,8 @@ TEST(HumanoidLayering, RuntimeDoesNotDependOnBaking) {
 
 TEST(HumanoidLayering, ThereIsNoUmbrellaInternalHeader) {
   const auto root = find_repo_root();
-  EXPECT_FALSE(fs::exists(root / "render" / "creature" / "humanoid" / "prepare_internal.h"));
+  EXPECT_FALSE(
+      fs::exists(root / "render" / "creature" / "humanoid" / "prepare_internal.h"));
 
   for (const auto& file : sources_under(root / "render" / "creature" / "humanoid")) {
     const auto source = read_text(file);
@@ -134,7 +135,8 @@ TEST(HumanoidLayering, CreaturePipelineKnowsNothingAboutHumanoidBones) {
 
 TEST(HumanoidLayering, RendererOwnsNoMutableRuntimeState) {
   const auto root = find_repo_root();
-  const auto header = root / "render" / "creature" / "humanoid" / "runtime" / "humanoid_renderer.h";
+  const auto header =
+      root / "render" / "creature" / "humanoid" / "runtime" / "humanoid_renderer.h";
   const auto source = read_text(header);
   ASSERT_FALSE(source.empty()) << header.string();
 

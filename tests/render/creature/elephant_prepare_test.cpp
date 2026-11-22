@@ -18,7 +18,6 @@
 #include "game/map/ground_type.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
-#include "render/scene/template_recorder.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/elephant/dimensions.h"
@@ -35,6 +34,7 @@
 #include "render/creature/snapshot_mesh_registry.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
+#include "render/scene/template_recorder.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {

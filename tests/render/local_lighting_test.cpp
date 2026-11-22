@@ -11,10 +11,10 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "render/gl/ubo_bindings.h"
 #include "render/frame/draw_queue.h"
 #include "render/frame/local_lighting.h"
 #include "render/gl/shader.h"
+#include "render/gl/ubo_bindings.h"
 #include "render/ground/firecamp_renderer.h"
 
 TEST(LocalLightingTest, SelectsTheMostRelevantLightsDeterministically) {

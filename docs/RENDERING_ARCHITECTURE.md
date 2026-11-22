@@ -10,20 +10,20 @@ That ownership model is the central rendering invariant. The renderer can cache 
 
 `render/` is a stack of folders. A file may include its own folder or any folder below it, never one above, so no two folders include each other. `scripts/check-render-layers.py` enforces this as a PR source-policy gate, and it also fails if a source file appears in the `render/` root. From the bottom up:
 
-| Layer | Holds |
-| --- | --- |
-| `math`, `profiling`, `software` | plain math and hashing, frame and asset counters, the CPU triangle rasteriser |
-| `gl` | GL handles and wrappers: `Buffer`, `Mesh`, `RiggedMesh`, `Texture`, `Shader`, `ResourceManager`, unit primitives |
-| `geom` | procedural meshes and tessellation (arrow, stone, selection disc, ground-marker rings) |
-| `frame` | what a frame is made of: draw commands, `DrawQueue`, `ISubmitter`/`FrameSubmitter`, `DrawContext`, render archetypes, graphics settings, the pass framework |
-| `cache` | baked static building meshes, the static mesh pack, attachment specs |
-| `backend` | `Backend`, the pipelines and command executors, the software backend |
-| `ground` | terrain, roads, water, scatter, fog |
-| `creature` | skeletons, baking, animation, GPU creature assets, and the species (`humanoid`, `horse`, `elephant`, `wildlife`) |
-| `equipment` | armour, weapons, attachments, nation material palettes |
-| `entity` | buildings, units, siege and effects per nation, and the entity renderer registry |
-| `overlay` | projectiles, rafts, range rings, order and target markers drawn over the world |
-| `scene` | `Renderer`, the scene walk, template prewarm, render bootstrap |
+| Layer                           | Holds                                                                                                                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `math`, `profiling`, `software` | plain math and hashing, frame and asset counters, the CPU triangle rasteriser                                                                               |
+| `gl`                            | GL handles and wrappers: `Buffer`, `Mesh`, `RiggedMesh`, `Texture`, `Shader`, `ResourceManager`, unit primitives                                            |
+| `geom`                          | procedural meshes and tessellation (arrow, stone, selection disc, ground-marker rings)                                                                      |
+| `frame`                         | what a frame is made of: draw commands, `DrawQueue`, `ISubmitter`/`FrameSubmitter`, `DrawContext`, render archetypes, graphics settings, the pass framework |
+| `cache`                         | baked static building meshes, the static mesh pack, attachment specs                                                                                        |
+| `backend`                       | `Backend`, the pipelines and command executors, the software backend                                                                                        |
+| `ground`                        | terrain, roads, water, scatter, fog                                                                                                                         |
+| `creature`                      | skeletons, baking, animation, GPU creature assets, and the species (`humanoid`, `horse`, `elephant`, `wildlife`)                                            |
+| `equipment`                     | armour, weapons, attachments, nation material palettes                                                                                                      |
+| `entity`                        | buildings, units, siege and effects per nation, and the entity renderer registry                                                                            |
+| `overlay`                       | projectiles, rafts, range rings, order and target markers drawn over the world                                                                              |
+| `scene`                         | `Renderer`, the scene walk, template prewarm, render bootstrap                                                                                              |
 
 The domain layers (`ground` up to `overlay`) draw into a `FrameSubmitter` (`render/frame/frame_submitter.h`), not into the scene `Renderer`. That interface carries what a frame offers: per-entity commands, world surfaces and effects, the camera and visibility, and shared GPU resources. `Renderer` is its implementation, so the domain code does not depend on how the scene builds a frame. `DrawContext` (`render/frame/draw_context.h`) and the small value types it needs (`CreatureLOD`, `FacialHairStyle`) live in `frame` for the same reason.
 
@@ -737,7 +737,7 @@ A member that only reads a name owned elsewhere (a shadow cascade's texture, the
 
 `gl_lifetime` keeps a live-object census per kind (`gl_object_census`): handles count creation, and the queue counts every deletion or discard. `tests/render/gl_ownership_leak_test.cpp` initialises a `Backend`, draws frames with profiling on (timer queries and fences included), destroys it, does that again, and asserts that every kind is back to its starting count. CI runs it on Mesa under Xvfb with `SOI_REQUIRE_GL=1`, so a missing context fails it instead of skipping it.
 
-`scripts/check-gl-ownership.py` (a PR source-policy gate) keeps it that way. It allows `glGen*`/`glCreate*`/`glDelete*`/`glFenceSync` only in `gl_handle.cpp` and `gl_lifetime.cpp`, no `gl*` call anywhere in `render/` outside `render/gl/`, and no raw `GLuint` member named like an owned object.
+`scripts/check-gl-ownership.py` (a PR source-policy gate) keeps it that way. It allows `glGen*`/`glCreate*`/`glDelete*`/`glFenceSync` only in `gl_handle.cpp` and `gl_lifetime.cpp`, no `gl*` call anywhere in `render/` outside `render/gl/` and `render/backend/`, and no raw `GLuint` member named like an owned object.
 
 `Mesh::prepare_draw` re-uploads when its vertex array belongs to a different share group than the current one. The process-global `SharedGeometryCache` can therefore survive a context change without handing out dead VAO names.
 

@@ -6,8 +6,8 @@
 #include <cmath>
 #include <cstdint>
 
-#include "render/math/math_utils.h"
 #include "render/math/hash.h"
+#include "render/math/math_utils.h"
 
 namespace Render::GL {
 

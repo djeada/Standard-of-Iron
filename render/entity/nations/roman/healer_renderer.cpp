@@ -36,12 +36,13 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/roman/healer_style.h"
 #include "render/entity/registry.h"
-#include "render/equipment/renderer_constants.h"
 #include "render/equipment/armor/torso_local_archetype_utils.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/equipment/renderer_constants.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/palette.h"
 #include "render/frame/submitter.h"
 #include "render/geom/transforms.h"
@@ -50,7 +51,6 @@
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
 #include "render/math/math_utils.h"
-#include "render/frame/frame_submitter.h"
 
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;

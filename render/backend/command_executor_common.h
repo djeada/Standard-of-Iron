@@ -28,7 +28,6 @@
 #include "render/backend/terrain_pipeline.h"
 #include "render/backend/uniform_helpers.h"
 #include "render/backend/vegetation_pipeline.h"
-#include "render/gl/vertex_attrib_layout.h"
 #include "render/backend/water_pipeline.h"
 #include "render/frame/decoration_gpu.h"
 #include "render/frame/draw_commands.h"
@@ -44,6 +43,7 @@
 #include "render/gl/resources.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
+#include "render/gl/vertex_attrib_layout.h"
 
 namespace Render::GL {
 

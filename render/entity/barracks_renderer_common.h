@@ -5,7 +5,6 @@
 #include <span>
 #include <string_view>
 
-#include "render/frame/render_archetype.h"
 #include "render/entity/ambient_people.h"
 #include "render/entity/barracks_activity.h"
 #include "render/entity/barracks_flag_renderer.h"
@@ -13,6 +12,7 @@
 #include "render/entity/building_state.h"
 #include "render/entity/building_torches.h"
 #include "render/entity/registry.h"
+#include "render/frame/render_archetype.h"
 
 namespace Render::GL {
 class Mesh;

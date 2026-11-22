@@ -16,11 +16,11 @@
 #include "game/map/visibility_service.h"
 #include "map/biome_settings.h"
 #include "map/terrain.h"
+#include "render/frame/frame_submitter.h"
 #include "render/gl/buffer.h"
 #include "render/gl/resources.h"
 #include "render/ground/riverbank_asset_gpu.h"
 #include "render/ground/scatter_runtime.h"
-#include "render/frame/frame_submitter.h"
 
 namespace {
 

@@ -1,6 +1,5 @@
-#include "render/scene/scene_renderer.h"
-
 #include "render/frame/effects_submitter.h"
+#include "render/scene/scene_renderer.h"
 
 namespace Render::GL {
 

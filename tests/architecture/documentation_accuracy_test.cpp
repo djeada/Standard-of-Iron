@@ -81,8 +81,9 @@ TEST(DocumentationAccuracy, DoesNotDenyTheSoftwareRenderingBackend) {
   const auto readme = read_text(root / "README.md");
   ASSERT_FALSE(readme.empty());
 
-  const bool backend_exists = fs::exists(root / "render" / "backend" / "software_backend.h") &&
-                              fs::exists(root / "render" / "software");
+  const bool backend_exists =
+      fs::exists(root / "render" / "backend" / "software_backend.h") &&
+      fs::exists(root / "render" / "software");
   ASSERT_TRUE(backend_exists);
   EXPECT_FALSE(contains(readme, "Software rendering is not supported"))
       << "a CPU rasteriser backend ships under render/software; describe what it "

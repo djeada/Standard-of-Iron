@@ -12,10 +12,10 @@
 #include "animation/clip_manifest.h"
 #include "game/core/component.h"
 #include "render/creature/horse/horse_motion.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/creature/humanoid/schema/skeleton_schema.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/wildlife/wildlife_rig.h"
-#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "tests/render/test_asset_paths.h"
 

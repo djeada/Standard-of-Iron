@@ -11,7 +11,6 @@
 #include <limits>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
@@ -32,6 +31,7 @@
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
+#include "render/frame/render_archetype.h"
 #include "render/gl/primitives.h"
 
 namespace {

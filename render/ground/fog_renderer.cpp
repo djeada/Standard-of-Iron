@@ -10,9 +10,9 @@
 #include <vector>
 
 #include "game/map/visibility_service.h"
+#include "render/frame/frame_submitter.h"
 #include "render/gl/texture_upload.h"
 #include "render/ground/visibility_mask_encoder.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 

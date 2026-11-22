@@ -11,11 +11,11 @@
 #include "game/core/death_sequence.h"
 #include "game/core/world.h"
 #include "render/frame/entity_appearance.h"
+#include "render/frame/frame_submitter.h"
 #include "render/frame/terrain_contact.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 
@@ -304,7 +304,8 @@ void register_siege_renderer_variant(EntityRendererRegistry& registry,
           unit = ctx.resources->unit();
           white = ctx.resources->white();
         }
-        if (auto* scene_renderer = dynamic_cast<FrameSubmitter*>(out.unwrap_submitter())) {
+        if (auto* scene_renderer =
+                dynamic_cast<FrameSubmitter*>(out.unwrap_submitter())) {
           unit = scene_renderer->get_mesh_cube();
           white = scene_renderer->get_white_texture();
         }

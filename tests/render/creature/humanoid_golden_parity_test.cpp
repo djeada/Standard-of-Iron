@@ -26,7 +26,6 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/archetype_registry.h"
-#include "render/gl/rigged_mesh.h"
 #include "render/creature/humanoid/animation/animation_inputs.h"
 #include "render/creature/humanoid/humanoid_types.h"
 #include "render/creature/humanoid/runtime/frame_control.h"
@@ -38,6 +37,7 @@
 #include "render/frame/draw_commands.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
+#include "render/gl/rigged_mesh.h"
 
 namespace {
 

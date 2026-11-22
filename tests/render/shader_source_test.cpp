@@ -19,10 +19,10 @@
 #include <vector>
 
 #include "render/backend/directional_shadow_block.h"
-#include "render/gl/ubo_bindings.h"
 #include "render/equipment/armor/cloak_renderer.h"
 #include "render/frame/local_lighting.h"
 #include "render/gl/shader.h"
+#include "render/gl/ubo_bindings.h"
 #include "scene/environment_lighting.h"
 
 namespace {
@@ -31,7 +31,8 @@ auto find_repo_root() -> std::filesystem::path {
   auto has_repo_markers = [](const std::filesystem::path& path) {
     return std::filesystem::exists(path / "CMakeLists.txt") &&
            std::filesystem::exists(path / "assets" / "shaders" / "combat_dust.frag") &&
-           std::filesystem::exists(path / "render" / "backend" / "combat_dust_pipeline.cpp");
+           std::filesystem::exists(path / "render" / "backend" /
+                                   "combat_dust_pipeline.cpp");
   };
 
   auto path = std::filesystem::path(__FILE__).parent_path();

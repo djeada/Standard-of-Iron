@@ -10,7 +10,6 @@
 
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
-#include "render/frame/render_archetype.h"
 #include "render/entity/building_archetype_catalog.h"
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
@@ -20,6 +19,7 @@
 #include "render/entity/nations/iberians/wall_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/frame/material_classification.h"
+#include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
 #include "render/gl/primitives.h"
 

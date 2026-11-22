@@ -8,10 +8,10 @@
 #include <vector>
 
 #include "game/map/visibility_service.h"
+#include "render/frame/frame_submitter.h"
+#include "render/frame/terrain_scene_types.h"
 #include "render/gl/mesh.h"
 #include "render/ground/linear_feature_visibility.h"
-#include "render/frame/terrain_scene_types.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::Ground {
 

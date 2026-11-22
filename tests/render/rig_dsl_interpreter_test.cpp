@@ -4,12 +4,12 @@
 #include <gtest/gtest.h>
 #include <unordered_map>
 
-#include "render/frame/draw_queue.h"
-#include "render/frame/material.h"
-#include "render/frame/submitter.h"
 #include "render/entity/rig_dsl/defs/watchtower_rig.h"
 #include "render/entity/rig_dsl/rig_def.h"
 #include "render/entity/rig_dsl/rig_interpreter.h"
+#include "render/frame/draw_queue.h"
+#include "render/frame/material.h"
+#include "render/frame/submitter.h"
 
 namespace {
 

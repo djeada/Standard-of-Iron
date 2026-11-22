@@ -47,7 +47,8 @@ void TerrainFeatureManager::set_fog_renderer(FogRenderer* fog) {
   }
 }
 
-void TerrainFeatureManager::submit(FrameSubmitter& renderer, ResourceManager* resources) {
+void TerrainFeatureManager::submit(FrameSubmitter& renderer,
+                                   ResourceManager* resources) {
   for (auto* pass : m_passes) {
     if (pass != nullptr) {
       pass->submit(renderer, resources);

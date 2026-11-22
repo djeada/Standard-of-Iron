@@ -7,10 +7,10 @@
 #include <cmath>
 #include <numbers>
 
+#include "render/frame/frame_submitter.h"
 #include "render/geom/selection_disc.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
-#include "render/frame/frame_submitter.h"
 
 namespace Render::GL {
 

@@ -1,12 +1,11 @@
 #include "render/entity/registry.h"
 
-#include "render/creature/humanoid/runtime/humanoid_renderer.h"
-
 #include <string>
 #include <utility>
 
 #include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/horse/horse_spec.h"
+#include "render/creature/humanoid/runtime/humanoid_renderer.h"
 #include "render/creature/wildlife/sheep_spec.h"
 #include "render/creature/wildlife/wolf_spec.h"
 #include "render/entity/ballista_renderer.h"

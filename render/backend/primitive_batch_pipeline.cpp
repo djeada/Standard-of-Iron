@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "render/gl/vertex_attrib_layout.h"
 #include "render/gl/draw_tally.h"
 #include "render/gl/gl_resource_tracking.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"
 #include "render/gl/render_constants.h"
+#include "render/gl/vertex_attrib_layout.h"
 
 namespace Render::GL::BackendPipelines {
 

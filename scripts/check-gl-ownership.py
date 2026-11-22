@@ -10,8 +10,9 @@ That only holds while nobody bypasses the handles, so three things are checked:
   * glGen*/glCreate{Shader,Program,...}/glDelete*/glFenceSync are called only in
     the handle implementation (render/gl/gl_handle.cpp) and the deferred-delete
     queue (render/gl/gl_lifetime.cpp);
-  * no file under render/ outside render/gl/ calls a gl* function at all: the
-    backend is the only layer that talks to the driver;
+  * no file under render/ outside render/gl/ (GL objects and wrappers) and
+    render/backend/ (pipelines and executors) calls a gl* function at all:
+    those are the only layers that talk to the driver;
   * no header under render/ declares a raw GLuint/GLsync member whose name says
     it owns an object (vao, buffer, texture, fbo, ...). A member that only
     borrows a name owned elsewhere is declared as `BorrowedGlName`.
@@ -29,6 +30,8 @@ HANDLE_IMPLEMENTATION = {
     "render/gl/gl_handle.cpp",
     "render/gl/gl_lifetime.cpp",
 }
+
+GL_LAYERS = ("render/gl/", "render/backend/")
 
 LIFETIME_CALL = re.compile(
     r"""\bgl(?:
@@ -70,7 +73,7 @@ def check(root: Path) -> list[str]:
     problems: list[str] = []
     for source in sources(root):
         relative = source.relative_to(root).as_posix()
-        in_backend = relative.startswith("render/gl/")
+        in_backend = relative.startswith(GL_LAYERS)
         for number, raw in enumerate(
             source.read_text(errors="replace").splitlines(), 1
         ):
@@ -83,8 +86,8 @@ def check(root: Path) -> list[str]:
                 )
             if not in_backend and ANY_GL_CALL.search(code):
                 problems.append(
-                    f"{where}: gl* call outside render/gl/; move it behind a "
-                    "render/gl interface"
+                    f"{where}: gl* call outside render/gl/ and render/backend/; "
+                    "move it behind a render/gl interface"
                 )
             if source.suffix == ".h" and RAW_HANDLE_MEMBER.search(code):
                 problems.append(

@@ -6,8 +6,8 @@
 #include "animation/rig/instance_transform.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/humanoid/humanoid_types.h"
-#include "render/frame/draw_context.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/frame/draw_context.h"
 
 namespace Render::GL {
 

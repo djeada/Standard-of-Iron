@@ -10,7 +10,6 @@
 #include <limits>
 
 #include "animation/rig/horse_attachment_frames.h"
-#include "render/frame/render_archetype.h"
 #include "render/cache/static_attachment_spec.h"
 #include "render/creature/gpu/rigged_mesh_bake.h"
 #include "render/creature/horse/horse_spec.h"
@@ -23,6 +22,7 @@
 #include "render/equipment/horse/horse_attachment_archetype.h"
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
 #include "render/equipment/horse/tack/blanket_renderer.h"
+#include "render/frame/render_archetype.h"
 
 namespace {
 

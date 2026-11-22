@@ -12,15 +12,15 @@
 #include "game/core/entity.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/humanoid/runtime/humanoid_math.h"
+#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/creature/humanoid/runtime/style_palette.h"
 #include "render/creature/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/creature/humanoid/runtime/mounted_swordsman_pose.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
-#include "render/equipment/renderer_constants.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/equipment/renderer_constants.h"
 #include "render/frame/palette.h"
 
 namespace Render::GL {
