@@ -38,6 +38,7 @@ constexpr float k_lock_minimum_distance = 0.75F;
 constexpr float k_lock_full_authority_distance = 2.0F;
 constexpr float k_lock_max_turn_degrees_per_second = 220.0F;
 constexpr float k_manual_override_seconds = 0.35F;
+constexpr float k_look_away_release_degrees = 75.0F;
 
 auto buildings_of(const Engine::Core::World& world)
     -> const Game::Systems::BuildingCollisionRegistry& {
@@ -443,6 +444,10 @@ auto CommanderTargeting::spring_view(const LockGeometry& geometry,
   float const manual_look = std::abs(signed_angle_delta(view_yaw, m_lock_spring_yaw));
   if (m_lock_spring_yaw_valid && manual_look > 0.05F) {
     m_lock_manual_override_timer = k_manual_override_seconds;
+    if (std::abs(geometry.yaw_error) > k_look_away_release_degrees) {
+      release_lock();
+      return view_yaw;
+    }
   }
   if (m_lock_manual_override_timer > 0.0F) {
     m_lock_manual_override_timer = std::max(0.0F, m_lock_manual_override_timer - dt);

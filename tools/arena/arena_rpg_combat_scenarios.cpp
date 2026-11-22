@@ -365,10 +365,12 @@ auto build_rpg_combat_definitions() -> std::vector<ArenaScenarioDefinition> {
         QString::fromLatin1(k_rpg_stamina_refusal_id),
         QStringLiteral("RPG Stamina Refusal And Recovery"),
         QStringLiteral(
-            "Attacks pressed until the stamina pool cannot pay for one, then a "
-            "pause, then one more. Every insufficient-stamina press has to come "
-            "back as a counted refusal rather than a dead click, and the pool has "
-            "to recover enough to swing again."),
+            "A commander already short of breath presses heavy attacks until the "
+            "stamina pool cannot pay for one, then pauses, then swings once more. "
+            "Every insufficient-stamina press has to come back as a counted "
+            "refusal rather than a dead click, and the pool has to recover enough "
+            "to swing again. Light attacks that land no longer drain a full pool "
+            "at this cadence, so the scenario starts low and presses heavy."),
         14.0F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
@@ -380,9 +382,10 @@ auto build_rpg_combat_definitions() -> std::vector<ArenaScenarioDefinition> {
                            Troop::RomanVeteranConsul,
                            1,
                            1,
-                           {0.0F, 0.0F, -1.8F},
+                           {0.0F, 0.0F, -1.1F},
                            1);
     commander.facing_degrees = 0.0F;
+    commander.stamina_override = 60.0F;
     auto enemy = group(QStringLiteral("training_dummy"),
                        Troop::Swordsman,
                        2,
@@ -395,7 +398,7 @@ auto build_rpg_combat_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.steps.reserve(14);
     for (int index = 0; index < 12; ++index) {
       s.steps.push_back(at(0.60F + (0.85F * static_cast<float>(index)),
-                           Command::RpgPrimaryAttack,
+                           Command::RpgHeavyAttack,
                            QStringLiteral("rpg_commander")));
     }
     s.steps.push_back(

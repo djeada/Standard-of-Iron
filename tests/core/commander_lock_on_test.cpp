@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_heading.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -300,6 +301,72 @@ TEST_F(CommanderLockOnTest, ManualLookOverridesTheLockSpringWithoutDroppingIt) {
       << "the lock spring must yield to manual look for its override window";
   EXPECT_EQ(controller.locked_target_id(), enemy->get_id())
       << "manual look steers, it does not unlock";
+}
+
+TEST_F(CommanderLockOnTest, LookingRightAwayFromTheTargetLetsItGo) {
+  constexpr float k_dt = 1.0F / 60.0F;
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  auto* enemy = make_unit(world, 4.0F, 4.0F, 2);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  make_enemies_hostile(world);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(45.0F);
+  controller.cycle_lock_on_target(world, commander->get_id(), 1);
+  ASSERT_EQ(controller.locked_target_id(), enemy->get_id());
+  ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+
+  controller.mouse_move(600.0, 0.0);
+  float const looked_away = controller.view_yaw();
+  ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+  EXPECT_EQ(controller.locked_target_id(), 0U)
+      << "a view turned more than 75 degrees off the target has let go of it";
+
+  for (int tick = 0; tick < 90; ++tick) {
+    ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+  }
+  EXPECT_NEAR(controller.view_yaw(), looked_away, 0.01F)
+      << "nothing may turn the view back once the player has looked away";
+}
+
+TEST_F(CommanderLockOnTest, TheViewStaysFreeWhileTheCommanderWalksToARally) {
+  constexpr float k_dt = 1.0F / 60.0F;
+  Engine::Core::World world;
+  auto* commander = make_commander(world);
+  ASSERT_NE(commander, nullptr);
+  auto* data = commander->get_component<Engine::Core::CommanderComponent>();
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(data, nullptr);
+  ASSERT_NE(transform, nullptr);
+  data->fpv_controlled = false;
+  data->begin_flag_rally(12.0F, 12.0F, false);
+  transform->rotation.y = 10.0F;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(10.0F);
+  ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+
+  for (int tick = 0; tick < 30; ++tick) {
+    controller.mouse_move(-20.0, 0.0);
+    ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+  }
+  float const looked = controller.view_yaw();
+  EXPECT_GT(App::Core::signed_angle_delta(looked, 10.0F), 90.0F)
+      << "the mouse still turns the view during a rally";
+
+  for (int tick = 0; tick < 30; ++tick) {
+    ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+  }
+  EXPECT_NEAR(controller.view_yaw(), looked, 0.01F)
+      << "the view holds where the player left it for a moment";
+
+  for (int tick = 0; tick < 240; ++tick) {
+    ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+  }
+  EXPECT_LT(std::abs(App::Core::signed_angle_delta(controller.view_yaw(), 10.0F)), 5.0F)
+      << "left alone, the view eases round behind the walking commander";
 }
 
 } // namespace

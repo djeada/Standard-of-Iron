@@ -50,6 +50,8 @@ add_executable(
     core/commander_bearings_test.cpp
     core/commander_finale_test.cpp
     core/commander_lock_on_test.cpp
+    core/commander_hill_scramble_test.cpp
+    core/commander_pointer_capture_test.cpp
     core/commander_status_builder_test.cpp
     core/commander_stage_owners_test.cpp
     core/commander_presentation_trace_test.cpp

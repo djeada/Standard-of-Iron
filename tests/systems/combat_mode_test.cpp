@@ -3911,6 +3911,86 @@ TEST_F(CombatModeTest, CommanderLauncherBreaksPoiseAndCreatesBallisticLift) {
   EXPECT_GT(action->hit_target_count, 0U);
 }
 
+TEST_F(CombatModeTest, ABlowThatLandsGivesBackPartOfWhatItCost) {
+  using Game::Systems::CombatActions::CombatActionId;
+  auto const* slash = Game::Systems::CombatActions::find_combat_action_definition(
+      CombatActionId::RpgSwordSlashLeft);
+  ASSERT_NE(slash, nullptr);
+  EXPECT_FLOAT_EQ(slash->light_stamina_cost,
+                  CombatStateComponent::k_stamina_cost_commander_light_attack);
+  EXPECT_FLOAT_EQ(slash->heavy_stamina_cost,
+                  CombatStateComponent::k_stamina_cost_commander_heavy_attack);
+
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.3F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  auto* stamina = commander->add_component<StaminaComponent>();
+  stamina->max_stamina = 180.0F;
+  stamina->stamina = 100.0F;
+  stamina->regen_delay_remaining = 0.5F;
+
+  ASSERT_NE(begin_commander_strike(commander, enemy->get_id()), nullptr);
+  auto* action =
+      start_authored_action_at(commander, CombatActionId::RpgSwordSlashLeft, 0.0F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = enemy->get_id();
+  complete_authored_action(*world, *commander);
+
+  ASSERT_GT(action->hit_target_count, 0U);
+  EXPECT_FLOAT_EQ(stamina->stamina,
+                  100.0F + (slash->light_stamina_cost *
+                            CombatStateComponent::k_connected_blow_stamina_refund))
+      << "a commander who keeps landing blows is winded after six of them";
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.5F)
+      << "the refund must not restart or cancel the recovery pause";
+}
+
+TEST_F(CombatModeTest, ASwingAtTheAirGivesNothingBack) {
+  using Game::Systems::CombatActions::CombatActionId;
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* stamina = commander->add_component<StaminaComponent>();
+  stamina->max_stamina = 180.0F;
+  stamina->stamina = 100.0F;
+
+  ASSERT_NE(begin_commander_strike(commander, 0), nullptr);
+  auto* action =
+      start_authored_action_at(commander, CombatActionId::RpgSwordSlashLeft, 0.0F);
+  ASSERT_NE(action, nullptr);
+  complete_authored_action(*world, *commander);
+
+  EXPECT_EQ(action->hit_target_count, 0U);
+  EXPECT_FLOAT_EQ(stamina->stamina, 100.0F);
+}
+
+TEST_F(CombatModeTest, ALightCommanderSwingLeavesAShorterRecoveryPause) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  commander->get_component<UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::CarthageSwordCommander;
+  auto* stamina = commander->add_component<StaminaComponent>();
+  stamina->max_stamina = 180.0F;
+  stamina->stamina = 180.0F;
+
+  auto const result = Game::Systems::CombatActions::CombatActionService::request_attack(
+      *world, {.attacker_id = commander->get_id()});
+  ASSERT_TRUE(result.accepted);
+  EXPECT_FLOAT_EQ(stamina->stamina,
+                  180.0F - CombatStateComponent::k_stamina_cost_commander_light_attack);
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining,
+                  CombatStateComponent::k_light_attack_regen_delay_seconds)
+      << "chained light swings never let the pool recover at all";
+
+  stamina->spend(CombatStateComponent::k_stamina_cost_dodge);
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining,
+                  StaminaComponent::k_regen_delay_seconds);
+  stamina->spend(1.0F, CombatStateComponent::k_light_attack_regen_delay_seconds);
+  EXPECT_FLOAT_EQ(stamina->regen_delay_remaining,
+                  StaminaComponent::k_regen_delay_seconds)
+      << "a cheap spend must not shorten a pause already running";
+}
+
 TEST_F(CombatModeTest, ACommandersBladeDentsTheEnemyHouseInFrontOfHim) {
   auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);

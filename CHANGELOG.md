@@ -11,6 +11,25 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Fixed
 
+- **Leading the commander, the camera always turns.** It could stop turning
+  one way while still turning the other: the pointer had slipped out of the
+  game's hold and come to rest against an edge of the screen. A fast turn of
+  the mouse could do it, and so could closing the menu or coming back from
+  another window. The pointer is now held for as long as the commander is led
+  and handed back whenever a menu, a panel or a pause is up.
+- **The mouse still looks around while the commander walks to plant a rally
+  flag.** The view was held to his facing until the flag was in the ground.
+- **Looking right away from a locked enemy lets the lock go** instead of
+  pulling the view back to him.
+- **The same presses give the same attack.** After a pause the commander's
+  first swing could come from either side, depending on how his last one had
+  ended, and the heavy attack that followed it changed with it. A swing after
+  a pause now always opens the same way.
+- **The commander is not out of breath after six swings.** His light and heavy
+  attacks cost 12 and 22 stamina, as intended, not 30 and 50; a light swing
+  pauses his recovery for half a second, not three quarters; and a blow that
+  lands gives a quarter of its cost back. Swinging at the air still tires him.
+
 - **Leading the commander, the mouse turns the way you move it.** Moving the
   mouse right turned the camera left, and `E` ("turn right") turned left with
   it; only strafing was the right way round. The view now follows the hand.
@@ -49,6 +68,11 @@ may change in any release — see [Save compatibility](#save-compatibility).
   Settings → Controls. The mouse wheel sets the camera distance during play.
 
 ### Changed
+
+- **Led in person, the commander walks up hillsides.** A grassy bank no longer
+  stops him like a wall. Climbing slows him, the steepest faces will not let
+  him stand still on them, and cliffs, mountains and water are as they were.
+  His army, and the commander himself under orders, still use the ramps.
 
 - **Jump is on `V`, not `Alt`.** Next to the other defaults `Alt` made
   `Alt+Tab`, `Alt+Space` and `Alt+click`, which belong to the desktop. A

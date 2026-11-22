@@ -623,6 +623,48 @@ TEST_F(CommanderControlControllerTest,
       << "a strike aims at what is in front of the commander; it does not lock on";
 }
 
+TEST_F(CommanderControlControllerTest, ASwingAfterAPauseOpensFromTheGuardAgain) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  commander->get_component<Engine::Core::CommanderComponent>()->fpv_controlled = true;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
+  auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  ASSERT_NE(action, nullptr);
+  auto const opener = action->combat_action_id;
+  auto const opening_line = combat_state->intent;
+
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+  combat_state->state_time = 0.0F;
+  combat_state->state_duration = 0.0F;
+  action->action_running = false;
+  action->action_completed = true;
+  for (int tick = 0; tick < 120; ++tick) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  }
+  commander->get_component<Engine::Core::CommanderComponent>()->combo_window_remaining =
+      0.0F;
+
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
+  EXPECT_EQ(action->combat_action_id, opener)
+      << "two seconds after a swing the blade is back at the guard; the next "
+         "press must open the chain the same way, or the heavy that follows "
+         "it branches to a different attack than the player asked for";
+  EXPECT_NEAR(combat_state->intent.strike_dir_x, opening_line.strike_dir_x, 1.0e-3F);
+  EXPECT_NEAR(combat_state->intent.strike_dir_y, opening_line.strike_dir_y, 1.0e-3F);
+}
+
 TEST_F(CommanderControlControllerTest,
        PrimaryActionGrowsTheNextSwingOutOfWhereTheLastOneFinished) {
   Engine::Core::World world;

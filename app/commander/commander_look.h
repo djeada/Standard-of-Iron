@@ -6,6 +6,7 @@
 #include "app/commander/commander_frame_intent.h"
 #include "app/commander/commander_input_port.h"
 #include "app/commander/commander_latency_probe.h"
+#include "app/commander/commander_pointer_capture.h"
 
 class QQuickWindow;
 
@@ -37,21 +38,22 @@ public:
                      float sensitivity_scale);
   void center_mouse(double center_sx, double center_sy, QQuickWindow* window);
   void poll_mouse(QQuickWindow* window, float sensitivity_scale);
+  void poll_pointer(PointerDevice& device,
+                    const QPoint& global_center,
+                    float sensitivity_scale);
 
   auto sample_frame_intent(const CommanderHeldInput& held) -> CommanderFrameIntent;
 
+  void suspend_mouse();
   void release_mouse();
   void reset();
 
+  [[nodiscard]] auto mouse_captured() const -> bool { return m_pointer.captured(); }
   [[nodiscard]] auto mouse_warp_supported() const -> bool {
-    return m_mouse_warp_supported;
+    return m_pointer.warp_supported();
   }
 
 private:
-  static constexpr int k_warp_tolerance_pixels = 2;
-
-  void warp_to_centre(const QPoint& global_center);
-
   CommanderLatencyProbe* m_latency_probe = nullptr;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;
@@ -63,11 +65,9 @@ private:
   float m_intent_sample_pitch = 0.0F;
   bool m_intent_sample_valid = false;
 
+  CommanderPointerCapture m_pointer;
   QPoint m_mouse_center;
   bool m_mouse_center_valid = false;
-  QPoint m_last_mouse_global;
-  bool m_last_mouse_valid = false;
-  bool m_mouse_warp_supported = false;
   bool m_mouse_recentering = false;
 };
 

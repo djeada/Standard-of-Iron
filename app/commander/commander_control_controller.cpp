@@ -15,6 +15,7 @@
 #include "game/core/world.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/melee_intent_solver.h"
+#include "game/systems/navigation/walkability.h"
 #include "game/systems/rpg_combat_system/rpg_bow_aim.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "scene/camera.h"
@@ -41,7 +42,15 @@ void CommanderControlController::release_all_input() {
   m_input_port.release_all();
   m_locomotion.release_input();
   m_strike.release_input();
+  m_look.suspend_mouse();
+}
+
+void CommanderControlController::release_pointer() {
   m_look.release_mouse();
+}
+
+auto CommanderControlController::pointer_captured() const -> bool {
+  return m_look.mouse_captured();
 }
 
 void CommanderControlController::reset() {
@@ -348,7 +357,8 @@ auto CommanderControlController::hold_for_rally(Engine::Core::World& world,
 
   m_input_port.release_for_rally();
   m_locomotion.hold_for_rally();
-  m_look.set_yaw(App::Core::wrap_angle_degrees(body.transform.rotation.y));
+  follow_body_while_rallying(App::Core::wrap_angle_degrees(body.transform.rotation.y),
+                             dt);
 
   if (body.movement != nullptr) {
     body.movement->set_manual_velocity(0.0F, 0.0F);
@@ -360,6 +370,23 @@ auto CommanderControlController::hold_for_rally(Engine::Core::World& world,
     update_camera(world, body.entity, *camera, dt);
   }
   return true;
+}
+
+void CommanderControlController::follow_body_while_rallying(float body_yaw, float dt) {
+  constexpr float k_idle_before_follow_seconds = 0.8F;
+  constexpr float k_follow_rate = 2.5F;
+  float const yaw = m_look.yaw();
+  bool const looked =
+      !m_rally_view_valid ||
+      std::abs(App::Core::signed_angle_delta(yaw, m_rally_view_yaw)) > 0.01F;
+  m_rally_look_idle = looked ? 0.0F : m_rally_look_idle + dt;
+  if (m_rally_look_idle >= k_idle_before_follow_seconds) {
+    m_look.set_yaw(App::Core::wrap_angle_degrees(
+        yaw + (App::Core::signed_angle_delta(body_yaw, yaw) *
+               (1.0F - std::exp(-k_follow_rate * dt)))));
+  }
+  m_rally_view_yaw = m_look.yaw();
+  m_rally_view_valid = true;
 }
 
 void CommanderControlController::steer_view(Engine::Core::World& world,
@@ -461,6 +488,10 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
   App::Core::CommanderDefence::advance_upkeep(body.entity, tick.guard_held, dt);
   auto const basis = start_dodge_stage(world, body, facts, out);
 
+  auto const footing =
+      App::Core::CommanderMotor::is_on_wall(body.entity)
+          ? Game::Systems::Walkability::SlopeFooting{}
+          : Game::Systems::Walkability::slope_footing(out.previous_position);
   out.report = m_locomotion.advance_motion(
       body,
       m_motor,
@@ -472,6 +503,9 @@ auto CommanderControlController::advance_motion(Engine::Core::World& world,
        .jump_active = out.jump_active,
        .squared_up = squared_up(facts),
        .wading = world.try_get<Engine::Core::WadingComponent>(body.entity.get_id()),
+       .slope_grade = footing.on_slope ? footing.grade : 0.0F,
+       .slope_downhill = footing.on_slope ? footing.downhill : QVector3D(),
+       .holds_footing = facts.attack_animation_active || tick.guard_held,
        .dt = dt});
 
   out.report.lunge_distance =
@@ -853,6 +887,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       !body.commander_data->fpv_controlled) {
     return hold_for_rally(world, body, camera, dt);
   }
+  m_rally_view_valid = false;
 
   if (body.movement != nullptr) {
     body.movement->stop();

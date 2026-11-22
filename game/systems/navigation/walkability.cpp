@@ -98,6 +98,9 @@ auto cell_is_open(const Pathfinding& pathfinder,
   if (pathfinder.is_walkable(grid_x, grid_z, profile.passability)) {
     return true;
   }
+  if (profile.scrambles_hill_slopes && pathfinder.is_scramble_slope(grid_x, grid_z)) {
+    return true;
+  }
   if (!profile.stops_at_building_facade) {
     return false;
   }
@@ -214,6 +217,34 @@ auto penetration(const QVector3D& position, const BodyProfile& profile) -> float
         return true;
       });
   return deepest;
+}
+
+auto slope_footing(const QVector3D& position) -> SlopeFooting {
+  SlopeFooting footing;
+  auto* pathfinder = current_pathfinder();
+  auto const* terrain = pathfinder != nullptr ? pathfinder->terrain_service() : nullptr;
+  if (terrain == nullptr || !terrain->is_initialized()) {
+    return footing;
+  }
+  Point const cell = pathfinder->world_to_grid(position.x(), position.z());
+  footing.on_slope = pathfinder->is_scramble_slope(cell.x, cell.y);
+  if (!footing.on_slope) {
+    return footing;
+  }
+  constexpr float k_probe = 0.5F;
+  float const rise_x =
+      terrain->get_terrain_height(position.x() + k_probe, position.z()) -
+      terrain->get_terrain_height(position.x() - k_probe, position.z());
+  float const rise_z =
+      terrain->get_terrain_height(position.x(), position.z() + k_probe) -
+      terrain->get_terrain_height(position.x(), position.z() - k_probe);
+  QVector3D const uphill(rise_x, 0.0F, rise_z);
+  float const rise = uphill.length();
+  footing.grade = rise / (2.0F * k_probe);
+  if (rise > 1.0e-4F) {
+    footing.downhill = -uphill / rise;
+  }
+  return footing;
 }
 
 auto can_traverse(const QVector3D& from,

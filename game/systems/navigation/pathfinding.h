@@ -98,6 +98,12 @@ public:
 
   [[nodiscard]] auto is_terrain_walkable(int x, int y) const -> bool;
 
+  static constexpr float k_max_scramble_grade = 2.0F;
+
+  [[nodiscard]] auto terrain_grade(int x, int y) const -> float;
+
+  [[nodiscard]] auto is_scramble_slope(int x, int y) const -> bool;
+
   [[nodiscard]] auto is_terrain_segment_walkable(const QVector3D& from,
                                                  const QVector3D& to) const -> bool;
   auto is_world_position_walkable(const QVector3D& world_position,
