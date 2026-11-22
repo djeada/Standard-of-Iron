@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <span>
 #include <string>
+#include <vector>
 
 #include "tools/ninja_reader/commandline_argument.h"
 
