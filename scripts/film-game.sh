@@ -130,6 +130,13 @@ ARGS=("${MISSION[@]}" --skip-briefing --film "${WORK}" --film-fps "${FPS}"
 [[ -n "${FIXTURE}" ]] && ARGS+=(--action-fixture "${FIXTURE}")
 ARGS+=("${EXTRA[@]}")
 
+# The saved vsync=false is not enough on its own: with the swap redirected to a
+# pbuffer (VirtualGL) the NVIDIA driver still waits for a vblank that never comes
+# once the monitor sleeps, and the take hangs after the unit-template prewarm
+# with no frame written. These two make the driver itself skip the wait.
+export __GL_SYNC_TO_VBLANK=0
+export vblank_mode=0
+
 cd "${ROOT}/build/bin"
 if [[ "${DISPLAY_MODE}" == "xvfb" ]]; then
   XDG_CONFIG_HOME="${CFG}" xvfb-run -a -s "-screen 0 ${SIZE/x/x}x24" \

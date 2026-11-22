@@ -183,6 +183,24 @@ void record_player_swing_contact(Engine::Core::World& world,
                            std::max(definition.hit_shape.reach, 1.2F));
 }
 
+void refund_connected_blow(Engine::Core::World& world,
+                           Engine::Core::Entity& attacker,
+                           const CA::CombatActionDefinition& definition) {
+  if (!definition.commander_only) {
+    return;
+  }
+  auto* stamina = world.try_get<Engine::Core::StaminaComponent>(attacker.get_id());
+  auto const* commander =
+      world.try_get<Engine::Core::CommanderComponent>(attacker.get_id());
+  if (stamina == nullptr || commander == nullptr) {
+    return;
+  }
+  float const paid = commander->power_strike_active ? definition.heavy_stamina_cost
+                                                    : definition.light_stamina_cost;
+  stamina->refund(paid *
+                  Engine::Core::CombatStateComponent::k_connected_blow_stamina_refund);
+}
+
 void present_trace_impact(Engine::Core::CombatStateComponent& presentation_state,
                           const CA::CombatActionDefinition& definition,
                           float contact_speed) {
@@ -427,6 +445,9 @@ void deal_weapon_trace_damage(
     present_trace_impact(*presentation_state, definition, contact.contact_speed);
   }
   bool const first_hit = action.hit_target_count == 0U;
+  if (first_hit && result.applied) {
+    refund_connected_blow(world, attacker, definition);
+  }
   action.last_contact_speed = contact.contact_speed;
   record_hit_on_action(action,
                        contact.target_id,

@@ -61,6 +61,45 @@ auto Pathfinding::terrain_cell_value(const Game::Map::TerrainService& terrain_se
                                            : Pathfinding::CellValue::Blocked;
 }
 
+auto Pathfinding::terrain_grade(int x, int y) const -> float {
+  auto const* height_map =
+      m_terrain->is_initialized() ? m_terrain->get_height_map() : nullptr;
+  if (height_map == nullptr || x < 0 || x >= height_map->get_width() || y < 0 ||
+      y >= height_map->get_height()) {
+    return 0.0F;
+  }
+  float const here = height_map->get_height_at_grid(x, y);
+  float steepest = 0.0F;
+  constexpr std::array<std::array<int, 2>, 4> k_neighbours{
+      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
+  for (auto const& step : k_neighbours) {
+    int const nx = x + step[0];
+    int const ny = y + step[1];
+    if (nx < 0 || nx >= height_map->get_width() || ny < 0 ||
+        ny >= height_map->get_height()) {
+      continue;
+    }
+    steepest =
+        std::max(steepest, std::abs(height_map->get_height_at_grid(nx, ny) - here));
+  }
+  return steepest / std::max(0.01F, height_map->get_tile_size());
+}
+
+auto Pathfinding::is_scramble_slope(int x, int y) const -> bool {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height || !m_terrain->is_initialized()) {
+    return false;
+  }
+  if (m_navigation_grid.get(x, y) != CellValue::Blocked ||
+      m_terrain->get_terrain_type(x, y) != Game::Map::TerrainType::Hill) {
+    return false;
+  }
+  if (terrain_cell_value(*m_terrain, m_terrain->get_height_map(), x, y) !=
+      CellValue::Blocked) {
+    return false;
+  }
+  return terrain_grade(x, y) <= k_max_scramble_grade;
+}
+
 void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   Engine::Core::count_nav(
       Engine::Core::NavCounter::DirtyCellsRebuilt,

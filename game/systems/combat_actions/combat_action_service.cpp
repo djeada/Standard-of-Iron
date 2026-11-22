@@ -434,7 +434,13 @@ auto CombatActionService::request_attack(
             ? (heavy ? definition->heavy_stamina_cost : definition->light_stamina_cost)
             : (heavy ? Engine::Core::CombatStateComponent::k_stamina_cost_heavy_attack
                      : Engine::Core::CombatStateComponent::k_stamina_cost_light_attack);
-    stamina->spend(cost);
+    bool const quick_recovery =
+        !heavy && definition != nullptr && definition->commander_only;
+    stamina->spend(
+        cost,
+        quick_recovery
+            ? Engine::Core::CombatStateComponent::k_light_attack_regen_delay_seconds
+            : Engine::Core::StaminaComponent::k_regen_delay_seconds);
   }
 
   if (combat_state != nullptr) {

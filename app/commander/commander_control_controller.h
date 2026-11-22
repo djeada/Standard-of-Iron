@@ -51,6 +51,8 @@ public:
 
   void release_for_rally();
   void release_all_input();
+  void release_pointer();
+  [[nodiscard]] auto pointer_captured() const -> bool;
   void set_view_yaw(float yaw);
   void set_view_pitch(float pitch);
   [[nodiscard]] float view_yaw() const;
@@ -283,8 +285,12 @@ private:
                      Render::GL::Camera& camera,
                      float dt);
   [[nodiscard]] auto look_sensitivity_scale() const -> float;
+  void follow_body_while_rallying(float body_yaw, float dt);
 
   App::Core::CommanderLatencyProbe* m_latency_probe = nullptr;
+  float m_rally_view_yaw = 0.0F;
+  float m_rally_look_idle = 0.0F;
+  bool m_rally_view_valid = false;
   App::Core::PlayerFeedbackBus* m_feedback = nullptr;
 
   App::Core::CommanderInputPort m_input_port;

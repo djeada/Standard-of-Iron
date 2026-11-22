@@ -185,7 +185,18 @@ The mouse and the turn keys now take yaw **down** for a turn to the right. Anyth
 
 ## Mouse capture
 
-Mouse look reads `QCursor::pos()` once per rendered frame and warps the pointer back to the centre of the view. The warp is not assumed to have worked. `CommanderLook::warp_to_centre` reads the pointer back and measures the next delta from where it actually is: a platform that refuses the warp (Wayland), clamps it (a window reaching past the edge of the screen) or rounds it (fractional display scaling) leaves the pointer somewhere else, and measuring from the requested centre turned that whole offset into one look delta. Entering commander control with the pointer in a corner threw the view to the pitch limit and left it there. The pointer counts as recentred when it lands within two pixels of the centre; it is warped again only after it has really moved, and no delta is measured across a spell without window focus.
+Mouse look reads `QCursor::pos()` once per rendered frame and warps the pointer back to the centre of the view. `CommanderPointerCapture` (`app/commander/commander_pointer_capture.*`) owns that, behind a `PointerDevice` so the logic is tested without a display.
+
+The view layer says when the pointer is the commander's. `CommanderInputLayer.qml` computes `pointer_owned` (the layer is active, the window has focus, and no menu, overlay, modal panel or pause is up) and calls `center_mouse` or `release_pointer` when it changes. A captured pointer stays captured until it is released that way. Dropping held input, a rally, and a controller reset only forget the last measured position, so the next frame recentres and no delta is counted across the gap. An uncaptured pointer turns nothing: it belongs to the interface.
+
+Until this the capture could be lost for good, and the camera then turned one way but not the other, because the loose pointer had run into a screen edge:
+
+- The pointer counted as recentred only when it was read back within two pixels of the centre, and one miss stopped all further warps. The warp and the read-back are two requests to the display server, and a hand moving quickly moves the pointer more than two pixels between them, so a fast turn switched recentring off.
+- Closing the menu, returning from another window and any input reset cleared the stored centre, and only the pointer leaving and re-entering the view set it again.
+
+The warp is still not assumed to have worked. The next delta is measured from where the pointer actually landed: a platform that refuses the warp (Wayland), clamps it (a window reaching past the edge of the screen) or rounds it (fractional display scaling) leaves the pointer somewhere else, and measuring from the requested centre turned that whole offset into one look delta. A pointer resting where the last warp left it is not warped again. Only a warp that does not move the pointer at all, three times running, marks the platform as refusing it, and it is then retried every thirty moving frames instead of every frame. `CommanderPointerCaptureTest`, `CommanderLookPointerTest`.
+
+While the commander walks to plant a rally flag the view is his to turn. The controller used to copy his facing into the view yaw on every tick of the rally, so the mouse did nothing for as long as the walk and the planting lasted. The view now eases round behind him only after 0.8 s without a look input (`follow_body_while_rallying`). `TheViewStaysFreeWhileTheCommanderWalksToARally`.
 
 The game does not use raw mouse input: deltas are pointer deltas, so the operating system's pointer acceleration applies. That is the remaining gap against "what PC players expect"; closing it needs a native event filter per platform (`WM_INPUT` on Windows, XInput2 raw motion on X11) and is tracked as future work rather than shipped untested.
 
@@ -246,7 +257,7 @@ The camera is the presentation authority for the resolved commander pose. It pub
 
 Direct control produces steering intent; it does not own collision policy. `Game::Systems::body_profile_for()`, `Walkability`, and `BodyContactSystem` decide where the commander may move. They form the same shared layer used by RTS-controlled bodies.
 
-The commander's centre is tested the same way in both control modes (`motor_profile_for`): the nav cell under it must be open, and its facade distance stays person-scale. `DirectControlPassesEveryLaneAnRtsOrderPasses` walks a one-cell lane 0.3 m off its centre line. That is the gap between two hills an RTS order crossed while direct control refused it. See "One Ground Rule, One Sealed-In Decision" in `PATHFINDING_ARCHITECTURE.md`.
+The commander's centre is tested the same way in both control modes (`motor_profile_for`): the nav cell under it must be open, and its facade distance stays person-scale. The one exception is a hillside, which only a commander led in person may climb; see "Hillsides". `DirectControlPassesEveryLaneAnRtsOrderPasses` walks a one-cell lane 0.3 m off its centre line. That is the gap between two hills an RTS order crossed while direct control refused it. See "One Ground Rule, One Sealed-In Decision" in `PATHFINDING_ARCHITECTURE.md`.
 
 Dynamic contact has three important properties:
 
@@ -255,6 +266,20 @@ Dynamic contact has three important properties:
 - A body that is already moving receives its contact correction sideways, so traffic deflects motion rather than simply braking it.
 
 `CommanderSharedTraversalTest` requires dense friendly traversal to retain at least 60% of unobstructed progress and requires an idle commander inside friendly ranks to remain within one metre of the starting point.
+
+## Hillsides
+
+A commander led in person walks up a hillside. Everyone else keeps to the ramps.
+
+In the army view the entrances are plain and a hill's flank reads as a wall. From the ground it reads as a grassy bank, and being stopped by one, most of all a knoll no taller than the commander, looks like a collision bug however clearly the ramp is marked. On the shipped maps the flanks of the campaign and battle hills have a median grade of 0.35 to 0.55 (20 to 30 degrees); the skirmish maps' horseshoe ridges are much steeper (median 1.2 to 2.5, up to 5).
+
+`BodyProfile::scrambles_hill_slopes` is set by `body_profile_for` for a commander with `fpv_controlled`. With it, `Walkability` also opens a cell that `Pathfinding::is_scramble_slope` accepts: hill terrain the navigation grid blocks only because it is slope, whose height differs from each of its four neighbours by no more than `k_max_scramble_grade` (2.0, about 63 degrees). Steeper faces, mountains, water, trees and building bodies are unchanged. The navigation grid itself does not change, so routing, the AI, formations and the commander under orders behave as before.
+
+Climbing costs speed: up to 70 % head-on at the steepest face that can be climbed, nothing across or down it (`slope_speed_scale`). On a face steeper than 45 degrees (`k_commander_slope_slide_grade`) a commander who stops walking is carried back down at 1.6 m/s unless he is mid-swing or guarding, so the steep flank is somewhere to cross, not somewhere to stand.
+
+When control goes back to the army view on a hillside, the capability goes with it and `MovementCollision::unstick_body` walks him to the nearest ground he may stand on, as it does for any body left on blocked ground.
+
+This is the one place where traversal differs between the two control modes; see "Current known limitations" for what it costs. `CommanderHillScrambleTest`.
 
 ## Commander motor
 
@@ -379,7 +404,7 @@ Lock-on reaches 20 m within 70° of the view and drops a target beyond 26 m. At 
 
 Lock-on selection is a screen-space operation. Initial lock chooses the target nearest the view center; the same key releases it, and the turn keys step the lock to the neighbouring soldier on that side (see "Player-facing controls"). The older cycle, kept for replays and arena scripts, sweeps toward +yaw, which is to the player's left, and wraps.
 
-Facing authority is suppressed inside 0.75 m, tapers in from 0.75 m to 2 m, and is capped at 220°/s. Manual look suspends the lock spring for 0.35 s without dropping the target.
+Facing authority is suppressed inside 0.75 m, tapers in from 0.75 m to 2 m, and is capped at 220°/s. Manual look suspends the lock spring for 0.35 s without dropping the target. A manual look that carries the view more than 75° off the target releases the lock (`k_look_away_release_degrees`): the spring would otherwise pull the view straight back, and a lock the player cannot look away from reads as a camera that will not turn. `LookingRightAwayFromTheTargetLetsItGo`.
 
 Person-scale building bodies are used for lock acquisition, melee line of sight, and bow aim.
 
@@ -412,6 +437,8 @@ movement restrictions, and both HUDs read this same state.
 
 A committed action therefore owns its direction while still allowing explicit redirect windows.
 
+A swing with no swipe behind it is thrown from where the blade rests: after a slash to the left the next one comes back from that side, which is what alternates a chain. That remembered rest is good only for the chain window (`k_chain_window_seconds`, 0.55 s after the swing ends); past it the blade is back at the guard and the next press opens the chain as the first one did. The rest used to be kept for ever, so a press made seconds or minutes after the last swing opened with the opposite slash, and because each slash branches to a different heavy (left to the launcher, right to the finisher) the same two presses gave a different attack depending on what the commander had last done. `rpg_commander_duel_standoff` caught it as a launcher that never came. `ASwingAfterAPauseOpensFromTheGuardAgain`.
+
 A strike lunges toward its target: the authored step, plus whatever is needed to close the rest of the gap, spread over the strike's carry window. That extra is capped at 1.2 m (`k_strike_max_gap_close`). Uncapped, it closed the whole gap to the locked enemy, and the carry window is only a few ticks long, so a swing at a lock-on target eight metres away slid the commander seven metres in 0.12 s (about 100 m/s). At the Sepulcher Bridge that carried him from the spear line onto the bridge deck into the middle of a rising, where he was pinned against the parapet and killed. A target further away than the capped lunge is simply missed; the player walks or uses Vanguard Rush to close.
 
 ## Contact, guard, and damage
@@ -442,7 +469,9 @@ Taking the duel also releases any lower-priority claim on the commander. `Gather
 
 ## Stamina
 
-A light attack costs 12 stamina, a heavy 22, a dodge 18, and guarding 8 per second. Any spend pauses regeneration for 0.75 s through `StaminaComponent::spend`, so repeated attacks eventually produce a real refusal and recovery cycle.
+A commander's light attack costs 12 stamina, a heavy 22, a dodge 18, and guarding 8 per second. Any spend pauses regeneration through `StaminaComponent::spend`: 0.5 s after a light attack, 0.75 s after anything else, and a cheaper spend never shortens a pause already running. The first blow of a swing that lands gives back a quarter of what the swing cost (`k_connected_blow_stamina_refund`), without touching the pause. Repeated attacks still end in a real refusal and recovery cycle, sooner for swings at the air than for blows that land.
+
+Those costs were written here before they were true. Every commander action took the generic defaults, 30 for a light attack and 50 for a heavy, and every spend restarted a 0.75 s pause that is longer than the gap between chained swings. A commander with the full 180 points got six swings, the last at the tired speed, and was then refused until he stopped clicking: in a filmed fight against three squads he was WINDED about three seconds after contact and stayed so for the remaining twenty. The commander actions now carry their own costs in `combat_action_definition.cpp`; the generic defaults are unchanged for everything else.
 
 In direct control the commander has at least 180 stamina and regenerates at least 30 per second (`CommanderModeCoordinator`), so a breath of about six seconds refills him. At 14 per second a full bar took thirteen seconds: in the Sepulcher Bridge waves the commander spent most of every fight with the WINDED flag up and his swings refused, which reads as a sluggish character rather than a cost to manage.
 
@@ -614,6 +643,8 @@ The following integration items remain open: moving the pointer to a top-bar con
 ## Current known limitations
 
 - Lock-on framing still writes the stored free-look yaw instead of using a separate camera-owned framing yaw.
+- Melee troops cannot follow a led commander onto a hillside, because their routes end at the nearest ground the navigation grid allows. On a gentle flank, where nothing slides him off, a commander with a bow can shoot from there; ranged troops still answer.
+- A platform that refuses pointer warps (native Wayland) still lets the pointer reach a screen edge. Fixing that needs relative pointer motion from the platform, the same work as raw mouse input.
 - Locomotion has four authored lateral clips rather than a complete eight-way set, and slip during locomotion does not yet have a dedicated gate metric.
 - Idle-to-action and action-to-idle sword seams still have a visible arm-position discontinuity owned by the base/action blend.
 - Arena `--fps` changes simulation timestep, so it cannot yet prove identical behavior under different presentation sampling rates.

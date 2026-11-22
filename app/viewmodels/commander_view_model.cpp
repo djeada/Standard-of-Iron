@@ -254,6 +254,7 @@ void CommanderViewModel::exit_mode() {
   static_cast<void>(m_mode->begin_exit());
   exit_commander_runtime_mode();
   reset_input();
+  m_control.release_pointer();
   const auto effects = m_mode->exit_commander_control_mode(
       {.world = m_context.world,
        .controlled_commander_id = m_controlled_commander_id,
@@ -513,6 +514,11 @@ void CommanderViewModel::center_mouse(qreal center_sx, qreal center_sy) {
   }
   const auto frame_lock = m_host.lock_frame();
   m_control.center_mouse(center_sx, center_sy, m_context.window);
+}
+
+void CommanderViewModel::release_pointer() {
+  const auto frame_lock = m_host.lock_frame();
+  m_control.release_pointer();
 }
 
 void CommanderViewModel::trigger_aura() {

@@ -19,9 +19,11 @@ auto body_profile_for(const Engine::Core::Entity& entity) -> BodyProfile {
                               ? Pathfinding::Passability::Light
                               : Pathfinding::Passability::Heavy;
   }
-  if (entity.has_component<Engine::Core::CommanderComponent>()) {
+  if (auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
+      commander != nullptr) {
     profile.radius = k_person_body_radius;
     profile.stops_at_building_facade = true;
+    profile.scrambles_hill_slopes = commander->fpv_controlled;
   }
   return profile;
 }

@@ -300,6 +300,9 @@ void advance_melee_control(Engine::Core::Entity& fighter,
 
   if (idle) {
     body->chain_window_remaining = std::max(0.0F, body->chain_window_remaining - dt);
+    if (body->chain_window_remaining <= 0.0F) {
+      body->rest_valid = false;
+    }
   }
 
   constexpr float k_sweep_scale = 1.0F / Body::k_sweep_degrees;

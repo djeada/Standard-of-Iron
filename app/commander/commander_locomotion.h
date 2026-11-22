@@ -23,6 +23,12 @@ inline constexpr float k_commander_air_acceleration_mps2 = 4.0F;
 
 inline constexpr float k_commander_movement_buffer_seconds = 0.20F;
 
+inline constexpr float k_commander_slope_easy_grade = 0.35F;
+inline constexpr float k_commander_slope_hard_grade = 2.0F;
+inline constexpr float k_commander_slope_uphill_cost = 0.70F;
+inline constexpr float k_commander_slope_slide_grade = 1.0F;
+inline constexpr float k_commander_slope_slide_speed = 1.6F;
+
 namespace Engine::Core {
 class RpgCommanderActionComponent;
 class WadingComponent;
@@ -79,6 +85,10 @@ struct MotionTickInput {
   bool squared_up{false};
 
   const Engine::Core::WadingComponent* wading{nullptr};
+
+  float slope_grade{0.0F};
+  QVector3D slope_downhill{0.0F, 0.0F, 0.0F};
+  bool holds_footing{false};
   float dt{0.0F};
 };
 

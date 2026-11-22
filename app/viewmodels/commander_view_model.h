@@ -87,6 +87,7 @@ public:
   Q_INVOKABLE void mouse_move(qreal dx, qreal dy);
   Q_INVOKABLE void mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy);
   Q_INVOKABLE void center_mouse(qreal center_sx, qreal center_sy);
+  Q_INVOKABLE void release_pointer();
 
   void aim_view_at_world(float x, float z);
   auto aim_view_at_nearest_enemy(float max_range, bool commanders_only) -> bool;

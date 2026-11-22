@@ -15,6 +15,8 @@ struct BodyProfile {
 
   bool stops_at_building_facade{false};
 
+  bool scrambles_hill_slopes{false};
+
   [[nodiscard]] auto clearance() const -> float {
     return radius <= 0.0F || stops_at_building_facade
                ? 0.0F
@@ -35,6 +37,14 @@ void refresh();
 
 [[nodiscard]] auto penetration(const QVector3D& position,
                                const BodyProfile& profile) -> float;
+
+struct SlopeFooting {
+  bool on_slope{false};
+  float grade{0.0F};
+  QVector3D downhill{0.0F, 0.0F, 0.0F};
+};
+
+[[nodiscard]] auto slope_footing(const QVector3D& position) -> SlopeFooting;
 
 [[nodiscard]] auto nearest_standable(const QVector3D& position,
                                      const BodyProfile& profile,

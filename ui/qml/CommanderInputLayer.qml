@@ -12,6 +12,7 @@ Item {
 
     property var held_keys: ({})
     readonly property real zoom_step: 0.1
+    readonly property bool pointer_owned: root.active && (!root.mainWindowRef || (root.mainWindowRef.active && !root.mainWindowRef.simulation_suspended))
 
     signal inputCaptured
 
@@ -20,10 +21,19 @@ Item {
     }
 
     function center_mouse() {
-        if (!root.active || root.commander === null || !root.commander.center_mouse)
+        if (!root.pointer_owned || root.commander === null || !root.commander.center_mouse)
             return;
         var center = scene_center();
         root.commander.center_mouse(center.x, center.y);
+    }
+
+    function sync_pointer() {
+        if (root.commander === null)
+            return;
+        if (root.pointer_owned)
+            root.center_mouse();
+        else if (root.commander.release_pointer)
+            root.commander.release_pointer();
     }
 
     function release_actions() {
@@ -178,6 +188,9 @@ Item {
     enabled: active
     visible: active
     z: 20
+    onPointer_ownedChanged: sync_pointer()
+    onWidthChanged: center_mouse()
+    onHeightChanged: center_mouse()
     Component.onCompleted: {
         if (active && typeof root.gameView !== 'undefined')
             root.gameView.forceActiveFocus();

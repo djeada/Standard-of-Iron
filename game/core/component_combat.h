@@ -615,6 +615,10 @@ public:
 
   static constexpr float k_stamina_cost_light_attack = 30.0F;
   static constexpr float k_stamina_cost_heavy_attack = 50.0F;
+  static constexpr float k_stamina_cost_commander_light_attack = 12.0F;
+  static constexpr float k_stamina_cost_commander_heavy_attack = 22.0F;
+  static constexpr float k_light_attack_regen_delay_seconds = 0.5F;
+  static constexpr float k_connected_blow_stamina_refund = 0.25F;
   static constexpr float k_stamina_cost_dodge = 18.0F;
   static constexpr float k_stamina_cost_guard_per_second = 8.0F;
   static constexpr float k_stamina_cost_shield_bash = 20.0F;

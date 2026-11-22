@@ -67,59 +67,50 @@ void CommanderLook::mouse_look_at(double sx,
   center_mouse(center_sx, center_sy, window);
 }
 
+namespace {
+
+class CursorDevice final : public PointerDevice {
+public:
+  [[nodiscard]] auto position() const -> QPoint override { return QCursor::pos(); }
+  void warp(const QPoint& global_position) override {
+    QCursor::setPos(global_position);
+  }
+};
+
+} // namespace
+
 void CommanderLook::center_mouse(double center_sx,
                                  double center_sy,
                                  QQuickWindow* window) {
-  if (window == nullptr) {
-    return;
-  }
-
-  const QPoint local_center(static_cast<int>(std::round(center_sx)),
-                            static_cast<int>(std::round(center_sy)));
-  m_mouse_center = local_center;
+  m_mouse_center = QPoint(static_cast<int>(std::round(center_sx)),
+                          static_cast<int>(std::round(center_sy)));
   m_mouse_center_valid = true;
-  warp_to_centre(window->mapToGlobal(local_center));
   m_mouse_recentering = false;
+  m_pointer.capture();
+  m_pointer.suspend();
+  poll_mouse(window, 1.0F);
 }
 
-void CommanderLook::warp_to_centre(const QPoint& global_center) {
-  if (QCursor::pos() != global_center) {
-    QCursor::setPos(global_center);
+void CommanderLook::poll_pointer(PointerDevice& device,
+                                 const QPoint& global_center,
+                                 float sensitivity_scale) {
+  const QPoint delta = m_pointer.poll(device, global_center);
+  if (!delta.isNull()) {
+    apply_mouse_delta(delta.x(), delta.y(), sensitivity_scale);
   }
-
-  const QPoint landed = QCursor::pos();
-  m_mouse_warp_supported =
-      (landed - global_center).manhattanLength() <= k_warp_tolerance_pixels;
-  m_last_mouse_global = landed;
-  m_last_mouse_valid = true;
 }
 
 void CommanderLook::poll_mouse(QQuickWindow* window, float sensitivity_scale) {
   if (window == nullptr || !window->isActive()) {
-
-    m_last_mouse_valid = false;
+    m_pointer.suspend();
     return;
   }
 
-  const QPoint current_global = QCursor::pos();
-  if (!m_last_mouse_valid) {
-    m_last_mouse_global = current_global;
-    m_last_mouse_valid = true;
-    if (m_mouse_center_valid) {
-      warp_to_centre(window->mapToGlobal(m_mouse_center));
-    }
-    return;
-  }
-
-  const QPoint delta = current_global - m_last_mouse_global;
-  if (!delta.isNull()) {
-    apply_mouse_delta(delta.x(), delta.y(), sensitivity_scale);
-  }
-
-  m_last_mouse_global = current_global;
-  if (!delta.isNull() && m_mouse_warp_supported && m_mouse_center_valid) {
-    warp_to_centre(window->mapToGlobal(m_mouse_center));
-  }
+  const QPoint local_center = m_mouse_center_valid
+                                  ? m_mouse_center
+                                  : QPoint(window->width() / 2, window->height() / 2);
+  CursorDevice device;
+  poll_pointer(device, window->mapToGlobal(local_center), sensitivity_scale);
 }
 
 auto CommanderLook::sample_frame_intent(const CommanderHeldInput& held)
@@ -149,8 +140,13 @@ auto CommanderLook::sample_frame_intent(const CommanderHeldInput& held)
   return m_frame_intent;
 }
 
+void CommanderLook::suspend_mouse() {
+  m_pointer.suspend();
+  m_mouse_recentering = false;
+}
+
 void CommanderLook::release_mouse() {
-  m_last_mouse_valid = false;
+  m_pointer.release();
   m_mouse_center_valid = false;
   m_mouse_recentering = false;
 }
@@ -160,10 +156,7 @@ void CommanderLook::reset() {
   remember_previous_view();
   m_frame_intent = {};
   m_intent_sample_valid = false;
-  m_mouse_center_valid = false;
-  m_last_mouse_valid = false;
-  m_mouse_warp_supported = false;
-  m_mouse_recentering = false;
+  suspend_mouse();
 }
 
 } // namespace App::Core

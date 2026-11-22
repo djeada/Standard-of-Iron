@@ -753,12 +753,20 @@ public:
 
   float regen_delay_remaining{0.0F};
 
-  void spend(float cost) noexcept {
+  void spend(float cost, float regen_delay = k_regen_delay_seconds) noexcept {
     if (cost <= 0.0F) {
       return;
     }
     stamina = stamina - cost > 0.0F ? stamina - cost : 0.0F;
-    regen_delay_remaining = k_regen_delay_seconds;
+    regen_delay_remaining =
+        regen_delay > regen_delay_remaining ? regen_delay : regen_delay_remaining;
+  }
+
+  void refund(float amount) noexcept {
+    if (amount <= 0.0F) {
+      return;
+    }
+    stamina = stamina + amount < max_stamina ? stamina + amount : max_stamina;
   }
 
   [[nodiscard]] auto get_stamina_ratio() const noexcept -> float {

@@ -62,6 +62,28 @@ struct WalkPlan {
   QVector3D direction{0.0F, 0.0F, 0.0F};
 };
 
+auto slope_steepness(float grade) -> float {
+  return std::clamp((grade - k_commander_slope_easy_grade) /
+                        (k_commander_slope_hard_grade - k_commander_slope_easy_grade),
+                    0.0F,
+                    1.0F);
+}
+
+auto slope_speed_scale(const MotionTickInput& input,
+                       const QVector3D& direction) -> float {
+  float const climb = -QVector3D::dotProduct(direction, input.slope_downhill);
+  if (climb <= 0.0F) {
+    return 1.0F;
+  }
+  return 1.0F -
+         (k_commander_slope_uphill_cost * climb * slope_steepness(input.slope_grade));
+}
+
+auto slides_down(const MotionTickInput& input, float requested_speed) -> bool {
+  return requested_speed <= 0.0F && !input.jump_active && !input.holds_footing &&
+         input.slope_grade >= k_commander_slope_slide_grade;
+}
+
 auto plan_walk(const CommanderHandles& body,
                const MotionTickInput& input,
                QVector3D& move) -> WalkPlan {
@@ -87,6 +109,7 @@ auto plan_walk(const CommanderHandles& body,
     speed *= directional_speed_scale(input.forward_axis, input.right_axis);
   }
   speed *= Game::Systems::FordRules::speed_multiplier(input.wading);
+  speed *= slope_speed_scale(input, move);
   plan.speed = speed;
   return plan;
 }
@@ -433,7 +456,12 @@ void CommanderLocomotion::walk(const CommanderHandles& body,
                                const MotionTickInput& input,
                                MotorReport& report) {
   auto& transform = body.transform;
-  auto const plan = plan_walk(body, input, report.move);
+  auto plan = plan_walk(body, input, report.move);
+  if (slides_down(input, plan.speed)) {
+    plan.direction = input.slope_downhill;
+    plan.speed = k_commander_slope_slide_speed;
+    report.move = input.slope_downhill;
+  }
   if (input.jump_active) {
     steer_airborne(plan.direction * plan.speed, plan.speed, input.dt);
   } else {
