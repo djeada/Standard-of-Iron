@@ -21,15 +21,6 @@ SourceFilesSorter::Exception::Exception(const std::string& msg)
           std::format("NinjaReader::Routines::SourceFilesSorter::Exception: {}", msg)) {
 }
 
-namespace {
-
-std::chrono::milliseconds
-ninjalog_element_duration(const NinjaLog::Element& elem) noexcept {
-  return elem.end_time - elem.start_time;
-}
-
-} // namespace
-
 // SourceFilesSorter
 
 std::vector<NinjaLog::Element>
@@ -45,7 +36,7 @@ SourceFilesSorter::sort(const NinjaLog& ninja_log,
     std::ranges::sort(
         elements_copy,
         [](const NinjaLog::Element& first, const NinjaLog::Element& second) {
-          return ninjalog_element_duration(first) > ninjalog_element_duration(second);
+          return duration_of_ninjalog_element(first) > duration_of_ninjalog_element(second);
         });
     break;
 
@@ -53,7 +44,7 @@ SourceFilesSorter::sort(const NinjaLog& ninja_log,
     std::ranges::sort(
         elements_copy,
         [](const NinjaLog::Element& first, const NinjaLog::Element& second) {
-          return ninjalog_element_duration(first) < ninjalog_element_duration(second);
+          return duration_of_ninjalog_element(first) < duration_of_ninjalog_element(second);
         });
     break;
 
@@ -77,7 +68,7 @@ std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_total_
     const NinjaLog& ninja_log) const {
   std::chrono::milliseconds calculation_result(0);
   for (const auto& elem : ninja_log.elements) {
-    calculation_result += ninjalog_element_duration(elem);
+    calculation_result += duration_of_ninjalog_element(elem);
   }
   return calculation_result;
 }

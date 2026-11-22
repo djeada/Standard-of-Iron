@@ -25,6 +25,9 @@ struct NinjaLog {
   std::vector<Element> elements;
 };
 
+[[nodiscard]] std::chrono::milliseconds
+duration_of_ninjalog_element(const NinjaLog::Element& element) noexcept;
+
 // Responsible for reading the provided `.ninja_log` and parsing it, producing a
 // `NinjaLog` instance.
 class NinjaLogParser {

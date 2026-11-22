@@ -20,6 +20,13 @@ NinjaLogParser::Exception::Exception(const std::string& msg)
           std::format("NinjaReader::Routines::NinjaLogParser::Exception: {}", msg)) {
 }
 
+// Public utility functions
+
+[[nodiscard]] std::chrono::milliseconds
+duration_of_ninjalog_element(const NinjaLog::Element& element) noexcept {
+  return element.end_time - element.start_time;
+}
+
 // NinjaLogParser
 
 namespace {
