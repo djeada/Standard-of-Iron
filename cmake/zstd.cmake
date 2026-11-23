@@ -31,5 +31,6 @@ set_target_properties(
 if(MSVC)
     target_compile_options(soi_zstd PRIVATE /W0)
 else()
-    target_compile_options(soi_zstd PRIVATE -w)
+    # The Debug baker spends most of its time inside the compressor.
+    target_compile_options(soi_zstd PRIVATE -w -O2)
 endif()

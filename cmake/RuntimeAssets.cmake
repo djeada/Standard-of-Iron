@@ -22,18 +22,30 @@ file(
     CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/assets/*"
 )
-# Baked creature artifacts are outputs of bake_creature_assets, which writes
-# them into bin/assets directly. Keeping them out of the staging glob avoids a
-# dependency cycle (staging -> stamp -> baked output -> baking -> staging).
-list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "assets/creatures/.*\\.(bpat|bpsm|bprm)$")
-list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "assets/meshes/.*\\.(smpk|rmpk)$")
+# The baker updates these files in bin/assets. Exclude them from the copy so
+# source-tree copies cannot overwrite a cache restored for this build.
+set(_soi_creature_bake_outputs "assets/creatures/.*[.](bpat|bpsm|bprm)$")
+set(_soi_mesh_bake_outputs "assets/meshes/.*[.](smpk|rmpk)$")
+list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "${_soi_creature_bake_outputs}")
+list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "${_soi_mesh_bake_outputs}")
+set(_soi_stage_assets_script "${CMAKE_CURRENT_BINARY_DIR}/stage_runtime_assets.cmake")
+file(
+    CONFIGURE
+    OUTPUT "${_soi_stage_assets_script}"
+    CONTENT
+        [=[
+file(COPY "@CMAKE_CURRENT_SOURCE_DIR@/assets/"
+    DESTINATION "@CMAKE_BINARY_DIR@/bin/assets"
+    REGEX "@_soi_creature_bake_outputs@" EXCLUDE
+    REGEX "@_soi_mesh_bake_outputs@" EXCLUDE)
+]=]
+    @ONLY
+)
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/bin/assets/.stamp"
-    COMMAND
-        ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        "${CMAKE_BINARY_DIR}/bin/assets"
+    COMMAND ${CMAKE_COMMAND} -P "${_soi_stage_assets_script}"
     COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_BINARY_DIR}/bin/assets/.stamp"
-    DEPENDS ${SOI_RUNTIME_ASSET_SOURCES}
+    DEPENDS ${SOI_RUNTIME_ASSET_SOURCES} "${_soi_stage_assets_script}"
     COMMENT "Staging assets into bin/assets"
     VERBATIM
 )

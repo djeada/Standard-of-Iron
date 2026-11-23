@@ -473,6 +473,13 @@ loadouts are explicit bake dependencies. A stable snapshot of that input list
 also invalidates the bake when an input is removed. Generated bake outputs and
 unrelated textures do not invalidate it.
 
+When the baker relinks, it hashes each freshly generated asset and reuses its
+compressed file if the bytes, zstd version, and compression level match. Ninja
+can skip the staging step when all the baked files keep their timestamps.
+Development builds use level 3. For a local release package, configure with
+`-DSOI_RELEASE_ASSET_COMPRESSION=ON` to use level 19 for creatures and level 6
+for the static mesh packs.
+
 The simulation's Git build ID is defined only for `game/command/replay.cpp`,
 which is the only source that reads it. Changing commits therefore invalidates
 one compiler invocation instead of all 47 in `game_sim` (including its PCH and
@@ -482,6 +489,15 @@ still receive the current commit ID.
 `make` invokes `cmake --build`, so an existing Ninja build directory works with
 the developer targets too. Set `CMAKE_GENERATOR=Ninja` for a fresh build tree,
 `BUILD_JOBS` to limit parallel work, and `CMAKE_ARGS` for extra configure flags.
+
+With Ninja, ccache, and mold installed on Linux, this builds the game with four
+parallel jobs and keeps compiler results for later builds.
+
+```sh
+CCACHE_SLOPPINESS=pch_defines,time_macros \
+  CMAKE_GENERATOR=Ninja make build-app BUILD_DIR=build-ninja BUILD_JOBS=4 \
+  CMAKE_ARGS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSOI_LINKER=mold -DSOI_ENABLE_LTO=OFF"
+```
 
 Run the small build-graph regression checks without building the game:
 

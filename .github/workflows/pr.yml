@@ -101,6 +101,21 @@ jobs:
           key: deps-ubuntu-24.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
           restore-keys: deps-ubuntu-24.04-
 
+      - name: Restore baked assets
+        id: baked-assets
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/baked-asset-metadata
+            build/bin/assets/creatures/*.bpat
+            build/bin/assets/creatures/*.bpsm
+            build/bin/assets/creatures/*.bprm
+            build/bin/assets/meshes/*.smpk
+            build/bin/assets/meshes/*.rmpk
+          key: baked-assets-v1-ubuntu-24.04-${{ github.sha }}
+          # The baker validates each restored frame against freshly baked bytes.
+          restore-keys: baked-assets-v1-ubuntu-24.04-
+
       # Line-table debug info and mold: see cmake/BuildSpeed.cmake.
       # The lanes that restore this job's cache configure identically; a flag
       # added here and not there turns their builds cold.
@@ -121,6 +136,24 @@ jobs:
         run: |
           cmake --build build --parallel \
             --target soi_test_binaries content_validator standard_of_iron
+
+      - name: Save baked assets
+        # Seed new PRs from main. Key by the outputs so unrelated commits
+        # do not consume more of the cache quota.
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main'
+          && steps.baked-assets.outputs.cache-matched-key != format(
+            'baked-assets-v1-ubuntu-24.04-{0}', hashFiles('build/baked-asset-metadata/*.sha256'))
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build/baked-asset-metadata
+            build/bin/assets/creatures/*.bpat
+            build/bin/assets/creatures/*.bpsm
+            build/bin/assets/creatures/*.bprm
+            build/bin/assets/meshes/*.smpk
+            build/bin/assets/meshes/*.rmpk
+          key: baked-assets-v1-ubuntu-24.04-${{ hashFiles('build/baked-asset-metadata/*.sha256') }}
 
       - name: Polish startup regression
         run: bash scripts/verify-polish-startup.sh build/bin/standard_of_iron

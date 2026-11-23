@@ -174,6 +174,7 @@ jobs:
             -DDEFAULT_LANG=en \
             -DCMAKE_OSX_ARCHITECTURES="${SOI_MACOS_ARCHS}" \
             -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON \
+            -DSOI_RELEASE_ASSET_COMPRESSION=ON \
             -DSOI_RELEASE_DEBUG_INFO=${{ inputs.debug-symbols && 'ON' || 'OFF' }} \
             -DBUILD_TESTING=OFF
 

@@ -1,5 +1,12 @@
 #include "asset_compression.h"
 
+#include <QByteArray>
+#include <QByteArrayView>
+#include <QCryptographicHash>
+#include <QFile>
+#include <QSaveFile>
+#include <QString>
+
 #include <array>
 #include <fstream>
 #include <iterator>
@@ -13,6 +20,62 @@ namespace {
 constexpr std::array<std::uint8_t, 4> k_zstd_magic = {0x28, 0xB5, 0x2F, 0xFD};
 
 constexpr unsigned long long k_max_decoded_bytes = 1ULL << 31U;
+
+auto compress_asset(std::string_view bytes,
+                    int level,
+                    std::string& error) -> QByteArray {
+  QByteArray frame(static_cast<qsizetype>(ZSTD_compressBound(bytes.size())),
+                   Qt::Uninitialized);
+  std::size_t const size = ZSTD_compress(frame.data(),
+                                         static_cast<std::size_t>(frame.size()),
+                                         bytes.data(),
+                                         bytes.size(),
+                                         level);
+  if (ZSTD_isError(size) != 0U) {
+    error = std::string("zstd compression failed: ") + ZSTD_getErrorName(size);
+    return {};
+  }
+  frame.resize(static_cast<qsizetype>(size));
+  return frame;
+}
+
+auto write_atomically(const QString& path,
+                      QByteArrayView bytes,
+                      std::string& error) -> bool {
+  QSaveFile out(path);
+  if (!out.open(QIODevice::WriteOnly) ||
+      out.write(bytes.data(), bytes.size()) != bytes.size() || !out.commit()) {
+    error =
+        "cannot write " + path.toStdString() + ": " + out.errorString().toStdString();
+    return false;
+  }
+  return true;
+}
+
+auto sha256_hex(QByteArrayView bytes) -> QByteArray {
+  return QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex();
+}
+
+auto matches_cached_frame(const QString& path,
+                          const QString& sidecar_path,
+                          const QByteArray& key) -> bool {
+  QFile sidecar(sidecar_path);
+  if (!sidecar.open(QIODevice::ReadOnly)) {
+    return false;
+  }
+  // The second line is the frame's SHA-256, so a partial write or an old
+  // sidecar restored alongside a different frame cannot produce a hit.
+  if (sidecar.readLine(key.size() + 1) != key) {
+    return false;
+  }
+  QFile frame(path);
+  QCryptographicHash hash(QCryptographicHash::Sha256);
+  if (!frame.open(QIODevice::ReadOnly) || !hash.addData(&frame)) {
+    return false;
+  }
+  auto const digest = hash.result().toHex();
+  return sidecar.read(digest.size() + 1) == digest;
+}
 
 } // namespace
 
@@ -88,26 +151,29 @@ auto write_compressed_asset(const std::filesystem::path& path,
                             std::string_view bytes,
                             std::string& error,
                             int level) -> bool {
-  std::vector<char> frame(ZSTD_compressBound(bytes.size()));
-  std::size_t const size =
-      ZSTD_compress(frame.data(), frame.size(), bytes.data(), bytes.size(), level);
-  if (ZSTD_isError(size) != 0U) {
-    error = std::string("zstd compression failed: ") + ZSTD_getErrorName(size);
-    return false;
+  auto const frame = compress_asset(bytes, level, error);
+  return !frame.isEmpty() &&
+         write_atomically(QString::fromStdU16String(path.u16string()), frame, error);
+}
+
+auto write_cached_asset(const std::filesystem::path& path,
+                        const std::filesystem::path& sidecar,
+                        std::string_view bytes,
+                        std::string& error,
+                        int level) -> bool {
+  auto const asset_path = QString::fromStdU16String(path.u16string());
+  auto const sidecar_path = QString::fromStdU16String(sidecar.u16string());
+  auto const key =
+      QByteArray::number(ZSTD_versionNumber()) + ':' + QByteArray::number(level) + ':' +
+      sha256_hex(QByteArrayView(bytes.data(), static_cast<qsizetype>(bytes.size()))) +
+      '\n';
+  if (matches_cached_frame(asset_path, sidecar_path, key)) {
+    return true;
   }
 
-  std::ofstream out(path, std::ios::binary | std::ios::trunc);
-  if (!out) {
-    error = "cannot open " + path.string() + " for writing";
-    return false;
-  }
-  out.write(frame.data(), static_cast<std::streamsize>(size));
-  out.flush();
-  if (!out) {
-    error = "write failed for " + path.string();
-    return false;
-  }
-  return true;
+  auto const frame = compress_asset(bytes, level, error);
+  return !frame.isEmpty() && write_atomically(asset_path, frame, error) &&
+         write_atomically(sidecar_path, key + sha256_hex(frame), error);
 }
 
 } // namespace Render::Creature::Bpat
