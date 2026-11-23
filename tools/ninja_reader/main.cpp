@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <optional>
+#include <span>
 #include <string>
 
 #include "commandline_argument.h"
