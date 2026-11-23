@@ -82,11 +82,9 @@ int read(const std::span<char*>& args) {
         latest_output_files;
 
     for (const auto& element : sorted_source_files) {
-      auto it = std::find_if(
-          latest_output_files.begin(),
-          latest_output_files.end(),
-          [&](const auto& existing) { return existing.first == element.output_file; });
-
+      auto it = std::ranges::find_if(latest_output_files, [&](const auto& existing) {
+        return existing.first == element.output_file;
+      });
       if (it == latest_output_files.end()) {
         latest_output_files.emplace_back(element.output_file, element);
       } else if (element.logged_mtime > it->second.logged_mtime) {
