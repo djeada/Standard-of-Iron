@@ -38,11 +38,11 @@ int main(int argc, char* argv[]) {
 
   if (command_name.value() == "help") {
     return Commands::help();
-  } else if (command_name.value() == "read") {
+  }
+  if (command_name.value() == "read") {
     return Commands::read(std::span(argv, argc));
-  } else {
-    std::cout << "Unknown command: " << command_name.value() << "\n";
   }
 
-  return 0;
+  std::cout << "Unknown command: " << command_name.value() << "\n";
+  return -1;
 }
