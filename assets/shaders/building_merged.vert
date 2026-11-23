@@ -10,9 +10,11 @@ layout(location = 5) in vec4 a_instance_model_col2;
 layout(location = 6) in vec4 a_instance_palette0;
 layout(location = 7) in vec4 a_instance_palette1;
 layout(location = 8) in vec4 a_instance_state;
+layout(location = 9) in vec4 a_instance_palette2;
+layout(location = 10) in vec4 a_instance_palette3;
 
-layout(location = 9) in vec4 a_part_color_alpha;
-layout(location = 10) in vec4 a_part_material;
+layout(location = 11) in vec4 a_part_color_alpha;
+layout(location = 12) in vec4 a_part_material;
 
 #include "frame_data.glsl"
 
@@ -40,7 +42,7 @@ const vec3 k_plaster_tints[5] = vec3[5](vec3(1.000, 1.000, 1.000),
 vec4 soi_building_instance_tint(vec2 origin) {
   float h = fract(sin(dot(floor(origin * 4.0), vec2(12.9898, 78.233))) * 43758.5453);
   float roof = fract(h * 7.31);
-  return vec4(k_plaster_tints[int(h * 5.0) % 5], mix(0.88, 1.08, roof));
+  return vec4(k_plaster_tints[int(h * 5.0) % 5], mix(0.74, 1.10, roof));
 }
 
 vec3 soi_unseen_surface_color(vec3 color) {
@@ -61,7 +63,10 @@ void main() {
 
   int slot = int(a_part_material.x);
   bool unseen = a_instance_state.y > 0.5;
-  vec4 palette = slot == 0 ? a_instance_palette0 : a_instance_palette1;
+  vec4 palette =
+      slot <= 0 ? a_instance_palette0
+                : (slot == 1 ? a_instance_palette1
+                             : (slot == 2 ? a_instance_palette2 : a_instance_palette3));
   int base_material = int(a_part_material.w);
   int material;
   if (slot >= 0 && palette.w >= 0.0) {
@@ -89,7 +94,10 @@ void main() {
   v_normal = soi_transform_normal(mat3(model), a_normal);
   v_tex_coord = a_tex_coord;
   v_ground_height = a_instance_model_col1.w;
+  // A run of buildings that share a tone seed weathers as one.
   v_instance_tint = soi_building_instance_tint(
-      vec2(a_instance_model_col0.w, a_instance_model_col2.w));
+      a_instance_state.w > 0.5
+          ? vec2(a_instance_state.w * 0.731, a_instance_state.w * 1.917)
+          : vec2(a_instance_model_col0.w, a_instance_model_col2.w));
   gl_Position = u_view_proj * world_pos4;
 }

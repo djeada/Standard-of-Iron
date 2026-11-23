@@ -1,6 +1,7 @@
 #include "render/entity/wall_renderer.h"
 
 #include "render/entity/building_render_common.h"
+#include "render/entity/masonry_wall_renderer.h"
 #include "render/entity/nations/carthage/wall_renderer.h"
 #include "render/entity/nations/iberians/wall_renderer.h"
 #include "render/entity/nations/roman/wall_renderer.h"
@@ -12,6 +13,7 @@ void register_wall_renderer(EntityRendererRegistry& registry) {
   Roman::register_wall_renderer(registry);
   Carthage::register_wall_renderer(registry);
   Iberians::register_wall_renderer(registry);
+  register_masonry_wall_renderers(registry);
   register_nation_variant_renderer(registry,
                                    "wall_segment",
                                    building_renderer_key("roman", "wall_segment"),

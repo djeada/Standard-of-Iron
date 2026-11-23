@@ -55,6 +55,9 @@ struct WallGeometry {
   float berm_height{0.18F};
   float masonry_half_width{0.28F};
   float masonry_height{1.34F};
+  // The gate is built in the wall's stone, two towers and an arch between
+  // them, instead of the timber gatehouse every field wall gets.
+  bool stone_gatehouse{false};
 };
 
 [[nodiscard]] auto wall_binding_color(const WallPalette& palette,

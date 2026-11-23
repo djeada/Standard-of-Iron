@@ -236,7 +236,7 @@ void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
         if (m_terrain_types[index] == TerrainType::Mountain) {
           continue;
         }
-        const float bed_height = lake.center.y() - 0.10F;
+        const float bed_height = lake.center.y() - k_lake_bed_depth;
         if (gameplay_water) {
           m_terrain_types[index] = TerrainType::Lake;
           m_heights[index] = bed_height;
@@ -246,6 +246,15 @@ void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
       }
     }
   }
+}
+
+auto TerrainHeightMap::lowest_lake_bed() const -> std::optional<float> {
+  std::optional<float> lowest;
+  for (const auto& lake : m_lakes) {
+    const float bed = lake.center.y() - k_lake_bed_depth;
+    lowest = lowest.has_value() ? std::min(*lowest, bed) : bed;
+  }
+  return lowest;
 }
 
 void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {

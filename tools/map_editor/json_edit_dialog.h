@@ -28,14 +28,14 @@ public:
                           HillProjection::MapContext map_context = {});
 
   [[nodiscard]] QJsonObject get_json() const;
-  [[nodiscard]] bool is_valid() const { return m_is_valid; }
+  [[nodiscard]] bool is_valid() const;
 
 private slots:
   void validate_json();
   void on_projection_entrances_changed();
   void on_accepted();
   void restore_opening_json();
-  void clear_entrances();
+  void reset_entrances();
 
 private:
   void setup_ui(const QString& title, const QJsonObject& json);
@@ -48,10 +48,11 @@ private:
   void insert_missing_required_keys();
   void show_field_details(const QString& key);
   void refresh_projection_hint();
-  void normalize_projection_entrances();
   void update_restore_state();
   void update_entrance_button_state();
-  [[nodiscard]] bool model_has_entrances() const;
+  [[nodiscard]] bool requires_entrance() const;
+  [[nodiscard]] int entrance_count() const;
+  [[nodiscard]] QJsonValue field_default(const JsonFieldSpec& field) const;
 
   QPlainTextEdit* m_editor = nullptr;
   TerrainProjectionWidget* m_projection = nullptr;
@@ -64,7 +65,7 @@ private:
   QPushButton* m_insert_key_button = nullptr;
   QPushButton* m_insert_missing_button = nullptr;
   QPushButton* m_restore_button = nullptr;
-  QPushButton* m_clear_entrances_button = nullptr;
+  QPushButton* m_reset_entrances_button = nullptr;
   JsonSchema m_schema;
   HillProjection::MapContext m_map_context;
   QString m_projection_warning;
@@ -75,7 +76,6 @@ private:
   bool m_syncing_editor = false;
   bool m_syncing_projection = false;
   bool m_is_valid = false;
-  bool m_entrances_cleared = false;
 };
 
 } // namespace MapEditor

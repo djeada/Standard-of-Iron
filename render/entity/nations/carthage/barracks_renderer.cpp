@@ -125,13 +125,17 @@ void draw_barracks_ornaments(const DrawContext& p,
 
 const std::array<TorchMount, 4> k_torches{{
     TorchMount{.at = QVector3D(-0.53F, 0.82F, 1.185F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.53F, 0.82F, 1.185F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(-1.28F, 0.9F, 0.92F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(1.28F, 0.9F, 0.92F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
 }};
 
 const std::array<QVector3D, 1> k_smoke_vents{k_oven_vent};

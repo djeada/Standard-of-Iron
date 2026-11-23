@@ -1,0 +1,165 @@
+[
+  {
+    "op": "map",
+    "description": "harbour test"
+  },
+  {
+    "op": "add",
+    "kind": "terrain",
+    "json": {
+      "type": "lake",
+      "x": 0,
+      "z": 400,
+      "width": 1400,
+      "depth": 700,
+      "rotation": 0,
+      "height": -0.6
+    }
+  },
+  {
+    "op": "add",
+    "kind": "terrain",
+    "json": {
+      "type": "lake",
+      "x": 0,
+      "z": 34.22,
+      "width": 66,
+      "depth": 44,
+      "rotation": 0,
+      "height": -0.59,
+      "shape": "basin"
+    }
+  },
+  {
+    "op": "terrace",
+    "id": "docks_n",
+    "from": [-27.5, 9.969999999999999],
+    "to": [27.5, 9.969999999999999],
+    "facing": 0,
+    "skip": [],
+    "style": "dock",
+    "type": "marketplace",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "terrace",
+    "id": "docks_w",
+    "from": [-35.25, 16.22],
+    "to": [-35.25, 38.22],
+    "facing": 90,
+    "skip": [],
+    "style": "dock",
+    "type": "marketplace",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "terrace",
+    "id": "docks_e",
+    "from": [35.25, 16.22],
+    "to": [35.25, 38.22],
+    "facing": 270,
+    "skip": [],
+    "style": "dock",
+    "type": "marketplace",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "paving",
+    "rect": [-22, -29.78, 22, -1.7800000000000011],
+    "style": "stone"
+  },
+  {
+    "op": "terrace",
+    "id": "stoa_n",
+    "from": [-22, -32.53],
+    "to": [22, -32.53],
+    "facing": 0,
+    "skip": [],
+    "style": "portico",
+    "type": "marketplace",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "terrace",
+    "id": "stoa_w",
+    "from": [-24.75, -29.78],
+    "to": [-24.75, -2.280000000000001],
+    "facing": 90,
+    "skip": [],
+    "style": "portico",
+    "type": "marketplace",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "terrace",
+    "id": "stoa_e",
+    "from": [24.75, -29.78],
+    "to": [24.75, -2.280000000000001],
+    "facing": 270,
+    "skip": [],
+    "style": "portico",
+    "type": "marketplace",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "terrace",
+    "id": "row_a",
+    "from": [-22, -45.78],
+    "to": [22, -45.78],
+    "facing": 180,
+    "skip": [],
+    "style": "tenement",
+    "type": "home",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "add",
+    "kind": "linear",
+    "json": {
+      "type": "road",
+      "start": [-44, -51.78],
+      "end": [44, -51.78],
+      "width": 4.0,
+      "style": "stone"
+    }
+  },
+  {
+    "op": "terrace",
+    "id": "row_c",
+    "from": [-22, -57.78],
+    "to": [22, -57.78],
+    "facing": 0,
+    "skip": [],
+    "style": "tenement",
+    "type": "home",
+    "player_id": 1,
+    "nation": "roman_republic"
+  },
+  {
+    "op": "wall",
+    "id": "wall",
+    "points": [
+      [-48, 28.22],
+      [-48, -67.78],
+      [48, -67.78],
+      [48, 28.22]
+    ],
+    "closed": false,
+    "tower_spacing": 44,
+    "player_id": 1,
+    "nation": "roman_republic",
+    "style": "masonry"
+  },
+  {
+    "op": "gate",
+    "id": "gate_n",
+    "at": [0, -67.78]
+  }
+]

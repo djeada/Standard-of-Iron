@@ -16,6 +16,7 @@
 #include "arena_viewport.h"
 #include "arena_viewport_internal.h"
 #include "game/core/component_economy.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/component_presentation.h"
 #include "game/core/death_sequence.h"
 #include "game/core/world.h"
@@ -480,6 +481,14 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   if (map_terrain && m_terrain_review_definition.has_value()) {
     spawn_terrain_review_structures();
   }
+  if (definition->gates_held_open && m_world != nullptr) {
+    for (auto [gate_id, gate] : m_world->view<Engine::Core::GateComponent>()) {
+      (void)gate_id;
+      // The gate system swings it open on the next tick, which also reopens
+      // the lane through it on the navigation grid.
+      gate.manual_mode = Engine::Core::GateComponent::ManualMode::ForcedOpen;
+    }
+  }
   QVector3D const scenario_origin =
       map_terrain ? QVector3D() : resolve_spawn_anchor_world();
 
@@ -685,6 +694,7 @@ auto ArenaViewport::apply_scenario_terrain(
   m_suppress_procedural_props = scenario.suppress_procedural_props;
   const bool snow_changed = m_terrain_snowbound != scenario.terrain_snowbound;
   m_terrain_snowbound = scenario.terrain_snowbound;
+  m_scenario_map_path = scenario.campaign_map_path;
   const bool map_terrain = !scenario.campaign_map_path.isEmpty();
   if (map_terrain) {
     if (!initialize_terrain_from_map(scenario.campaign_map_path)) {
@@ -758,7 +768,9 @@ auto ArenaViewport::spawn_scenario_group_entity(const Arena::ArenaScenarioGroup&
                                              *group.spawn_type,
                                              position,
                                              group.ai_controlled,
-                                             group.max_population)
+                                             group.max_population,
+                                             0.0F,
+                                             group.visual_style)
                      : spawn_single_unit(group.owner_id,
                                          group.nation_id,
                                          group.troop_type,

@@ -43,6 +43,7 @@ private:
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle surface_kind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle calm{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
     std::array<GL::Shader::UniformHandle, 2> ford_a{GL::Shader::InvalidUniform,

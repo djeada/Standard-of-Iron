@@ -15,6 +15,7 @@
 #include "render/entity/building_archetype_desc.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
+#include "render/entity/nation_motifs.h"
 
 namespace Render::GL {
 
@@ -282,6 +283,120 @@ void add_piers(BuildingArchetypeDesc& desc,
   }
 }
 
+// The gate of a stone curtain: a tower either side of the passage, and the
+// wall carried over it on an arch. The palette's "wood" tones are the wall's
+// stone here, as they are for every solid-masonry wall.
+void add_stone_gatehouse(BuildingArchetypeDesc& desc,
+                         const WallPalette& palette,
+                         const WallGeometry& geometry) {
+  BuildingPartMaterial const stone(desc, k_building_material_stone);
+  const float wall_top = geometry.masonry_height;
+  const float top = wall_top + 1.25F;
+  constexpr float k_half_x = 0.80F;
+  const float half_z = geometry.masonry_half_width + 0.34F;
+  const float tower_x = k_jamb_offset + k_half_x;
+  const QVector3D slit = palette.wood_dark * 0.30F;
+
+  for (const float side : {-1.0F, 1.0F}) {
+    const float cx = side * tower_x;
+    desc.add_box(QVector3D(cx, 0.14F, 0.0F),
+                 QVector3D(k_half_x + 0.06F, 0.14F, half_z + 0.06F),
+                 palette.wood_dark);
+    desc.add_box(QVector3D(cx, top * 0.5F, 0.0F),
+                 QVector3D(k_half_x, top * 0.5F, half_z),
+                 palette.wood_mid,
+                 k_mask_intact);
+    desc.add_box(QVector3D(cx, wall_top, 0.0F),
+                 QVector3D(k_half_x + 0.04F, 0.05F, half_z + 0.04F),
+                 palette.masonry_accent,
+                 k_mask_intact);
+    desc.add_box(QVector3D(cx, top + 0.035F, 0.0F),
+                 QVector3D(k_half_x + 0.06F, 0.035F, half_z + 0.06F),
+                 palette.wood_light,
+                 k_mask_intact);
+    // Merlons round the tower head: the corners and the middle of each face.
+    for (int mx = -1; mx <= 1; ++mx) {
+      for (int mz = -1; mz <= 1; ++mz) {
+        if (mx == 0 && mz == 0) {
+          continue;
+        }
+        const bool falls =
+            decay_hash((mx * 7) + (mz * 3) + (static_cast<int>(side) * 11) + 40) < 0.4F;
+        desc.add_box(QVector3D(cx + (static_cast<float>(mx) * (k_half_x - 0.10F)),
+                               top + 0.07F + 0.13F,
+                               static_cast<float>(mz) * (half_z - 0.10F)),
+                     QVector3D(0.14F, 0.13F, 0.14F),
+                     palette.wood_light,
+                     falls ? BuildingStateMask::Normal : k_mask_intact);
+      }
+    }
+    // Loops that look down the road, front and back.
+    for (const float face : {-1.0F, 1.0F}) {
+      for (const float y : {wall_top * 0.52F, wall_top + 0.60F}) {
+        desc.add_box(QVector3D(cx, y, face * (half_z + 0.004F)),
+                     QVector3D(0.045F, 0.20F, 0.006F),
+                     slit,
+                     k_mask_intact);
+      }
+    }
+    // What is left standing once it has been thrown down.
+    desc.add_box(QVector3D(cx, 0.45F, 0.0F),
+                 QVector3D(k_half_x * 0.92F,
+                           0.45F + (0.35F * decay_hash(static_cast<int>(side) + 9)),
+                           half_z * 0.92F),
+                 palette.wood_dark,
+                 BuildingStateMask::Destroyed);
+  }
+
+  // The curtain over the passage, its ends let into the towers, and the
+  // stepped haunches it springs from.
+  const float crown = leaf_height(geometry) + 0.10F;
+  const float spring = crown - 0.50F;
+  const float curtain_top = wall_top + 0.45F;
+  const float curtain_half_z = geometry.masonry_half_width + 0.10F;
+  desc.add_box(
+      QVector3D(0.0F, (crown + curtain_top) * 0.5F, 0.0F),
+      QVector3D(k_jamb_offset + 0.10F, (curtain_top - crown) * 0.5F, curtain_half_z),
+      palette.wood_mid,
+      k_mask_intact);
+  constexpr int k_steps = 4;
+  constexpr float k_step = 0.30F;
+  for (const float side : {-1.0F, 1.0F}) {
+    for (int step = 0; step < k_steps; ++step) {
+      const float low = spring + ((crown - spring) * static_cast<float>(step) /
+                                  static_cast<float>(k_steps));
+      desc.add_box(QVector3D(side * (k_jamb_offset -
+                                     (k_step * (static_cast<float>(step) + 0.5F))),
+                             (low + crown) * 0.5F,
+                             0.0F),
+                   QVector3D(k_step * 0.5F, (crown - low) * 0.5F, curtain_half_z),
+                   (step % 2 == 0) ? palette.wood_light : palette.wood_mid,
+                   k_mask_intact);
+    }
+  }
+  for (const float face : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(0.0F, crown + 0.16F, face * (curtain_half_z + 0.012F)),
+                 QVector3D(0.16F, 0.16F, 0.012F),
+                 palette.wood_light,
+                 k_mask_intact);
+    desc.add_box(QVector3D(0.0F, wall_top, face * (curtain_half_z + 0.010F)),
+                 QVector3D(k_jamb_offset - 0.02F, 0.04F, 0.010F),
+                 palette.masonry_accent,
+                 k_mask_intact);
+  }
+  // The walk across, behind its own battlements.
+  for (int merlon = -3; merlon <= 3; ++merlon) {
+    for (const float face : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(static_cast<float>(merlon) * 0.78F,
+                             curtain_top + 0.14F,
+                             face * (curtain_half_z - 0.09F)),
+                   QVector3D(0.20F, 0.14F, 0.09F),
+                   palette.wood_light,
+                   (merlon % 2 == 0) ? k_mask_intact : BuildingStateMask::Normal);
+    }
+  }
+}
+
 } // namespace
 
 auto build_wall_gate_desc(std::string_view name_prefix,
@@ -289,6 +404,48 @@ auto build_wall_gate_desc(std::string_view name_prefix,
                           const WallGeometry& geometry) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc(std::string(name_prefix) + "_gate");
   desc.set_material(k_building_material_wood);
+  // Each nation hangs its own mark over a gate: Rome an ox skull and garland,
+  // Carthage ivory. The family is named for the nation it belongs to.
+  const bool roman = name_prefix.starts_with("roman");
+  const bool punic = name_prefix.starts_with("carthage");
+  if (geometry.stone_gatehouse) {
+    add_stone_gatehouse(desc, palette, geometry);
+    const float crown = leaf_height(geometry) + 0.10F;
+    const float face_z = geometry.masonry_half_width + 0.10F;
+    for (const float face : {-1.0F, 1.0F}) {
+      if (roman) {
+        Motif::add_roman_bucranium(
+            desc, QVector3D(0.0F, crown + 0.50F, face * (face_z + 0.014F)), 2.2F, face);
+      } else if (punic) {
+        Motif::add_punic_tusks(desc,
+                               QVector3D(0.0F, crown - 0.40F, face * (face_z + 0.16F)),
+                               2.0F * k_jamb_offset,
+                               3.0F);
+      }
+    }
+    desc.set_material(k_building_material_stone);
+    add_rubble_field(desc,
+                     RubbleField{.center = QVector3D(0.0F, 0.0F, 0.0F),
+                                 .extent = QVector3D(k_structure_half_span * 0.85F,
+                                                     0.0F,
+                                                     k_jamb_depth * 1.6F),
+                                 .stone = palette.rubble,
+                                 .stone_dark = palette.earth_dark,
+                                 .count = 7,
+                                 .seed = 73,
+                                 .states = BuildingStateMask::Damaged});
+    add_rubble_field(desc,
+                     RubbleField{.center = QVector3D(0.0F, 0.0F, 0.0F),
+                                 .extent = QVector3D(
+                                     k_structure_half_span, 0.0F, k_jamb_depth * 2.4F),
+                                 .stone = palette.rubble,
+                                 .stone_dark = palette.earth_dark,
+                                 .chunk_scale = 1.4F,
+                                 .count = 16,
+                                 .seed = 313,
+                                 .states = BuildingStateMask::Destroyed});
+    return desc;
+  }
 
   if (geometry.earthwork_base) {
     BuildingPartMaterial const earth(desc, k_building_material_stone);
@@ -320,6 +477,21 @@ auto build_wall_gate_desc(std::string_view name_prefix,
     add_gate_tower(desc, palette, geometry, side);
   }
   add_gate_bridge(desc, palette, geometry);
+  for (const float face : {-1.0F, 1.0F}) {
+    if (roman) {
+      Motif::add_roman_bucranium(
+          desc,
+          QVector3D(0.0F, lintel_y + 0.34F, face * (k_jamb_depth + 0.085F)),
+          2.6F,
+          face);
+    } else if (punic) {
+      Motif::add_punic_tusks(
+          desc,
+          QVector3D(0.0F, lintel_y - 0.10F, face * (k_jamb_depth + 0.12F)),
+          2.0F * k_jamb_offset,
+          2.6F);
+    }
+  }
 
   desc.add_rotated_box(QVector3D(0.35F, 0.10F, k_jamb_depth * 1.6F),
                        QVector3D(k_jamb_offset * 0.9F, 0.075F, 0.16F),

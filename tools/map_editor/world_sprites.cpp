@@ -238,6 +238,69 @@ void paint_home(const Local& local, const QColor& owner, unsigned seed) {
                                  : QRectF(-0.95, 1.0, 0.42, 0.42));
 }
 
+// A town house fills its lot and turns its ridge along the street, so a
+// terrace reads as one long roof with the party walls ruled across it.
+void paint_tenement(const Local& local, const QColor& owner, unsigned seed) {
+  const QRectF lot(-2.15, -2.2, 4.3, 4.4);
+  owner_plate(local.painter, lot, owner);
+  house(local, lot, true);
+  QPainter& painter = local.painter;
+  painter.setPen(hairline(k_roof_ridge, 0.07F));
+  painter.drawLine(QLineF(lot.left(), lot.top(), lot.left(), lot.bottom()));
+  painter.drawLine(QLineF(lot.right(), lot.top(), lot.right(), lot.bottom()));
+  // The street front: a strip of pavement and an awning.
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(QColor(196, 188, 170));
+  painter.drawRect(QRectF(lot.left(), lot.bottom(), lot.width(), 0.5));
+  if (unit_random(seed, 3U) > 0.35F) {
+    painter.setBrush(unit_random(seed, 5U) > 0.5F ? QColor(176, 70, 52)
+                                                  : QColor(210, 168, 72));
+    painter.drawRect(QRectF(lot.left() + 0.35, lot.bottom() - 0.1, 2.3, 0.55));
+  }
+}
+
+// A portico: the tiled range at the back, the open walk and its columns in
+// front.
+void paint_portico(const Local& local, const QColor& owner) {
+  const QRectF lot(-2.75, -2.75, 5.5, 5.5);
+  owner_plate(local.painter, lot, owner);
+  QPainter& painter = local.painter;
+  house(local, QRectF(lot.left(), lot.top(), lot.width(), 4.6), true);
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(QColor(214, 208, 192));
+  painter.drawRect(QRectF(lot.left(), 1.85, lot.width(), 0.9));
+  painter.setBrush(QColor(238, 234, 222));
+  for (const double x : {-1.83, 0.0, 1.83}) {
+    painter.drawEllipse(QPointF(x, 2.3), 0.2, 0.2);
+  }
+}
+
+// A dock: warehouse, quay, and a hull lying off its front.
+void paint_dock(const Local& local, const QColor& owner, unsigned seed) {
+  const QRectF lot(-2.75, -2.75, 5.5, 5.5);
+  owner_plate(local.painter, lot, owner);
+  QPainter& painter = local.painter;
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(QColor(176, 170, 156));
+  painter.drawRect(lot);
+  house(local, QRectF(lot.left(), lot.top(), lot.width(), 2.4), true);
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(QColor(196, 108, 72));
+  for (int jar = 0; jar < 3; ++jar) {
+    painter.drawEllipse(QPointF(-2.2 + 0.3 * jar, 0.4), 0.11, 0.11);
+  }
+  if (unit_random(seed, 7U) > 0.3F) {
+    QPainterPath hull;
+    hull.moveTo(-3.2, 3.9);
+    hull.quadTo(0.0, 2.9, 3.2, 3.9);
+    hull.quadTo(0.0, 4.9, -3.2, 3.9);
+    painter.setBrush(QColor(92, 66, 44));
+    painter.drawPath(hull);
+    painter.setBrush(QColor(210, 196, 160));
+    painter.drawRect(QRectF(-1.5, 3.82, 3.0, 0.16));
+  }
+}
+
 void paint_tower(const Local& local, const QColor& owner) {
   QPainter& painter = local.painter;
   const QRectF body(-1.6, -1.6, 3.2, 3.2);
@@ -615,8 +678,25 @@ void paint_gold_vein(const Local& local, unsigned seed, double seconds) {
 
 } // namespace
 
+auto styled_structure_sprite(const QString& type, const QString& style) -> QString {
+  if (type == QLatin1String("home") && style == QLatin1String("tenement")) {
+    return QStringLiteral("home_tenement");
+  }
+  if (type == QLatin1String("marketplace") && style == QLatin1String("dock")) {
+    return QStringLiteral("marketplace_dock");
+  }
+  if (type == QLatin1String("marketplace") &&
+      (style == QLatin1String("portico") || style == QLatin1String("basilica"))) {
+    return QStringLiteral("marketplace_portico");
+  }
+  return type;
+}
+
 auto has_structure_sprite(const QString& type) -> bool {
   return type == QLatin1String("barracks") || type == QLatin1String("home") ||
+         type == QLatin1String("home_tenement") ||
+         type == QLatin1String("marketplace_portico") ||
+         type == QLatin1String("marketplace_dock") ||
          type == QLatin1String("defense_tower") ||
          type == QLatin1String("marketplace") || type == QLatin1String("temple") ||
          type == QLatin1String("farm") || type == QLatin1String("village") ||
@@ -663,6 +743,12 @@ void paint_structure_sprite(QPainter& painter,
   const Local local{painter, rotation_deg};
   if (type == QLatin1String("barracks")) {
     paint_barracks(local, owner);
+  } else if (type == QLatin1String("home_tenement")) {
+    paint_tenement(local, owner, seed);
+  } else if (type == QLatin1String("marketplace_portico")) {
+    paint_portico(local, owner);
+  } else if (type == QLatin1String("marketplace_dock")) {
+    paint_dock(local, owner, seed);
   } else if (type == QLatin1String("home")) {
     paint_home(local, owner, seed);
   } else if (type == QLatin1String("defense_tower")) {

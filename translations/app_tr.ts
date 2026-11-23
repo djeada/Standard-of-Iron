@@ -8030,6 +8030,22 @@ bir harita seç</translation>
         <source>The Sepulcher Bridge</source>
         <translation>Kabir Köprüsü</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Kartaca</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Roma</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
+        <translation>Burnundaki şehir: amiral adasıyla yuvarlak savaş limanı ve yanındaki ticaret havuzu, rıhtımların ardındaki agora, yüksek beyaz evlerin üzerinde Eşmun tapınağıyla Byrsa, kıyıdaki tofet, Megara bahçeleri ve kıstağı boydan boya kesen surlar.</translation>
+    </message>
+    <message>
+        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
+        <translation>Tiber kıyısındaki şehir: Forum&apos;un üzerinde Capitolium ve tapınakları, Palatinus ile altındaki büyük sirk, kalabalık Subura, tepeleri çevreleyen taş sur, Aventinus&apos;un altındaki nehir rıhtımları ve Tiber&apos;in denize kavuştuğu Ostia.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

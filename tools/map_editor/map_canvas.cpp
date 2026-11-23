@@ -12,6 +12,7 @@
 #include <QPainterPathStroker>
 #include <QPointer>
 #include <QPolygonF>
+#include <QResizeEvent>
 #include <QSet>
 #include <QSizeF>
 #include <QThreadPool>
@@ -30,10 +31,12 @@
 #include "canvas_transform.h"
 #include "commander_preview.h"
 #include "element_ops.h"
+#include "hill_projection_model.h"
 #include "map_canvas_internal.h"
 #include "map_json_keys.h"
+#include "move_handle.h"
 #include "tool_catalog.h"
-#include "ui/theme.h"
+#include "town_block.h"
 #include "wall_geometry.h"
 
 namespace MapEditor {
@@ -43,7 +46,7 @@ using CanvasDetail::default_wildlife_radius;
 
 namespace {
 
-constexpr int k_backdrop_debounce_ms = 160;
+constexpr int k_backdrop_debounce_ms = 90;
 constexpr int k_ambient_frame_ms = 66;
 constexpr qint64 k_ambient_paint_budget_ms = 14;
 
@@ -61,19 +64,42 @@ auto axis_aligned_endpoint(const QVector2D& anchor, QVector2D candidate) -> QVec
   return candidate;
 }
 
+auto placement_layer(ToolType tool) -> int {
+  switch (tool_placement(tool)) {
+  case ToolPlacement::Terrain:
+    return MapCanvas::LayerTerrain;
+  case ToolPlacement::WorldProp:
+    return MapCanvas::LayerWorldProp;
+  case ToolPlacement::Linear:
+    return MapCanvas::LayerLinear;
+  case ToolPlacement::Structure:
+  case ToolPlacement::TownBlock:
+  case ToolPlacement::Gate:
+    return MapCanvas::LayerStructure;
+  case ToolPlacement::Troop:
+    return MapCanvas::LayerTroopSpawn;
+  case ToolPlacement::Forest:
+    return MapCanvas::LayerForest;
+  case ToolPlacement::Wildlife:
+    return MapCanvas::LayerWildlifeArea;
+  case ToolPlacement::UndeadZone:
+    return MapCanvas::LayerUndeadZone;
+  case ToolPlacement::None:
+  case ToolPlacement::Erase:
+    return -1;
+  }
+  return -1;
+}
+
 } // namespace
 
 MapCanvas::MapCanvas(QWidget* parent)
     : QWidget(parent) {
   setMouseTracking(true);
   setFocusPolicy(Qt::StrongFocus);
-  setMinimumSize(400, 400);
+  setMinimumSize(360, 300);
   m_layer_visible.fill(true);
-
-  setAutoFillBackground(true);
-  QPalette pal = palette();
-  pal.setColor(QPalette::Window, Theme::backgroundDeep());
-  setPalette(pal);
+  setAttribute(Qt::WA_OpaquePaintEvent);
 
   m_backdrop_debounce.setSingleShot(true);
   m_backdrop_debounce.setInterval(k_backdrop_debounce_ms);
@@ -83,8 +109,8 @@ MapCanvas::MapCanvas(QWidget* parent)
   m_world_clock.start();
   m_ambient_timer.setInterval(k_ambient_frame_ms);
   connect(&m_ambient_timer, &QTimer::timeout, this, [this]() {
-    if (m_world_view && m_living_world && m_backdrop.ok() && isVisible() &&
-        m_last_paint_ms <= k_ambient_paint_budget_ms) {
+    if (m_living_world && m_gesture == PointerGesture::None && painting_world() &&
+        isVisible() && m_last_paint_ms <= k_ambient_paint_budget_ms) {
       update();
     }
   });
@@ -95,10 +121,14 @@ void MapCanvas::set_world_view(bool enabled) {
   if (m_world_view == enabled) {
     return;
   }
+  cancel_pointer_gesture();
   m_world_view = enabled;
-  if (enabled) {
-    schedule_world_backdrop();
+  if (preview_pending()) {
+    m_backdrop_debounce.start();
+  } else {
+    m_backdrop_debounce.stop();
   }
+  emit preview_changed();
   update();
 }
 
@@ -107,40 +137,60 @@ void MapCanvas::set_living_world(bool enabled) {
   update();
 }
 
-void MapCanvas::schedule_world_backdrop() {
-  if (m_map_data == nullptr || !m_world_view) {
-    return;
+bool MapCanvas::preview_pending() const {
+  return m_world_view && m_map_data != nullptr &&
+         m_backdrop_completed != m_backdrop_requested;
+}
+
+bool MapCanvas::edits_paused() const {
+  return preview_pending() && m_backdrop_completed < m_backdrop_required;
+}
+
+QString MapCanvas::preview_error() const {
+  return m_world_view && !preview_pending() ? m_backdrop.error : QString{};
+}
+
+void MapCanvas::invalidate_world_backdrop(WorldPreviewChange change) {
+  ++m_backdrop_requested;
+  // Terrain and paths are baked into the raster. Scenery edits draw live while
+  // the worker refreshes their effect on procedural decoration.
+  if (change == WorldPreviewChange::Terrain) {
+    m_backdrop_required = m_backdrop_requested;
   }
-  m_backdrop_debounce.start();
+  if (preview_pending()) {
+    m_backdrop_debounce.start();
+    emit preview_changed();
+    update();
+  }
 }
 
 void MapCanvas::start_world_backdrop() {
-  if (m_map_data == nullptr || !m_world_view) {
-    return;
-  }
-  if (m_backdrop_running) {
-    m_backdrop_stale = true;
+  if (!preview_pending() || m_backdrop_running) {
     return;
   }
   m_backdrop_running = true;
-  m_backdrop_stale = false;
-  const quint64 generation = ++m_backdrop_generation;
+  const quint64 generation = m_backdrop_requested;
   const QByteArray document = m_map_data->to_canonical_json_bytes();
+  const WorldBackdropOptions options{.show_terrain = layer_visible(LayerTerrain),
+                                     .show_paths = layer_visible(LayerLinear)};
   const QPointer<MapCanvas> guard(this);
-  QThreadPool::globalInstance()->start([guard, generation, document]() {
-    WorldBackdrop painted = render_world_backdrop(document);
+  QThreadPool::globalInstance()->start([guard, generation, document, options]() {
+    WorldBackdrop painted = render_world_backdrop(document, options);
     QMetaObject::invokeMethod(
         qApp,
-        [guard, generation, painted = std::move(painted)]() {
+        [guard, generation, painted = std::move(painted)]() mutable {
           if (guard.isNull()) {
             return;
           }
           guard->m_backdrop_running = false;
-          if (generation == guard->m_backdrop_generation && painted.ok()) {
-            guard->m_backdrop = painted;
+          if (generation == guard->m_backdrop_requested) {
+            guard->m_backdrop_completed = generation;
+            guard->m_backdrop = std::move(painted);
+            guard->update_canvas_cursor(guard->m_last_mouse_pos);
+            emit guard->preview_changed();
             guard->update();
           }
-          if (guard->m_backdrop_stale) {
+          if (!guard->m_backdrop_debounce.isActive()) {
             guard->start_world_backdrop();
           }
         },
@@ -149,22 +199,41 @@ void MapCanvas::start_world_backdrop() {
 }
 
 void MapCanvas::set_map_data(MapData* data) {
+  if (m_map_data == data) {
+    return;
+  }
+  if (m_map_data != nullptr) {
+    disconnect(m_map_data, nullptr, this, nullptr);
+  }
+  cancel_pointer_gesture();
+  m_is_placing_linear = false;
   m_map_data = data;
   m_selection.clear();
+  m_selected_refs.clear();
   m_front_order.clear();
   m_back_order.clear();
   m_element_counts.fill(0);
+  m_backdrop = {};
   if (m_map_data != nullptr) {
-    connect(m_map_data, &MapData::data_changed, this, qOverload<>(&QWidget::update));
-    connect(
-        m_map_data, &MapData::data_changed, this, &MapCanvas::drop_stale_view_state);
-    connect(
-        m_map_data, &MapData::data_changed, this, &MapCanvas::schedule_world_backdrop);
+    connect(m_map_data, &MapData::data_changed, this, [this]() {
+      if (m_gesture == PointerGesture::Move) {
+        cancel_pointer_gesture();
+      }
+      drop_stale_view_state();
+      update();
+    });
+    connect(m_map_data,
+            &MapData::world_preview_changed,
+            this,
+            &MapCanvas::invalidate_world_backdrop);
     drop_stale_view_state();
-    m_backdrop = WorldBackdrop{};
-    start_world_backdrop();
+    zoom_to_fit();
+  } else {
+    m_backdrop_debounce.stop();
+    emit preview_changed();
   }
-  update();
+  invalidate_world_backdrop(WorldPreviewChange::Terrain);
+  notify_selection_changed();
 }
 
 void MapCanvas::drop_stale_view_state() {
@@ -192,6 +261,7 @@ void MapCanvas::drop_stale_view_state() {
     return !ElementOps::index_valid(*m_map_data, ref.kind, ref.index);
   });
   if (static_cast<int>(m_selection.size()) != before) {
+    m_selected_refs = QSet<ElementRef>(m_selection.cbegin(), m_selection.cend());
     notify_selection_changed();
   }
 }
@@ -211,53 +281,44 @@ void MapCanvas::set_mission_data(MissionData* data) {
 }
 
 void MapCanvas::set_current_tool(ToolType tool) {
+  cancel_pointer_gesture();
   m_current_tool = tool;
   m_is_placing_linear = false;
+  m_hovered = {};
+  const int layer = placement_layer(tool);
+  if (layer >= 0) {
+    set_layer_visible(layer, true);
+  }
   update_canvas_cursor(m_last_mouse_pos);
-  emit status_hint_changed("");
+  emit status_hint_changed({});
   update();
 }
 
 void MapCanvas::clear_tool() {
-  m_current_tool = ToolType::Select;
-  m_is_placing_linear = false;
-  update_canvas_cursor(m_last_mouse_pos);
-  emit status_hint_changed("");
+  set_current_tool(ToolType::Select);
   emit tool_cleared();
-  update();
-}
-
-void MapCanvas::begin_panning(const QPoint& pos) {
-  m_is_panning = true;
-  m_is_pan_drag_pending = false;
-  m_last_mouse_pos = pos;
-  setCursor(Qt::ClosedHandCursor);
-}
-
-void MapCanvas::finish_panning(const QPoint& pos) {
-  m_is_panning = false;
-  m_is_pan_drag_pending = false;
-  update_canvas_cursor(pos);
 }
 
 void MapCanvas::update_canvas_cursor(const QPoint& pos) {
-  if (m_is_panning || m_is_dragging) {
+  if (m_gesture == PointerGesture::Pan || m_gesture == PointerGesture::Move) {
     setCursor(Qt::ClosedHandCursor);
     return;
   }
 
-  if (m_space_pan_active) {
+  if (m_space_pan_active || m_read_only) {
     setCursor(Qt::OpenHandCursor);
     return;
   }
 
-  if (m_current_tool == ToolType::Select) {
-    const HitResult hover = hit_test(pos);
-    setCursor(hover.element_type >= 0 ? Qt::SizeAllCursor : Qt::OpenHandCursor);
+  if (move_handle_at(pos) != MoveHandle::None) {
+    setCursor(Qt::SizeAllCursor);
     return;
   }
-
-  setCursor(Qt::ArrowCursor);
+  if (m_current_tool == ToolType::Select || edits_paused()) {
+    setCursor(m_hovered.is_valid() ? Qt::PointingHandCursor : Qt::OpenHandCursor);
+  } else {
+    setCursor(Qt::CrossCursor);
+  }
 }
 
 bool MapCanvas::is_forced_pan_gesture(const QMouseEvent* event) const {
@@ -279,14 +340,24 @@ void MapCanvas::set_selection(int element_type, int index) {
 }
 
 void MapCanvas::set_selection(const QVector<ElementRef>& refs) {
-  m_selection.clear();
+  QVector<ElementRef> selection;
+  QSet<ElementRef> selected_refs;
   for (const ElementRef& ref : refs) {
     if (m_map_data != nullptr && layer_visible(ref.kind) &&
         ElementOps::index_valid(*m_map_data, ref.kind, ref.index) &&
-        !m_selection.contains(ref)) {
-      m_selection.append(ref);
+        !selected_refs.contains(ref)) {
+      selection.append(ref);
+      selected_refs.insert(ref);
     }
   }
+  if (m_selection == selection) {
+    return;
+  }
+  if (m_gesture == PointerGesture::Move) {
+    cancel_pointer_gesture();
+  }
+  m_selection = std::move(selection);
+  m_selected_refs = std::move(selected_refs);
   notify_selection_changed();
 }
 
@@ -299,8 +370,10 @@ void MapCanvas::toggle_selection(const ElementRef& ref) {
   const qsizetype at = m_selection.indexOf(ref);
   if (at >= 0) {
     m_selection.remove(at);
+    m_selected_refs.remove(ref);
   } else {
     m_selection.append(ref);
+    m_selected_refs.insert(ref);
   }
   notify_selection_changed();
 }
@@ -312,7 +385,7 @@ void MapCanvas::notify_selection_changed() {
 }
 
 bool MapCanvas::is_selected_element(int kind, int index) const {
-  return m_selection.contains(ElementRef{kind, index});
+  return m_selected_refs.contains(ElementRef{kind, index});
 }
 
 void MapCanvas::select_all() {
@@ -356,6 +429,8 @@ QString MapCanvas::layer_label(int layer) {
     return QStringLiteral("Fog zones");
   case LayerMissionOverlay:
     return QStringLiteral("Mission overlays");
+  case LayerLinear:
+    return QStringLiteral("Paths & crossings");
   default:
     break;
   }
@@ -368,19 +443,21 @@ void MapCanvas::set_layer_visible(int layer, bool visible) {
     return;
   }
   m_layer_visible[layer] = visible;
+  cancel_pointer_gesture();
 
   if (!visible) {
     const qsizetype before = m_selection.size();
     m_selection.removeIf([layer](const ElementRef& ref) { return ref.kind == layer; });
     if (m_selection.size() != before) {
+      m_selected_refs = QSet<ElementRef>(m_selection.cbegin(), m_selection.cend());
       notify_selection_changed();
-    }
-    if (m_hovered_type == layer) {
-      m_hovered_type = -1;
-      m_hovered_index = -1;
     }
   }
 
+  if (layer == LayerTerrain || layer == LayerLinear) {
+    invalidate_world_backdrop(WorldPreviewChange::Terrain);
+  }
+  m_hovered = {};
   emit layers_changed();
   update();
 }
@@ -405,11 +482,20 @@ void MapCanvas::apply_zoom(float zoom, const QPointF& anchor_widget_pos) {
     return;
   }
 
+  m_fit_view = false;
   m_zoom = new_zoom;
   m_pan_offset =
       anchor_widget_pos - (anchor_widget_pos - m_pan_offset) * (m_zoom / old_zoom);
   emit zoom_changed(m_zoom);
   update();
+}
+
+void MapCanvas::pan_by(const QPointF& delta) {
+  if (!delta.isNull()) {
+    m_fit_view = false;
+    m_pan_offset += delta;
+    update();
+  }
 }
 
 void MapCanvas::set_zoom(float zoom) {
@@ -429,35 +515,19 @@ void MapCanvas::zoom_to_fit() {
     return;
   }
 
-  const GridSettings& grid = m_map_data->grid();
-  if (grid.width <= 0 || grid.height <= 0) {
+  const QRectF bounds = map_coordinate_bounds();
+  if (bounds.isEmpty()) {
     return;
   }
 
-  constexpr float k_fit_margin = 0.94F;
-  const float fit_x = static_cast<float>(width()) * k_fit_margin /
-                      (static_cast<float>(grid.width) * grid_cell_size);
-  const float fit_y = static_cast<float>(height()) * k_fit_margin /
-                      (static_cast<float>(grid.height) * grid_cell_size);
+  constexpr double k_fit_margin = 0.94;
+  const double fit_x = width() * k_fit_margin / (bounds.width() * grid_cell_size);
+  const double fit_y = height() * k_fit_margin / (bounds.height() * grid_cell_size);
 
-  m_zoom = std::clamp(std::min(fit_x, fit_y), min_zoom, max_zoom);
-
-  const float span_x = static_cast<float>(grid.width) * grid_cell_size * m_zoom;
-  const float span_y = static_cast<float>(grid.height) * grid_cell_size * m_zoom;
-  m_pan_offset = QPointF((width() - span_x) * 0.5, (height() - span_y) * 0.5);
-  if (m_map_data->uses_world_coordinates()) {
-    const float tile = std::max(grid.tile_size, 0.0001F);
-    const float cell = grid_cell_size * m_zoom;
-    m_pan_offset -= QPointF((static_cast<float>(grid.width) -
-                             (static_cast<float>(grid.width) * 0.5F + 0.5F) * tile) *
-                                cell,
-                            (static_cast<float>(grid.height) -
-                             (static_cast<float>(grid.height) * 0.5F + 0.5F) * tile) *
-                                cell);
-  }
-
+  m_zoom = std::clamp(static_cast<float>(std::min(fit_x, fit_y)), min_zoom, max_zoom);
+  center_on_grid_pos(bounds.center());
+  m_fit_view = true;
   emit zoom_changed(m_zoom);
-  update();
 }
 
 void MapCanvas::center_on_grid_pos(const QPointF& grid_pos) {
@@ -465,6 +535,7 @@ void MapCanvas::center_on_grid_pos(const QPointF& grid_pos) {
     return;
   }
 
+  m_fit_view = false;
   const GridSettings& grid = m_map_data->grid();
   const float scaled_cell = grid_cell_size * m_zoom;
   const float view_x =
@@ -492,7 +563,7 @@ void MapCanvas::frame_selection() {
 }
 
 void MapCanvas::delete_selection() {
-  if (m_map_data == nullptr || m_selection.isEmpty()) {
+  if (!edit_available() || m_map_data == nullptr || m_selection.isEmpty()) {
     return;
   }
 
@@ -503,6 +574,7 @@ void MapCanvas::delete_selection() {
 
   const qsizetype removed = m_selection.size();
   m_selection.clear();
+  m_selected_refs.clear();
   m_map_data->execute_command(std::move(cmd));
   notify_selection_changed();
   if (removed > 1) {
@@ -524,7 +596,7 @@ void MapCanvas::copy_selection() {
 }
 
 void MapCanvas::paste_from_clipboard(const QPointF& grid_pos) {
-  if (m_map_data == nullptr || !has_clipboard()) {
+  if (!edit_available() || m_map_data == nullptr || !has_clipboard()) {
     return;
   }
 
@@ -567,7 +639,7 @@ void MapCanvas::paste_at_cursor() {
 }
 
 void MapCanvas::duplicate_selection() {
-  if (m_map_data == nullptr) {
+  if (!edit_available() || m_map_data == nullptr) {
     return;
   }
 
@@ -630,7 +702,7 @@ void MapCanvas::select_appended(const QVector<ElementSnapshot>& added) {
 
 void MapCanvas::apply_to_selection(const SelectionTransform& transform,
                                    const QString& description) {
-  if (m_map_data == nullptr || m_selection.isEmpty()) {
+  if (!edit_available() || m_map_data == nullptr || m_selection.isEmpty()) {
     return;
   }
 
@@ -780,7 +852,7 @@ QPointF MapCanvas::clamp_group_delta(const QVector<ElementSnapshot>& snaps,
     return delta;
   }
 
-  const GridSettings& grid = m_map_data->grid();
+  const QRectF bounds = map_coordinate_bounds();
   double min_dx = std::numeric_limits<double>::lowest();
   double max_dx = std::numeric_limits<double>::max();
   double min_dy = std::numeric_limits<double>::lowest();
@@ -791,10 +863,10 @@ QPointF MapCanvas::clamp_group_delta(const QVector<ElementSnapshot>& snaps,
     if (!pos.has_value()) {
       continue;
     }
-    min_dx = std::max(min_dx, -pos->x());
-    max_dx = std::min(max_dx, static_cast<double>(grid.width) - pos->x());
-    min_dy = std::max(min_dy, -pos->y());
-    max_dy = std::min(max_dy, static_cast<double>(grid.height) - pos->y());
+    min_dx = std::max(min_dx, bounds.left() - pos->x());
+    max_dx = std::min(max_dx, bounds.right() - pos->x());
+    min_dy = std::max(min_dy, bounds.top() - pos->y());
+    max_dy = std::min(max_dy, bounds.bottom() - pos->y());
   }
 
   if (min_dx > max_dx || min_dy > max_dy) {
@@ -868,9 +940,26 @@ QPointF MapCanvas::clamp_to_grid(const QPointF& grid_pos) const {
     return grid_pos;
   }
 
+  const QRectF bounds = map_coordinate_bounds();
+  return {std::clamp(grid_pos.x(), bounds.left(), bounds.right()),
+          std::clamp(grid_pos.y(), bounds.top(), bounds.bottom())};
+}
+
+QRectF MapCanvas::map_coordinate_bounds() const {
+  if (m_map_data == nullptr) {
+    return {};
+  }
   const GridSettings& grid = m_map_data->grid();
-  return {std::clamp(grid_pos.x(), 0.0, static_cast<double>(grid.width)),
-          std::clamp(grid_pos.y(), 0.0, static_cast<double>(grid.height))};
+  const double width = std::max(0, grid.width);
+  const double height = std::max(0, grid.height);
+  if (m_map_data->uses_world_coordinates()) {
+    const double tile = std::max(grid.tile_size, 0.0001F);
+    return {(0.5 - width * 0.5) * tile,
+            (0.5 - height * 0.5) * tile,
+            width * tile,
+            height * tile};
+  }
+  return {0, 0, width, height};
 }
 
 QPoint MapCanvas::grid_to_widget(float grid_x, float grid_z) const {
@@ -890,276 +979,316 @@ QPoint MapCanvas::grid_to_widget(float grid_x, float grid_z) const {
                                          static_cast<float>(grid_cell_size));
 }
 
-void MapCanvas::mousePressEvent(QMouseEvent* event) {
-  m_last_mouse_pos = event->pos();
+QRectF MapCanvas::move_handle_for(const ElementSnapshot& snap) const {
+  const auto pos = ElementOps::position(snap);
+  return pos.has_value() ? move_handle_rect(grid_to_widget(pos->x(), pos->y()), rect())
+                         : QRectF{};
+}
 
-  if (m_read_only) {
-    if (event->button() == Qt::LeftButton || event->button() == Qt::MiddleButton) {
-      begin_panning(event->pos());
+QRectF MapCanvas::endpoint_handle(const LinearElement& line, int endpoint) const {
+  const QVector2D pos = endpoint == 0 ? line.start : line.end;
+  return QRectF(grid_to_widget(pos.x(), pos.y()), QSizeF(0, 0)).adjusted(-7, -7, 7, 7);
+}
+
+MapCanvas::MoveHandle MapCanvas::move_handle_at(const QPoint& pos) const {
+  if (!edit_available() || m_current_tool != ToolType::Select || !has_selection()) {
+    return MoveHandle::None;
+  }
+
+  const ElementSnapshot snap = selected_snapshot();
+  if (move_handle_for(snap).contains(pos)) {
+    return MoveHandle::Whole;
+  }
+
+  const auto* line = std::get_if<LinearElement>(&snap);
+  if (line != nullptr && selection_count() == 1 && !is_ring_river(*line)) {
+    if (endpoint_handle(*line, 0).contains(pos)) {
+      return MoveHandle::Start;
     }
+    if (endpoint_handle(*line, 1).contains(pos)) {
+      return MoveHandle::End;
+    }
+  }
+  return MoveHandle::None;
+}
+
+const ElementSnapshot* MapCanvas::drag_preview(const ElementRef& ref) const {
+  const auto it = m_drag_indices.constFind(ref);
+  return it != m_drag_indices.cend() ? &m_drag_after.at(it.value()) : nullptr;
+}
+
+void MapCanvas::begin_move(MoveHandle handle, const QPoint& pos) {
+  m_gesture = PointerGesture::Move;
+  m_active_handle = handle;
+  m_drag_press_grid = map_to_grid(pos);
+  m_drag_before = selected_snapshots();
+  m_drag_after = m_drag_before;
+  for (qsizetype i = 0; i < m_selection.size(); ++i) {
+    const ElementRef ref = m_selection[i];
+    const auto* line = std::get_if<LinearElement>(&m_drag_before[i]);
+    m_drag_changes_terrain |= ref.kind == LayerTerrain ||
+                              (line != nullptr && line->type != QLatin1String("wall"));
+    m_drag_indices.insert(ref, i);
+  }
+  const QString subject =
+      handle == MoveHandle::Whole
+          ? (selection_count() == 1
+                 ? ElementOps::display_name(m_drag_before.back())
+                 : QStringLiteral("%1 elements").arg(selection_count()))
+          : QStringLiteral("endpoint");
+  emit status_hint_changed(
+      QStringLiteral("Moving %1 · Release to place · Esc cancels").arg(subject));
+}
+
+void MapCanvas::update_move(const QPoint& pos, bool snap) {
+  if (!m_drag_dist_reached) {
+    m_drag_dist_reached =
+        (pos - m_press_pos).manhattanLength() >= QApplication::startDragDistance();
+  }
+  if (!m_drag_dist_reached) {
     return;
   }
 
+  const QPointF raw_delta = map_to_grid(pos) - m_drag_press_grid;
+  const QPointF delta = snap ? snap_pos(raw_delta) : raw_delta;
+  if (m_active_handle == MoveHandle::Whole) {
+    const QPointF clamped = clamp_group_delta(m_drag_before, delta);
+    for (qsizetype i = 0; i < m_drag_before.size(); ++i) {
+      m_drag_after[i] = ElementOps::translated(m_drag_before[i], clamped);
+    }
+  } else {
+    LinearElement line = std::get<LinearElement>(m_drag_before.back());
+    const bool start = m_active_handle == MoveHandle::Start;
+    QVector2D& endpoint = start ? line.start : line.end;
+    const QVector2D anchor = start ? line.end : line.start;
+    const QPointF target = endpoint.toPointF() + delta;
+    endpoint = QVector2D(clamp_to_grid(target));
+    if (line.type == QLatin1String("wall")) {
+      endpoint = axis_aligned_endpoint(anchor, endpoint);
+    }
+    if (line.waypoints.size() >= 2) {
+      (start ? line.waypoints.first() : line.waypoints.last()) = endpoint.toPointF();
+    }
+    m_drag_after.back() = std::move(line);
+  }
+  update();
+}
+
+void MapCanvas::finish_move() {
+  QVector<ElementRef> refs;
+  QVector<ElementSnapshot> before;
+  QVector<ElementSnapshot> after;
+  for (qsizetype i = 0; i < m_drag_before.size(); ++i) {
+    if (ElementOps::has_moved(m_drag_before[i], m_drag_after[i])) {
+      refs.append(m_selection[i]);
+      before.append(m_drag_before[i]);
+      after.append(m_drag_after[i]);
+    }
+  }
+  cancel_pointer_gesture();
+
+  if (refs.isEmpty() || m_map_data == nullptr || !edit_available()) {
+    return;
+  }
+  const QString description =
+      refs.size() == 1
+          ? QStringLiteral("Move %1").arg(ElementOps::display_name(after.front()))
+          : QStringLiteral("Move %1 elements").arg(refs.size());
+  if (auto command =
+          ElementOps::make_update_many(*m_map_data, refs, before, after, description)) {
+    m_map_data->execute_command(std::move(command));
+    report_converted(ElementOps::count_generated(before));
+  }
+}
+
+void MapCanvas::cancel_pointer_gesture() {
+  const bool was_moving = m_gesture == PointerGesture::Move;
+  m_gesture = PointerGesture::None;
+  m_gesture_button = Qt::NoButton;
+  m_band_active = false;
+  m_active_handle = MoveHandle::None;
+  m_drag_indices.clear();
+  m_drag_before.clear();
+  m_drag_after.clear();
+  m_drag_dist_reached = false;
+  m_drag_changes_terrain = false;
+  if (was_moving) {
+    emit status_hint_changed({});
+  }
+}
+
+void MapCanvas::mousePressEvent(QMouseEvent* event) {
+  const QPoint pos = event->pos();
+  m_pointer_inside = true;
+
   if (event->button() == Qt::RightButton) {
+    if (m_gesture == PointerGesture::Move) {
+      cancel_pointer_gesture();
+      update_canvas_cursor(pos);
+      update();
+      return;
+    }
+    if (m_gesture != PointerGesture::None || !edit_available()) {
+      return;
+    }
     switch (right_click_action(m_is_placing_linear, m_current_tool)) {
     case RightClickAction::CancelLinearDraw:
       m_is_placing_linear = false;
-      emit status_hint_changed("");
+      emit status_hint_changed({});
       update();
       break;
     case RightClickAction::ClearTool:
       clear_tool();
       break;
     case RightClickAction::ShowContextMenu:
-      show_context_menu(event->pos());
+      show_context_menu(pos);
       break;
     }
     return;
   }
 
-  if (is_forced_pan_gesture(event)) {
-    begin_panning(event->pos());
+  if (m_gesture_button != Qt::NoButton ||
+      (event->button() != Qt::LeftButton && event->button() != Qt::MiddleButton)) {
     return;
   }
+  setFocus(Qt::MouseFocusReason);
+  m_last_mouse_pos = pos;
+  m_press_pos = pos;
+  m_gesture_button = event->button();
 
-  if (event->button() == Qt::LeftButton && (m_map_data != nullptr)) {
-    QPointF const raw_pos = map_to_grid(event->pos());
-    const bool shift_held = (event->modifiers() & Qt::ShiftModifier) != 0U;
-    QPointF const grid_pos = clamp_to_grid(shift_held ? raw_pos : snap_pos(raw_pos));
-
-    switch (m_current_tool) {
-    case ToolType::Select: {
-      HitResult const hit = hit_test(event->pos());
-      const ElementRef hit_ref{hit.element_type, hit.index};
-      m_dragged_endpoint = hit.endpoint;
-
-      if (!hit_ref.is_valid()) {
-        if (shift_held) {
-
-          m_band_active = true;
-          m_band_origin = event->pos();
-          m_band_current = event->pos();
-        } else {
-          m_drag_refs.clear();
-          m_drag_pre_elements.clear();
-          set_selection(QVector<ElementRef>{});
-          m_is_pan_drag_pending = true;
-          m_pan_press_pos = event->pos();
-        }
-        update_canvas_cursor(event->pos());
-        update();
-        break;
-      }
-
-      if (shift_held) {
-        toggle_selection(hit_ref);
-      } else if (!is_selected_element(hit_ref.kind, hit_ref.index)) {
-
-        set_selection(hit_ref.kind, hit_ref.index);
-      } else {
-
-        m_selection.removeAll(hit_ref);
-        m_selection.append(hit_ref);
-        notify_selection_changed();
-      }
-
-      if (is_selected_element(hit_ref.kind, hit_ref.index)) {
-        m_is_dragging = true;
-        m_did_drag_move = false;
-        m_linear_drag_center_offset = QPointF();
-        m_drag_refs = m_selection;
-        m_drag_pre_elements = selected_snapshots();
-        if (const auto* linear =
-                std::get_if<LinearElement>(&m_drag_pre_elements.back());
-            linear != nullptr && hit.endpoint < 0) {
-          const QPointF center((linear->start.x() + linear->end.x()) * 0.5F,
-                               (linear->start.y() + linear->end.y()) * 0.5F);
-          m_linear_drag_center_offset = grid_pos - center;
-        } else if (std::holds_alternative<TerrainElement>(m_drag_pre_elements.back())) {
-          if (const auto anchor = ElementOps::position(m_drag_pre_elements.back())) {
-            m_linear_drag_center_offset = snap_pos(grid_pos) - snap_pos(*anchor);
-          }
-        }
-      }
-      update_canvas_cursor(event->pos());
-      update();
-      break;
-    }
-    case ToolType::Eraser:
-      erase_at_position(grid_pos);
-      break;
-    default:
-      if (!is_linear_tool(m_current_tool)) {
-        place_element(grid_pos);
-      } else if (!m_is_placing_linear) {
-        start_linear_element(grid_pos);
-      } else {
-        finish_linear_element(grid_pos);
-      }
-      break;
+  if (is_forced_pan_gesture(event) || m_read_only ||
+      (edits_paused() && m_current_tool != ToolType::Select)) {
+    m_gesture = PointerGesture::Pan;
+  } else {
+    const bool extend = event->modifiers().testFlag(Qt::ShiftModifier);
+    const MoveHandle handle = move_handle_at(pos);
+    if (handle != MoveHandle::None) {
+      begin_move(handle, pos);
+    } else if (extend && m_current_tool == ToolType::Select) {
+      m_gesture = PointerGesture::ExtendSelection;
+      m_band_origin = pos;
+      m_band_current = pos;
+    } else {
+      m_gesture = PointerGesture::Click;
     }
   }
+  update_canvas_cursor(pos);
+  update();
 }
 
 void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
-  if (event->button() == Qt::MiddleButton ||
-      (event->button() == Qt::LeftButton && m_is_panning)) {
-    finish_panning(event->pos());
+  if (event->button() != m_gesture_button) {
+    return;
   }
+  const QPoint pos = event->pos();
+  const bool snap = !event->modifiers().testFlag(Qt::ShiftModifier);
+  const bool moved =
+      (pos - m_press_pos).manhattanLength() >= QApplication::startDragDistance();
 
-  if (event->button() == Qt::LeftButton && m_band_active) {
-    finish_rubber_band();
-  }
-
-  if (event->button() == Qt::LeftButton && m_is_dragging && m_did_drag_move &&
-      (m_map_data != nullptr) && !m_drag_refs.isEmpty()) {
-
-    QVector<ElementRef> refs;
-    QVector<ElementSnapshot> before;
-    QVector<ElementSnapshot> after;
-    for (int i = 0; i < m_drag_refs.size(); ++i) {
-      const ElementSnapshot current = ElementOps::snapshot(*m_map_data, m_drag_refs[i]);
-      if (ElementOps::has_moved(m_drag_pre_elements[i], current)) {
-        refs.append(m_drag_refs[i]);
-        before.append(m_drag_pre_elements[i]);
-        after.append(current);
-      }
+  if (m_gesture == PointerGesture::Move) {
+    update_move(pos, snap);
+    finish_move();
+  } else if (m_gesture == PointerGesture::Pan) {
+    pan_by(pos - m_last_mouse_pos);
+  } else if (m_gesture == PointerGesture::ExtendSelection) {
+    if (m_band_active || moved) {
+      m_band_current = pos;
+      finish_rubber_band();
+    } else if (const ElementRef hit = hit_test(pos); hit.is_valid()) {
+      toggle_selection(hit);
     }
-
-    if (!refs.isEmpty()) {
-      const QString description =
-          refs.size() == 1 ? "Move " + ElementOps::display_name(after.front())
-                           : QStringLiteral("Move %1 elements").arg(refs.size());
-      const int converted = ElementOps::count_generated(before);
-      if (std::unique_ptr<Command> cmd = ElementOps::make_update_many(
-              *m_map_data, refs, before, after, description)) {
-        if (converted > 0) {
-          cmd->execute();
-        }
-        m_map_data->record_command(std::move(cmd));
-        report_converted(converted);
+  } else if (m_gesture == PointerGesture::Click) {
+    if (moved) {
+      pan_by(pos - m_press_pos);
+    } else if (m_current_tool == ToolType::Select) {
+      const ElementRef hit = hit_test(pos);
+      if (!m_selected_refs.contains(hit)) {
+        set_selection(hit.kind, hit.index);
+      } else if (hit != primary_selection()) {
+        m_selection.removeAll(hit);
+        m_selection.append(hit);
+        notify_selection_changed();
       }
+    } else if (edit_available()) {
+      place_at_pointer(pos, snap);
     }
   }
 
-  if (event->button() == Qt::LeftButton) {
-    m_is_pan_drag_pending = false;
-  }
-
-  m_drag_refs.clear();
-  m_drag_pre_elements.clear();
-  m_is_dragging = false;
-  m_dragged_endpoint = -1;
-  m_did_drag_move = false;
-  m_linear_drag_center_offset = QPointF();
-  m_hovered_type = -1;
-  m_hovered_index = -1;
-  update_canvas_cursor(event->pos());
+  cancel_pointer_gesture();
+  m_last_mouse_pos = pos;
+  m_hovered = {};
+  update_canvas_cursor(pos);
   update();
 }
 
 void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
-  QPoint const delta = event->pos() - m_last_mouse_pos;
-  m_last_mouse_pos = event->pos();
+  const QPoint pos = event->pos();
+  const QPoint previous = m_last_mouse_pos;
+  const QPoint delta = pos - m_last_mouse_pos;
+  m_pointer_inside = rect().contains(pos);
+  m_last_mouse_pos = pos;
+  const bool moved =
+      (pos - m_press_pos).manhattanLength() >= QApplication::startDragDistance();
+  const bool snap = !event->modifiers().testFlag(Qt::ShiftModifier);
 
-  if (m_is_pan_drag_pending) {
-    const int drag_distance = (event->pos() - m_pan_press_pos).manhattanLength();
-    if (drag_distance >= pan_drag_threshold) {
-      begin_panning(event->pos());
-      m_pan_offset += QPointF(delta.x(), delta.y());
-      update();
-      return;
-    }
-  }
-
-  if (m_is_panning) {
-    m_pan_offset += QPointF(delta.x(), delta.y());
+  if (m_gesture == PointerGesture::Click && moved) {
+    m_gesture = PointerGesture::Pan;
+    m_hovered = {};
+    pan_by(pos - m_press_pos);
+  } else if (m_gesture == PointerGesture::Pan) {
+    pan_by(delta);
+  } else if (m_gesture == PointerGesture::ExtendSelection && (m_band_active || moved)) {
+    m_band_active = true;
+    m_band_current = pos;
     update();
-    return;
-  }
-
-  if (m_band_active) {
-    m_band_current = event->pos();
-    update();
-    return;
-  }
-
-  if (m_is_dragging && (m_map_data != nullptr) && !m_drag_refs.isEmpty()) {
-    m_did_drag_move = true;
-    QPointF const raw_pos = map_to_grid(event->pos());
-    const bool shift_held = (event->modifiers() & Qt::ShiftModifier) != 0U;
-    QPointF const grid_pos = clamp_to_grid(shift_held ? raw_pos : snap_pos(raw_pos));
-
-    const ElementSnapshot& primary_pre = m_drag_pre_elements.back();
-    const auto* dragged_linear = std::get_if<LinearElement>(&primary_pre);
-
-    if (dragged_linear != nullptr && m_dragged_endpoint >= 0) {
-
-      LinearElement elem = std::get<LinearElement>(
-          ElementOps::snapshot(*m_map_data, m_drag_refs.back()));
-      const QVector2D new_pos(static_cast<float>(grid_pos.x()),
-                              static_cast<float>(grid_pos.y()));
-      if (m_dragged_endpoint == 0) {
-        elem.start = elem.type == QStringLiteral("wall")
-                         ? axis_aligned_endpoint(elem.end, new_pos)
-                         : new_pos;
-      } else if (m_dragged_endpoint == 1) {
-        elem.end = elem.type == QStringLiteral("wall")
-                       ? axis_aligned_endpoint(elem.start, new_pos)
-                       : new_pos;
-      }
-      m_map_data->update_linear_element(m_drag_refs.back().index, elem);
-    } else {
-      const QPointF target = grid_pos - m_linear_drag_center_offset;
-      if (const auto origin = ElementOps::position(primary_pre);
-          origin.has_value() && std::holds_alternative<TerrainElement>(primary_pre)) {
-        move_selection_to(*origin + (target - snap_pos(*origin)));
-      } else {
-        move_selection_to(target);
-      }
-    }
-  }
-
-  if (!m_is_dragging && !m_is_panning && (m_map_data != nullptr) &&
-      (m_current_tool == ToolType::Select || m_current_tool == ToolType::Eraser)) {
-    HitResult const hover_hit = hit_test(event->pos());
-    int const new_hovered_type = hover_hit.element_type;
-    int const new_hovered_index = hover_hit.index;
-    if (new_hovered_type != m_hovered_type || new_hovered_index != m_hovered_index) {
-      m_hovered_type = new_hovered_type;
-      m_hovered_index = new_hovered_index;
+  } else if (m_gesture == PointerGesture::Move) {
+    update_move(pos, snap);
+  } else if (m_gesture == PointerGesture::None && !m_read_only &&
+             (m_current_tool == ToolType::Select ||
+              m_current_tool == ToolType::Eraser)) {
+    const MoveHandle handle = move_handle_at(pos);
+    const ElementRef hover = handle == MoveHandle::None && !m_space_pan_active
+                                 ? hit_test(pos)
+                                 : ElementRef{};
+    if (hover != m_hovered || handle != move_handle_at(previous)) {
+      m_hovered = hover;
       update();
     }
   }
 
-  QPointF const cursor_grid = map_to_grid(event->pos());
+  const QPointF cursor_grid = map_to_grid(pos);
+  m_placement_pos = clamp_to_grid(snap ? snap_pos(cursor_grid) : cursor_grid);
+  if (m_current_tool != ToolType::Select) {
+    update();
+  }
   emit cursor_moved(static_cast<int>(std::floor(cursor_grid.x())),
                     static_cast<int>(std::floor(cursor_grid.y())));
-
-  if (m_current_tool == ToolType::Select && !m_is_dragging && !m_is_panning) {
-    update_canvas_cursor(event->pos());
-  } else if (m_current_tool != ToolType::Select) {
-    update();
-  }
+  update_canvas_cursor(pos);
 }
 
-void MapCanvas::move_selection_to(const QPointF& primary_target) {
-  if (m_map_data == nullptr || m_drag_refs.isEmpty()) {
+void MapCanvas::place_at_pointer(const QPoint& pos, bool snap) {
+  if (m_map_data == nullptr || !map_rect_px().contains(pos)) {
     return;
   }
-
-  const std::optional<QPointF> primary_origin =
-      ElementOps::position(m_drag_pre_elements.back());
-  if (!primary_origin.has_value()) {
+  if (m_current_tool == ToolType::Eraser) {
+    erase_at_position(pos);
     return;
   }
-
-  const QPointF delta =
-      clamp_group_delta(m_drag_pre_elements, primary_target - *primary_origin);
-  for (int i = 0; i < m_drag_refs.size(); ++i) {
-    ElementOps::apply(*m_map_data,
-                      m_drag_refs[i].index,
-                      ElementOps::translated(m_drag_pre_elements[i], delta));
+  const int layer = placement_layer(m_current_tool);
+  if (!layer_visible(layer)) {
+    emit action_feedback(QStringLiteral("Enable %1 in Layers to place this tool.")
+                             .arg(layer_label(layer)),
+                         false);
+    return;
+  }
+  const QPointF raw_pos = map_to_grid(pos);
+  const QPointF grid_pos = clamp_to_grid(snap ? snap_pos(raw_pos) : raw_pos);
+  if (!is_linear_tool(m_current_tool)) {
+    place_element(grid_pos);
+  } else if (m_is_placing_linear) {
+    finish_linear_element(grid_pos);
+  } else {
+    start_linear_element(grid_pos);
   }
 }
 
@@ -1210,7 +1339,7 @@ void MapCanvas::finish_rubber_band() {
 
   QVector<ElementRef> refs = m_selection;
   for (const ElementRef& ref : elements_in_rect(band)) {
-    if (!refs.contains(ref)) {
+    if (!m_selected_refs.contains(ref)) {
       refs.append(ref);
     }
   }
@@ -1227,31 +1356,29 @@ void MapCanvas::show_context_menu(const QPoint& pos) {
     return;
   }
 
-  const HitResult hit = hit_test(pos);
+  const ElementRef hit = hit_test(pos);
 
   const QPointF grid_pos = clamp_to_grid(snap_pos(map_to_grid(pos)));
   const QPoint global_pos = mapToGlobal(pos);
 
   QMenu menu(this);
 
-  if (hit.element_type >= 0 && hit.index >= 0) {
+  if (hit.kind >= 0 && hit.index >= 0) {
 
-    if (!is_selected_element(hit.element_type, hit.index)) {
-      set_selection(hit.element_type, hit.index);
+    if (!is_selected_element(hit.kind, hit.index)) {
+      set_selection(hit.kind, hit.index);
     }
-    const ElementSnapshot snap =
-        ElementOps::snapshot(*m_map_data, hit.element_type, hit.index);
+    const ElementSnapshot snap = ElementOps::snapshot(*m_map_data, hit.kind, hit.index);
     const bool multi = m_selection.size() > 1;
 
     auto* header = menu.addAction(
-        multi
-            ? QStringLiteral("%1 elements selected").arg(m_selection.size())
-            : QStringLiteral("%1: %2").arg(ElementOps::category_label(hit.element_type),
-                                           ElementOps::display_name(snap)));
+        multi ? QStringLiteral("%1 elements selected").arg(m_selection.size())
+              : QStringLiteral("%1: %2").arg(ElementOps::category_label(hit.kind),
+                                             ElementOps::display_name(snap)));
     header->setEnabled(false);
     menu.addSeparator();
 
-    const int element_type = hit.element_type;
+    const int element_type = hit.kind;
     const int index = hit.index;
     QAction* edit = menu.addAction(QStringLiteral("Edit JSON…"));
     edit->setEnabled(!multi);
@@ -1364,21 +1491,34 @@ void MapCanvas::show_context_menu(const QPoint& pos) {
     connect(menu.addAction(QStringLiteral("Resize map…")),
             &QAction::triggered,
             this,
-            &MapCanvas::grid_double_clicked);
+            &MapCanvas::resize_requested);
   }
 
   menu.exec(global_pos);
 }
 
 bool MapCanvas::event(QEvent* event) {
-  if (event->type() == QEvent::ToolTip) {
+  if (event->type() == QEvent::UngrabMouse || event->type() == QEvent::FocusOut ||
+      event->type() == QEvent::Hide) {
+    if (m_gesture_button != Qt::NoButton || m_space_pan_active) {
+      cancel_pointer_gesture();
+      m_space_pan_active = false;
+      update_canvas_cursor(m_last_mouse_pos);
+      update();
+    }
+  } else if (event->type() == QEvent::ToolTip) {
     auto* help_event = static_cast<QHelpEvent*>(event);
-    const HitResult hit = hit_test(help_event->pos());
-    const ElementSnapshot snap =
-        m_map_data != nullptr
-            ? ElementOps::snapshot(*m_map_data, hit.element_type, hit.index)
-            : ElementSnapshot{};
-    const QString text = ElementOps::summary(snap);
+    const MoveHandle handle = move_handle_at(help_event->pos());
+    QString text;
+    if (handle == MoveHandle::Whole) {
+      text =
+          QStringLiteral("Drag to move the selection. Hold Shift for free movement.");
+    } else if (handle != MoveHandle::None) {
+      text = QStringLiteral("Drag to move this endpoint.");
+    } else if (m_map_data != nullptr) {
+      text = ElementOps::summary(
+          ElementOps::snapshot(*m_map_data, hit_test(help_event->pos())));
+    }
     if (text.isEmpty()) {
       QToolTip::hideText();
       event->ignore();
@@ -1391,39 +1531,78 @@ bool MapCanvas::event(QEvent* event) {
   return QWidget::event(event);
 }
 
-void MapCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
-  if (!m_read_only && event->button() == Qt::LeftButton) {
-    HitResult const hit = hit_test(event->pos());
-    if (hit.element_type >= 0 && hit.index >= 0) {
-      emit element_double_clicked(hit.element_type, hit.index);
-    } else {
+void MapCanvas::leaveEvent(QEvent* event) {
+  m_pointer_inside = false;
+  m_hovered = {};
+  update();
+  QWidget::leaveEvent(event);
+}
 
-      emit grid_double_clicked();
-    }
+void MapCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
+  if (event->button() != Qt::LeftButton || !edit_available() ||
+      m_current_tool != ToolType::Select || is_forced_pan_gesture(event) ||
+      move_handle_at(event->pos()) != MoveHandle::None) {
+    return;
+  }
+  if (const ElementRef hit = hit_test(event->pos()); hit.is_valid()) {
+    set_selection(hit.kind, hit.index);
+    emit element_double_clicked(hit.kind, hit.index);
   }
 }
 
 void MapCanvas::wheelEvent(QWheelEvent* event) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-  QPointF const cursor_pos = event->position();
-#else
-  QPointF cursor_pos = event->posF();
-#endif
-
-  apply_zoom(event->angleDelta().y() > 0 ? m_zoom * 1.1F : m_zoom / 1.1F, cursor_pos);
+  const QPointF cursor_pos = event->position();
+  const int angle = event->angleDelta().y();
+  const double steps = angle != 0 ? angle / 120.0 : event->pixelDelta().y() / 60.0;
+  if (steps == 0.0) {
+    return;
+  }
+  apply_zoom(m_zoom * static_cast<float>(std::pow(1.12, steps)), cursor_pos);
+  const QPointF cursor_grid = map_to_grid(cursor_pos.toPoint());
+  m_placement_pos = clamp_to_grid(event->modifiers().testFlag(Qt::ShiftModifier)
+                                      ? cursor_grid
+                                      : snap_pos(cursor_grid));
+  update_canvas_cursor(cursor_pos.toPoint());
+  event->accept();
 }
 
-void MapCanvas::resizeEvent(QResizeEvent*) {
-
-  if (m_pan_offset.isNull() && (m_map_data != nullptr)) {
+void MapCanvas::resizeEvent(QResizeEvent* event) {
+  if (m_fit_view) {
     zoom_to_fit();
+  } else if (event->oldSize().isValid()) {
+    const QSize delta = event->size() - event->oldSize();
+    m_pan_offset += QPointF(delta.width() * 0.5, delta.height() * 0.5);
+    update();
   }
 }
 
-MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
-  HitResult result;
+ElementRef MapCanvas::hit_test(const QPoint& pos) const {
+  ElementRef result;
   if (m_map_data == nullptr) {
     return result;
+  }
+
+  const auto& linear = m_map_data->linear_elements();
+  if (layer_visible(LayerLinear)) {
+    double closest = std::numeric_limits<double>::infinity();
+    for (int i = linear.size() - 1; i >= 0; --i) {
+      const auto& line = linear[i];
+      if (line.type == QLatin1String("ford") || is_fordable_river(line)) {
+        const QRectF marker = ford_marker_bounds(line);
+        if (!marker.contains(pos)) {
+          continue;
+        }
+        const QPointF delta = marker.center() - pos;
+        const double distance = std::hypot(delta.x(), delta.y());
+        if (distance < closest) {
+          result = {LayerLinear, i};
+          closest = distance;
+        }
+      }
+    }
+    if (result.is_valid()) {
+      return result;
+    }
   }
 
   const QVector2D cursor(static_cast<float>(pos.x()), static_cast<float>(pos.y()));
@@ -1433,7 +1612,6 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
 
   auto consider_hit = [&](int element_type,
                           int index,
-                          int endpoint,
                           float distance,
                           float max_distance,
                           int priority) {
@@ -1444,9 +1622,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
         ((std::abs(distance - best_dist) < 0.01F) && priority < best_priority)) {
       best_dist = distance;
       best_priority = priority;
-      result.element_type = element_type;
-      result.index = index;
-      result.endpoint = endpoint;
+      result = {element_type, index};
     }
   };
 
@@ -1456,7 +1632,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QPoint center = grid_to_widget(elem.x, elem.z);
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
-    consider_hit(4, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 0);
+    consider_hit(4, i, (cursor - center_vec).length(), point_hit_radius_px, 0);
   }
 
   const auto& undead_zones = m_map_data->undead_zones();
@@ -1466,7 +1642,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
     const float zone_radius_px = elem.radius * m_zoom * grid_cell_size;
-    consider_hit(5, i, -1, (cursor - center_vec).length(), zone_radius_px + 4.0F, 6);
+    consider_hit(5, i, (cursor - center_vec).length(), zone_radius_px + 4.0F, 6);
   }
 
   const auto& forests = m_map_data->forests();
@@ -1478,7 +1654,6 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const float forest_radius_px = elem.radius * m_zoom * grid_cell_size;
     consider_hit(static_cast<int>(ElementKind::Forest),
                  i,
-                 -1,
                  (cursor - center_vec).length(),
                  forest_radius_px + 4.0F,
                  8);
@@ -1493,7 +1668,6 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
 
     consider_hit(static_cast<int>(ElementKind::WildlifeArea),
                  i,
-                 -1,
                  (cursor - center_vec).length(),
                  point_hit_radius_px,
                  7);
@@ -1511,7 +1685,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
                                        WallGeometry::k_gate_span * 0.5F *
                                            static_cast<float>(grid_cell_size) * m_zoom)
                             : point_hit_radius_px;
-    consider_hit(3, i, -1, (cursor - center_vec).length(), reach, 1);
+    consider_hit(3, i, (cursor - center_vec).length(), reach, 1);
   }
 
   const auto& world_props = m_map_data->world_props();
@@ -1520,7 +1694,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QPoint center = grid_to_widget(elem.x, elem.z);
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
-    consider_hit(1, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 2);
+    consider_hit(1, i, (cursor - center_vec).length(), point_hit_radius_px, 2);
   }
 
   const auto& terrain = m_map_data->terrain_elements();
@@ -1529,22 +1703,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QPoint center = grid_to_widget(elem.x, elem.z);
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
-    consider_hit(
-        0, i, -1, (cursor - center_vec).length(), terrain_hit_radius_px(elem), 3);
-  }
-
-  const auto& linear = m_map_data->linear_elements();
-  for (int i = linear.size() - 1; i >= 0; --i) {
-    const auto& elem = linear[i];
-    const QPoint start_pos = grid_to_widget(elem.start.x(), elem.start.y());
-    const QPoint end_pos = grid_to_widget(elem.end.x(), elem.end.y());
-    const QVector2D start_vec(static_cast<float>(start_pos.x()),
-                              static_cast<float>(start_pos.y()));
-    const QVector2D end_vec(static_cast<float>(end_pos.x()),
-                            static_cast<float>(end_pos.y()));
-
-    consider_hit(2, i, 0, (cursor - start_vec).length(), point_hit_radius_px, 4);
-    consider_hit(2, i, 1, (cursor - end_vec).length(), point_hit_radius_px, 4);
+    consider_hit(0, i, (cursor - center_vec).length(), terrain_hit_radius_px(elem), 3);
   }
 
   for (int i = linear.size() - 1; i >= 0; --i) {
@@ -1570,11 +1729,7 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     }
 
     const float line_hit_radius_px = (linear_width_px(elem) * 0.5F) + 4.0F;
-    if ((cursor - QVector2D(path.first())).length() <= point_hit_radius_px ||
-        (cursor - QVector2D(path.last())).length() <= point_hit_radius_px) {
-      continue;
-    }
-    consider_hit(2, i, -1, dist, line_hit_radius_px, 5);
+    consider_hit(LayerLinear, i, dist, line_hit_radius_px, 5);
   }
 
   return result;
@@ -1596,8 +1751,8 @@ void MapCanvas::place_gate(const QPointF& grid_pos) {
 
   if (plan.wall_index < 0) {
     m_map_data->execute_command(std::make_unique<AddStructureCmd>(m_map_data, gate));
-    emit status_hint_changed(
-        "Gate placed clear of any wall - draw a wall through it to seal the ring");
+    emit action_feedback(
+        QStringLiteral("Placed a gate. Draw a wall through it to close the ring."));
     return;
   }
 
@@ -1636,6 +1791,15 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
   case ToolPlacement::Terrain: {
     TerrainElement elem = default_terrain_element(m_current_tool);
     at(elem);
+    if (elem.type == QLatin1String("hill") &&
+        !HillProjection::ensure_entrance(elem,
+                                         HillProjection::map_context(*m_map_data))) {
+      emit action_feedback(
+          QStringLiteral(
+              "Place the hill far enough inside the map to fit an entrance."),
+          false);
+      return;
+    }
     m_map_data->execute_command(std::make_unique<AddTerrainCmd>(m_map_data, elem));
     break;
   }
@@ -1660,7 +1824,33 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
     elem.player_id = m_current_player_id;
     elem.max_population = default_max_population;
     elem.nation = m_current_nation;
+    if (const QString style = structure_style_for_tool(m_current_tool);
+        !style.isEmpty()) {
+      elem.extra_fields[QStringLiteral("style")] = style;
+    }
     m_map_data->execute_command(std::make_unique<AddStructureCmd>(m_map_data, elem));
+    break;
+  }
+  case ToolPlacement::TownBlock: {
+    TownBlock::BlockSpec spec;
+    spec.type = element_type;
+    spec.style = structure_style_for_tool(m_current_tool);
+    spec.alley_lot = spec.lots_wide / 2;
+    spec.owner.player_id = m_current_player_id;
+    spec.owner.nation = m_current_nation;
+    spec.owner.max_population = default_max_population;
+    const TownBlock::BlockExtent extent = TownBlock::block_extent(spec);
+    spec.origin = grid_pos - QPointF(extent.width * 0.5, extent.depth * 0.5);
+    std::vector<std::unique_ptr<Command>> steps;
+    for (const StructureElement& house : TownBlock::block(spec)) {
+      steps.push_back(std::make_unique<AddStructureCmd>(m_map_data, house));
+    }
+    if (!steps.empty()) {
+      const int count = static_cast<int>(steps.size());
+      m_map_data->execute_command(std::make_unique<CompositeCmd>(
+          std::move(steps), QStringLiteral("Stamp town block")));
+      emit action_feedback(QStringLiteral("Stamped a block of %1 houses.").arg(count));
+    }
     break;
   }
   case ToolPlacement::Gate:
@@ -1729,9 +1919,11 @@ void MapCanvas::start_linear_element(const QPointF& grid_pos) {
   m_is_placing_linear = true;
   m_linear_start = clamp_to_grid(grid_pos);
 
-  emit status_hint_changed("Drawing " + element_type_for_tool(m_current_tool) +
-                           " \u2014 click to place end point"
-                           " (right-click to cancel)");
+  emit status_hint_changed(
+      m_current_tool == ToolType::Ford
+          ? QStringLiteral("Ford · Click the opposite bank · Esc cancels")
+          : QStringLiteral("%1 · Click the endpoint · Esc cancels")
+                .arg(tool_name(m_current_tool)));
 }
 
 void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
@@ -1783,23 +1975,27 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
     break;
   }
 
-  m_map_data->execute_command(std::make_unique<AddLinearCmd>(m_map_data, elem));
+  if (elem.start == elem.end) {
+    emit action_feedback(QStringLiteral("Choose a different endpoint."), false);
+    return;
+  }
   m_is_placing_linear = false;
-  emit status_hint_changed("");
+  emit status_hint_changed({});
+  m_map_data->execute_command(std::make_unique<AddLinearCmd>(m_map_data, elem));
 }
 
-void MapCanvas::erase_at_position(const QPointF& grid_pos) {
+void MapCanvas::erase_at_position(const QPoint& pos) {
   if (m_map_data == nullptr) {
     return;
   }
 
-  HitResult const hit = hit_test(grid_to_widget(static_cast<float>(grid_pos.x()),
-                                                static_cast<float>(grid_pos.y())));
+  const ElementRef hit = hit_test(pos);
 
   std::unique_ptr<Command> cmd =
-      ElementOps::make_remove(*m_map_data, hit.element_type, hit.index);
+      ElementOps::make_remove(*m_map_data, hit.kind, hit.index);
   if (cmd) {
-    m_selection.removeAll(ElementRef{hit.element_type, hit.index});
+    // A deletion shifts later indices in this category.
+    clear_selection();
     m_map_data->execute_command(std::move(cmd));
   }
 }
@@ -1807,6 +2003,11 @@ void MapCanvas::erase_at_position(const QPointF& grid_pos) {
 void MapCanvas::keyPressEvent(QKeyEvent* event) {
   if (m_read_only) {
     QWidget::keyPressEvent(event);
+    return;
+  }
+  if (m_gesture != PointerGesture::None && event->key() != Qt::Key_Escape &&
+      event->key() != Qt::Key_Space) {
+    event->accept();
     return;
   }
   switch (event->key()) {
@@ -1825,11 +2026,6 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
   case Qt::Key_Right:
   case Qt::Key_Up:
   case Qt::Key_Down: {
-    if (!has_selection()) {
-      QWidget::keyPressEvent(event);
-      break;
-    }
-
     const bool fine = (event->modifiers() & Qt::ShiftModifier) != 0U;
     const double step = fine ? 0.25 : 1.0;
     QPointF delta;
@@ -1842,7 +2038,11 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
     } else {
       delta.setY(-step);
     }
-    nudge_selection(delta);
+    if (has_selection() && edit_available()) {
+      nudge_selection(delta);
+    } else {
+      pan_by(delta * 64.0);
+    }
     event->accept();
     break;
   }
@@ -1883,15 +2083,16 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
     event->accept();
     break;
   case Qt::Key_Escape:
-    if (m_band_active) {
-      m_band_active = false;
+    if (m_gesture != PointerGesture::None) {
+      const bool was_moving = m_gesture == PointerGesture::Move;
+      cancel_pointer_gesture();
+      update_canvas_cursor(m_last_mouse_pos);
+      if (was_moving) {
+        emit action_feedback(QStringLiteral("Move cancelled."));
+      }
       update();
     } else if (m_is_placing_linear) {
       m_is_placing_linear = false;
-      emit status_hint_changed("");
-      update();
-    } else if (m_is_panning || m_is_pan_drag_pending) {
-      finish_panning(m_last_mouse_pos);
       emit status_hint_changed("");
       update();
     } else if (m_current_tool != ToolType::Select) {
@@ -1899,6 +2100,7 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
     } else {
       set_selection(-1, -1);
     }
+    event->accept();
     break;
   default:
     QWidget::keyPressEvent(event);
@@ -1909,9 +2111,7 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
 void MapCanvas::keyReleaseEvent(QKeyEvent* event) {
   if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
     m_space_pan_active = false;
-    if (!m_is_panning) {
-      update_canvas_cursor(m_last_mouse_pos);
-    }
+    update_canvas_cursor(m_last_mouse_pos);
     event->accept();
     return;
   }

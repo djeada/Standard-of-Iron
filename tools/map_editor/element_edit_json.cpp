@@ -198,12 +198,17 @@ auto forest_document(const ForestElement& elem) -> EditDocument {
   return doc;
 }
 
-auto terrain_from_json(const QJsonObject& json) -> EditResult {
+auto terrain_from_json(const QJsonObject& json,
+                       const HillProjection::MapContext& map_context) -> EditResult {
   TerrainElement elem = terrain_element_from_json(json);
   if (is_mountain(elem.type)) {
     elem.entrances = QJsonArray{};
   }
-  return {std::move(elem), QStringLiteral("Edit terrain"), {}};
+  QStringList notes;
+  if (HillProjection::ensure_entrance(elem, map_context)) {
+    notes << QStringLiteral("Added a default hill entrance.");
+  }
+  return {std::move(elem), QStringLiteral("Edit terrain"), std::move(notes)};
 }
 
 auto world_prop_from_json(const QJsonObject& json) -> EditResult {
@@ -262,6 +267,11 @@ auto linear_from_json(const QJsonObject& json,
                                        MapJsonKeys::player_id,
                                        MapJsonKeys::nation,
                                        MapJsonKeys::waypoints});
+  // A river's height is its water level, set or left to the ground it runs
+  // through: it is written back exactly as it was given.
+  if (elem.type == QStringLiteral("river") && json.contains(MapJsonKeys::height)) {
+    elem.extra_fields[MapJsonKeys::height] = json[MapJsonKeys::height];
+  }
 
   QStringList notes;
   if (elem.type == QStringLiteral("bridge")) {
@@ -420,11 +430,12 @@ auto to_document(const ElementSnapshot& element) -> std::optional<EditDocument> 
 
 auto from_json(const ElementSnapshot& before,
                const QJsonObject& json,
-               const QVector<LinearElement>& linear_elements) -> EditResult {
+               const QVector<LinearElement>& linear_elements,
+               const HillProjection::MapContext& map_context) -> EditResult {
   return std::visit(
       Overloaded{
           [](std::monostate) { return EditResult{}; },
-          [&](const TerrainElement&) { return terrain_from_json(json); },
+          [&](const TerrainElement&) { return terrain_from_json(json, map_context); },
           [&](const WorldPropElement&) { return world_prop_from_json(json); },
           [&](const LinearElement& e) {
             return linear_from_json(json, e, linear_elements);

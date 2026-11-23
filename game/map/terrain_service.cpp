@@ -66,16 +66,21 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
   std::vector<Game::Systems::BuildingFootprint> obstacles;
   obstacles.reserve(map_def.structures.size() + map_def.spawns.size());
 
+  // A turned building reserves its turned ground: a gate at 90 degrees spans
+  // the wall it stands in, not the street through it.
   const auto add = [&obstacles](Game::Units::SpawnType type,
                                 float center_x,
                                 float center_z,
                                 float min_width,
-                                float min_depth) {
+                                float min_depth,
+                                float rotation_degrees) {
     if (!Game::Units::is_building_spawn(type)) {
       return;
     }
-    const auto size = BuildingCollisionRegistry::get_building_size(
-        Game::Units::spawn_typeToString(type));
+    const auto size = BuildingCollisionRegistry::axis_aligned_size(
+        BuildingCollisionRegistry::get_building_size(
+            Game::Units::spawn_typeToString(type)),
+        rotation_degrees);
     obstacles.emplace_back(center_x,
                            center_z,
                            std::max(size.width, min_width),
@@ -86,7 +91,12 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
 
   for (const auto& structure : map_def.structures) {
     if (const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry)) {
-      add(structure.type, point->position.x(), point->position.z(), 0.0F, 0.0F);
+      add(structure.type,
+          point->position.x(),
+          point->position.z(),
+          0.0F,
+          0.0F,
+          structure.rotation);
       continue;
     }
     if (const auto* line = std::get_if<LineStructureGeometry>(&structure.geometry)) {
@@ -97,14 +107,14 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
       for (int step = 0; step <= steps; ++step) {
         const float t = static_cast<float>(step) / static_cast<float>(steps);
         const QVector3D point = line->start + (delta * t);
-        add(structure.type, point.x(), point.z(), line->width, line->width);
+        add(structure.type, point.x(), point.z(), line->width, line->width, 0.0F);
       }
       continue;
     }
   }
 
   for (const auto& spawn : map_def.spawns) {
-    add(spawn.type, spawn.x, spawn.z, 0.0F, 0.0F);
+    add(spawn.type, spawn.x, spawn.z, 0.0F, 0.0F, 0.0F);
   }
 
   BuildingCollisionRegistry::instance().set_authored_obstacles(std::move(obstacles));

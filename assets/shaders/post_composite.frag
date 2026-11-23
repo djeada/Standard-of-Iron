@@ -270,8 +270,14 @@ const vec2 k_far_blur_offsets[8] = vec2[8](vec2(1.0, 0.0),
                                            vec2(0.0, -1.0),
                                            vec2(0.7071, -0.7071));
 
+// A NaN or infinite sample from any pass must not reach the screen: it shows as
+// a black pixel, and through the blurred passes as a black square.
+vec3 finite_or_black(vec3 c) {
+  return (any(isnan(c)) || any(isinf(c))) ? vec3(0.0) : c;
+}
+
 vec3 far_softened_scene(float fog) {
-  vec3 center = texture(u_scene, v_uv).rgb;
+  vec3 center = finite_or_black(texture(u_scene, v_uv).rgb);
 #if !SOI_SURFACE_DETAIL
   return center;
 #else
@@ -282,9 +288,9 @@ vec3 far_softened_scene(float fog) {
   vec3 sum = center;
   float radius = k_far_blur_radius * amount;
   for (int i = 0; i < k_far_blur_taps; ++i) {
-    sum +=
+    sum += finite_or_black(
         texture(u_scene, v_uv + k_far_blur_offsets[i] * u_inverse_resolution * radius)
-            .rgb;
+            .rgb);
   }
   return mix(center, sum / float(k_far_blur_taps + 1), amount);
 #endif
@@ -298,11 +304,12 @@ void main() {
   vec3 scene = far_softened_scene(fog);
   vec3 combined = scene;
   if (u_bloom_intensity > 0.0) {
-    combined += texture(u_bloom, v_uv).rgb * u_bloom_intensity *
+    combined += finite_or_black(texture(u_bloom, v_uv).rgb) * u_bloom_intensity *
                 mix(1.0, k_night_bloom_boost, environment_darkness_amount());
   }
   if (u_godray_strength > 0.0) {
     float rays = texture(u_rays, v_uv).r;
+    rays = (isnan(rays) || isinf(rays)) ? 0.0 : rays;
     combined += environment_primary_color() * environment_primary_intensity() *
                 (rays * u_godray_strength);
   }

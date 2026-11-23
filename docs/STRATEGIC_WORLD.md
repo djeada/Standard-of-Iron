@@ -224,10 +224,11 @@ Campaign workspace:
   districts, roads, sites, ports, labels, armies, campaign movements (dashed
   arrows along the roads an army took in the current event), supply lines,
   resources, chokepoints, objectives, problems, legend.
-- **Navigation** — wheel or `+`/`-` to zoom, middle-drag, Space+drag, drag on
-  empty ground or the arrow keys to pan, `F` to frame the selection, `Home` to
-  fit, `Esc` to cancel or clear.
-- **Tools** — Select (`S`: click, drag sites, drag route bends), Add Site (`N`;
+- **Navigation** — wheel or `+`/`-` to zoom. Drag in Select to pan, or use
+  middle-drag, Space+drag, or the arrow keys. Use `F` to frame the selection,
+  `Home` to fit the map, and `Esc` to cancel or clear.
+- **Tools** — Select (`S`). Click to select, then drag the move handle on a
+  site or a bend square on a route. Add Site (`N`;
   returns to Select after one placement, hold Shift to place several; clicking
   an existing site selects it), Add Route (`R`; click sites in turn to chain a
   road), Bend (`B`; double-click a bend to remove it), Measure March (`M`),

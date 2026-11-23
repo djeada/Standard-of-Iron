@@ -7,6 +7,7 @@
 
 #include "game/audio/audio_cues.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_actions/commander_defense_timeline.h"
 #include "game/systems/navigation/gate_service.h"
@@ -248,7 +249,15 @@ void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
 
   const auto* terrain =
       commander.get_component<Engine::Core::TerrainContextComponent>();
-  const bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
+  // Paving rings under a boot; a street or a plaza is stone, not grass.
+  bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
+  if (!hard_ground) {
+    if (const auto* transform =
+            commander.get_component<Engine::Core::TransformComponent>()) {
+      hard_ground = Game::Map::TerrainService::instance().is_point_on_road(
+          transform->position.x, transform->position.z);
+    }
+  }
   Game::Audio::play_cue(hard_ground ? Game::Audio::Cue::k_move_footstep_hard
                                     : Game::Audio::Cue::k_move_footstep);
 }

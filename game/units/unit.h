@@ -38,6 +38,10 @@ struct SpawnParams {
   bool enables_production = true;
 
   std::string commander_id;
+
+  // Presentation only: which look a structure draws with (see
+  // Game::Visuals::k_building_visual_styles). Never read by the simulation.
+  std::string visual_style;
 };
 
 class Unit {

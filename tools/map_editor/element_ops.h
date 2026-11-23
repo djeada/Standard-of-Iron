@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QHashFunctions>
 #include <QPointF>
 #include <QString>
 #include <QVector>
@@ -37,6 +38,10 @@ struct ElementRef {
   }
   friend auto operator!=(const ElementRef& lhs, const ElementRef& rhs) -> bool {
     return !(lhs == rhs);
+  }
+
+  friend auto qHash(const ElementRef& ref, size_t seed = 0) noexcept -> size_t {
+    return qHashMulti(seed, ref.kind, ref.index);
   }
 };
 

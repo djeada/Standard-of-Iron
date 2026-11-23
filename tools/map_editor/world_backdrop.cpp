@@ -729,12 +729,24 @@ auto render_world_backdrop(const QByteArray& map_json,
     result.error = QStringLiteral("cannot stage the map for the terrain builder");
     return result;
   }
-  file.write(map_json);
-  file.flush();
+  if (file.write(map_json) != map_json.size() || !file.flush()) {
+    result.error = file.errorString();
+    return result;
+  }
 
   Game::Map::MapDefinition map;
   if (!Game::Map::MapLoader::load_from_json_file(file.fileName(), map, &result.error)) {
     return result;
+  }
+  if (!options.show_terrain) {
+    map.terrain.clear();
+    map.lakes.clear();
+  }
+  if (!options.show_paths) {
+    map.rivers.clear();
+    map.roads.clear();
+    map.bridges.clear();
+    map.fords.clear();
   }
   const int cells_w = map.grid.width;
   const int cells_h = map.grid.height;

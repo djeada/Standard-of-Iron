@@ -1,0 +1,49 @@
+{
+  "map": "assets/maps/map_carthage.json",
+  "views": [
+    {
+      "name": "carthage_G1_hero",
+      "center": [-20, 60],
+      "distance": 170,
+      "tilt": 30,
+      "yaw": 225,
+      "hour": 17.0
+    },
+    {
+      "name": "carthage_G2_overview",
+      "center": [-20, 0],
+      "distance": 620,
+      "tilt": 58,
+      "yaw": 180
+    },
+    {
+      "name": "carthage_G3_megara",
+      "center": [-40, -250],
+      "distance": 120,
+      "tilt": 38,
+      "yaw": 200
+    },
+    {
+      "name": "carthage_G4_night_day",
+      "center": [105, 196],
+      "distance": 60,
+      "tilt": 30,
+      "yaw": 150
+    },
+    {
+      "name": "carthage_G5_byrsa",
+      "center": [-70, 30],
+      "distance": 90,
+      "tilt": 32,
+      "yaw": 250
+    },
+    {
+      "name": "carthage_G6_street_night",
+      "center": [95, 148],
+      "distance": 40,
+      "tilt": 24,
+      "yaw": 200,
+      "hour": 21.5
+    }
+  ]
+}

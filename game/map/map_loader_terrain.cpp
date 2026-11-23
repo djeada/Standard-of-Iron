@@ -429,6 +429,7 @@ void read_rivers(const QJsonArray& arr,
     const float width = float(river_obj.value("width").toDouble(default_river_width));
     const std::optional<FordProfile> ford = read_ford_profile(river_obj.value(FORD));
     const bool authored_height = river_obj.contains("height");
+    const bool calm = river_obj.value("calm").toBool(false);
     const float height = float(river_obj.value("height").toDouble(0.0));
 
     std::vector<QVector3D> points;
@@ -479,6 +480,7 @@ void read_rivers(const QJsonArray& arr,
     for (std::size_t index = 1; index < points.size(); ++index) {
       RiverSegment segment{points[index - 1U], points[index], width};
       segment.ford = ford;
+      segment.calm = calm;
       if (authored_height) {
         segment.start.setY(height);
         segment.end.setY(height);
@@ -528,6 +530,9 @@ void read_lakes(const QJsonArray& arr,
       lake.center.setY(float(lake_obj.value("height").toDouble(0.0)));
       lake.elevation_mode = WaterElevationMode::Authored;
     }
+    lake.shape = lake_shape_from_name(lake_obj.value("shape").toString().toStdString())
+                     .value_or(LakeShape::Natural);
+    lake.calm = lake_obj.value("calm").toBool(false);
     out.push_back(lake);
   }
 }

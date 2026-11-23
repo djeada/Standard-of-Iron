@@ -8034,6 +8034,22 @@ to see preview</translation>
         <source>The Sepulcher Bridge</source>
         <translation>The Sepulcher Bridge</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Carthage</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rome</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
+        <translation>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</translation>
+    </message>
+    <message>
+        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
+        <translation>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

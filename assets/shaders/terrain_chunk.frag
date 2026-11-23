@@ -72,6 +72,7 @@ const float k_soi_forest_floor_amount = 0.80;
 const float k_soi_forest_margin_amount = 0.14;
 const float k_soi_wall_foot_amount = 0.68;
 const float k_soi_yard_amount = 0.78;
+const float k_soi_town_ground_amount = 0.95;
 const float k_soi_road_verge_amount = 0.52;
 const float k_soi_talus_amount = 0.50;
 const vec3 k_soi_terrain_hue_warm = vec3(1.075, 1.018, 0.900);
@@ -593,6 +594,7 @@ void main() {
       (u_has_cover_tex == 1) ? texture(u_cover_tex, height_uv) : vec4(0.0);
   float road_verge = min(ground_ecology.g, 1.0);
   float yard_ground = clamp(ground_ecology.g - 1.0, 0.0, 1.0);
+  float town_ground = clamp(ground_ecology.g - 2.0, 0.0, 1.0);
   float talus_apron = min(ground_ecology.a, 1.0);
   float wall_foot = clamp(ground_ecology.a - 1.0, 0.0, 1.0);
 
@@ -1563,6 +1565,21 @@ void main() {
     vec3 packed_earth = mix(u_soil_color, u_grass_dry, 0.30) *
                         (0.90 + 0.14 * smoothstep(-0.25, 0.25, talus_breakup));
     terrain_color = mix(terrain_color, packed_earth, yard * k_soi_yard_amount);
+    if (town_ground > 0.002) {
+      // Streets and courts of a built-up quarter: pale beaten earth, scuffed
+      // darker where carts and feet keep it damp, never lawn.
+      float town_edge = smoothstep(
+          0.10 + verge_breakup * 0.30, 0.55 + verge_breakup * 0.30, town_ground);
+      vec3 beaten_earth = mix(u_soil_color, vec3(0.60, 0.53, 0.42), 0.70) *
+                          (0.92 + 0.13 * smoothstep(-0.30, 0.30, talus_breakup));
+      beaten_earth = mix(beaten_earth,
+                         beaten_earth * vec3(0.80, 0.78, 0.76),
+                         smoothstep(0.18, 0.46, verge_drift) * 0.55);
+      terrain_color =
+          mix(terrain_color,
+              beaten_earth,
+              town_edge * (1.0 - rock_mask * 0.7) * k_soi_town_ground_amount);
+    }
   }
   if (wall_foot > 0.002) {
     vec3 wet_foot = mix(u_soil_color, u_rock_low, 0.35) * 0.60;

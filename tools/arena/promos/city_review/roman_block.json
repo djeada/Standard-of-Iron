@@ -1,0 +1,378 @@
+{
+  "id": "city_review_roman_block",
+  "title": "CITY REVIEW: ROMAN BLOCK",
+  "width": 1920,
+  "height": 1080,
+  "fps": 8,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "end_card_steam": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 400,
+    "pitch_degrees_per_second": 400,
+    "fov_degrees_per_second": 400,
+    "roll_degrees_per_second": 400,
+    "roll_magnitude_degrees": 30,
+    "shake": 1,
+    "minimum_clip_seconds": 0.1,
+    "mean_clip_seconds": 0.1
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "rb_A_skyline",
+      "view": "A",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-14, 24, 104],
+          "look": [2, 4, -8],
+          "fov": 30
+        },
+        {
+          "time": 0.5,
+          "eye": [-14, 24, 104],
+          "look": [2, 4, -8],
+          "fov": 30
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "rb_B_main_street",
+      "view": "B",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-60, 1.7, 14.6],
+          "look": [0, 2.6, 13.6],
+          "fov": 52
+        },
+        {
+          "time": 0.5,
+          "eye": [-60, 1.7, 14.6],
+          "look": [0, 2.6, 13.6],
+          "fov": 52
+        }
+      ],
+      "ground_clearance": 0.3,
+      "street_level": true,
+      "near": 0.35
+    },
+    {
+      "name": "rb_C_forum",
+      "view": "C",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [39, 4.2, 16.5],
+          "look": [39, 3.0, -8],
+          "fov": 50
+        },
+        {
+          "time": 0.5,
+          "eye": [39, 4.2, 16.5],
+          "look": [39, 3.0, -8],
+          "fov": 50
+        }
+      ],
+      "ground_clearance": 0.3,
+      "street_level": true,
+      "near": 0.35
+    },
+    {
+      "name": "rb_D_court_rooftops",
+      "view": "D",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-26, 17, 30],
+          "look": [-2, 1.5, -2],
+          "fov": 40
+        },
+        {
+          "time": 0.5,
+          "eye": [-26, 17, 30],
+          "look": [-2, 1.5, -2],
+          "fov": 40
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "rb_E_facade",
+      "view": "E",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-2.6, 1.55, 16.1],
+          "look": [-6.8, 2.1, 10.9],
+          "fov": 58
+        },
+        {
+          "time": 0.5,
+          "eye": [-2.6, 1.55, 16.1],
+          "look": [-6.8, 2.1, 10.9],
+          "fov": 58
+        }
+      ],
+      "ground_clearance": 0.3,
+      "street_level": true,
+      "near": 0.35
+    },
+    {
+      "name": "rb_F_gameplay",
+      "view": "F",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-27, 34, 46],
+          "look": [-4, 0, 10],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [-27, 34, 46],
+          "look": [-4, 0, 10],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "rb_A_skyline_low_sun",
+      "view": "A",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-14, 24, 104],
+          "look": [2, 4, -8],
+          "fov": 30
+        },
+        {
+          "time": 0.5,
+          "eye": [-14, 24, 104],
+          "look": [2, 4, -8],
+          "fov": 30
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 17.8
+      }
+    },
+    {
+      "name": "rb_B_main_street_low_sun",
+      "view": "B",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-60, 1.7, 14.6],
+          "look": [0, 2.6, 13.6],
+          "fov": 52
+        },
+        {
+          "time": 0.5,
+          "eye": [-60, 1.7, 14.6],
+          "look": [0, 2.6, 13.6],
+          "fov": 52
+        }
+      ],
+      "ground_clearance": 0.3,
+      "street_level": true,
+      "near": 0.35,
+      "lighting": {
+        "hour": 17.8
+      }
+    },
+    {
+      "name": "rb_D_court_rooftops_morning",
+      "view": "D",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-26, 17, 30],
+          "look": [-2, 1.5, -2],
+          "fov": 40
+        },
+        {
+          "time": 0.5,
+          "eye": [-26, 17, 30],
+          "look": [-2, 1.5, -2],
+          "fov": 40
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 7.2
+      }
+    },
+    {
+      "name": "rb_B_main_street_wet_night",
+      "view": "B",
+      "scenario": "city_block_roman_wet_night",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-60, 1.7, 14.6],
+          "look": [0, 2.6, 13.6],
+          "fov": 52
+        },
+        {
+          "time": 0.5,
+          "eye": [-60, 1.7, 14.6],
+          "look": [0, 2.6, 13.6],
+          "fov": 52
+        }
+      ],
+      "ground_clearance": 0.3,
+      "street_level": true,
+      "near": 0.35,
+      "weather": "rain, night"
+    },
+    {
+      "name": "rb_F_gameplay_wet_night",
+      "view": "F",
+      "scenario": "city_block_roman_wet_night",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-27, 34, 46],
+          "look": [-4, 0, 10],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [-27, 34, 46],
+          "look": [-4, 0, 10],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3,
+      "weather": "rain, night"
+    }
+  ]
+}

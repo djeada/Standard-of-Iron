@@ -29,6 +29,7 @@ enum class ToolPlacement {
   Terrain,
   WorldProp,
   Structure,
+  TownBlock,
   Gate,
   Troop,
   Forest,
@@ -47,6 +48,9 @@ struct ToolSpec {
   const char* element_type;
   const char* description;
   const char* usage_hint;
+  // The presentation style a structure tool places (see
+  // Game::Visuals::k_building_visual_styles), or null for the plain building.
+  const char* style = nullptr;
 };
 
 [[nodiscard]] auto tool_catalog() -> std::span<const ToolSpec>;
@@ -62,6 +66,7 @@ struct ToolSpec {
 [[nodiscard]] auto tool_status_label(ToolType tool) -> QString;
 [[nodiscard]] auto tool_placement(ToolType tool) -> ToolPlacement;
 [[nodiscard]] auto element_type_for_tool(ToolType tool) -> QString;
+[[nodiscard]] auto structure_style_for_tool(ToolType tool) -> QString;
 [[nodiscard]] auto tool_matches_filter(const ToolSpec& spec,
                                        const QString& filter) -> bool;
 

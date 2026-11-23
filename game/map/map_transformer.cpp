@@ -565,6 +565,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     sp.nation_id =
         resolve_nation_id_for_map_owner(nations, sp.player_id, structure.nation);
 
+    sp.visual_style = structure.style.toStdString();
+
     const QVector3D structure_offset =
         seating.structure_owner.count(structure_index) != 0U
             ? QVector3D()
@@ -587,6 +589,21 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
 
     const QVector3D line_start = line->start + structure_offset;
     const QVector3D line_end = line->end + structure_offset;
+
+    // A run that leaves the lattice at an angle is laid as it was drawn: free
+    // pieces end to end along the true line, the way the AI's angled town
+    // walls stand. Axis runs keep the grid chain below.
+    if (const auto pieces = Game::Systems::WallNetworkService::freeform_run(
+            line_start.x(), line_start.z(), line_end.x(), line_end.z());
+        !pieces.empty()) {
+      for (const auto& piece : pieces) {
+        sp.position = QVector3D(piece.x, 0.0F, piece.z);
+        sp.rotation_y = piece.yaw_degrees;
+        spawn_map_unit(sp, world);
+      }
+      continue;
+    }
+
     const auto snapped_start = Game::Systems::WallGridPosition{
         .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
             runtime_world_to_grid(line_start.x(), def.grid.width)),

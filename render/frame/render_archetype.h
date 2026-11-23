@@ -53,8 +53,18 @@ struct RenderArchetypeSlice {
   float max_distance = std::numeric_limits<float>::infinity();
 };
 
+// A fire that burns in a bowl the archetype's own mesh provides: drawn live,
+// with its light, by whatever draws the archetype.
+struct RenderArchetypeFire {
+  QVector3D at;
+  float size{1.0F};
+  // Burns pale sea-green instead of orange.
+  bool ghost{false};
+};
+
 struct RenderArchetype {
   std::string debug_name;
+  std::vector<RenderArchetypeFire> fires;
   std::array<RenderArchetypeSlice, static_cast<std::size_t>(RenderArchetypeLod::Count)>
       lods{};
   std::shared_ptr<const MergedBuildingMesh> merged_full;
@@ -69,6 +79,10 @@ struct RenderInstance {
   RenderArchetypeLod lod = RenderArchetypeLod::Full;
   int damage_material_id = 0;
   bool unseen = false;
+  // Buildings that share a non-zero tone seed weather alike: one roof tone and
+  // one plaster tint from end to end of a stoa. Zero: each takes its own from
+  // where it stands.
+  float tone_seed = 0.0F;
 };
 
 struct ResolvedRenderDraw {

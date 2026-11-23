@@ -6,14 +6,18 @@
 #include <vector>
 
 #include "game/visuals/building_asset_key.h"
+#include "render/entity/dock_authoring.h"
 #include "render/entity/farm_field.h"
 #include "render/entity/home_yard.h"
+#include "render/entity/masonry_wall_renderer.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/barracks_authoring.h"
 #include "render/entity/nations/carthage/defense_tower_authoring.h"
 #include "render/entity/nations/carthage/farm_authoring.h"
 #include "render/entity/nations/carthage/home_authoring.h"
 #include "render/entity/nations/carthage/marketplace_authoring.h"
 #include "render/entity/nations/carthage/temple_authoring.h"
+#include "render/entity/nations/carthage/tenement_authoring.h"
 #include "render/entity/nations/carthage/wall_authoring.h"
 #include "render/entity/nations/iberians/wall_authoring.h"
 #include "render/entity/nations/roman/barracks_authoring.h"
@@ -22,7 +26,10 @@
 #include "render/entity/nations/roman/home_authoring.h"
 #include "render/entity/nations/roman/marketplace_authoring.h"
 #include "render/entity/nations/roman/temple_authoring.h"
+#include "render/entity/nations/roman/tenement_authoring.h"
 #include "render/entity/nations/roman/wall_authoring.h"
+#include "render/entity/portico_authoring.h"
+#include "render/entity/tenement_layout.h"
 #include "render/entity/wall_authoring.h"
 #include "render/entity/wall_gate_authoring.h"
 
@@ -62,10 +69,21 @@ void add_nation_buildings(std::vector<BuildingArchetypeCatalogEntry>& out,
   }
 }
 
+// The Roman barracks with what a legion leaves at its gate.
+auto roman_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
+  BuildingArchetypeDesc desc = Roman::build_barracks_desc(state);
+  Motif::dress_roman_barracks(desc, state);
+  return desc;
+}
+
+// `leaf_palette` colours the gate's leaves when they are not built of what the
+// wall is: timber doors in a stone curtain.
 void add_nation_walls(std::vector<BuildingArchetypeCatalogEntry>& out,
                       const std::string& nation,
                       const WallPalette& palette,
-                      const WallGeometry& geometry) {
+                      const WallGeometry& geometry,
+                      const WallPalette* leaf_palette = nullptr) {
+  const WallPalette& leaf = leaf_palette != nullptr ? *leaf_palette : palette;
   const std::string prefix = nation + "_wall_variant";
   // Every segment kind draws from the whole variant and walk set.
   std::vector<std::string> segment_kinds;
@@ -87,8 +105,8 @@ void add_nation_walls(std::vector<BuildingArchetypeCatalogEntry>& out,
                  },
                  {kind_of(nation, "wall_gate")}});
   out.push_back({prefix + "_gate_leaf",
-                 [prefix, &palette, &geometry](BuildingState) {
-                   return build_wall_gate_leaf_desc(prefix, palette, geometry);
+                 [prefix, &leaf, &geometry](BuildingState) {
+                   return build_wall_gate_leaf_desc(prefix, leaf, geometry);
                  },
                  {kind_of(nation, "wall_gate")}});
   out.push_back({prefix + "_walk_span",
@@ -119,7 +137,7 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
   add_nation_buildings(out,
                        "roman",
                        &Roman::build_home_desc,
-                       &Roman::build_barracks_desc,
+                       &roman_barracks_desc,
                        &Roman::build_tower_desc,
                        &Roman::build_marketplace_desc,
                        &Roman::build_temple_desc,
@@ -132,6 +150,53 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
                        &Carthage::build_marketplace_desc,
                        &Carthage::build_temple_desc,
                        &Carthage::build_farm_desc);
+
+  for (int variant = 0; variant < k_tenement_variant_count; ++variant) {
+    out.push_back(
+        {"roman_tenement_variant_" + std::to_string(variant),
+         [variant](BuildingState state) {
+           return Roman::build_tenement_desc(state, variant);
+         },
+         {kind_of("roman", Game::Visuals::styled_building_type("home", "tenement"))}});
+    out.push_back({"carthage_tenement_variant_" + std::to_string(variant),
+                   [variant](BuildingState state) {
+                     return Carthage::build_tenement_desc(state, variant);
+                   },
+                   {kind_of("carthage",
+                            Game::Visuals::styled_building_type("home", "tenement"))}});
+  }
+
+  // The marketplace styles that fill their lot: porticoes and docks.
+  struct MarketLook {
+    const char* nation;
+    const PorticoLook* portico;
+    const DockLook* dock;
+  };
+  for (const MarketLook& look :
+       {MarketLook{"roman", &roman_portico_look(), &roman_dock_look()},
+        MarketLook{"carthage", &carthage_portico_look(), &carthage_dock_look()}}) {
+    for (int variant = 0; variant < k_portico_variant_count; ++variant) {
+      std::vector<std::string> const kinds{
+          kind_of(look.nation,
+                  Game::Visuals::styled_building_type(
+                      "marketplace",
+                      variant == k_portico_basilica_variant ? "basilica" : "portico"))};
+      out.push_back({std::string(look.portico->name_prefix) + std::to_string(variant),
+                     [portico = look.portico, variant](BuildingState state) {
+                       return build_portico_desc(*portico, state, variant);
+                     },
+                     std::move(kinds)});
+    }
+    for (int variant = 0; variant < k_dock_variant_count; ++variant) {
+      out.push_back(
+          {std::string(look.dock->name_prefix) + std::to_string(variant),
+           [dock = look.dock, variant](BuildingState state) {
+             return build_dock_desc(*dock, state, variant);
+           },
+           {kind_of(look.nation,
+                    Game::Visuals::styled_building_type("marketplace", "dock"))}});
+    }
+  }
 
   out.push_back({"carthage_barracks_palms",
                  &Carthage::build_barracks_palms_desc,
@@ -151,6 +216,11 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
       out, "carthage", Carthage::wall_palette(), Carthage::wall_geometry());
   add_nation_walls(
       out, "iberians", Iberians::wall_palette(), Iberians::wall_geometry());
+  for (const MasonryWallLook* look :
+       {&roman_masonry_wall(), &carthage_masonry_wall()}) {
+    add_nation_walls(
+        out, std::string(look->slug), *look->palette, *look->geometry, look->timber);
+  }
 
   return out;
 }

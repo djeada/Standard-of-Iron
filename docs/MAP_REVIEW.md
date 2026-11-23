@@ -42,6 +42,8 @@ map_cli audit    <map>                 # terrain topology audit, offenders named
 map_cli apply    <map> <ops.json> [--out <path>] [--dry-run]
 map_cli roundtrip <map> <out>          # load + save, for diffing
 map_cli normalize <map> <out>          # rewrite in the editor's schema
+map_cli backdrop <map> <out.png>       # the editor's painted world
+map_cli new      <out> <width> <height> [name]   # a blank world-space map
 ```
 
 Kinds are `terrain`, `prop`, `linear` (rivers, roads, bridges), `structure`,
@@ -81,6 +83,100 @@ is written.
 
 The audit prints which hill, river end, lake or road network it is unhappy
 with, in map coordinates, instead of only a count.
+
+## Building a town
+
+A town is too many structures to place one at a time, so the operations file
+has verbs for the pieces a town is made of. Each is also a tool in the editor.
+
+```json
+[
+    {
+        "op": "block",
+        "id": "subura_3",
+        "origin": [44, -128],
+        "lots": [7, 2],
+        "rotation": 6,
+        "alley": 3,
+        "style": "tenement",
+        "player_id": 1,
+        "nation": "roman_republic"
+    },
+    {
+        "op": "terrace",
+        "id": "basilica_aemilia",
+        "from": [-2, -36.75],
+        "to": [64, -36.75],
+        "facing": 0,
+        "type": "marketplace",
+        "style": "basilica",
+        "player_id": 1,
+        "nation": "roman_republic"
+    },
+    {
+        "op": "paving",
+        "rect": [-3.5, -35.5, 65.5, -6.5],
+        "style": "flagstone",
+        "strip": 12
+    },
+    {
+        "op": "wall",
+        "id": "servian",
+        "points": [
+            [-64, -140],
+            [172, -140],
+            [172, 78],
+            [130, 78],
+            [130, 146],
+            [-64, 146]
+        ],
+        "style": "masonry",
+        "tower_spacing": 46,
+        "player_id": 1,
+        "nation": "roman_republic"
+    },
+    { "op": "gate", "id": "porta_esquilina", "at": [172, -21] }
+]
+```
+
+- `terrace` lays buildings of one `type` along `from` -> `to`, one lot apart
+  and centred on the run, fronts turned to `facing` (0 is +z, 90 is +x).
+  `skip` lists lots to leave open. The lot is the type's navigation footprint:
+  4.3 units for a home, 5.5 for a marketplace.
+- `block` lays the four terraces of a perimeter block of `lots: [wide, deep]`
+  from its low corner, turned by `rotation` about that corner, with one lot of
+  the first terrace left open as the `alley` into the court.
+- `paving` covers a rectangle with parallel road strips of `style` and one
+  across them, so the square is a single road network.
+- `wall` builds a circuit through `points` (legs along x or z only) with a
+  tower on every corner and every `tower_spacing` along a leg. With
+  `"style": "masonry"` it is built in stone; without it the wall is the
+  nation's own.
+- `gate` cuts a gate into the wall run under `at`; it takes the run's style.
+
+A `style` has to be one the building type has (`tenement` for a home;
+`portico`, `basilica` or `dock` for a marketplace; `masonry` for a wall); the
+operation is refused otherwise.
+
+The two cities are built this way and nothing else:
+`tools/map_editor/plans/rome.ops.json` and `carthage.ops.json` applied to a
+`map_cli new` map give `assets/maps/map_rome.json` and `map_carthage.json`.
+
+## Water level and outline
+
+A lake carries two optional fields, and the editor writes back exactly what it
+was given:
+
+- `height`: the water level in world units, the ground being 0. Unset, the
+  water lies with the ground at the lake's centre. `-0.6` is the level a sea
+  or a harbour needs to give a quay a bank; a river running into it takes the
+  same `height`.
+- `shape`: `natural` (the default) is an ellipse with a wandering shore;
+  `round` a true ellipse; `basin` a rectangle with eased corners. A round
+  harbour with an island in it is a ring river.
+
+Where lakes overlap they draw as one water. A dock stands with its centre 2.25
+units inland of the water's edge and its front to the water.
 
 ## `scripts/map-plan.py`
 

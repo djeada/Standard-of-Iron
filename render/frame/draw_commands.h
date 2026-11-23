@@ -214,6 +214,8 @@ struct TerrainFeatureCmd {
   int water_neighbor_count = 0;
   LinearFeatureKind kind = LinearFeatureKind::Water;
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;
+  // 0 open water, 1 sheltered (harbour, canal, pool): slower, smaller ripples.
+  float water_calm = 0.0F;
   RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;
   TerrainSurfaceCmd::VisibilityResources visibility{};
   FogMaskResources fog_mask{};

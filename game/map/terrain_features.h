@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <string_view>
 #include <vector>
 
 #include "ground_type.h"
@@ -100,6 +101,8 @@ struct RiverSegment {
   WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
 
   std::optional<FordProfile> ford;
+  // Sheltered water (a harbour ring, a canal): drawn with slow, small ripples.
+  bool calm = false;
 };
 
 struct FordCrossing {
@@ -109,21 +112,98 @@ struct FordCrossing {
   FordProfile profile;
 };
 
+// How far a lake's bed lies under its water level.
+inline constexpr float k_lake_bed_depth = 0.10F;
+
+// The outline of a lake inside its width and depth.
+enum class LakeShape : std::uint8_t {
+  // An ellipse with a wandering shore: a lake, a bay, an open coast.
+  Natural,
+  // A true ellipse: a dug pool, a round harbour.
+  Round,
+  // A rectangle with eased corners: a harbour basin, a dock, a canal reach.
+  Basin,
+};
+
 struct Lake {
   QVector3D center;
   float width = 8.0F;
   float depth = 8.0F;
   float rotation_deg = 0.0F;
   WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
+  LakeShape shape = LakeShape::Natural;
+  // Sheltered water (a harbour basin, a garden pool): slow, small ripples.
+  bool calm = false;
 };
 
+inline constexpr std::string_view k_lake_shape_natural = "natural";
+inline constexpr std::string_view k_lake_shape_round = "round";
+inline constexpr std::string_view k_lake_shape_basin = "basin";
+
+[[nodiscard]] constexpr auto
+lake_shape_name(LakeShape shape) noexcept -> std::string_view {
+  switch (shape) {
+  case LakeShape::Round:
+    return k_lake_shape_round;
+  case LakeShape::Basin:
+    return k_lake_shape_basin;
+  case LakeShape::Natural:
+    break;
+  }
+  return k_lake_shape_natural;
+}
+
+[[nodiscard]] constexpr auto
+lake_shape_from_name(std::string_view name) noexcept -> std::optional<LakeShape> {
+  if (name.empty() || name == k_lake_shape_natural) {
+    return LakeShape::Natural;
+  }
+  if (name == k_lake_shape_round) {
+    return LakeShape::Round;
+  }
+  if (name == k_lake_shape_basin) {
+    return LakeShape::Basin;
+  }
+  return std::nullopt;
+}
+
+// How far the shore stands from the centre at an angle, as a multiple of the
+// ellipse through the lake's width and depth.
 [[nodiscard]] inline auto lake_boundary_scale(const Lake& lake,
                                               float local_angle) noexcept -> float {
+  if (lake.shape == LakeShape::Round) {
+    return 1.0F;
+  }
+  if (lake.shape == LakeShape::Basin) {
+    // A superellipse: straight sides out to the full width and depth, and
+    // corners eased enough to be drawn and walked round.
+    constexpr float k_exponent = 12.0F;
+    const float c = std::abs(std::cos(local_angle));
+    const float s = std::abs(std::sin(local_angle));
+    return std::pow(std::pow(c, k_exponent) + std::pow(s, k_exponent),
+                    -1.0F / k_exponent);
+  }
   const float phase = lake.center.x() * 0.071F + lake.center.z() * 0.113F;
   return std::clamp(1.0F + std::sin(local_angle * 3.0F + phase) * 0.055F +
                         std::sin(local_angle * 7.0F - phase * 1.7F) * 0.025F,
                     0.90F,
                     1.10F);
+}
+
+// How far in from the shore a lake's shallows reach, in world units: the
+// stretch over which the bed shows and the water's edge breaks up. Zero keeps
+// them in proportion to the lake, which suits a pond and ruins a sea: there
+// the mud flats would run out for a bowshot.
+[[nodiscard]] inline auto lake_shallows_reach(const Lake& lake) noexcept -> float {
+  constexpr float k_open_water_half_extent = 34.0F;
+  constexpr float k_open_water_reach = 20.0F;
+  constexpr float k_built_edge_reach = 4.0F;
+  if (lake.shape != LakeShape::Natural) {
+    return k_built_edge_reach;
+  }
+  return std::min(lake.width, lake.depth) * 0.5F > k_open_water_half_extent
+             ? k_open_water_reach
+             : 0.0F;
 }
 
 [[nodiscard]] inline auto point_in_lake(const Lake& lake,

@@ -15,6 +15,7 @@
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
 #include "render/entity/home_activity.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/math/math_utils.h"
 
@@ -483,6 +484,20 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                                  .scale = 1.0F,
                                  .seed = 137});
 
+  {
+    // Carthage's marks on a house: black basalt under the whitewash, horns on
+    // the four corners of the roof, and an incense stand by the door.
+    const Motif::Setter set(desc, state);
+    Motif::add_plinth(
+        desc, -1.04F, 1.04F, -1.04F, 1.04F, 0.10F, 0.13F, Motif::Carthage::k_basalt);
+    Motif::add_punic_incense_stand(
+        desc, set.at((variant % 2 == 0 ? 0.64F : -0.64F), 1.10F, 0.4F), 1.05F);
+    for (const float side : {-1.0F, 1.0F}) {
+      for (const float depth : {-1.0F, 1.0F}) {
+        Motif::add_punic_horns(desc, set.at(side * 0.93F, depth * 0.93F), 1.5F);
+      }
+    }
+  }
   return desc;
 }
 

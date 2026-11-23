@@ -141,6 +141,9 @@ void write_lakes(const Game::Map::TerrainHeightMap* height_map,
     lake_obj["width"] = lake.width;
     lake_obj["depth"] = lake.depth;
     lake_obj["rotation"] = lake.rotation_deg;
+    if (lake.shape != Game::Map::LakeShape::Natural) {
+      lake_obj["shape"] = QString::fromUtf8(Game::Map::lake_shape_name(lake.shape));
+    }
     lakes_array.append(lake_obj);
   }
   terrain_obj["lakes"] = lakes_array;
@@ -345,6 +348,9 @@ auto read_lakes(const QJsonObject& json) -> std::vector<Game::Map::Lake> {
       lake.depth = static_cast<float>(lake_obj["depth"].toDouble(defaults.depth));
       lake.rotation_deg =
           static_cast<float>(lake_obj["rotation"].toDouble(defaults.rotation_deg));
+      lake.shape =
+          Game::Map::lake_shape_from_name(lake_obj["shape"].toString().toStdString())
+              .value_or(defaults.shape);
       lakes.push_back(lake);
     }
   }

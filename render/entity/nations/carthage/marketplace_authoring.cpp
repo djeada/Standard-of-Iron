@@ -16,6 +16,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/frame/render_archetype.h"
 #include "render/geom/primitives.h"
@@ -732,6 +733,15 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .scale = 1.0F,
                                  .seed = 223});
 
+  {
+    // Incense at the corners of the market floor, and Baal's disc and crescent
+    // over the arch.
+    const Motif::Setter set(desc, state);
+    for (const float side : {-1.0F, 1.0F}) {
+      Motif::add_punic_incense_stand(desc, set.at(side * 1.28F, 1.28F, 0.4F), 0.95F);
+    }
+    Motif::add_punic_standard(desc, set.at(-1.14F, 0.05F), 0.85F);
+  }
   return desc;
 }
 

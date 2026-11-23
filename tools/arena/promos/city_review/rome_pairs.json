@@ -1,0 +1,35 @@
+{
+  "map": "assets/maps/map_rome.json",
+  "note": "Before/after pairs: camera distance, tilt, yaw, fov, preset and hour are fixed; the centre follows the landmark when a plan moves it.",
+  "views": [
+    {
+      "name": "rome_P1_skyline",
+      "center": [-20, 10],
+      "distance": 330,
+      "tilt": 50,
+      "yaw": 200
+    },
+    {
+      "name": "rome_P2_gameplay",
+      "center": [-50, 2],
+      "distance": 95,
+      "tilt": 48,
+      "yaw": 225
+    },
+    {
+      "name": "rome_P3_street",
+      "center": [33, -62],
+      "distance": 26,
+      "tilt": 16,
+      "yaw": 160
+    },
+    {
+      "name": "rome_P4_night",
+      "center": [-50, 2],
+      "distance": 60,
+      "tilt": 30,
+      "yaw": 200,
+      "hour": 21.5
+    }
+  ]
+}

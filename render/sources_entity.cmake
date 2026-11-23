@@ -87,6 +87,8 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/swordsman_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/temple_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/temple_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/tenement_authoring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/tenement_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/equipment_loadout_catalog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/gauls/horse_swordsman_renderer.cpp
@@ -122,6 +124,10 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/swordsman_style.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/temple_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/temple_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/tenement_authoring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/tenement_dressing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/tenement_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/tenement_roof.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/sepulcher/barracks_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/production_completion_renderer.cpp
@@ -137,6 +143,15 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/swordsman_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/tenement_layout.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/town_palette.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/lot_building_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/market_lot.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/masonry_wall_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/portico_authoring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/dock_authoring.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/tenement_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/tenement_shell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wading_effects_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_authoring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_gate_authoring.cpp

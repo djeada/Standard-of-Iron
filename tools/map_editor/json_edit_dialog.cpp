@@ -52,11 +52,15 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
   m_editor->setTabStopDistance(
       4 * m_editor->fontMetrics().horizontalAdvance(QLatin1Char(' ')));
 
-  QJsonDocument const doc(json);
-  m_editor->setPlainText(doc.toJson(QJsonDocument::Indented));
-  m_opening_json = json;
   m_model_json = json;
-  m_result = json;
+  if (requires_entrance() && entrance_count() < HillProjection::k_min_entrances) {
+    m_model_json[MapJsonKeys::entrances] =
+        HillProjection::default_entrances(m_model_json, m_map_context);
+  }
+  const QJsonDocument doc(m_model_json);
+  m_editor->setPlainText(doc.toJson(QJsonDocument::Indented));
+  m_opening_json = m_model_json;
+  m_result = m_model_json;
 
   if (m_enable_hill_projection) {
     auto* splitter = new QSplitter(Qt::Horizontal, this);
@@ -138,15 +142,15 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     });
 
     if (entrance_idx >= 0) {
-      m_clear_entrances_button = new QPushButton("Clear Entrances", marker_row);
-      m_clear_entrances_button->setToolTip(
-          "Drop every entrance from this hill; paint new ones on the outlined edge "
-          "cells");
-      marker_layout->addWidget(m_clear_entrances_button);
-      connect(m_clear_entrances_button,
+      m_reset_entrances_button =
+          new QPushButton("Reset to Default Entrance", marker_row);
+      m_reset_entrances_button->setToolTip(
+          "Replace the current entrances with one ramp on the hill edge.");
+      marker_layout->addWidget(m_reset_entrances_button);
+      connect(m_reset_entrances_button,
               &QPushButton::clicked,
               this,
-              &JsonEditDialog::clear_entrances);
+              &JsonEditDialog::reset_entrances);
     }
 
     projection_layout->addWidget(marker_row);
@@ -366,7 +370,7 @@ void JsonEditDialog::insert_key(const QString& key) {
     return;
   }
 
-  m_model_json[key] = field->placeholder;
+  m_model_json[key] = field_default(*field);
   sync_editor_from_model();
 }
 
@@ -378,7 +382,7 @@ void JsonEditDialog::insert_missing_required_keys() {
   bool changed = false;
   for (const JsonFieldSpec& field : m_schema.fields) {
     if (field.required && !m_model_json.contains(field.key)) {
-      m_model_json[field.key] = field.placeholder;
+      m_model_json[field.key] = field_default(field);
       changed = true;
     }
   }
@@ -434,6 +438,10 @@ void JsonEditDialog::update_schema_state() {
     lines << QStringLiteral("<span style='color:#e0a860;'>Missing required: %1</span>")
                  .arg(missing.join(QStringLiteral(", ")));
   }
+  if (requires_entrance() && entrance_count() < HillProjection::k_min_entrances) {
+    lines << QStringLiteral("<span style='color:#e0a860;'>Add an entrance on the map "
+                            "to save this hill.</span>");
+  }
   if (!unknown.isEmpty()) {
 
     lines << QStringLiteral(
@@ -463,7 +471,6 @@ void JsonEditDialog::validate_json() {
       QJsonDocument::fromJson(m_editor->toPlainText().toUtf8(), &error);
 
   m_is_valid = (error.error == QJsonParseError::NoError && doc.isObject());
-  m_ok_button->setEnabled(m_is_valid);
 
   if (!m_is_valid) {
     m_editor->setStyleSheet("QPlainTextEdit { border: 2px solid red; }");
@@ -473,10 +480,7 @@ void JsonEditDialog::validate_json() {
     m_result = m_model_json;
   }
 
-  if (m_is_valid && model_has_entrances()) {
-    m_entrances_cleared = false;
-  }
-
+  m_ok_button->setEnabled(is_valid());
   update_schema_state();
   update_projection_state();
   update_restore_state();
@@ -490,36 +494,60 @@ void JsonEditDialog::update_restore_state() {
   m_restore_button->setEnabled(!m_is_valid || m_model_json != m_opening_json);
 }
 
-bool JsonEditDialog::model_has_entrances() const {
-  return !m_model_json.value(MapJsonKeys::entrances).toArray().isEmpty();
+bool JsonEditDialog::requires_entrance() const {
+  return m_enable_hill_projection &&
+         m_model_json.value(MapJsonKeys::type)
+                 .toString()
+                 .trimmed()
+                 .compare(QLatin1String("hill"), Qt::CaseInsensitive) == 0;
+}
+
+int JsonEditDialog::entrance_count() const {
+  return HillProjection::entrance_count(
+      m_model_json.value(MapJsonKeys::entrances).toArray(), m_map_context);
+}
+
+bool JsonEditDialog::is_valid() const {
+  return m_is_valid &&
+         (!requires_entrance() || entrance_count() >= HillProjection::k_min_entrances);
+}
+
+QJsonValue JsonEditDialog::field_default(const JsonFieldSpec& field) const {
+  if (field.key == QLatin1String(MapJsonKeys::entrances) && requires_entrance()) {
+    return HillProjection::default_entrances(m_model_json, m_map_context);
+  }
+  return field.placeholder;
 }
 
 void JsonEditDialog::update_entrance_button_state() {
-  if (m_clear_entrances_button == nullptr) {
+  if (m_reset_entrances_button == nullptr) {
     return;
   }
-  const bool is_hill =
-      m_is_valid &&
-      m_model_json.value(MapJsonKeys::type).toString().trimmed().toLower() ==
-          QStringLiteral("hill");
-  m_clear_entrances_button->setEnabled(is_hill && model_has_entrances());
+  m_reset_entrances_button->setEnabled(m_is_valid && requires_entrance());
+  m_reset_entrances_button->setText(entrance_count() >= HillProjection::k_min_entrances
+                                        ? QStringLiteral("Reset to Default Entrance")
+                                        : QStringLiteral("Add Default Entrance"));
 }
 
-void JsonEditDialog::clear_entrances() {
-  if (!m_is_valid || !model_has_entrances()) {
+void JsonEditDialog::reset_entrances() {
+  if (!m_is_valid || !requires_entrance()) {
     return;
   }
 
-  m_entrances_cleared = true;
-  m_projection_warning.clear();
-  m_model_json.remove(MapJsonKeys::entrances);
-  m_result = m_model_json;
+  const QJsonArray entrances =
+      HillProjection::default_entrances(m_model_json, m_map_context);
+  if (entrances.isEmpty()) {
+    m_projection_warning =
+        QStringLiteral("Move the hill onto the map to add an entrance.");
+    refresh_projection_hint();
+    return;
+  }
+  m_model_json[MapJsonKeys::entrances] = entrances;
   sync_editor_from_model();
 }
 
 void JsonEditDialog::restore_opening_json() {
   m_projection_warning.clear();
-  m_entrances_cleared = false;
   m_model_json = m_opening_json;
   m_result = m_opening_json;
 
@@ -620,24 +648,19 @@ void JsonEditDialog::refresh_projection_hint() {
   if (model.is_mountain) {
     lines << QStringLiteral("Mountains stay entrance-free; rotation comes from JSON.");
   } else {
-    lines << QStringLiteral(
-                 "Entrances: %1-%2 ramps. Each connected blob is stored as one "
-                 "{x, z, radius} entry centred on the hill edge, so painted cells "
-                 "snap to the disc that entry describes.")
-                 .arg(HillProjection::k_min_entrances)
-                 .arg(HillProjection::k_max_entrances);
-  }
-
-  if (m_entrances_cleared) {
-    lines << QStringLiteral(
-        "<span style='color:#e0a860;'>Entrances cleared. The runtime still carves one "
-        "default ramp on the hill's western face (rotated with the hill) until you "
-        "paint new ones.</span>");
-  } else {
-    const QStringList issues = m_projection->issues();
-    if (!issues.isEmpty()) {
-      lines << QStringLiteral("<span style='color:#e0a860;'>%1</span>")
-                   .arg(issues.join(QStringLiteral(" ")));
+    const int count = entrance_count();
+    lines << (count == 1 ? QStringLiteral("1 entrance ramp")
+                         : QStringLiteral("%1 entrance ramps").arg(count));
+    if (count < HillProjection::k_min_entrances) {
+      lines << QStringLiteral(
+          "<span style='color:#e0a860;'>Paint an entrance on the outlined edge or add "
+          "the default entrance to save this hill.</span>");
+    } else {
+      const QStringList issues = m_projection->issues();
+      if (!issues.isEmpty()) {
+        lines << QStringLiteral("<span style='color:#e0a860;'>%1</span>")
+                     .arg(issues.join(QLatin1Char(' ')));
+      }
     }
   }
   if (!m_projection_warning.isEmpty()) {
@@ -657,9 +680,6 @@ void JsonEditDialog::apply_projection_to_model_json() {
   const HillProjection::Model& model = m_projection->get_model();
   m_model_json = HillProjection::apply_projection_to_hill_json(
       m_model_json, model, m_projection->body_cells(), m_projection->entrance_cells());
-  if (m_entrances_cleared) {
-    m_model_json.remove(MapJsonKeys::entrances);
-  }
   m_result = m_model_json;
 
   if (!model.is_mountain) {
@@ -673,49 +693,24 @@ void JsonEditDialog::on_projection_entrances_changed() {
     return;
   }
 
-  if (!m_projection->entrance_cells().isEmpty()) {
-    m_entrances_cleared = false;
-  }
-
+  const bool last_entrance_removed =
+      requires_entrance() && m_projection->entrance_cells().isEmpty();
   m_syncing_projection = true;
   apply_projection_to_model_json();
   sync_editor_from_model();
   m_syncing_projection = false;
-}
-
-void JsonEditDialog::normalize_projection_entrances() {
-  if (m_projection == nullptr || !m_projection->is_active() || m_entrances_cleared ||
-      m_model_json == m_opening_json) {
-    return;
+  if (last_entrance_removed && entrance_count() >= HillProjection::k_min_entrances) {
+    m_projection_warning =
+        QStringLiteral("Every hill needs an entrance. The default ramp was restored.");
   }
-
-  const HillProjection::Model& model = m_projection->get_model();
-  if (model.is_mountain) {
-    return;
-  }
-
-  const QVector<QPoint> body = m_projection->body_cells();
-  const QVector<QPoint> entrances = m_projection->entrance_cells();
-  if (HillProjection::entrance_issues(model, body, entrances).isEmpty()) {
-    return;
-  }
-
-  const QJsonArray normalized = HillProjection::entrances_from_cells(
-      model, HillProjection::normalize_entrance_cells(model, body, entrances));
-  if (normalized.isEmpty()) {
-    m_model_json.remove(MapJsonKeys::entrances);
-  } else {
-    m_model_json[MapJsonKeys::entrances] = normalized;
-  }
-  m_result = m_model_json;
+  refresh_projection_hint();
 }
 
 void JsonEditDialog::on_accepted() {
-  if (m_is_valid) {
-    normalize_projection_entrances();
+  if (is_valid()) {
     m_result = m_model_json;
     accept();
-  } else {
+  } else if (!m_is_valid) {
     QMessageBox::warning(
         this, "Invalid JSON", "The JSON is not valid. Fix errors before saving.");
   }

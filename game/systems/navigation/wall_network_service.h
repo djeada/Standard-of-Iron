@@ -72,6 +72,20 @@ public:
                                        const WallGridPosition& end)
       -> std::vector<WallGridPosition>;
 
+  // One piece of an authored wall run that leaves the lattice at an angle.
+  struct FreeformPiece {
+    float x{0.0F};
+    float z{0.0F};
+    float yaw_degrees{0.0F};
+  };
+  // A map's wall run laid as drawn when it is neither along x nor along z:
+  // free pieces end to end on the true line, each turned to it. Empty for a
+  // run on the lattice, which keeps build_axis_aligned_chain.
+  static auto freeform_run(float start_x,
+                           float start_z,
+                           float end_x,
+                           float end_z) -> std::vector<FreeformPiece>;
+
   static auto encode_key(int grid_x, int grid_z) -> std::uint64_t;
   static void add_world_occupancy(Engine::Core::World& world,
                                   OccupancySet& out,

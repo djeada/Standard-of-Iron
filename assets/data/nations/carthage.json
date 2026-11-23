@@ -49,7 +49,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.5,
+        "render_scale": 0.56,
         "selection_ring_size": 0.9,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/archer"
@@ -540,7 +540,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.5,
+        "render_scale": 0.57,
         "selection_ring_size": 1.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/builder"
@@ -583,7 +583,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.756,
+        "render_scale": 0.62,
         "selection_ring_size": 1.86,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/commanders/hanno_the_great"
@@ -617,7 +617,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.756,
+        "render_scale": 0.62,
         "selection_ring_size": 1.88,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/commanders/hasdrubal_barca"
@@ -651,7 +651,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.756,
+        "render_scale": 0.62,
         "selection_ring_size": 1.95,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/commanders/hannibal_barca"

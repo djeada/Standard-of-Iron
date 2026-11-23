@@ -21,6 +21,7 @@ add_library(
     world_document.cpp
     road_network.cpp
     batch_edit.cpp
+    town_block.cpp
     json_text.cpp
     world_backdrop.cpp
     world_sprites.cpp
@@ -34,11 +35,11 @@ target_link_libraries(
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui soi_strategic game_sim
 )
 
-# The widget sources. game/map/environment_lighting.cpp and ui/widget_shell.cpp
-# used to be listed here too, compiled a second time into the editor even though
-# game_sim and ui_shell already ship them. They are linked now.
-set(MAP_EDITOR_SOURCES
-    main.cpp
+# Share the editor widgets with interaction tests so they exercise the same
+# canvas and window that ship with the tool.
+add_library(
+    map_editor_widgets
+    STATIC
     editor_window.cpp
     mission_panel.cpp
     generator_panel.cpp
@@ -56,23 +57,19 @@ set(MAP_EDITOR_SOURCES
     campaign_workspace.cpp
     command_palette.cpp
 )
+target_link_libraries(
+    map_editor_widgets
+    PUBLIC map_editor_core Qt${QT_VERSION_MAJOR}::Widgets
+    PRIVATE ui_shell
+)
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt6_add_executable(map_editor ${MAP_EDITOR_SOURCES})
+    qt6_add_executable(map_editor main.cpp)
 else()
-    add_executable(map_editor ${MAP_EDITOR_SOURCES})
+    add_executable(map_editor main.cpp)
 endif()
 
-target_link_libraries(
-    map_editor
-    PRIVATE
-        ui_shell
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Widgets
-        Qt${QT_VERSION_MAJOR}::Qml
-        map_editor_core
-        game_sim
-)
+target_link_libraries(map_editor PRIVATE map_editor_widgets ui_shell)
 
 # Keep tool binaries alongside the main game binary for consistent dev runs
 # (Makefile expects executables under build/bin)

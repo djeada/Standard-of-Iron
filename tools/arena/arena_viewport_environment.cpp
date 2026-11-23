@@ -23,6 +23,7 @@
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
+#include "game/systems/navigation/pathfinding.h"
 #include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/spawn_type.h"
@@ -723,6 +724,9 @@ void ArenaViewport::apply_map_terrain() {
   m_terrain_grid_extent = map.grid.width;
 
   m_session.terrain().initialize(map);
+  // The arena spawns the map's real buildings itself, with their turned
+  // bodies; the terrain's load-time reservations would only shut gate lanes.
+  m_session.building_collision().clear_authored_obstacles();
   m_session.visibility().initialize(
       map.grid.width, map.grid.height, map.grid.tile_size);
   Game::Systems::NavGrid::initialize(map.grid.width, map.grid.height);
@@ -804,7 +808,8 @@ void ArenaViewport::spawn_terrain_review_structures() {
           point->position,
           false,
           0,
-          structure.rotation);
+          structure.rotation,
+          structure.style);
       continue;
     }
 
@@ -813,6 +818,23 @@ void ArenaViewport::spawn_terrain_review_structures() {
     if (line == nullptr || structure.type != Game::Units::SpawnType::WallSegment) {
       qWarning() << "Arena terrain review: unsupported line structure"
                  << Game::Units::spawn_typeToQString(structure.type);
+      continue;
+    }
+    const auto nation_for_run =
+        resolve_nation(structure.player_id, parse_nation(structure.nation));
+    if (const auto pieces = Game::Systems::WallNetworkService::freeform_run(
+            line->start.x(), line->start.z(), line->end.x(), line->end.z());
+        !pieces.empty()) {
+      for (const auto& piece : pieces) {
+        spawn_single_building(structure.player_id,
+                              nation_for_run,
+                              Game::Units::SpawnType::WallSegment,
+                              QVector3D(piece.x, 0.0F, piece.z),
+                              false,
+                              0,
+                              piece.yaw_degrees,
+                              structure.style);
+      }
       continue;
     }
     const auto start = Game::Systems::WallGridPosition{
@@ -835,8 +857,18 @@ void ArenaViewport::spawn_terrain_review_structures() {
                             QVector3D(grid_to_world(segment.x, definition.grid.width),
                                       0.0F,
                                       grid_to_world(segment.z, definition.grid.height)),
-                            false);
+                            false,
+                            0,
+                            0.0F,
+                            structure.style);
     }
+  }
+  // The map's buildings now stand with their real, turned bodies; drop the
+  // ground the terrain reserved for them at load, as MapTransformer does.
+  m_session.building_collision().clear_authored_obstacles();
+  Game::Systems::BuildingCollisionRegistry::instance().clear_authored_obstacles();
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    pathfinder->mark_navigation_grid_dirty();
   }
 }
 

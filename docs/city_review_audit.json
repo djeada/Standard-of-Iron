@@ -1,0 +1,137 @@
+{
+  "about": "Ranked city visual defects for issue #1683. Severity follows docs/CITY_VISUAL_DIRECTION.md section 6. scripts/city-review.py audit <this file> --gate fails while a critical or major defect is open.",
+  "baseline_build": "3f9c9e196",
+  "defects": [
+    {
+      "id": "R-01",
+      "city": "aurelia_magna",
+      "severity": "critical",
+      "title": "City reads as detached one-storey cottages on lawn; no street has a wall",
+      "views": ["A", "D", "F"],
+      "owners": [
+        "tools/city_export/aurelia_magna_plan.cpp",
+        "render/entity/nations/roman/tenement_authoring.cpp"
+      ],
+      "status": "open",
+      "note": "Solved for the pilot block (city_block_roman): tenement terraces on abutting lots. Aurelia Magna still exports 0.8 m frontage gaps and plain homes; slice 3 moves its insula blocks onto lay_tenement_block."
+    },
+    {
+      "id": "R-02",
+      "city": "aurelia_magna",
+      "severity": "major",
+      "title": "Flat skyline: every home one height, nothing between a cottage and the temple",
+      "views": ["A"],
+      "owners": [
+        "render/entity/tenement_layout.cpp",
+        "tools/city_export/aurelia_magna_plan.cpp"
+      ],
+      "status": "open",
+      "note": "Pilot block has two to four storeys grouped by district cell. Open until the flagship city uses it."
+    },
+    {
+      "id": "R-03",
+      "city": "both",
+      "severity": "major",
+      "title": "Shaded walls turn slate blue",
+      "views": ["B", "C", "D", "E", "F"],
+      "owners": ["assets/shaders/basic_instanced.frag"],
+      "status": "fixed",
+      "note": "Street bounce fill on shaded mineral, ceramic and timber building surfaces; limewash classified as mineral instead of by brightness."
+    },
+    {
+      "id": "R-04",
+      "city": "both",
+      "severity": "major",
+      "title": "Lawn between town houses and in courts inside the walls",
+      "views": ["D", "F"],
+      "owners": [
+        "render/ground/terrain_renderer_submission.cpp",
+        "assets/shaders/terrain_chunk.frag"
+      ],
+      "status": "fixed",
+      "note": "Building density in the terrain cover mask turns crowded ground into beaten earth and clears its grass."
+    },
+    {
+      "id": "R-05",
+      "city": "aurelia_magna",
+      "severity": "major",
+      "title": "An imperial capital behind a timber palisade",
+      "views": ["A", "B"],
+      "owners": [
+        "render/entity/nations/roman/wall_authoring.h",
+        "render/entity/wall_authoring.cpp"
+      ],
+      "status": "fixed",
+      "note": "Masonry wall style (wall_segment and wall_gate, \"masonry\"): a crenellated stone curtain and a stone gatehouse with timber leaves, for Rome and Carthage. Used by map_rome and map_carthage; Aurelia Magna keeps its palisade until it is converted."
+    },
+    {
+      "id": "R-06",
+      "city": "aurelia_magna",
+      "severity": "major",
+      "title": "Forum and plazas are bare grey rectangles",
+      "views": ["C"],
+      "owners": ["tools/city_export/aurelia_magna_plan.cpp"],
+      "status": "fixed",
+      "note": "Flagstone road style for squares; the Forum of map_rome has statues, basilicas down its long sides and temples closing its ends. Aurelia Magna not converted yet."
+    },
+    {
+      "id": "R-07",
+      "city": "aurelia_magna",
+      "severity": "major",
+      "title": "Basilica, curia, baths and library are market stalls",
+      "views": ["C", "E"],
+      "owners": ["render/entity/nations/roman/marketplace_authoring.cpp"],
+      "status": "fixed",
+      "note": "Marketplace styles portico and basilica: a colonnaded walk with shops, and a clerestory hall behind a two-storey colonnade. Aurelia Magna not converted yet."
+    },
+    {
+      "id": "R-08",
+      "city": "aurelia_magna",
+      "severity": "moderate",
+      "title": "The sacred mountain is a smooth green dome and the crags are cones",
+      "views": ["A"],
+      "owners": ["tools/city_export/aurelia_magna_plan.cpp"],
+      "status": "open"
+    },
+    {
+      "id": "R-09",
+      "city": "roman_block",
+      "severity": "moderate",
+      "title": "Garden houses of the west quarter stand apart with open lawn between them",
+      "views": ["A", "F"],
+      "owners": ["tools/arena/arena_city_block_scenarios.cpp"],
+      "status": "open",
+      "note": "Wants garden walls between lots; a P4 dressing kit."
+    },
+    {
+      "id": "P-01",
+      "city": "punic",
+      "severity": "critical",
+      "title": "There is no Punic city: the showcase is eight buildings in a stockade",
+      "views": ["A", "D", "F"],
+      "owners": ["tools/arena/arena_world_review_scenarios.cpp"],
+      "status": "fixed",
+      "note": "map_carthage: the headland city with the round war harbour and the admiral's island, the merchant basin, agora, Byrsa, tophet, tall-house quarters and the isthmus wall."
+    },
+    {
+      "id": "P-02",
+      "city": "punic",
+      "severity": "major",
+      "title": "The arena's banded cliff ring stands in for a horizon",
+      "views": ["A", "B", "E"],
+      "owners": ["tools/arena/arena_world_review_scenarios.cpp"],
+      "status": "fixed",
+      "note": "map_carthage is reviewed as a map, with the gulf and the lagoon out to the horizon, not inside the arena's cliff ring."
+    },
+    {
+      "id": "P-03",
+      "city": "punic",
+      "severity": "moderate",
+      "title": "Punic houses are well characterised but identical in height",
+      "views": ["A", "D"],
+      "owners": ["render/entity/nations/carthage/home_authoring.cpp"],
+      "status": "fixed",
+      "note": "The Punic tall house: eight variants of two to four storeys on the tenement lot, grouped by district."
+    }
+  ]
+}

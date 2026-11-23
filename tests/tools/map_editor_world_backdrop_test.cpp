@@ -59,6 +59,29 @@ TEST(MapEditorWorldBackdrop, PaintsWaterBlueAndMeadowGreenWhereTheMapPutsThem) {
   EXPECT_GT(meadow.green(), meadow.red());
 }
 
+TEST(MapEditorWorldBackdrop, LayerVisibilityAlsoHidesGeometryInThePaintedPreview) {
+  const QByteArray map = R"({
+    "name":"Layer test", "coord_system":"grid",
+    "grid":{"width":64,"height":64,"tile_size":1},
+    "lakes":[{"x":16,"z":40,"width":12,"depth":12}],
+    "rivers":[{"start":[42,2],"end":[42,62],"width":6}]
+  })";
+  const auto visible = MapEditor::render_world_backdrop(map);
+  ASSERT_TRUE(visible.ok()) << visible.error.toStdString();
+  for (const float x : {16.0F, 42.0F}) {
+    const QColor water = pixel_at(visible, x, 40.0F);
+    EXPECT_GT(water.blue(), water.green());
+  }
+
+  const auto hidden = MapEditor::render_world_backdrop(
+      map, {.show_terrain = false, .show_paths = false});
+  ASSERT_TRUE(hidden.ok()) << hidden.error.toStdString();
+  for (const float x : {16.0F, 42.0F}) {
+    const QColor ground = pixel_at(hidden, x, 40.0F);
+    EXPECT_GT(ground.green(), ground.blue());
+  }
+}
+
 TEST(MapEditorWorldBackdrop, LightsTheHillFromTheTopLeftOfTheCanvas) {
   const auto backdrop = MapEditor::render_world_backdrop(k_lake_and_hill);
   ASSERT_TRUE(backdrop.ok());

@@ -8034,6 +8034,22 @@ um die Vorschau zu sehen</translation>
         <source>The Sepulcher Bridge</source>
         <translation>Die Grabmalbrücke</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Karthago</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rom</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
+        <translation>Die Stadt auf ihrer Landzunge: der runde Kriegshafen mit der Insel des Admirals und daneben das Handelsbecken, die Agora hinter den Kais, die Byrsa mit dem Tempel des Eschmun über den hohen weißen Häusern, der Tophet am Ufer, die Gärten von Megara und die Mauern quer über die Landenge.</translation>
+    </message>
+    <message>
+        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
+        <translation>Die Stadt am Tiber: das Kapitol mit seinen Tempeln über dem Forum, der Palatin und der große Circus darunter, die dicht gedrängte Subura, eine Steinmauer um die Hügel, die Flusskais unter dem Aventin und Ostia, wo der Tiber ins Meer mündet.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

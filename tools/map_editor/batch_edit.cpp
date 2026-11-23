@@ -4,9 +4,12 @@
 #include <QPointF>
 
 #include <array>
+#include <memory>
 #include <utility>
 
 #include "element_edit_json.h"
+#include "town_block.h"
+#include "wall_geometry.h"
 
 namespace MapEditor::BatchEdit {
 
@@ -105,7 +108,8 @@ auto rebuilt(const MapData& data,
              const ElementSnapshot& before,
              const QJsonObject& json,
              QStringList& notes) -> ElementSnapshot {
-  auto result = ElementEditJson::from_json(before, json, data.linear_elements());
+  auto result = ElementEditJson::from_json(
+      before, json, data.linear_elements(), HillProjection::map_context(data));
   notes = result.notes;
   return result.element;
 }
@@ -134,6 +138,21 @@ void apply_map_settings(MapData& data, const QJsonObject& op, Report& report) {
   if (op.contains(QStringLiteral("environment"))) {
     data.set_environment(
         merged(data.environment(), op.value(QStringLiteral("environment")).toObject()));
+  }
+  if (op.contains(QStringLiteral("camera"))) {
+    data.set_camera(
+        merged(data.camera(), op.value(QStringLiteral("camera")).toObject()));
+  }
+  if (op.contains(QStringLiteral("victory"))) {
+    data.set_victory(
+        merged(data.victory(), op.value(QStringLiteral("victory")).toObject()));
+  }
+  if (op.contains(QStringLiteral("description"))) {
+    data.set_description(op.value(QStringLiteral("description")).toString());
+  }
+  if (op.contains(QStringLiteral("max_troops_per_player"))) {
+    data.set_max_troops_per_player(
+        op.value(QStringLiteral("max_troops_per_player")).toInt());
   }
   ++report.applied;
   report.log.append(QStringLiteral("map settings updated"));
@@ -328,6 +347,137 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
       } else {
         fail(error);
       }
+      continue;
+    }
+
+    if (verb == QLatin1String("terrace") || verb == QLatin1String("block")) {
+      QVector<StructureElement> houses;
+      QString error;
+      if (verb == QLatin1String("terrace")) {
+        TownBlock::TerraceSpec spec;
+        if (!TownBlock::terrace_from_json(op, spec, error)) {
+          fail(error);
+          continue;
+        }
+        houses = TownBlock::terrace(spec);
+      } else {
+        TownBlock::BlockSpec spec;
+        if (!TownBlock::block_from_json(op, spec, error)) {
+          fail(error);
+          continue;
+        }
+        houses = TownBlock::block(spec);
+      }
+      if (houses.isEmpty()) {
+        fail(QStringLiteral("the run is shorter than one lot"));
+        continue;
+      }
+      for (const StructureElement& house : houses) {
+        data.execute_command(std::make_unique<AddStructureCmd>(&data, house));
+      }
+      ++report.applied;
+      report.log.append(QStringLiteral("%1 %2: %3 houses")
+                            .arg(verb, op.value(QStringLiteral("id")).toString())
+                            .arg(houses.size()));
+      continue;
+    }
+
+    if (verb == QLatin1String("wall")) {
+      TownBlock::WallSpec spec;
+      QString error;
+      if (!TownBlock::wall_from_json(op, spec, error)) {
+        fail(error);
+        continue;
+      }
+      const TownBlock::WallPlan plan = TownBlock::wall(spec, error);
+      if (plan.runs.isEmpty()) {
+        fail(error.isEmpty() ? QStringLiteral("the wall has no run") : error);
+        continue;
+      }
+      for (const LinearElement& run : plan.runs) {
+        data.execute_command(std::make_unique<AddLinearCmd>(&data, run));
+      }
+      for (const StructureElement& tower : plan.towers) {
+        data.execute_command(std::make_unique<AddStructureCmd>(&data, tower));
+      }
+      ++report.applied;
+      report.log.append(QStringLiteral("wall %1: %2 runs, %3 towers")
+                            .arg(spec.id)
+                            .arg(plan.runs.size())
+                            .arg(plan.towers.size()));
+      continue;
+    }
+
+    if (verb == QLatin1String("gate")) {
+      // The editor's own gate gesture: find the run under the point, cut the
+      // six-cell gap out of it and set the gate on the run's axis.
+      QPointF at;
+      if (!point_of(op.value(QStringLiteral("at")), at)) {
+        fail(QStringLiteral("needs 'at': [x, z]"));
+        continue;
+      }
+      namespace WG = WallGeometry;
+      const WG::GatePlacement plan = WG::plan_gate(data.linear_elements(), at);
+      if (plan.wall_index < 0) {
+        fail(QStringLiteral("no wall run within %1 cells of %2, %3")
+                 .arg(WG::k_gate_snap_reach)
+                 .arg(at.x())
+                 .arg(at.y()));
+        continue;
+      }
+      const LinearElement run = data.linear_elements()[plan.wall_index];
+      StructureElement gate;
+      gate.type = QStringLiteral("wall_gate");
+      gate.x = plan.x;
+      gate.z = plan.z;
+      gate.rotation = plan.rotation;
+      gate.player_id = run.player_id;
+      gate.nation = run.nation;
+      gate.max_population = 100;
+      // A gate in a stone wall is a stone gate.
+      const QJsonValue wall_style = run.extra_fields.value(QStringLiteral("style"));
+      if (wall_style.isString() && !wall_style.toString().isEmpty()) {
+        gate.extra_fields[QStringLiteral("style")] = wall_style;
+      }
+      if (const QString id = op.value(QStringLiteral("id")).toString(); !id.isEmpty()) {
+        gate.extra_fields[QStringLiteral("id")] = id;
+        gate.extra_fields[QStringLiteral("group")] = id;
+      }
+      data.execute_command(
+          std::make_unique<RemoveLinearCmd>(&data, plan.wall_index, run));
+      for (const bool keep_low : {true, false}) {
+        if (auto piece =
+                WG::trim_run_to_gate(run, plan.horizontal, plan.centre, keep_low)) {
+          data.execute_command(std::make_unique<AddLinearCmd>(&data, *piece));
+        }
+      }
+      data.execute_command(std::make_unique<AddStructureCmd>(&data, gate));
+      ++report.applied;
+      report.log.append(
+          QStringLiteral("gate at %1, %2 across %3")
+              .arg(gate.x)
+              .arg(gate.z)
+              .arg(plan.horizontal ? QStringLiteral("x") : QStringLiteral("z")));
+      continue;
+    }
+
+    if (verb == QLatin1String("paving")) {
+      TownBlock::PavingSpec spec;
+      QString error;
+      if (!TownBlock::paving_from_json(op, spec, error)) {
+        fail(error);
+        continue;
+      }
+      const QVector<LinearElement> roads = TownBlock::paving(spec);
+      if (roads.isEmpty()) {
+        fail(QStringLiteral("the rectangle is too small to pave"));
+        continue;
+      }
+      for (const LinearElement& road : roads) {
+        data.execute_command(std::make_unique<AddLinearCmd>(&data, road));
+      }
+      ++report.applied;
+      report.log.append(QStringLiteral("paved in %1 strips").arg(roads.size()));
       continue;
     }
 

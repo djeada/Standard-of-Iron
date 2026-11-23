@@ -37,6 +37,16 @@ const QVector3D k_flame_outer{1.00F, 0.46F, 0.12F};
 const QVector3D k_flame_inner{1.00F, 0.86F, 0.42F};
 const QVector3D k_firelight{1.00F, 0.58F, 0.26F};
 
+// The sea-green fire Carthage burns in its incense stands, its lamps and its
+// torches.
+const QVector3D k_ghost_outer{0.18F, 0.86F, 0.70F};
+const QVector3D k_ghost_inner{0.78F, 1.00F, 0.94F};
+const QVector3D k_ghost_light{0.34F, 1.00F, 0.82F};
+// A green flame reads dimmer than firelight at the same energy: Punic fixtures
+// throw a little further and brighter so doorways and quays stay legible at night.
+constexpr float k_ghost_reach = 6.2F;
+constexpr float k_ghost_intensity = 1.25F;
+
 auto hash01(std::uint32_t value) -> float {
   value ^= value >> 16U;
   value *= 0x7feb352dU;
@@ -62,7 +72,8 @@ void submit_brazier(ISubmitter& out,
                     const QVector3D& ground,
                     float night,
                     float time,
-                    std::uint32_t seed) {
+                    std::uint32_t seed,
+                    bool ghost) {
   constexpr float k_bowl_height = 0.42F;
   constexpr float k_bowl_radius = 0.15F;
   Mesh* const unit_cylinder = get_unit_cylinder();
@@ -106,14 +117,15 @@ void submit_brazier(ISubmitter& out,
         QVector3D(std::sin(time * 2.9F + offset_angle), 0.0F, 0.0F) * 0.03F;
     out.mesh(unit_cone,
              Render::Geom::cone_from_to(base, tip, 0.060F * (1.10F - 0.15F * flick)),
-             tongue == 0 ? k_flame_inner : k_flame_outer,
+             tongue == 0 ? (ghost ? k_ghost_inner : k_flame_inner)
+                         : (ghost ? k_ghost_outer : k_flame_outer),
              nullptr,
              1.0F);
   }
   Render::LocalLight light;
   light.position = bowl + up * 0.35F;
-  light.color = k_firelight;
-  light.radius = 7.0F;
+  light.color = ghost ? k_ghost_light : k_firelight;
+  light.radius = ghost ? 8.0F : 7.0F;
   light.intensity =
       (0.35F + 1.05F * night) * (0.94F + 0.04F * std::sin(time * 6.7F + phase) +
                                  0.02F * std::sin(time * 11.3F + phase * 1.7F));
@@ -121,6 +133,60 @@ void submit_brazier(ISubmitter& out,
 }
 
 } // namespace
+
+void submit_archetype_fires(const DrawContext& ctx,
+                            ISubmitter& out,
+                            std::span<const RenderArchetypeFire> fires) {
+  if (fires.empty() || ctx.template_prewarm ||
+      ctx.distance_sq > k_far_metres * k_far_metres) {
+    return;
+  }
+  const float night = ctx.home_activity != nullptr ? ctx.home_activity->night() : 0.0F;
+  const float time = ctx.animation_time;
+  const auto owner =
+      ctx.entity != nullptr ? static_cast<std::uint32_t>(ctx.entity->get_id()) : 0U;
+  // A fire is as big as the bowl the building gives it, in world metres.
+  const float world = ctx.model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
+  Mesh* const unit_cone = get_unit_cone();
+  const QVector3D up(0.0F, 1.0F, 0.0F);
+  const float burn = 0.60F + (0.40F * night);
+  std::uint32_t index = 0;
+  for (const RenderArchetypeFire& fire : fires) {
+    ++index;
+    const float size = fire.size * world;
+    const QVector3D bowl = ctx.model.map(fire.at);
+    const float phase = hash01((owner * 131U) + index) * k_tau;
+    for (int tongue = 0; tongue < 3; ++tongue) {
+      const float around = phase + (static_cast<float>(tongue) * 2.1F);
+      const float flick =
+          0.84F +
+          (0.11F * std::sin((time * (6.7F + static_cast<float>(tongue))) + around)) +
+          (0.05F * std::sin((time * 11.3F) + (around * 1.7F)));
+      const QVector3D base =
+          bowl +
+          (QVector3D(std::cos(around), 0.0F, std::sin(around)) * (0.016F * size));
+      const QVector3D tip =
+          base + (up * (0.26F * size * flick * burn)) +
+          (QVector3D(std::sin((time * 2.9F) + around), 0.0F, 0.0F) * (0.02F * size));
+      const QVector3D inner = fire.ghost ? k_ghost_inner : k_flame_inner;
+      const QVector3D outer = fire.ghost ? k_ghost_outer : k_flame_outer;
+      out.mesh(unit_cone,
+               Render::Geom::cone_from_to(
+                   base, tip, 0.046F * size * (1.10F - (0.15F * flick))),
+               tongue == 0 ? inner : outer,
+               nullptr,
+               1.0F);
+    }
+    Render::LocalLight light;
+    light.position = bowl + (up * (0.30F * size));
+    light.color = fire.ghost ? k_ghost_light : k_firelight;
+    light.radius = 4.0F + (2.5F * size);
+    light.intensity = (fire.ghost ? 0.78F : 1.0F) * (0.30F + (0.95F * night)) *
+                      (0.94F + (0.04F * std::sin((time * 6.7F) + phase)) +
+                       (0.02F * std::sin((time * 11.3F) + (phase * 1.7F))));
+    out.local_light(light);
+  }
+}
 
 void submit_temple_incense(const DrawContext& ctx,
                            ISubmitter& out,
@@ -195,7 +261,8 @@ void submit_building_torches(const DrawContext& ctx,
   for (const TorchMount& mount : mounts) {
     ++index;
     if (mount.brazier) {
-      submit_brazier(out, ctx.model.map(mount.at), lit, time, owner * 97U + index);
+      submit_brazier(
+          out, ctx.model.map(mount.at), lit, time, owner * 97U + index, mount.ghost);
       continue;
     }
     const QVector3D wall = ctx.model.map(mount.at);
@@ -242,22 +309,23 @@ void submit_building_torches(const DrawContext& ctx,
     out.mesh(unit_cone,
              Render::Geom::cone_from_to(
                  crown, crown + up * outer_height + tip_drift, k_head_radius * 1.35F),
-             k_flame_outer,
+             mount.ghost ? k_ghost_outer : k_flame_outer,
              nullptr,
              1.0F);
     out.mesh(unit_cone,
              Render::Geom::cone_from_to(crown + up * 0.01F,
                                         crown + up * inner_height + tip_drift * 0.6F,
                                         k_head_radius * 0.80F),
-             k_flame_inner,
+             mount.ghost ? k_ghost_inner : k_flame_inner,
              nullptr,
              1.0F);
 
     Render::LocalLight light;
     light.position = crown + up * 0.12F + outward * 0.05F;
-    light.color = k_firelight;
-    light.radius = k_light_reach;
-    light.intensity = k_light_intensity * lit * (0.86F + 0.14F * flicker);
+    light.color = mount.ghost ? k_ghost_light : k_firelight;
+    light.radius = mount.ghost ? k_ghost_reach : k_light_reach;
+    light.intensity = (mount.ghost ? k_ghost_intensity : k_light_intensity) * lit *
+                      (0.86F + 0.14F * flicker);
     out.local_light(light);
   }
 }

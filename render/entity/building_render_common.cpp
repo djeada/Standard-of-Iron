@@ -12,6 +12,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
+#include "render/entity/building_torches.h"
 #include "render/frame/draw_resources.h"
 #include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
@@ -138,8 +139,10 @@ auto resolve_building_renderer_key(std::string_view renderer_key,
 void submit_building_instance(ISubmitter& out,
                               const DrawContext& ctx,
                               const RenderArchetype& archetype,
-                              std::span<const QVector3D> palette) {
+                              std::span<const QVector3D> palette,
+                              float tone_seed) {
   RenderInstance instance;
+  instance.tone_seed = tone_seed;
   instance.archetype = &archetype;
   instance.world = ctx.model;
   instance.palette = palette;
@@ -161,6 +164,9 @@ void submit_building_instance(ISubmitter& out,
     }
   }
   out.render_instance(instance);
+  if (!archetype.fires.empty()) {
+    submit_archetype_fires(ctx, out, archetype.fires);
+  }
 }
 
 void submit_building_box(ISubmitter& out,

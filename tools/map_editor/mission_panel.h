@@ -34,6 +34,7 @@ private:
   void sync_identity();
   void sync_player();
   void sync_weather();
+  void refresh_atmosphere();
   void refresh_ai_table();
   void refresh_forces_table();
   void refresh_condition_tables();
@@ -57,6 +58,9 @@ private:
   MissionData* m_mission_data = nullptr;
   MapData* m_map_data = nullptr;
   bool m_refreshing = false;
+  bool m_atmosphere_initialized = false;
+  QJsonObject m_last_rain;
+  QVector<FogZoneElement> m_last_fog;
 
   QLineEdit* m_id_edit = nullptr;
   QLineEdit* m_title_edit = nullptr;

@@ -18,6 +18,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <vector>
 
 #include "arena_scenario.h"
 #include "arena_viewport.h"
@@ -69,6 +70,58 @@ namespace {
                     static_cast<int>(std::lround(viewport->height())));
   }
   return hardware;
+}
+
+// SOI_REVIEW_TIMING_FRAMES=N draws the gameplay view N more times and writes
+// frame_timing.json: wall time per drawn and read-back frame, so two maps (or
+// two builds) can be compared on one machine. The read-back waits for the GPU,
+// so each sample is the whole frame, CPU and GPU.
+void write_terrain_review_frame_timing(ArenaViewport& viewport,
+                                       const QString& directory) {
+  bool ok = false;
+  const int frames = qEnvironmentVariableIntValue("SOI_REVIEW_TIMING_FRAMES", &ok);
+  if (!ok || frames <= 0) {
+    return;
+  }
+  constexpr int k_warmup = 20;
+  std::vector<double> samples;
+  samples.reserve(static_cast<std::size_t>(frames));
+  QElapsedTimer timer;
+  for (int frame = 0; frame < k_warmup + frames; ++frame) {
+    timer.start();
+    const QImage image = viewport.grabFramebuffer();
+    const double ms = static_cast<double>(timer.nsecsElapsed()) / 1.0e6;
+    if (frame >= k_warmup && !image.isNull()) {
+      samples.push_back(ms);
+    }
+  }
+  if (samples.empty()) {
+    return;
+  }
+  std::vector<double> sorted = samples;
+  std::sort(sorted.begin(), sorted.end());
+  const auto at = [&sorted](double q) {
+    return sorted[static_cast<std::size_t>(q * static_cast<double>(sorted.size() - 1))];
+  };
+  double total = 0.0;
+  for (const double value : samples) {
+    total += value;
+  }
+  QJsonObject report;
+  report[QStringLiteral("frames")] = static_cast<int>(samples.size());
+  report[QStringLiteral("min_ms")] = sorted.front();
+  report[QStringLiteral("p50_ms")] = at(0.5);
+  report[QStringLiteral("p95_ms")] = at(0.95);
+  report[QStringLiteral("mean_ms")] = total / static_cast<double>(samples.size());
+  QFile file(QDir(directory).filePath(QStringLiteral("frame_timing.json")));
+  if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    file.write(QJsonDocument(report).toJson(QJsonDocument::Indented));
+  }
+  qInfo().noquote() << QStringLiteral(
+                           "Frame timing: p50 %1 ms, min %2 ms over %3 frames")
+                           .arg(at(0.5), 0, 'f', 2)
+                           .arg(sorted.front(), 0, 'f', 2)
+                           .arg(samples.size());
 }
 
 auto write_terrain_review_report(const QString& directory,
@@ -468,6 +521,7 @@ void start_terrain_review(ArenaViewport& viewport_ref,
             if (gameplay_saved) {
               gameplay.save(QDir(directory).filePath(QStringLiteral("final.png")));
             }
+            write_terrain_review_frame_timing(*viewport, directory);
             const auto* definition = viewport->terrain_review_definition();
             const bool report_saved =
                 definition != nullptr &&

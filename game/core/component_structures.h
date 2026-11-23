@@ -35,6 +35,11 @@ public:
   BuildingComponent() = default;
 
   Game::Systems::NationID original_nation_id{Game::Systems::NationID::RomanRepublic};
+
+  // Presentation only: the look the structure was authored with (see
+  // Game::Visuals::k_building_visual_styles). Systems that recompute a
+  // structure's renderer key, as the wall network does, keep to it.
+  std::string visual_style;
 };
 
 class ProductionComponent {

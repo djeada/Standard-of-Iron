@@ -1,0 +1,93 @@
+{
+  "id": "city_review_aurelia_magna_motion",
+  "title": "CITY REVIEW: AURELIA MAGNA IN MOTION",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "end_card_steam": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 400,
+    "pitch_degrees_per_second": 400,
+    "fov_degrees_per_second": 400,
+    "roll_degrees_per_second": 400,
+    "roll_magnitude_degrees": 30,
+    "shake": 1,
+    "minimum_clip_seconds": 0.1,
+    "mean_clip_seconds": 0.1
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "aur_walk_avenue",
+      "view": "walk",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [4, 1.7, 112],
+          "look": [0, 2.4, 80],
+          "fov": 50
+        },
+        {
+          "time": 10,
+          "eye": [3, 1.7, 76],
+          "look": [0, 2.4, 44],
+          "fov": 50
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_flight_to_forum",
+      "view": "flight",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 14.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [120, 80, 300],
+          "look": [0, 5, 0],
+          "fov": 36
+        },
+        {
+          "time": 7,
+          "eye": [70, 46, 170],
+          "look": [0, 4, -40],
+          "fov": 38
+        },
+        {
+          "time": 14,
+          "eye": [24, 22, 40],
+          "look": [0, 3, -96],
+          "fov": 42
+        }
+      ],
+      "ground_clearance": 0.3
+    }
+  ]
+}

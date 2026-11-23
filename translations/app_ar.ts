@@ -8050,6 +8050,22 @@ to see preview</source>
         <source>The Sepulcher Bridge</source>
         <translation>جسر الضريح</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>قرطاج</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>روما</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
+        <translation>المدينة على رأسها البحري: الميناء الحربي المستدير بجزيرة الأميرال وبجواره الحوض التجاري، والأغورا خلف الأرصفة، وبيرصا بمعبد أشمون فوق البيوت البيضاء العالية، والتوفيت عند الشاطئ، وحدائق ميغارا، والأسوار الممتدة عبر البرزخ.</translation>
+    </message>
+    <message>
+        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
+        <translation>المدينة على نهر التيبر: الكابيتول ومعابده فوق الفوروم، والبالاتين والسيرك الكبير أسفله، وحي سوبورا المزدحم، وسور حجري يحيط بالتلال، وأرصفة النهر تحت الأفنتين، وأوستيا حيث يلتقي التيبر بالبحر.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

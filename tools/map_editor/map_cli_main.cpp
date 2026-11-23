@@ -33,6 +33,7 @@ auto usage() -> int {
          "  map_cli roundtrip <map.json> <out.json>\n"
          "  map_cli normalize <map.json> <out.json>   rewrite in the editor's schema\n"
          "  map_cli apply <map.json> <ops.json> [--out <path>] [--dry-run]\n"
+         "  map_cli new <out.json> <width> <height> [name]   a blank world-space map\n"
          "\n"
          "kinds: terrain prop linear structure spawn undead_zone wildlife forest\n"
          "\n"
@@ -45,12 +46,31 @@ auto usage() -> int {
          "  {\"op\":\"replace\",\"kind\":K,\"index\":N|\"id\":S,\"json\":{...}}\n"
          "  {\"op\":\"remove\",\"kind\":K,\"index\":N|\"id\":S}\n"
          "  {\"op\":\"add\",\"kind\":K,\"json\":{...}}\n"
-         "  {\"op\":\"map\",\"name\":S,\"biome\":{...},\"rain\":{...},\"environment\":{"
-         "...}}\n"
+         "  "
+         "{\"op\":\"map\",\"name\":S,\"description\":S,\"biome\":{...},\"rain\":{...},"
+         "\n"
+         "   \"environment\":{...},\"camera\":{...},\"victory\":{...},"
+         "\"max_troops_per_player\":N}\n"
          "  {\"op\":\"root\",\"key\":S,\"value\":V | \"append\":[...] | "
          "\"remove_ids\":[...]}\n"
          "     for root data the editor does not model: dressing, landmarks, "
          "settlements\n"
+         "  {\"op\":\"terrace\",\"from\":[x,z],\"to\":[x,z],\"facing\":DEG,\"id\":S,"
+         "\"skip\":[N,...]}\n"
+         "  {\"op\":\"block\",\"origin\":[x,z],\"lots\":[WIDE,DEEP],\"rotation\":DEG,"
+         "\"alley\":N,\"id\":S}\n"
+         "     houses wall to wall on their own footprint; both take player_id, "
+         "nation,\n"
+         "     type (home) and style (tenement). A block is four terraces round a "
+         "court.\n"
+         "  {\"op\":\"paving\",\"rect\":[x0,z0,x1,z1],\"style\":\"stone\"}   a paved "
+         "square\n"
+         "  {\"op\":\"wall\",\"points\":[[x,z],...],\"closed\":true,"
+         "\"tower_spacing\":44,\"id\":S}\n"
+         "     an axis-aligned wall circuit, towers on its corners and along "
+         "long legs\n"
+         "  {\"op\":\"gate\",\"at\":[x,z],\"id\":S}   cut a gate into the wall "
+         "run under the point\n"
          "An index refers to the map as it stands when that step runs.\n";
   return 2;
 }
@@ -174,6 +194,38 @@ auto run_apply(const QStringList& args) -> int {
   return 0;
 }
 
+// A blank map in world coordinates (origin at the centre), the frame the big
+// authored maps use.
+auto run_new(const QStringList& args) -> int {
+  bool width_ok = false;
+  bool height_ok = false;
+  const int width = args[1].toInt(&width_ok);
+  const int height = args[2].toInt(&height_ok);
+  if (!width_ok || !height_ok || width < 16 || height < 16) {
+    err() << "width and height must be whole numbers of at least 16\n";
+    return 2;
+  }
+  const QString name = args.size() > 3 ? args[3] : QStringLiteral("Untitled");
+  const QJsonObject root{
+      {QStringLiteral("name"), name},
+      {QStringLiteral("coord_system"), QStringLiteral("world")},
+      {QStringLiteral("grid"),
+       QJsonObject{{QStringLiteral("width"), width},
+                   {QStringLiteral("height"), height},
+                   {QStringLiteral("tile_size"), 1}}},
+  };
+  MapEditor::MapData data;
+  QString error;
+  if (!data.load_from_bytes(QJsonDocument(root).toJson(QJsonDocument::Indented),
+                            &error) ||
+      !data.save_to_json(args[0], &error)) {
+    err() << "cannot write " << args[0] << ": " << error << "\n";
+    return 1;
+  }
+  out() << "wrote " << args[0] << " (" << width << " x " << height << ")\n";
+  return 0;
+}
+
 } // namespace
 
 auto main(int argc, char** argv) -> int {
@@ -235,6 +287,8 @@ auto main(int argc, char** argv) -> int {
     status = 0;
   } else if (command == QLatin1String("apply") && args.size() >= 2) {
     status = run_apply(args);
+  } else if (command == QLatin1String("new") && args.size() >= 3) {
+    status = run_new(args);
   } else {
     status = usage();
   }

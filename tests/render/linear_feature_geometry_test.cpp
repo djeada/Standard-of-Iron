@@ -577,4 +577,74 @@ TEST(LinearFeatureGeometryTest, BuildsLakeSurfaceAndShorelineMeshes) {
   EXPECT_FALSE(shore.visibility_samples.empty());
 }
 
+// Share of a lake surface's vertices the water shader treats as open water
+// (v at its deepest), as opposed to shallows near a shore.
+auto deep_share(const Render::GL::Mesh& water) -> float {
+  std::size_t deep = 0;
+  for (const auto& vertex : water.get_vertices()) {
+    deep += vertex.tex_coord[1] >= 0.499F ? 1U : 0U;
+  }
+  return static_cast<float>(deep) / static_cast<float>(water.get_vertices().size());
+}
+
+TEST(LinearFeatureGeometryTest, ASeaKeepsItsShallowsToAStripAlongTheShore) {
+  // On a pond the shallows are in proportion to the pond...
+  const Game::Map::Lake pond{{0.0F, 0.0F, 0.0F}, 40.0F, 30.0F, 0.0F};
+  EXPECT_FLOAT_EQ(Game::Map::lake_shallows_reach(pond), 0.0F);
+  auto pond_water = Render::Ground::build_lake_surface_mesh(pond, 1.0F);
+  ASSERT_NE(pond_water, nullptr);
+  EXPECT_LT(deep_share(*pond_water), 0.05F);
+
+  // ...on a sea that would lay mud flats a bowshot wide: they stay a strip.
+  const Game::Map::Lake sea{{0.0F, 0.0F, 400.0F}, 1400.0F, 700.0F, 0.0F};
+  const float reach = Game::Map::lake_shallows_reach(sea);
+  ASSERT_GT(reach, 0.0F);
+  ASSERT_LT(reach, 30.0F);
+  auto sea_water = Render::Ground::build_lake_surface_mesh(sea, 1.0F);
+  ASSERT_NE(sea_water, nullptr);
+  EXPECT_GT(deep_share(*sea_water), 0.7F);
+  for (const auto& vertex : sea_water->get_vertices()) {
+    if (vertex.tex_coord[1] >= 0.499F) {
+      continue;
+    }
+    EXPECT_TRUE(!Game::Map::point_in_lake(
+        sea, vertex.position[0], vertex.position[2], -(reach * 1.15F + 2.0F)))
+        << "shallow water " << vertex.position[0] << ", " << vertex.position[2]
+        << " lies further out than the reach";
+  }
+}
+
+TEST(LinearFeatureGeometryTest, ABasinOpeningOnTheSeaShowsNoShoreBetweenThem) {
+  const std::vector<Game::Map::Lake> waters{
+      Game::Map::Lake{{0.0F, -0.6F, 400.0F},
+                      1400.0F,
+                      700.0F,
+                      0.0F,
+                      Game::Map::WaterElevationMode::Authored},
+      Game::Map::Lake{{0.0F, -0.59F, 34.0F},
+                      66.0F,
+                      44.0F,
+                      0.0F,
+                      Game::Map::WaterElevationMode::Authored,
+                      Game::Map::LakeShape::Basin}};
+  const auto& sea = waters[0];
+  const auto& basin = waters[1];
+  auto water = Render::Ground::build_lake_surface_mesh(basin, 1.0F, 0.12F, waters);
+  ASSERT_NE(water, nullptr);
+
+  int landward_shore = 0;
+  for (const auto& vertex : water->get_vertices()) {
+    const bool in_sea =
+        Game::Map::point_in_lake(sea, vertex.position[0], vertex.position[2], -1.0F);
+    if (in_sea) {
+      EXPECT_FLOAT_EQ(vertex.tex_coord[1], 0.5F)
+          << "the basin still draws a shoreline out in the sea at "
+          << vertex.position[0] << ", " << vertex.position[2];
+    } else if (vertex.tex_coord[1] < 0.01F) {
+      ++landward_shore;
+    }
+  }
+  EXPECT_GT(landward_shore, 20) << "its quays on the land side still have an edge";
+}
+
 } // namespace

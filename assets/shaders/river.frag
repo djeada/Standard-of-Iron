@@ -10,6 +10,8 @@ in vec3 world_pos;
 uniform float time;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
+// 1 in a sheltered harbour, canal or pool: the water barely stirs.
+uniform float u_water_calm;
 uniform vec3 u_camera_pos;
 uniform vec3 u_soil_color;
 uniform float u_moisture_level;
@@ -71,7 +73,7 @@ float fbm(vec2 point) {
 
 float water_height(vec2 point, vec2 flow_dir) {
   float river = float(u_water_surface_kind == 0);
-  float speed = mix(0.055, 0.105, river);
+  float speed = mix(0.055, 0.105, river) * mix(1.0, 0.38, u_water_calm);
   vec2 flow = flow_dir * time * speed;
   vec2 counter_flow = vec2(-flow_dir.y, flow_dir.x) * time * speed * 0.62;
   vec2 warp = vec2(fbm(point * 0.55 - flow), fbm(point * 0.55 + counter_flow));
@@ -202,7 +204,7 @@ void main() {
   vec2 gradient;
   water_derivatives(water_uv, uv_flow, height, gradient, laplacian);
 
-  float normal_strength = 0.58;
+  float normal_strength = 0.58 * mix(1.0, 0.36, u_water_calm);
   vec3 normal = normalize(
       vec3(-gradient.x * normal_strength, 1.0, -gradient.y * normal_strength));
 

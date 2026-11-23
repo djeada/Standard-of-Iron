@@ -10,8 +10,14 @@ out vec4 frag_color;
 
 const vec3 k_bright_luma = vec3(0.2126, 0.7152, 0.0722);
 
+// One NaN or infinite pixel would be blurred by every bloom level into a black
+// square; it contributes nothing instead.
+vec3 finite_or_black(vec3 c) {
+  return (any(isnan(c)) || any(isinf(c))) ? vec3(0.0) : c;
+}
+
 void main() {
-  vec3 scene = texture(u_scene, v_uv).rgb;
+  vec3 scene = finite_or_black(texture(u_scene, v_uv).rgb);
   float luma = dot(scene, k_bright_luma);
   float soft = clamp(luma - u_threshold + u_knee, 0.0, 2.0 * u_knee);
   soft = soft * soft / max(4.0 * u_knee, 1e-4);

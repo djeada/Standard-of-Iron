@@ -125,9 +125,11 @@ void draw_tower_banner_for_team(const DrawContext& p,
 
 const std::array<TorchMount, 2> k_torches{{
     TorchMount{.at = QVector3D(-0.40F, 1.10F, 0.78F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.40F, 1.10F, 0.78F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
 }};
 
 } // namespace

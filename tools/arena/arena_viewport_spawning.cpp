@@ -550,7 +550,9 @@ auto ArenaViewport::spawn_single_building(int owner_id,
                                           std::optional<QVector3D> requested_position,
                                           bool ai_controlled,
                                           int max_population,
-                                          float rotation_y) -> Engine::Core::EntityID {
+                                          float rotation_y,
+                                          const QString& visual_style)
+    -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
@@ -573,6 +575,7 @@ auto ArenaViewport::spawn_single_building(int owner_id,
     params.max_population = max_population;
   }
   params.rotation_y = rotation_y;
+  params.visual_style = visual_style.toStdString();
 
   auto unit = m_unit_factory->create(building_type, *m_world, params);
   if (unit == nullptr) {

@@ -637,6 +637,11 @@ void submit_hens(const DrawContext& ctx,
 
 auto resolve_home_activity_plan(const DrawContext& ctx,
                                 bool carthage) -> HomeActivityPlan {
+  return resolve_home_activity_plan(ctx, home_smoke_anchor(carthage));
+}
+
+auto resolve_home_activity_plan(const DrawContext& ctx,
+                                const HomeSmokeAnchor& anchor) -> HomeActivityPlan {
   HomeActivityPlan plan;
   auto* activity = ctx.home_activity;
   if (activity == nullptr || ctx.entity == nullptr || ctx.template_prewarm ||
@@ -644,7 +649,6 @@ auto resolve_home_activity_plan(const DrawContext& ctx,
     return plan;
   }
   const auto id = ctx.entity->get_id();
-  const auto& anchor = home_smoke_anchor(carthage);
   if (!activity->inhabited(id)) {
 
     if (!anchor.valid() || resolve_building_state(ctx) != BuildingState::Destroyed) {
@@ -686,12 +690,19 @@ void submit_home_activity(const DrawContext& ctx,
                           ISubmitter& out,
                           bool carthage,
                           const HomeActivityPlan& plan) {
+  submit_home_activity(ctx, out, carthage, plan, home_smoke_anchor(carthage));
+}
+
+void submit_home_activity(const DrawContext& ctx,
+                          ISubmitter& out,
+                          bool carthage,
+                          const HomeActivityPlan& plan,
+                          const HomeSmokeAnchor& anchor) {
   if (plan.mode == HomeActivityPlan::Mode::None) {
     return;
   }
   auto* activity = ctx.home_activity;
   const auto id = ctx.entity->get_id();
-  const auto& anchor = home_smoke_anchor(carthage);
   if (plan.mode == HomeActivityPlan::Mode::FallenResidents) {
     const float fallen_for = plan.fallen_for;
     DrawContext struck = ctx;
@@ -775,7 +786,7 @@ void submit_home_activity(const DrawContext& ctx,
   if (anchor.max_laundry > 0 && detailed) {
     submit_laundry(ctx, out, carthage, anchor, id);
   }
-  if (detailed && activity->hens) {
+  if (detailed && activity->hens && anchor.hens) {
     submit_hens(ctx, out, anchor, id);
   }
 

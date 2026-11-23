@@ -271,7 +271,15 @@ void paint_water_layer(QImage& image,
     painter.rotate(lake.rotation_deg);
     painter.setPen(QPen(Palette::WATER_DARK, std::max(1.0F, half_width * 0.06F)));
     painter.setBrush(Palette::WATER_MAIN);
-    painter.drawEllipse(QPointF(0.0, 0.0), half_width, half_depth);
+    if (lake.shape == LakeShape::Basin) {
+      const float corner = std::min(half_width, half_depth) * 0.25F;
+      painter.drawRoundedRect(
+          QRectF(-half_width, -half_depth, half_width * 2.0F, half_depth * 2.0F),
+          corner,
+          corner);
+    } else {
+      painter.drawEllipse(QPointF(0.0, 0.0), half_width, half_depth);
+    }
     painter.restore();
   }
 

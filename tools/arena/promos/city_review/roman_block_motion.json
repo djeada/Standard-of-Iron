@@ -1,0 +1,95 @@
+{
+  "id": "city_review_roman_block_motion",
+  "title": "CITY REVIEW: ROMAN BLOCK IN MOTION",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "end_card_steam": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 400,
+    "pitch_degrees_per_second": 400,
+    "fov_degrees_per_second": 400,
+    "roll_degrees_per_second": 400,
+    "roll_magnitude_degrees": 30,
+    "shake": 1,
+    "minimum_clip_seconds": 0.1,
+    "mean_clip_seconds": 0.1
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "rb_walk_main_street",
+      "view": "walk",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 10.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-58, 1.6, 15.2],
+          "look": [-30, 2.2, 13.4],
+          "fov": 52
+        },
+        {
+          "time": 10,
+          "eye": [-12, 1.6, 15.2],
+          "look": [16, 2.2, 13.4],
+          "fov": 52
+        }
+      ],
+      "ground_clearance": 0.3,
+      "street_level": true,
+      "near": 0.35
+    },
+    {
+      "name": "rb_flight_over_block",
+      "view": "flight",
+      "scenario": "city_block_roman",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 12.0,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-44, 30, 96],
+          "look": [0, 4, 0],
+          "fov": 34
+        },
+        {
+          "time": 6,
+          "eye": [-36, 18, 44],
+          "look": [-2, 2, 2],
+          "fov": 38
+        },
+        {
+          "time": 12,
+          "eye": [-6, 9, 26],
+          "look": [10, 2, -4],
+          "fov": 42
+        }
+      ],
+      "ground_clearance": 0.3
+    }
+  ]
+}

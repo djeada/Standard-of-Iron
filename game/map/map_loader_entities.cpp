@@ -18,6 +18,7 @@
 #include "units/commander_catalog.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
+#include "visuals/building_asset_key.h"
 #include "wildlife/wildlife_placement.h"
 
 namespace Game::Map::loader_detail {
@@ -544,6 +545,17 @@ auto read_structures(const QJsonArray& arr,
     entry.max_population = obj.value(MAX_POPULATION).toInt(60);
     entry.rotation = float(obj.value(ROTATION).toDouble(0.0));
     entry.nation = obj.value("nation").toString();
+    entry.style = obj.value(STRUCTURE_STYLE).toString();
+    if (!entry.style.isEmpty() &&
+        !Game::Visuals::is_building_visual_style(
+            Game::Units::spawn_typeToString(entry.type), entry.style.toStdString())) {
+      if (out_error != nullptr) {
+        *out_error = QString("Unknown style '%1' for a %2 at structures[%3]")
+                         .arg(entry.style, type_name)
+                         .arg(index);
+      }
+      return false;
+    }
 
     if (entry.type == Game::Units::SpawnType::WallSegment) {
       const QJsonArray start = obj.value(START).toArray();

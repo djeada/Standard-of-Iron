@@ -8038,6 +8038,22 @@ by zobaczyć podgląd</translation>
         <source>The Sepulcher Bridge</source>
         <translation>Most Grobowca</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Kartagina</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rzym</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
+        <translation>Miasto na cyplu: okrągły port wojenny z wyspą admirała i basen handlowy tuż obok, agora za nabrzeżami, Byrsa ze świątynią Eszmuna nad wysokimi białymi domami, tofet przy brzegu, ogrody Megary i mury w poprzek przesmyku.</translation>
+    </message>
+    <message>
+        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
+        <translation>Miasto nad Tybrem: Kapitol ze świątyniami nad Forum, Palatyn i wielki cyrk u jego stóp, zatłoczona Subura, kamienny mur wokół wzgórz, rzeczne nabrzeża pod Awentynem i Ostia, gdzie Tyber wpada do morza.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

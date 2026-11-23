@@ -308,17 +308,29 @@ void update_wall_entity_visuals(Engine::Core::World& world,
 
     connection_mask = 0U;
   }
+  // A free-angled piece stands in a run of its own kind, laid end to end
+  // along its yaw: it wears the straight run (parapet and walk), not the
+  // capped stub of a lone piece, though the lattice sees no neighbours.
+  const std::uint8_t look_mask =
+      (wall->freeform && !is_gate)
+          ? static_cast<std::uint8_t>(WallNetworkService::k_connection_east |
+                                      WallNetworkService::k_connection_west)
+          : connection_mask;
   const auto appearance =
       is_gate ? WallNetworkService::resolve_gate_appearance(
                     nation_id, connection_mask, transform->rotation.y)
-              : WallNetworkService::resolve_appearance(nation_id, connection_mask);
+              : WallNetworkService::resolve_appearance(nation_id, look_mask);
   const bool keeps_authored_yaw = wall->freeform && !is_gate;
   if (!keeps_authored_yaw) {
     transform->rotation.y = (connection_mask == 0U && !is_gate)
                                 ? preserved_isolated_rotation(transform->rotation.y)
                                 : appearance.rotation_y;
   }
-  renderable->renderer_id = appearance.renderer_id;
+  const auto* building = world.try_get<BuildingComponent>(entity->get_id());
+  renderable->renderer_id =
+      building != nullptr ? Game::Visuals::apply_wall_style(appearance.renderer_id,
+                                                            building->visual_style)
+                          : appearance.renderer_id;
   wall->connection_mask = connection_mask;
   if (!is_gate) {
     sync_wall_body(world, entity->get_id(), connection_mask, transform->rotation.y);
@@ -341,6 +353,34 @@ auto WallNetworkService::snap_world_position(float world_x,
                                              float world_z) -> WallGridPosition {
   const Point grid = NavGrid::world_to_grid(world_x, world_z);
   return {.x = snap_grid_coordinate(grid.x), .z = snap_grid_coordinate(grid.y)};
+}
+
+auto WallNetworkService::freeform_run(float start_x,
+                                      float start_z,
+                                      float end_x,
+                                      float end_z) -> std::vector<FreeformPiece> {
+  const float run_dx = end_x - start_x;
+  const float run_dz = end_z - start_z;
+  const float run_length = std::hypot(run_dx, run_dz);
+  constexpr float k_rad_to_deg = 57.29577951308232F;
+  const float yaw = std::atan2(-run_dz, run_dx) * k_rad_to_deg;
+  std::vector<FreeformPiece> pieces;
+  if (run_length <= static_cast<float>(k_segment_spacing) ||
+      !Engine::Core::WallSegmentComponent::is_freeform_rotation(yaw)) {
+    return pieces;
+  }
+  // Pieces are two units long; a slightly closer pitch hides the joins.
+  constexpr float k_freeform_pitch = 1.9F;
+  const int count =
+      std::max(1, static_cast<int>(std::ceil(run_length / k_freeform_pitch)));
+  pieces.reserve(static_cast<std::size_t>(count) + 1U);
+  for (int piece = 0; piece <= count; ++piece) {
+    const float along = static_cast<float>(piece) / static_cast<float>(count);
+    pieces.push_back({.x = start_x + (run_dx * along),
+                      .z = start_z + (run_dz * along),
+                      .yaw_degrees = yaw});
+  }
+  return pieces;
 }
 
 auto WallNetworkService::build_axis_aligned_chain(const WallGridPosition& start,

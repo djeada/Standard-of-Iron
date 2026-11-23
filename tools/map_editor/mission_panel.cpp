@@ -508,7 +508,7 @@ MissionPanel::MissionPanel(MissionData* mission_data,
     , m_map_data(map_data) {
   setup_ui();
   connect(m_mission_data, &MissionData::data_changed, this, &MissionPanel::refresh);
-  connect(m_map_data, &MapData::data_changed, this, &MissionPanel::refresh);
+  connect(m_map_data, &MapData::data_changed, this, &MissionPanel::refresh_atmosphere);
   refresh();
 }
 
@@ -810,15 +810,32 @@ void MissionPanel::refresh() {
   refresh_condition_tables();
   refresh_waves_table();
   refresh_phases_table();
+  m_refreshing = false;
+  refresh_atmosphere();
+}
+
+void MissionPanel::refresh_atmosphere() {
+  if (m_refreshing) {
+    return;
+  }
   const QJsonObject rain = m_map_data->rain();
-  m_weather_enabled->setChecked(rain.value("enabled").toBool(false));
-  select_value(m_weather_type, rain.value("type").toString("rain"));
-  m_weather_intensity->setValue(rain.value("intensity").toDouble(0.5));
-  m_weather_cycle->setValue(rain.value("cycle_duration").toDouble(300.0));
-  m_weather_active->setValue(rain.value("active_duration").toDouble(60.0));
-  m_weather_fade->setValue(rain.value("fade_duration").toDouble(5.0));
-  m_weather_wind->setValue(rain.value("wind_strength").toDouble(0.0));
-  refresh_fog_table();
+  const auto& fog = m_map_data->fog_zones();
+  m_refreshing = true;
+  if (!m_atmosphere_initialized || rain != m_last_rain) {
+    m_last_rain = rain;
+    m_weather_enabled->setChecked(rain.value("enabled").toBool(false));
+    select_value(m_weather_type, rain.value("type").toString("rain"));
+    m_weather_intensity->setValue(rain.value("intensity").toDouble(0.5));
+    m_weather_cycle->setValue(rain.value("cycle_duration").toDouble(300.0));
+    m_weather_active->setValue(rain.value("active_duration").toDouble(60.0));
+    m_weather_fade->setValue(rain.value("fade_duration").toDouble(5.0));
+    m_weather_wind->setValue(rain.value("wind_strength").toDouble(0.0));
+  }
+  if (!m_atmosphere_initialized || fog != m_last_fog) {
+    m_last_fog = fog;
+    refresh_fog_table();
+  }
+  m_atmosphere_initialized = true;
   m_refreshing = false;
 }
 

@@ -12,6 +12,7 @@
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/roman/building_architecture.h"
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/geom/primitives.h"
@@ -267,6 +268,13 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .scale = 0.95F,
                                  .seed = 353});
 
+  {
+    // A trophy and a fire at its foot, and a raven on the roof to watch with.
+    const Motif::Setter set(desc, state);
+    Motif::add_roman_trophy(desc, set.at(-0.52F, 1.04F, 0.8F), 0.85F, 3);
+    Motif::add_roman_tripod_fire(desc, set.at(0.52F, 1.04F, 0.8F), 0.80F);
+    Motif::add_roman_raven(desc, set.highest(-0.6F, 0.6F, -0.6F, 0.6F), 50.0F, 0.9F);
+  }
   return desc;
 }
 
