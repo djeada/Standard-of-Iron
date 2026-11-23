@@ -116,14 +116,26 @@ int read(const std::span<char*>& args) {
                 << "\n";
     }
 
+    // Temporarily construct a vector of NinjaLog::Element instances so the functions of
+    // the compilation_time_calculator could accept it. It is needed to consider latest
+    // output files only during calculation process.
+
+    std::vector<Routines::NinjaLog::Element> ninjalog_elements;
+    ninjalog_elements.reserve(latest_output_files.size());
+    for (auto& output_file : latest_output_files) {
+      ninjalog_elements.push_back(output_file.second);
+    }
+
     std::cout << "Total compilation time: "
-              << std::chrono::hh_mm_ss(
-                     compilation_time_calculator.calculate_total_time(ninjalog))
+              << std::chrono::hh_mm_ss(compilation_time_calculator.calculate_total_time(
+                     ninjalog_elements))
               << "\n";
     std::cout << "Average compilation time: "
               << std::chrono::hh_mm_ss(
-                     compilation_time_calculator.calculate_average_time(ninjalog))
+                     compilation_time_calculator.calculate_average_time(
+                         ninjalog_elements))
               << "\n";
+
     // Additional exception classes are not required to be caught here, since all of
     // them inherit std::runtime_error. If a specific exception class does not inherit
     // std::runtime_error, add it explicitly here, or, add its base class.
