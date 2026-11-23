@@ -94,12 +94,10 @@ int read(const std::span<char*>& args) {
       }
     }
 
-    std::sort(newest_output_files.begin(),
-              newest_output_files.end(),
-              [](const auto& lhs, const auto& rhs) {
-                return Routines::duration_of_ninjalog_element(lhs.second) >
-                       Routines::duration_of_ninjalog_element(rhs.second);
-              });
+    std::ranges::sort(newest_output_files, [](const auto& lhs, const auto& rhs) {
+      return Routines::duration_of_ninjalog_element(lhs.second) >
+             Routines::duration_of_ninjalog_element(rhs.second);
+    });
 
     std::cout << "Top " << read_options.top << " slowest source files: \n\n";
     for (auto& sorted_source_file : newest_output_files) {
