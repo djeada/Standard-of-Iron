@@ -16,9 +16,9 @@
 namespace NinjaReader::Commands {
 
 int help() {
-  std::cout << "Available commands:\n\n";
+  std::cout << "Available commands:\n";
   std::cout << "\thelp\tPrint this output\n";
-  std::cout << "\read\tRead the .ninja_log file and get the slowest source files";
+  std::cout << "\tread\tRead the .ninja_log file and get the slowest source files\n";
   return 0;
 }
 
