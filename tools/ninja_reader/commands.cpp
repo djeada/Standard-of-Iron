@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "commandline_argument.h"
 #include "routines_ninjalog_parser.h"
@@ -97,11 +98,21 @@ int read(const std::span<char*>& args) {
              Routines::duration_of_ninjalog_element(rhs.second);
     });
 
-    std::cout << "Top " << read_options.top << " slowest source files: \n\n";
-    for (auto& sorted_source_file : latest_output_files) {
-      std::cout << "* " << sorted_source_file.first << ": "
-                << std::chrono::hh_mm_ss(Routines::duration_of_ninjalog_element(
-                       sorted_source_file.second))
+    auto final_top = std::min(static_cast<std::size_t>(read_options.top),
+                              latest_output_files.size());
+    if (read_options.top > latest_output_files.size()) {
+      std::cout << "(there are only " << latest_output_files.size()
+                << " source files)\n";
+    }
+    std::cout << "Top " << final_top << " slowest source files: \n\n";
+    for (auto it = latest_output_files.begin();
+         it != latest_output_files.end() &&
+         std::cmp_less(it - latest_output_files.begin(), final_top);
+         ++it) {
+      const auto& output_file = *it;
+      std::cout << "* " << output_file.first << ": "
+                << std::chrono::hh_mm_ss(
+                       Routines::duration_of_ninjalog_element(output_file.second))
                 << "\n";
     }
 
