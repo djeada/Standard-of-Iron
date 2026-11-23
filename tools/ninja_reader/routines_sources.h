@@ -43,7 +43,13 @@ public:
   calculate_average_time(const NinjaLog& ninja_log) const;
 
   [[nodiscard]] std::chrono::milliseconds
+  calculate_average_time(const std::vector<NinjaLog::Element>& elements) const;
+
+  [[nodiscard]] std::chrono::milliseconds
   calculate_total_time(const NinjaLog& ninja_log) const;
+
+  [[nodiscard]] std::chrono::milliseconds
+  calculate_total_time(const std::vector<NinjaLog::Element>& elements) const;
 };
 
 } // namespace NinjaReader::Routines

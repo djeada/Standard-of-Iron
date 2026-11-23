@@ -36,7 +36,8 @@ SourceFilesSorter::sort(const NinjaLog& ninja_log,
     std::ranges::sort(
         elements_copy,
         [](const NinjaLog::Element& first, const NinjaLog::Element& second) {
-          return duration_of_ninjalog_element(first) > duration_of_ninjalog_element(second);
+          return duration_of_ninjalog_element(first) >
+                 duration_of_ninjalog_element(second);
         });
     break;
 
@@ -44,7 +45,8 @@ SourceFilesSorter::sort(const NinjaLog& ninja_log,
     std::ranges::sort(
         elements_copy,
         [](const NinjaLog::Element& first, const NinjaLog::Element& second) {
-          return duration_of_ninjalog_element(first) < duration_of_ninjalog_element(second);
+          return duration_of_ninjalog_element(first) <
+                 duration_of_ninjalog_element(second);
         });
     break;
 
@@ -61,7 +63,15 @@ SourceFilesSorter::sort(const NinjaLog& ninja_log,
 std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_average_time(
     const NinjaLog& ninja_log) const {
   auto total_time = calculate_total_time(ninja_log);
-  return total_time / std::chrono::milliseconds::rep(ninja_log.elements.size());
+  return total_time /
+         static_cast<std::chrono::milliseconds::rep>(ninja_log.elements.size());
+}
+
+std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_average_time(
+    const std::vector<NinjaLog::Element>& elements) const {
+  NinjaLog log = {};
+  log.elements = elements;
+  return calculate_average_time(log);
 }
 
 std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_total_time(
@@ -71,6 +81,13 @@ std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_total_
     calculation_result += duration_of_ninjalog_element(elem);
   }
   return calculation_result;
+}
+
+std::chrono::milliseconds SourceFilesCompilationTimeCalculator::calculate_total_time(
+    const std::vector<NinjaLog::Element>& elements) const {
+  NinjaLog log = {};
+  log.elements = elements;
+  return calculate_total_time(log);
 }
 
 } // namespace NinjaReader::Routines
