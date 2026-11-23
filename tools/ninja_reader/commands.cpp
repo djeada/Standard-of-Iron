@@ -67,54 +67,66 @@ int read(const std::span<char*>& args) {
   Routines::SourceFilesSorter source_files_sorter;
   Routines::SourceFilesCompilationTimeCalculator compilation_time_calculator;
 
-  auto read_options = get_read_options(args);
-  auto ninjalog_path = std::filesystem::path(read_options.build) / ".ninja_log";
-  auto ninjalog = ninjalog_parser.parse(ninjalog_path);
-  if (ninjalog.elements.empty()) {
-    std::cout << "No source files found in " << ninjalog_path << "\n";
+  try {
+    auto read_options = get_read_options(args);
+    auto ninjalog_path = std::filesystem::path(read_options.build) / ".ninja_log";
+    auto ninjalog = ninjalog_parser.parse(ninjalog_path);
+    if (ninjalog.elements.empty()) {
+      std::cout << "No source files found in " << ninjalog_path << "\n";
+      return -1;
+    }
+
+    auto sorted_source_files = source_files_sorter.sort(
+        ninjalog, Routines::SourceFilesSorter::Order::FROM_SLOWEST_TO_FASTEST);
+    std::vector<std::pair<std::string, Routines::NinjaLog::Element>>
+        newest_output_files;
+
+    for (const auto& element : sorted_source_files) {
+      auto it = std::find_if(
+          newest_output_files.begin(),
+          newest_output_files.end(),
+          [&](const auto& existing) { return existing.first == element.output_file; });
+
+      if (it == newest_output_files.end()) {
+        newest_output_files.emplace_back(element.output_file, element);
+      } else if (element.logged_mtime > it->second.logged_mtime) {
+        it->second = element;
+      }
+    }
+
+    std::sort(newest_output_files.begin(),
+              newest_output_files.end(),
+              [](const auto& lhs, const auto& rhs) {
+                return Routines::duration_of_ninjalog_element(lhs.second) >
+                       Routines::duration_of_ninjalog_element(rhs.second);
+              });
+
+    std::cout << "Top " << read_options.top << " slowest source files: \n\n";
+    for (auto& sorted_source_file : newest_output_files) {
+      std::cout << "* " << sorted_source_file.first << ": "
+                << std::chrono::hh_mm_ss(Routines::duration_of_ninjalog_element(
+                       sorted_source_file.second))
+                << "\n";
+    }
+
+    std::cout << "Total compilation time: "
+              << std::chrono::hh_mm_ss(
+                     compilation_time_calculator.calculate_total_time(ninjalog))
+              << "\n";
+    std::cout << "Average compilation time: "
+              << std::chrono::hh_mm_ss(
+                     compilation_time_calculator.calculate_average_time(ninjalog))
+              << "\n";
+    // Additional exception classes are not required to be caught here, since all of
+    // them inherit std::runtime_error. If a specific exception class does not inherit
+    // std::runtime_error, add it explicitly here, or, add its base class.
+  } catch (const std::runtime_error& e) {
+    std::cout << e.what() << "\n";
+    return -1;
+  } catch (...) {
+    std::cout << "Unknown error" << "\n";
     return -1;
   }
-
-  auto sorted_source_files = source_files_sorter.sort(
-      ninjalog, Routines::SourceFilesSorter::Order::FROM_SLOWEST_TO_FASTEST);
-  std::vector<std::pair<std::string, Routines::NinjaLog::Element>> newest_output_files;
-
-  for (const auto& element : sorted_source_files) {
-    auto it = std::find_if(
-        newest_output_files.begin(),
-        newest_output_files.end(),
-        [&](const auto& existing) { return existing.first == element.output_file; });
-
-    if (it == newest_output_files.end()) {
-      newest_output_files.emplace_back(element.output_file, element);
-    } else if (element.logged_mtime > it->second.logged_mtime) {
-      it->second = element;
-    }
-  }
-
-  std::sort(newest_output_files.begin(),
-            newest_output_files.end(),
-            [](const auto& lhs, const auto& rhs) {
-              return Routines::duration_of_ninjalog_element(lhs.second) >
-                     Routines::duration_of_ninjalog_element(rhs.second);
-            });
-
-  std::cout << "Top " << read_options.top << " slowest source files: \n\n";
-  for (auto& sorted_source_file : newest_output_files) {
-    std::cout << "* " << sorted_source_file.first << ": "
-              << std::chrono::hh_mm_ss(
-                     Routines::duration_of_ninjalog_element(sorted_source_file.second))
-              << "\n";
-  }
-
-  std::cout << "Total compilation time: "
-            << std::chrono::hh_mm_ss(
-                   compilation_time_calculator.calculate_total_time(ninjalog))
-            << "\n";
-  std::cout << "Average compilation time: "
-            << std::chrono::hh_mm_ss(
-                   compilation_time_calculator.calculate_average_time(ninjalog))
-            << "\n";
 
   return 0;
 }
