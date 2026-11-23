@@ -79,28 +79,28 @@ int read(const std::span<char*>& args) {
     auto sorted_source_files = source_files_sorter.sort(
         ninjalog, Routines::SourceFilesSorter::Order::FROM_SLOWEST_TO_FASTEST);
     std::vector<std::pair<std::string, Routines::NinjaLog::Element>>
-        newest_output_files;
+        latest_output_files;
 
     for (const auto& element : sorted_source_files) {
       auto it = std::find_if(
-          newest_output_files.begin(),
-          newest_output_files.end(),
+          latest_output_files.begin(),
+          latest_output_files.end(),
           [&](const auto& existing) { return existing.first == element.output_file; });
 
-      if (it == newest_output_files.end()) {
-        newest_output_files.emplace_back(element.output_file, element);
+      if (it == latest_output_files.end()) {
+        latest_output_files.emplace_back(element.output_file, element);
       } else if (element.logged_mtime > it->second.logged_mtime) {
         it->second = element;
       }
     }
 
-    std::ranges::sort(newest_output_files, [](const auto& lhs, const auto& rhs) {
+    std::ranges::sort(latest_output_files, [](const auto& lhs, const auto& rhs) {
       return Routines::duration_of_ninjalog_element(lhs.second) >
              Routines::duration_of_ninjalog_element(rhs.second);
     });
 
     std::cout << "Top " << read_options.top << " slowest source files: \n\n";
-    for (auto& sorted_source_file : newest_output_files) {
+    for (auto& sorted_source_file : latest_output_files) {
       std::cout << "* " << sorted_source_file.first << ": "
                 << std::chrono::hh_mm_ss(Routines::duration_of_ninjalog_element(
                        sorted_source_file.second))
