@@ -1,0 +1,35 @@
+{
+  "map": "assets/maps/map_carthage.json",
+  "note": "Before/after pairs: camera distance, tilt, yaw, fov, preset and hour are fixed; the centre follows the landmark when a plan moves it.",
+  "views": [
+    {
+      "name": "carthage_P1_skyline",
+      "center": [-20, 90],
+      "distance": 330,
+      "tilt": 50,
+      "yaw": 200
+    },
+    {
+      "name": "carthage_P2_gameplay",
+      "center": [109, 122],
+      "distance": 95,
+      "tilt": 48,
+      "yaw": 225
+    },
+    {
+      "name": "carthage_P3_street",
+      "center": [95, 148],
+      "distance": 26,
+      "tilt": 16,
+      "yaw": 200
+    },
+    {
+      "name": "carthage_P4_night",
+      "center": [105, 196],
+      "distance": 60,
+      "tilt": 30,
+      "yaw": 150,
+      "hour": 21.5
+    }
+  ]
+}

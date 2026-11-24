@@ -8030,6 +8030,22 @@ bir harita seç</translation>
         <source>The Sepulcher Bridge</source>
         <translation>Kabir Köprüsü</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Kartaca</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Roma</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>Burun üzerindeki şehir: teraslar hâlinde Eşmun Tapınağı&apos;na yükselen Byrsa, denize doğru yelpaze gibi açılan aşağı şehir, amiral adasıyla yuvarlak savaş limanı ve ticaret havuzu, rıhtımların ardındaki agora, lagün kıyısındaki tofet, Megara&apos;nın duvarlarla çevrili bahçeleri ve villaları, tepelerdeki nekropol ve kıstağı boydan boya kesen üçlü sur.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>Tiber kıyısındaki yedi tepeli şehir: Capitolium&apos;un eteğindeki Forum, imparatorluk forumları, Kolezyum ve Circus Maximus, nehir kıyısındaki hayvan pazarı, kalabalık Subura, havuzlarıyla Sallustius, Maecenas ve Lucullus&apos;un bahçeleri, nehrin kıvrımındaki Campus Martius, Janiculum&apos;un eteğindeki Trastevere, zeytinlikler içindeki villalar, Servius Surları dışında saf tutmuş bir lejyon ve Tiber&apos;in denize döküldüğü Ostia.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

@@ -13,7 +13,7 @@ namespace {
 
 // clang-format off
 [[maybe_unused]] const char* const k_asset_strings[] = {
-    // 1169 strings across 9 contexts.
+    // 1173 strings across 9 contexts.
     // ---- Missions (473) ----
     QT_TRANSLATE_NOOP("Missions", "202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal's eighty elephants could be driven or let pass. Masinissa's Numidian horse on the right and Laelius's Italian cavalry on the left drove Hannibal's cavalry off the field. Hannibal's three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher's intervention is the campaign's deliberate dark-fantasy break from history."),
     QT_TRANSLATE_NOOP("Missions", "216-211 BC: after Cannae, Capua went over to Hannibal, and his army wintered there in 216-215. Rome answered by containment rather than battle: Quintus Fabius Maximus, the Delayer and 'shield of Rome', shadowed Hannibal and stripped the country, while Marcus Claudius Marcellus, the 'sword of Rome', held Nola against him in 216, 215 and 214 BC. In 212 the consuls closed a ring of siege works around Capua, and the city fell in 211 after Hannibal's march on Rome failed to draw the legions off. This mission is a dark-fantasy composite: it compresses those years into one defence, puts Fabius, the allied legions and Marcellus at the head of a siege army on the field at once, and adds the Iron Sepulcher, which history does not record."),
@@ -509,7 +509,7 @@ namespace {
     QT_TRANSLATE_NOOP("Campaigns", "The legions come out of the river and Mago comes out of the reeds behind them. Ten thousand cut their way through to Placentia; the rest stay in the water. Sempronius writes to Rome that the weather robbed him of victory, and bodies beneath the ice rise only when nobody is watching."),
     QT_TRANSLATE_NOOP("Campaigns", "The velites run before they throw, and Scipio is carried from the field across his son's saddle. Rome falls back over the Po to Placentia. The Insubres see that Carthage can defeat Rome on Italian ground - but pale bowmen still haunt the abandoned ford."),
 
-    // ---- Maps (34) ----
+    // ---- Maps (38) ----
     QT_TRANSLATE_NOOP("Maps", "A Roman watch camp on the old road, the night it finds out why the shepherds stopped using it. Timber, stone and a flock are close to the camp; the barrow ruins hold the middle ground; the cursed shrine stands alone on the north-east ground. A low knoll between the camp and the barrow is the only high ground worth having, and the road runs past the dead the whole way."),
     QT_TRANSLATE_NOOP("Maps", "A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side."),
     QT_TRANSLATE_NOOP("Maps", "A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready."),
@@ -526,6 +526,7 @@ namespace {
     QT_TRANSLATE_NOOP("Maps", "Battle of Zama"),
     QT_TRANSLATE_NOOP("Maps", "Blackpine Hollow"),
     QT_TRANSLATE_NOOP("Maps", "Campania Campaign"),
+    QT_TRANSLATE_NOOP("Maps", "Carthage"),
     QT_TRANSLATE_NOOP("Maps", "Copper Canyons"),
     QT_TRANSLATE_NOOP("Maps", "Crossing the Alps"),
     QT_TRANSLATE_NOOP("Maps", "Crossing the Rhone"),
@@ -536,11 +537,14 @@ namespace {
     QT_TRANSLATE_NOOP("Maps", "Iron Sepulcher Watch"),
     QT_TRANSLATE_NOOP("Maps", "One stone bridge over the Grey Water, and nothing else for a day's march either way. The south bank rises in two ridges that close on a gated wall across the bridgehead, so whatever crosses the bridge has to cross it under the bows on both ridges and then break the gate. The north bank is barrows and dead wood, and that is where the dead come from."),
     QT_TRANSLATE_NOOP("Maps", "Pinewater Cut"),
+    QT_TRANSLATE_NOOP("Maps", "Rome"),
     QT_TRANSLATE_NOOP("Maps", "Sallow Ford"),
     QT_TRANSLATE_NOOP("Maps", "Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won."),
     QT_TRANSLATE_NOOP("Maps", "Sunbaked Terraces"),
     QT_TRANSLATE_NOOP("Maps", "The Sepulcher Bridge"),
     QT_TRANSLATE_NOOP("Maps", "The Two Fords"),
+    QT_TRANSLATE_NOOP("Maps", "The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea."),
+    QT_TRANSLATE_NOOP("Maps", "The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral's island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus."),
     QT_TRANSLATE_NOOP("Maps", "Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first."),
     QT_TRANSLATE_NOOP("Maps", "Training Meadow"),
     QT_TRANSLATE_NOOP("Maps", "Victumulae"),

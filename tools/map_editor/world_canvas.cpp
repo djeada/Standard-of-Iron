@@ -1,8 +1,10 @@
 #include "world_canvas.h"
 
+#include <QApplication>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFileInfo>
+#include <QHelpEvent>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
@@ -17,6 +19,7 @@
 
 #include "game/strategic/strategic_assets.h"
 #include "game/strategic/strategic_encounter.h"
+#include "move_handle.h"
 #include "world_document.h"
 
 namespace MapEditor {
@@ -191,14 +194,23 @@ WorldCanvas::WorldCanvas(WorldDocument* document, QWidget* parent)
   setMinimumSize(480, 320);
   setAttribute(Qt::WA_OpaquePaintEvent);
   connect(m_document, &WorldDocument::loaded, this, [this]() {
+    cancel_gesture();
     load_backdrop();
     rebuild_shapes();
     m_fitted = false;
     m_user_view = false;
     fit_all();
   });
-  connect(m_document, &WorldDocument::changed, this, [this]() { update(); });
-  connect(m_document, &WorldDocument::selection_changed, this, [this]() { update(); });
+  connect(m_document, &WorldDocument::changed, this, [this]() {
+    cancel_gesture();
+    update();
+  });
+  connect(m_document, &WorldDocument::selection_changed, this, [this]() {
+    if (!m_drag_site.isEmpty() || !m_drag_route.isEmpty()) {
+      cancel_gesture();
+    }
+    update();
+  });
 }
 
 void WorldCanvas::load_backdrop() {
@@ -278,6 +290,10 @@ auto WorldCanvas::screen_of(const S::LonLat& point) const -> QPointF {
   return (map_of(point) * m_scale) + m_offset;
 }
 
+auto WorldCanvas::screen_of(const S::Site& site) const -> QPointF {
+  return screen_of(site.id == m_drag_site ? m_drag_position : site.position);
+}
+
 auto WorldCanvas::lonlat_at(QPointF screen) const -> S::LonLat {
   return lonlat_of_map((screen - m_offset) / m_scale);
 }
@@ -289,11 +305,18 @@ void WorldCanvas::set_layer(Layer layer, bool enabled) {
     return;
   }
   m_layers = next;
+  if ((m_layers & Sites) == 0U && !m_drag_site.isEmpty()) {
+    cancel_gesture();
+  }
+  if ((m_layers & Routes) == 0U && !m_drag_route.isEmpty()) {
+    cancel_gesture();
+  }
   emit layers_changed(m_layers);
   update();
 }
 
 void WorldCanvas::set_tool(Tool tool) {
+  cancel_gesture();
   m_tool = tool;
   m_route_start.clear();
   setCursor(tool == Tool::Select ? Qt::ArrowCursor : Qt::CrossCursor);
@@ -408,10 +431,21 @@ auto WorldCanvas::site_radius(const S::Site& site) const -> double {
 
 auto WorldCanvas::route_screen_path(const S::Route& route) const -> QPainterPath {
   const auto& def = m_document->definition();
-  const auto line = def.route_polyline(route);
+  auto line = def.route_polyline(route);
   QPainterPath path;
   if (line.size() < 2) {
     return path;
+  }
+  if (!m_drag_site.isEmpty()) {
+    if (route.from == m_drag_site) {
+      line.first() = m_drag_position;
+    }
+    if (route.to == m_drag_site) {
+      line.last() = m_drag_position;
+    }
+  } else if (route.id == m_drag_route && m_drag_waypoint >= 0) {
+    const qsizetype i = m_drag_waypoint + (def.site(route.from) != nullptr ? 1 : 0);
+    line[i] = m_drag_position;
   }
   path.moveTo(screen_of(line.first()));
   if (route.kind == S::RouteKind::SeaLane && route.waypoints.isEmpty()) {
@@ -434,8 +468,7 @@ auto WorldCanvas::army_anchor(const S::ArmyState& army, int stack) const -> QPoi
   if (site == nullptr) {
     return {};
   }
-  return screen_of(site->position) +
-         QPointF(site_radius(*site) + 4.0, -22.0 - (stack * 19.0));
+  return screen_of(*site) + QPointF(site_radius(*site) + 4.0, -22.0 - (stack * 19.0));
 }
 
 auto WorldCanvas::banner_rect(const S::ArmyState& army, int stack) const -> QRectF {
@@ -456,10 +489,13 @@ auto WorldCanvas::banner_text(const S::ArmyState& army) -> QString {
 }
 
 auto WorldCanvas::hit_site(QPointF screen) const -> QString {
+  if ((m_layers & Sites) == 0U) {
+    return {};
+  }
   QString best;
   double best_distance = 1e9;
   for (const auto& site : m_document->definition().sites) {
-    const double d = QLineF(screen, screen_of(site.position)).length();
+    const double d = QLineF(screen, screen_of(site)).length();
     if (d <= site_radius(site) + 5.0 && d < best_distance) {
       best_distance = d;
       best = site.id;
@@ -648,6 +684,7 @@ void WorldCanvas::paintEvent(QPaintEvent*) {
   paint_waypoints(painter);
   paint_overlay(painter);
   paint_legend(painter);
+  paint_site_handle(painter);
 }
 
 void WorldCanvas::paint_backdrop(QPainter& painter) const {
@@ -815,7 +852,7 @@ void WorldCanvas::paint_movements(QPainter& painter) const {
     const QColor color = faction_color(army.faction);
     if (previous == nullptr) {
       if (const auto* site = def.site(army.location)) {
-        const QPointF at = screen_of(site->position);
+        const QPointF at = screen_of(*site);
         painter.setPen(QPen(color.lighter(130), 2.0));
         for (int i = 0; i < 8; ++i) {
           const double a = i * std::numbers::pi / 4.0;
@@ -874,7 +911,7 @@ void WorldCanvas::paint_movements(QPainter& painter) const {
   for (const auto& army : before.armies) {
     if (after.army(army.id) == nullptr) {
       if (const auto* site = def.site(army.location)) {
-        const QPointF at = screen_of(site->position) + QPointF(0, -16);
+        const QPointF at = screen_of(*site) + QPointF(0, -16);
         painter.setPen(QPen(QColor(40, 30, 20, 220), 3.0));
         painter.drawLine(at + QPointF(-7, -7), at + QPointF(7, 7));
         painter.drawLine(at + QPointF(-7, 7), at + QPointF(7, -7));
@@ -901,9 +938,9 @@ void WorldCanvas::paint_supply(QPainter& painter) const {
           continue;
         }
         if (i == 0) {
-          line.moveTo(screen_of(site->position));
+          line.moveTo(screen_of(*site));
         } else {
-          line.lineTo(screen_of(site->position));
+          line.lineTo(screen_of(*site));
         }
       }
       QPen pen(color, 3.0, Qt::CustomDashLine, Qt::RoundCap, Qt::RoundJoin);
@@ -915,14 +952,14 @@ void WorldCanvas::paint_supply(QPainter& painter) const {
         painter.setPen(QPen(color, 2.4));
         painter.setBrush(Qt::NoBrush);
         const double r = site_radius(*source) + 6.0;
-        painter.drawEllipse(screen_of(source->position), r, r);
+        painter.drawEllipse(screen_of(*source), r, r);
       }
     }
     if (const auto* here = def.site(army->location)) {
       painter.setPen(QPen(color, 2.0, Qt::DashLine));
       painter.setBrush(Qt::NoBrush);
       const double r = site_radius(*here) + 10.0;
-      painter.drawEllipse(screen_of(here->position), r, r);
+      painter.drawEllipse(screen_of(*here), r, r);
     }
   }
   painter.restore();
@@ -966,7 +1003,7 @@ void WorldCanvas::paint_path(QPainter& painter) const {
     if (site == nullptr) {
       continue;
     }
-    const QPointF at = screen_of(site->position);
+    const QPointF at = screen_of(*site);
     painter.setPen(QPen(k_ink, 1.4));
     painter.setBrush(k_gold);
     painter.drawEllipse(at, 8.5, 8.5);
@@ -1107,7 +1144,7 @@ void WorldCanvas::paint_sites(QPainter& painter) const {
   }
   painter.save();
   for (const auto& site : def.sites) {
-    const QPointF at = screen_of(site.position);
+    const QPointF at = screen_of(site);
     if (!rect().adjusted(-40, -40, 40, 40).contains(at.toPoint())) {
       continue;
     }
@@ -1143,10 +1180,12 @@ void WorldCanvas::paint_sites(QPainter& painter) const {
     }
     const bool selected = m_document->selection() == site.id;
     if (selected) {
+      const bool moving = m_drag_site == site.id;
       painter.setBrush(Qt::NoBrush);
-      painter.setPen(QPen(QColor(20, 14, 8, 200), 6.0));
+      painter.setPen(QPen(QColor(20, 14, 8, 220), moving ? 8.0 : 6.0));
       painter.drawEllipse(at, r + 7.0, r + 7.0);
-      painter.setPen(QPen(k_gold, 3.0));
+      painter.setPen(
+          QPen(moving ? k_grabbed_color : k_selection_color, moving ? 4.0 : 3.0));
       painter.drawEllipse(at, r + 7.0, r + 7.0);
     } else if (m_hover == site.id || m_route_start == site.id) {
       painter.setPen(QPen(QColor(255, 250, 235, 220), 2.0));
@@ -1191,7 +1230,7 @@ void WorldCanvas::paint_armies(QPainter& painter) const {
     if (site == nullptr) {
       continue;
     }
-    const QPointF base = screen_of(site->position);
+    const QPointF base = screen_of(*site);
     const QColor color = faction_color(army.faction);
     const bool selected = m_document->selection() == army.id;
     painter.setPen(QPen(k_ink, 1.6));
@@ -1257,7 +1296,7 @@ void WorldCanvas::paint_labels(QPainter& painter) const {
   QFont font(QStringLiteral("Serif"));
   for (const auto& candidate : candidates) {
     const S::Site& site = *candidate.site;
-    const QPointF at = screen_of(site.position);
+    const QPointF at = screen_of(site);
     if (!rect().adjusted(-20, -20, 20, 20).contains(at.toPoint())) {
       continue;
     }
@@ -1333,7 +1372,7 @@ void WorldCanvas::paint_issues(QPainter& painter) const {
     }
     const QColor color = issue.severity == S::Severity::Error ? k_error : k_warning;
     if (const auto* site = def.site(issue.entity)) {
-      const QPointF at = screen_of(site->position);
+      const QPointF at = screen_of(*site);
       const double r = site_radius(*site) + 11.0;
       painter.setPen(QPen(color, 2.6));
       painter.drawEllipse(at, r, r);
@@ -1365,18 +1404,38 @@ void WorldCanvas::paint_issues(QPainter& painter) const {
 }
 
 void WorldCanvas::paint_waypoints(QPainter& painter) const {
+  if (!m_drag_edit || (m_layers & Routes) == 0U ||
+      (m_tool != Tool::Select && m_tool != Tool::Waypoint)) {
+    return;
+  }
   const auto* route = m_document->definition().route(m_document->selection());
   if (route == nullptr) {
     return;
   }
   painter.save();
   for (int i = 0; i < route->waypoints.size(); ++i) {
-    const QPointF at = screen_of(route->waypoints[i]);
+    const bool active = route->id == m_drag_route && i == m_drag_waypoint;
+    const QPointF at = screen_of(active ? m_drag_position : route->waypoints[i]);
     painter.setPen(QPen(k_ink, 1.5));
-    painter.setBrush(i == m_drag_waypoint ? k_gold : QColor(255, 250, 235));
-    painter.drawRect(QRectF(at - QPointF(4.5, 4.5), QSizeF(9, 9)));
+    painter.setBrush(active ? k_grabbed_color : k_selection_color);
+    painter.drawRoundedRect(QRectF(at - QPointF(6, 6), QSizeF(12, 12)), 2, 2);
   }
   painter.restore();
+}
+
+void WorldCanvas::paint_site_handle(QPainter& painter) const {
+  if (!m_drag_edit || m_tool != Tool::Select || (m_layers & Sites) == 0U) {
+    return;
+  }
+  if (const auto* site = m_document->definition().site(m_document->selection())) {
+    const QPointF at = screen_of(*site);
+    const QRectF box = move_handle_rect(at, rect());
+    paint_move_handle(painter,
+                      at,
+                      box,
+                      site->id == m_drag_site,
+                      !m_panning && !m_space_held && box.contains(m_mouse));
+  }
 }
 
 void WorldCanvas::paint_overlay(QPainter& painter) const {
@@ -1391,7 +1450,7 @@ void WorldCanvas::paint_overlay(QPainter& painter) const {
   const QColor color = m_tool == Tool::PathQuery ? k_gold : QColor(255, 255, 255);
   QPen pen(color, 2.4, Qt::DashLine, Qt::RoundCap);
   painter.setPen(pen);
-  painter.drawLine(screen_of(site->position), m_mouse);
+  painter.drawLine(screen_of(*site), m_mouse);
   painter.restore();
 }
 
@@ -1467,26 +1526,73 @@ void WorldCanvas::paint_legend(QPainter& painter) const {
 }
 
 auto WorldCanvas::hit_waypoint(QPointF screen) const -> int {
+  if (!m_drag_edit || (m_layers & Routes) == 0U ||
+      (m_tool != Tool::Select && m_tool != Tool::Waypoint)) {
+    return -1;
+  }
   const auto* route = m_document->definition().route(m_document->selection());
   if (route == nullptr) {
     return -1;
   }
   for (int i = 0; i < route->waypoints.size(); ++i) {
-    if (QLineF(screen, screen_of(route->waypoints[i])).length() <= 7.0) {
+    const QPointF at = screen_of(route->waypoints[i]);
+    if (QRectF(at - QPointF(7, 7), QSizeF(14, 14)).contains(screen)) {
       return i;
     }
   }
   return -1;
 }
 
+auto WorldCanvas::site_handle_at(QPointF screen) const -> bool {
+  if (!m_drag_edit || m_tool != Tool::Select || (m_layers & Sites) == 0U) {
+    return false;
+  }
+  const auto* site = m_document->definition().site(m_document->selection());
+  return site != nullptr && move_handle_rect(screen_of(*site), rect()).contains(screen);
+}
+
+void WorldCanvas::update_drag(QPointF screen) {
+  m_moved |= (screen - m_press).manhattanLength() >= QApplication::startDragDistance();
+  if (!m_moved) {
+    return;
+  }
+  const S::LonLat point = lonlat_at(screen);
+  m_drag_position = {m_drag_origin.lon + point.lon - m_drag_press.lon,
+                     m_drag_origin.lat + point.lat - m_drag_press.lat};
+}
+
+void WorldCanvas::cancel_gesture() {
+  m_gesture_button = Qt::NoButton;
+  m_panning = false;
+  m_pan_pending = false;
+  m_moved = false;
+  m_drag_waypoint = -1;
+  m_drag_route.clear();
+  m_drag_site.clear();
+  setCursor(m_space_held             ? Qt::OpenHandCursor
+            : m_tool == Tool::Select ? Qt::ArrowCursor
+                                     : Qt::CrossCursor);
+}
+
 void WorldCanvas::mousePressEvent(QMouseEvent* event) {
+  if (m_gesture_button != Qt::NoButton) {
+    if (event->button() == Qt::RightButton &&
+        (!m_drag_site.isEmpty() || !m_drag_route.isEmpty())) {
+      cancel_gesture();
+      emit status_message(QStringLiteral("Move cancelled."));
+      update();
+    }
+    return;
+  }
   setFocus(Qt::MouseFocusReason);
   m_last_mouse = event->pos();
   m_mouse = event->position();
   m_press = event->position();
   if (event->button() == Qt::MiddleButton ||
       (event->button() == Qt::LeftButton && m_space_held)) {
+    m_gesture_button = event->button();
     m_panning = true;
+    m_hover.clear();
     setCursor(Qt::ClosedHandCursor);
     return;
   }
@@ -1502,27 +1608,29 @@ void WorldCanvas::mousePressEvent(QMouseEvent* event) {
   if (event->button() != Qt::LeftButton) {
     return;
   }
+  m_gesture_button = Qt::LeftButton;
   const QPointF pos = event->position();
-  switch (m_tool) {
-  case Tool::Select: {
-    const int waypoint = hit_waypoint(pos);
-    if (waypoint >= 0) {
-      m_drag_waypoint = waypoint;
-      return;
-    }
-    const QString id = hit_any(pos);
-    m_document->select(id);
-    if (m_drag_edit && m_document->definition().site(id) != nullptr &&
-        hit_army(pos).isEmpty()) {
-      m_drag_site = id;
-      m_drag_origin = m_document->definition().site(id)->position;
-      m_drag_position = m_drag_origin;
-    } else if (id.isEmpty() || m_document->definition().region(id) != nullptr) {
-      m_panning = true;
-      setCursor(Qt::ClosedHandCursor);
-    }
-    break;
+  if (const int waypoint = hit_waypoint(pos); waypoint >= 0) {
+    m_drag_waypoint = waypoint;
+    m_drag_route = m_document->selection();
+    m_drag_origin = m_document->definition().route(m_drag_route)->waypoints[waypoint];
+  } else if (site_handle_at(pos)) {
+    m_drag_site = m_document->selection();
+    m_drag_origin = m_document->definition().site(m_drag_site)->position;
   }
+  if (!m_drag_site.isEmpty() || !m_drag_route.isEmpty()) {
+    m_drag_press = lonlat_at(pos);
+    m_drag_position = m_drag_origin;
+    setCursor(Qt::ClosedHandCursor);
+    emit status_message(QStringLiteral("Release to place · Esc cancels the move"));
+    update();
+    return;
+  }
+
+  switch (m_tool) {
+  case Tool::Select:
+    m_pan_pending = true;
+    break;
   case Tool::AddSite: {
     const QString existing = hit_site(pos);
     if (!existing.isEmpty()) {
@@ -1538,7 +1646,7 @@ void WorldCanvas::mousePressEvent(QMouseEvent* event) {
     }
     emit status_message(
         QStringLiteral(
-            "Added %1 — drag it into place, then connect it with Add Route (R).")
+            "Added %1. Drag its move handle or connect it with Add Route (R).")
             .arg(m_document->definition().display_name(m_document->selection())));
     break;
   }
@@ -1590,7 +1698,16 @@ void WorldCanvas::mousePressEvent(QMouseEvent* event) {
 }
 
 void WorldCanvas::mouseMoveEvent(QMouseEvent* event) {
+  const QPointF previous = m_mouse;
   m_mouse = event->position();
+  if (m_pan_pending &&
+      (m_mouse - m_press).manhattanLength() >= QApplication::startDragDistance()) {
+    m_panning = true;
+    m_pan_pending = false;
+    m_hover.clear();
+    m_last_mouse = m_press.toPoint();
+    setCursor(Qt::ClosedHandCursor);
+  }
   if (m_panning) {
     m_user_view = true;
     m_offset += event->pos() - m_last_mouse;
@@ -1598,48 +1715,22 @@ void WorldCanvas::mouseMoveEvent(QMouseEvent* event) {
     update();
     return;
   }
-  if (m_drag_waypoint >= 0 && (event->buttons() & Qt::LeftButton) != 0U) {
-    auto& def = const_cast<S::WorldDefinition&>(m_document->definition());
-    if (S::Route* route = def.route_mut(m_document->selection());
-        route != nullptr && m_drag_waypoint < route->waypoints.size()) {
-      if (!m_dragging_site) {
-        m_drag_origin = route->waypoints[m_drag_waypoint];
-      }
-      m_dragging_site = true;
-      m_drag_position = lonlat_at(event->position());
-      route->waypoints[m_drag_waypoint] = m_drag_position;
-    }
+  if (!m_drag_site.isEmpty() || !m_drag_route.isEmpty()) {
+    update_drag(m_mouse);
     update();
     return;
   }
-  if (!m_drag_site.isEmpty() && (event->buttons() & Qt::LeftButton) != 0U) {
-    if (!m_dragging_site && QLineF(m_press, event->position()).length() < 3.0) {
-      return;
-    }
-    m_dragging_site = true;
-    m_drag_position = lonlat_at(event->position());
-    auto& def = const_cast<S::WorldDefinition&>(m_document->definition());
-    if (S::Site* site = def.site_mut(m_drag_site)) {
-      site->position = m_drag_position;
-    }
-    update();
-    return;
-  }
-  const QString hover = hit_any(event->position());
-  if (hover != m_hover) {
+  const bool handle = !m_space_held && site_handle_at(m_mouse);
+  const QString hover = handle || m_space_held ? QString{} : hit_any(m_mouse);
+  if (hover != m_hover || !m_route_start.isEmpty() ||
+      handle != site_handle_at(previous)) {
     m_hover = hover;
-    if (!hover.isEmpty()) {
-      QToolTip::showText(event->globalPosition().toPoint(), describe(hover), this);
-    } else {
-      QToolTip::hideText();
-    }
-    update();
-  } else if (!m_route_start.isEmpty()) {
     update();
   }
-  setCursor(hit_waypoint(event->position()) >= 0 ? Qt::SizeAllCursor
+  setCursor(m_space_held                           ? Qt::OpenHandCursor
+            : handle || hit_waypoint(m_mouse) >= 0 ? Qt::SizeAllCursor
             : m_tool == Tool::Select
-                ? (hover.isEmpty() ? Qt::ArrowCursor : Qt::PointingHandCursor)
+                ? (hover.isEmpty() ? Qt::OpenHandCursor : Qt::PointingHandCursor)
                 : Qt::CrossCursor);
   const S::LonLat ll = lonlat_at(event->position());
   emit cursor_moved(QStringLiteral("%1° %2  %3° %4")
@@ -1649,54 +1740,57 @@ void WorldCanvas::mouseMoveEvent(QMouseEvent* event) {
                         .arg(ll.lon >= 0 ? QStringLiteral("E") : QStringLiteral("W")));
 }
 
-void WorldCanvas::mouseReleaseEvent(QMouseEvent*) {
-  if (m_panning) {
-    m_panning = false;
-    setCursor(m_tool == Tool::Select ? Qt::ArrowCursor : Qt::CrossCursor);
-    update();
+void WorldCanvas::mouseReleaseEvent(QMouseEvent* event) {
+  if (event->button() != m_gesture_button) {
     return;
   }
-  auto& def = const_cast<S::WorldDefinition&>(m_document->definition());
-  if (m_drag_waypoint >= 0) {
-    const int index = m_drag_waypoint;
-    m_drag_waypoint = -1;
-    if (m_dragging_site) {
-      m_dragging_site = false;
-      const QString route = m_document->selection();
-      if (S::Route* entry = def.route_mut(route);
-          entry != nullptr && index < entry->waypoints.size()) {
-        entry->waypoints[index] = m_drag_origin;
-      }
-      m_document->move_waypoint(route, index, m_drag_position);
+  if (m_panning || m_pan_pending) {
+    if (m_panning || (event->position() - m_press).manhattanLength() >=
+                         QApplication::startDragDistance()) {
+      m_user_view = true;
+      m_offset += event->pos() - m_last_mouse;
+    } else {
+      m_document->select(hit_any(event->position()));
     }
-    return;
+    cancel_gesture();
+  } else if (!m_drag_site.isEmpty() || !m_drag_route.isEmpty()) {
+    update_drag(event->position());
+    const QString site = m_drag_site;
+    const QString route = m_drag_route;
+    const int waypoint = m_drag_waypoint;
+    const S::LonLat position = m_drag_position;
+    const bool moved = m_moved;
+    cancel_gesture();
+    if (moved && !site.isEmpty() && m_document->move_site(site, position)) {
+      emit status_message(
+          QStringLiteral("Moved %1").arg(m_document->definition().display_name(site)));
+    } else if (moved && !route.isEmpty() &&
+               m_document->move_waypoint(route, waypoint, position)) {
+      emit status_message(QStringLiteral("Moved route bend"));
+    } else {
+      emit status_message(QStringLiteral("Position unchanged"));
+    }
+  } else {
+    cancel_gesture();
   }
-  if (m_drag_site.isEmpty()) {
-    return;
-  }
-  const QString id = m_drag_site;
-  m_drag_site.clear();
-  if (!m_dragging_site) {
-    return;
-  }
-  m_dragging_site = false;
-  if (S::Site* site = def.site_mut(id)) {
-    site->position = m_drag_origin;
-  }
-  m_document->move_site(id, m_drag_position);
-  emit status_message(
-      QStringLiteral("Moved %1. Ctrl+Z undoes.").arg(def.display_name(id)));
+  update();
 }
 
 void WorldCanvas::mouseDoubleClickEvent(QMouseEvent* event) {
+  if (event->button() != Qt::LeftButton || m_space_held ||
+      site_handle_at(event->position())) {
+    return;
+  }
   const int waypoint = hit_waypoint(event->position());
   if (waypoint >= 0) {
     m_document->remove_waypoint(m_document->selection(), waypoint);
     return;
   }
-  const QString id = hit_any(event->position());
-  if (!id.isEmpty()) {
-    emit activated(id);
+  if (m_tool == Tool::Select) {
+    const QString id = hit_any(event->position());
+    if (!id.isEmpty()) {
+      emit activated(id);
+    }
   }
 }
 
@@ -1721,23 +1815,72 @@ void WorldCanvas::resizeEvent(QResizeEvent*) {
 
 void WorldCanvas::leaveEvent(QEvent*) {
   m_hover.clear();
+  m_mouse = QPointF(-1, -1);
   update();
+}
+
+bool WorldCanvas::event(QEvent* event) {
+  if (event->type() == QEvent::UngrabMouse || event->type() == QEvent::FocusOut ||
+      event->type() == QEvent::Hide) {
+    if (m_gesture_button != Qt::NoButton || m_space_held) {
+      const bool moving = !m_drag_site.isEmpty() || !m_drag_route.isEmpty();
+      m_space_held = false;
+      cancel_gesture();
+      if (moving) {
+        emit status_message(QStringLiteral("Move cancelled."));
+      }
+      update();
+    }
+  } else if (event->type() == QEvent::ToolTip) {
+    auto* help = static_cast<QHelpEvent*>(event);
+    QString text;
+    if (m_gesture_button == Qt::NoButton && !m_space_held) {
+      if (site_handle_at(help->pos())) {
+        text = QStringLiteral("Drag to move the site.");
+      } else if (hit_waypoint(help->pos()) >= 0) {
+        text = QStringLiteral("Drag to move this bend. Double-click to remove it.");
+      } else if (const QString id = hit_any(help->pos()); !id.isEmpty()) {
+        text = describe(id);
+      }
+    }
+    if (text.isEmpty()) {
+      QToolTip::hideText();
+      event->ignore();
+    } else {
+      QToolTip::showText(help->globalPos(), text, this);
+    }
+    return true;
+  }
+  return QWidget::event(event);
 }
 
 void WorldCanvas::keyReleaseEvent(QKeyEvent* event) {
   if (event->key() == Qt::Key_Space && !event->isAutoRepeat()) {
     m_space_held = false;
-    setCursor(m_tool == Tool::Select ? Qt::ArrowCursor : Qt::CrossCursor);
+    if (m_gesture_button == Qt::NoButton) {
+      setCursor(m_tool == Tool::Select ? Qt::OpenHandCursor : Qt::CrossCursor);
+    }
+    update();
     return;
   }
   QWidget::keyReleaseEvent(event);
 }
 
 void WorldCanvas::keyPressEvent(QKeyEvent* event) {
+  if (m_gesture_button != Qt::NoButton && event->key() != Qt::Key_Escape) {
+    event->accept();
+    return;
+  }
   const double step = 80.0;
   switch (event->key()) {
   case Qt::Key_Escape:
-    if (!m_route_start.isEmpty()) {
+    if (m_gesture_button != Qt::NoButton) {
+      const bool moving = !m_drag_site.isEmpty() || !m_drag_route.isEmpty();
+      cancel_gesture();
+      if (moving) {
+        emit status_message(QStringLiteral("Move cancelled."));
+      }
+    } else if (!m_route_start.isEmpty()) {
       m_route_start.clear();
       emit status_message(QStringLiteral("Cancelled."));
     } else if (m_path.found || !m_reach.empty()) {
@@ -1752,6 +1895,7 @@ void WorldCanvas::keyPressEvent(QKeyEvent* event) {
     if (!event->isAutoRepeat()) {
       m_space_held = true;
       setCursor(Qt::OpenHandCursor);
+      update();
     }
     return;
   case Qt::Key_Left:

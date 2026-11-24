@@ -8034,6 +8034,22 @@ para ver la vista previa</translation>
         <source>The Sepulcher Bridge</source>
         <translation>El Puente del Sepulcro</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Cartago</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Roma</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>La ciudad sobre el promontorio: la Birsa, que asciende en terrazas hasta el templo de Eshmún, la ciudad baja que se abre en abanico hacia el mar, el puerto de guerra circular con la isla del almirante y la dársena mercante, el ágora tras los muelles, el tofet junto a la laguna, los jardines amurallados y las villas de Megara, la necrópolis en las colinas y la triple muralla que cruza el istmo.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>La ciudad de las siete colinas a orillas del Tíber: el Foro a los pies del Capitolio, los foros imperiales, el Coliseo y el Circo Máximo, el mercado de ganado junto al río, la concurrida Subura, los jardines de Salustio, Mecenas y Lúculo con sus estanques, el Campo de Marte en el meandro, el Trastévere a los pies del Janículo, las villas entre olivares, una legión desplegada fuera de la muralla Serviana y Ostia, donde el Tíber desemboca en el mar.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

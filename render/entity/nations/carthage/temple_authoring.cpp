@@ -11,6 +11,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/frame/render_archetype.h"
 
@@ -862,6 +863,19 @@ auto build_temple_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
 
   desc.scale_uniformly(k_temple_mesh_scale);
 
+  {
+    // The tophet comes up to the temple steps: a row of stelae across the
+    // front, and the tall stands burning either side.
+    const Motif::Setter set(desc, state);
+    int salt = 0;
+    for (const float across : {-1.45F, -0.85F, 0.85F, 1.45F}) {
+      Motif::add_punic_stele(
+          desc, set.at(-3.05F, across, 1.2F), 2.7F, -1.0F, ++salt, true);
+    }
+    for (const float side : {-1.0F, 1.0F}) {
+      Motif::add_punic_incense_stand(desc, set.at(-2.6F, side * 2.0F, 1.4F), 1.9F);
+    }
+  }
   return desc;
 }
 

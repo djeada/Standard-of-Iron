@@ -47,8 +47,8 @@ auto ambient_hash(std::uint32_t value) noexcept -> std::uint32_t {
 
 auto civilian_render_scale(const DrawContext& ctx,
                            const NationCivilianRig& rig) -> float {
-  constexpr float k_fallback_civilian_scale = 0.48F;
-  constexpr float k_fallback_builder_scale = 0.5F;
+  constexpr float k_fallback_civilian_scale = 0.56F;
+  constexpr float k_fallback_builder_scale = 0.57F;
   const auto type = rig.builder  ? Game::Units::TroopType::Builder
                     : rig.healer ? Game::Units::TroopType::Healer
                                  : Game::Units::TroopType::Civilian;

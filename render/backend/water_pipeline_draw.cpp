@@ -171,6 +171,9 @@ void WaterPipeline::draw_water(const PreparedBatch& prepared,
       water_shader->set_uniform(uniforms.surface_kind,
                                 static_cast<int>(single.water_kind));
     }
+    if (uniforms.calm != Shader::InvalidUniform) {
+      water_shader->set_uniform(uniforms.calm, single.water_calm);
+    }
     if (uniforms.ford_count != Shader::InvalidUniform) {
       int const fords =
           std::clamp(single.ford_patch_count, 0, TerrainFeatureCmd::k_max_ford_patches);

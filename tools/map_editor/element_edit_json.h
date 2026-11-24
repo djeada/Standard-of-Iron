@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "element_ops.h"
+#include "hill_projection_model.h"
 
 namespace MapEditor::ElementEditJson {
 
@@ -30,7 +31,8 @@ to_document(const ElementSnapshot& element) -> std::optional<EditDocument>;
 [[nodiscard]] auto
 from_json(const ElementSnapshot& before,
           const QJsonObject& json,
-          const QVector<LinearElement>& linear_elements) -> EditResult;
+          const QVector<LinearElement>& linear_elements,
+          const HillProjection::MapContext& map_context = {}) -> EditResult;
 
 [[nodiscard]] auto prettify_identifier(const QString& value) -> QString;
 

@@ -23,8 +23,12 @@
 #include "game/core/entity.h"
 #include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
+#include "render/entity/building_archetype_catalog.h"
+#include "render/entity/building_geometry_audit.h"
 #include "render/entity/building_state.h"
+#include "render/entity/market_lot.h"
 #include "render/entity/registry.h"
+#include "render/entity/tenement_layout.h"
 #include "render/frame/draw_resources.h"
 #include "render/frame/render_archetype.h"
 #include "render/frame/submitter.h"
@@ -191,6 +195,7 @@ float g_at_x = 0.0F;
 float g_at_z = 0.0F;
 float g_animation_time = 0.0F;
 float g_gate_open = 0.0F;
+int g_tenement_variant = -1;
 
 auto render_building(EntityRendererRegistry& registry,
                      const Render::GL::DrawResources* resources,
@@ -247,6 +252,33 @@ auto render_building(EntityRendererRegistry& registry,
   ctx.entity = &entity;
   ctx.resources = resources;
   ctx.model = QMatrix4x4{};
+  if (type == "tenement" || type == "portico" || type == "basilica" || type == "dock") {
+    // A lot-filling style picks its variant from where it stands, and stands
+    // at the scale its building is spawned with.
+    const bool home = type == "tenement";
+    const auto variant_at = [&](float x, float z) {
+      if (home) {
+        return Render::GL::tenement_visual_variant(x, z);
+      }
+      return type == "portico" ? Render::GL::portico_visual_variant(x, z)
+                               : Render::GL::dock_visual_variant(x, z);
+    };
+    QVector3D at(g_at_x, 0.0F, g_at_z);
+    if (g_tenement_variant >= 0 && type != "basilica") {
+      const float pitch = home ? 4.3F : 5.5F;
+      for (int step = 0; step < 4000; ++step) {
+        const float x = pitch * static_cast<float>(step % 64);
+        const float z = pitch * static_cast<float>(step / 64);
+        if (variant_at(x, z) == g_tenement_variant) {
+          at = QVector3D(x, 0.0F, z);
+          break;
+        }
+      }
+    }
+    ctx.model.translate(at);
+    const float horizontal = home ? 1.8F : 1.95F;
+    ctx.model.scale(horizontal, 1.5F, horizontal);
+  }
   ctx.distance_sq = 0.0F;
 
   CapturingSubmitter sub;
@@ -306,6 +338,7 @@ auto main(int argc, char** argv) -> int {
   std::string filter;
   bool show_states = false;
   bool report_bounds = false;
+  bool audit = false;
   for (int i = 1; i < argc; ++i) {
     std::string const arg = argv[i];
     if (arg == "--only" && i + 1 < argc) {
@@ -329,12 +362,44 @@ auto main(int argc, char** argv) -> int {
     } else if (arg == "--at" && i + 2 < argc) {
       g_at_x = QString::fromLatin1(argv[++i]).toFloat();
       g_at_z = QString::fromLatin1(argv[++i]).toFloat();
+    } else if (arg == "--audit") {
+      audit = true;
+    } else if (arg == "--variant" && i + 1 < argc) {
+      g_tenement_variant = QString::fromLatin1(argv[++i]).toInt();
     } else if (arg == "--growth" && i + 1 < argc) {
       g_farm_growth = QString::fromLatin1(argv[++i]).toFloat();
     } else {
       out_dir = arg;
     }
   }
+  if (audit) {
+    // Tied and buried surfaces in every catalog building whose name contains
+    // the --only filter, in all three damage states. No image is written.
+    std::size_t ties = 0;
+    for (const auto& entry : Render::GL::building_archetype_catalog()) {
+      if (!filter.empty() && entry.name.find(filter) == std::string::npos) {
+        continue;
+      }
+      for (const auto state : {Render::GL::BuildingState::Normal,
+                               Render::GL::BuildingState::Damaged,
+                               Render::GL::BuildingState::Destroyed}) {
+        const auto result = Render::GL::audit_building_desc(entry.build(state), state);
+        for (const auto& conflict : result.conflicts) {
+          std::cout << "TIE " << Render::GL::describe_facade_conflict(conflict) << "\n";
+        }
+        ties += result.conflicts.size();
+        std::cout << entry.name << " state=" << static_cast<int>(state)
+                  << " parts=" << result.analyzed_parts
+                  << " skipped=" << result.skipped_parts
+                  << " ties=" << result.conflicts.size()
+                  << " same_colour=" << result.benign.size()
+                  << " buried=" << result.buried.size() << "\n";
+      }
+    }
+    gl.doneCurrent();
+    return ties == 0 ? 0 : 5;
+  }
+
   std::filesystem::create_directories(out_dir);
 
   EntityRendererRegistry registry;
@@ -353,6 +418,10 @@ auto main(int argc, char** argv) -> int {
                                        .wear_volume = resources.wear_volume()});
 
   std::vector<std::string> types = {"home",
+                                    "tenement",
+                                    "portico",
+                                    "basilica",
+                                    "dock",
                                     "farm",
                                     "barracks",
                                     "defense_tower",
@@ -361,6 +430,10 @@ auto main(int argc, char** argv) -> int {
                                     "wall",
                                     "gate"};
   std::vector<std::string> keys = {"home",
+                                   "home_tenement",
+                                   "marketplace_portico",
+                                   "marketplace_basilica",
+                                   "marketplace_dock",
                                    "farm",
                                    "barracks",
                                    "defense_tower",

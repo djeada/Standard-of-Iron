@@ -68,6 +68,14 @@ public:
   void clear_map_bounds() { m_map_bounds = {}; }
 
   void set_rts_constraints(bool enabled) { m_rts_constraints = enabled; }
+  // The pitch band of a camera that is not the RTS camera, in degrees below
+  // (negative) or above (positive) the horizon. The default keeps the eye at
+  // least five degrees above what it looks at; a street-level view that looks
+  // up at a facade has to widen it.
+  void set_pitch_band(float min_deg, float max_deg) {
+    m_pitch_min_deg = min_deg;
+    m_pitch_max_deg = max_deg;
+  }
   [[nodiscard]] auto rts_constraints_enabled() const noexcept -> bool {
     return m_rts_constraints;
   }

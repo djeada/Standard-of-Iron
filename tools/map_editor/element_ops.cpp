@@ -205,6 +205,11 @@ auto position(const ElementSnapshot& snap) -> std::optional<QPointF> {
       Overloaded{
           [](std::monostate) { return std::optional<QPointF>{}; },
           [](const LinearElement& e) {
+            if (is_ring_river(e)) {
+              return std::optional<QPointF>(
+                  QPointF(e.extra_fields.value(QStringLiteral("x")).toDouble(),
+                          e.extra_fields.value(QStringLiteral("z")).toDouble()));
+            }
             const QVector2D centre = (e.start + e.end) * 0.5F;
             return std::optional<QPointF>(QPointF(static_cast<double>(centre.x()),
                                                   static_cast<double>(centre.y())));
@@ -251,6 +256,12 @@ auto translated(const ElementSnapshot& snap, const QPointF& delta) -> ElementSna
                             waypoint += QPointF(static_cast<double>(dx),
                                                 static_cast<double>(dz));
                           }
+                          if (is_ring_river(e)) {
+                            const auto x = QStringLiteral("x");
+                            const auto z = QStringLiteral("z");
+                            e.extra_fields[x] = e.extra_fields.value(x).toDouble() + dx;
+                            e.extra_fields[z] = e.extra_fields.value(z).toDouble() + dz;
+                          }
                           return ElementSnapshot{e};
                         },
                         [&](TerrainElement e) {
@@ -278,6 +289,11 @@ auto snapped_to_grid(const ElementSnapshot& snap) -> ElementSnapshot {
       Overloaded{
           [](std::monostate) { return ElementSnapshot{}; },
           [](LinearElement e) {
+            if (is_ring_river(e)) {
+              const QPointF center = *position(e);
+              return translated(
+                  e, QPointF(round_cell(center.x()), round_cell(center.y())) - center);
+            }
             const QVector2D shift(round_cell(e.start.x()) - e.start.x(),
                                   round_cell(e.start.y()) - e.start.y());
             e.start = QVector2D(round_cell(e.start.x()), round_cell(e.start.y()));

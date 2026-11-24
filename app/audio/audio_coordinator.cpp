@@ -4,6 +4,7 @@
 #include <QSet>
 #include <QStringList>
 
+#include <cstddef>
 #include <initializer_list>
 #include <optional>
 #include <string>
@@ -17,6 +18,7 @@
 #include "game/map/map_context.h"
 #include "game/map/mission_definition.h"
 #include "game/systems/nation_registry.h"
+#include "game/units/spawn_type.h"
 #include "utils/resource_utils.h"
 
 namespace {
@@ -174,6 +176,24 @@ auto context_mentions_any(const QString& text,
   return false;
 }
 
+// A map built as a city, hundreds of houses on its streets, sounds like one
+// whatever it is called: market voices, not wind over an empty field.
+constexpr std::size_t k_city_house_count = 300;
+
+auto map_is_a_city(const Game::Map::MapDefinition* map_def) -> bool {
+  if (map_def == nullptr) {
+    return false;
+  }
+  std::size_t houses = 0;
+  for (const auto& structure : map_def->structures) {
+    if (structure.type == Game::Units::SpawnType::Home &&
+        ++houses >= k_city_house_count) {
+      return true;
+    }
+  }
+  return false;
+}
+
 auto build_mission_ambience_queries(const Game::Mission::MissionDefinition* mission,
                                     const QString& map_path,
                                     const Game::Map::MapDefinition* map_def,
@@ -182,6 +202,9 @@ auto build_mission_ambience_queries(const Game::Mission::MissionDefinition* miss
   std::vector<QMap<QString, QString>> queries;
   const QString context_text = build_audio_context_text(mission, map_path, map_def);
 
+  if (map_is_a_city(map_def)) {
+    queries.push_back({{QStringLiteral("biome"), QStringLiteral("city")}});
+  }
   if (context_mentions_any(context_text, {"harbor", "port"})) {
     queries.push_back({{QStringLiteral("biome"), QStringLiteral("harbor")}});
   }

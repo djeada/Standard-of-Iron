@@ -971,7 +971,6 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .ground_y = 0.16F,
                                  .scale = 1.25F,
                                  .seed = 443});
-
   return desc;
 }
 

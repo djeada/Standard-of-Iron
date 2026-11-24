@@ -8050,6 +8050,22 @@ to see preview</source>
         <source>The Sepulcher Bridge</source>
         <translation>جسر الضريح</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>قرطاج</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>روما</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>المدينة على الرأس البحري: بيرصا تصعد في مصاطب إلى معبد أشمون، والمدينة السفلى تمتد نحو البحر على شكل مروحة، والميناء الحربي المستدير بجزيرة الأميرال والحوض التجاري، والأغورا خلف الأرصفة، والتوفيت بجوار البحيرة الساحلية، وحدائق ميغارا المسوّرة وفيلاتها، والمقبرة على التلال، والسور الثلاثي الممتد عبر البرزخ.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>مدينة التلال السبعة على نهر التيبر: الفوروم عند سفح الكابيتول، والمنتديات الإمبراطورية، والكولوسيوم والسيرك العظيم، وسوق الماشية بجوار النهر، وحي سوبورا المزدحم، وحدائق سالوست ومايكيناس ولوكولوس بأحواضها، وحقل مارس عند منعطف النهر، وتراستيفيري عند سفح جانيكولوم، والفيلات وسط بساتين الزيتون، وفيلق مصطفّ خارج السور السيرفي، وأوستيا عند مصب التيبر في البحر.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

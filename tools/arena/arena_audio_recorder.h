@@ -33,8 +33,11 @@ public:
   AudioRecorder(const AudioRecorder&) = delete;
   auto operator=(const AudioRecorder&) -> AudioRecorder& = delete;
 
+  // map_path, when the scenario plays on a shipped map, picks its ambience the
+  // way the game does (a city sounds like a city); empty means the battlefield.
   [[nodiscard]] auto start(Engine::Core::World* world,
-                           Game::Systems::NationRegistry& nations) -> bool;
+                           Game::Systems::NationRegistry& nations,
+                           const QString& map_path = {}) -> bool;
 
   void advance(float seconds, bool record);
 

@@ -14,14 +14,14 @@ constexpr double k_margin = 12.0;
 constexpr QColor k_background_color(7, 16, 24);
 constexpr QColor k_grid_background_color(12, 30, 42);
 constexpr QColor k_grid_border_color(31, 139, 245);
-constexpr QColor k_entrance_color(31, 139, 245, 210);
+constexpr QColor k_entrance_color(99, 210, 255, 245);
 constexpr QColor k_overlap_color(210, 121, 255, 220);
 constexpr QColor k_mountain_body_color(100, 110, 130, 95);
 constexpr QColor k_rim_hint_color(126, 148, 160, 130);
 constexpr QColor k_entrance_outline_color(8, 20, 30, 235);
 constexpr int k_max_brush_cells = 12;
 constexpr int k_entrance_body_reach_cells = 2;
-constexpr double k_min_entrance_marker_px = 5.0;
+constexpr double k_min_entrance_marker_px = 8.0;
 
 } // namespace
 
@@ -158,19 +158,6 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
     }
   }
 
-  const double entrance_size =
-      std::max(k_min_entrance_marker_px, geometry.cell_size - (cell_inset * 2.0));
-  for (quint64 const encoded : m_entrance_cells) {
-    const QRectF cell_rect = cell_rect_at(decode_cell(encoded));
-    QRectF marker(0.0, 0.0, entrance_size, entrance_size);
-    marker.moveCenter(cell_rect.center());
-
-    painter.setPen(QPen(k_entrance_outline_color, 1.0));
-    painter.setBrush(m_body_cells.contains(encoded) ? k_entrance_color
-                                                    : k_overlap_color);
-    painter.drawRect(marker);
-  }
-
   painter.setRenderHint(QPainter::Antialiasing, false);
   const QColor grid_color =
       geometry.cell_size >= 4.0 ? QColor(79, 106, 117, 140) : QColor(79, 106, 117, 80);
@@ -184,6 +171,20 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
     const double py = geometry.rect.top() + (geometry.cell_size * y);
     painter.drawLine(QPointF(geometry.rect.left(), py),
                      QPointF(geometry.rect.right(), py));
+  }
+
+  painter.setRenderHint(QPainter::Antialiasing);
+  const double authored_size = geometry.cell_size - (cell_inset * 2.0);
+  const double entrance_size = m_entrance_cells.size() == 1
+                                   ? std::max(k_min_entrance_marker_px, authored_size)
+                                   : authored_size;
+  painter.setPen(QPen(k_entrance_outline_color, 1.0));
+  for (quint64 const encoded : m_entrance_cells) {
+    QRectF marker(0.0, 0.0, entrance_size, entrance_size);
+    marker.moveCenter(cell_rect_at(decode_cell(encoded)).center());
+    painter.setBrush(m_body_cells.contains(encoded) ? k_entrance_color
+                                                    : k_overlap_color);
+    painter.drawRoundedRect(marker, 1.0, 1.0);
   }
 }
 

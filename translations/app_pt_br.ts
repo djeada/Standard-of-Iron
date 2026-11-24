@@ -8034,6 +8034,22 @@ para ver a prévia</translation>
         <source>The Sepulcher Bridge</source>
         <translation>A Ponte do Sepulcro</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Cartago</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Roma</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>A cidade no promontório: a Birsa sobe em terraços até o templo de Eshmun, a cidade baixa se abre em leque em direção ao mar, o porto de guerra circular abriga a ilha do almirante e tem ao lado a bacia mercante, a ágora fica atrás dos cais, o tofet junto à lagoa, os jardins murados e as vilas de Mégara, a necrópole nas colinas e a muralha tripla que atravessa o istmo.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>A cidade das sete colinas às margens do Tibre: o Fórum aos pés do Capitólio, os fóruns imperiais, o Coliseu e o Circo Máximo, o mercado de gado à beira do rio, a movimentada Subura, os jardins de Salústio, Mecenas e Lúculo com seus espelhos d’água, o Campo de Marte na curva do rio, o Trastevere aos pés do Janículo, as vilas entre olivais, uma legião em formação do lado de fora da Muralha Serviana e Óstia, onde o Tibre deságua no mar.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

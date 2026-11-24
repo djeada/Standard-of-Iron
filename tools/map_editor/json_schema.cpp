@@ -113,12 +113,29 @@ auto terrain_schema(const QString& sub_type) -> JsonSchema {
                      10.0),
       optional_field("height",
                      "number",
-                     is_mountain ? "8" : "3",
-                     "Peak height in world units. Lakes ignore it.",
-                     is_mountain ? 8.0 : 3.0),
+                     is_mountain ? "8" : (is_lake ? "unset" : "3"),
+                     is_lake ? "Water level in world units, where the surrounding "
+                               "ground is 0. Unset, the water lies level with the "
+                               "ground at the lake's centre; -0.6 gives a sea or a "
+                               "harbour a bank to stand a quay on."
+                             : "Peak height in world units.",
+                     is_mountain ? 8.0 : (is_lake ? -0.6 : 3.0)),
       optional_field(
           "rotation", "number", "0", "Footprint rotation in degrees, clockwise.", 0.0),
   };
+
+  if (is_lake) {
+    schema.fields.append(optional_field(
+        "shape",
+        "string",
+        "natural",
+        "Outline inside width and depth. natural is an ellipse with a wandering "
+        "shore: a lake, a bay, an open coast. round is a true ellipse: a dug "
+        "pool, a round harbour. basin is a rectangle with eased corners: a "
+        "harbour basin, a dock, a canal reach.",
+        QStringLiteral("basin"),
+        {"natural", "round", "basin"}));
+  }
 
   if (!is_mountain && !is_lake) {
     schema.fields.append(
@@ -171,15 +188,14 @@ auto terrain_schema(const QString& sub_type) -> JsonSchema {
                        QJsonArray{}));
   }
 
-  if (!is_mountain) {
-    JsonFieldSpec entrances =
-        optional_field("entrances",
-                       "array",
-                       "[]",
-                       "Ramp openings: [{\"x\": 0, \"z\": 0, \"radius\": 2}]. Easier "
-                       "to paint in the projection panel.",
-                       QJsonArray{});
-    schema.fields.append(entrances);
+  if (sub_type.isEmpty() || sub_type == QLatin1String("hill")) {
+    schema.fields.append(required_field(
+        "entrances",
+        "array",
+        "Every hill needs at least one ramp. Each entry has x and z coordinates "
+        "and can set a radius. Paint ramps on the projection or add the default "
+        "entrance.",
+        QJsonArray{}));
   }
 
   return schema;
@@ -283,6 +299,14 @@ auto linear_schema(const QString& sub_type) -> JsonSchema {
   }
   if (sub_type == QStringLiteral("river")) {
     schema.fields.append(optional_field(
+        "height",
+        "number",
+        "unset",
+        "Water level in world units, where the surrounding ground is 0. Unset, "
+        "the river runs level with the ground; give it the level of the sea or "
+        "harbour it flows into (-0.6) and it cuts a bank a wharf can stand on.",
+        -0.6));
+    schema.fields.append(optional_field(
         "ford",
         "bool | {depth, speed, cold, exposure}",
         "false",
@@ -293,8 +317,11 @@ auto linear_schema(const QString& sub_type) -> JsonSchema {
     schema.fields.append(optional_field("style",
                                         "string",
                                         "default",
-                                        "Road surface variant.",
-                                        QStringLiteral("default")));
+                                        "Road surface: default is packed earth, rough "
+                                        "a cart track, stone grey cobbles, flagstone "
+                                        "the pale dressed paving of a forum or a quay.",
+                                        QStringLiteral("default"),
+                                        {"default", "rough", "stone", "flagstone"}));
   }
   if (sub_type == QStringLiteral("road") || sub_type == QStringLiteral("river") ||
       sub_type.isEmpty()) {
@@ -361,6 +388,29 @@ auto structure_schema(const QString& sub_type) -> JsonSchema {
                      150),
       nation_field(),
   };
+  if (sub_type.isEmpty() || sub_type == QStringLiteral("home")) {
+    schema.fields.append(optional_field(
+        "style",
+        "string",
+        "unset",
+        "How the building looks, never what it is. 'tenement' draws a home as a "
+        "town house of two to four storeys filling its lot; next to another on "
+        "the 4.3-cell lot pitch the two share a party wall.",
+        QStringLiteral("tenement"),
+        {"tenement"}));
+  } else if (sub_type == QStringLiteral("marketplace")) {
+    schema.fields.append(optional_field(
+        "style",
+        "string",
+        "unset",
+        "How the building looks, never what it is. 'portico' draws a colonnaded "
+        "walk with shops behind it; 'basilica' the same with a gallery over the "
+        "colonnade, for the long sides of a forum; 'dock' a quay with a "
+        "warehouse and a vessel alongside, its front to the water. All fill the "
+        "5.5-cell lot, so a row of them is one stoa or one harbour front.",
+        QStringLiteral("portico"),
+        {"portico", "basilica", "dock"}));
+  }
 
   return schema;
 }

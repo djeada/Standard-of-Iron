@@ -936,7 +936,9 @@ private:
     m_viewport.load_scenario(pass.scenario);
     if (m_spec.audio) {
       m_audio = std::make_unique<AudioRecorder>();
-      if (!m_audio->start(m_viewport.world(), m_viewport.session().nations())) {
+      if (!m_audio->start(m_viewport.world(),
+                          m_viewport.session().nations(),
+                          m_viewport.scenario_map_path())) {
         qWarning().noquote() << QStringLiteral(
                                     "Promo pass over '%1' runs without audio")
                                     .arg(pass.scenario);
@@ -1029,7 +1031,8 @@ private:
                                                               : 0.0F);
     m_viewport.set_capture_gameplay_ui(shot.gameplay_ui && !shot.flame_card,
                                        shot.gameplay_ui_all_owners);
-    m_viewport.set_cinematic_lens(shot.near_plane, shot.ground_clearance);
+    m_viewport.set_cinematic_lens(
+        shot.near_plane, shot.ground_clearance, shot.street_level);
     m_viewport.set_promo_lighting(shot.lighting);
     open_tracks(shot, base);
 
@@ -1254,6 +1257,7 @@ private:
         auto lens = m_viewport.cinematic_state();
         lens.near_plane = camera.near_plane;
         lens.ground_clearance = camera.ground_clearance;
+        lens.street_level = camera.street_level;
         m_viewport.set_capture_variant_lens(slot, lens);
       }
       m_viewport.set_cinematic_state(primary_lens);

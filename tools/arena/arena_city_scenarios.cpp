@@ -156,6 +156,7 @@ struct Bucket {
   std::vector<QVector3D> positions;
   Spawn type{Spawn::Civilian};
   float facing{0.0F};
+  QString style;
   bool resident{false};
   float roam{16.0F};
   std::vector<QVector3D> patrol_route;
@@ -171,6 +172,7 @@ void finish_bucket(const Bucket& bucket, ArenaScenarioDefinition& out) {
   group.nation_id = Nation::RomanRepublic;
   group.count = static_cast<int>(bucket.positions.size());
   group.facing_degrees = bucket.facing;
+  group.visual_style = bucket.style;
   group.settlement_resident = bucket.resident;
   group.settlement_roam_radius = bucket.roam;
 
@@ -252,6 +254,7 @@ void read_city(const Game::Map::MapDefinition& map,
                          ? QVector3D(2.0F, 0.0F, 0.0F)
                          : QVector3D(0.0F, 0.0F, 2.0F);
       wall.facing_degrees = std::abs(span.x()) >= std::abs(span.z()) ? 0.0F : 90.0F;
+      wall.visual_style = entry.style;
       out.groups.push_back(std::move(wall));
       continue;
     }
@@ -262,6 +265,7 @@ void read_city(const Game::Map::MapDefinition& map,
     Bucket& bucket = bucket_for(name);
     bucket.type = entry.type;
     bucket.facing = entry.rotation;
+    bucket.style = entry.style;
     bucket.positions.push_back(point->position);
   }
 
@@ -518,6 +522,14 @@ auto imperial_capital() -> ArenaScenarioDefinition {
 auto build_city_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
   result.push_back(imperial_capital());
+
+  // Keep the city's acceptance checks in the wet-night review variant.
+  auto wet_night = imperial_capital();
+  wet_night.id = QStringLiteral("city_review_aurelia_wet_night");
+  wet_night.label = QStringLiteral("Aurelia Magna: Wet Night");
+  wet_night.environment.start_time = 21.5F;
+  wet_night.weather.rain = Game::Map::k_weather_intensity_medium;
+  result.push_back(std::move(wet_night));
   return result;
 }
 

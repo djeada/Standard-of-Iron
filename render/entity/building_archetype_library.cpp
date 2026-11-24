@@ -9,6 +9,7 @@
 
 #include "render/creature/runtime_bake_guard.h"
 #include "render/entity/building_archetype_catalog.h"
+#include "render/entity/nation_motifs.h"
 #include "render/frame/submitter.h"
 
 namespace Render::GL {
@@ -49,6 +50,23 @@ auto build_set(const BuildingArchetypeCatalogEntry& entry) -> BuildingArchetypeS
     if (set.states[i].merged_full == nullptr) {
       Render::Creature::report_missing_preloaded_asset(
           "baked building mesh " + building_mesh_key(entry.name, state));
+    }
+    // The fires its motifs keep: the baked mesh has the bowls, and these say
+    // where to light them.
+    const BuildingStateMask visible =
+        state == BuildingState::Normal
+            ? BuildingStateMask::Normal
+            : (state == BuildingState::Damaged ? BuildingStateMask::Damaged
+                                               : BuildingStateMask::Destroyed);
+    const BuildingArchetypeDesc desc = entry.build(state);
+    for (const BuildingPartDesc& part : desc.parts()) {
+      if ((part.states & visible) == BuildingStateMask::None ||
+          !part.name.starts_with(Motif::k_fire_label)) {
+        continue;
+      }
+      set.states[i].fires.push_back({.at = part.point_a,
+                                     .size = part.radius / Motif::k_fire_radius,
+                                     .ghost = part.name == Motif::k_ghost_fire_label});
     }
   }
   return set;

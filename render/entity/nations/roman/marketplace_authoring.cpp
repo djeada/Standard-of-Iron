@@ -16,6 +16,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/roman/building_architecture.h"
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/frame/render_archetype.h"
@@ -728,6 +729,15 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .scale = 1.0F,
                                  .seed = 181});
 
+  {
+    // Fires at the corners of the market floor, and a raven on the arch
+    // waiting for whatever falls off a stall.
+    const Motif::Setter set(desc, state);
+    for (const float side : {-1.0F, 1.0F}) {
+      Motif::add_roman_tripod_fire(desc, set.at(side * 1.30F, 1.30F, 0.4F), 0.95F);
+    }
+    Motif::add_roman_raven(desc, set.at(-1.14F, 0.05F), 90.0F, 1.1F);
+  }
   return desc;
 }
 

@@ -5,6 +5,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "game/map/terrain.h"
@@ -82,10 +83,14 @@ build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& segmen
     const LinearFeatureRibbonSettings& settings)
     -> std::vector<LinearFeatureJunctionMesh>;
 
-[[nodiscard]] auto
-build_lake_surface_mesh(const Game::Map::Lake& lake,
-                        float tile_size,
-                        float y_offset = 0.12F) -> std::unique_ptr<Render::GL::Mesh>;
+// `waters` are the lakes of the map, this one among them or not: where this
+// lake's edge lies inside another there is no shore, a harbour basin opening
+// on the sea being one water with it.
+[[nodiscard]] auto build_lake_surface_mesh(const Game::Map::Lake& lake,
+                                           float tile_size,
+                                           float y_offset = 0.12F,
+                                           std::span<const Game::Map::Lake> waters = {})
+    -> std::unique_ptr<Render::GL::Mesh>;
 
 [[nodiscard]] auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                                      float tile_size,

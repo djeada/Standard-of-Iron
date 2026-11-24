@@ -8038,6 +8038,22 @@ to see preview</source>
         <source>The Sepulcher Bridge</source>
         <translation>Мост Гробницы</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Карфаген</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Рим</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>Город на мысу: Бирса, поднимающаяся террасами к храму Эшмуна, нижний город, расходящийся веером к морю, круглая военная гавань с островом адмирала и торговый бассейн, агора за причалами, тофет у лагуны, обнесённые стенами сады и виллы Мегары, некрополь на холмах и тройная стена поперёк перешейка.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>Город семи холмов на Тибре: Форум у подножия Капитолия, императорские форумы, Колизей и Большой цирк, скотный рынок у реки, многолюдная Субура, сады Саллюстия, Мецената и Лукулла с водоёмами, Марсово поле в излучине реки, Трастевере у подножия Яникула, виллы в оливковых рощах, легион, выстроившийся за Сервиевой стеной, и Остия, где Тибр впадает в море.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

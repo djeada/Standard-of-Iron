@@ -196,10 +196,10 @@ auto pack_building_instance(const RenderInstance& instance,
       .state = {static_cast<float>(instance.damage_material_id),
                 instance.unseen ? 1.0F : 0.0F,
                 coverage,
-                0.0F},
+                instance.tone_seed},
   };
-  std::array<float*, k_merged_building_palette_capacity> const entries{record.palette0,
-                                                                       record.palette1};
+  std::array<float*, k_merged_building_palette_capacity> const entries{
+      record.palette0, record.palette1, record.palette2, record.palette3};
   for (std::size_t slot = 0; slot < instance.palette.size() && slot < entries.size();
        ++slot) {
     QVector3D const color = instance.unseen

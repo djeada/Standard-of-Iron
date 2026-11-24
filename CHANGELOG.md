@@ -11,6 +11,13 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Fixed
 
+- **A large lake no longer has mud flats far out from its shore.** The shallows
+  were drawn in proportion to the lake, so the bigger the water the further
+  they ran; on a sea-sized lake they reached tens of metres.
+- **Water set below ground level is drawn.** It used to disappear under the
+  ground that surrounds the map.
+- **Map editor: a lake keeps its water level and a river keeps its own.** Adding
+  or editing either through the editor used to drop the level.
 - **Leading the commander, the camera always turns.** It could stop turning
   one way while still turning the other: the pointer had slipped out of the
   game's hold and come to rest against an edge of the screen. A fast turn of
@@ -49,6 +56,32 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Rome and Carthage.** Two new maps, each a whole city. Rome stands on the
+  Tiber: the Forum between its basilicas, the Capitol and its temples, the
+  Palatine, the circus, the insula quarters inside a stone wall, wharves along
+  the river, and Ostia with its harbour where the river meets the sea. Carthage
+  fills its headland: the round war harbour with the admiral's island, the
+  merchant basin, the agora, the Byrsa, the tophet, the tall white houses, and
+  a double wall across the isthmus. You hold the city; a commander of the other
+  nation is outside the walls.
+- **Towns look like towns.** Houses can be multi-storey tenements that share
+  party walls; markets can be colonnaded porticoes, two-storey basilicas, or
+  docks with a ship alongside; city walls and their gates can be dressed stone.
+  Rome and Carthage each have their own of all of them. The ground between
+  crowded buildings is beaten earth, roofs weather to their own tones, and a
+  forum is paved in pale flagstone.
+- **Rome and Carthage no longer share a look.** Every Roman building stands on
+  dark tufa in warm stone and oxblood, with a bronze tripod fire at its door,
+  pale palmettes on its roof, a raven on the ridge and, outside a barracks or a
+  tower, a trophy of taken arms. Every Punic building is whitewash over black
+  basalt, banded in blue, with horns on its roof corners, stelae at its foot,
+  ivory over its gates and tall incense stands whose fire burns sea-green - so
+  at night the two nations' towns are lit in different colours.
+- **Harbours.** A lake can be a rectangular basin or a true round pool, and
+  water can be set below the ground so a quay has a bank to stand on.
+- **Map editor: build a town in a few strokes.** New Insula, Town Block,
+  Portico, Basilica and Dock tools, and `map_cli` operations for terraces,
+  blocks, paving, walls and gates, plus `map_cli new` for a blank map.
 - **The end of a battle fought as the commander is shown.** The verdict panel
   used to cut in on the frame the last blow landed. Now the camera stays with
   the commander for a few seconds in slow motion, turning and drawing back,

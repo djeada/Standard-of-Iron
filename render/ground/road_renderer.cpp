@@ -42,6 +42,10 @@ auto road_color_for_style(const QString& authored_style) -> QVector3D {
   if (style == QStringLiteral("stone") || style == QStringLiteral("paved")) {
     return {0.50F, 0.49F, 0.46F};
   }
+  // Dressed travertine: the pale paving of a forum, an agora or a quay.
+  if (style == QStringLiteral("flagstone")) {
+    return {0.76F, 0.72F, 0.63F};
+  }
   return {0.52F, 0.44F, 0.30F};
 }
 
@@ -50,7 +54,8 @@ auto road_surface_for_style(const QString& authored_style) -> RoadSurfaceKind {
   if (style == QStringLiteral("rough")) {
     return RoadSurfaceKind::RoughTrack;
   }
-  if (style == QStringLiteral("stone") || style == QStringLiteral("paved")) {
+  if (style == QStringLiteral("stone") || style == QStringLiteral("paved") ||
+      style == QStringLiteral("flagstone")) {
     return RoadSurfaceKind::Paved;
   }
   return RoadSurfaceKind::PackedEarth;

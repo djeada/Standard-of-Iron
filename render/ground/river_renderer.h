@@ -52,6 +52,7 @@ private:
   struct SurfaceMesh {
     std::unique_ptr<Mesh> mesh;
     WaterSurfaceKind kind = WaterSurfaceKind::River;
+    float calm = 0.0F;
     QVector3D visibility_start;
     QVector3D visibility_end;
     std::vector<FordPatch> fords;

@@ -85,6 +85,7 @@ void WaterPipeline::cache_water_uniforms() {
       m_water_shader->optional_uniform_handle("u_segment_visibility");
   m_water_uniforms.surface_kind =
       m_water_shader->optional_uniform_handle("u_water_surface_kind");
+  m_water_uniforms.calm = m_water_shader->optional_uniform_handle("u_water_calm");
   m_water_uniforms.camera_position =
       m_water_shader->optional_uniform_handle("u_camera_pos");
   m_water_uniforms.light_direction =

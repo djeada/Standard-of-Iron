@@ -31,6 +31,11 @@ struct HomeActivityPlan {
 
 [[nodiscard]] auto resolve_home_activity_plan(const DrawContext& ctx,
                                               bool carthage) -> HomeActivityPlan;
+// The same for a home that draws with its own anchor instead of the nation's
+// registered one (styled homes).
+[[nodiscard]] auto
+resolve_home_activity_plan(const DrawContext& ctx,
+                           const HomeSmokeAnchor& anchor) -> HomeActivityPlan;
 
 // Draws what HomeActivity decided for one home: doorstep residents, laundry,
 // shutters, curtains and hens.
@@ -38,6 +43,11 @@ void submit_home_activity(const DrawContext& ctx,
                           ISubmitter& out,
                           bool carthage,
                           const HomeActivityPlan& plan);
+void submit_home_activity(const DrawContext& ctx,
+                          ISubmitter& out,
+                          bool carthage,
+                          const HomeActivityPlan& plan,
+                          const HomeSmokeAnchor& anchor);
 // Resolves the plan and draws it, for callers outside the registry.
 void submit_home_activity(const DrawContext& ctx, ISubmitter& out, bool carthage);
 

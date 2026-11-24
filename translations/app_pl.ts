@@ -8038,6 +8038,22 @@ by zobaczyć podgląd</translation>
         <source>The Sepulcher Bridge</source>
         <translation>Most Grobowca</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Kartagina</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rzym</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>Miasto na cyplu: Byrsa wznosząca się tarasami ku świątyni Eszmuna, dolne miasto rozchodzące się wachlarzem ku morzu, okrągły port wojenny z wyspą admirała i basen handlowy, agora za nabrzeżami, tofet nad laguną, otoczone murami ogrody i wille Megary, nekropolia na wzgórzach i potrójny mur w poprzek przesmyku.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>Miasto siedmiu wzgórz nad Tybrem: Forum u stóp Kapitolu, fora cesarskie, Koloseum i Circus Maximus, targ bydła nad rzeką, zatłoczona Subura, ogrody Salustiusza, Mecenasa i Lukullusa z sadzawkami, Pole Marsowe w zakolu rzeki, Zatybrze u stóp Janikulum, wille w gajach oliwnych, legion ustawiony w szyku za murem Serwiusza i Ostia, gdzie Tyber wpada do morza.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

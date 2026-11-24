@@ -1,5 +1,5 @@
 # ---- tools_tests -------------------------------------------------------
-# The map editor document model and the balance runner. Neither needs a
+# The map editor and the balance runner. Neither needs a
 # renderer, so this binary links neither render_gl nor game_view -- an editor
 # change that starts reaching for the scene graph fails here.
 add_executable(
@@ -24,6 +24,7 @@ add_executable(
     tools/map_editor_world_document_test.cpp
     tools/map_editor_road_network_test.cpp
     tools/map_editor_lossless_save_test.cpp
+    tools/map_editor_town_ops_test.cpp
     tools/map_editor_world_backdrop_test.cpp
     widget_main.cpp
 )
@@ -37,7 +38,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         game_sim
-        map_editor_core
+        map_editor_widgets
         balance_sim_harness
         campaign_film_core
 )

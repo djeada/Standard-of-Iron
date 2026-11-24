@@ -99,6 +99,9 @@ void write_structures(const CityPlan& plan, QJsonObject& root) {
       if (*group.spawn_type == SpawnType::Barracks) {
         entry.insert("max_population", 120);
       }
+      if (!group.visual_style.isEmpty()) {
+        entry.insert("style", group.visual_style);
+      }
       out.push_back(entry);
     }
   }

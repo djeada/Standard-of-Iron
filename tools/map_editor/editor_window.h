@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QPlainTextEdit>
+#include <QTimer>
 #include <QWidget>
 
 #include "command_palette.h"
@@ -12,6 +13,8 @@
 #include "mission_panel.h"
 #include "tool_panel.h"
 
+class QComboBox;
+class QProgressBar;
 class QScrollArea;
 class QStackedWidget;
 class QTabWidget;
@@ -58,7 +61,6 @@ private slots:
   void on_tool_selected(ToolType tool);
   void on_tool_cleared();
   void on_element_double_clicked(int element_type, int index);
-  void on_grid_double_clicked();
   void on_modified_changed(bool modified);
   void on_undo_redo_changed();
   void update_dimensions_label();
@@ -73,6 +75,8 @@ private slots:
 
 private:
   void setup_ui();
+  auto build_viewport(QWidget* parent) -> QWidget*;
+  auto build_inspector(QWidget* parent) -> QWidget*;
   auto build_workspace_bar() -> QWidget*;
   void refresh_workspace_bar();
   void refresh_campaign_context(const QString& site);
@@ -85,7 +89,6 @@ private:
   void setup_menus();
   void reset_to_new_map();
   void update_window_title();
-  void update_current_file_label();
   void show_action_feedback(const QString& message, bool success = true);
   void show_load_failure(const QString& file_path, const QString& error_message);
   void show_save_failure(const QString& file_path, const QString& error_message);
@@ -104,6 +107,9 @@ private:
   bool maybe_save();
   void closeEvent(QCloseEvent* event) override;
   void refresh_status_label();
+  void refresh_preview_state();
+  void schedule_json_preview();
+  [[nodiscard]] bool json_preview_active() const;
 
   MapData* m_map_data = nullptr;
   MissionData* m_mission_data = nullptr;
@@ -127,23 +133,35 @@ private:
   Workspace m_workspace = Workspace::Battlefield;
   QTabWidget* m_sidebar_tabs = nullptr;
   QScrollArea* m_mission_scroll = nullptr;
+  QScrollArea* m_environment_scroll = nullptr;
+  QStackedWidget* m_details_stack = nullptr;
+  QComboBox* m_details_picker = nullptr;
   QLabel* m_feedback_label = nullptr;
-  QLabel* m_tool_label = nullptr;
+  QLabel* m_view_hint = nullptr;
+  QLabel* m_preview_label = nullptr;
+  QProgressBar* m_preview_progress = nullptr;
+  QToolButton* m_painted_button = nullptr;
+  QToolButton* m_blueprint_button = nullptr;
+  QToolButton* m_layers_button = nullptr;
+  QLabel* m_inspector_title = nullptr;
+  QLabel* m_inspector_detail = nullptr;
+  QToolButton* m_edit_properties_button = nullptr;
+  QToolButton* m_frame_button = nullptr;
+  QLabel* m_inspector_hint = nullptr;
   QLabel* m_dimensions_label = nullptr;
   QLabel* m_zoom_label = nullptr;
-  QWidget* m_zoom_widget = nullptr;
   QLabel* m_cursor_label = nullptr;
-  QLabel* m_file_label = nullptr;
   QPlainTextEdit* m_json_preview = nullptr;
+  QTimer m_json_preview_timer;
+  bool m_json_preview_dirty = true;
   QString m_current_file_path;
   QString m_linked_map_file_path;
-  QString m_tool_status_text = "Tool: Select";
-  QString m_selection_status_text;
-  bool m_hint_active = false;
+  QString m_canvas_hint;
   bool m_mission_mode = false;
 
   QAction* m_undo_action = nullptr;
   QAction* m_redo_action = nullptr;
+  QList<QAction*> m_battlefield_edit_actions;
 };
 
 } // namespace MapEditor

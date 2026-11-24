@@ -13,6 +13,7 @@
 #include <QFileInfo>
 #include <QFont>
 #include <QFormLayout>
+#include <QFrame>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QJsonArray>
@@ -23,6 +24,7 @@
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProcess>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
@@ -33,6 +35,7 @@
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
+#include <QTabBar>
 #include <QTabWidget>
 #include <QTextBrowser>
 #include <QToolBar>
@@ -58,6 +61,7 @@
 #include "resize_dialog.h"
 #include "road_network.h"
 #include "tool_catalog.h"
+#include "ui/theme.h"
 #include "world_canvas.h"
 #include "world_document.h"
 
@@ -70,6 +74,14 @@ auto editor_settings() -> QSettings {
                    QSettings::UserScope,
                    QCoreApplication::organizationName(),
                    QCoreApplication::applicationName());
+}
+
+auto scroll_panel(QWidget* content, QWidget* parent) -> QScrollArea* {
+  auto* scroll = new QScrollArea(parent);
+  scroll->setWidget(content);
+  scroll->setWidgetResizable(true);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  return scroll;
 }
 
 auto createGuideSection(const QString& title,
@@ -97,26 +109,15 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
   title->setObjectName("panelTitle");
   layout->addWidget(title);
 
-  auto* intro =
-      new QLabel("The map editor uses the same dark split-view layout as the other "
-                 "Standard "
-                 "of Iron tools, with the canvas on the left and editing panels on the "
-                 "right. The canvas orientation matches the in-game battlefield view.",
-                 panel);
-  intro->setObjectName("panelIntro");
-  intro->setWordWrap(true);
-  intro->setTextFormat(Qt::PlainText);
-  layout->addWidget(intro);
-
-  layout->addWidget(
-      createGuideSection("Workflow",
-                         "1. Pick a tool on the Tools tab.\n"
-                         "2. Click on the canvas to place or start drawing.\n"
-                         "3. Drag placed items to refine positioning.\n"
-                         "4. Double-click elements to edit JSON (hills also show a "
-                         "cell grid: draw the hill shape or its entrances).\n"
-                         "5. Save the map when the layout looks right.",
-                         panel));
+  layout->addWidget(createGuideSection(
+      "Editing",
+      "Choose a placement tool and click the map. Paths take two clicks. "
+      "For a ford, click one bank and then the opposite bank.\n\n"
+      "Click an element to select it. Drag its move handle to reposition it. "
+      "Use the endpoint squares on selected paths. Press Esc to cancel a move.\n\n"
+      "Double-click a selected element or choose Edit properties to edit it. "
+      "Hills include a grid for painting the footprint and entrances.",
+      panel));
 
   layout->addWidget(createGuideSection(
       "Generator",
@@ -127,22 +128,16 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
       "makes it authored, so later rerolls leave it alone.",
       panel));
 
-  layout->addWidget(
-      createGuideSection("Mouse Controls",
-                         "Left click places or selects.\n"
-                         "Shift + click an element adds or removes it from the "
-                         "selection.\n"
-                         "Shift + drag empty space draws a selection box.\n"
-                         "Drag any selected element to move the whole selection.\n"
-                         "Shift + click or drag places without grid snapping.\n"
-                         "Drag empty space in Select mode to pan.\n"
-                         "Middle click, Space + drag, or Ctrl + left drag also pans.\n"
-                         "Mouse wheel zooms in and out.\n"
-                         "Right click opens the context menu (cancels line drawing).\n"
-                         "Hover an element for a summary tooltip.\n"
-                         "Double-click element to edit its JSON.\n"
-                         "Double-click empty canvas opens Resize Map.",
-                         panel));
+  layout->addWidget(createGuideSection(
+      "Navigation and selection",
+      "Drag to pan. Middle-drag, Space + drag, and Ctrl + drag also pan. "
+      "Scroll to zoom at the pointer.\n\n"
+      "In Select, Shift + click toggles an element and Shift + drag "
+      "draws a selection box. Hold Shift when placing or moving to "
+      "work without snapping.\n\n"
+      "Right-click in Select to open the context menu. With a placement "
+      "tool active, right-click or Esc cancels the current action.",
+      panel));
 
   layout->addWidget(createGuideSection("Keyboard Shortcuts",
                                        "Ctrl+N: New map\n"
@@ -160,18 +155,14 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
                                        "Escape: Cancel or return to Select",
                                        panel));
 
-  layout->addWidget(
-      createGuideSection("View",
-                         "The canvas paints the land the map becomes: real relief,\n"
-                         "water, woods and buildings. F6 switches to the blueprint.\n"
-                         "View ▸ Layers hides categories you are not editing;\n"
-                         "hidden layers cannot be selected or deleted by accident.\n"
-                         "Markers shrink as you zoom out and labels fade below 60%\n"
-                         "so dense maps stay readable.\n"
-                         "Hills, mountains and lakes always draw behind everything\n"
-                         "else, largest first. Bring to front / send to back change\n"
-                         "the view only — they are never saved to the map.",
-                         panel));
+  layout->addWidget(createGuideSection(
+      "Map views",
+      "Painted previews terrain and scenery. Blueprint shows map elements "
+      "as you edit. Switch with the view buttons or F6.\n\n"
+      "While the painted terrain refreshes, you can still pan and zoom. "
+      "Switch to Blueprint to keep editing. Use Layers to reveal or hide "
+      "paths, forests, and other elements.",
+      panel));
 
   layout->addStretch(1);
   return panel;
@@ -199,6 +190,7 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
   auto* form = new QFormLayout(form_group);
 
   auto* time = new QDoubleSpinBox(form_group);
+  time->setKeyboardTracking(false);
   time->setRange(0.0, 23.99);
   time->setDecimals(2);
   time->setSingleStep(0.25);
@@ -212,6 +204,7 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
   form->addRow("Time mode", mode);
 
   auto* day_length = new QDoubleSpinBox(form_group);
+  day_length->setKeyboardTracking(false);
   day_length->setRange(1.0, 86400.0);
   day_length->setDecimals(0);
   day_length->setSingleStep(60.0);
@@ -232,6 +225,7 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
   form->addRow("Lighting profile", profile);
 
   auto* fog = new QDoubleSpinBox(form_group);
+  fog->setKeyboardTracking(false);
   fog->setRange(-1.0, 0.10);
   fog->setDecimals(4);
   fog->setSingleStep(0.001);
@@ -239,6 +233,7 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
   form->addRow("Fog density", fog);
 
   auto* exposure = new QDoubleSpinBox(form_group);
+  exposure->setKeyboardTracking(false);
   exposure->setRange(-1.0, 2.5);
   exposure->setDecimals(2);
   exposure->setSingleStep(0.05);
@@ -285,8 +280,18 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
   layout->addWidget(sun);
   layout->addStretch(1);
 
-  const auto refresh = [=]() {
+  auto refresh = [=,
+                  last_environment = QJsonObject(),
+                  last_rain = QJsonObject(),
+                  initialized = false]() mutable {
     const QJsonObject environment = map_data->environment();
+    const QJsonObject rain = map_data->rain();
+    if (initialized && environment == last_environment && rain == last_rain) {
+      return;
+    }
+    initialized = true;
+    last_environment = environment;
+    last_rain = rain;
     const QSignalBlocker block_time(time);
     const QSignalBlocker block_mode(mode);
     const QSignalBlocker block_day_length(day_length);
@@ -318,7 +323,6 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
             ? environment.value(MapEditor::MapJsonKeys::exposure).toDouble()
             : -1.0);
 
-    const QJsonObject rain = map_data->rain();
     const bool enabled = rain.value("enabled").toBool(false);
     const QString weather_value =
         enabled ? rain.value("type").toString("rain") : QStringLiteral("off");
@@ -424,8 +428,9 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
                    qOverload<double>(&QDoubleSpinBox::valueChanged),
                    panel,
                    [=](double) { write_weather(); });
-  QObject::connect(map_data, &MapEditor::MapData::data_changed, panel, refresh);
   refresh();
+  QObject::connect(
+      map_data, &MapEditor::MapData::data_changed, panel, std::move(refresh));
   return panel;
 }
 
@@ -454,7 +459,13 @@ EditorWindow::EditorWindow(QWidget* parent)
   connect(
       m_map_data, &MapData::data_changed, this, &EditorWindow::update_dimensions_label);
   connect(
-      m_map_data, &MapData::data_changed, this, &EditorWindow::refresh_json_preview);
+      m_map_data, &MapData::data_changed, this, &EditorWindow::schedule_json_preview);
+  connect(
+      m_map_data, &MapData::command_applied, this, [this](const QString& description) {
+        if (!description.isEmpty()) {
+          show_action_feedback(QStringLiteral("Applied · %1").arg(description));
+        }
+      });
   connect(m_mission_data,
           &MissionData::modified_changed,
           this,
@@ -462,7 +473,7 @@ EditorWindow::EditorWindow(QWidget* parent)
   connect(m_mission_data,
           &MissionData::data_changed,
           this,
-          &EditorWindow::refresh_json_preview);
+          &EditorWindow::schedule_json_preview);
 
   resize(1600, 960);
 
@@ -501,47 +512,61 @@ void EditorWindow::setup_ui() {
 
   auto* splitter = new QSplitter(Qt::Horizontal, central_widget);
   splitter->setChildrenCollapsible(false);
-
-  m_canvas = new MapCanvas(splitter);
-  m_canvas->set_map_data(m_map_data);
+  splitter->setHandleWidth(4);
+  auto* viewport = build_viewport(splitter);
+  connect(m_canvas,
+          &MapCanvas::preview_changed,
+          this,
+          &EditorWindow::refresh_preview_state);
   connect(m_canvas,
           &MapCanvas::element_double_clicked,
           this,
           &EditorWindow::on_element_double_clicked);
-  connect(m_canvas,
-          &MapCanvas::grid_double_clicked,
-          this,
-          &EditorWindow::on_grid_double_clicked);
+  connect(m_canvas, &MapCanvas::resize_requested, this, &EditorWindow::resize_map);
   connect(m_canvas, &MapCanvas::tool_cleared, this, &EditorWindow::on_tool_cleared);
   connect(m_canvas, &MapCanvas::status_hint_changed, this, [this](const QString& hint) {
-    m_hint_active = !hint.isEmpty();
-    if (m_hint_active && m_tool_label != nullptr) {
-      m_tool_label->setText(hint);
-    } else {
-      refresh_status_label();
-    }
+    m_canvas_hint = hint;
+    refresh_status_label();
   });
   connect(m_canvas, &MapCanvas::zoom_changed, this, [this](float zoom) {
-    m_zoom_label->setText(QString("%1%").arg(static_cast<int>(zoom * 100)));
+    m_zoom_label->setText(QStringLiteral("%1%").arg(qRound(zoom * 100)));
   });
-  connect(m_canvas, &MapCanvas::action_feedback, this, [this](const QString& message) {
-    show_action_feedback(message);
-  });
+  connect(
+      m_canvas, &MapCanvas::action_feedback, this, &EditorWindow::show_action_feedback);
   connect(m_canvas,
           &MapCanvas::selection_changed,
           this,
           &EditorWindow::on_selection_changed);
   connect(m_canvas, &MapCanvas::cursor_moved, this, [this](int gx, int gz) {
     if (m_cursor_label != nullptr) {
-      m_cursor_label->setText(QString("X:%1 Z:%2").arg(gx).arg(gz));
+      m_cursor_label->setText(QStringLiteral("X %1   Z %2").arg(gx).arg(gz));
     }
   });
   connect(
       m_map_data, &MapData::data_changed, this, &EditorWindow::update_selection_info);
 
-  m_sidebar_tabs = new QTabWidget(splitter);
-  m_sidebar_tabs->setMinimumWidth(300);
-  m_sidebar_tabs->setMaximumWidth(560);
+  auto* sidebar = new QWidget(splitter);
+  sidebar->setMinimumWidth(324);
+  sidebar->setMaximumWidth(520);
+  auto* sidebar_layout = new QVBoxLayout(sidebar);
+  sidebar_layout->setContentsMargins(0, 0, 0, 0);
+  sidebar_layout->setSpacing(0);
+
+  m_sidebar_tabs = new QTabWidget(sidebar);
+  m_sidebar_tabs->setObjectName(QStringLiteral("battlefieldSidebar"));
+  m_sidebar_tabs->setDocumentMode(true);
+  m_sidebar_tabs->tabBar()->setExpanding(true);
+  m_sidebar_tabs->setElideMode(Qt::ElideRight);
+  m_sidebar_tabs->setStyleSheet(
+      QStringLiteral(
+          "#battlefieldSidebar::pane{border:0;}"
+          "#battlefieldSidebar QTabBar::tab{margin:0;border-width:0 0 2px;"
+          "min-width:0;padding:8px 10px;color:%1;}"
+          "#battlefieldSidebar QTabBar::tab:selected{color:%2;border-color:%3;}")
+          .arg(Theme::textSecondary().name(),
+               Theme::textPrimary().name(),
+               Theme::accent().name()));
+  sidebar_layout->addWidget(m_sidebar_tabs, 1);
 
   m_tool_panel = new ToolPanel(m_sidebar_tabs);
   connect(
@@ -555,11 +580,7 @@ void EditorWindow::setup_ui() {
           m_canvas,
           &MapCanvas::set_current_nation);
 
-  auto* tools_scroll = new QScrollArea(m_sidebar_tabs);
-  tools_scroll->setWidget(m_tool_panel);
-  tools_scroll->setWidgetResizable(true);
-  tools_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  m_sidebar_tabs->addTab(tools_scroll, "Tools");
+  m_sidebar_tabs->addTab(m_tool_panel, QStringLiteral("Tools"));
 
   m_mission_panel = new MissionPanel(m_mission_data, m_map_data, m_sidebar_tabs);
   connect(m_mission_panel,
@@ -578,17 +599,12 @@ void EditorWindow::setup_ui() {
           &MissionPanel::launch_arena_requested,
           this,
           &EditorWindow::launch_mission_arena);
-  m_mission_scroll = new QScrollArea(m_sidebar_tabs);
-  m_mission_scroll->setWidget(m_mission_panel);
-  m_mission_scroll->setWidgetResizable(true);
-  m_mission_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  m_sidebar_tabs->addTab(m_mission_scroll, "Mission");
+  m_mission_scroll = scroll_panel(m_mission_panel, m_sidebar_tabs);
+  m_sidebar_tabs->addTab(m_mission_scroll, QStringLiteral("Mission"));
 
-  auto* environment_scroll = new QScrollArea(m_sidebar_tabs);
-  environment_scroll->setWidget(createEnvironmentPanel(m_map_data, environment_scroll));
-  environment_scroll->setWidgetResizable(true);
-  environment_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  m_sidebar_tabs->addTab(environment_scroll, "Environment");
+  m_environment_scroll =
+      scroll_panel(createEnvironmentPanel(m_map_data, m_sidebar_tabs), m_sidebar_tabs);
+  m_sidebar_tabs->addTab(m_environment_scroll, QStringLiteral("Environment"));
 
   m_generator_panel = new GeneratorPanel(m_map_data, m_sidebar_tabs);
   m_generator_panel->set_repository_root(repository_root());
@@ -599,17 +615,33 @@ void EditorWindow::setup_ui() {
             show_action_feedback(message, success);
           });
   connect(m_generator_panel, &GeneratorPanel::document_replaced, this, [this]() {
+    m_canvas->clear_tool();
     m_canvas->clear_selection();
     m_canvas->zoom_to_fit();
     update_dimensions_label();
   });
-  auto* generator_scroll = new QScrollArea(m_sidebar_tabs);
-  generator_scroll->setWidget(m_generator_panel);
-  generator_scroll->setWidgetResizable(true);
-  generator_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  m_sidebar_tabs->addTab(generator_scroll, "Generator");
+  m_sidebar_tabs->addTab(scroll_panel(m_generator_panel, m_sidebar_tabs),
+                         QStringLiteral("Generator"));
 
-  m_campaign_context = new QTextBrowser(m_sidebar_tabs);
+  auto* details = new QWidget(m_sidebar_tabs);
+  auto* details_layout = new QVBoxLayout(details);
+  const int details_margin = Theme::spacingSmall();
+  details_layout->setContentsMargins(
+      details_margin, details_margin, details_margin, details_margin);
+  m_details_picker = new QComboBox(details);
+  m_details_picker->setAccessibleName(QStringLiteral("Details panel"));
+  details_layout->addWidget(m_details_picker);
+  m_details_stack = new QStackedWidget(details);
+  details_layout->addWidget(m_details_stack, 1);
+  m_sidebar_tabs->addTab(details, QStringLiteral("Details"));
+
+  m_details_picker->addItem(QStringLiteral("Guide"));
+  m_details_stack->addWidget(
+      scroll_panel(createGuidePanel(m_details_stack), m_details_stack));
+
+  m_details_picker->addItem(QStringLiteral("Campaign context"),
+                            QStringLiteral("Campaign"));
+  m_campaign_context = new QTextBrowser(m_details_stack);
   m_campaign_context->setOpenLinks(false);
   m_campaign_context->document()->setDefaultStyleSheet(
       QStringLiteral("body{color:#F4E7C8;} a{color:#E8C98B;text-decoration:none;} "
@@ -624,15 +656,11 @@ void EditorWindow::setup_ui() {
           m_campaign->select_entity(link.mid(5));
         }
       });
-  m_sidebar_tabs->addTab(m_campaign_context, "Campaign");
+  m_details_stack->addWidget(m_campaign_context);
 
-  auto* guide_scroll = new QScrollArea(m_sidebar_tabs);
-  guide_scroll->setWidget(createGuidePanel(guide_scroll));
-  guide_scroll->setWidgetResizable(true);
-  guide_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  m_sidebar_tabs->addTab(guide_scroll, "Guide");
-
-  m_json_preview = new QPlainTextEdit(m_sidebar_tabs);
+  m_details_picker->addItem(QStringLiteral("JSON"));
+  m_json_preview = new QPlainTextEdit(m_details_stack);
+  m_json_preview->setObjectName(QStringLiteral("mapJsonPreview"));
   m_json_preview->setReadOnly(true);
   m_json_preview->setLineWrapMode(QPlainTextEdit::NoWrap);
   QFont mono_font("Monospace");
@@ -640,67 +668,209 @@ void EditorWindow::setup_ui() {
   mono_font.setPointSize(9);
   m_json_preview->setFont(mono_font);
   m_json_preview->setPlaceholderText("JSON preview will appear here…");
-  m_sidebar_tabs->addTab(m_json_preview, "JSON");
+  m_details_stack->addWidget(m_json_preview);
+  connect(m_details_picker,
+          &QComboBox::currentIndexChanged,
+          m_details_stack,
+          &QStackedWidget::setCurrentIndex);
+  m_json_preview_timer.setSingleShot(true);
+  m_json_preview_timer.setInterval(120);
+  connect(&m_json_preview_timer,
+          &QTimer::timeout,
+          this,
+          &EditorWindow::refresh_json_preview);
+  connect(m_sidebar_tabs,
+          &QTabWidget::currentChanged,
+          this,
+          &EditorWindow::refresh_json_preview);
+  connect(m_details_stack,
+          &QStackedWidget::currentChanged,
+          this,
+          &EditorWindow::refresh_json_preview);
 
-  splitter->addWidget(m_canvas);
-  splitter->addWidget(m_sidebar_tabs);
+  sidebar_layout->addWidget(build_inspector(sidebar));
+
+  splitter->addWidget(viewport);
+  splitter->addWidget(sidebar);
   splitter->setStretchFactor(0, 1);
   splitter->setStretchFactor(1, 0);
-  splitter->setSizes({1180, 480});
-  set_mission_mode(false);
-
+  splitter->setSizes({1220, 380});
   main_layout->addWidget(splitter);
 
-  m_feedback_label = new QLabel("Ready", this);
+  m_feedback_label = new QLabel(QStringLiteral("Ready"), this);
+  m_feedback_label->setTextFormat(Qt::PlainText);
   m_feedback_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  m_feedback_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-  m_tool_label = new QLabel(m_tool_status_text, this);
-  m_tool_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  m_dimensions_label = new QLabel("", this);
-  m_dimensions_label->setToolTip(
-      "Double-click on empty canvas area to edit dimensions");
-  m_zoom_label = new QLabel("100%", this);
-  m_zoom_label->setToolTip("Current zoom level (scroll to zoom)");
-  m_zoom_label->setMinimumWidth(48);
-  m_zoom_label->setAlignment(Qt::AlignCenter);
+  m_feedback_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+  m_feedback_label->setContentsMargins(8, 0, 0, 0);
+  m_dimensions_label = new QLabel(this);
+  m_dimensions_label->setToolTip(QStringLiteral("Map dimensions"));
+  m_dimensions_label->setContentsMargins(12, 0, 8, 0);
+  m_cursor_label = new QLabel(this);
+  m_cursor_label->setToolTip(QStringLiteral("Cursor position on the map"));
+  m_cursor_label->setMinimumWidth(100);
+  m_cursor_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-  m_zoom_widget = new QWidget(this);
-  auto* zoom_layout = new QHBoxLayout(m_zoom_widget);
-  zoom_layout->setContentsMargins(0, 0, 0, 0);
-  zoom_layout->setSpacing(2);
-
-  const auto add_zoom_button =
-      [this, zoom_layout](const QString& text, const QString& tip, auto&& slot) {
-        auto* button = new QToolButton(m_zoom_widget);
-        button->setText(text);
-        button->setToolTip(tip);
-        button->setAutoRaise(true);
-        connect(button, &QToolButton::clicked, m_canvas, slot);
-        zoom_layout->addWidget(button);
-      };
-
-  add_zoom_button("−", "Zoom out (Ctrl+-)", &MapCanvas::zoom_out);
-  zoom_layout->addWidget(m_zoom_label);
-  add_zoom_button("+", "Zoom in (Ctrl++)", &MapCanvas::zoom_in);
-  add_zoom_button(
-      "Fit", "Fit the whole map in the canvas (Ctrl+0)", &MapCanvas::zoom_to_fit);
-  m_cursor_label = new QLabel("X:0 Z:0", this);
-  m_cursor_label->setToolTip("Grid cursor position");
-  m_cursor_label->setMinimumWidth(80);
-  m_file_label = new QLabel(this);
-  m_file_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  m_file_label->setToolTip("Current map file path");
-  update_current_file_label();
-
+  statusBar()->setSizeGripEnabled(false);
   statusBar()->addWidget(m_feedback_label, 1);
-  statusBar()->addPermanentWidget(m_tool_label);
   statusBar()->addPermanentWidget(m_cursor_label);
-  statusBar()->addPermanentWidget(m_file_label);
-  statusBar()->addPermanentWidget(m_zoom_widget);
   statusBar()->addPermanentWidget(m_dimensions_label);
-  auto* version_label = new QLabel("Standard of Iron Editor", this);
-  version_label->setProperty("status", "muted");
-  statusBar()->addPermanentWidget(version_label);
+  m_canvas->set_map_data(m_map_data);
+  set_mission_mode(false);
+  refresh_preview_state();
+}
+
+auto EditorWindow::build_viewport(QWidget* parent) -> QWidget* {
+  auto* viewport = new QWidget(parent);
+  auto* layout = new QVBoxLayout(viewport);
+  layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
+
+  const auto strip = [viewport, layout](const QString& name) {
+    auto* widget = new QFrame(viewport);
+    widget->setObjectName(name);
+    widget->setStyleSheet(
+        QStringLiteral(
+            "#%1{background:%2;}"
+            "#%1 QToolButton{min-height:22px;padding:2px 8px;}"
+            "#%1 QToolButton:checked{background:%3;border-color:%4;font-weight:700;}")
+            .arg(name,
+                 Theme::panelLeather().name(),
+                 Theme::infoBg().name(),
+                 Theme::accent().name()));
+    auto* row = new QHBoxLayout(widget);
+    row->setContentsMargins(Theme::spacingSmall(),
+                            Theme::spacingTiny(),
+                            Theme::spacingSmall(),
+                            Theme::spacingTiny());
+    row->setSpacing(Theme::spacingTiny());
+    layout->addWidget(widget);
+    return row;
+  };
+
+  auto* view_controls = strip(QStringLiteral("battlefieldView"));
+  auto* modes = new QButtonGroup(viewport);
+  const auto view_mode = [&](const QString& name, const QString& tip, bool painted) {
+    auto* button = new QToolButton(viewport);
+    button->setText(name);
+    button->setToolTip(tip);
+    button->setCheckable(true);
+    modes->addButton(button);
+    view_controls->addWidget(button);
+    connect(button, &QToolButton::clicked, this, [this, painted]() {
+      m_canvas->set_world_view(painted);
+      m_canvas->setFocus();
+    });
+    return button;
+  };
+  m_painted_button = view_mode(QStringLiteral("Painted"),
+                               QStringLiteral("Preview the terrain and scenery (F6)"),
+                               true);
+  m_blueprint_button = view_mode(QStringLiteral("Blueprint"),
+                                 QStringLiteral("Edit with a live schematic view (F6)"),
+                                 false);
+  view_controls->addStretch();
+  m_preview_progress = new QProgressBar(viewport);
+  m_preview_progress->setRange(0, 0);
+  m_preview_progress->setTextVisible(false);
+  m_preview_progress->setFixedSize(52, 6);
+  m_preview_progress->setAccessibleName(QStringLiteral("Updating the painted preview"));
+  m_preview_label = new QLabel(viewport);
+  m_preview_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+  m_preview_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  view_controls->addWidget(m_preview_label, 2);
+  view_controls->addWidget(m_preview_progress);
+
+  m_layers_button = new QToolButton(viewport);
+  m_layers_button->setText(QStringLiteral("Layers"));
+  m_layers_button->setToolTip(QStringLiteral("Show or hide map layers"));
+  m_layers_button->setPopupMode(QToolButton::InstantPopup);
+  view_controls->addWidget(m_layers_button);
+
+  m_canvas = new MapCanvas(viewport);
+  m_canvas->setObjectName(QStringLiteral("battlefieldCanvas"));
+  layout->addWidget(m_canvas, 1);
+
+  auto* footer = strip(QStringLiteral("battlefieldNavigation"));
+  m_view_hint = new QLabel(viewport);
+  m_view_hint->setTextFormat(Qt::PlainText);
+  m_view_hint->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+  footer->addWidget(m_view_hint, 1);
+  const auto zoom_button =
+      [this, viewport, footer](const QString& name, const QString& tip, auto slot) {
+        auto* button = new QToolButton(viewport);
+        button->setText(name);
+        button->setToolTip(tip);
+        button->setAccessibleName(tip);
+        connect(button, &QToolButton::clicked, m_canvas, slot);
+        footer->addWidget(button);
+      };
+  zoom_button(QStringLiteral("−"), QStringLiteral("Zoom out"), &MapCanvas::zoom_out);
+  m_zoom_label = new QLabel(QStringLiteral("100%"), viewport);
+  m_zoom_label->setAlignment(Qt::AlignCenter);
+  m_zoom_label->setMinimumWidth(46);
+  footer->addWidget(m_zoom_label);
+  zoom_button(QStringLiteral("+"), QStringLiteral("Zoom in"), &MapCanvas::zoom_in);
+  zoom_button(QStringLiteral("Fit"),
+              QStringLiteral("Fit map (Ctrl+0)"),
+              &MapCanvas::zoom_to_fit);
+  return viewport;
+}
+
+auto EditorWindow::build_inspector(QWidget* parent) -> QWidget* {
+  auto* inspector = new QFrame(parent);
+  inspector->setObjectName(QStringLiteral("battlefieldInspector"));
+  inspector->setStyleSheet(
+      QStringLiteral(
+          "#battlefieldInspector{background:%1;border-top:1px solid %2;}"
+          "#battlefieldInspector QToolButton{min-height:22px;padding:2px 8px;}"
+          "#battlefieldInspector QLabel#selectionTitle{font-size:%3px;font-weight:700;}"
+          "#battlefieldInspector QLabel#selectionHint{color:%4;}")
+          .arg(Theme::panelLeather().name(), Theme::borderSubtle().name())
+          .arg(Theme::scaled(14))
+          .arg(Theme::textSecondary().name()));
+  auto* layout = new QVBoxLayout(inspector);
+  const int margin = Theme::spacingMedium();
+  layout->setContentsMargins(margin, margin, margin, margin);
+  layout->setSpacing(Theme::spacingTiny());
+  auto* heading = new QLabel(QStringLiteral("Selection"), inspector);
+  heading->setObjectName(QStringLiteral("selectionHint"));
+  layout->addWidget(heading);
+  m_inspector_title = new QLabel(QStringLiteral("No selection"), inspector);
+  m_inspector_title->setObjectName(QStringLiteral("selectionTitle"));
+  m_inspector_title->setTextFormat(Qt::PlainText);
+  m_inspector_title->setWordWrap(true);
+  layout->addWidget(m_inspector_title);
+  m_inspector_detail = new QLabel(inspector);
+  m_inspector_detail->setTextFormat(Qt::PlainText);
+  m_inspector_detail->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_inspector_detail->setWordWrap(true);
+  layout->addWidget(m_inspector_detail);
+
+  m_inspector_hint = new QLabel(inspector);
+  m_inspector_hint->setObjectName(QStringLiteral("selectionHint"));
+  m_inspector_hint->setWordWrap(true);
+  layout->addWidget(m_inspector_hint);
+
+  auto* actions = new QHBoxLayout;
+  actions->setSpacing(Theme::spacingSmall());
+  m_edit_properties_button = new QToolButton(inspector);
+  m_edit_properties_button->setText(QStringLiteral("Edit properties…"));
+  connect(m_edit_properties_button, &QToolButton::clicked, this, [this]() {
+    on_element_double_clicked(m_canvas->selected_element_type(),
+                              m_canvas->selected_element_index());
+  });
+  actions->addWidget(m_edit_properties_button);
+  m_frame_button = new QToolButton(inspector);
+  m_frame_button->setText(QStringLiteral("Frame"));
+  m_frame_button->setToolTip(QStringLiteral("Focus on the selected element (F)"));
+  connect(m_frame_button, &QToolButton::clicked, this, [this]() {
+    m_canvas->frame_selection();
+    m_canvas->setFocus();
+  });
+  actions->addWidget(m_frame_button);
+  actions->addStretch();
+  layout->addLayout(actions);
+  return inspector;
 }
 
 void EditorWindow::setup_menus() {
@@ -769,6 +939,7 @@ void EditorWindow::setup_menus() {
   auto* edit_menu = menuBar()->addMenu("&Edit");
 
   m_undo_action = new QAction("&Undo", this);
+  m_undo_action->setIconText(QStringLiteral("Undo"));
   m_undo_action->setShortcut(QKeySequence::Undo);
   m_undo_action->setEnabled(false);
   m_undo_action->setToolTip("Undo the last change (Ctrl+Z)");
@@ -776,6 +947,7 @@ void EditorWindow::setup_menus() {
   edit_menu->addAction(m_undo_action);
 
   m_redo_action = new QAction("&Redo", this);
+  m_redo_action->setIconText(QStringLiteral("Redo"));
   m_redo_action->setShortcut(QKeySequence::Redo);
   m_redo_action->setEnabled(false);
   m_redo_action->setToolTip("Redo the last undone change (Ctrl+Y)");
@@ -820,6 +992,8 @@ void EditorWindow::setup_menus() {
   select_all_action->setToolTip("Select every element on the visible layers (Ctrl+A)");
   connect(select_all_action, &QAction::triggered, m_canvas, &MapCanvas::select_all);
   edit_menu->addAction(select_all_action);
+  m_battlefield_edit_actions = {
+      resize_action, biome_action, duplicate_action, paste_action};
 
   auto* view_menu = menuBar()->addMenu("&View");
 
@@ -877,6 +1051,13 @@ void EditorWindow::setup_menus() {
   world_view_action->setToolTip("Paint the map as the land it becomes in the game; "
                                 "turn off for the blueprint (F6)");
   connect(world_view_action, &QAction::toggled, m_canvas, &MapCanvas::set_world_view);
+  connect(m_canvas,
+          &MapCanvas::preview_changed,
+          world_view_action,
+          [this, world_view_action]() {
+            const QSignalBlocker block(world_view_action);
+            world_view_action->setChecked(m_canvas->world_view());
+          });
   view_menu->addAction(world_view_action);
 
   auto* living_world_action = new QAction("Drifting &Cloud Shadows", this);
@@ -890,28 +1071,51 @@ void EditorWindow::setup_menus() {
 
   auto* layers_menu = view_menu->addMenu("&Layers");
   for (int layer = 0; layer < MapCanvas::LayerCount; ++layer) {
-    auto* action = new QAction(MapCanvas::layer_label(layer), this);
+    auto* action = new QAction(MapCanvas::layer_label(layer).replace(
+                                   QStringLiteral("&"), QStringLiteral("&&")),
+                               this);
     action->setCheckable(true);
     action->setChecked(m_canvas->layer_visible(layer));
     connect(action, &QAction::toggled, this, [this, layer](bool visible) {
       m_canvas->set_layer_visible(layer, visible);
     });
+    connect(m_canvas, &MapCanvas::layers_changed, action, [this, action, layer]() {
+      const QSignalBlocker block(action);
+      action->setChecked(m_canvas->layer_visible(layer));
+    });
     layers_menu->addAction(action);
   }
+  m_layers_button->setMenu(layers_menu);
 
-  auto* toolbar = addToolBar("Main");
+  auto* panels_menu = view_menu->addMenu(QStringLiteral("&Panels"));
+  for (const QString& name : {QStringLiteral("Guide"),
+                              QStringLiteral("Campaign context"),
+                              QStringLiteral("JSON")}) {
+    connect(panels_menu->addAction(name), &QAction::triggered, this, [this, name]() {
+      if (m_workspace == Workspace::Campaign) {
+        set_workspace(Workspace::Battlefield);
+      }
+      select_sidebar_tab(name);
+    });
+  }
+
+  auto* toolbar = addToolBar(QStringLiteral("Document"));
   m_main_toolbar = toolbar;
+  toolbar->setObjectName(QStringLiteral("battlefieldDocument"));
+  toolbar->setStyleSheet(QStringLiteral(
+      "#battlefieldDocument{padding:4px 8px;spacing:4px;}"
+      "#battlefieldDocument QToolButton{min-height:22px;padding:2px 8px;}"));
   toolbar->setMovable(false);
+  toolbar->setFloatable(false);
+  toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
   toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  open_action->setIconText(QStringLiteral("Open"));
   toolbar->addAction(new_action);
-  toolbar->addAction(new_mission_action);
   toolbar->addAction(open_action);
   toolbar->addAction(save_action);
   toolbar->addSeparator();
   toolbar->addAction(m_undo_action);
   toolbar->addAction(m_redo_action);
-  toolbar->addSeparator();
-  toolbar->addAction(resize_action);
 
   auto* go_menu = menuBar()->addMenu("&Go");
   const auto add_go = [&](const QString& text, const QKeySequence& key, auto&& slot) {
@@ -1032,6 +1236,7 @@ void EditorWindow::check_road_network() {
 auto EditorWindow::build_workspace_bar() -> QWidget* {
   auto* bar = new QWidget(this);
   bar->setObjectName(QStringLiteral("workspace_bar"));
+  bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   bar->setStyleSheet(QStringLiteral(
       "#workspace_bar{background:#1A140F;border-bottom:1px solid #4A3820;}"
       "#workspace_bar QToolButton[workspace='true']{padding:6px 16px;border:none;"
@@ -1080,9 +1285,10 @@ auto EditorWindow::build_workspace_bar() -> QWidget* {
           QStringLiteral(
               "Objectives, forces, waves and dialogue on top of the map (Ctrl+3)"),
           Workspace::Mission);
-  layout->addSpacing(18);
+  layout->addSpacing(Theme::spacingSmall());
   m_breadcrumb = new QLabel(bar);
   m_breadcrumb->setTextFormat(Qt::RichText);
+  m_breadcrumb->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   connect(m_breadcrumb, &QLabel::linkActivated, this, [this](const QString& link) {
     if (link == QLatin1String("campaign")) {
       set_workspace(Workspace::Campaign);
@@ -1104,8 +1310,8 @@ auto EditorWindow::build_workspace_bar() -> QWidget* {
   layout->addWidget(m_problem_badge);
   auto* search = new QToolButton(bar);
   search->setObjectName(QStringLiteral("workspace_search"));
-  search->setText(QStringLiteral("Search or run a command…     Ctrl+K"));
-  search->setMinimumWidth(280);
+  search->setText(QStringLiteral("Commands  ·  Ctrl+K"));
+  search->setToolTip(QStringLiteral("Search commands, battlefields and missions"));
   connect(search, &QToolButton::clicked, this, [this]() { open_command_palette(); });
   layout->addWidget(search);
   m_palette = new CommandPalette(this);
@@ -1117,6 +1323,7 @@ void EditorWindow::ensure_campaign() {
     return;
   }
   m_campaign = new CampaignWorkspace(m_stack);
+  m_campaign->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_stack->addWidget(m_campaign);
   connect(m_campaign,
           &CampaignWorkspace::feedback,
@@ -1131,7 +1338,6 @@ void EditorWindow::ensure_campaign() {
         }
       });
   connect(m_campaign, &CampaignWorkspace::summary_changed, this, [this]() {
-    refresh_workspace_bar();
     on_undo_redo_changed();
     update_window_title();
   });
@@ -1223,6 +1429,10 @@ void EditorWindow::set_workspace(Workspace workspace) {
   }
   m_workspace = workspace;
   const bool campaign = workspace == Workspace::Campaign;
+  if (m_campaign != nullptr) {
+    const auto policy = campaign ? QSizePolicy::Expanding : QSizePolicy::Ignored;
+    m_campaign->setSizePolicy(policy, policy);
+  }
   m_stack->setCurrentWidget(campaign ? static_cast<QWidget*>(m_campaign)
                                      : m_battlefield_page);
   if (m_main_toolbar != nullptr) {
@@ -1231,14 +1441,7 @@ void EditorWindow::set_workspace(Workspace workspace) {
   if (m_cursor_label != nullptr) {
     m_cursor_label->clear();
   }
-  for (QWidget* widget : {static_cast<QWidget*>(m_dimensions_label),
-                          m_zoom_widget,
-                          static_cast<QWidget*>(m_tool_label),
-                          static_cast<QWidget*>(m_file_label)}) {
-    if (widget != nullptr) {
-      widget->setVisible(!campaign);
-    }
-  }
+  m_dimensions_label->setVisible(!campaign);
   if (!campaign && m_sidebar_tabs != nullptr) {
     if (workspace == Workspace::Mission && m_mission_scroll != nullptr) {
       m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
@@ -1252,7 +1455,8 @@ void EditorWindow::set_workspace(Workspace workspace) {
     m_canvas->setFocus();
   }
   refresh_workspace_bar();
-  on_undo_redo_changed();
+  refresh_preview_state();
+  refresh_json_preview();
   update_window_title();
 }
 
@@ -1322,9 +1526,12 @@ void EditorWindow::refresh_workspace_bar() {
   }
   m_breadcrumb->setText(
       crumbs.join(QStringLiteral("  <span style='color:#5A4630'>›</span>  ")));
+  m_breadcrumb->setToolTip(m_workspace == Workspace::Campaign ? QString{}
+                                                              : m_current_file_path);
   if (m_campaign != nullptr && m_campaign->has_world()) {
     const auto& report = m_campaign->document()->report();
-    m_problem_badge->setVisible(true);
+    m_problem_badge->setVisible(m_workspace == Workspace::Campaign ||
+                                report.errors() > 0 || report.warnings() > 0);
     m_problem_badge->setText(
         report.errors() + report.warnings() == 0
             ? QStringLiteral("✔ Campaign valid")
@@ -1645,12 +1852,14 @@ void EditorWindow::open_command_palette() {
 }
 
 void EditorWindow::reset_to_new_map() {
+  m_canvas->clear_tool();
+  m_canvas->clear_selection();
   m_map_data->clear();
+  m_canvas->zoom_to_fit();
   set_mission_mode(false);
   m_current_file_path.clear();
   m_linked_map_file_path.clear();
   update_window_title();
-  update_current_file_label();
 }
 
 void EditorWindow::new_map() {
@@ -1669,6 +1878,8 @@ void EditorWindow::new_mission() {
     return;
   }
 
+  m_canvas->clear_tool();
+  m_canvas->clear_selection();
   m_mission_data->clear();
   m_map_data->clear();
   set_mission_mode(true);
@@ -1677,7 +1888,6 @@ void EditorWindow::new_mission() {
   QString map_error;
   load_linked_map(m_mission_data->map_path(), &map_error);
   update_window_title();
-  update_current_file_label();
   m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
   m_anchor_site.clear();
   set_workspace(Workspace::Mission);
@@ -1745,7 +1955,6 @@ bool EditorWindow::load_file(const QString& file_path) {
               .arg(m_mission_data->title(), normalizedDisplayPath(file_path)));
     }
     update_window_title();
-    update_current_file_label();
     m_sidebar_tabs->setCurrentWidget(m_mission_scroll);
     m_anchor_site.clear();
     ensure_campaign_context_world();
@@ -1757,13 +1966,11 @@ bool EditorWindow::load_file(const QString& file_path) {
     set_mission_mode(false);
     m_current_file_path = QFileInfo(file_path).absoluteFilePath();
     m_linked_map_file_path.clear();
+    m_canvas->clear_tool();
     m_canvas->clear_selection();
     m_canvas->zoom_to_fit();
     update_window_title();
-    update_current_file_label();
-    show_action_feedback(
-        QString("Loaded \"%1\" from %2")
-            .arg(m_map_data->name(), normalizedDisplayPath(file_path)));
+    show_action_feedback(QStringLiteral("Opened %1").arg(m_map_data->name()));
     m_anchor_site.clear();
     ensure_campaign_context_world();
     set_workspace(Workspace::Battlefield);
@@ -1834,6 +2041,9 @@ void EditorWindow::save_map_as() {
 }
 
 void EditorWindow::resize_map() {
+  if (m_canvas->edits_paused() || m_workspace == Workspace::Campaign) {
+    return;
+  }
   const GridSettings& grid = m_map_data->grid();
   ResizeDialog dialog(grid.width, grid.height, this);
 
@@ -1850,6 +2060,9 @@ void EditorWindow::resize_map() {
 }
 
 void EditorWindow::edit_biome() {
+  if (m_canvas->edits_paused() || m_workspace == Workspace::Campaign) {
+    return;
+  }
   const QJsonObject before = m_map_data->biome();
   JsonEditDialog dialog("Edit Biome", before, false, schema_for_biome(), this);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
@@ -1864,6 +2077,9 @@ void EditorWindow::undo() {
     m_campaign->undo();
     return;
   }
+  if (m_canvas->edits_paused() || !m_map_data->can_undo()) {
+    return;
+  }
   const QString desc = m_map_data->undo_description();
   m_map_data->undo();
   m_canvas->clear_selection();
@@ -1875,6 +2091,9 @@ void EditorWindow::redo() {
     m_campaign->redo();
     return;
   }
+  if (m_canvas->edits_paused() || !m_map_data->can_redo()) {
+    return;
+  }
   const QString desc = m_map_data->redo_description();
   m_map_data->redo();
   m_canvas->clear_selection();
@@ -1883,20 +2102,13 @@ void EditorWindow::redo() {
 
 void EditorWindow::on_tool_selected(ToolType tool) {
   m_canvas->set_current_tool(tool);
-  m_tool_status_text = "Tool: " + tool_status_label(tool);
-  m_selection_status_text.clear();
-  refresh_status_label();
+  m_canvas->setFocus();
+  update_selection_info();
 }
 
 void EditorWindow::on_tool_cleared() {
-  m_tool_panel->clear_selection();
-  m_tool_status_text = "Tool: Select";
-  m_selection_status_text.clear();
-  refresh_status_label();
-}
-
-void EditorWindow::on_grid_double_clicked() {
-  resize_map();
+  m_tool_panel->clear_selection(false);
+  update_selection_info();
 }
 
 void EditorWindow::on_undo_redo_changed() {
@@ -1910,8 +2122,8 @@ void EditorWindow::on_undo_redo_changed() {
     m_redo_action->setText("&Redo");
     return;
   }
-  const bool can_undo = m_map_data->can_undo();
-  const bool can_redo = m_map_data->can_redo();
+  const bool can_undo = m_map_data->can_undo() && !m_canvas->edits_paused();
+  const bool can_redo = m_map_data->can_redo() && !m_canvas->edits_paused();
 
   m_undo_action->setEnabled(can_undo);
   m_redo_action->setEnabled(can_redo);
@@ -1925,20 +2137,21 @@ void EditorWindow::on_undo_redo_changed() {
 
 void EditorWindow::update_dimensions_label() {
   const GridSettings& grid = m_map_data->grid();
-  m_dimensions_label->setText(QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
+  m_dimensions_label->setText(
+      QStringLiteral("%1 × %2 cells").arg(grid.width).arg(grid.height));
 }
 
 void EditorWindow::on_element_double_clicked(int element_type, int index) {
+  if (m_canvas->edits_paused()) {
+    return;
+  }
   const ElementSnapshot before = ElementOps::snapshot(*m_map_data, element_type, index);
   const auto document = ElementEditJson::to_document(before);
   if (!document.has_value()) {
     return;
   }
 
-  const HillProjection::MapContext map_context{
-      .tile_size = static_cast<double>(m_map_data->grid().tile_size),
-      .map_grid_width = m_map_data->grid().width,
-      .map_grid_height = m_map_data->grid().height};
+  const auto map_context = HillProjection::map_context(*m_map_data);
   JsonEditDialog dialog(document->title,
                         document->json,
                         document->hill_projection,
@@ -1950,7 +2163,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
   }
 
   const ElementEditJson::EditResult result = ElementEditJson::from_json(
-      before, dialog.get_json(), m_map_data->linear_elements());
+      before, dialog.get_json(), m_map_data->linear_elements(), map_context);
   for (const QString& note : result.notes) {
     show_action_feedback(note, false);
   }
@@ -1971,28 +2184,20 @@ void EditorWindow::select_sidebar_tab(const QString& title) {
       return;
     }
   }
+  for (int index = 0; index < m_details_picker->count(); ++index) {
+    if (m_details_picker->itemText(index).compare(title, Qt::CaseInsensitive) == 0 ||
+        m_details_picker->itemData(index).toString().compare(
+            title, Qt::CaseInsensitive) == 0) {
+      m_details_picker->setCurrentIndex(index);
+      m_sidebar_tabs->setCurrentWidget(m_details_stack->parentWidget());
+      return;
+    }
+  }
 }
 
 void EditorWindow::on_modified_changed(bool modified) {
   Q_UNUSED(modified)
   update_window_title();
-}
-
-void EditorWindow::update_current_file_label() {
-  if (m_file_label == nullptr) {
-    return;
-  }
-
-  if (m_current_file_path.isEmpty()) {
-    m_file_label->setText("File: unsaved");
-    m_file_label->setToolTip(m_mission_mode ? "This mission has not been saved yet."
-                                            : "This map has not been saved yet.");
-    return;
-  }
-
-  const QString display_path = normalizedDisplayPath(m_current_file_path);
-  m_file_label->setText("File: " + display_path);
-  m_file_label->setToolTip(display_path);
 }
 
 void EditorWindow::show_action_feedback(const QString& message, bool success) {
@@ -2089,7 +2294,6 @@ bool EditorWindow::save_map_to_path(const QString& file_path,
   remember_dialog_directory(absolute_path);
   m_map_data->set_modified(false);
   update_window_title();
-  update_current_file_label();
   show_action_feedback(
       QString("Saved \"%1\" to %2")
           .arg(m_map_data->name(), normalizedDisplayPath(absolute_path)));
@@ -2125,7 +2329,6 @@ bool EditorWindow::save_mission_to_path(const QString& file_path,
   remember_dialog_directory(absolute_path);
   m_mission_data->set_modified(false);
   update_window_title();
-  update_current_file_label();
   show_action_feedback(
       QStringLiteral("Saved mission \"%1\" to %2")
           .arg(m_mission_data->title(), normalizedDisplayPath(absolute_path)));
@@ -2192,6 +2395,7 @@ bool EditorWindow::load_linked_map(const QString& authored_path, QString* out_er
     return false;
   }
   m_linked_map_file_path = resolved;
+  m_canvas->clear_tool();
   m_canvas->clear_selection();
   m_canvas->zoom_to_fit();
   m_mission_panel->refresh();
@@ -2365,7 +2569,7 @@ void EditorWindow::set_mission_mode(bool enabled) {
       m_sidebar_tabs->setTabVisible(index, enabled);
     }
   }
-  refresh_json_preview();
+  schedule_json_preview();
   update_window_title();
 }
 
@@ -2430,114 +2634,43 @@ void EditorWindow::closeEvent(QCloseEvent* event) {
 }
 
 void EditorWindow::on_selection_changed(int element_type, int index) {
-  if (element_type < 0 || index < 0 || (m_map_data == nullptr)) {
-    m_selection_status_text.clear();
-    refresh_status_label();
-    return;
+  const ElementSnapshot snap = ElementOps::snapshot(*m_map_data, element_type, index);
+  const auto pos = ElementOps::position(snap);
+  const int count = pos.has_value() ? m_canvas->selection_count() : 0;
+  const auto* line = std::get_if<LinearElement>(&snap);
+  const auto coordinates = [](const QPointF& at) {
+    return QStringLiteral("%1, %2").arg(at.x(), 0, 'f', 1).arg(at.y(), 0, 'f', 1);
+  };
+  QString detail;
+  if (line != nullptr && !is_ring_river(*line)) {
+    detail = QStringLiteral("%1  →  %2")
+                 .arg(coordinates(line->start.toPointF()),
+                      coordinates(line->end.toPointF()));
+  } else if (pos.has_value()) {
+    detail = QStringLiteral("X, Z   %1").arg(coordinates(*pos));
   }
-
-  QString type_name;
-  QString coords;
-  if (element_type == 0) {
-    const auto& terrain = m_map_data->terrain_elements();
-    if (index < terrain.size()) {
-      const auto& e = terrain[index];
-      type_name = e.type;
-      coords =
-          QString("(%1, %2)").arg(static_cast<int>(e.x)).arg(static_cast<int>(e.z));
-    }
-  } else if (element_type == 1) {
-    const auto& world_props = m_map_data->world_props();
-    if (index < world_props.size()) {
-      const auto& e = world_props[index];
-      type_name = e.type;
-      coords =
-          QString("(%1, %2)").arg(static_cast<int>(e.x)).arg(static_cast<int>(e.z));
-    }
-  } else if (element_type == 2) {
-    const auto& linear = m_map_data->linear_elements();
-    if (index < linear.size()) {
-      const auto& e = linear[index];
-      type_name = e.type;
-      coords = QString("(%1,%2)→(%3,%4)")
-                   .arg(static_cast<int>(e.start.x()))
-                   .arg(static_cast<int>(e.start.y()))
-                   .arg(static_cast<int>(e.end.x()))
-                   .arg(static_cast<int>(e.end.y()));
-    }
-  } else if (element_type == 3) {
-    const auto& structures = m_map_data->structures();
-    if (index < structures.size()) {
-      const auto& e = structures[index];
-      type_name = e.type;
-      coords = e.type == QStringLiteral("wall_gate")
-                   ? QString("(%1, %2) P%3 %4°")
-                         .arg(static_cast<int>(e.x))
-                         .arg(static_cast<int>(e.z))
-                         .arg(e.player_id)
-                         .arg(static_cast<int>(e.rotation))
-                   : QString("(%1, %2) P%3")
-                         .arg(static_cast<int>(e.x))
-                         .arg(static_cast<int>(e.z))
-                         .arg(e.player_id);
-    }
-  } else if (element_type == 4) {
-    const auto& troop_spawns = m_map_data->troop_spawns();
-    if (index < troop_spawns.size()) {
-      const auto& e = troop_spawns[index];
-      type_name = e.type;
-      coords = e.player_id >= 0 ? QString("(%1, %2) P%3")
-                                      .arg(static_cast<int>(e.x))
-                                      .arg(static_cast<int>(e.z))
-                                      .arg(e.player_id)
-                                : QString("(%1, %2)")
-                                      .arg(static_cast<int>(e.x))
-                                      .arg(static_cast<int>(e.z));
-    }
-  } else if (element_type == 5) {
-    const auto& undead_zones = m_map_data->undead_zones();
-    if (index < undead_zones.size()) {
-      const auto& e = undead_zones[index];
-      type_name = "undead_zone";
-      coords = QString("(%1, %2) r=%3")
-                   .arg(static_cast<int>(e.x))
-                   .arg(static_cast<int>(e.z))
-                   .arg(static_cast<int>(e.radius));
-    }
-  } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
-    const auto& areas = m_map_data->wildlife_areas();
-    if (index < areas.size()) {
-      const auto& e = areas[index];
-      type_name = wildlife_species_label(e.species);
-      coords = QString("(%1, %2) r=%3")
-                   .arg(static_cast<int>(e.x))
-                   .arg(static_cast<int>(e.z))
-                   .arg(static_cast<int>(e.radius));
-    }
-  } else if (element_type == static_cast<int>(ElementKind::Forest)) {
-    const auto& forests = m_map_data->forests();
-    if (index < forests.size()) {
-      const auto& e = forests[index];
-      type_name = QStringLiteral("forest");
-      coords = QString("(%1, %2) r=%3")
-                   .arg(static_cast<int>(e.x))
-                   .arg(static_cast<int>(e.z))
-                   .arg(static_cast<int>(e.radius));
-    }
+  if (ElementOps::supports_player_id(snap)) {
+    const int player = ElementOps::player_id(snap);
+    detail += player > 0 ? QStringLiteral("  ·  Player %1").arg(player)
+                         : QStringLiteral("  ·  Neutral");
   }
-
-  if (!type_name.isEmpty()) {
-    m_selection_status_text =
-        QString("Selected: %1 at %2")
-            .arg(ElementEditJson::prettify_identifier(type_name), coords);
-    const int extra = m_canvas->selection_count() - 1;
-    if (extra > 0) {
-      m_selection_status_text += QString(" (+%1 more)").arg(extra);
-    }
-  } else {
-    m_selection_status_text.clear();
-  }
-  refresh_status_label();
+  m_inspector_title->setText(
+      count > 1 ? QStringLiteral("%1 elements selected").arg(count)
+      : count == 1
+          ? ElementEditJson::prettify_identifier(ElementOps::display_name(snap))
+          : QStringLiteral("No selection"));
+  m_inspector_detail->setText(detail);
+  m_inspector_detail->setToolTip(ElementOps::summary(snap));
+  m_inspector_detail->setVisible(count == 1);
+  const bool can_move = count > 0 && m_tool_panel->current_tool() == ToolType::Select &&
+                        !m_canvas->edits_paused();
+  m_inspector_hint->setText(
+      count == 1 && line != nullptr && !is_ring_river(*line)
+          ? QStringLiteral("Drag the move handle or an endpoint square.")
+          : QStringLiteral("Drag the move handle to reposition the selection."));
+  m_inspector_hint->setVisible(can_move);
+  m_edit_properties_button->setEnabled(count == 1 && !m_canvas->edits_paused());
+  m_frame_button->setEnabled(count > 0);
 }
 
 void EditorWindow::update_selection_info() {
@@ -2546,31 +2679,83 @@ void EditorWindow::update_selection_info() {
 }
 
 void EditorWindow::refresh_status_label() {
-  if (m_tool_label == nullptr) {
-    return;
+  QString hint = m_canvas_hint;
+  if (m_canvas->edits_paused()) {
+    hint = QStringLiteral("Editing paused · Switch to Blueprint to continue");
+  } else if (hint.isEmpty()) {
+    const ToolType tool = m_tool_panel->current_tool();
+    switch (tool) {
+    case ToolType::Select:
+      hint = QStringLiteral("Click to select  ·  Drag to pan  ·  Scroll to zoom");
+      break;
+    case ToolType::Eraser:
+      hint = QStringLiteral("Eraser · Click an element to remove it · Esc to exit");
+      break;
+    case ToolType::Ford:
+      hint = QStringLiteral("Ford · Click the first bank · Esc to exit");
+      break;
+    default:
+      hint = is_linear_tool(tool)
+                 ? QStringLiteral("%1 · Click the start point · Esc to exit")
+                       .arg(tool_name(tool))
+                 : QStringLiteral("%1 · Click to place · Esc to exit")
+                       .arg(tool_name(tool));
+      break;
+    }
   }
-  if (m_hint_active) {
-    return;
+  m_view_hint->setText(hint);
+  m_view_hint->setToolTip(hint);
+}
+
+void EditorWindow::refresh_preview_state() {
+  const bool pending = m_canvas->preview_pending();
+  const bool paused = m_canvas->edits_paused();
+  const QString error = m_canvas->preview_error();
+  m_painted_button->setChecked(m_canvas->world_view());
+  m_blueprint_button->setChecked(!m_canvas->world_view());
+  m_preview_progress->setVisible(pending);
+  m_preview_label->setVisible(pending || !error.isEmpty());
+  const QString status =
+      pending ? QStringLiteral("Updating painted preview…")
+              : QStringLiteral("Using Blueprint · Painted preview unavailable");
+  m_preview_label->setText(status);
+  m_preview_label->setToolTip(error.isEmpty() ? status : error);
+  m_tool_panel->setEnabled(!paused);
+  m_environment_scroll->setEnabled(!paused);
+  m_mission_scroll->setEnabled(!paused);
+  m_generator_panel->setEnabled(!paused);
+  for (QAction* action : m_battlefield_edit_actions) {
+    action->setEnabled(!paused && m_workspace != Workspace::Campaign);
   }
-  if (!m_selection_status_text.isEmpty()) {
-    m_tool_label->setText(m_selection_status_text);
-  } else {
-    m_tool_label->setText(m_tool_status_text);
+  update_selection_info();
+  refresh_status_label();
+  on_undo_redo_changed();
+}
+
+bool EditorWindow::json_preview_active() const {
+  return m_workspace != Workspace::Campaign &&
+         m_sidebar_tabs->currentWidget() == m_details_stack->parentWidget() &&
+         m_details_stack->currentWidget() == m_json_preview;
+}
+
+void EditorWindow::schedule_json_preview() {
+  m_json_preview_dirty = true;
+  if (json_preview_active()) {
+    m_json_preview_timer.start();
   }
 }
 
 void EditorWindow::refresh_json_preview() {
-  if (m_json_preview == nullptr) {
+  if (!m_json_preview_dirty || !json_preview_active()) {
     return;
   }
+  m_json_preview_timer.stop();
+  m_json_preview_dirty = false;
   const QString json =
       m_mission_mode ? m_mission_data->to_json_string() : m_map_data->to_json_string();
-
-  if (m_json_preview->toPlainText() != json) {
-    const int scroll_pos = m_json_preview->verticalScrollBar()->value();
-    m_json_preview->setPlainText(json);
-    m_json_preview->verticalScrollBar()->setValue(scroll_pos);
-  }
+  const int scroll_pos = m_json_preview->verticalScrollBar()->value();
+  m_json_preview->setPlainText(json);
+  m_json_preview->verticalScrollBar()->setValue(scroll_pos);
 }
 
 } // namespace MapEditor

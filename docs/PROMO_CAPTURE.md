@@ -108,10 +108,21 @@ Current shot fields include:
 - casting-overlay flag;
 - RPG-HUD/UI flags;
 - report-card duration;
-- focus rule; and
-- camera keyframes.
+- focus rule;
+- camera keyframes; and
+- `street_level`, for a free rig at eye height (see below).
 
 A shot can therefore be reviewed as a self-contained instruction: run this scenario/seed, begin at this event/time, follow this subject, evaluate this camera curve, and record for this duration.
+
+### Street-level shots
+
+Arena cameras keep the pitch band of the game's free cameras: the eye is lifted
+until it looks at least five degrees down at its target. That is right for a
+battle and wrong for a street, where the view runs level along the paving and
+up a facade. A free-rig shot with `"street_level": true` widens the band for
+that shot only, so `eye` and `look` are honoured as authored. The city review
+specs under `tools/arena/promos/city_review/` use it for their eye-level views;
+see `docs/CITY_VISUAL_DIRECTION.md`.
 
 ## Output dimensions and supersampling
 

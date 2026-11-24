@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
@@ -242,7 +243,10 @@ auto decode_like_building_merged_vert(const MergedBuildingVertex& vertex,
     -> DecodedPart {
   const int slot = static_cast<int>(vertex.material[0]);
   const bool unseen = record.state[1] > 0.5F;
-  const float* palette = slot == 0 ? record.palette0 : record.palette1;
+  const float* palette = slot <= 0   ? record.palette0
+                         : slot == 1 ? record.palette1
+                         : slot == 2 ? record.palette2
+                                     : record.palette3;
   const int base = static_cast<int>(vertex.material[3]);
   DecodedPart out;
   if (slot >= 0 && palette[3] >= 0.0F) {
@@ -310,6 +314,31 @@ TEST(MergedBuildingMesh, DecodedVerticesMatchTheDynamicPathForEveryInstanceState
       }
     }
   }
+}
+
+TEST(StaticBuildingBatch, InstanceCarriesFourPaletteSlots) {
+  const RenderArchetype archetype = two_part_archetype();
+  const std::array<QVector3D, 4> palette{QVector3D(0.8F, 0.1F, 0.1F),
+                                         QVector3D(0.9F, 0.8F, 0.6F),
+                                         QVector3D(0.6F, 0.2F, 0.15F),
+                                         QVector3D(0.2F, 0.4F, 0.5F)};
+  const std::array<QVector3D, 1> first{palette[0]};
+  RenderInstance instance = instance_at(archetype, 0.0F, first);
+  instance.palette = palette;
+  const BuildingInstanceGpu record = Render::GL::pack_building_instance(instance);
+  const std::array<const float*, 4> entries{
+      record.palette0, record.palette1, record.palette2, record.palette3};
+  for (std::size_t slot = 0; slot < entries.size(); ++slot) {
+    EXPECT_FLOAT_EQ(entries[slot][0], palette[slot].x()) << slot;
+    EXPECT_FLOAT_EQ(entries[slot][1], palette[slot].y()) << slot;
+    EXPECT_FLOAT_EQ(entries[slot][2], palette[slot].z()) << slot;
+    EXPECT_GE(entries[slot][3], 0.0F) << "slot " << slot << " must read as set";
+  }
+  EXPECT_EQ(Render::GL::k_merged_building_palette_capacity, entries.size());
+  // The first six instance attributes keep their offsets; shaders written
+  // against them still bind.
+  EXPECT_EQ(offsetof(BuildingInstanceGpu, state), 5U * 4U * sizeof(float));
+  EXPECT_EQ(offsetof(BuildingInstanceGpu, palette2), 6U * 4U * sizeof(float));
 }
 
 TEST(StaticBuildingBatch, InstancePacksWorldPaletteUnseenAndDamage) {

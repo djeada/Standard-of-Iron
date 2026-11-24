@@ -247,6 +247,7 @@ void WaterRenderer::build_meshes() {
     m_meshes.push_back(
         {std::move(river_meshes[index]),
          WaterSurfaceKind::River,
+         segment.calm ? 1.0F : 0.0F,
          segment.start,
          segment.end,
          fords_near(segment.start, segment.end, segment.width),
@@ -260,6 +261,7 @@ void WaterRenderer::build_meshes() {
     m_meshes.push_back(
         {std::move(junction.mesh),
          WaterSurfaceKind::River,
+         0.0F,
          junction.center,
          junction.center,
          fords_near(junction.center, junction.center, 4.0F),
@@ -267,16 +269,18 @@ void WaterRenderer::build_meshes() {
   }
   for (std::size_t index = 0; index < m_lakes.size(); ++index) {
     const auto& lake = m_lakes[index];
-    m_meshes.push_back({Ground::build_lake_surface_mesh(lake, m_tile_size),
-                        WaterSurfaceKind::Lake,
-                        lake.center,
-                        lake.center,
-                        {},
-                        water_neighbors_near(lake.center,
-                                             lake.center,
-                                             std::max(lake.width, lake.depth) * 0.55F,
-                                             -1,
-                                             static_cast<std::ptrdiff_t>(index))});
+    m_meshes.push_back(
+        {Ground::build_lake_surface_mesh(lake, m_tile_size, 0.12F, m_lakes),
+         WaterSurfaceKind::Lake,
+         lake.calm ? 1.0F : 0.0F,
+         lake.center,
+         lake.center,
+         {},
+         water_neighbors_near(lake.center,
+                              lake.center,
+                              std::max(lake.width, lake.depth) * 0.55F,
+                              -1,
+                              static_cast<std::ptrdiff_t>(index))});
   }
 }
 
@@ -319,6 +323,7 @@ void WaterRenderer::submit(FrameSubmitter& renderer, const DrawResources* resour
     cmd.mesh = mesh;
     cmd.kind = LinearFeatureKind::Water;
     cmd.water_kind = surface.kind;
+    cmd.water_calm = surface.calm;
     cmd.model = model;
     cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
     cmd.biome_soil_color = surface_profile.soil_color;

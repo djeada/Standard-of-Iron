@@ -16,6 +16,7 @@
 
 #include "arena_casting.h"
 #include "arena_viewport.h"
+#include "game/map/map_definition.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
 #include "game/session/selection_service.h"
@@ -143,6 +144,11 @@ void ArenaViewport::set_cinematic_view(const QVector3D& target,
 void ArenaViewport::clear_cinematic_view() {
   m_cinematic_view_valid = false;
   m_cinematic_eye_valid = false;
+  if (m_camera != nullptr && m_saved_near > 0.0F) {
+    m_camera->set_perspective(
+        m_camera->get_fov(), m_camera->get_aspect(), m_saved_near, m_camera->get_far());
+    m_saved_near = 0.0F;
+  }
 }
 
 void ArenaViewport::set_cinematic_eye(const QVector3D& eye,
@@ -157,19 +163,12 @@ void ArenaViewport::set_cinematic_eye(const QVector3D& eye,
   m_cinematic_view_valid = true;
 }
 
-void ArenaViewport::set_cinematic_lens(float near_plane, float ground_clearance) {
-  if (m_camera != nullptr) {
-    if (m_cinematic_near <= 0.0F && near_plane > 0.0F) {
-      m_saved_near = m_camera->get_near();
-    } else if (m_cinematic_near > 0.0F && near_plane <= 0.0F && m_saved_near > 0.0F) {
-      m_camera->set_perspective(m_camera->get_fov(),
-                                m_camera->get_aspect(),
-                                m_saved_near,
-                                m_camera->get_far());
-    }
-  }
+void ArenaViewport::set_cinematic_lens(float near_plane,
+                                       float ground_clearance,
+                                       bool street_level) {
   m_cinematic_near = near_plane;
   m_cinematic_ground_clearance = ground_clearance;
+  m_cinematic_street_level = street_level;
 }
 
 void ArenaViewport::set_promo_lighting(const Arena::Promo::LightingOverride& lighting) {
@@ -249,6 +248,9 @@ void ArenaViewport::apply_cinematic_view() {
   if (!m_cinematic_view_valid || m_camera == nullptr) {
     return;
   }
+  if (m_saved_near <= 0.0F) {
+    m_saved_near = m_camera->get_near();
+  }
   float const clearance = m_cinematic_ground_clearance >= 0.0F
                               ? m_cinematic_ground_clearance
                               : k_cinematic_ground_clearance;
@@ -277,12 +279,22 @@ void ArenaViewport::apply_cinematic_view() {
     up = tilt.map(up);
   }
 
+  if (m_cinematic_street_level) {
+    m_camera->set_pitch_band(-89.0F, 70.0F);
+  } else {
+    m_camera->set_pitch_band(Render::GL::CameraDefaults::k_default_pitch_min,
+                             Render::GL::CameraDefaults::k_default_pitch_max);
+  }
   m_camera->look_at(position, m_cinematic_target, up);
-  m_camera->set_perspective(m_cinematic_fov,
-                            m_camera->get_aspect(),
-                            m_cinematic_near > 0.0F ? m_cinematic_near
-                                                    : m_camera->get_near(),
-                            m_camera->get_far());
+
+  // The commander rig can set a 5 cm near plane every simulation tick. Use the
+  // map's near plane for scripted shots so distant surfaces keep depth precision.
+  const float map_near = m_terrain_review_definition
+                             ? m_terrain_review_definition->camera.near_plane
+                             : Game::Map::CameraDefinition{}.near_plane;
+  const float near_plane = m_cinematic_near > 0.0F ? m_cinematic_near : map_near;
+  m_camera->set_perspective(
+      m_cinematic_fov, m_camera->get_aspect(), near_plane, m_camera->get_far());
 }
 
 auto ArenaViewport::ensure_capture_target() -> bool {
@@ -642,6 +654,7 @@ auto ArenaViewport::cinematic_state() const -> CinematicState {
   state.roll = m_cinematic_roll;
   state.near_plane = m_cinematic_near;
   state.ground_clearance = m_cinematic_ground_clearance;
+  state.street_level = m_cinematic_street_level;
   return state;
 }
 
@@ -657,6 +670,7 @@ void ArenaViewport::set_cinematic_state(const CinematicState& state) {
   m_cinematic_roll = state.roll;
   m_cinematic_near = state.near_plane;
   m_cinematic_ground_clearance = state.ground_clearance;
+  m_cinematic_street_level = state.street_level;
 }
 
 void ArenaViewport::set_capture_variants(std::vector<CaptureVariant> variants) {

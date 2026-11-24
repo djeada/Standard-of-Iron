@@ -1,0 +1,48 @@
+{
+  "map": "assets/maps/map_rome.json",
+  "views": [
+    {
+      "name": "rome_G1_hero",
+      "center": [10, 40],
+      "distance": 150,
+      "tilt": 30,
+      "yaw": 215,
+      "hour": 17.0
+    },
+    {
+      "name": "rome_G2_overview",
+      "center": [-40, 0],
+      "distance": 620,
+      "tilt": 58,
+      "yaw": 180
+    },
+    {
+      "name": "rome_G3_gardens",
+      "center": [120, -300],
+      "distance": 110,
+      "tilt": 38,
+      "yaw": 200
+    },
+    {
+      "name": "rome_G4_night_day",
+      "center": [-50, 2],
+      "distance": 60,
+      "tilt": 30,
+      "yaw": 200
+    },
+    {
+      "name": "rome_G5_ostia",
+      "center": [-90, 290],
+      "distance": 110,
+      "tilt": 36,
+      "yaw": 160
+    },
+    {
+      "name": "rome_G6_wall",
+      "center": [150, -200],
+      "distance": 70,
+      "tilt": 28,
+      "yaw": 250
+    }
+  ]
+}

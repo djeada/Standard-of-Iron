@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QElapsedTimer>
+#include <QHash>
 #include <QPoint>
 #include <QPolygonF>
+#include <QSet>
 #include <QSizeF>
 #include <QTimer>
 #include <QWidget>
@@ -14,7 +16,7 @@
 #include "game/map/terrain_footprint.h"
 #include "map_data.h"
 #include "mission_data.h"
-#include "tool_panel.h"
+#include "tool_type.h"
 #include "world_backdrop.h"
 
 namespace MapEditor {
@@ -26,16 +28,17 @@ public:
   explicit MapCanvas(QWidget* parent = nullptr);
 
   enum Layer {
-    LayerTerrain = 0,
-    LayerWorldProp = 1,
-    LayerLinear = 2,
-    LayerStructure = 3,
-    LayerTroopSpawn = 4,
-    LayerUndeadZone = 5,
-    LayerWildlifeArea = 6,
-    LayerFogZone = 7,
-    LayerMissionOverlay = 8,
-    LayerCount = 9,
+    LayerTerrain = static_cast<int>(ElementKind::Terrain),
+    LayerWorldProp = static_cast<int>(ElementKind::WorldProp),
+    LayerLinear = static_cast<int>(ElementKind::Linear),
+    LayerStructure = static_cast<int>(ElementKind::Structure),
+    LayerTroopSpawn = static_cast<int>(ElementKind::TroopSpawn),
+    LayerUndeadZone = static_cast<int>(ElementKind::UndeadZone),
+    LayerWildlifeArea = static_cast<int>(ElementKind::WildlifeArea),
+    LayerForest = static_cast<int>(ElementKind::Forest),
+    LayerFogZone = k_element_kind_count,
+    LayerMissionOverlay,
+    LayerCount,
   };
 
   void set_map_data(MapData* data);
@@ -90,18 +93,22 @@ public:
   [[nodiscard]] bool world_view() const { return m_world_view; }
   void set_living_world(bool enabled);
   [[nodiscard]] bool living_world() const { return m_living_world; }
-  [[nodiscard]] bool world_backdrop_ready() const { return m_backdrop.ok(); }
+  [[nodiscard]] bool preview_pending() const;
+  [[nodiscard]] bool edits_paused() const;
+  [[nodiscard]] QString preview_error() const;
+  [[nodiscard]] bool world_backdrop_ready() const { return painting_world(); }
 
 signals:
   void element_double_clicked(int element_type, int index);
-  void grid_double_clicked();
+  void resize_requested();
   void tool_cleared();
   void status_hint_changed(const QString& hint);
   void zoom_changed(float zoom);
   void selection_changed(int element_type, int index);
   void cursor_moved(int grid_x, int grid_z);
   void layers_changed();
-  void action_feedback(const QString& message);
+  void action_feedback(const QString& message, bool success = true);
+  void preview_changed();
 
 protected:
   void paintEvent(QPaintEvent* event) override;
@@ -113,6 +120,7 @@ protected:
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
+  void leaveEvent(QEvent* event) override;
   bool event(QEvent* event) override;
 
 private:
@@ -125,31 +133,39 @@ private:
   void draw_world_frame(QPainter& painter);
   [[nodiscard]] QRectF map_rect_px() const;
   [[nodiscard]] bool painting_world() const;
-  void schedule_world_backdrop();
+  void invalidate_world_backdrop(WorldPreviewChange change);
   void start_world_backdrop();
   void draw_fog_zones(QPainter& painter);
   void draw_category(QPainter& painter, int kind);
   void draw_one_element(QPainter& painter, const ElementRef& ref);
-  void draw_terrain_element(QPainter& painter, int index);
-  void draw_world_prop_element(QPainter& painter, int index);
+  void draw_terrain_element(QPainter& painter, int index, const TerrainElement& elem);
+  void
+  draw_world_prop_element(QPainter& painter, int index, const WorldPropElement& elem);
   void draw_gate_element(QPainter& painter,
                          const StructureElement& elem,
-                         bool is_selected,
                          bool is_hovered,
                          const QColor& hover_ring_color);
-  void draw_structure_element(QPainter& painter, int index);
-  void draw_troop_spawn_element(QPainter& painter, int index);
-  void draw_linear_element(QPainter& painter, int index);
+  void
+  draw_structure_element(QPainter& painter, int index, const StructureElement& elem);
+  void
+  draw_troop_spawn_element(QPainter& painter, int index, const TroopSpawnElement& elem);
+  void draw_linear_element(QPainter& painter, int index, const LinearElement& elem);
   [[nodiscard]] float linear_width_px(const LinearElement& elem) const;
   [[nodiscard]] QPolygonF linear_polyline_px(const LinearElement& elem) const;
-  void draw_undead_zone_element(QPainter& painter, int index);
-  void draw_wildlife_area_element(QPainter& painter, int index);
-  void draw_forest_element(QPainter& painter, int index);
+  [[nodiscard]] QRectF ford_marker_bounds(const LinearElement& elem) const;
+  void draw_crossing_markers(QPainter& painter);
+  void
+  draw_undead_zone_element(QPainter& painter, int index, const UndeadZoneElement& elem);
+  void draw_wildlife_area_element(QPainter& painter,
+                                  int index,
+                                  const WildlifeAreaElement& elem);
+  void draw_forest_element(QPainter& painter, int index, const ForestElement& elem);
   void draw_linear_preview(QPainter& painter);
   void draw_mission_overlays(QPainter& painter);
   void draw_derived_commanders(QPainter& painter);
   void draw_current_placement(QPainter& painter);
   void draw_rubber_band(QPainter& painter);
+  void draw_selection_overlay(QPainter& painter);
   void finish_rubber_band();
 
   [[nodiscard]] QVector<int> category_draw_order(int kind) const;
@@ -186,23 +202,32 @@ private:
   [[nodiscard]] int marker_radius_px() const;
   [[nodiscard]] bool labels_visible() const;
 
-  struct HitResult {
-    int element_type = -1;
-    int index = -1;
-    int endpoint = -1;
+  [[nodiscard]] ElementRef hit_test(const QPoint& pos) const;
+  [[nodiscard]] QRectF move_handle_for(const ElementSnapshot& snap) const;
+  [[nodiscard]] QRectF endpoint_handle(const LinearElement& line, int endpoint) const;
+  enum class MoveHandle {
+    None,
+    Whole,
+    Start,
+    End
   };
-  [[nodiscard]] HitResult hit_test(const QPoint& pos) const;
-
-  void begin_panning(const QPoint& pos);
-  void finish_panning(const QPoint& pos);
+  [[nodiscard]] MoveHandle move_handle_at(const QPoint& pos) const;
+  [[nodiscard]] const ElementSnapshot* drag_preview(const ElementRef& ref) const;
+  void begin_move(MoveHandle handle, const QPoint& pos);
+  void update_move(const QPoint& pos, bool snap);
+  void finish_move();
+  void cancel_pointer_gesture();
   void update_canvas_cursor(const QPoint& pos);
   [[nodiscard]] bool is_forced_pan_gesture(const QMouseEvent* event) const;
+  [[nodiscard]] bool edit_available() const { return !m_read_only && !edits_paused(); }
+  [[nodiscard]] QRectF map_coordinate_bounds() const;
 
   void place_gate(const QPointF& grid_pos);
   void place_element(const QPointF& grid_pos);
+  void place_at_pointer(const QPoint& pos, bool snap);
   void start_linear_element(const QPointF& grid_pos);
   void finish_linear_element(const QPointF& grid_pos);
-  void erase_at_position(const QPointF& grid_pos);
+  void erase_at_position(const QPoint& pos);
 
   void show_context_menu(const QPoint& pos);
   void set_selection(int element_type, int index);
@@ -215,12 +240,12 @@ private:
   void notify_selection_changed();
   void drop_stale_view_state();
   void apply_zoom(float zoom, const QPointF& anchor_widget_pos);
+  void pan_by(const QPointF& delta);
   void center_on_grid_pos(const QPointF& grid_pos);
   void report_converted(int converted);
   [[nodiscard]] ElementSnapshot selected_snapshot() const;
   [[nodiscard]] QVector<ElementSnapshot> selected_snapshots() const;
   [[nodiscard]] QVector<ElementRef> elements_in_rect(const QRect& rect) const;
-  void move_selection_to(const QPointF& primary_target);
   void select_appended(const QVector<ElementSnapshot>& added);
 
   using SelectionTransform =
@@ -236,25 +261,36 @@ private:
   bool m_read_only = false;
 
   float m_zoom = 1.0F;
+  bool m_fit_view = true;
   QPointF m_pan_offset{0, 0};
 
-  bool m_is_panning = false;
-  bool m_is_pan_drag_pending = false;
+  enum class PointerGesture {
+    None,
+    Click,
+    ExtendSelection,
+    Pan,
+    Move
+  };
+  PointerGesture m_gesture = PointerGesture::None;
+  Qt::MouseButton m_gesture_button = Qt::NoButton;
+  QPoint m_press_pos;
   bool m_space_pan_active = false;
+  bool m_pointer_inside = false;
   QPoint m_last_mouse_pos;
-  QPoint m_pan_press_pos;
+  QPointF m_placement_pos;
   bool m_is_placing_linear = false;
   QPointF m_linear_start;
 
   QVector<ElementRef> m_selection;
-  int m_hovered_type = -1;
-  int m_hovered_index = -1;
-  bool m_is_dragging = false;
-  int m_dragged_endpoint = -1;
-  bool m_did_drag_move = false;
-  QPointF m_linear_drag_center_offset;
-  QVector<ElementRef> m_drag_refs;
-  QVector<ElementSnapshot> m_drag_pre_elements;
+  QSet<ElementRef> m_selected_refs;
+  ElementRef m_hovered;
+  MoveHandle m_active_handle = MoveHandle::None;
+  QPointF m_drag_press_grid;
+  bool m_drag_dist_reached = false;
+  bool m_drag_changes_terrain = false;
+  QHash<ElementRef, qsizetype> m_drag_indices;
+  QVector<ElementSnapshot> m_drag_before;
+  QVector<ElementSnapshot> m_drag_after;
   QVector<ElementSnapshot> m_clipboard;
 
   bool m_band_active = false;
@@ -273,9 +309,10 @@ private:
   QTimer m_backdrop_debounce;
   QTimer m_ambient_timer;
   QElapsedTimer m_world_clock;
-  quint64 m_backdrop_generation = 0;
+  quint64 m_backdrop_requested = 0;
+  quint64 m_backdrop_completed = 0;
+  quint64 m_backdrop_required = 0;
   bool m_backdrop_running = false;
-  bool m_backdrop_stale = false;
   qint64 m_last_paint_ms = 0;
 
   int m_current_player_id = 0;
@@ -283,7 +320,6 @@ private:
 
   static constexpr int grid_cell_size = 8;
   static constexpr int icon_size = 16;
-  static constexpr int pan_drag_threshold = 4;
   static constexpr int min_player_id = 0;
   static constexpr int max_player_id = 4;
   static constexpr int default_max_population = 150;

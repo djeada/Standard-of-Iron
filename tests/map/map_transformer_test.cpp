@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "core/component_economy.h"
 #include "core/component_gameplay.h"
 #include "core/world.h"
 #include "game/core/ownership_constants.h"
@@ -384,6 +385,54 @@ TEST_F(MapTransformerStructureTest, SpawnsAuthoredBuildingsAndRegistersOwners) {
   EXPECT_EQ(home_count, 1);
   EXPECT_EQ(Game::Systems::OwnerRegistry::instance().get_owner_type(2),
             Game::Systems::OwnerType::AI);
+}
+
+TEST_F(MapTransformerStructureTest, AStyledHomeDrawsWithItsStyleAndStaysAHome) {
+  Engine::Core::World world;
+
+  Game::Map::MapDefinition def;
+  def.grid.width = 32;
+  def.grid.height = 32;
+  const auto home_at = [&](int grid_x, const char* nation, const char* style) {
+    Game::Map::StructureEntry entry;
+    entry.type = Game::Units::SpawnType::Home;
+    entry.geometry = Game::Map::PointStructureGeometry{
+        QVector3D(runtime_world_from_grid(grid_x, def.grid.width),
+                  0.0F,
+                  runtime_world_from_grid(8, def.grid.height))};
+    entry.player_id = 2;
+    entry.nation = QString::fromLatin1(nation);
+    entry.style = QString::fromLatin1(style);
+    def.structures.push_back(entry);
+  };
+  home_at(4, "roman_republic", "tenement");
+  home_at(14, "roman_republic", "");
+  home_at(24, "carthage", "tenement");
+
+  (void)Game::Map::MapTransformer::apply_to_world(def, world);
+
+  int styled = 0;
+  int plain_roman = 0;
+  int styled_punic = 0;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
+    ASSERT_NE(unit, nullptr);
+    ASSERT_NE(renderable, nullptr);
+    EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::Home)
+        << "a style never changes what the structure is";
+    EXPECT_NE(entity->get_component<Engine::Core::HomeComponent>(), nullptr);
+    if (renderable->renderer_id == "troops/roman/home_tenement") {
+      ++styled;
+    } else if (renderable->renderer_id == "troops/roman/home") {
+      ++plain_roman;
+    } else if (renderable->renderer_id == "troops/carthage/home_tenement") {
+      ++styled_punic;
+    }
+  }
+  EXPECT_EQ(styled, 1);
+  EXPECT_EQ(plain_roman, 1);
+  EXPECT_EQ(styled_punic, 1);
 }
 
 TEST_F(MapTransformerStructureTest,

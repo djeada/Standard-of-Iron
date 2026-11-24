@@ -1,0 +1,61 @@
+{
+  "map": "assets/maps/map_carthage.json",
+  "views": [
+    {
+      "name": "carthage_A_skyline",
+      "view": "A",
+      "center": [20, 30],
+      "distance": 290,
+      "tilt": 52,
+      "yaw": 180
+    },
+    {
+      "name": "carthage_B_isthmus_wall",
+      "view": "B",
+      "center": [-140, 56],
+      "distance": 36,
+      "tilt": 22,
+      "yaw": 90
+    },
+    {
+      "name": "carthage_C_street",
+      "view": "C",
+      "center": [-60, 90],
+      "distance": 34,
+      "tilt": 22,
+      "yaw": 200
+    },
+    {
+      "name": "carthage_D_agora",
+      "view": "D",
+      "center": [26, 25],
+      "distance": 60,
+      "tilt": 34,
+      "yaw": 160
+    },
+    {
+      "name": "carthage_E_harbour_low",
+      "view": "E",
+      "center": [30, 60],
+      "distance": 50,
+      "tilt": 18,
+      "yaw": 150
+    },
+    {
+      "name": "carthage_F_cothon",
+      "view": "F",
+      "center": [40, 84],
+      "distance": 84,
+      "tilt": 40,
+      "yaw": 200
+    },
+    {
+      "name": "carthage_F_byrsa",
+      "view": "F",
+      "center": [-58, -14],
+      "distance": 70,
+      "tilt": 30,
+      "yaw": 220
+    }
+  ]
+}

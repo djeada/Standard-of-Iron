@@ -674,7 +674,11 @@ TEST(ShaderSource, MainWorldReceiversUseDirectionalAndLocalLighting) {
         << name;
     EXPECT_NE(source.find("#include \"directional_shadows.glsl\""), std::string::npos)
         << name;
-    EXPECT_NE(source.find("apply_directional_shadow("), std::string::npos) << name;
+    // Buildings take the shadow amount on its own: they add the street's
+    // bounce light to whatever the shadow leaves unlit.
+    EXPECT_TRUE(source.find("apply_directional_shadow(") != std::string::npos ||
+                source.find("directional_shadow_amount(") != std::string::npos)
+        << name;
   }
 
   const auto shadow =
@@ -1656,4 +1660,53 @@ void main() {
       EXPECT_FLOAT_EQ(pixel[3], 0.0F);
     }
   }
+}
+
+TEST(ShaderSource, ShadedBuildingWallsTakeTheStreetBounce) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "basic_instanced.frag");
+  ASSERT_FALSE(frag.empty());
+  const auto shadow = frag.find("directional_shadow_amount(");
+  const auto bounce = frag.find("environment_sun_bounce()");
+  ASSERT_NE(shadow, std::string::npos);
+  ASSERT_NE(bounce, std::string::npos)
+      << "a wall the sun does not reach is lit by the sunlit street; with only "
+         "the sky and the cool shadow tint, shaded plaster turns slate blue";
+  EXPECT_LT(shadow, bounce) << "the fill follows the shadow it fills";
+  EXPECT_GT(glsl_float_constant(frag, "k_street_bounce_gain"), 0.0F);
+
+  const auto shadows =
+      read_text(root / "assets" / "shaders" / "include" / "directional_shadows.glsl");
+  EXPECT_NE(shadows.find("float directional_shadow_amount("), std::string::npos);
+}
+
+TEST(ShaderSource, MergedBuildingsReadFourPaletteSlots) {
+  const auto root = find_repo_root();
+  const auto vert = read_text(root / "assets" / "shaders" / "building_merged.vert");
+  ASSERT_FALSE(vert.empty());
+  // The instance record is model (3), palette 0-1, state, palette 2-3; the
+  // per-part attributes follow it. MeshInstancingPipeline derives the same
+  // locations from sizeof(BuildingInstanceGpu).
+  EXPECT_NE(vert.find("layout(location = 8) in vec4 a_instance_state;"),
+            std::string::npos);
+  EXPECT_NE(vert.find("layout(location = 9) in vec4 a_instance_palette2;"),
+            std::string::npos);
+  EXPECT_NE(vert.find("layout(location = 10) in vec4 a_instance_palette3;"),
+            std::string::npos);
+  EXPECT_NE(vert.find("layout(location = 11) in vec4 a_part_color_alpha;"),
+            std::string::npos);
+  EXPECT_NE(vert.find("layout(location = 12) in vec4 a_part_material;"),
+            std::string::npos);
+}
+
+TEST(ShaderSource, CrowdedBuildingGroundBecomesTownEarth) {
+  const auto root = find_repo_root();
+  const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  ASSERT_FALSE(terrain.empty());
+  EXPECT_NE(
+      terrain.find("float town_ground = clamp(ground_ecology.g - 2.0, 0.0, 1.0);"),
+      std::string::npos)
+      << "TerrainRenderer::stamp_building_ground encodes town density above the "
+         "yard range of the cover mask's green channel";
+  EXPECT_GT(glsl_float_constant(terrain, "k_soi_town_ground_amount"), 0.8F);
 }

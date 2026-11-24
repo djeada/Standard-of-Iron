@@ -19,7 +19,7 @@ constexpr auto k_tools = std::to_array<ToolSpec>({
      nullptr,
      "⬚",
      "",
-     "Select placed elements, drag them, or double-click to edit.",
+     "Click to select. Drag to pan. Use the move handle to reposition a selection.",
      ""},
     {T::Eraser,
      S::Selection,
@@ -579,6 +579,30 @@ constexpr auto k_tools = std::to_array<ToolSpec>({
      "home",
      "Place a home building and assign it to a player.",
      ""},
+    {T::Insula,
+     S::Structures,
+     P::Structure,
+     "Town house",
+     nullptr,
+     "▥",
+     "home",
+     "Place a town house: a home in the tenement style, two to four storeys on "
+     "its whole lot. Set next to another on the 4.3-cell lot pitch it shares a "
+     "party wall with it.",
+     "",
+     "tenement"},
+    {T::TownBlock,
+     S::Structures,
+     P::TownBlock,
+     "Town block",
+     nullptr,
+     "▣",
+     "home",
+     "Stamp a block of town houses: four terraces wall to wall around a court, "
+     "fronts on the streets, one lot left open as the alley in. Eight lots by "
+     "three; edit or delete single houses afterwards.",
+     "click where the block's centre goes",
+     "tenement"},
     {T::Marketplace,
      S::Structures,
      P::Structure,
@@ -588,6 +612,41 @@ constexpr auto k_tools = std::to_array<ToolSpec>({
      "marketplace",
      "Place a marketplace building and assign it to a player.",
      ""},
+    {T::Portico,
+     S::Structures,
+     P::Structure,
+     "Portico",
+     nullptr,
+     "▤",
+     "marketplace",
+     "Place a portico: a marketplace in the portico style, a colonnaded walk "
+     "with shops behind it. Set next to another on the 5.5-cell lot pitch the "
+     "two run on as one stoa; ring a paved square with them for a forum.",
+     "",
+     "portico"},
+    {T::Basilica,
+     S::Structures,
+     P::Structure,
+     "Basilica",
+     nullptr,
+     "▥",
+     "marketplace",
+     "Place a basilica: a marketplace in the basilica style, the portico with a "
+     "gallery over its colonnade. Run them down the long sides of a forum.",
+     "",
+     "basilica"},
+    {T::Dock,
+     S::Structures,
+     P::Structure,
+     "Dock",
+     nullptr,
+     "⚓",
+     "marketplace",
+     "Place a dock: a marketplace in the dock style, a quay with its warehouse "
+     "and a vessel alongside. Turn its front to the water; a row of them on "
+     "the 5.5-cell lot pitch is a harbour front.",
+     "",
+     "dock"},
     {T::Temple,
      S::Structures,
      P::Structure,
@@ -669,7 +728,7 @@ auto section_title(ToolSection section) -> QString {
   case S::Wildlife:
     return QStringLiteral("Wildlife");
   case S::Paths:
-    return QStringLiteral("Paths & Bridges");
+    return QStringLiteral("Paths & crossings");
   case S::Fortifications:
     return QStringLiteral("Walls & Gates");
   case S::Structures:
@@ -708,6 +767,11 @@ auto tool_placement(ToolType tool) -> ToolPlacement {
 
 auto element_type_for_tool(ToolType tool) -> QString {
   return QString::fromLatin1(tool_spec(tool).element_type);
+}
+
+auto structure_style_for_tool(ToolType tool) -> QString {
+  const char* style = tool_spec(tool).style;
+  return style != nullptr ? QString::fromLatin1(style) : QString();
 }
 
 auto tool_matches_filter(const ToolSpec& spec, const QString& filter) -> bool {

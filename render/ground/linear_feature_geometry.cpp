@@ -304,17 +304,22 @@ auto build_linear_feature_junction_meshes(
 
 auto build_lake_surface_mesh(const Game::Map::Lake& lake,
                              float tile_size,
-                             float y_offset) -> std::unique_ptr<Render::GL::Mesh> {
+                             float y_offset,
+                             std::span<const Game::Map::Lake> waters)
+    -> std::unique_ptr<Render::GL::Mesh> {
   constexpr float two_pi = 6.28318530717958647692F;
   constexpr float deg_to_rad = 0.01745329251994329577F;
+  constexpr int k_shallow_rings = 6;
   const float half_width = std::max(lake.width * 0.5F, tile_size * 0.5F);
   const float half_depth = std::max(lake.depth * 0.5F, tile_size * 0.5F);
 
   const float water_render_margin = std::max(tile_size * 0.70F, 0.10F);
+  const float joined_water_inset = tile_size * 0.75F;
+  // A basin's corners turn inside a few degrees: give them the vertices.
   const int angular_segments =
       std::clamp(static_cast<int>(std::ceil(two_pi * std::max(half_width, half_depth) /
                                             std::max(tile_size * 0.65F, 0.25F))),
-                 32,
+                 lake.shape == Game::Map::LakeShape::Basin ? 96 : 32,
                  160);
   const int radial_rings =
       std::clamp(static_cast<int>(std::ceil(std::min(half_width, half_depth) /
@@ -331,7 +336,7 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
   indices.reserve(static_cast<std::size_t>(angular_segments) *
                   static_cast<std::size_t>(radial_rings * 6));
 
-  auto append_vertex = [&](float local_x, float local_z, float radial_t) {
+  auto append_vertex = [&](float local_x, float local_z, float shore_distance) {
     const float rotated_x = local_x * cos_rotation - local_z * sin_rotation;
     const float rotated_z = local_x * sin_rotation + local_z * cos_rotation;
     Render::GL::Vertex vertex{};
@@ -340,22 +345,59 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
                        lake.center.z() + rotated_z};
     vertex.normal = {0.0F, 1.0F, 0.0F};
 
+    // Well inside another lake this one has no shore to show.
+    if (shore_distance < 0.5F) {
+      for (const Game::Map::Lake& other : waters) {
+        if (&other != &lake &&
+            Game::Map::point_in_lake(
+                other, vertex.position[0], vertex.position[2], -joined_water_inset)) {
+          shore_distance = 0.5F;
+          break;
+        }
+      }
+    }
+
+    // v is the distance to the shore the water shader works from: 0 at the
+    // water's edge, 0.5 where the lake is as deep as it gets.
     vertex.tex_coord = {0.5F + local_x / (half_width * 2.2F),
-                        std::clamp(0.5F * (1.0F - radial_t), 0.0F, 0.5F)};
+                        std::clamp(shore_distance, 0.0F, 0.5F)};
     vertices.push_back(vertex);
   };
 
-  append_vertex(0.0F, 0.0F, 0.0F);
+  // A lake with a set reach keeps its shallows that many world units wide all
+  // the way round, in the outer rings; the rest of the surface is deep water.
+  const float reach = Game::Map::lake_shallows_reach(lake);
+  const int shallow_rings =
+      reach > 0.0F ? std::min(k_shallow_rings, radial_rings - 1) : 0;
+  const int deep_rings = radial_rings - shallow_rings;
+
+  append_vertex(0.0F, 0.0F, 0.5F);
   for (int ring = 1; ring <= radial_rings; ++ring) {
-    const float radial_t = static_cast<float>(ring) / static_cast<float>(radial_rings);
     for (int segment = 0; segment < angular_segments; ++segment) {
       const float angle =
           two_pi * static_cast<float>(segment) / static_cast<float>(angular_segments);
       const float boundary = Game::Map::lake_boundary_scale(lake, angle);
-      append_vertex(
-          std::cos(angle) * (half_width * boundary + water_render_margin) * radial_t,
-          std::sin(angle) * (half_depth * boundary + water_render_margin) * radial_t,
-          radial_t);
+      const float edge_x =
+          std::cos(angle) * (half_width * boundary + water_render_margin);
+      const float edge_z =
+          std::sin(angle) * (half_depth * boundary + water_render_margin);
+      float radial_t = static_cast<float>(ring) / static_cast<float>(radial_rings);
+      float shore_distance = 0.5F * (1.0F - radial_t);
+      if (shallow_rings > 0) {
+        const float shallows_start =
+            std::max(0.0F, 1.0F - reach / std::max(std::hypot(edge_x, edge_z), 0.001F));
+        if (ring <= deep_rings) {
+          radial_t = shallows_start * static_cast<float>(ring) /
+                     static_cast<float>(deep_rings);
+          shore_distance = 0.5F;
+        } else {
+          const float across =
+              static_cast<float>(ring - deep_rings) / static_cast<float>(shallow_rings);
+          radial_t = shallows_start + (1.0F - shallows_start) * across;
+          shore_distance = 0.5F * (1.0F - across);
+        }
+      }
+      append_vertex(edge_x * radial_t, edge_z * radial_t, shore_distance);
     }
   }
 
@@ -854,7 +896,7 @@ auto build_lake_shore_mesh(const Game::Map::Lake& lake,
   const int angular_segments =
       std::clamp(static_cast<int>(std::ceil(two_pi * std::max(half_width, half_depth) /
                                             std::max(tile_size * 0.75F, 0.3F))),
-                 32,
+                 lake.shape == Game::Map::LakeShape::Basin ? 96 : 32,
                  160);
   const float rotation = lake.rotation_deg * deg_to_rad;
   const float cos_rotation = std::cos(rotation);

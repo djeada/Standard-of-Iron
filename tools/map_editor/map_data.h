@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -35,6 +36,9 @@ struct TerrainElement {
   float taper = 0.0F;
   bool has_arc = false;
   bool has_arc_start = false;
+  // Lakes only: `height` is a water level somebody set. Unset, the water lies
+  // level with the ground at the lake's centre and no height is written.
+  bool level_authored = false;
   QJsonArray points;
   QJsonArray cells;
   QJsonArray entrances;
@@ -74,6 +78,8 @@ struct LinearElement {
 [[nodiscard]] auto waypoints_to_json(const QVector<QPointF>& waypoints) -> QJsonArray;
 [[nodiscard]] auto linear_polyline(const LinearElement& element) -> QVector<QPointF>;
 [[nodiscard]] auto supports_waypoints(const QString& type) -> bool;
+[[nodiscard]] auto is_ring_river(const LinearElement& element) -> bool;
+[[nodiscard]] auto is_fordable_river(const LinearElement& element) -> bool;
 
 inline constexpr float k_min_bridge_height = 0.1F;
 inline constexpr float k_min_bridge_width = 8.0F;
@@ -151,12 +157,19 @@ struct FogZoneElement {
   float width = 10.0F;
   float height = 10.0F;
   float density = 0.6F;
+
+  bool operator==(const FogZoneElement&) const = default;
 };
 
 struct GridSettings {
   int width = 100;
   int height = 100;
   float tile_size = 1.0F;
+};
+
+enum class WorldPreviewChange {
+  Terrain,
+  Scenery
 };
 
 class MapData;
@@ -214,6 +227,14 @@ public:
   void set_rain(const QJsonObject& rain);
   [[nodiscard]] const QJsonObject& environment() const { return m_environment; }
   void set_environment(const QJsonObject& environment);
+  [[nodiscard]] const QJsonObject& camera() const { return m_camera; }
+  void set_camera(const QJsonObject& camera);
+  [[nodiscard]] const QJsonObject& victory() const { return m_victory; }
+  void set_victory(const QJsonObject& victory);
+  [[nodiscard]] QString description() const { return m_description; }
+  void set_description(const QString& description);
+  [[nodiscard]] int max_troops_per_player() const { return m_max_troops_per_player; }
+  void set_max_troops_per_player(int max_troops);
 
   [[nodiscard]] const QVector<TerrainElement>& terrain_elements() const {
     return m_terrain;
@@ -285,7 +306,6 @@ public:
   void remove_fog_zone(int index);
 
   void execute_command(std::unique_ptr<Command> cmd);
-  void record_command(std::unique_ptr<Command> cmd);
   void undo();
   void redo();
   [[nodiscard]] bool can_undo() const { return !m_undo_stack.empty(); }
@@ -302,8 +322,11 @@ signals:
   void data_changed();
   void modified_changed(bool modified);
   void undo_redo_changed();
+  void world_preview_changed(WorldPreviewChange change);
+  void command_applied(const QString& description);
 
 private:
+  void notify_data_change(std::optional<WorldPreviewChange> change = std::nullopt);
   QString m_name;
   GridSettings m_grid;
   QVector<TerrainElement> m_terrain;
@@ -335,6 +358,8 @@ private:
   QVector<RawSpawnEntry> m_raw_spawns;
 
   bool m_modified = false;
+  bool m_applying_command = false;
+  std::optional<WorldPreviewChange> m_pending_preview_change;
 
   std::vector<std::unique_ptr<Command>> m_undo_stack;
   std::vector<std::unique_ptr<Command>> m_redo_stack;

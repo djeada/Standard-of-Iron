@@ -29,6 +29,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 #include "render/scene/scene_renderer.h"
@@ -39,12 +40,14 @@ namespace {
 constexpr float k_tick = 1.0F / 60.0F;
 constexpr int k_opening_ticks = 1200;
 
-constexpr std::array<const char*, 6> k_skirmish_maps = {
+constexpr std::array<const char*, 8> k_skirmish_maps = {
     "map_amber_delta.json",
+    "map_carthage.json",
     "map_copper_canyons.json",
     "map_forest.json",
     "map_mountain.json",
     "map_rivers.json",
+    "map_rome.json",
     "map_spanish_grove.json",
 };
 
@@ -78,8 +81,15 @@ auto short_squads(Engine::Core::World& world) -> std::string {
         entity->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
-    const int establishment =
+    int establishment =
         Game::Units::TroopConfig::instance().get_individuals_per_unit(unit->spawn_type);
+    if (const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
+        unit->uses_nation_formation_profile && troop_type) {
+      const auto& profile =
+          Game::Systems::TroopProfileService::instance().get_profile_ref(
+              unit->nation_id, *troop_type);
+      establishment = profile.individuals_per_unit;
+    }
     const int listed =
         Game::Systems::FormationCombat::resolve_definition(*unit).total_count;
     const int alive =

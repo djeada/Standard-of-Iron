@@ -12,6 +12,7 @@
 #include "render/entity/building_archetype_library.h"
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/geom/primitives.h"
 #include "render/math/math_utils.h"
@@ -283,6 +284,12 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .scale = 0.95F,
                                  .seed = 397});
 
+  {
+    // A stele and a burning stand at its foot.
+    const Motif::Setter set(desc, state);
+    Motif::add_punic_stele(desc, set.at(-0.52F, 1.04F, 0.8F), 0.95F, 1.0F, 6);
+    Motif::add_punic_incense_stand(desc, set.at(0.52F, 1.04F, 0.8F), 0.80F);
+  }
   return desc;
 }
 

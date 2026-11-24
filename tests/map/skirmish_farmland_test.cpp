@@ -90,12 +90,14 @@ auto verdict_name(Game::Systems::GroundVerdict verdict) -> const char* {
   return "?";
 }
 
-constexpr std::array<const char*, 6> k_skirmish_maps = {
+constexpr std::array<const char*, 8> k_skirmish_maps = {
     "map_amber_delta.json",
+    "map_carthage.json",
     "map_copper_canyons.json",
     "map_forest.json",
     "map_mountain.json",
     "map_rivers.json",
+    "map_rome.json",
     "map_spanish_grove.json",
 };
 

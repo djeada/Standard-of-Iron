@@ -7,6 +7,7 @@
 
 #include "game/audio/audio_cues.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/combat_actions/commander_defense_timeline.h"
 #include "game/systems/navigation/gate_service.h"
@@ -226,7 +227,8 @@ auto build_camera_inputs(Engine::Core::World& world,
 }
 
 void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
-                                    const Engine::Core::Entity& commander,
+                                    const Engine::Core::World& world,
+                                    Engine::Core::EntityID commander_id,
                                     bool running,
                                     float previous_bob_phase) {
   if (rig.bob_amplitude() < k_footstep_min_bob_amplitude) {
@@ -247,8 +249,15 @@ void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
   }
 
   const auto* terrain =
-      commander.get_component<Engine::Core::TerrainContextComponent>();
-  const bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
+      world.try_get<Engine::Core::TerrainContextComponent>(commander_id);
+  bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
+  if (!hard_ground) {
+    if (const auto* transform =
+            world.try_get<Engine::Core::TransformComponent>(commander_id)) {
+      hard_ground = Game::Session::session_for(world).terrain().is_point_on_road(
+          transform->position.x, transform->position.z);
+    }
+  }
   Game::Audio::play_cue(hard_ground ? Game::Audio::Cue::k_move_footstep_hard
                                     : Game::Audio::Cue::k_move_footstep);
 }

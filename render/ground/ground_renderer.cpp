@@ -26,7 +26,7 @@ inline auto saturate(const QVector3D& c) -> QVector3D {
 void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
 
-  new_model.translate(0.0F, -0.08F, 0.0F);
+  new_model.translate(0.0F, m_plane_y, 0.0F);
 
   if (m_width > 0 && m_height > 0) {
     const float margin = k_non_playable_margin_tiles * m_tile_size;
@@ -198,6 +198,19 @@ void GroundRenderer::sync_biome_from_service() {
   const auto& service = world().terrain_or_empty();
   if (!service.is_initialized()) {
     return;
+  }
+  // A plane above the water would hide it: a sea authored below the ground
+  // takes the plane down with it. Lakes level with the ground leave it be.
+  float plane_y = k_ground_plane_y;
+  if (const auto* height_map = service.get_height_map()) {
+    if (const auto bed = height_map->lowest_lake_bed();
+        bed.has_value() && *bed < k_ground_plane_y - k_bed_clearance) {
+      plane_y = *bed - k_bed_clearance;
+    }
+  }
+  if (plane_y != m_plane_y) {
+    m_plane_y = plane_y;
+    recompute_model();
   }
   const auto& current = service.biome_settings();
   if (!m_has_biome || !biome_equals(current, m_biome_settings)) {

@@ -7,6 +7,7 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform float time;
 uniform int u_water_surface_kind;
+uniform float u_water_calm;
 
 out vec2 tex_coord;
 out vec3 world_pos;
@@ -16,7 +17,7 @@ void main() {
 
   float lake = float(u_water_surface_kind == 1);
   float speed = mix(1.0, 0.58, lake);
-  float amplitude = mix(1.0, 0.68, lake);
+  float amplitude = mix(1.0, 0.68, lake) * mix(1.0, 0.3, u_water_calm);
   float wave1 = sin(a_pos.z * 0.34 + time * 1.20 * speed) * 0.012;
   float wave2 = sin(a_pos.x * 0.47 - time * 0.92 * speed) * 0.009;
   float wave3 = sin((a_pos.x + a_pos.z) * 0.21 + time * 0.74 * speed) * 0.007;

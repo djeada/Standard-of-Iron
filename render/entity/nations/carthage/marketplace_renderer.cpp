@@ -47,13 +47,17 @@ auto marketplace_archetype(BuildingState state) -> const RenderArchetype& {
 
 const std::array<TorchMount, 4> k_torches{{
     TorchMount{.at = QVector3D(-1.22F, 0.64F, 0.50F),
-               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(-1.22F, 0.64F, -0.50F),
-               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.54F, 0.58F, 0.40F),
-               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.54F, 0.58F, -0.40F),
-               .outward = QVector3D(-1.0F, 0.0F, 0.0F)},
+               .outward = QVector3D(-1.0F, 0.0F, 0.0F),
+               .ghost = true},
 }};
 
 const std::array<MarketAwning, 7> k_awnings{{

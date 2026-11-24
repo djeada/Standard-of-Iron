@@ -49,7 +49,7 @@ void WallGate::init(const SpawnParams& params) {
     e->add_component<Engine::Core::AIControlledComponent>();
   }
 
-  m_r = add_building_renderable(*e, nation_id, m_type_string);
+  m_r = add_building_renderable(*e, nation_id, m_type_string, params.visual_style);
 
   auto* wall = e->add_component<Engine::Core::WallSegmentComponent>();
   const auto snapped = Game::Systems::WallNetworkService::snap_world_position(

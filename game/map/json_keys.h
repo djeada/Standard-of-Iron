@@ -130,6 +130,7 @@ inline constexpr const char* END = "end";
 inline constexpr const char* BRIDGE_WIDTH = "width";
 
 inline constexpr const char* ROAD_STYLE = "style";
+inline constexpr const char* STRUCTURE_STYLE = "style";
 inline constexpr const char* ROAD_WAYPOINTS = "waypoints";
 
 inline constexpr const char* RAIN = "rain";

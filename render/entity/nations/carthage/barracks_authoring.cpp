@@ -14,6 +14,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/frame/render_archetype.h"
 #include "render/geom/primitives.h"
@@ -913,6 +914,18 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .scale = 1.25F,
                                  .seed = 487});
 
+  {
+    // Ivory crossed over the gate, stelae for the men who did not come back,
+    // and the stands that burn for them.
+    const Motif::Setter set(desc, state);
+    Motif::add_punic_tusks(
+        desc, QVector3D(0.0F, set.at(0.0F, 1.46F).y(), 1.50F), 1.10F, 1.7F);
+    for (const float side : {-1.0F, 1.0F}) {
+      Motif::add_punic_stele(
+          desc, set.at(side * 0.98F, 1.68F, 0.4F), 2.0F, 1.0F, side > 0.0F ? 1 : 4);
+      Motif::add_punic_incense_stand(desc, set.at(side * 0.45F, 1.74F, 0.4F), 1.05F);
+    }
+  }
   return desc;
 }
 

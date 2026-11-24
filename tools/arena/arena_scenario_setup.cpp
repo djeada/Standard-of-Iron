@@ -1,5 +1,8 @@
 #include <QtMath>
 
+#include <cmath>
+#include <numbers>
+
 #include "arena_scenario_internal.h"
 
 namespace Arena {
@@ -1347,6 +1350,17 @@ void ArenaScenarioRunner::Impl::execute_step(std::size_t index,
       }
       if (step.rpg_view_yaw_degrees.has_value() && host.set_rpg_view_yaw) {
         host.set_rpg_view_yaw(entity_id, *step.rpg_view_yaw_degrees);
+      }
+      if (step.rpg_heading_target.has_value() && host.set_rpg_view_yaw) {
+        if (const auto* transform =
+                world.try_get<Engine::Core::TransformComponent>(entity_id)) {
+          const float dx = step.rpg_heading_target->x() - transform->position.x;
+          const float dz = step.rpg_heading_target->z() - transform->position.z;
+          if ((dx * dx) + (dz * dz) > 1.0e-4F) {
+            host.set_rpg_view_yaw(
+                entity_id, std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>);
+          }
+        }
       }
 
       for (float const axis : {step.destination.x(), step.destination.z()}) {

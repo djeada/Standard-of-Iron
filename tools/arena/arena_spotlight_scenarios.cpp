@@ -1,5 +1,10 @@
 #include "arena_spotlight_scenarios.h"
 
+#include <QByteArray>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSet>
 #include <QString>
 #include <QVector3D>
@@ -9,6 +14,7 @@
 #include <limits>
 #include <map>
 #include <numbers>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -64,6 +70,8 @@ auto spotlight_map(const QString& mission_id,
   s.terrain_grid_extent = map.grid.width;
   s.arena_floor_half_extent = static_cast<float>(map.grid.width) * 0.5F;
   s.environment = map.environment;
+  // The map's own flocks and birds: sheep in the market pens and the fields.
+  s.wildlife = map.wildlife;
   s.environment.start_time =
       std::clamp(map.environment.start_time, k_earliest_hour, k_latest_hour);
   s.environment.time_mode = Game::Map::TimeMode::Locked;
@@ -306,10 +314,155 @@ auto spotlight_battle(ArenaScenarioDefinition scenario,
   return scenario;
 }
 
+// A walled city filmed with its commander walking it: the map's own
+// structures and folk, the player's commander under RPG control, and a walk
+// along authored street waypoints. Each leg starts when the commander reaches
+// the waypoint before it, so the walk follows the street however fast he goes;
+// the view turns a few degrees at a time along a densely sampled route.
+struct CityFilm {
+  const char* id;
+  const char* title;
+  const char* map_path;
+  const char* route_path;
+};
+
+constexpr float k_city_film_seconds = 240.0F;
+constexpr float k_waypoint_reach = 2.6F;
+
+auto read_city_route(const QString& path, bool& run) -> std::vector<QVector3D> {
+  std::vector<QVector3D> route;
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return route;
+  }
+  const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
+  run = root.value(QStringLiteral("run")).toBool(false);
+  for (const QJsonValue point : root.value(QStringLiteral("points")).toArray()) {
+    const QJsonArray pair = point.toArray();
+    if (pair.size() == 2) {
+      route.emplace_back(static_cast<float>(pair[0].toDouble()),
+                         0.0F,
+                         static_cast<float>(pair[1].toDouble()));
+    }
+  }
+  return route;
+}
+
+auto city_film(const CityFilm& film) -> std::optional<ArenaScenarioDefinition> {
+  auto scenario = spotlight_map(QString::fromLatin1(film.id),
+                                QString::fromLatin1(film.title),
+                                QString::fromLatin1(film.map_path));
+  if (!scenario.has_value()) {
+    return scenario;
+  }
+  ArenaScenarioDefinition& s = *scenario;
+  s.id = QStringLiteral("city_film_%1").arg(QString::fromLatin1(film.id));
+  s.label = QStringLiteral("City film: %1").arg(QString::fromLatin1(film.title));
+  s.description =
+      QStringLiteral(
+          "The shipped %1 map with every building, for filming the city: aerial "
+          "passes, and the commander walking its streets under RPG control along "
+          "the route in %2.")
+          .arg(QString::fromLatin1(film.title), QString::fromLatin1(film.route_path));
+  s.duration_seconds = k_city_film_seconds;
+  s.gates_held_open = true;
+  // The whole city lives on camera, not only the ground round the origin.
+  s.wildlife.near_simulation_radius =
+      std::max(s.wildlife.near_simulation_radius, 450.0F);
+  s.wildlife.far_simulation_radius = std::max(s.wildlife.far_simulation_radius, 600.0F);
+  s.expectations.clear();
+
+  bool run = false;
+  const std::vector<QVector3D> route = read_city_route(
+      Utils::Resources::resolve_resource_path(QString::fromLatin1(film.route_path)),
+      run);
+  ArenaScenarioGroup* commander = nullptr;
+  for (auto& group : s.groups) {
+    if (group.owner_id == k_player_owner && !group.spawn_type.has_value() &&
+        Game::Units::is_commander_troop(group.troop_type)) {
+      commander = &group;
+      break;
+    }
+  }
+  if (commander != nullptr) {
+    commander->name = QStringLiteral("commander");
+  }
+  if (!s.groups.empty()) {
+    ArenaExpectation exists;
+    exists.kind = ArenaExpectationKind::GroupExists;
+    exists.group = s.groups.front().name;
+    s.expectations.push_back(exists);
+  }
+  if (commander == nullptr || route.size() < 2) {
+    return scenario;
+  }
+  commander->origin = route.front();
+  const auto yaw_of = [](const QVector3D& from, const QVector3D& to) {
+    return std::atan2(to.x() - from.x(), to.z() - from.z()) * 180.0F /
+           std::numbers::pi_v<float>;
+  };
+  commander->facing_degrees = yaw_of(route[0], route[1]);
+  s.rpg_mode = true;
+  s.rpg_commander_group = commander->name;
+
+  for (std::size_t leg = 0; leg + 1 < route.size(); ++leg) {
+    ArenaScenarioStep step;
+    step.name = QStringLiteral("walk_%1").arg(leg);
+    step.command = ScenarioCommandKind::RpgMove;
+    step.group = commander->name;
+    step.destination = QVector3D(0.0F, 0.0F, 1.0F);
+    step.value = run ? 1 : 0;
+    step.rpg_view_yaw_degrees = yaw_of(route[leg], route[leg + 1]);
+    step.rpg_heading_target = route[leg + 1];
+    if (leg == 0) {
+      step.trigger = {ScenarioTriggerKind::AtTime, 1.0F, {}, {}, 0.0F};
+    } else {
+      step.trigger.kind = ScenarioTriggerKind::GroupEnteredArea;
+      step.trigger.group = commander->name;
+      step.trigger.position = route[leg];
+      step.trigger.distance = k_waypoint_reach;
+    }
+    s.steps.push_back(step);
+  }
+  ArenaScenarioStep stop;
+  stop.name = QStringLiteral("walk_end");
+  stop.command = ScenarioCommandKind::RpgMove;
+  stop.group = commander->name;
+  stop.destination = QVector3D();
+  stop.trigger.kind = ScenarioTriggerKind::GroupEnteredArea;
+  stop.trigger.group = commander->name;
+  stop.trigger.position = route.back();
+  stop.trigger.distance = k_waypoint_reach;
+  s.steps.push_back(stop);
+  return scenario;
+}
+
 } // namespace
 
 auto build_spotlight_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
+  for (const CityFilm& film :
+       {CityFilm{"rome",
+                 "Rome",
+                 "assets/maps/map_rome.json",
+                 "tools/arena/promos/city_film/rome_walk.json"},
+        CityFilm{"carthage",
+                 "Carthage",
+                 "assets/maps/map_carthage.json",
+                 "tools/arena/promos/city_film/carthage_walk.json"}}) {
+    if (auto scenario = city_film(film)) {
+      result.push_back(std::move(*scenario));
+    }
+  }
+  // SOI_CITY_FILM_MAP=<map.json> films any map the same way (line-ups, test towns).
+  if (const QByteArray custom = qgetenv("SOI_CITY_FILM_MAP"); !custom.isEmpty()) {
+    const std::string path = custom.toStdString();
+    const std::string route = qgetenv("SOI_CITY_FILM_ROUTE").toStdString();
+    if (auto scenario =
+            city_film(CityFilm{"custom", "Custom", path.c_str(), route.c_str()})) {
+      result.push_back(std::move(*scenario));
+    }
+  }
   Game::Campaign::CampaignDefinition campaign;
   QString error;
   if (!Game::Campaign::CampaignLoader::load_from_json_file(

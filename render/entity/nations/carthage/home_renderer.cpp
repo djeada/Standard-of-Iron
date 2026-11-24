@@ -59,9 +59,11 @@ auto home_archetype(BuildingState state, int variant) -> const RenderArchetype& 
 
 const std::array<TorchMount, 2> k_torches{{
     TorchMount{.at = QVector3D(-0.5F, 0.62F, 1.02F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.5F, 0.62F, 1.02F),
-               .outward = QVector3D(0.0F, 0.0F, 1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, 1.0F),
+               .ghost = true},
 }};
 
 } // namespace

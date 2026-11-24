@@ -1,0 +1,61 @@
+{
+  "map": "assets/maps/map_rome.json",
+  "views": [
+    {
+      "name": "rome_A_skyline",
+      "view": "A",
+      "center": [40, 0],
+      "distance": 300,
+      "tilt": 52,
+      "yaw": 180
+    },
+    {
+      "name": "rome_B_gate",
+      "view": "B",
+      "center": [160, -21],
+      "distance": 26,
+      "tilt": 20,
+      "yaw": 100
+    },
+    {
+      "name": "rome_C_street",
+      "view": "C",
+      "center": [60, -70],
+      "distance": 30,
+      "tilt": 24,
+      "yaw": 160
+    },
+    {
+      "name": "rome_D_forum",
+      "view": "D",
+      "center": [30, -21],
+      "distance": 64,
+      "tilt": 36,
+      "yaw": 200
+    },
+    {
+      "name": "rome_E_forum_low",
+      "view": "E",
+      "center": [20, -40],
+      "distance": 46,
+      "tilt": 18,
+      "yaw": 215
+    },
+    {
+      "name": "rome_F_wharves",
+      "view": "F",
+      "center": [-80, 84],
+      "distance": 60,
+      "tilt": 34,
+      "yaw": 110
+    },
+    {
+      "name": "rome_F_ostia",
+      "view": "F",
+      "center": [-56, 205],
+      "distance": 84,
+      "tilt": 40,
+      "yaw": 180
+    }
+  ]
+}

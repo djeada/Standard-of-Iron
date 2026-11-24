@@ -1,0 +1,273 @@
+{
+  "id": "city_review_punic_town",
+  "title": "CITY REVIEW: PUNIC TOWN",
+  "width": 1920,
+  "height": 1080,
+  "fps": 8,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "end_card_steam": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 400,
+    "pitch_degrees_per_second": 400,
+    "fov_degrees_per_second": 400,
+    "roll_degrees_per_second": 400,
+    "roll_magnitude_degrees": 30,
+    "shake": 1,
+    "minimum_clip_seconds": 0.1,
+    "mean_clip_seconds": 0.1
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "pun_A_skyline",
+      "view": "A",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [40, 26, 60],
+          "look": [0, 2, 0],
+          "fov": 40
+        },
+        {
+          "time": 0.5,
+          "eye": [40, 26, 60],
+          "look": [0, 2, 0],
+          "fov": 40
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "pun_B_gate",
+      "view": "B",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-6, 4, 26],
+          "look": [-6, 2, 12],
+          "fov": 48
+        },
+        {
+          "time": 0.5,
+          "eye": [-6, 4, 26],
+          "look": [-6, 2, 12],
+          "fov": 48
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "pun_C_bazaar",
+      "view": "C",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-14, 2.6, 0.6],
+          "look": [6, 1.6, 0],
+          "fov": 50
+        },
+        {
+          "time": 0.5,
+          "eye": [-14, 2.6, 0.6],
+          "look": [6, 1.6, 0],
+          "fov": 50
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "pun_D_rooftops",
+      "view": "D",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-22, 16, 16],
+          "look": [-10, 0, 2],
+          "fov": 42
+        },
+        {
+          "time": 0.5,
+          "eye": [-22, 16, 16],
+          "look": [-10, 0, 2],
+          "fov": 42
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "pun_E_facade",
+      "view": "E",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-1, 2, 3],
+          "look": [-1, 1.8, -5.5],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [-1, 2, 3],
+          "look": [-1, 1.8, -5.5],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "pun_F_gameplay",
+      "view": "F",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [24, 30, 24],
+          "look": [0, 0, 0],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [24, 30, 24],
+          "look": [0, 0, 0],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "pun_A_skyline_low_sun",
+      "view": "A",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [40, 26, 60],
+          "look": [0, 2, 0],
+          "fov": 40
+        },
+        {
+          "time": 0.5,
+          "eye": [40, 26, 60],
+          "look": [0, 2, 0],
+          "fov": 40
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 17.8
+      }
+    },
+    {
+      "name": "pun_C_bazaar_low_sun",
+      "view": "C",
+      "scenario": "carthage_trade_town",
+      "seed": 1683,
+      "start": 3.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [-14, 2.6, 0.6],
+          "look": [6, 1.6, 0],
+          "fov": 50
+        },
+        {
+          "time": 0.5,
+          "eye": [-14, 2.6, 0.6],
+          "look": [6, 1.6, 0],
+          "fov": 50
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 17.8
+      }
+    }
+  ]
+}

@@ -43,6 +43,9 @@ add_executable(
     render/market_awning_test.cpp
     render/building_facade_coplanarity_test.cpp
     render/building_body_footprint_test.cpp
+    render/tenement_test.cpp
+    render/market_lot_test.cpp
+    render/nation_motifs_test.cpp
     render/building_render_common_test.cpp
     render/static_building_batch_test.cpp
     render/static_mesh_pack_test.cpp

@@ -50,7 +50,7 @@ void Marketplace::init(const SpawnParams& params) {
     e->add_component<Engine::Core::AIControlledComponent>();
   }
 
-  m_r = add_building_renderable(*e, nation_id, m_type_string);
+  m_r = add_building_renderable(*e, nation_id, m_type_string, params.visual_style);
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id,

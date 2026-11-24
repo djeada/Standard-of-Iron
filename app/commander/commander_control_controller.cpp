@@ -932,5 +932,5 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
     m_latency_probe->note_camera_response();
   }
   App::Core::play_footstep_if_stride_landed(
-      m_camera_rig, commander, m_locomotion.move_running(), previous_bob_phase);
+      m_camera_rig, world, commander.get_id(), feed.move_running, previous_bob_phase);
 }

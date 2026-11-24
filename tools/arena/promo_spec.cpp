@@ -807,6 +807,8 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
           static_cast<float>(shot_object.value(QStringLiteral("near")).toDouble(0.0));
       shot.ground_clearance = static_cast<float>(
           shot_object.value(QStringLiteral("ground_clearance")).toDouble(-1.0));
+      shot.street_level =
+          shot_object.value(QStringLiteral("street_level")).toBool(false);
       if (const QJsonValue handheld = shot_object.value(QStringLiteral("handheld"));
           handheld.isObject()) {
         const QJsonObject hand = handheld.toObject();

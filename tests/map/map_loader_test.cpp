@@ -421,6 +421,62 @@ TEST(MapLoaderTest, ParsesLakesAsFirstClassWaterBodies) {
   EXPECT_FLOAT_EQ(map_def.lakes.front().rotation_deg, 27.0F);
 }
 
+TEST(MapLoaderTest, ReadsALakesShapeAndItsWaterLevel) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Harbour Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 96}, {"height", 96}, {"tile_size", 1.0}}},
+      {"lakes",
+       QJsonArray{QJsonObject{{"x", 0.0},
+                              {"z", 20.0},
+                              {"width", 40.0},
+                              {"depth", 24.0},
+                              {"height", -0.6},
+                              {"shape", "basin"}},
+                  QJsonObject{{"x", -30.0},
+                              {"z", -30.0},
+                              {"width", 16.0},
+                              {"depth", 16.0},
+                              {"shape", "round"}},
+                  QJsonObject{{"x", 30.0},
+                              {"z", -30.0},
+                              {"width", 16.0},
+                              {"depth", 16.0},
+                              {"shape", "no_such_shape"}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.lakes.size(), 3U);
+  const auto& basin = map_def.lakes[0];
+  EXPECT_EQ(basin.shape, Game::Map::LakeShape::Basin);
+  EXPECT_EQ(basin.elevation_mode, Game::Map::WaterElevationMode::Authored);
+  EXPECT_FLOAT_EQ(basin.center.y(), -0.6F);
+  // A basin fills its rectangle: the corner an ellipse would cut off is water.
+  EXPECT_TRUE(Game::Map::point_in_lake(basin, 17.0F, 20.0F + 10.0F));
+  EXPECT_FALSE(Game::Map::point_in_lake(basin, 21.0F, 20.0F));
+  EXPECT_FALSE(Game::Map::point_in_lake(basin, 0.0F, 20.0F + 13.0F));
+
+  const auto& pool = map_def.lakes[1];
+  EXPECT_EQ(pool.shape, Game::Map::LakeShape::Round);
+  EXPECT_EQ(pool.elevation_mode, Game::Map::WaterElevationMode::Terrain);
+  EXPECT_TRUE(Game::Map::point_in_lake(pool, -30.0F + 7.9F, -30.0F));
+  EXPECT_FALSE(Game::Map::point_in_lake(pool, -30.0F + 8.1F, -30.0F));
+  EXPECT_FALSE(Game::Map::point_in_lake(pool, -30.0F + 6.8F, -30.0F + 6.8F))
+      << "a round pool has no corners";
+
+  EXPECT_EQ(map_def.lakes[2].shape, Game::Map::LakeShape::Natural)
+      << "an outline the game does not know falls back to the natural shore";
+}
+
 TEST(MapLoaderTest, TrimsFeedingRiverAtIrregularLakeBoundary) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
@@ -1149,4 +1205,69 @@ TEST(MapLoaderTest, AForestIsWhereTheTreesActuallyThicken) {
       << "an authored forest has to raise the tree scatter over its ground; "
          "with_forest="
       << with_forest << " bare=" << bare_ground;
+}
+
+namespace {
+
+auto load_structures(const QJsonArray& structures,
+                     Game::Map::MapDefinition& map,
+                     QString& error) -> bool {
+  QTemporaryFile temp_file;
+  if (!temp_file.open()) {
+    return false;
+  }
+  const QJsonObject root{
+      {"name", "Structure Style Test"},
+      {"coord_system", "world"},
+      {"grid", QJsonObject{{"width", 65}, {"height", 65}, {"tile_size", 1.0}}},
+      {"structures", structures}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+  return Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error);
+}
+
+} // namespace
+
+TEST(MapLoaderTest, AStructureCarriesItsPresentationStyle) {
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(load_structures(
+      QJsonArray{
+          QJsonObject{{"type", "home"},
+                      {"x", 4.0},
+                      {"z", 2.0},
+                      {"player_id", 1},
+                      {"style", "tenement"}},
+          QJsonObject{{"type", "home"}, {"x", 12.0}, {"z", 2.0}, {"player_id", 1}}},
+      map,
+      error))
+      << error.toStdString();
+  ASSERT_EQ(map.structures.size(), 2U);
+  EXPECT_EQ(map.structures[0].style, QStringLiteral("tenement"));
+  EXPECT_TRUE(map.structures[1].style.isEmpty())
+      << "a structure with no style keeps its nation's plain building";
+}
+
+TEST(MapLoaderTest, AnUnknownStructureStyleIsAnAuthoringError) {
+  Game::Map::MapDefinition map;
+  QString error;
+  EXPECT_FALSE(load_structures(QJsonArray{QJsonObject{{"type", "home"},
+                                                      {"x", 4.0},
+                                                      {"z", 2.0},
+                                                      {"player_id", 1},
+                                                      {"style", "skyscraper"}}},
+                               map,
+                               error));
+  EXPECT_TRUE(error.contains(QStringLiteral("skyscraper"))) << error.toStdString();
+
+  // A style belongs to one building type: a tenement is a home, not a temple.
+  error.clear();
+  EXPECT_FALSE(load_structures(QJsonArray{QJsonObject{{"type", "temple"},
+                                                      {"x", 4.0},
+                                                      {"z", 2.0},
+                                                      {"player_id", 1},
+                                                      {"style", "tenement"}}},
+                               map,
+                               error));
+  EXPECT_TRUE(error.contains(QStringLiteral("tenement"))) << error.toStdString();
 }

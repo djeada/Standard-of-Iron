@@ -534,11 +534,12 @@ void CampaignWorkspace::build_toolbar() {
     });
     return action;
   };
-  add_tool(QStringLiteral("Select"),
-           WorldCanvas::Tool::Select,
-           QStringLiteral("S"),
-           QStringLiteral(
-               "Select, drag sites and route bends. Space+drag or middle-drag pans."))
+  add_tool(
+      QStringLiteral("Select"),
+      WorldCanvas::Tool::Select,
+      QStringLiteral("S"),
+      QStringLiteral("Click to select. Drag to pan. Drag a selected site's move handle "
+                     "or a route's bend square to edit it."))
       ->setChecked(true);
   bar->addSeparator();
   add_tool(QStringLiteral("Add Site"),

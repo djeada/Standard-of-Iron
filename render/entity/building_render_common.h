@@ -36,7 +36,8 @@ auto resolve_building_renderer_key(std::string_view renderer_key,
 void submit_building_instance(ISubmitter& out,
                               const DrawContext& ctx,
                               const RenderArchetype& archetype,
-                              std::span<const QVector3D> palette = {});
+                              std::span<const QVector3D> palette = {},
+                              float tone_seed = 0.0F);
 void submit_building_box(ISubmitter& out,
                          Mesh* mesh,
                          Texture* texture,

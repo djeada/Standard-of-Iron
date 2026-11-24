@@ -1,0 +1,335 @@
+{
+  "id": "city_review_aurelia_magna",
+  "title": "CITY REVIEW: AURELIA MAGNA",
+  "width": 1920,
+  "height": 1080,
+  "fps": 8,
+  "supersample": 1,
+  "gameplay_ui": false,
+  "audio": false,
+  "record_music": false,
+  "end_card_steam": false,
+  "motion_limits": {
+    "yaw_degrees_per_second": 400,
+    "pitch_degrees_per_second": 400,
+    "fov_degrees_per_second": 400,
+    "roll_degrees_per_second": 400,
+    "roll_magnitude_degrees": 30,
+    "shake": 1,
+    "minimum_clip_seconds": 0.1,
+    "mean_clip_seconds": 0.1
+  },
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "aur_A_skyline",
+      "view": "A",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [60, 70, 290],
+          "look": [0, 5, -60],
+          "fov": 38
+        },
+        {
+          "time": 0.5,
+          "eye": [60, 70, 290],
+          "look": [0, 5, -60],
+          "fov": 38
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_B_gate",
+      "view": "B",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [10, 7, 158],
+          "look": [0, 3, 110],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [10, 7, 158],
+          "look": [0, 3, 110],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_C_forum",
+      "view": "C",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [0, 9, -52],
+          "look": [0, 3, -104],
+          "fov": 48
+        },
+        {
+          "time": 0.5,
+          "eye": [0, 9, -52],
+          "look": [0, 3, -104],
+          "fov": 48
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_D_rooftops",
+      "view": "D",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [55, 24, 118],
+          "look": [82, 0, 78],
+          "fov": 40
+        },
+        {
+          "time": 0.5,
+          "eye": [55, 24, 118],
+          "look": [82, 0, 78],
+          "fov": 40
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_E_facade",
+      "view": "E",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [72, 2.2, 58],
+          "look": [77, 1.5, 66],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [72, 2.2, 58],
+          "look": [77, 1.5, 66],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_F_gameplay",
+      "view": "F",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [38, 34, 52],
+          "look": [14, 0, 22],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [38, 34, 52],
+          "look": [14, 0, 22],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3
+    },
+    {
+      "name": "aur_A_skyline_low_sun",
+      "view": "A",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [60, 70, 290],
+          "look": [0, 5, -60],
+          "fov": 38
+        },
+        {
+          "time": 0.5,
+          "eye": [60, 70, 290],
+          "look": [0, 5, -60],
+          "fov": 38
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 17.8
+      }
+    },
+    {
+      "name": "aur_C_forum_low_sun",
+      "view": "C",
+      "scenario": "promo_imperial_capital",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [0, 9, -52],
+          "look": [0, 3, -104],
+          "fov": 48
+        },
+        {
+          "time": 0.5,
+          "eye": [0, 9, -52],
+          "look": [0, 3, -104],
+          "fov": 48
+        }
+      ],
+      "ground_clearance": 0.3,
+      "lighting": {
+        "hour": 17.8
+      }
+    },
+    {
+      "name": "aur_B_gate_wet_night",
+      "view": "B",
+      "scenario": "city_review_aurelia_wet_night",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [10, 7, 158],
+          "look": [0, 3, 110],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [10, 7, 158],
+          "look": [0, 3, 110],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3,
+      "weather": "rain, night"
+    },
+    {
+      "name": "aur_F_gameplay_wet_night",
+      "view": "F",
+      "scenario": "city_review_aurelia_wet_night",
+      "seed": 1683,
+      "start": 4.0,
+      "duration": 0.5,
+      "rig": "free",
+      "eye_space": "world",
+      "look_space": "world",
+      "focus": {
+        "mode": "point",
+        "point": [0, 0, 0]
+      },
+      "camera": [
+        {
+          "time": 0,
+          "eye": [38, 34, 52],
+          "look": [14, 0, 22],
+          "fov": 45
+        },
+        {
+          "time": 0.5,
+          "eye": [38, 34, 52],
+          "look": [14, 0, 22],
+          "fov": 45
+        }
+      ],
+      "ground_clearance": 0.3,
+      "weather": "rain, night"
+    }
+  ]
+}

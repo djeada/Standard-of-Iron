@@ -95,6 +95,7 @@ protected:
   void leaveEvent(QEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
+  bool event(QEvent* event) override;
 
 private:
   void load_backdrop();
@@ -102,6 +103,7 @@ private:
   [[nodiscard]] auto map_of(const Game::Strategic::LonLat& point) const -> QPointF;
   [[nodiscard]] auto lonlat_of_map(QPointF map) const -> Game::Strategic::LonLat;
   [[nodiscard]] auto screen_of(const Game::Strategic::LonLat& point) const -> QPointF;
+  [[nodiscard]] auto screen_of(const Game::Strategic::Site& site) const -> QPointF;
   [[nodiscard]] auto lonlat_at(QPointF screen) const -> Game::Strategic::LonLat;
   [[nodiscard]] auto map_rect() const -> QRectF;
   [[nodiscard]] auto hit_site(QPointF screen) const -> QString;
@@ -110,6 +112,9 @@ private:
   [[nodiscard]] auto hit_region(QPointF screen) const -> QString;
   [[nodiscard]] auto hit_any(QPointF screen) const -> QString;
   [[nodiscard]] auto hit_waypoint(QPointF screen) const -> int;
+  [[nodiscard]] auto site_handle_at(QPointF screen) const -> bool;
+  void update_drag(QPointF screen);
+  void cancel_gesture();
   [[nodiscard]] auto
   route_screen_path(const Game::Strategic::Route& route) const -> QPainterPath;
   [[nodiscard]] auto site_radius(const Game::Strategic::Site& site) const -> double;
@@ -143,6 +148,7 @@ private:
   void paint_labels(QPainter& painter) const;
   void paint_issues(QPainter& painter) const;
   void paint_waypoints(QPainter& painter) const;
+  void paint_site_handle(QPainter& painter) const;
   void paint_overlay(QPainter& painter) const;
   void paint_legend(QPainter& painter) const;
 
@@ -161,11 +167,15 @@ private:
   QString m_hover;
   QString m_route_start;
   QString m_drag_site;
+  QString m_drag_route;
   Game::Strategic::LonLat m_drag_position;
   Game::Strategic::LonLat m_drag_origin;
-  bool m_dragging_site = false;
+  Game::Strategic::LonLat m_drag_press;
+  bool m_moved = false;
+  bool m_pan_pending = false;
   bool m_panning = false;
   bool m_drag_edit = true;
+  Qt::MouseButton m_gesture_button = Qt::NoButton;
   QPoint m_last_mouse;
   QPointF m_mouse;
   Game::Strategic::Path m_path;

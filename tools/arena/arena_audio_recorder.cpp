@@ -21,6 +21,7 @@
 #include "game/core/ambient_session.h"
 #include "game/core/component_structures.h"
 #include "game/core/world.h"
+#include "utils/resource_utils.h"
 
 namespace Arena::Promo {
 
@@ -45,7 +46,8 @@ AudioRecorder::~AudioRecorder() {
 }
 
 auto AudioRecorder::start(Engine::Core::World* world,
-                          Game::Systems::NationRegistry& nations) -> bool {
+                          Game::Systems::NationRegistry& nations,
+                          const QString& map_path) -> bool {
   if (m_running || world == nullptr) {
     return m_running;
   }
@@ -70,7 +72,11 @@ auto AudioRecorder::start(Engine::Core::World* world,
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   m_coordinator = std::make_unique<AudioCoordinator>(m_handler.get(), nations);
   m_coordinator->configure_audio_manifest_mappings(0);
-  m_coordinator->apply_mission_ambience(nullptr, QString{}, 0);
+  m_coordinator->apply_mission_ambience(
+      nullptr,
+      map_path.isEmpty() ? QString{}
+                         : Utils::Resources::resolve_resource_path(map_path),
+      0);
 
   m_ambient_state = resting_state();
   Engine::Core::EventManager::instance().publish(Engine::Core::AmbientStateChangedEvent(

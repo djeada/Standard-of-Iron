@@ -29,11 +29,14 @@ auto farm_archetype(BuildingState state, int stage) -> const RenderArchetype& {
 
 const std::array<TorchMount, 3> k_torches{{
     TorchMount{.at = QVector3D(0.985F, 0.09F, 0.18F),
-               .outward = QVector3D(1.0F, 0.0F, 0.0F)},
+               .outward = QVector3D(1.0F, 0.0F, 0.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.985F, 0.09F, 0.44F),
-               .outward = QVector3D(1.0F, 0.0F, 0.0F)},
+               .outward = QVector3D(1.0F, 0.0F, 0.0F),
+               .ghost = true},
     TorchMount{.at = QVector3D(0.35F, 0.24F, 0.48F),
-               .outward = QVector3D(0.0F, 0.0F, -1.0F)},
+               .outward = QVector3D(0.0F, 0.0F, -1.0F),
+               .ghost = true},
 }};
 
 } // namespace

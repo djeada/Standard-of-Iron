@@ -116,7 +116,9 @@ Painting the body stores the hill as `shape: "mask"` with the exact cells drawn.
 
 Leaving the body untouched preserves the authored shape and its numeric parameters.
 
-The terrain toolbox also places **Ridge**, **Boomerang**, **Elbow**, and **Ring** presets with appropriate shape values and starting extents.
+The terrain toolbox places **Ridge**, **Boomerang**, **Elbow**, and **Ring** presets with a default ramp on the footprint's edge. The ramp is saved with the hill and appears in its projection when you open the properties.
+
+Every hill needs at least one entrance on the map. Paint an entrance or use **Add Default Entrance** if the JSON has none. Erasing the last painted entrance restores a default ramp. When you open the properties of an older hill without an authored entrance, the dialog adds a default to the draft and saves it when you accept the edit.
 
 ## Flat features: terraces and raised ground
 

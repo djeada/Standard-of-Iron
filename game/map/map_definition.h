@@ -85,6 +85,9 @@ struct StructureEntry {
   int max_population = 60;
   float rotation = 0.0F;
   QString nation;
+
+  // Presentation only; one of Game::Visuals::k_building_visual_styles.
+  QString style;
 };
 
 struct WorldProp {

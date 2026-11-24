@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QSaveFile>
+#include <QScopedValueRollback>
 #include <QSet>
 
 #include <algorithm>
@@ -10,9 +11,11 @@
 #include <limits>
 #include <utility>
 
+#include "game/map/bridge_geometry.h"
 #include "game/map/river_geometry.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "hill_projection_model.h"
 #include "map_json_keys.h"
 
 namespace MapEditor {
@@ -114,6 +117,37 @@ auto is_ring_river(const QJsonObject& obj) -> bool {
   return obj.value(QStringLiteral("shape"))
              .toString()
              .compare(QStringLiteral("ring"), Qt::CaseInsensitive) == 0;
+}
+
+auto ford_stroke_offset(const QVector2D& center,
+                        const QVector<LinearElement>& elements,
+                        float coordinate_scale) -> QVector2D {
+  QVector2D offset(0.0F, k_default_ford_stroke);
+  float nearest = std::numeric_limits<float>::infinity();
+  for (const auto& river : elements) {
+    if (river.type != QLatin1String("river")) {
+      continue;
+    }
+    const auto path = linear_polyline(river);
+    const float bank =
+        Game::Map::river_bank_standing_half_width(river.width) * coordinate_scale;
+    for (qsizetype i = 1; i < path.size(); ++i) {
+      const QVector2D origin(path[i - 1]);
+      const QVector2D span = QVector2D(path[i]) - origin;
+      const float length_squared = span.lengthSquared();
+      if (length_squared <= 0.0001F) {
+        continue;
+      }
+      const float t = std::clamp(
+          QVector2D::dotProduct(center - origin, span) / length_squared, 0.0F, 1.0F);
+      const float distance = (center - (origin + t * span)).length();
+      if (distance < nearest && distance <= bank) {
+        nearest = distance;
+        offset = QVector2D(-span.y(), span.x()).normalized() * (bank + distance);
+      }
+    }
+  }
+  return offset;
 }
 
 auto applyLinearEndpoints(const QJsonObject& obj, LinearElement& elem) -> void {
@@ -262,17 +296,24 @@ auto unique_element_id(const Elements& elements,
   }
 }
 
+// A lake whose outline is something other than the wandering natural shore.
+auto is_shaped_lake(const TerrainElement& elem) -> bool {
+  return !elem.shape.isEmpty() && elem.shape != QStringLiteral("natural");
+}
+
 } // namespace
 
 auto terrain_element_from_json(const QJsonObject& obj) -> TerrainElement {
   TerrainElement elem;
   elem.type = obj[MapJsonKeys::type].toString();
+  const bool lake = elem.type == QStringLiteral("lake");
+  elem.level_authored = lake && obj.contains(MapJsonKeys::height);
   elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
   elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
   elem.radius = static_cast<float>(obj[MapJsonKeys::radius].toDouble(10.0));
   elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(0.0));
   elem.depth = static_cast<float>(obj[MapJsonKeys::depth].toDouble(0.0));
-  elem.height = static_cast<float>(obj[MapJsonKeys::height].toDouble(3.0));
+  elem.height = static_cast<float>(obj[MapJsonKeys::height].toDouble(lake ? 0.0 : 3.0));
   elem.rotation = static_cast<float>(obj[MapJsonKeys::rotation].toDouble(0.0));
   elem.shape = obj[MapJsonKeys::shape].toString();
   elem.thickness = static_cast<float>(obj[MapJsonKeys::thickness].toDouble(0.0));
@@ -321,11 +362,15 @@ auto terrain_element_to_json(const TerrainElement& elem) -> QJsonObject {
     obj[MapJsonKeys::radius] = static_cast<double>(elem.radius);
   }
 
-  obj[MapJsonKeys::height] = static_cast<double>(elem.height);
+  const bool lake = elem.type == QStringLiteral("lake");
+  if (!lake || elem.level_authored) {
+    obj[MapJsonKeys::height] = static_cast<double>(elem.height);
+  }
   if (elem.rotation != 0.0F) {
     obj[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
   }
-  if (!elem.shape.isEmpty() && elem.shape != QStringLiteral("blob")) {
+  if (lake ? is_shaped_lake(elem)
+           : (!elem.shape.isEmpty() && elem.shape != QStringLiteral("blob"))) {
     obj[MapJsonKeys::shape] = elem.shape;
   }
   if (elem.thickness > 0.0F) {
@@ -379,6 +424,15 @@ auto waypoints_to_json(const QVector<QPointF>& waypoints) -> QJsonArray {
 
 auto supports_waypoints(const QString& type) -> bool {
   return type == QLatin1String("road") || type == QLatin1String("river");
+}
+
+auto is_ring_river(const LinearElement& element) -> bool {
+  return element.type == QLatin1String("river") && is_ring_river(element.extra_fields);
+}
+
+auto is_fordable_river(const LinearElement& element) -> bool {
+  const QJsonValue ford = element.extra_fields.value(QStringLiteral("ford"));
+  return element.type == QLatin1String("river") && (ford.toBool() || ford.isObject());
 }
 
 auto linear_polyline(const LinearElement& element) -> QVector<QPointF> {
@@ -507,7 +561,7 @@ void MapData::clear() {
   m_redo_stack.clear();
 
   set_modified(false);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Terrain);
   emit undo_redo_changed();
 }
 
@@ -515,14 +569,14 @@ void MapData::set_name(const QString& name) {
   if (m_name != name) {
     m_name = name;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
 void MapData::set_grid(const GridSettings& grid) {
   m_grid = grid;
   set_modified(true);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Terrain);
 }
 
 auto MapData::is_modelled_root_key(const QString& key) -> bool {
@@ -548,7 +602,7 @@ auto MapData::set_extra_root_field(const QString& key,
     m_extra_root_fields.insert(key, value);
   }
   set_modified(true);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Terrain);
   return true;
 }
 
@@ -556,7 +610,7 @@ void MapData::set_biome(const QJsonObject& biome) {
   if (m_biome != biome) {
     m_biome = normalize_json_object(biome);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Terrain);
   }
 }
 
@@ -565,7 +619,40 @@ void MapData::set_rain(const QJsonObject& rain) {
   if (m_rain != normalized) {
     m_rain = normalized;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
+  }
+}
+
+void MapData::set_camera(const QJsonObject& camera) {
+  const QJsonObject normalized = normalize_json_object(camera);
+  if (m_camera != normalized) {
+    m_camera = normalized;
+    set_modified(true);
+    notify_data_change();
+  }
+}
+
+void MapData::set_victory(const QJsonObject& victory) {
+  if (m_victory != victory) {
+    m_victory = victory;
+    set_modified(true);
+    notify_data_change();
+  }
+}
+
+void MapData::set_description(const QString& description) {
+  if (m_description != description) {
+    m_description = description;
+    set_modified(true);
+    notify_data_change();
+  }
+}
+
+void MapData::set_max_troops_per_player(int max_troops) {
+  if (max_troops > 0 && m_max_troops_per_player != max_troops) {
+    m_max_troops_per_player = max_troops;
+    set_modified(true);
+    notify_data_change();
   }
 }
 
@@ -574,27 +661,46 @@ void MapData::set_environment(const QJsonObject& environment) {
   if (m_environment != normalized) {
     m_environment = normalized;
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Terrain);
   }
 }
 
 void MapData::set_modified(bool modified) {
-  if (m_modified != modified) {
+  if (!m_applying_command && m_modified != modified) {
     m_modified = modified;
     emit modified_changed(modified);
   }
+}
+
+void MapData::notify_data_change(std::optional<WorldPreviewChange> change) {
+  if (m_applying_command) {
+    if (change.has_value() && (!m_pending_preview_change.has_value() ||
+                               change == WorldPreviewChange::Terrain)) {
+      m_pending_preview_change = change;
+    }
+    return;
+  }
+  if (change.has_value()) {
+    emit world_preview_changed(*change);
+  }
+  emit data_changed();
 }
 
 void MapData::execute_command(std::unique_ptr<Command> cmd) {
   if (!cmd) {
     return;
   }
-  cmd->execute();
+  const QString description = cmd->description();
+  {
+    const QScopedValueRollback batch(m_applying_command, true);
+    cmd->execute();
+  }
   m_undo_stack.push_back(std::move(cmd));
-
   m_redo_stack.clear();
   set_modified(true);
+  notify_data_change(std::exchange(m_pending_preview_change, std::nullopt));
   emit undo_redo_changed();
+  emit command_applied(description);
 }
 
 void MapData::undo() {
@@ -603,10 +709,13 @@ void MapData::undo() {
   }
   auto cmd = std::move(m_undo_stack.back());
   m_undo_stack.pop_back();
-  cmd->undo();
+  {
+    const QScopedValueRollback batch(m_applying_command, true);
+    cmd->undo();
+  }
   m_redo_stack.push_back(std::move(cmd));
   set_modified(true);
-  emit data_changed();
+  notify_data_change(std::exchange(m_pending_preview_change, std::nullopt));
   emit undo_redo_changed();
 }
 
@@ -616,10 +725,13 @@ void MapData::redo() {
   }
   auto cmd = std::move(m_redo_stack.back());
   m_redo_stack.pop_back();
-  cmd->execute();
+  {
+    const QScopedValueRollback batch(m_applying_command, true);
+    cmd->execute();
+  }
   m_undo_stack.push_back(std::move(cmd));
   set_modified(true);
-  emit data_changed();
+  notify_data_change(std::exchange(m_pending_preview_change, std::nullopt));
   emit undo_redo_changed();
 }
 
@@ -642,7 +754,7 @@ bool MapData::load_from_bytes(const QByteArray& data, QString* out_error) {
   m_redo_stack.clear();
 
   set_modified(false);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Terrain);
   emit undo_redo_changed();
   return true;
 }
@@ -651,7 +763,7 @@ bool MapData::restore_document(const QByteArray& data, QString* out_error) {
   if (!apply_document(data, out_error)) {
     return false;
   }
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Terrain);
   return true;
 }
 
@@ -1063,13 +1175,17 @@ void MapData::parse_lakes_array(const QJsonArray& arr) {
         obj[MapJsonKeys::width].toDouble(radius > 0.0F ? radius * 2.0F : 8.0F));
     elem.depth = static_cast<float>(
         obj[MapJsonKeys::depth].toDouble(radius > 0.0F ? radius * 2.0F : 8.0F));
-    elem.height = 0.0F;
+    elem.level_authored = obj.contains(MapJsonKeys::height);
+    elem.height = static_cast<float>(obj[MapJsonKeys::height].toDouble(0.0));
+    elem.shape = obj[MapJsonKeys::shape].toString();
     elem.rotation = static_cast<float>(obj[MapJsonKeys::rotation].toDouble(0.0));
     const QStringList known_keys = {MapJsonKeys::x,
                                     MapJsonKeys::z,
                                     MapJsonKeys::radius,
                                     MapJsonKeys::width,
                                     MapJsonKeys::depth,
+                                    MapJsonKeys::height,
+                                    MapJsonKeys::shape,
                                     MapJsonKeys::rotation};
     elem.extra_fields = copyExtraFields(obj, known_keys);
     m_terrain.append(elem);
@@ -1198,25 +1314,30 @@ void MapData::parse_fords_array(const QJsonArray& arr) {
     LinearElement elem;
     elem.type = QStringLiteral("ford");
 
-    if (obj.value(MapJsonKeys::start).isArray() &&
-        obj.value(MapJsonKeys::end).isArray()) {
-      applyLinearEndpoints(obj, elem);
-    } else {
-
+    if (!readLinearPoint(obj.value(MapJsonKeys::start).toArray(), elem.start) ||
+        !readLinearPoint(obj.value(MapJsonKeys::end).toArray(), elem.end)) {
       QVector2D centre;
       const QJsonValue position = obj.value(QStringLiteral("position"));
-      if (position.isArray()) {
-        const QJsonArray point = position.toArray();
+      const QJsonArray point = position.toArray();
+      if (point.size() >= 2) {
         centre = QVector2D(
             static_cast<float>(point.at(0).toDouble()),
             static_cast<float>(point.at(point.size() >= 3 ? 2 : 1).toDouble()));
+      } else if (position.isObject()) {
+        const QJsonObject coordinates = position.toObject();
+        centre = QVector2D(static_cast<float>(coordinates[MapJsonKeys::x].toDouble()),
+                           static_cast<float>(coordinates[MapJsonKeys::z].toDouble()));
+      } else if (obj.contains(MapJsonKeys::x) && obj.contains(MapJsonKeys::z)) {
+        centre = QVector2D(static_cast<float>(obj[MapJsonKeys::x].toDouble()),
+                           static_cast<float>(obj[MapJsonKeys::z].toDouble()));
       } else {
-        centre =
-            QVector2D(static_cast<float>(obj.value(QStringLiteral("x")).toDouble()),
-                      static_cast<float>(obj.value(QStringLiteral("z")).toDouble()));
+        continue;
       }
-      elem.start = centre - QVector2D(0.0F, k_default_ford_stroke);
-      elem.end = centre + QVector2D(0.0F, k_default_ford_stroke);
+      const float scale =
+          uses_world_coordinates() ? 1.0F : 1.0F / std::max(m_grid.tile_size, 0.0001F);
+      const QVector2D offset = ford_stroke_offset(centre, m_linear_elements, scale);
+      elem.start = centre - offset;
+      elem.end = centre + offset;
     }
     elem.width =
         static_cast<float>(obj.contains(QStringLiteral("length"))
@@ -1330,6 +1451,12 @@ QJsonArray MapData::lakes_to_json() const {
     obj[MapJsonKeys::depth] = static_cast<double>(std::max(elem.depth, 0.1F));
     if (elem.rotation != 0.0F) {
       obj[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
+    }
+    if (elem.level_authored) {
+      obj[MapJsonKeys::height] = static_cast<double>(elem.height);
+    }
+    if (is_shaped_lake(elem)) {
+      obj[MapJsonKeys::shape] = elem.shape;
     }
     arr.append(obj);
   }
@@ -1533,16 +1660,18 @@ QJsonArray MapData::structures_to_json() const {
 }
 
 void MapData::add_terrain_element(const TerrainElement& element) {
-  m_terrain.append(element);
+  TerrainElement placed = element;
+  HillProjection::ensure_entrance(placed, HillProjection::map_context(*this));
+  m_terrain.append(std::move(placed));
   set_modified(true);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Terrain);
 }
 
 void MapData::insert_terrain_element(int index, const TerrainElement& element) {
   if (index >= 0 && index <= m_terrain.size()) {
     m_terrain.insert(index, element);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Terrain);
   }
 }
 
@@ -1550,7 +1679,7 @@ void MapData::update_terrain_element(int index, const TerrainElement& element) {
   if (index >= 0 && index < m_terrain.size()) {
     m_terrain[index] = element;
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Terrain);
   }
 }
 
@@ -1558,21 +1687,21 @@ void MapData::remove_terrain_element(int index) {
   if (index >= 0 && index < m_terrain.size()) {
     m_terrain.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Terrain);
   }
 }
 
 void MapData::add_world_prop(const WorldPropElement& element) {
   m_world_props.append(element);
   set_modified(true);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Scenery);
 }
 
 void MapData::insert_world_prop(int index, const WorldPropElement& element) {
   if (index >= 0 && index <= m_world_props.size()) {
     m_world_props.insert(index, element);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Scenery);
   }
 }
 
@@ -1580,7 +1709,7 @@ void MapData::update_world_prop(int index, const WorldPropElement& element) {
   if (index >= 0 && index < m_world_props.size()) {
     m_world_props[index] = element;
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Scenery);
   }
 }
 
@@ -1588,7 +1717,7 @@ void MapData::remove_world_prop(int index) {
   if (index >= 0 && index < m_world_props.size()) {
     m_world_props.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Scenery);
   }
 }
 
@@ -1597,7 +1726,9 @@ void MapData::add_linear_element(const LinearElement& element) {
   syncLinearWaypointsWithEndpoints(normalized);
   m_linear_elements.append(normalized);
   set_modified(true);
-  emit data_changed();
+  notify_data_change(element.type == QLatin1String("wall")
+                         ? WorldPreviewChange::Scenery
+                         : WorldPreviewChange::Terrain);
 }
 
 void MapData::insert_linear_element(int index, const LinearElement& element) {
@@ -1606,12 +1737,16 @@ void MapData::insert_linear_element(int index, const LinearElement& element) {
     syncLinearWaypointsWithEndpoints(normalized);
     m_linear_elements.insert(index, normalized);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(element.type == QLatin1String("wall")
+                           ? WorldPreviewChange::Scenery
+                           : WorldPreviewChange::Terrain);
   }
 }
 
 void MapData::update_linear_element(int index, const LinearElement& element) {
   if (index >= 0 && index < m_linear_elements.size()) {
+    const bool wall_only = m_linear_elements[index].type == QLatin1String("wall") &&
+                           element.type == QLatin1String("wall");
     LinearElement normalized = element;
     syncLinearWaypointsWithEndpoints(normalized);
     if (normalized.structure_order < 0) {
@@ -1619,15 +1754,18 @@ void MapData::update_linear_element(int index, const LinearElement& element) {
     }
     m_linear_elements[index] = normalized;
     set_modified(true);
-    emit data_changed();
+    notify_data_change(wall_only ? WorldPreviewChange::Scenery
+                                 : WorldPreviewChange::Terrain);
   }
 }
 
 void MapData::remove_linear_element(int index) {
   if (index >= 0 && index < m_linear_elements.size()) {
+    const bool wall = m_linear_elements[index].type == QLatin1String("wall");
     m_linear_elements.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(wall ? WorldPreviewChange::Scenery
+                            : WorldPreviewChange::Terrain);
   }
 }
 
@@ -1638,7 +1776,7 @@ void MapData::add_structure(const StructureElement& element) {
   }
   m_structures.append(normalized);
   set_modified(true);
-  emit data_changed();
+  notify_data_change(WorldPreviewChange::Scenery);
 }
 
 void MapData::insert_structure(int index, const StructureElement& element) {
@@ -1649,7 +1787,7 @@ void MapData::insert_structure(int index, const StructureElement& element) {
     }
     m_structures.insert(index, normalized);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Scenery);
   }
 }
 
@@ -1664,7 +1802,7 @@ void MapData::update_structure(int index, const StructureElement& element) {
     }
     m_structures[index] = normalized;
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Scenery);
   }
 }
 
@@ -1672,7 +1810,7 @@ void MapData::remove_structure(int index) {
   if (index >= 0 && index < m_structures.size()) {
     m_structures.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change(WorldPreviewChange::Scenery);
   }
 }
 
@@ -1699,7 +1837,7 @@ void MapData::add_troop_spawn(const TroopSpawnElement& element) {
   }
   m_troop_spawns.append(normalized);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::insert_troop_spawn(int index, const TroopSpawnElement& element) {
@@ -1710,7 +1848,7 @@ void MapData::insert_troop_spawn(int index, const TroopSpawnElement& element) {
     }
     m_troop_spawns.insert(index, normalized);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1722,7 +1860,7 @@ void MapData::update_troop_spawn(int index, const TroopSpawnElement& element) {
     }
     m_troop_spawns[index] = normalized;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1730,7 +1868,7 @@ void MapData::remove_troop_spawn(int index) {
   if (index >= 0 && index < m_troop_spawns.size()) {
     m_troop_spawns.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1807,15 +1945,6 @@ QJsonObject MapData::troop_to_spawn_json(const TroopSpawnElement& elem) const {
   return obj;
 }
 
-void MapData::record_command(std::unique_ptr<Command> cmd) {
-  if (!cmd) {
-    return;
-  }
-  m_undo_stack.push_back(std::move(cmd));
-  m_redo_stack.clear();
-  emit undo_redo_changed();
-}
-
 QString MapData::undo_description() const {
   return m_undo_stack.empty() ? QString{} : m_undo_stack.back()->description();
 }
@@ -1829,14 +1958,14 @@ void MapData::add_undead_zone(const UndeadZoneElement& element) {
   added.id = unique_element_id(m_undead_zones, element.id, QStringLiteral("zone"));
   m_undead_zones.append(added);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::insert_undead_zone(int index, const UndeadZoneElement& element) {
   if (index >= 0 && index <= m_undead_zones.size()) {
     m_undead_zones.insert(index, element);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1844,7 +1973,7 @@ void MapData::update_undead_zone(int index, const UndeadZoneElement& element) {
   if (index >= 0 && index < m_undead_zones.size()) {
     m_undead_zones[index] = element;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1852,7 +1981,7 @@ void MapData::remove_undead_zone(int index) {
   if (index >= 0 && index < m_undead_zones.size()) {
     m_undead_zones.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1906,14 +2035,14 @@ QJsonArray MapData::undead_zones_to_json() const {
 void MapData::add_fog_zone(const FogZoneElement& element) {
   m_fog_zones.append(element);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::update_fog_zone(int index, const FogZoneElement& element) {
   if (index >= 0 && index < m_fog_zones.size()) {
     m_fog_zones[index] = element;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1921,7 +2050,7 @@ void MapData::remove_fog_zone(int index) {
   if (index >= 0 && index < m_fog_zones.size()) {
     m_fog_zones.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -1993,7 +2122,7 @@ void MapData::add_forest(const ForestElement& element) {
   added.id = unique_element_id(m_forests, element.id, QStringLiteral("forest"));
   m_forests.append(added);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::insert_forest(int index, const ForestElement& element) {
@@ -2002,14 +2131,14 @@ void MapData::insert_forest(int index, const ForestElement& element) {
   }
   m_forests.insert(index, element);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::update_forest(int index, const ForestElement& element) {
   if (index >= 0 && index < m_forests.size()) {
     m_forests[index] = element;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -2017,14 +2146,14 @@ void MapData::remove_forest(int index) {
   if (index >= 0 && index < m_forests.size()) {
     m_forests.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
 void MapData::add_wildlife_area(const WildlifeAreaElement& element) {
   m_wildlife_areas.append(element);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::insert_wildlife_area(int index, const WildlifeAreaElement& element) {
@@ -2033,14 +2162,14 @@ void MapData::insert_wildlife_area(int index, const WildlifeAreaElement& element
   }
   m_wildlife_areas.insert(index, element);
   set_modified(true);
-  emit data_changed();
+  notify_data_change();
 }
 
 void MapData::update_wildlife_area(int index, const WildlifeAreaElement& element) {
   if (index >= 0 && index < m_wildlife_areas.size()) {
     m_wildlife_areas[index] = element;
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 
@@ -2048,7 +2177,7 @@ void MapData::remove_wildlife_area(int index) {
   if (index >= 0 && index < m_wildlife_areas.size()) {
     m_wildlife_areas.removeAt(index);
     set_modified(true);
-    emit data_changed();
+    notify_data_change();
   }
 }
 

@@ -25,6 +25,8 @@ struct WorldBackdropOptions {
   int max_dimension_px = 2048;
   float min_pixels_per_cell = 2.0F;
   float max_pixels_per_cell = 8.0F;
+  bool show_terrain = true;
+  bool show_paths = true;
 };
 
 [[nodiscard]] auto

@@ -8034,6 +8034,22 @@ um die Vorschau zu sehen</translation>
         <source>The Sepulcher Bridge</source>
         <translation>Die Grabmalbrücke</translation>
     </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Karthago</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rom</translation>
+    </message>
+    <message>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>Die Stadt auf der Landzunge: die Byrsa, die in Terrassen zum Tempel des Eschmun ansteigt, die sich zum Meer hin auffächernde Unterstadt, der runde Kriegshafen mit der Admiralsinsel und das Handelsbecken, die Agora hinter den Kais, der Tophet an der Lagune, die ummauerten Gärten und Villen von Megara, die Nekropole auf den Hügeln und die dreifache Mauer quer über die Landenge.</translation>
+    </message>
+    <message>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>Die Stadt der sieben Hügel am Tiber: das Forum unterhalb des Kapitols, die Kaiserforen, das Kolosseum und der Circus Maximus, der Viehmarkt am Fluss, die belebte Subura, die Gärten von Sallust, Maecenas und Lucullus mit ihren Wasserbecken, das Marsfeld in der Flussbiegung, Trastevere unterhalb des Gianicolo, Villen in Olivenhainen, eine vor der Servianischen Mauer aufgestellte Legion und Ostia an der Tibermündung.</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>

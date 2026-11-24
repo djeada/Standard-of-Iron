@@ -12,6 +12,7 @@
 #include "arena_battle_order_scenarios.h"
 #include "arena_battle_scale_scenarios.h"
 #include "arena_cinematic_scenarios.h"
+#include "arena_city_block_scenarios.h"
 #include "arena_city_scenarios.h"
 #include "arena_combat_scenarios.h"
 #include "arena_commander_duel_scenarios.h"
@@ -105,6 +106,7 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     append(values, build_ambience_definitions());
     append(values, build_spotlight_definitions());
     append(values, build_city_definitions());
+    append(values, build_city_block_definitions());
     append(values, build_ai_duel_definitions());
     append(values, build_economy_definitions());
     append(values, build_engagement_definitions());

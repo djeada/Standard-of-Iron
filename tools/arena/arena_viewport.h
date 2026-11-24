@@ -264,7 +264,9 @@ public:
                          const QVector3D& target,
                          float fov_degrees,
                          float roll_degrees);
-  void set_cinematic_lens(float near_plane, float ground_clearance);
+  void set_cinematic_lens(float near_plane,
+                          float ground_clearance,
+                          bool street_level = false);
   void set_promo_lighting(const Arena::Promo::LightingOverride& lighting);
   [[nodiscard]] auto terrain_height_at(float x, float z) const -> float;
 
@@ -298,6 +300,7 @@ public:
     float roll{0.0F};
     float near_plane{0.0F};
     float ground_clearance{-1.0F};
+    bool street_level{false};
   };
   [[nodiscard]] auto cinematic_state() const -> CinematicState;
   void set_cinematic_state(const CinematicState& state);
@@ -325,6 +328,10 @@ public:
   }
 
   [[nodiscard]] auto active_scenario_finished() const -> bool;
+  // The shipped map the active scenario plays on; empty for a built arena.
+  [[nodiscard]] auto scenario_map_path() const -> const QString& {
+    return m_scenario_map_path;
+  }
   [[nodiscard]] auto
   active_scenario_report() const -> const Arena::ArenaScenarioReport*;
 
@@ -444,13 +451,15 @@ private:
   void reconfigure_terrain_from_state();
   void apply_initial_visibility();
   void update_fog_of_war(float dt);
-  auto spawn_single_building(int owner_id,
-                             Game::Systems::NationID nation_id,
-                             Game::Units::SpawnType building_type,
-                             std::optional<QVector3D> requested_position = std::nullopt,
-                             bool ai_controlled = false,
-                             int max_population = 0,
-                             float rotation_y = 0.0F) -> Engine::Core::EntityID;
+  auto
+  spawn_single_building(int owner_id,
+                        Game::Systems::NationID nation_id,
+                        Game::Units::SpawnType building_type,
+                        std::optional<QVector3D> requested_position = std::nullopt,
+                        bool ai_controlled = false,
+                        int max_population = 0,
+                        float rotation_y = 0.0F,
+                        const QString& visual_style = {}) -> Engine::Core::EntityID;
   auto owner_display_name(int owner_id) const -> QString;
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,
@@ -463,6 +472,7 @@ private:
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
   void spawn_terrain_review_structures();
   auto initialize_terrain_from_map(const QString& map_path) -> bool;
+  QString m_scenario_map_path;
   void apply_map_terrain();
   void draw_debug_overlay(QPainter& painter);
   void draw_floating_numbers(QPainter& painter);
@@ -657,6 +667,7 @@ private:
   float m_cinematic_near = 0.0F;
   float m_saved_near = 0.0F;
   float m_cinematic_ground_clearance = -1.0F;
+  bool m_cinematic_street_level = false;
   Arena::Promo::LightingOverride m_promo_lighting;
   bool m_flame_card_active = false;
   float m_flame_card_speed = 1.0F;

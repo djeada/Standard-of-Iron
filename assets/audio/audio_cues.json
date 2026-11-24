@@ -483,9 +483,9 @@
       "description": "A wall gate swings open.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.85,
+      "volume": 0.4,
       "priority": 5,
-      "cooldown_ms": 500,
+      "cooldown_ms": 2500,
       "resources": [
         "sfx.build.gate_open"
       ],
@@ -497,9 +497,9 @@
       "description": "A wall gate swings shut and bars.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.85,
+      "volume": 0.4,
       "priority": 5,
-      "cooldown_ms": 500,
+      "cooldown_ms": 2500,
       "resources": [
         "sfx.build.gate_close"
       ],
@@ -1222,7 +1222,7 @@
       "description": "The controlled commander plants a foot on open ground.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.42,
+      "volume": 0.13,
       "priority": 2,
       "cooldown_ms": 90,
       "resources": [
@@ -1237,7 +1237,7 @@
       "description": "The same step on a bridge or other hard surface.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.42,
+      "volume": 0.11,
       "priority": 2,
       "cooldown_ms": 90,
       "resources": [
@@ -1252,7 +1252,7 @@
       "description": "The controlled commander plants a foot at a run.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.5,
+      "volume": 0.16,
       "priority": 2,
       "cooldown_ms": 70,
       "resources": [

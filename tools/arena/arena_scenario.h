@@ -165,6 +165,9 @@ struct ArenaScenarioGroup {
 
   QString renderer_override;
 
+  // A structure's presentation style (Game::Visuals::k_building_visual_styles).
+  QString visual_style;
+
   QString commander_id;
   QStringList showcase_routine;
   float showcase_start_delay{0.0F};
@@ -276,6 +279,10 @@ struct ArenaScenarioStep {
 
   std::optional<float> rpg_view_yaw_degrees;
   std::optional<float> rpg_view_pitch_degrees;
+  // RpgMove: turn to face this point from where the commander stands when the
+  // step fires, so a walked route corrects its own drift leg by leg (wins over
+  // rpg_view_yaw_degrees).
+  std::optional<QVector3D> rpg_heading_target;
   ArenaScenarioFormationOrder formation;
 
   QString event;
@@ -560,6 +567,9 @@ struct ArenaScenarioDefinition {
   QString campaign_map_path;
 
   bool suppress_procedural_props{false};
+  // Every gate on a shipped map stands open (a city at peace, for filming): the
+  // walking commander never meets a shut door or a creak.
+  bool gates_held_open{false};
 
   bool suppress_combat_dust{false};
   ArenaCameraView camera;

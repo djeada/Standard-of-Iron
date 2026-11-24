@@ -8,6 +8,11 @@
 
 #include "game/map/terrain_footprint.h"
 
+namespace MapEditor {
+class MapData;
+struct TerrainElement;
+} // namespace MapEditor
+
 namespace MapEditor::HillProjection {
 
 inline constexpr int k_min_entrances = 1;
@@ -20,6 +25,7 @@ struct MapContext {
   double tile_size = 1.0;
   int map_grid_width = 0;
   int map_grid_height = 0;
+  bool world_coordinates = false;
 };
 
 struct Model {
@@ -43,7 +49,12 @@ struct Model {
   QJsonArray invalid_entrances;
 };
 
+auto map_context(const MapData& data) -> MapContext;
 auto build_model(const QJsonObject& hill_json, const MapContext& context = {}) -> Model;
+auto entrance_count(const QJsonArray& entrances, const MapContext& context = {}) -> int;
+auto default_entrances(const QJsonObject& hill_json,
+                       const MapContext& context = {}) -> QJsonArray;
+auto ensure_entrance(TerrainElement& terrain, const MapContext& context) -> bool;
 
 auto entrance_cells_from_json(const Model& model,
                               const QJsonArray& entrances) -> QVector<QPoint>;

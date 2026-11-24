@@ -10,6 +10,7 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
+#include "render/entity/nation_motifs.h"
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/frame/render_archetype.h"
 
@@ -382,6 +383,16 @@ auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDe
                                  .count = 4,
                                  .seed = 457});
 
+  {
+    // Horns on the store's roof and a boundary stele at the corner of the land.
+    const Motif::Setter set(desc, state);
+    for (const float x : {0.13F, 0.76F}) {
+      for (const float z : {0.48F, 0.88F}) {
+        Motif::add_punic_horns(desc, set.at(x, z), 0.38F);
+      }
+    }
+    Motif::add_punic_stele(desc, set.at(-0.86F, 0.86F, 0.2F), 0.38F, 1.0F, 9);
+  }
   return desc;
 }
 

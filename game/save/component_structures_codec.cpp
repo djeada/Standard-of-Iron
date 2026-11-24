@@ -27,6 +27,9 @@ void write_building(const Entity* entity, QJsonObject& entity_obj) {
     QJsonObject building_obj;
     building_obj["original_nation_id"] =
         Game::Systems::nation_id_to_qstring(building->original_nation_id);
+    if (!building->visual_style.empty()) {
+      building_obj["visual_style"] = QString::fromStdString(building->visual_style);
+    }
     entity_obj["building"] = building_obj;
   }
 }
@@ -43,6 +46,7 @@ void read_building(Entity* entity, const QJsonObject& json) {
           building->original_nation_id = nation_id;
         }
       }
+      building->visual_style = building_obj["visual_style"].toString().toStdString();
     }
   }
 }

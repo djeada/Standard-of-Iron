@@ -39,6 +39,9 @@ struct HomeSmokeAnchor {
   bool line_pole{false};
   int max_laundry{0};
 
+  // Yard hens peck around the doorstep; town houses on a pavement keep none.
+  bool hens{true};
+
   [[nodiscard]] auto valid() const noexcept -> bool { return plume_radius > 0.0F; }
 };
 
