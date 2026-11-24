@@ -232,7 +232,7 @@ get_argument_value(std::vector<Argument>& parsed_arguments, const std::string& n
   if (parsed_arguments.empty()) {
     throw std::runtime_error("parsed arguments vector is empty");
   }
-  if (parsed_arguments.empty()) {
+  if (name.empty()) {
     throw std::runtime_error("argument name is empty");
   }
 
