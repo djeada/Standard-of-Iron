@@ -523,14 +523,12 @@ auto build_city_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
   result.push_back(imperial_capital());
 
-  // The same city for the wet-night review frames: nothing is asserted of it,
-  // it only has to be looked at.
+  // Keep the city's acceptance checks in the wet-night review variant.
   auto wet_night = imperial_capital();
   wet_night.id = QStringLiteral("city_review_aurelia_wet_night");
   wet_night.label = QStringLiteral("Aurelia Magna: Wet Night");
   wet_night.environment.start_time = 21.5F;
   wet_night.weather.rain = Game::Map::k_weather_intensity_medium;
-  wet_night.expectations.clear();
   result.push_back(std::move(wet_night));
   return result;
 }

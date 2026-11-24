@@ -227,7 +227,8 @@ auto build_camera_inputs(Engine::Core::World& world,
 }
 
 void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
-                                    const Engine::Core::Entity& commander,
+                                    const Engine::Core::World& world,
+                                    Engine::Core::EntityID commander_id,
                                     bool running,
                                     float previous_bob_phase) {
   if (rig.bob_amplitude() < k_footstep_min_bob_amplitude) {
@@ -248,13 +249,12 @@ void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
   }
 
   const auto* terrain =
-      commander.get_component<Engine::Core::TerrainContextComponent>();
-  // Paving rings under a boot; a street or a plaza is stone, not grass.
+      world.try_get<Engine::Core::TerrainContextComponent>(commander_id);
   bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
   if (!hard_ground) {
     if (const auto* transform =
-            commander.get_component<Engine::Core::TransformComponent>()) {
-      hard_ground = Game::Map::TerrainService::instance().is_point_on_road(
+            world.try_get<Engine::Core::TransformComponent>(commander_id)) {
+      hard_ground = Game::Session::session_for(world).terrain().is_point_on_road(
           transform->position.x, transform->position.z);
     }
   }

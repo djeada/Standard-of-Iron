@@ -866,7 +866,6 @@ void ArenaViewport::spawn_terrain_review_structures() {
   // The map's buildings now stand with their real, turned bodies; drop the
   // ground the terrain reserved for them at load, as MapTransformer does.
   m_session.building_collision().clear_authored_obstacles();
-  Game::Systems::BuildingCollisionRegistry::instance().clear_authored_obstacles();
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
     pathfinder->mark_navigation_grid_dirty();
   }

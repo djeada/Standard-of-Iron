@@ -8043,12 +8043,12 @@ para ver a prévia</translation>
         <translation>Roma</translation>
     </message>
     <message>
-        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
-        <translation>A cidade em seu promontório: o porto de guerra circular com a ilha do almirante e, ao lado, a bacia mercante; a ágora atrás dos cais; a Birsa com o templo de Eshmun acima das altas casas brancas; o tofet junto à praia; os jardins de Mégara e as muralhas que atravessam o istmo.</translation>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>A cidade no promontório: a Birsa sobe em terraços até o templo de Eshmun, a cidade baixa se abre em leque em direção ao mar, o porto de guerra circular abriga a ilha do almirante e tem ao lado a bacia mercante, a ágora fica atrás dos cais, o tofet junto à lagoa, os jardins murados e as vilas de Mégara, a necrópole nas colinas e a muralha tripla que atravessa o istmo.</translation>
     </message>
     <message>
-        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
-        <translation>A cidade do Tibre: o Capitólio e seus templos acima do Fórum, o Palatino e o grande circo logo abaixo, a apinhada Subura, uma muralha de pedra em volta das colinas, os cais do rio sob o Aventino e Óstia, onde o Tibre encontra o mar.</translation>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>A cidade das sete colinas às margens do Tibre: o Fórum aos pés do Capitólio, os fóruns imperiais, o Coliseu e o Circo Máximo, o mercado de gado à beira do rio, a movimentada Subura, os jardins de Salústio, Mecenas e Lúculo com seus espelhos d’água, o Campo de Marte na curva do rio, o Trastevere aos pés do Janículo, as vilas entre olivais, uma legião em formação do lado de fora da Muralha Serviana e Óstia, onde o Tibre deságua no mar.</translation>
     </message>
 </context>
 <context>

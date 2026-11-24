@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """topdown.py <map.json> <out.png> [scale] : quick plan sketch of a map (north up, east right)."""
-import json, math, sys
-from PIL import Image, ImageDraw
+import json
+import math
+import sys
 
-sys.path.insert(0, __import__("os").path.dirname(__file__))
+from PIL import Image, ImageDraw
 from planlib import Water
 
 m = json.load(open(sys.argv[1]))
@@ -31,14 +32,14 @@ for t in m.get("terrain", []):
 # lakes (sampled)
 waters = [
     Water(
-        l["x"],
-        l["z"],
-        l["width"],
-        l["depth"],
-        l.get("rotation", 0),
-        l.get("shape", "natural"),
+        lake["x"],
+        lake["z"],
+        lake["width"],
+        lake["depth"],
+        lake.get("rotation", 0),
+        lake.get("shape", "natural"),
     )
-    for l in m.get("lakes", [])
+    for lake in m.get("lakes", [])
 ]
 px = im.load()
 step = max(1, int(S))
@@ -53,7 +54,7 @@ for j in range(0, im.height, 2):
 
 
 def poly(pts, width, fill):
-    for a, b in zip(pts, pts[1:]):
+    for a, b in zip(pts, pts[1:], strict=False):
         d.line([P(*a), P(*b)], fill=fill, width=max(1, int(width * S)))
 
 

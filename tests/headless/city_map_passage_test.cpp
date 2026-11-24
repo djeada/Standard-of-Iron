@@ -281,17 +281,3 @@ TEST_F(CityMapPassageTest, CarthagesRoadsLeadToTheAgora) {
   });
   march(marches, 420.0, 12.0F);
 }
-
-static void probe_gate(float gx, float gz) {
-  auto* pathfinder = NavGrid::get_pathfinder();
-  for (int z = static_cast<int>(gz) - 8; z <= static_cast<int>(gz) + 8; ++z) {
-    std::string row;
-    for (int x = static_cast<int>(gx) - 8; x <= static_cast<int>(gx) + 8; ++x) {
-      const Point cell =
-          NavGrid::world_to_grid(static_cast<float>(x), static_cast<float>(z));
-      const auto region = pathfinder->region_of(cell, Passability::Light);
-      row += region == 0 ? '#' : static_cast<char>('a' + (region % 26));
-    }
-    std::printf("z=%4d %s\n", z, row.c_str());
-  }
-}

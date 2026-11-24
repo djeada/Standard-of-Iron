@@ -102,7 +102,7 @@ class Plan:
 
         for pts, width in self.rivers:
             reach = width / 2 + pad
-            for a, b in zip(pts, pts[1:]):
+            for a, b in zip(pts, pts[1:], strict=False):
                 dx, dz = b[0] - a[0], b[1] - a[1]
                 L2 = dx * dx + dz * dz
                 t = (
@@ -243,7 +243,8 @@ class Plan:
             )
         j = {"type": "road", "start": a, "end": b, "width": width, "style": style}
         if waypoints:
-            j["waypoints"] = waypoints
+            # The editor's waypoint list includes both endpoints.
+            j["waypoints"] = [a, *waypoints, b]
         self.add("linear", **j)
 
     def bridge(self, a, b, width=10, height=0.6):
@@ -311,7 +312,9 @@ class Plan:
         self.add("structure", **j)
 
     def wall(self, ident, points, closed=True, tower_spacing=44, style="masonry"):
-        legs = list(zip(points, points[1:] + (points[:1] if closed else [])))
+        legs = list(
+            zip(points, points[1:] + (points[:1] if closed else []), strict=False)
+        )
         for a, b in legs[: len(points) if closed else len(points) - 1]:
             self.reserve(
                 min(a[0], b[0]) - 2.5,
@@ -390,7 +393,8 @@ class Plan:
         that would stand on water or a reserved rectangle are left out, and the
         streets only run where blocks were built.
         """
-        import math, random
+        import math
+        import random
 
         rng = random.Random(seed)
         LOT_W, LOT_D, PAVE = 4.3, 4.4, 0.5
@@ -500,7 +504,8 @@ class Plan:
         so they close up against each other and against obstacles a street apart.
         Each block lays the street round itself.
         """
-        import math, random
+        import math
+        import random
 
         rng = random.Random(seed)
         LOT_W, LOT_D, PAVE = 4.3, 4.4, 0.5
@@ -642,7 +647,6 @@ class Plan:
 
     def harbour(self, name, cx, cz, width, depth, sides="nwe", shape="basin"):
         """A basin with docks on the named sides, fronts to the water. Its open side is the sea's."""
-        LOT = 5.5
         self.basin(cx, cz, width, depth, shape=shape)
         x0, x1, z0, z1 = cx - width / 2, cx + width / 2, cz - depth / 2, cz + depth / 2
         inset = 3.0
@@ -775,9 +779,7 @@ class Plan:
             ):
                 j = op["json"]
                 pts = j.get("waypoints") or [j["start"], j["end"]]
-                if j.get("waypoints"):
-                    pts = [j["start"]] + [q for q in j["waypoints"]] + [j["end"]]
-                for a, b in zip(pts, pts[1:]):
+                for a, b in zip(pts, pts[1:], strict=False):
                     if a != b:
                         segs.append((tuple(a), tuple(b)))
             elif op["op"] == "paving":
@@ -881,7 +883,8 @@ class Plan:
 
     def connect_roads(self, max_len=18.0, width=3.6, style="stone"):
         """Join detached road networks to the largest one with short streets; returns what is left."""
-        import math, collections
+        import collections
+        import math
 
         for _ in range(200):
             segs = self._road_segments()

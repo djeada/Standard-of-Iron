@@ -145,7 +145,6 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
   s.select_spawned_units = false;
   s.suppress_spawn_anchor = true;
   s.suppress_ui_overlays = true;
-  s.collect_animation_diagnostics = false;
   // An open horizon: the review is of the town, not of the arena's ring of
   // crags.
   s.suppress_boundary_mountains = true;
@@ -349,6 +348,8 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
                            QStringLiteral("street_watch")}) {
     s.expectations.push_back(expectation(Expect::GroupExists, name));
   }
+  s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                       QStringLiteral("main_street_folk")));
   return s;
 }
 

@@ -9,12 +9,13 @@ the sea along the south edge, where Ostia stands. The Servian wall follows the
 hills; inside it every quarter has its own warped street web.
 """
 import json
-import math, math, os, random, sys
+import math
+import os
+import random
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from shapely.geometry import LineString, Point, Polygon, box
-from planlib import Plan, spline, SEA_LEVEL, DOCK_SETBACK
-from organic import Town, blob, facing_of, rect, HOUSE_W, SHOP_W, SHOP_D
+from organic import SHOP_W, Town, blob, facing_of, rect
+from planlib import DOCK_SETBACK, SEA_LEVEL, Plan, spline
+from shapely.geometry import LineString, Point, Polygon
 
 SIZE = 801
 p = Plan("roman_republic")
@@ -408,9 +409,9 @@ BR = {}
 BR["aemilius"] = span(TIBER_PTS, 24, (-160, 96))
 BR["sublicius"] = span(TIBER_PTS, 24, (-172, 172))
 BR["aelius"] = span(TIBER_PTS, 24, (-246, -150))
-ISL = 30
-BR["fabricius"] = span(ARM, 10, (-130, ISL), deck=8.0)
-BR["cestius"] = span(TIBER_PTS, 24, (-156, ISL), deck=8.0)
+# Cross the side channel just south of its bend so the deck stays square to one reach.
+BR["fabricius"] = span(ARM, 10, (-130, 33), deck=8.0)
+BR["cestius"] = span(TIBER_PTS, 24, (-156, 30), deck=8.0)
 
 
 def approach(name, side, to, width=4.6):
@@ -1073,6 +1074,16 @@ p.root(
 p.root(
     "theme", "A day in Rome: the river port, the market, the Forum and the Colosseum."
 )
+t.building(
+    "punic_siege_camp",
+    "barracks",
+    284,
+    -370,
+    180,
+    max_population=120,
+    player_id=2,
+    nation="carthage",
+)
 p.add(
     "spawn",
     type="roman_veteran_consul",
@@ -1118,6 +1129,27 @@ print(
     "openings cut where streets meet porticoes:", len(t.clear_streets(keep_styles=()))
 )
 print("streets into buildings:", t.check_streets())
+
+# Keep room for fields by Castra Peregrina after filling the Caelian district.
+# Clear the lots after placing frontage so the other streets keep their layouts.
+castra_fields = ((108, 150), (124, 192), (150, 162))
+
+
+def occupies_castra_field(op):
+    lot = op.get("json", {})
+    if op.get("kind") == "structure" and lot.get("type") == "home":
+        half_extent = 10.5  # Field half-width plus room for a turned house.
+    elif op.get("kind") == "prop":
+        half_extent = 8.5  # Includes clearance for foliage at the edge.
+    else:
+        return False
+    return any(
+        abs(lot["x"] - x) < half_extent and abs(lot["z"] - z) < half_extent
+        for x, z in castra_fields
+    )
+
+
+p.ops = [op for op in p.ops if not occupies_castra_field(op)]
 
 # The consul's walk: from the quay, through the river gate and the cattle market, across the
 # Forum, down the Via Sacra and in at the Colosseum's west gate.

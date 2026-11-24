@@ -9,11 +9,9 @@ North is -z, east is +x. A structure's `rotation` is the way its front looks:
 import math
 import random
 
+from planlib import spline
 from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import unary_union
-from shapely import affinity
-
-from planlib import spline
 
 HOUSE_W, HOUSE_D = 4.3, 4.4  # home lot: along the street, street to court
 SHOP_W, SHOP_D = 5.5, 5.5  # marketplace lot (portico, basilica, dock)
@@ -470,7 +468,6 @@ class Town:
                 mark=False,
             )
         L = SHOP_D / 2 + 0.3
-        rot = rotation
         if "n" in sides:
             self.run(
                 f"{ident}_n",
@@ -701,7 +698,7 @@ class Town:
                     kind="cypress_tree",
                     region=region,
                 )
-        for k, line in enumerate(l for l in lines if l is not None):
+        for k, line in enumerate(path for path in lines if path is not None):
             if k == 0:
                 self.avenue(
                     line,
@@ -736,7 +733,7 @@ class Town:
         count = int(region.area * density)
         groves = max(2, count // 14)
         made = 0
-        for g in range(groves):
+        for _ in range(groves):
             for _ in range(30):
                 gx, gz = rng.uniform(x0, x1), rng.uniform(z0, z1)
                 if region.contains(Point(gx, gz)):
@@ -970,8 +967,8 @@ class Town:
         stagger=0.0,
     ):
         made = 0
-        for k, (line) in enumerate(lines):
-            width = next((w for (l, w) in self.road_lines if l is line), 3.6)
+        for k, line in enumerate(lines):
+            width = next((w for road, w in self.road_lines if road is line), 3.6)
             made += self.frontage(
                 f"{ident}{k}",
                 line,
@@ -989,11 +986,11 @@ class Town:
     ):
         """Frontage on every street that touches the region (default: every street laid so far)."""
         made = 0
-        cand = lines if lines is not None else [l for (l, _) in self.road_lines]
+        cand = lines if lines is not None else [road for road, _ in self.road_lines]
         for k, line in enumerate(cand):
             if not line.intersects(region):
                 continue
-            width = next((w for (l, w) in self.road_lines if l is line), 3.6)
+            width = next((w for road, w in self.road_lines if road is line), 3.6)
             made += self.frontage(
                 f"{ident}{k}", line, width, region=region, styles=styles, alley=alley
             )
@@ -1045,7 +1042,9 @@ def _network_extras(Town):
     def connect(self, reach=34.0, width=3.4, style="stone", passes=60):
         """Join every detached piece of the road network to the rest with short streets."""
         for _ in range(passes):
-            pieces = unary_union([l.buffer(w / 2 + 0.4) for (l, w) in self.road_lines])
+            pieces = unary_union(
+                [road.buffer(w / 2 + 0.4) for road, w in self.road_lines]
+            )
             parts = sorted(getattr(pieces, "geoms", [pieces]), key=lambda g: -g.area)
             if len(parts) <= 1:
                 return 1
@@ -1066,7 +1065,7 @@ def _network_extras(Town):
                         cands.append((d, a, b))
                     k += 4.0
                 cands.sort(key=lambda c: c[0])
-                for d, a, b in cands[:40]:
+                for _, a, b in cands[:40]:
                     ux, uz = b.x - a.x, b.y - a.y
                     n = math.hypot(ux, uz) or 1.0
                     ux, uz = ux / n, uz / n
@@ -1127,8 +1126,8 @@ _defer_extras(Town)
 
 
 def _audit_connect(Town):
-    from shapely.strtree import STRtree
     from shapely.ops import nearest_points
+    from shapely.strtree import STRtree
 
     JOIN = 1.75
 
@@ -1142,9 +1141,9 @@ def _audit_connect(Town):
                 i = parent[i]
             return i
 
-        for i, l in enumerate(lines):
-            probe = l.union(Point(l.coords[0]).buffer(JOIN)).union(
-                Point(l.coords[-1]).buffer(JOIN)
+        for i, line in enumerate(lines):
+            probe = line.union(Point(line.coords[0]).buffer(JOIN)).union(
+                Point(line.coords[-1]).buffer(JOIN)
             )
             for j in tree.query(probe):
                 j = int(j)
@@ -1156,7 +1155,7 @@ def _audit_connect(Town):
                     .buffer(JOIN)
                     .union(Point(o.coords[-1]).buffer(JOIN))
                 )
-                if probe.intersects(o) or ends_o.intersects(l):
+                if probe.intersects(o) or ends_o.intersects(line):
                     parent[find(i)] = find(j)
         return [find(i) for i in range(len(lines))]
 
@@ -1167,7 +1166,7 @@ def _audit_connect(Town):
         import collections
 
         for _ in range(passes):
-            lines = [l for (l, _) in self.road_lines]
+            lines = [line for line, _ in self.road_lines]
             comp = components(lines)
             sizes = collections.Counter()
             for i, c in enumerate(comp):
@@ -1180,12 +1179,12 @@ def _audit_connect(Town):
             joined = False
             # Smallest gap first, over every detached piece.
             cands = {}
-            for i, l in enumerate(lines):
+            for i, line in enumerate(lines):
                 if comp[i] == main:
                     continue
                 k = 0.0
-                while k <= l.length:
-                    q = l.interpolate(k)
+                while k <= line.length:
+                    q = line.interpolate(k)
                     jn = main_tree.nearest(q)
                     b = nearest_points(q, main_lines[int(jn)])[1]
                     d = q.distance(b)
@@ -1218,7 +1217,7 @@ def _audit_connect(Town):
                             )
                     k += 3.0
             for c in sorted(cands, key=lambda c: min(x[0] for x in cands[c])):
-                for d, a, b in sorted(cands[c], key=lambda x: x[0])[:400]:
+                for _, a, b in sorted(cands[c], key=lambda x: x[0])[:400]:
                     ux, uz = b.x - a.x, b.y - a.y
                     n = math.hypot(ux, uz)
                     if n < 0.05:
@@ -1397,8 +1396,9 @@ _building_check(Town)
 
 
 def _city_life(Town):
-    from shapely.ops import unary_union, nearest_points
     import heapq
+
+    from shapely.ops import nearest_points, unary_union
 
     def _set_line(self, line, pts):
         op, mark = self.road_ops[id(line)]
@@ -1406,13 +1406,13 @@ def _city_life(Town):
         pts = [[round(x, 2), round(z, 2)] for (x, z) in pts]
         j["start"], j["end"] = pts[0], pts[-1]
         if len(pts) > 2:
-            j["waypoints"] = pts[1:-1]
+            j["waypoints"] = pts
         else:
             j.pop("waypoints", None)
         new = LineString(pts)
         self.road_ops[id(new)] = (op, mark)
-        for k, (l, w) in enumerate(self.road_lines):
-            if l is line:
+        for k, (road, w) in enumerate(self.road_lines):
+            if road is line:
                 self.road_lines[k] = (new, w)
                 if mark:
                     self.roads.add(new.buffer(w / 2 + 0.3, cap_style=2))
@@ -1430,7 +1430,7 @@ def _city_life(Town):
                     continue  # paving strips, bridges, links
                 if line.coords[0] == line.coords[-1]:
                     continue  # a closed walk has no ends
-                others = [l for (l, _) in self.road_lines if l is not line]
+                others = [road for road, _ in self.road_lines if road is not line]
                 if not others:
                     continue
                 rest = unary_union(others)
@@ -1502,7 +1502,9 @@ def _city_life(Town):
                             op, _ = self.road_ops.pop(id(line))
                             self.p.ops.remove(op)
                             self.road_lines = [
-                                (l, w) for (l, w) in self.road_lines if l is not line
+                                (road, w)
+                                for road, w in self.road_lines
+                                if road is not line
                             ]
                             trimmed += 1
                             changed = True
@@ -1529,8 +1531,8 @@ def _city_life(Town):
     def route(self, a, b, step=4.5):
         """Shortest walk along the streets from near a to near b, resampled."""
         lines = [
-            LineString(self._extend(list(l.coords), 1.8))
-            for (l, w) in self.road_lines
+            LineString(self._extend(list(road.coords), 1.8))
+            for road, w in self.road_lines
             if w >= 2.4
         ]
         net = unary_union(lines)
@@ -1542,7 +1544,7 @@ def _city_life(Town):
 
         for g in segs:
             cs = list(g.coords)
-            for u, v in zip(cs, cs[1:]):
+            for u, v in zip(cs, cs[1:], strict=False):
                 d = math.hypot(v[0] - u[0], v[1] - u[1])
                 graph.setdefault(key(u), []).append((key(v), d))
                 graph.setdefault(key(v), []).append((key(u), d))
@@ -1648,7 +1650,7 @@ def _city_life(Town):
             )
         kinds = kinds or (("plant", 4), ("olive_tree", 1), ("palm_tree", 0))
         names, weights = [k for (k, _) in kinds], [w for (_, w) in kinds]
-        for k in range(int(r * 1.4)):
+        for _ in range(int(r * 1.4)):
             a, d = rng.uniform(0, 2 * math.pi), rng.uniform(pr + 4.0, r - 4.5)
             self.tree(
                 rng.choices(names, weights)[0],
@@ -1697,7 +1699,7 @@ def _city_life(Town):
             self.tree("cypress_tree", x + c * 7 * k, z + s_ * 7 * k, 1.0)
         self.p.prop("statue", round(x - s_ * 2.6, 1), round(z + c * 2.6, 1), 0.8)
         names, weights = [k for (k, _) in grove], [w for (_, w) in grove]
-        for k in range(26):
+        for _ in range(26):
             a, d = rng.uniform(0, 2 * math.pi), rng.uniform(17, 30)
             self.tree(
                 rng.choices(names, weights)[0],
@@ -1709,9 +1711,9 @@ def _city_life(Town):
         # The drive from its gate down to the nearest road.
         gate = (x + s_ * 11.5, z - c * 11.5)
         end = (x + s_ * 20, z - c * 20)
-        roads = [l for (l, w) in self.road_lines if w >= 4.0]
+        roads = [road for road, w in self.road_lines if w >= 4.0]
         if roads:
-            near = min(roads, key=lambda l: l.distance(Point(end)))
+            near = min(roads, key=lambda road: road.distance(Point(end)))
             q = nearest_points(Point(end), near)[1]
             mid = (
                 (end[0] + q.x) / 2 + rng.uniform(-6, 6),

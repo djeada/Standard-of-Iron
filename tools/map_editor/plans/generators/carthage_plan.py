@@ -9,12 +9,14 @@ lower city fans out from it to the sea in radial streets and ring streets; the
 two harbours lie in the south-east; Megara, the garden suburb, fills the north
 inside its own long wall.
 """
-import json, math, os, random, sys
+import json
+import math
+import os
+import random
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from organic import SHOP_W, Town, blob, rect
+from planlib import DOCK_SETBACK, SEA_LEVEL, Plan, spline
 from shapely.geometry import LineString, Point, Polygon, box
-from planlib import Plan, spline, SEA_LEVEL, DOCK_SETBACK
-from organic import Town, blob, facing_of, rect, HOUSE_W, SHOP_W, SHOP_D
 
 SIZE = 801
 p = Plan("carthage")
@@ -532,7 +534,7 @@ for k, (hx, hz, w, d, h) in enumerate(
     p.rise(hx, hz, w, d, h, 0.5)
     NEC = blob(hx, hz, w / 2 - 6, d / 2 - 5, seed=50 + k)
     t.keep_out(NEC)
-    for j in range(26):
+    for _ in range(26):
         x, z = hx + rng.uniform(-w / 2 + 8, w / 2 - 8), hz + rng.uniform(
             -d / 2 + 6, d / 2 - 6
         )
@@ -662,6 +664,16 @@ p.root(
     "Two harbours, the stepped Byrsa, the gardens of Megara and the wall across the isthmus.",
 )
 QUAY = (BWEST + 10, HZ - BD / 2 - 6.5)
+t.building(
+    "roman_siege_camp",
+    "barracks",
+    -370,
+    100,
+    90,
+    max_population=120,
+    player_id=2,
+    nation="roman_republic",
+)
 p.add(
     "spawn",
     type="carthage_sword_commander",

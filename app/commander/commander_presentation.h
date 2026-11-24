@@ -60,7 +60,8 @@ struct CameraFeed {
     -> CommanderCameraInputs;
 
 void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
-                                    const Engine::Core::Entity& commander,
+                                    const Engine::Core::World& world,
+                                    Engine::Core::EntityID commander_id,
                                     bool running,
                                     float previous_bob_phase);
 

@@ -8047,12 +8047,12 @@ to see preview</source>
         <translation>Рим</translation>
     </message>
     <message>
-        <source>The city on its headland: the round war harbour with the admiral&apos;s island and the merchant basin beside it, the agora behind the quays, the Byrsa with the temple of Eshmun over the tall white houses, the tophet by the shore, the gardens of Megara, and the walls across the isthmus.</source>
-        <translation>Город на мысу: круглая военная гавань с островом адмирала и торговый бассейн рядом, агора за причалами, Бирса с храмом Эшмуна над высокими белыми домами, тофет у берега, сады Мегары и стены поперёк перешейка.</translation>
+        <source>The city on its headland: the Byrsa rising in terraces to the temple of Eshmun, the lower city fanning out to the sea, the round war harbour with the admiral&apos;s island and the merchant basin, the agora behind the quays, the tophet by the lagoon, the walled gardens and villas of Megara, the necropolis on the hills, and the triple wall across the isthmus.</source>
+        <translation>Город на мысу: Бирса, поднимающаяся террасами к храму Эшмуна, нижний город, расходящийся веером к морю, круглая военная гавань с островом адмирала и торговый бассейн, агора за причалами, тофет у лагуны, обнесённые стенами сады и виллы Мегары, некрополь на холмах и тройная стена поперёк перешейка.</translation>
     </message>
     <message>
-        <source>The city on the Tiber: the Capitol and its temples over the Forum, the Palatine and the great circus below it, the crowded Subura, a stone wall round the hills, the river wharves under the Aventine, and Ostia where the Tiber meets the sea.</source>
-        <translation>Город на Тибре: Капитолий с храмами над Форумом, Палатин и большой цирк под ним, тесная Субура, каменная стена вокруг холмов, речные причалы под Авентином и Остия, где Тибр впадает в море.</translation>
+        <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
+        <translation>Город семи холмов на Тибре: Форум у подножия Капитолия, императорские форумы, Колизей и Большой цирк, скотный рынок у реки, многолюдная Субура, сады Саллюстия, Мецената и Лукулла с водоёмами, Марсово поле в излучине реки, Трастевере у подножия Яникула, виллы в оливковых рощах, легион, выстроившийся за Сервиевой стеной, и Остия, где Тибр впадает в море.</translation>
     </message>
 </context>
 <context>
