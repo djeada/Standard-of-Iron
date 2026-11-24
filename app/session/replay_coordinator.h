@@ -56,6 +56,7 @@ public:
       -> ReplayPlaybackResult;
 
   void arm_for_started_match(Game::Session::SessionContext* session);
+  [[nodiscard]] auto playback_pending() const -> bool { return m_pending.has_value(); }
 
   void finish_verification_if_done(Game::Session::SessionContext* session);
 

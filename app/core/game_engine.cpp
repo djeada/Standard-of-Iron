@@ -77,6 +77,7 @@
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
 #include "game/audio/cue_trace.h"
+#include "game/command/command_log.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/startup_profiler.h"
@@ -525,7 +526,7 @@ void GameEngine::update_active_runtime_simulation(float dt) {
   if (profile_simulation) {
     m_world->system_profiler().set_enabled(true);
   }
-  m_commander_view_model->apply_replayed_actions();
+  m_commander_view_model->apply_logged_actions();
   if (m_commander_view_model->active()) {
     m_commander_view_model->update_control_mode(dt);
     m_world->update(dt);
@@ -533,7 +534,6 @@ void GameEngine::update_active_runtime_simulation(float dt) {
   } else {
     m_world->update(dt);
   }
-  m_replay->finish_verification_if_done(m_session.get());
 }
 
 auto GameEngine::world_freeze_refused_message() -> QString {
@@ -621,12 +621,14 @@ void GameEngine::simulate(float dt) {
 
   const bool overlay_up = m_loading_overlay.waiting_for_first_frame();
 
-  float simulation_time_scale = 0.0F;
+  const float game_speed = replay_playing()
+                               ? static_cast<float>(m_session->clock().time_scale())
+                               : m_runtime.time_scale;
+  float pacing_scale = 0.0F;
   if (!m_runtime.paused && !overlay_up) {
-    simulation_time_scale =
-        m_runtime.time_scale * m_commander_view_model->time_effect_scale(
-                                   dt * m_runtime.time_scale, m_runtime.paused);
+    pacing_scale = m_commander_view_model->time_effect_scale(dt * game_speed, false);
   }
+  const float simulation_time_scale = game_speed * pacing_scale;
   m_simulation_time_scale.store(simulation_time_scale, std::memory_order_release);
 
   m_mission->publish_deadline(mission_binding());
@@ -634,7 +636,7 @@ void GameEngine::simulate(float dt) {
   update_commander_messages(
       m_runtime.victory_state.isEmpty() ? dt * simulation_time_scale : dt);
 
-  RuntimeFrameState frame_state{.simulation_time_scale = simulation_time_scale};
+  RuntimeFrameState frame_state{.simulation_time_scale = pacing_scale};
   m_frame_orchestrator.advance_simulation(
       scene_context(), frame_state, dt, [this](float step_dt) {
         update_mission_waves(step_dt);
@@ -650,6 +652,7 @@ void GameEngine::simulate(float dt) {
         }
       });
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
+  m_replay->finish_verification_if_done(m_session.get());
 }
 
 void GameEngine::update_presentation(float dt) {
@@ -1140,19 +1143,27 @@ void GameEngine::set_audio_frontend_context(const QString& context) {
 }
 
 void GameEngine::set_paused(bool paused) {
+  const auto frame_lock = lock_frame();
   if (m_runtime.paused == paused) {
     return;
   }
   m_runtime.paused = paused;
+  if (m_session != nullptr) {
+    m_session->submit_clock_change({.paused = paused});
+  }
   m_tutorial->notes().speed_changed = true;
 }
 
 void GameEngine::set_game_speed(float speed) {
+  const auto frame_lock = lock_frame();
   const float sanitized = App::Core::GameSpeed::sanitize(speed);
   if (qFuzzyCompare(m_runtime.time_scale, sanitized)) {
     return;
   }
   m_runtime.time_scale = sanitized;
+  if (m_session != nullptr) {
+    m_session->submit_clock_change({.speed = sanitized});
+  }
   m_tutorial->notes().speed_changed = true;
   Game::Audio::play_cue(Game::Audio::Cue::k_state_speed_change);
   emit time_scale_changed();
@@ -1388,22 +1399,23 @@ auto GameEngine::load_match_world(const QString& map_path,
       m_campaign_manager && m_campaign_manager->current_mission_context().has_mission();
   const bool allow_default_player_barracks = !is_campaign_mission;
   const Engine::Core::ScopedStartupPhase world_phase("world.load");
-  return m_skirmish_runtime->perform_load({*m_world,
-                                           m_level,
-                                           m_entity_cache,
-                                           map_path,
-                                           player_configs,
-                                           m_selected_player_id,
-                                           scene_context(),
-                                           m_victory_service.get(),
-                                           m_minimap_manager.get(),
-                                           m_visibility_coordinator.get(),
-                                           allow_default_player_barracks,
-                                           is_campaign_mission,
-                                           m_loading_progress_tracker.get(),
-                                           [this]() {
-                                             emit owner_info_changed();
-                                           }});
+  return m_skirmish_runtime->perform_load(
+      {*m_world,
+       m_level,
+       m_entity_cache,
+       map_path,
+       player_configs,
+       m_selected_player_id,
+       scene_context(),
+       m_victory_service.get(),
+       m_minimap_manager.get(),
+       m_visibility_coordinator.get(),
+       allow_default_player_barracks,
+       is_campaign_mission || m_replay->playback_pending(),
+       m_loading_progress_tracker.get(),
+       [this]() {
+         emit owner_info_changed();
+       }});
 }
 
 void GameEngine::configure_loaded_match(const QString& map_path,
@@ -1441,7 +1453,11 @@ void GameEngine::configure_loaded_match(const QString& map_path,
   m_environment->configure_rain(m_level, m_rain.get());
   m_environment->reset_clock(m_level);
 
-  App::Core::SkirmishRuntimeCoordinator::prepare_ai_state(m_world, m_session.get());
+  if (m_replay->playback_pending()) {
+    m_replay->arm_for_started_match(m_session.get());
+  } else {
+    App::Core::SkirmishRuntimeCoordinator::prepare_ai_state(m_world, m_session.get());
+  }
   App::Core::SkirmishRuntimeCoordinator::record_startup_counters(*m_world);
 }
 
@@ -1480,6 +1496,9 @@ void GameEngine::finalize_match_load() {
     emit spectator_mode_changed();
   }
   m_replay->arm_for_started_match(m_session.get());
+  if (m_session != nullptr && !m_session->log_follower()) {
+    m_session->submit_clock_change({.speed = m_runtime.time_scale});
+  }
   m_tutorial->activate_if_configured(m_campaign_manager.get());
 }
 
@@ -1567,7 +1586,7 @@ auto GameEngine::mission_startup_pending_components() const -> QStringList {
   if (AudioSystem::get_instance().has_pending_mission_decodes()) {
     pending << QStringLiteral("mission audio");
   }
-  if (m_world != nullptr) {
+  if (m_world != nullptr && m_session != nullptr && !m_session->log_follower()) {
     if (const auto* ai_system = m_world->get_system<Game::Systems::AISystem>();
         ai_system != nullptr && !ai_system->initial_decisions_ready()) {
       pending << QStringLiteral("AI initial decisions");
@@ -1846,7 +1865,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   }
 
   if (m_commander_view_model->active()) {
-    m_commander_view_model->exit_mode();
+    m_commander_view_model->leave_commander_mode();
   }
 
   reset_preload_interaction_state();

@@ -14,6 +14,7 @@
 #include "app/orders/order_submission.h"
 #include "app/orders/worker_orders.h"
 #include "game/audio/audio_cues.h"
+#include "game/command/command_queue.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
@@ -699,18 +700,13 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
       continue;
     }
 
-    auto* prod = e->get_component<Engine::Core::ProductionComponent>();
-    if (prod == nullptr) {
-      prod = e->add_component<Engine::Core::ProductionComponent>();
+    if (Game::Command::submit(
+            *m_world,
+            Game::Command::Source::LocalPlayer,
+            local_owner_id,
+            Game::Command::SetRallyPoint{.building = id, .position = hit})) {
+      updated_any = true;
     }
-    if (prod == nullptr) {
-      continue;
-    }
-    prod->rally_x = hit.x();
-    prod->rally_z = hit.z();
-    prod->rally_set = true;
-    prod->rally_default = false;
-    updated_any = true;
   }
   return updated_any;
 }

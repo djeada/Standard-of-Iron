@@ -156,7 +156,7 @@ void GameEngine::wire_view_models() {
               return;
             }
             if (m_commander_view_model->active()) {
-              m_commander_view_model->exit_mode();
+              m_commander_view_model->leave_commander_mode();
             }
             reset_preload_interaction_state();
             end_match_after_failed_load();

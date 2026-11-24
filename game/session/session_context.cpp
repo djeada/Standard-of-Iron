@@ -1,5 +1,7 @@
 #include "session_context.h"
 
+#include <cstdio>
+
 #include "../command/command_queue.h"
 #include "../command/replay.h"
 #include "../core/ambient_session.h"
@@ -51,6 +53,7 @@ struct SessionContext::State {
   std::shared_ptr<Game::Units::UnitFactoryRegistry> units;
   Game::Wildlife::BirdFlockManager birds;
   Game::Map::VisibilityService visibility;
+  Game::Map::SimulationVisibility simulation_visibility;
   Game::Command::CommandQueue commands;
   std::unique_ptr<Game::Command::ReplayPlayer> replay_player;
   std::unique_ptr<Game::Command::ReplayRecorder> replay_recorder;
@@ -70,6 +73,7 @@ SessionContext::SessionContext(const Config& config)
   services.events = &m_state->events;
   services.terrain = &m_state->terrain;
   services.visibility = &m_state->visibility;
+  services.simulation_visibility = &m_state->simulation_visibility;
   services.owners = &m_state->owners;
   services.economy = &m_state->economy;
   services.nations = &m_state->nations;
@@ -86,14 +90,17 @@ SessionContext::SessionContext(const Config& config)
   services.commands = &m_state->commands;
 
   m_state->building_collision.bind_navigation(&m_state->navigation);
-  m_state->world.add_world_cleared_observer(
-      [state = m_state.get()]() { state->alliance.clear(); });
+  m_state->world.add_world_cleared_observer([state = m_state.get()]() {
+    state->alliance.clear();
+    state->marketplace.clear_ally_exchange();
+    state->simulation_visibility.clear();
+  });
 
   bind_world_services(m_state->world, &m_state->services);
 }
 
 SessionContext::~SessionContext() {
-
+  m_state->commands.log().finish_match();
   m_state->world.shutdown_systems();
   unbind_world_services(m_state->world);
   unbind_ambient_services(&m_state->services);
@@ -151,6 +158,10 @@ auto SessionContext::visibility() -> Game::Map::VisibilityService& {
 
 auto SessionContext::visibility() const -> const Game::Map::VisibilityService& {
   return m_state->visibility;
+}
+
+auto SessionContext::simulation_visibility() -> Game::Map::SimulationVisibility& {
+  return m_state->simulation_visibility;
 }
 
 auto SessionContext::owners() -> Game::Systems::OwnerRegistry& {
@@ -223,6 +234,9 @@ auto SessionContext::commands() -> Game::Command::CommandQueue& {
 
 void SessionContext::set_replay_player(
     std::unique_ptr<Game::Command::ReplayPlayer> player) {
+  if (player != nullptr || m_state->replay_player != nullptr) {
+    m_state->commands.clear(m_state->clock.tick());
+  }
   m_state->replay_player = std::move(player);
   m_state->commands.set_replay_only(m_state->replay_player != nullptr);
 }
@@ -240,6 +254,80 @@ auto SessionContext::replay_recorder() -> Game::Command::ReplayRecorder* {
   return m_state->replay_recorder.get();
 }
 
+void SessionContext::submit_clock_change(Game::Command::ClockChange change) {
+  m_state->commands.log().append(
+      m_state->clock.tick() + 1, Game::Command::Source::LocalPlayer, 0, change);
+}
+
+auto SessionContext::log_follower() const -> bool {
+  return m_state->commands.replay_only();
+}
+
+void SessionContext::prepare_tick() {
+  const auto tick = m_state->clock.tick() + 1;
+  if (auto* player = replay_player()) {
+    player->feed(tick, m_state->commands);
+  }
+  const auto& log = m_state->commands.log();
+  if (log.follower() && tick > log.available_tick()) {
+    return;
+  }
+  for (const auto& entry : log.entries_at(tick)) {
+    if (const auto* change = std::get_if<Game::Command::ClockChange>(&entry->payload)) {
+      if (change->paused) {
+        m_state->clock.set_paused(*change->paused);
+      }
+      if (change->speed) {
+        m_state->clock.set_time_scale(*change->speed);
+      }
+    }
+  }
+}
+
+void SessionContext::run_tick(const TickFn& per_tick) {
+  auto& clock = m_state->clock;
+  auto& log = m_state->commands.log();
+  log.flush();
+  if (const auto* map = m_state->terrain.get_height_map()) {
+    m_state->simulation_visibility.advance(
+        m_state->world, m_state->owners, *map, clock.tick(), clock.tick_seconds());
+  }
+  if (per_tick) {
+    per_tick(static_cast<float>(clock.tick_seconds()));
+  } else {
+    step();
+  }
+  const auto tick = clock.tick();
+  auto* recorder = replay_recorder();
+  auto* player = replay_player();
+  const bool record_digest = recorder != nullptr && recorder->digest_due(tick);
+  const bool check_digest = player != nullptr && player->digest_due(tick);
+  if (record_digest || check_digest) {
+    const auto digests = subsystem_digests(*this);
+    if (record_digest) {
+      log.append(tick, Game::Command::Source::Script, 0, digests);
+    }
+    if (check_digest && !player->check(tick, digests)) {
+      const auto& divergence = *player->divergence();
+      if (divergence.tick == tick) {
+        std::fprintf(stderr,
+                     "replay: digest diverged at tick %llu in %s (recorded %llu, "
+                     "observed %llu)\n",
+                     static_cast<unsigned long long>(tick),
+                     divergence.subsystem,
+                     static_cast<unsigned long long>(divergence.recorded),
+                     static_cast<unsigned long long>(divergence.observed));
+      }
+    }
+  }
+  if (recorder != nullptr) {
+    if (auto checkpoint = recorder->checkpoint_at(tick)) {
+      log.append(tick, Game::Command::Source::Script, 0, std::move(*checkpoint));
+    }
+  }
+  log.complete_tick(tick);
+}
+
 auto SessionContext::rng_seed() const -> std::uint64_t {
   return m_state->seed;
 }
@@ -247,20 +335,44 @@ auto SessionContext::rng_seed() const -> std::uint64_t {
 auto SessionContext::advance(double real_dt,
                              int max_steps,
                              OverloadPolicy overload,
-                             const TickFn& per_tick) -> int {
+                             const TickFn& per_tick,
+                             double pacing) -> int {
   auto& clock = m_state->clock;
-  clock.advance(real_dt);
-  int steps = 0;
-  while (steps < max_steps && clock.consume_tick()) {
-    if (per_tick) {
-      per_tick(static_cast<float>(clock.tick_seconds()));
-    } else {
-      step();
-    }
-    ++steps;
+  const auto& log = m_state->commands.log();
+  const bool following = log.follower();
+  prepare_tick();
+  if (pacing <= 0.0) {
+    return 0;
   }
-  if (overload == OverloadPolicy::DiscardBacklog) {
+  clock.advance(real_dt, following, pacing);
+  int steps = 0;
+  while (steps < max_steps && !clock.paused() &&
+         (!following || clock.tick() < log.available_tick()) && clock.consume_tick()) {
+    run_tick(per_tick);
+    ++steps;
+    prepare_tick();
+  }
+  if (!following && overload == OverloadPolicy::DiscardBacklog) {
     clock.drop_pending_ticks();
+  }
+  return steps;
+}
+
+auto SessionContext::advance_from_log(int max_steps, const TickFn& per_tick) -> int {
+  const auto& log = m_state->commands.log();
+  if (!log.follower()) {
+    return 0;
+  }
+  auto& clock = m_state->clock;
+  int steps = 0;
+  while (steps < max_steps) {
+    prepare_tick();
+    clock.queue_through(log.available_tick(), max_steps - steps);
+    if (clock.paused() || !clock.consume_tick()) {
+      break;
+    }
+    run_tick(per_tick);
+    ++steps;
   }
   return steps;
 }
@@ -270,7 +382,7 @@ void SessionContext::step() {
 }
 
 void SessionContext::reset() {
-
+  m_state->commands.log().finish_match();
   m_state->replay_recorder.reset();
   set_replay_player(nullptr);
   m_state->commands.clear();

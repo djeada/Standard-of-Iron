@@ -3,7 +3,8 @@
 #include <Qt>
 
 #include "game/accessibility/commander_input_settings.h"
-#include "game/command/replay.h"
+#include "game/command/command_queue.h"
+#include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
@@ -254,22 +255,39 @@ auto CommanderInputPort::exchange_recorded(Engine::Core::World& world,
   }
 
   const std::uint64_t tick = session->clock().tick();
+  if (tick == 0) {
+    return std::nullopt;
+  }
 
-  if (auto* player = session->replay_player()) {
-    if (const auto* recorded = player->commander_input(tick)) {
-      m_tick_input = CommanderInputSnapshot::from_record(*recorded);
-      RecordedView replayed{.yaw = recorded->view_yaw, .pitch = recorded->view_pitch};
-      if (recorded->held(Game::Command::CommanderInputFrame::HasAimRay)) {
-        replayed.aim_ray = std::make_pair(recorded->aim_origin, recorded->aim_forward);
-      }
-      return replayed;
+  auto& log = session->commands().log();
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(commander_id);
+  if (unit == nullptr) {
+    m_tick_input = {};
+    return std::nullopt;
+  }
+  if (!session->log_follower()) {
+    log.append(
+        tick,
+        Game::Command::Source::LocalPlayer,
+        unit->owner_id,
+        m_tick_input.to_record(commander_id, view.yaw, view.pitch, view.aim_ray));
+    log.flush();
+  }
+  for (const auto& entry : log.entries_at(tick)) {
+    const auto* recorded =
+        std::get_if<Game::Command::CommanderInputFrame>(&entry->payload);
+    if (recorded == nullptr || recorded->commander != commander_id ||
+        entry->owner != unit->owner_id) {
+      continue;
     }
+    m_tick_input = CommanderInputSnapshot::from_record(*recorded);
+    RecordedView applied{.yaw = recorded->view_yaw, .pitch = recorded->view_pitch};
+    if (recorded->held(Game::Command::CommanderInputFrame::HasAimRay)) {
+      applied.aim_ray = std::make_pair(recorded->aim_origin, recorded->aim_forward);
+    }
+    return applied;
   }
-
-  if (auto* recorder = session->replay_recorder()) {
-    recorder->record_commander_input(
-        tick, m_tick_input.to_record(commander_id, view.yaw, view.pitch, view.aim_ray));
-  }
+  m_tick_input = {};
   return std::nullopt;
 }
 

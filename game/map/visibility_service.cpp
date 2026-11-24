@@ -16,6 +16,7 @@
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 #include "game/core/presentation_coverage.h"
+#include "terrain.h"
 
 namespace Game::Map {
 
@@ -135,12 +136,36 @@ auto VisibilityService::step(Engine::Core::World& world, int player_id) -> bool 
   return true;
 }
 
+void VisibilityService::step_on_tick(Engine::Core::World& world,
+                                     int player_id,
+                                     std::uint64_t tick,
+                                     std::uint64_t interval) {
+  if (m_result_tick && tick >= *m_result_tick) {
+    std::unique_lock lock(m_queue_mutex);
+    m_queue_cv.wait(lock, [this] { return m_completed_result.has_value(); });
+    auto result = std::move(*m_completed_result);
+    m_completed_result.reset();
+    m_result_tick.reset();
+    lock.unlock();
+    integrate_result(std::move(result));
+  }
+  if (tick % interval != 0 || m_result_tick) {
+    return;
+  }
+  auto sources = gather_vision_sources(world, player_id);
+  if (sources != m_last_sources) {
+    m_last_sources = sources;
+    m_result_tick = tick + 1;
+    enqueue_job(compose_job_payload(std::move(sources)));
+  }
+}
+
 auto VisibilityService::gather_vision_sources(
     Engine::Core::World& world, int player_id) const -> std::vector<VisionSource> {
   std::vector<VisionSource> sources;
   const float range_padding = m_tile_size * k_half_cell_offset;
   const float inverse_tile_size_sq = 1.0F / (m_tile_size * m_tile_size);
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  const auto& owner_registry = *Game::Session::services_for(world).owners;
 
   auto add_source =
       [&](float world_x, float world_z, int cell_radius, float radius_sq) {
@@ -256,6 +281,7 @@ void VisibilityService::worker_loop() {
       if (!m_completed_result.has_value() || result.changed) {
         m_completed_result = std::move(result);
       }
+      m_queue_cv.notify_all();
     }
   }
 }
@@ -405,6 +431,41 @@ void VisibilityService::reveal_all() {
                                 static_cast<std::uint8_t>(VisibilityState::Visible)));
 }
 
+void VisibilityService::reveal_scouted_areas(
+    std::span<const ScoutedArea> scouted_areas) {
+  if (!scouted_areas.empty() && is_initialized()) {
+    const int width = get_width();
+    const int height = get_height();
+    const float tile_size = get_tile_size();
+    std::vector<std::uint8_t> known(
+        static_cast<std::size_t>(width) * static_cast<std::size_t>(height), 0U);
+    const float half_width = static_cast<float>(width) * 0.5F - 0.5F;
+    const float half_height = static_cast<float>(height) * 0.5F - 0.5F;
+    for (const auto& area : scouted_areas) {
+      const float centre_x = area.x / tile_size + half_width;
+      const float centre_z = area.z / tile_size + half_height;
+      const float radius = area.radius / tile_size;
+      const int min_z = std::max(0, static_cast<int>(std::floor(centre_z - radius)));
+      const int max_z =
+          std::min(height - 1, static_cast<int>(std::ceil(centre_z + radius)));
+      const int min_x = std::max(0, static_cast<int>(std::floor(centre_x - radius)));
+      const int max_x =
+          std::min(width - 1, static_cast<int>(std::ceil(centre_x + radius)));
+      for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+        for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+          const float dx = static_cast<float>(grid_x) - centre_x;
+          const float dz = static_cast<float>(grid_z) - centre_z;
+          if ((dx * dx) + (dz * dz) <= radius * radius) {
+            known[static_cast<std::size_t>(grid_z) * static_cast<std::size_t>(width) +
+                  static_cast<std::size_t>(grid_x)] = 1U;
+          }
+        }
+      }
+    }
+    (void)restore_explored(known, width, height);
+  }
+}
+
 auto VisibilityService::restore_explored(const std::vector<std::uint8_t>& explored,
                                          int width,
                                          int height) -> bool {
@@ -457,7 +518,56 @@ void VisibilityService::reset_worker_state() {
   m_completed_result.reset();
   m_generation.store(0, std::memory_order_release);
   m_last_sources.clear();
+  m_result_tick.reset();
   reset_throttle();
+}
+
+auto SimulationVisibility::grid_for(int owner) -> VisibilityService& {
+  return m_grids[owner];
+}
+
+auto SimulationVisibility::grid_for(int owner) const -> const VisibilityService* {
+  const auto found = m_grids.find(owner);
+  return found != m_grids.end() ? &found->second : nullptr;
+}
+
+void SimulationVisibility::advance(Engine::Core::World& world,
+                                   const Game::Systems::OwnerRegistry& owners,
+                                   const TerrainHeightMap& map,
+                                   std::uint64_t tick,
+                                   double tick_seconds) {
+  constexpr double refresh_seconds = 0.075;
+  const auto interval = static_cast<std::uint64_t>(
+      std::max(1.0, std::ceil(refresh_seconds / tick_seconds)));
+  for (const int owner : owners.get_player_owner_ids()) {
+    auto& visibility = grid_for(owner);
+    if (!visibility.is_initialized()) {
+      visibility.initialize(map.get_width(), map.get_height(), map.get_tile_size());
+      visibility.compute_immediate(world, owner);
+      visibility.reveal_scouted_areas(m_scouted_areas);
+    }
+    visibility.step_on_tick(world, owner, tick, interval);
+  }
+}
+
+void SimulationVisibility::set_scouted_areas(const std::vector<ScoutedArea>& areas) {
+  m_scouted_areas = areas;
+}
+
+void SimulationVisibility::clear() {
+  m_grids.clear();
+  m_scouted_areas.clear();
+}
+
+auto SimulationVisibility::generation() const -> std::uint64_t {
+  std::uint64_t result = 0;
+  for (const auto& [owner, visibility] : m_grids) {
+    if (const auto snapshot = visibility.snapshot_ptr()) {
+      result = (result * 1099511628211ULL) ^ static_cast<std::uint64_t>(owner);
+      result = (result * 1099511628211ULL) ^ snapshot->version;
+    }
+  }
+  return result;
 }
 
 void VisibilityService::publish_snapshot_locked(std::vector<std::uint8_t> cells) {

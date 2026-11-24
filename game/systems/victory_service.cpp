@@ -355,28 +355,32 @@ void VictoryService::evaluate_rules(const WorldSummary& summary) {
   }
 }
 
-void VictoryService::evaluate_spectator_state() {
-  if (m_world_ptr == nullptr) {
-    return;
-  }
-
+auto living_competing_teams(const Engine::Core::World& world,
+                            const OwnerRegistry& owners) -> std::vector<int> {
   std::set<int> live_teams;
-  for (auto [entity_id, unit_ref] : m_world_ptr->view<Engine::Core::UnitComponent>()) {
+  for (auto [entity_id, unit_ref] : world.view<Engine::Core::UnitComponent>()) {
     const auto* unit = &unit_ref;
     if (unit->health <= 0 || Game::Core::is_neutral_owner(unit->owner_id)) {
       continue;
     }
-    const auto owner_type = m_owner_registry.get_owner_type(unit->owner_id);
+    const auto owner_type = owners.get_owner_type(unit->owner_id);
     if (owner_type != OwnerType::Player && owner_type != OwnerType::AI) {
       continue;
     }
     if (unit->nation_id == Game::Systems::NationID::IronSepulcher) {
       continue;
     }
-    live_teams.insert(m_owner_registry.get_owner_team(unit->owner_id));
+    live_teams.insert(owners.get_owner_team(unit->owner_id));
+  }
+  return {live_teams.begin(), live_teams.end()};
+}
+
+void VictoryService::evaluate_spectator_state() {
+  if (m_world_ptr == nullptr) {
+    return;
   }
 
-  if (live_teams.size() >= 2U) {
+  if (living_competing_teams(*m_world_ptr, m_owner_registry).size() >= 2U) {
     m_spectator_saw_rivals = true;
     return;
   }

@@ -12,11 +12,14 @@ placement services' mutating entry points, and not by writing the fields of
 That is what lets the same client drive a local match, a remote one and a
 replay: the payload is the only thing that crosses.
 
-Two things are checked in app/ and ui/:
+The gate checks these rules in app/ and ui/:
 
   * no call to a service entry point that applies an order (the list below is
     the set the dispatcher calls; keep it in step with command_dispatcher.cpp);
   * no assignment to the task fields of BuilderProductionComponent.
+  * no direct construction/removal of gameplay components or writes to the
+    run and production rally fields. Exceptions identify the component and
+    the file that currently owns the mutation.
 
 The commander's first-person control mode is a local input mode, not an
 order; the files that implement it may reset the controlled commander's own
@@ -77,6 +80,48 @@ BUILDER_TASK_WRITE = re.compile(
 
 SOURCE_SUFFIXES = (".h", ".cpp")
 
+COMPONENT_MUTATION = re.compile(
+    r"\b(?:add_component|remove_component|get_or_add_component|remove)\s*<\s*"
+    r"(?:Engine::Core::)?(?P<component>\w+Component)\b"
+)
+COMPONENT_MUTATION_ALLOWED = {
+    # The construction preview owns its own ghost entities.
+    "app/economy/construction_preview.cpp": {
+        "ConstructionPreviewComponent",
+        "RenderableComponent",
+        "TransformComponent",
+    },
+    "ui/commander_portrait_scenes.cpp": {"ShowcaseRoutineComponent"},
+    # First-person control consumes command-log input, but the controller
+    # still lives in the client and owns the world mutations below.
+    "app/commander/commander_abilities.cpp": {
+        "CommanderGuardComponent",
+        "StaggerComponent",
+    },
+    "app/commander/commander_control_controller.cpp": {
+        "CombatIntentQueueComponent",
+        "MovementComponent",
+    },
+    "app/commander/commander_defence.cpp": {"CommanderGuardComponent"},
+    "app/commander/commander_mode_coordinator.cpp": {
+        "CommanderPresentationSampleComponent",
+        "RpgCommanderActionComponent",
+        "RpgCommanderTargetComponent",
+        "RpgHealthComponent",
+        "StaminaComponent",
+    },
+    "app/commander/commander_motor.cpp": {"WallWalkerComponent"},
+    "app/commander/commander_presentation.cpp": {
+        "CommanderPresentationSampleComponent"
+    },
+    "app/commander/commander_strike.cpp": {"CombatIntentQueueComponent"},
+    "app/commander/commander_targeting.cpp": {"RpgCommanderTargetComponent"},
+}
+ORDER_FIELD_WRITE = re.compile(
+    r"->\s*(?:run_requested|is_running|rally_x|rally_z|rally_set|rally_default)\s*=(?!=)"
+)
+ORDER_FIELD_WRITE_ALLOWED = {"app/commander/commander_locomotion.cpp"}
+
 
 def sources(root: Path) -> list[Path]:
     found: list[Path] = []
@@ -91,9 +136,13 @@ def violations(root: Path) -> list[str]:
     found: list[str] = []
     for source in sources(root):
         relative = source.relative_to(root).as_posix()
-        for number, line in enumerate(
-            source.read_text(errors="ignore").splitlines(), 1
-        ):
+        contents = source.read_text(errors="ignore")
+        for match in COMPONENT_MUTATION.finditer(contents):
+            component = match.group("component")
+            if component not in COMPONENT_MUTATION_ALLOWED.get(relative, ()):
+                number = contents.count("\n", 0, match.start()) + 1
+                found.append(f"{relative}:{number}: mutates component {component}")
+        for number, line in enumerate(contents.splitlines(), 1):
             stripped = line.lstrip()
             if stripped.startswith("//") or stripped.startswith("*"):
                 continue
@@ -111,6 +160,10 @@ def violations(root: Path) -> list[str]:
                 found.append(
                     f"{relative}:{number}: writes a builder task field: {match.group(0).strip()}"
                 )
+            if relative not in ORDER_FIELD_WRITE_ALLOWED and ORDER_FIELD_WRITE.search(
+                line
+            ):
+                found.append(f"{relative}:{number}: writes a run or rally order field")
     return found
 
 

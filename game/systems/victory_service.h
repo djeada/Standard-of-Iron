@@ -37,6 +37,10 @@ class NationRegistry;
 class OwnerRegistry;
 class PlayerResourceRegistry;
 
+[[nodiscard]] auto
+living_competing_teams(const Engine::Core::World& world,
+                       const OwnerRegistry& owners) -> std::vector<int>;
+
 class VictoryService {
 public:
   struct Services {

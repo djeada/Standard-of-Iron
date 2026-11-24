@@ -1,6 +1,8 @@
 #include "alliance_board.h"
 
+#include <algorithm>
 #include <cstddef>
+#include <iterator>
 
 #include "../core/component_core.h"
 #include "../core/world.h"
@@ -33,6 +35,20 @@ void AllianceBoard::queue_call(const AllyCallRequest& request) {
   push_capped(m_calls, request);
 }
 
+auto AllianceBoard::calls_for(int ally) const -> std::vector<AllyCallRequest> {
+  std::vector<AllyCallRequest> calls;
+  std::ranges::copy_if(m_calls, std::back_inserter(calls), [ally](const auto& call) {
+    return call.ally == ally;
+  });
+  return calls;
+}
+
+auto AllianceBoard::remove_call(std::uint32_t call_id, int ally) -> bool {
+  return std::erase_if(m_calls, [=](const auto& call) {
+           return call.call_id == call_id && call.ally == ally;
+         }) != 0;
+}
+
 auto AllianceBoard::take_calls_for(int ally) -> std::vector<AllyCallRequest> {
   std::vector<AllyCallRequest> taken;
   std::erase_if(m_calls, [&](const AllyCallRequest& request) {
@@ -54,6 +70,7 @@ auto AllianceBoard::take_call_answers() -> std::vector<AllyCallAnswer> {
 }
 
 void AllianceBoard::record_appeal(const AllyAppeal& appeal) {
+  m_last_appeal_id = std::max(m_last_appeal_id, appeal.appeal_id);
   if (m_open_appeals.size() >= k_queue_cap) {
     return;
   }
@@ -84,6 +101,21 @@ void AllianceBoard::record_appeal_answer(const AllyAppealAnswer& answer) {
   push_capped(m_appeal_answers, answer);
 }
 
+auto AllianceBoard::appeal_answers_for(int ally) const
+    -> std::vector<AllyAppealAnswer> {
+  std::vector<AllyAppealAnswer> answers;
+  std::ranges::copy_if(m_appeal_answers,
+                       std::back_inserter(answers),
+                       [ally](const auto& answer) { return answer.from_ally == ally; });
+  return answers;
+}
+
+auto AllianceBoard::remove_appeal_answer(std::uint32_t appeal_id, int ally) -> bool {
+  return std::erase_if(m_appeal_answers, [=](const auto& answer) {
+           return answer.appeal_id == appeal_id && answer.from_ally == ally;
+         }) != 0;
+}
+
 auto AllianceBoard::take_appeal_answers_for(int ally) -> std::vector<AllyAppealAnswer> {
   std::vector<AllyAppealAnswer> taken;
   std::erase_if(m_appeal_answers, [&](const AllyAppealAnswer& answer) {
@@ -104,6 +136,16 @@ auto AllianceBoard::take_appeal_replies() -> std::vector<AllyAppealReply> {
   return take_all(m_appeal_replies);
 }
 
+auto AllianceBoard::goodwill(int ally, int owner) const -> float {
+  const auto found = m_goodwill.find({ally, owner});
+  return found != m_goodwill.end() ? found->second : 0.0F;
+}
+
+void AllianceBoard::change_goodwill(int ally, int owner, float delta) {
+  auto& value = m_goodwill[{ally, owner}];
+  value = std::clamp(value + delta, -1.0F, 1.0F);
+}
+
 void AllianceBoard::clear() {
   ++m_epoch;
   m_calls.clear();
@@ -112,6 +154,9 @@ void AllianceBoard::clear() {
   m_open_appeals.clear();
   m_appeal_answers.clear();
   m_appeal_replies.clear();
+  m_goodwill.clear();
+  m_last_call_id = 0;
+  m_last_appeal_id = 0;
 }
 
 auto ally_call_kind_key(AllyCallKind kind) -> const char* {

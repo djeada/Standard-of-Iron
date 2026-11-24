@@ -96,14 +96,13 @@ auto node_is_hidden_by_fog(const Engine::Core::World& world,
                            float z) -> bool {
   const auto& services = Game::Session::services_for(world);
   const auto* unit = worker.get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr || unit->owner_id != services.owners->get_local_player_id()) {
+  if (unit == nullptr || services.simulation_visibility == nullptr) {
     return false;
   }
-  auto const& visibility = *services.visibility;
-  if (!visibility.is_initialized()) {
-    return false;
-  }
-  return !visibility.is_explored_world(x, z);
+  const auto& grids = *services.simulation_visibility;
+  const auto* visibility = grids.grid_for(unit->owner_id);
+  return visibility != nullptr && visibility->is_initialized() &&
+         !visibility->is_explored_world(x, z);
 }
 
 auto rank_nearby_nodes(Engine::Core::World& world,

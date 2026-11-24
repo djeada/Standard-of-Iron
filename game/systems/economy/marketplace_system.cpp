@@ -1,6 +1,7 @@
 #include "marketplace_system.h"
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 #include "core/ambient_session.h"
@@ -175,6 +176,27 @@ void MarketplaceSystem::queue_ally_request(const AllyTributeRequest& request) {
   if (m_ally_requests.size() < k_pending_cap) {
     m_ally_requests.push_back(request);
   }
+}
+
+auto MarketplaceSystem::ally_requests_for(int giver) const
+    -> std::vector<AllyTributeRequest> {
+  std::vector<AllyTributeRequest> requests;
+  std::ranges::copy_if(m_ally_requests,
+                       std::back_inserter(requests),
+                       [giver](const auto& request) { return request.giver == giver; });
+  return requests;
+}
+
+auto MarketplaceSystem::remove_ally_request(const AllyTributeAnswer& answer) -> bool {
+  const auto request = std::ranges::find_if(m_ally_requests, [&](const auto& pending) {
+    return pending.giver == answer.giver && pending.requester == answer.requester &&
+           pending.resource == answer.resource && pending.amount == answer.requested;
+  });
+  if (request == m_ally_requests.end()) {
+    return false;
+  }
+  m_ally_requests.erase(request);
+  return true;
 }
 
 auto MarketplaceSystem::take_ally_requests_for(int giver)

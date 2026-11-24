@@ -7,6 +7,18 @@
 
 namespace Game::Command::handlers {
 
+void apply_ai_diplomacy(Engine::Core::World& world,
+                        const Game::Systems::AllyTributeAnswer& answer);
+void apply_ai_diplomacy(Engine::Core::World& world, int owner, const AIAllyCall& call);
+void apply_ai_diplomacy(Engine::Core::World& world,
+                        const Game::Systems::AllyCallAnswer& answer);
+void apply_ai_diplomacy(Engine::Core::World& world,
+                        const Game::Systems::AllyAppeal& appeal);
+void apply_ai_diplomacy(Engine::Core::World& world, const AIAllyAppealReply& reply);
+void apply_garrison_leash(Engine::Core::World& world,
+                          int owner,
+                          const SetGarrisonLeash& leash);
+
 template <typename Fn>
 void for_each_subject(Engine::Core::World& world,
                       const std::vector<Engine::Core::EntityID>& units,

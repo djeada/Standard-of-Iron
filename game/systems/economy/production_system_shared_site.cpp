@@ -130,11 +130,9 @@ void publish_crew_pace(Engine::Core::World& world,
   }
 }
 
-auto notice_is_for_the_local_human(const Engine::Core::World& world,
-                                   int owner_id) -> bool {
+auto belongs_to_human_player(const Engine::Core::World& world, int owner_id) -> bool {
   const auto* owners = Game::Session::services_for(world).owners;
-  return owners != nullptr && owners->is_player(owner_id) &&
-         Engine::Core::LocalAudience{owners->get_local_player_id()}.is_local(owner_id);
+  return owners != nullptr && owners->is_player(owner_id);
 }
 
 } // namespace
@@ -207,7 +205,7 @@ void abandon_paid_site(Engine::Core::World& world,
     return;
   }
 
-  if (!notice_is_for_the_local_human(world, owner_id)) {
+  if (!belongs_to_human_player(world, owner_id)) {
     return;
   }
   const QString text =

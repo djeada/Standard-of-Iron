@@ -107,11 +107,15 @@ auto wrap_degrees(float value) -> double {
   return wrapped > 180.0 ? 360.0 - wrapped : wrapped;
 }
 
-void configure_registries(Game::Session::SessionContext& session, bool use_ai) {
+void configure_registries(Game::Session::SessionContext& session,
+                          bool use_ai,
+                          bool ai_vs_ai) {
   auto& owners = session.owners();
   owners.clear();
-  owners.register_owner_with_id(
-      k_player_owner, Game::Systems::OwnerType::Player, "Verifier Player");
+  owners.register_owner_with_id(k_player_owner,
+                                ai_vs_ai ? Game::Systems::OwnerType::AI
+                                         : Game::Systems::OwnerType::Player,
+                                "Verifier Player");
   owners.register_owner_with_id(k_enemy_owner,
                                 use_ai ? Game::Systems::OwnerType::AI
                                        : Game::Systems::OwnerType::Player,
@@ -224,8 +228,9 @@ void issue_opposed_orders(ScenarioWorld& scenario, bool command_enemy) {
   }
 }
 
-auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
-    -> std::unique_ptr<ScenarioWorld> {
+auto build_world(ScenarioId id,
+                 Engine::Core::World* into = nullptr,
+                 bool ai_vs_ai = false) -> std::unique_ptr<ScenarioWorld> {
   bool const use_ai = id == ScenarioId::BotSkirmish;
   auto scenario = std::make_unique<ScenarioWorld>();
   if (into != nullptr) {
@@ -234,7 +239,7 @@ auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
     scenario->owned_world = std::make_unique<Engine::Core::World>();
     scenario->world = scenario->owned_world.get();
   }
-  configure_registries(Game::Session::session_for(*scenario->world), use_ai);
+  configure_registries(Game::Session::session_for(*scenario->world), use_ai, ai_vs_ai);
   Game::Units::register_built_in_units(scenario->factories);
 
   switch (id) {
@@ -270,7 +275,8 @@ auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
     spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 20, 14, 0, 2, false);
     break;
   case ScenarioId::BotSkirmish:
-    spawn_line(*scenario, 1, Game::Units::SpawnType::Swordsman, 12, -12, 0, 1, false);
+    spawn_line(
+        *scenario, 1, Game::Units::SpawnType::Swordsman, 12, -12, 0, 1, ai_vs_ai);
     spawn_line(*scenario, 2, Game::Units::SpawnType::Swordsman, 12, 12, 0, 2, true);
     break;
   }
@@ -649,8 +655,9 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
 }
 
 auto build_scenario(ScenarioId id,
-                    Engine::Core::World& into) -> std::unique_ptr<ScenarioMatch> {
-  return build_world(id, &into);
+                    Engine::Core::World& into,
+                    bool ai_vs_ai) -> std::unique_ptr<ScenarioMatch> {
+  return build_world(id, &into, ai_vs_ai);
 }
 
 auto check_determinism(const RunnerConfig& config, int runs) -> DeterminismReport {

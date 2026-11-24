@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QStringList>
 
+#include <algorithm>
+
 #include "core/component_core.h"
 #include "core/component_gameplay.h"
 #include "core/death_sequence.h"
@@ -211,12 +213,19 @@ void UndeadShrine::pay_clear_reward(Engine::Core::World& world,
     return;
   }
 
-  int beneficiary = m_owners.get_local_player_id();
+  int beneficiary = zone.awakened_by_owner_id;
   if (captured) {
     if (int const captor = anchor_owner(world, zone.anchor_entity_id);
         captor != Engine::Core::k_owner_everyone) {
       beneficiary = captor;
     }
+  }
+  if (beneficiary <= 0) {
+    const auto humans = m_owners.get_player_owner_ids();
+    if (humans.empty()) {
+      return;
+    }
+    beneficiary = *std::ranges::min_element(humans);
   }
 
   QStringList spoils;

@@ -11,6 +11,7 @@
 #include "../core/entity.h"
 #include "../formation/army_formation_types.h"
 #include "../systems/alliance_board.h"
+#include "../systems/economy/marketplace_system.h"
 #include "../systems/movement/order_service.h"
 #include "../systems/resource_types.h"
 #include "../units/troop_type.h"
@@ -21,7 +22,8 @@ enum class Source : std::uint8_t {
   LocalPlayer,
   AI,
   Replay,
-  Script
+  Script,
+  Network
 };
 
 struct Move {
@@ -38,6 +40,7 @@ struct AttackTarget {
   std::vector<Engine::Core::EntityID> units;
   Engine::Core::EntityID target = Engine::Core::NULL_ENTITY;
   bool should_chase = true;
+  bool sally = false;
 };
 
 struct Stop {
@@ -114,6 +117,27 @@ struct AllyCall {
 struct AllyAppealAnswer {
   std::uint32_t appeal_id = 0;
   bool accept = false;
+};
+
+struct AIAllyCall {
+  Game::Systems::AllyCallKind kind = Game::Systems::AllyCallKind::Defend;
+  Engine::Core::EntityID target = Engine::Core::NULL_ENTITY;
+  int target_owner = 0;
+  float target_x = 0.0F;
+  float target_z = 0.0F;
+};
+
+struct AIAllyAppealReply {
+  Game::Systems::AllyAppealReply reply;
+  float goodwill_change = 0.0F;
+  bool answers_player = false;
+};
+
+struct SetGarrisonLeash {
+  float x = 0.0F;
+  float z = 0.0F;
+  float half_x = 0.0F;
+  float half_z = 0.0F;
 };
 
 struct RollStones {
@@ -241,7 +265,13 @@ using Payload = std::variant<Move,
                              AllyCall,
                              AllyAppealAnswer,
                              RollStones,
-                             CrossByRaft>;
+                             CrossByRaft,
+                             Game::Systems::AllyTributeAnswer,
+                             AIAllyCall,
+                             Game::Systems::AllyCallAnswer,
+                             Game::Systems::AllyAppeal,
+                             AIAllyAppealReply,
+                             SetGarrisonLeash>;
 
 struct Command {
   Source source = Source::LocalPlayer;

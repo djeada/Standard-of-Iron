@@ -1,6 +1,8 @@
 #include "simulation_clock.h"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
 
 namespace Game::Session {
 
@@ -31,26 +33,42 @@ auto SimulationClock::consume_dropped_ticks() -> std::uint64_t {
 }
 
 void SimulationClock::set_time_scale(double scale) {
-  m_time_scale = std::max(0.0, scale);
+  m_time_scale = std::isfinite(scale) ? std::max(0.0, scale) : 0.0;
 }
 
-auto SimulationClock::advance(double real_delta_seconds) -> int {
-  if (m_paused || real_delta_seconds <= 0.0) {
-    m_pending_ticks = 0;
-    return 0;
+auto SimulationClock::advance(double real_delta_seconds,
+                              bool keep_elapsed,
+                              double pacing) -> int {
+  if (m_paused || real_delta_seconds <= 0.0 || !std::isfinite(real_delta_seconds) ||
+      pacing <= 0.0 || !std::isfinite(pacing)) {
+    if (!keep_elapsed) {
+      m_pending_ticks = 0;
+    }
+    return m_paused ? 0 : m_pending_ticks;
   }
 
-  const double clamped = std::min(real_delta_seconds, k_max_frame_seconds);
+  const double clamped = keep_elapsed
+                             ? real_delta_seconds
+                             : std::min(real_delta_seconds, k_max_frame_seconds);
+  const double scale = m_time_scale * pacing;
   if (clamped < real_delta_seconds) {
-    const double discarded = (real_delta_seconds - clamped) * m_time_scale;
+    const double discarded = (real_delta_seconds - clamped) * scale;
     m_dropped_ticks += static_cast<std::uint64_t>(discarded / m_tick_seconds);
   }
-  m_accumulator += clamped * m_time_scale;
+  m_accumulator += clamped * scale;
 
-  const int fresh = static_cast<int>(m_accumulator / m_tick_seconds);
+  const double capacity = std::numeric_limits<int>::max() - m_pending_ticks;
+  const int fresh =
+      static_cast<int>(std::min(capacity, m_accumulator / m_tick_seconds));
   m_accumulator -= static_cast<double>(fresh) * m_tick_seconds;
   m_pending_ticks += fresh;
   return m_pending_ticks;
+}
+
+void SimulationClock::queue_through(std::uint64_t available_tick, int max_steps) {
+  const auto available = available_tick > m_tick ? available_tick - m_tick : 0;
+  m_pending_ticks = static_cast<int>(
+      std::min(available, static_cast<std::uint64_t>(std::max(0, max_steps))));
 }
 
 auto SimulationClock::consume_tick() -> bool {

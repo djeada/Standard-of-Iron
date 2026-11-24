@@ -91,6 +91,9 @@ public:
 
   void queue_ally_request(const AllyTributeRequest& request);
   [[nodiscard]] auto
+  ally_requests_for(int giver) const -> std::vector<AllyTributeRequest>;
+  auto remove_ally_request(const AllyTributeAnswer& answer) -> bool;
+  [[nodiscard]] auto
   take_ally_requests_for(int giver) -> std::vector<AllyTributeRequest>;
 
   void record_ally_answer(const AllyTributeAnswer& answer);

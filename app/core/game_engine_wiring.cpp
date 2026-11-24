@@ -163,7 +163,7 @@ void GameEngine::wire_loading_and_saves() {
           .leave_commander_mode =
               [this]() {
                 if (m_commander_view_model->active()) {
-                  m_commander_view_model->exit_mode();
+                  m_commander_view_model->leave_commander_mode();
                 }
               },
           .autosave_allowed =

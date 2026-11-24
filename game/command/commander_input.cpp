@@ -5,6 +5,10 @@
 #include <QLatin1String>
 
 #include <array>
+#include <cmath>
+#include <limits>
+
+#include "json_u64.h"
 
 namespace Game::Command {
 namespace {
@@ -14,9 +18,10 @@ struct CommanderActionName {
   const char* name;
 };
 
-constexpr std::array<CommanderActionName, 9> k_commander_action_names{{
+constexpr std::array<CommanderActionName, 10> k_commander_action_names{{
     {CommanderAction::EnterControl, "enter_control"},
     {CommanderAction::ExitControl, "exit_control"},
+    {CommanderAction::ToggleControl, "toggle_control"},
     {CommanderAction::CycleLockOn, "cycle_lock_on"},
     {CommanderAction::ToggleCameraMode, "toggle_camera_mode"},
     {CommanderAction::ToggleWeaponStance, "toggle_weapon_stance"},
@@ -26,15 +31,33 @@ constexpr std::array<CommanderActionName, 9> k_commander_action_names{{
     {CommanderAction::SwitchLockRight, "switch_lock_right"},
 }};
 
+auto finite_float(const QJsonValue& value) -> std::optional<float> {
+  const double number = value.toDouble(std::numeric_limits<double>::infinity());
+  if (!std::isfinite(number) || std::abs(number) > std::numeric_limits<float>::max()) {
+    return std::nullopt;
+  }
+  return static_cast<float>(number);
+}
+
+auto read_vector(const QJsonArray& values, int index) -> std::optional<QVector3D> {
+  const auto x = finite_float(values.at(index));
+  const auto y = finite_float(values.at(index + 1));
+  const auto z = finite_float(values.at(index + 2));
+  if (!x || !y || !z) {
+    return std::nullopt;
+  }
+  return QVector3D(*x, *y, *z);
+}
+
 } // namespace
 
 auto to_json(const CommanderInputFrame& frame) -> QJsonObject {
   QJsonObject object;
-  object["commander_input"] = static_cast<qint64>(frame.commander);
-  object["buttons"] = static_cast<qint64>(frame.buttons);
+  object["commander_input"] = u64_to_json(frame.commander);
+  object["buttons"] = u64_to_json(frame.buttons);
   object["view_yaw"] = static_cast<double>(frame.view_yaw);
   object["view_pitch"] = static_cast<double>(frame.view_pitch);
-  object["sequence"] = static_cast<qint64>(frame.sequence);
+  object["sequence"] = u64_to_json(frame.sequence);
   if (frame.held(CommanderInputFrame::HasDodgeDirection)) {
     QJsonArray direction;
     direction.append(static_cast<double>(frame.dodge_direction.x()));
@@ -55,44 +78,40 @@ auto to_json(const CommanderInputFrame& frame) -> QJsonObject {
 
 auto commander_input_from_json(const QJsonObject& object)
     -> std::optional<CommanderInputFrame> {
-  if (!object.contains(QLatin1String("commander_input"))) {
+  const auto commander = u64_from_json(object.value(QLatin1String("commander_input")));
+  const auto buttons = u64_from_json(object.value(QLatin1String("buttons")));
+  const auto sequence = u64_from_json(object.value(QLatin1String("sequence")));
+  const auto yaw = finite_float(object.value(QLatin1String("view_yaw")));
+  const auto pitch = finite_float(object.value(QLatin1String("view_pitch")));
+  constexpr std::uint64_t all_buttons = (CommanderInputFrame::HasAimRay << 1U) - 1U;
+  if (!commander || !buttons || *buttons > all_buttons || !sequence || !yaw || !pitch) {
     return std::nullopt;
   }
-
-  CommanderInputFrame frame;
-  frame.commander = static_cast<Engine::Core::EntityID>(
-      object.value(QLatin1String("commander_input")).toVariant().toULongLong());
-  frame.buttons = static_cast<std::uint32_t>(
-      object.value(QLatin1String("buttons")).toVariant().toUInt());
-  frame.view_yaw =
-      static_cast<float>(object.value(QLatin1String("view_yaw")).toDouble(0.0));
-  frame.view_pitch =
-      static_cast<float>(object.value(QLatin1String("view_pitch")).toDouble(0.0));
-  frame.sequence = static_cast<std::uint64_t>(
-      object.value(QLatin1String("sequence")).toVariant().toULongLong());
-
-  const auto direction = object.value(QLatin1String("dodge"));
-  if (direction.isArray()) {
-    const QJsonArray values = direction.toArray();
-    if (values.size() != 3) {
+  CommanderInputFrame frame{.commander = *commander,
+                            .buttons = static_cast<std::uint32_t>(*buttons),
+                            .view_yaw = *yaw,
+                            .view_pitch = *pitch,
+                            .sequence = *sequence};
+  if (frame.held(CommanderInputFrame::HasDodgeDirection)) {
+    const auto values = object.value(QLatin1String("dodge")).toArray();
+    const auto direction = values.size() == 3 ? read_vector(values, 0) : std::nullopt;
+    if (!direction) {
       return std::nullopt;
     }
-    frame.dodge_direction = QVector3D(static_cast<float>(values.at(0).toDouble()),
-                                      static_cast<float>(values.at(1).toDouble()),
-                                      static_cast<float>(values.at(2).toDouble()));
+    frame.dodge_direction = *direction;
   }
-
-  const auto aim = object.value(QLatin1String("aim"));
-  if (aim.isArray()) {
-    const QJsonArray values = aim.toArray();
+  if (frame.held(CommanderInputFrame::HasAimRay)) {
+    const auto values = object.value(QLatin1String("aim")).toArray();
     if (values.size() != 6) {
       return std::nullopt;
     }
-    const auto at = [&values](int index) {
-      return static_cast<float>(values.at(index).toDouble());
-    };
-    frame.aim_origin = QVector3D(at(0), at(1), at(2));
-    frame.aim_forward = QVector3D(at(3), at(4), at(5));
+    const auto origin = read_vector(values, 0);
+    const auto forward = read_vector(values, 3);
+    if (!origin || !forward) {
+      return std::nullopt;
+    }
+    frame.aim_origin = *origin;
+    frame.aim_forward = *forward;
   }
   return frame;
 }
@@ -115,13 +134,13 @@ auto commander_action_from_json(const QJsonObject& object)
   const QString name = object.value(QLatin1String("commander_action")).toString();
   for (const auto& entry : k_commander_action_names) {
     if (name == QLatin1String(entry.name)) {
-      CommanderActionRecord record;
-      record.action = entry.action;
-      record.view_yaw =
-          static_cast<float>(object.value(QLatin1String("view_yaw")).toDouble(0.0));
-      record.view_pitch =
-          static_cast<float>(object.value(QLatin1String("view_pitch")).toDouble(0.0));
-      return record;
+      const auto yaw = finite_float(object.value(QLatin1String("view_yaw")));
+      const auto pitch = finite_float(object.value(QLatin1String("view_pitch")));
+      if (!yaw || !pitch) {
+        return std::nullopt;
+      }
+      return CommanderActionRecord{
+          .action = entry.action, .view_yaw = *yaw, .view_pitch = *pitch};
     }
   }
   return std::nullopt;

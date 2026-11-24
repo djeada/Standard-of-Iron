@@ -32,6 +32,7 @@
 
 #include "app/session/level_loader.h"
 #include "game/command/command_queue.h"
+#include "game/command/replay.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
@@ -107,7 +108,6 @@ void SkirmishLoader::reset_game_state() {
   m_world.clear();
 
   m_world.shutdown_systems();
-  Game::Systems::register_runtime_systems(m_world);
 
   m_renderer.clear_entity_render_caches();
 
@@ -126,7 +126,10 @@ void SkirmishLoader::reset_game_state() {
 
   session.nations().clear_player_assignments();
 
+  session.set_replay_recorder(nullptr);
+  session.set_replay_player(nullptr);
   session.commands().clear();
+  Game::Systems::register_runtime_systems(m_world);
 
   session.clock().reset();
 

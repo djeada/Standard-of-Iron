@@ -23,6 +23,7 @@ class World;
 
 namespace Game::Systems {
 
+class AllianceBoard;
 class NationRegistry;
 class OwnerRegistry;
 
@@ -31,6 +32,7 @@ public:
   struct Services {
     OwnerRegistry& owners;
     NationRegistry& nations;
+    bool authority = true;
   };
 
   explicit AISystem(Services services);
@@ -141,7 +143,6 @@ private:
       float accepted_at = 0.0F;
     };
     std::vector<InstanceAppeal> appeals;
-    std::unordered_map<int, float> goodwill;
     float last_defend_appeal_at = -1.0e9F;
     float last_attack_appeal_at = -1.0e9F;
     float appealed_wave_committed_at = -1.0e9F;
@@ -150,6 +151,10 @@ private:
   static constexpr std::uint64_t k_decision_latency_updates = 6;
   static constexpr std::chrono::microseconds k_default_decision_wait_budget{4000};
   std::uint64_t m_update_count = 0;
+
+  const AllianceBoard* m_alliance = nullptr;
+  std::uint32_t m_latest_appeal_id = 0;
+  auto next_appeal_id(const AllianceBoard& board) -> std::uint32_t;
 
   std::unique_ptr<AI::AIWorkerPool> m_worker_pool;
   std::vector<AIInstance> m_ai_instances;

@@ -4,10 +4,13 @@
 #include <QJsonObject>
 #include <QString>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <string>
 #include <thread>
@@ -19,10 +22,12 @@
 #include "game/map/map_context.h"
 #include "game/map/map_transformer.h"
 #include "game/map/match_loader.h"
+#include "game/save/replay_checkpoint.h"
 #include "game/session/map_session.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/session/world_digest.h"
+#include "game/systems/ai_system.h"
 #include "game/systems/battlefield_capture.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
@@ -30,6 +35,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/systems/victory_service.h"
 
 namespace {
 
@@ -43,14 +49,19 @@ struct Options {
   std::string replay;
   bool verify = false;
   bool realtime = false;
+  bool scripted_orders = false;
+  bool until_victory = false;
   int digest_every = 60;
+  int checkpoint_every = 3600;
 };
 
 void usage() {
   std::fputs("usage: soi_headless [--scenario id | --map path] [--seconds s]\n"
              "                    [--seed n] [--local-owner id]\n"
              "                    [--record file] [--replay file [--verify]]\n"
-             "                    [--realtime] [--digest-every ticks]\n",
+             "                    [--realtime] [--digest-every ticks] "
+             "[--checkpoint-every ticks]\n"
+             "                    [--scripted-orders] [--until-victory]\n",
              stderr);
 }
 
@@ -82,8 +93,14 @@ auto parse(int argc, char** argv, Options& out) -> bool {
       out.verify = true;
     } else if (arg == "--realtime") {
       out.realtime = true;
+    } else if (arg == "--scripted-orders") {
+      out.scripted_orders = true;
+    } else if (arg == "--until-victory") {
+      out.until_victory = true;
     } else if (arg == "--digest-every") {
       out.digest_every = std::stoi(value("--digest-every"));
+    } else if (arg == "--checkpoint-every") {
+      out.checkpoint_every = std::stoi(value("--checkpoint-every"));
     } else if (arg == "--help" || arg == "-h") {
       usage();
       std::exit(0);
@@ -94,6 +111,42 @@ auto parse(int argc, char** argv, Options& out) -> bool {
     }
   }
   return true;
+}
+
+constexpr int k_scripted_owner = 3;
+
+auto add_scripted_player(Game::Session::SessionContext& session,
+                         const Game::Units::UnitFactoryRegistry& factories)
+    -> Engine::Core::EntityID {
+  session.owners().register_owner_with_id(
+      k_scripted_owner, Game::Systems::OwnerType::Player, "Scripted player");
+  session.owners().set_owner_team(k_scripted_owner, 1);
+  constexpr auto type = Game::Units::SpawnType::Archer;
+  const auto unit = factories.create(type,
+                                     session.world(),
+                                     {.position = QVector3D(-18.0F, 0.0F, 10.0F),
+                                      .player_id = k_scripted_owner,
+                                      .spawn_type = type});
+  return unit != nullptr ? unit->id() : Engine::Core::NULL_ENTITY;
+}
+
+void submit_scripted_orders(Game::Command::CommandQueue& queue,
+                            std::uint64_t tick,
+                            Engine::Core::EntityID archer) {
+  using namespace Game::Command;
+  // Include a rejected order so the verifier exercises validation on playback.
+  if (tick == 0) {
+    queue.submit(Source::LocalPlayer, k_scripted_owner, Stop{.units = {0}});
+    queue.submit(Source::LocalPlayer,
+                 k_scripted_owner,
+                 Move{.units = {archer}, .targets = {QVector3D(-14.0F, 0.0F, 10.0F)}});
+  } else if (tick == 90) {
+    queue.submit(Source::LocalPlayer, k_scripted_owner, SetHold{.units = {archer}});
+  } else if (tick == 180) {
+    queue.submit(Source::LocalPlayer,
+                 k_scripted_owner,
+                 Move{.units = {archer}, .targets = {QVector3D(-9.0F, 0.0F, 10.0F)}});
+  }
 }
 
 auto run_real_match_setup(Game::Session::SessionContext& session,
@@ -170,10 +223,10 @@ int main(int argc, char** argv) {
       options.scenario = replay_file->header.reference.toStdString();
     }
     options.seed = replay_file->header.rng_seed;
-    if (const auto seconds = replay_file->header.launch.value(QLatin1String("seconds"));
-        seconds.isDouble()) {
-      options.seconds = seconds.toDouble();
-    }
+    options.local_owner =
+        replay_file->header.launch.value(QLatin1String("local_owner")).toInt(1);
+    options.scripted_orders =
+        replay_file->header.launch.value(QLatin1String("scripted_orders")).toBool();
   }
 
   Game::BattlefieldCapture::ScenarioId scenario_id{};
@@ -183,21 +236,52 @@ int main(int argc, char** argv) {
         stderr, "soi_headless: unknown scenario '%s'\n", options.scenario.c_str());
     return 2;
   }
+  if (options.scripted_orders &&
+      (!options.map.empty() ||
+       scenario_id != Game::BattlefieldCapture::ScenarioId::BotSkirmish)) {
+    std::fputs("soi_headless: --scripted-orders requires bot_skirmish\n", stderr);
+    return 2;
+  }
+  if (options.until_victory && (!options.scripted_orders || replay_file)) {
+    std::fputs("soi_headless: --until-victory requires a live scripted bot skirmish\n",
+               stderr);
+    return 2;
+  }
 
-  Game::Session::SessionContext session(
-      Game::Session::SessionContext::Config{.rng_seed = options.seed});
+  Game::Session::SessionContext session(Game::Session::SessionContext::Config{
+      .rng_seed = options.seed,
+      .tick_seconds = replay_file
+                          ? replay_file->header.tick_seconds
+                          : Game::Session::SimulationClock::k_default_tick_seconds});
   Game::Session::ScopedSession const active(session);
+  if (replay_file) {
+    if (replay_file->recovered_tail) {
+      std::fprintf(stderr,
+                   "soi_headless: recovered log through tick %llu\n",
+                   static_cast<unsigned long long>(replay_file->last_tick()));
+    }
+    session.set_replay_player(
+        std::make_unique<Game::Command::ReplayPlayer>(std::move(*replay_file)));
+  }
 
   const QString reference = options.map.empty()
                                 ? QString::fromStdString(options.scenario)
                                 : QString::fromStdString(options.map);
+  Engine::Core::EntityID scripted_archer = Engine::Core::NULL_ENTITY;
   if (!options.map.empty()) {
     if (!run_real_match_setup(session, options)) {
       return 2;
     }
   } else {
-    auto match = Game::BattlefieldCapture::build_scenario(scenario_id, session.world());
-    (void)match;
+    auto match = Game::BattlefieldCapture::build_scenario(
+        scenario_id, session.world(), options.scripted_orders);
+    if (options.scripted_orders) {
+      scripted_archer = add_scripted_player(session, match->factories);
+      if (scripted_archer == Engine::Core::NULL_ENTITY) {
+        std::fputs("soi_headless: cannot spawn scripted player\n", stderr);
+        return 2;
+      }
+    }
   }
 
   if (!options.record.empty()) {
@@ -205,34 +289,65 @@ int main(int argc, char** argv) {
     header.kind = options.map.empty() ? QStringLiteral("headless-scenario")
                                       : QStringLiteral("skirmish-map");
     header.reference = reference;
-    header.launch["seconds"] = options.seconds;
+    header.launch["local_owner"] = options.local_owner;
+    header.launch["scripted_orders"] = options.scripted_orders;
     header.tick_seconds = session.clock().tick_seconds();
     header.rng_seed = options.seed;
     header.digest_interval =
         static_cast<std::uint32_t>(std::max(options.digest_every, 0));
+    header.checkpoint_interval =
+        static_cast<std::uint32_t>(std::max(options.checkpoint_every, 0));
     auto recorder = std::make_unique<Game::Command::ReplayRecorder>();
     if (!recorder->begin(
-            QString::fromStdString(options.record), header, session.commands())) {
+            QString::fromStdString(options.record),
+            header,
+            session.commands(),
+            [&session]() { return Game::Save::capture_replay_checkpoint(session); })) {
       std::fprintf(stderr, "soi_headless: cannot write %s\n", options.record.c_str());
       return 2;
     }
     session.set_replay_recorder(std::move(recorder));
   }
-  if (replay_file.has_value()) {
-    session.set_replay_player(
-        std::make_unique<Game::Command::ReplayPlayer>(std::move(*replay_file)));
-  }
-
   const double tick_seconds = session.clock().tick_seconds();
-  const auto total_ticks = static_cast<std::uint64_t>(options.seconds / tick_seconds);
+  const double requested_ticks = options.seconds / tick_seconds;
+  if (!std::isfinite(requested_ticks) || requested_ticks < 0.0 ||
+      requested_ticks >=
+          static_cast<double>(std::numeric_limits<std::uint64_t>::max())) {
+    std::fputs("soi_headless: invalid match duration\n", stderr);
+    return 2;
+  }
+  const auto* replay = session.replay_player();
+  const auto total_ticks = replay != nullptr
+                               ? replay->file().last_tick()
+                               : static_cast<std::uint64_t>(requested_ticks);
   const auto started = std::chrono::steady_clock::now();
   std::uint64_t ticks = 0;
+  bool victory = false;
   while (ticks < total_ticks) {
 
-    ticks += static_cast<std::uint64_t>(
-        session.advance(tick_seconds,
-                        1,
-                        Game::Session::SessionContext::OverloadPolicy::DiscardBacklog));
+    if (replay != nullptr) {
+      const auto stepped = session.advance_from_log(options.realtime ? 1 : 120);
+      if (stepped == 0) {
+        std::fputs("soi_headless: log clock stopped before the last complete tick\n",
+                   stderr);
+        return 12;
+      }
+      ticks += static_cast<std::uint64_t>(stepped);
+    } else {
+      if (options.scripted_orders) {
+        submit_scripted_orders(session.commands(), ticks, scripted_archer);
+      }
+      ticks += static_cast<std::uint64_t>(session.advance(
+          tick_seconds,
+          1,
+          Game::Session::SessionContext::OverloadPolicy::DiscardBacklog));
+      if (options.until_victory &&
+          Game::Systems::living_competing_teams(session.world(), session.owners())
+                  .size() < 2U) {
+        victory = true;
+        break;
+      }
+    }
     if (options.realtime) {
       std::this_thread::sleep_for(std::chrono::duration<double>(tick_seconds));
     }
@@ -253,6 +368,11 @@ int main(int argc, char** argv) {
 
   if (auto* recorder = session.replay_recorder()) {
     recorder->finish();
+    if (recorder->failed()) {
+      std::fprintf(
+          stderr, "soi_headless: failed to write %s\n", options.record.c_str());
+      return 2;
+    }
     std::printf("soi_headless: recorded %llu commands to %s\n",
                 static_cast<unsigned long long>(recorder->recorded_count()),
                 options.record.c_str());
@@ -266,9 +386,23 @@ int main(int argc, char** argv) {
                   static_cast<unsigned long long>(divergence->observed));
       return options.verify ? 12 : 0;
     }
+    const auto* ai = session.world().get_system<Game::Systems::AISystem>();
+    if (player->fed_count() != player->file().command_count() ||
+        player->checked_count() != player->file().digest_count() ||
+        (ai != nullptr && ai->completed_decision_count() != 0)) {
+      std::fputs(
+          "SOI_HEADLESS_REPLAY: FAIL - playback did not consume the recorded stream\n",
+          stderr);
+      return options.verify ? 12 : 0;
+    }
     std::printf("SOI_HEADLESS_REPLAY: PASS - %zu commands fed, %zu digests matched\n",
                 player->fed_count(),
                 player->checked_count());
+  }
+  if (options.until_victory && !victory) {
+    std::fputs("soi_headless: neither bot was eliminated before the time limit\n",
+               stderr);
+    return 2;
   }
   return 0;
 }

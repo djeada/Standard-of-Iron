@@ -158,23 +158,12 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       if (attackers.empty()) {
         break;
       }
-      if (command.sally) {
-        for (const auto unit_id : attackers) {
-          if (auto* controlled =
-                  world.try_get<Engine::Core::AIControlledComponent>(unit_id)) {
-
-            controlled->sallying = true;
-            controlled->leash_half_x = 0.0F;
-            controlled->leash_half_z = 0.0F;
-          }
-        }
-      }
-
       submit(world,
              ai_owner_id,
              Game::Command::AttackTarget{.units = std::move(attackers),
                                          .target = command.target_id,
-                                         .should_chase = command.should_chase});
+                                         .should_chase = command.should_chase,
+                                         .sally = command.sally});
       break;
     }
 

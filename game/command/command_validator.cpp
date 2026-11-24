@@ -92,6 +92,10 @@ auto validate_attack(Engine::Core::World& world,
                      AttackTarget& payload) -> Rejection {
   using Game::Systems::Combat::TargetRefusal;
 
+  if (payload.sally && source != Source::AI) {
+    return Rejection::NotPermittedForSource;
+  }
+
   const auto ruling = Game::Systems::Combat::evaluate_target(
       owners_for(world),
       owner_id,
@@ -229,8 +233,9 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
           const auto& owners = Game::Session::session_for(world).owners();
           if (payload.amount <= 0 || payload.ally_owner == owner_id ||
               !owners.are_allies(owner_id, payload.ally_owner) ||
-              !Game::Systems::MarketplaceSystem::owner_has_marketplace(world,
-                                                                       owner_id)) {
+              (!(command.source == Source::AI && payload.request) &&
+               !Game::Systems::MarketplaceSystem::owner_has_marketplace(world,
+                                                                        owner_id))) {
             return Rejection::NoSubjects;
           }
           return Rejection::None;
@@ -256,6 +261,29 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
           return appeal != nullptr && appeal->to_owner == owner_id
                      ? Rejection::None
                      : Rejection::NoSubjects;
+        } else if constexpr (std::is_same_v<T, Game::Systems::AllyTributeAnswer> ||
+                             std::is_same_v<T, AIAllyCall> ||
+                             std::is_same_v<T, Game::Systems::AllyCallAnswer> ||
+                             std::is_same_v<T, Game::Systems::AllyAppeal> ||
+                             std::is_same_v<T, AIAllyAppealReply> ||
+                             std::is_same_v<T, SetGarrisonLeash>) {
+          if (command.source != Source::AI || !owners_for(world).is_ai(owner_id)) {
+            return Rejection::NotPermittedForSource;
+          }
+          if constexpr (std::is_same_v<T, Game::Systems::AllyTributeAnswer>) {
+            return payload.giver == owner_id ? Rejection::None
+                                             : Rejection::MalformedPayload;
+          } else if constexpr (std::is_same_v<T, Game::Systems::AllyCallAnswer>) {
+            return payload.ally == owner_id ? Rejection::None
+                                            : Rejection::MalformedPayload;
+          } else if constexpr (std::is_same_v<T, Game::Systems::AllyAppeal>) {
+            return payload.from_ally == owner_id ? Rejection::None
+                                                 : Rejection::MalformedPayload;
+          } else if constexpr (std::is_same_v<T, AIAllyAppealReply>) {
+            return payload.reply.from_ally == owner_id ? Rejection::None
+                                                       : Rejection::MalformedPayload;
+          }
+          return Rejection::None;
         } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
           if (!is_commandable(world, payload.commander, owner_id)) {
             return Rejection::NoSubjects;

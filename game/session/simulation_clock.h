@@ -14,7 +14,10 @@ public:
 
   void reset();
 
-  auto advance(double real_delta_seconds) -> int;
+  auto advance(double real_delta_seconds,
+               bool keep_elapsed = false,
+               double pacing = 1.0) -> int;
+  void queue_through(std::uint64_t available_tick, int max_steps);
 
   auto consume_tick() -> bool;
 

@@ -398,7 +398,6 @@ auto CommanderModeCoordinator::confirm_commander_flag_rally(
   }
 
   if (context.commander_mode_active) {
-    commander_data->fpv_controlled = false;
     effects.reset_commander_input = true;
   }
   Game::Command::submit(*context.world,
@@ -432,7 +431,6 @@ auto CommanderModeCoordinator::rally_where_the_commander_stands(
   }
 
   if (context.commander_mode_active) {
-    commander_data->fpv_controlled = false;
     effects.reset_commander_input = true;
   }
   Game::Command::submit(

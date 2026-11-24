@@ -161,7 +161,8 @@ TEST(CommanderModeTransitionTest, ARallyInDirectControlNeedsNoCursorPlacement) {
       << "a rally in the middle of a melee freed the cursor and opened a placement "
          "mode while the wave kept cutting at the commander";
   EXPECT_TRUE(effects.reset_commander_input);
-  EXPECT_FALSE(data->fpv_controlled) << "the commander plants the flag where he stands";
+  EXPECT_TRUE(data->fpv_controlled)
+      << "the commander keeps control until the order applies";
 }
 
 namespace {

@@ -63,6 +63,7 @@ struct CommanderInputFrame {
 enum class CommanderAction : std::uint8_t {
   EnterControl,
   ExitControl,
+  ToggleControl,
   CycleLockOn,
   ToggleCameraMode,
   ToggleWeaponStance,

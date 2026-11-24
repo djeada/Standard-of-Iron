@@ -98,7 +98,7 @@ See [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) and [docs/CAMERA_CONTROLS.md]
 
 ## Replays and headless simulation
 
-Replay recording is part of the current command pipeline.
+Every match runs commands from an in-memory log. Recording saves the log to disk.
 
 Record a match:
 
@@ -112,7 +112,9 @@ Replay and verify it:
 standard_of_iron --replay match.soireplay --replay-verify
 ```
 
-A replay stores the accepted command stream and periodic world digests. During verified playback, local input and AI command generation are excluded; the process exits non-zero at the first detected simulation divergence.
+A replay stores commands before validation, commander input, clock changes, and periodic subsystem digests. The verifier reports the first divergence and exits nonzero. If recording is interrupted, the reader recovers through the last complete tick.
+
+Replays require the build and content that recorded them. The header identifies the revision, platform, compiler, and floating-point mode so playback can reject an incompatible file. Keep that build if you want to replay a match after upgrading.
 
 `soi_headless` uses the same simulation without a window and supports record/replay/verify workflows. `battlefield_gameplay_verifier --determinism-runs N` runs deterministic scenario checks repeatedly and reports divergence details.
 
@@ -282,7 +284,7 @@ scripts/      validation, portability, release, content, and asset automation
 - **Arena** — runs gameplay/rendering scenarios interactively or in deterministic batch mode.
 - **Balance simulator** — executes seeded production-simulation matchup fixtures.
 - **Content validator** — validates campaign, mission, map, faction, and asset contracts.
-- **Replay verifier** — records and checks accepted command streams and deterministic world digests.
+- **Replay verifier** — records the command log and checks deterministic subsystem digests.
 - **Performance tooling** — simulation budgets, profiling counters, frame/startup reports, and repeatable performance suites.
 - **Asset pipelines** — campaign map generation, creature baking, fonts, audio processing, and promotional rendering.
 

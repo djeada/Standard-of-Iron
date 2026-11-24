@@ -5,17 +5,27 @@
 #include <compare>
 #include <condition_variable>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <thread>
 #include <vector>
+
+#include "map_definition.h"
 
 namespace Engine::Core {
 class World;
 }
 
+namespace Game::Systems {
+class OwnerRegistry;
+}
+
 namespace Game::Map {
+
+class TerrainHeightMap;
 
 enum class VisibilityState : std::uint8_t {
   Unseen = 0,
@@ -62,6 +72,10 @@ public:
   void compute_immediate(Engine::Core::World& world, int player_id);
 
   auto step(Engine::Core::World& world, int player_id) -> bool;
+  void step_on_tick(Engine::Core::World& world,
+                    int player_id,
+                    std::uint64_t tick,
+                    std::uint64_t interval);
 
   auto is_initialized() const -> bool { return m_initialized; }
 
@@ -77,6 +91,7 @@ public:
   auto snapshot_if_newer(std::uint64_t known_version) const -> SnapshotPtr;
 
   void reveal_all();
+  void reveal_scouted_areas(std::span<const ScoutedArea> areas);
 
   auto restore_explored(const std::vector<std::uint8_t>& explored,
                         int width,
@@ -143,6 +158,26 @@ private:
   std::atomic<bool> m_shutdown_requested{false};
 
   std::vector<VisionSource> m_last_sources;
+  std::optional<std::uint64_t> m_result_tick;
+};
+
+class SimulationVisibility {
+public:
+  auto grid_for(int owner) -> VisibilityService&;
+  [[nodiscard]] auto grid_for(int owner) const -> const VisibilityService*;
+
+  void advance(Engine::Core::World& world,
+               const Game::Systems::OwnerRegistry& owners,
+               const TerrainHeightMap& map,
+               std::uint64_t tick,
+               double tick_seconds);
+  void set_scouted_areas(const std::vector<ScoutedArea>& areas);
+  void clear();
+  [[nodiscard]] auto generation() const -> std::uint64_t;
+
+private:
+  std::map<int, VisibilityService> m_grids;
+  std::vector<ScoutedArea> m_scouted_areas;
 };
 
 } // namespace Game::Map

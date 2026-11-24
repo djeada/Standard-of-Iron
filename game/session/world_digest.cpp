@@ -14,6 +14,7 @@
 #include "../core/component_gameplay.h"
 #include "../core/component_structures.h"
 #include "../core/world.h"
+#include "../map/visibility_service.h"
 #include "../systems/owner_registry.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/resource_types.h"
@@ -38,6 +39,7 @@ void mix(std::uint64_t& digest, std::uint64_t value) {
 
 auto systems_digest(SessionContext& session) -> std::uint64_t {
   std::uint64_t digest = k_offset;
+  mix(digest, session.simulation_visibility().generation());
   const QJsonObject view =
       SessionSnapshot::digest_view(SnapshotScope{.world = &session.world()});
   const QByteArray bytes = QJsonDocument(view).toJson(QJsonDocument::Compact);

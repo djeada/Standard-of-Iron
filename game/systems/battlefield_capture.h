@@ -42,7 +42,8 @@ struct ScenarioMatch {
 };
 
 auto build_scenario(ScenarioId id,
-                    Engine::Core::World& into) -> std::unique_ptr<ScenarioMatch>;
+                    Engine::Core::World& into,
+                    bool ai_vs_ai = false) -> std::unique_ptr<ScenarioMatch>;
 
 struct RunnerConfig {
   ScenarioId scenario{ScenarioId::InfantryApproach20v20};

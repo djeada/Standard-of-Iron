@@ -14,6 +14,8 @@ auto source_name(Source source) -> const char* {
     return "replay";
   case Source::Script:
     return "script";
+  case Source::Network:
+    return "network";
   }
   return "unknown";
 }
@@ -80,6 +82,18 @@ auto payload_name(const Payload& payload) -> const char* {
           return "dismantle-structure";
         } else if constexpr (std::is_same_v<T, PlaceWallPlan>) {
           return "place-wall-plan";
+        } else if constexpr (std::is_same_v<T, Game::Systems::AllyTributeAnswer>) {
+          return "ai-tribute-answer";
+        } else if constexpr (std::is_same_v<T, AIAllyCall>) {
+          return "ai-ally-call";
+        } else if constexpr (std::is_same_v<T, Game::Systems::AllyCallAnswer>) {
+          return "ai-ally-call-answer";
+        } else if constexpr (std::is_same_v<T, Game::Systems::AllyAppeal>) {
+          return "ai-ally-appeal";
+        } else if constexpr (std::is_same_v<T, AIAllyAppealReply>) {
+          return "ai-ally-appeal-reply";
+        } else if constexpr (std::is_same_v<T, SetGarrisonLeash>) {
+          return "ai-garrison-leash";
         } else {
           return "place-building";
         }

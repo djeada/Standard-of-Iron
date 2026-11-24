@@ -107,16 +107,16 @@ Player input, AI, replay playback, and scripted systems converge on typed comman
 
 ```text
 player input ─┐
-AI            ├──► typed Game::Command ─► CommandQueue ─► validation/dispatch ─► systems
-mission/tools ┤
-replay        ┘
+AI authority  ├──► CommandQueue ─► CommandLog ─► validation and dispatch ─► systems
+mission/tools ┘                       ▲
+replay and replicated input ──────────┘
 ```
 
-`CommandQueue` is the match command boundary. The application can ask simulation services whether an action is available so it can show useful feedback, but authoritative mutation occurs through command dispatch rather than through a parallel client-side implementation of the same order.
+`CommandQueue` is the match command boundary. The application asks simulation services whether an action is available to provide immediate feedback. The dispatcher applies typed orders during the simulation tick.
 
 This gives different command producers the same rules. A move issued by the player, an AI move, and a replayed move enter the same simulation path instead of carrying three independent versions of movement legality.
 
-Accepted commands also form the deterministic replay stream. Replay playback can replace live command producers while exercising the same command application path.
+The log assigns each input a tick and sequence number before validation. Live commands and recorded commands pass through the same validator at their assigned tick. Playback and log followers consume completed ticks without running AI decisions.
 
 ## Fixed-step simulation
 
@@ -147,11 +147,11 @@ The main ingredients are:
 - save/replay snapshots that capture authoritative non-entity state for the systems that register a `SessionSnapshot` contributor; and
 - world digests used by replay verification.
 
-Replay format 7 (`k_replay_format_version`) stores unsigned 64-bit `rng_seed` and `tick` values losslessly as decimal strings rather than JSON numbers (which round above 2^53); earlier replay formats are rejected with a version-mismatch error.
+Replay format 8 has a build and content header followed by checksummed, length-prefixed records. The records preserve 64-bit seeds, entity IDs, ticks, and sequence numbers as decimal strings. When the file ends in a partial record, playback uses the last complete tick. Older formats require the original simulation build.
 
 ### What the replay digest covers
 
-`subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count and resource stock. It also hashes a `systems` part: the `digest` view of every registered `SessionSnapshot` contributor, serialized as compact JSON. Today those are AI runtime state, undead zones, cursed gold veins, and wildlife groups (without the bird flocks, which are cosmetic and follow the camera).
+`subsystem_digests()` hashes per-entity lines (identity, movement, combat, status, economy, wildlife), the session clock, RNG draw count, and resource stock. The `systems` digest includes the simulation visibility generation and the digest view of registered `SessionSnapshot` contributors, such as undead zones, cursed gold veins, and wildlife groups. AI planning state lives on the authority. Its decisions reach the simulation through the log.
 
 A contributor opts in by providing `SnapshotContributor::digest`. The victory contributor does not: `VictoryService` and the mission-wave runtime are owned by `GameEngine`, so a headless replay would not produce the same part. Their timers are still tick-driven (see [VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md)), but a divergence there is not caught by the digest until they move into the session.
 

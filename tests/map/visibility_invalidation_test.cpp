@@ -87,6 +87,21 @@ TEST_F(VisibilityInvalidationTest, TheFogDimsWhenTheLastScoutDies) {
       << "what was seen stays remembered";
 }
 
+TEST_F(VisibilityInvalidationTest, AJobPublishesOnTheTickAfterItWasScheduled) {
+  auto& visibility = VisibilityService::instance();
+  const auto scout = spawn_scout(world(), 0.0F, 0.0F, k_short_sight);
+  visibility.compute_immediate(world(), k_player);
+  ASSERT_EQ(visibility.state_at(k_centre, k_centre), VisibilityState::Visible);
+  world().destroy_entity(scout);
+
+  visibility.step_on_tick(world(), k_player, 4, 5);
+  EXPECT_EQ(visibility.state_at(k_centre, k_centre), VisibilityState::Visible);
+  visibility.step_on_tick(world(), k_player, 5, 5);
+  EXPECT_EQ(visibility.state_at(k_centre, k_centre), VisibilityState::Visible);
+  visibility.step_on_tick(world(), k_player, 6, 5);
+  EXPECT_EQ(visibility.state_at(k_centre, k_centre), VisibilityState::Explored);
+}
+
 TEST_F(VisibilityInvalidationTest, AStationaryScoutThatSeesFurtherLightsMore) {
   auto& visibility = VisibilityService::instance();
   const auto scout = spawn_scout(world(), 0.0F, 0.0F, k_short_sight);
