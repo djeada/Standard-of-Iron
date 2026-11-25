@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iterator>
 
+#include "render/backend/prop_mesh_builder.h"
+
 namespace {
 
 using Render::GL::BackendPipelines::PropMeshData;
@@ -65,89 +67,6 @@ void append_quad(std::vector<PropMeshVertex>& verts,
               base,
               uint16_t(base + 2),
               uint16_t(base + 3)});
-}
-
-void append_box(std::vector<PropMeshVertex>& verts,
-                std::vector<uint16_t>& idx,
-                const V3& lo,
-                const V3& hi) {
-  const float x0 = lo.x();
-  const float y0 = lo.y();
-  const float z0 = lo.z();
-  const float x1 = hi.x();
-  const float y1 = hi.y();
-  const float z1 = hi.z();
-
-  append_quad(
-      verts, idx, {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}, {x0, y1, z1}, {0, 0, 1});
-  append_quad(
-      verts, idx, {x1, y0, z0}, {x0, y0, z0}, {x0, y1, z0}, {x1, y1, z0}, {0, 0, -1});
-  append_quad(
-      verts, idx, {x0, y0, z0}, {x0, y0, z1}, {x0, y1, z1}, {x0, y1, z0}, {-1, 0, 0});
-  append_quad(
-      verts, idx, {x1, y0, z1}, {x1, y0, z0}, {x1, y1, z0}, {x1, y1, z1}, {1, 0, 0});
-  append_quad(
-      verts, idx, {x0, y1, z0}, {x0, y1, z1}, {x1, y1, z1}, {x1, y1, z0}, {0, 1, 0});
-  append_quad(
-      verts, idx, {x0, y0, z1}, {x0, y0, z0}, {x1, y0, z0}, {x1, y0, z1}, {0, -1, 0});
-}
-
-void append_oriented_box(std::vector<PropMeshVertex>& verts,
-                         std::vector<uint16_t>& idx,
-                         const V3& a,
-                         const V3& b,
-                         float half_width,
-                         float half_depth) {
-  V3 dir = b - a;
-  if (dir.lengthSquared() < 1.0e-8F) {
-    dir = {0.0F, 1.0F, 0.0F};
-  } else {
-    dir.normalize();
-  }
-
-  V3 const reference =
-      std::abs(dir.y()) < 0.9F ? V3(0.0F, 1.0F, 0.0F) : V3(1.0F, 0.0F, 0.0F);
-  V3 side = QVector3D::crossProduct(reference, dir);
-  if (side.lengthSquared() < 1.0e-8F) {
-    side = {1.0F, 0.0F, 0.0F};
-  } else {
-    side.normalize();
-  }
-  V3 depth = QVector3D::crossProduct(dir, side);
-  if (depth.lengthSquared() < 1.0e-8F) {
-    depth = {0.0F, 0.0F, 1.0F};
-  } else {
-    depth.normalize();
-  }
-
-  side *= half_width;
-  depth *= half_depth;
-
-  V3 const a0 = a - side - depth;
-  V3 const a1 = a + side - depth;
-  V3 const a2 = a + side + depth;
-  V3 const a3 = a - side + depth;
-  V3 const b0 = b - side - depth;
-  V3 const b1 = b + side - depth;
-  V3 const b2 = b + side + depth;
-  V3 const b3 = b - side + depth;
-
-  auto face = [&](const V3& p0, const V3& p1, const V3& p2, const V3& p3) {
-    V3 n = QVector3D::crossProduct(p3 - p0, p1 - p0);
-    if (n.lengthSquared() > 1.0e-8F) {
-      n.normalize();
-    } else {
-      n = {0.0F, 1.0F, 0.0F};
-    }
-    append_quad(verts, idx, p0, p1, p2, p3, n);
-  };
-
-  face(a0, b0, b1, a1);
-  face(a3, a2, b2, b3);
-  face(a1, b1, b2, a2);
-  face(a0, a3, b3, b0);
-  face(a0, a1, a2, a3);
-  face(b0, b3, b2, b1);
 }
 
 auto make_ring(float x, int station) -> std::vector<V3> {
@@ -283,15 +202,17 @@ auto build_dead_tree_mesh() -> PropMeshData {
                   true);
   append_splintered_break(verts, idx, rings.back(), k_tip_x);
 
-  append_oriented_box(
-      verts, idx, {-0.62F, 0.24F, 0.15F}, {-0.86F, 0.46F, 0.26F}, 0.038F, 0.030F);
-  append_oriented_box(
-      verts, idx, {0.02F, 0.20F, -0.18F}, {0.24F, 0.44F, -0.29F}, 0.040F, 0.031F);
-  append_oriented_box(
-      verts, idx, {0.64F, 0.15F, 0.13F}, {0.88F, 0.31F, 0.23F}, 0.031F, 0.026F);
-
-  append_box(verts, idx, {-0.48F, 0.01F, -0.34F}, {-0.24F, 0.05F, -0.24F});
-  append_box(verts, idx, {0.20F, 0.00F, 0.24F}, {0.42F, 0.04F, 0.33F});
+  // The thick branch collars start inside the bole. Narrow, forked ends
+  // break the silhouette while keeping the log low enough to step over.
+  V3 const fork(-0.66F, 0.34F, 0.20F);
+  append_prop_limb(verts, idx, {-0.47F, 0.23F, 0.10F}, fork, 0.10F, 0.064F, 7);
+  append_prop_limb(verts, idx, fork, {-0.99F, 0.47F, 0.30F}, 0.066F, 0.024F, 7);
+  append_prop_limb(verts, idx, fork, {-0.71F, 0.47F, 0.31F}, 0.041F, 0.015F, 6);
+  V3 const elbow(0.30F, 0.29F, -0.24F);
+  append_prop_limb(verts, idx, {0.04F, 0.16F, -0.08F}, elbow, 0.091F, 0.048F, 7);
+  append_prop_limb(verts, idx, elbow, {0.49F, 0.39F, -0.32F}, 0.050F, 0.022F, 6);
+  append_prop_limb(verts, idx, {0.62F, 0.14F, 0.08F}, {0.92F, 0.28F, 0.27F},
+                   0.076F, 0.035F, 6);
 
   return mesh;
 }

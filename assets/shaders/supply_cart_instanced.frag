@@ -11,6 +11,7 @@ in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
 in vec3 v_local_normal;
+flat in float v_cover;
 
 uniform vec3 u_camera_pos;
 
@@ -60,6 +61,7 @@ void main() {
   float canvas_mask = max(cargo_mask(v_local_pos, vec2(-0.24, 0.36), 0.185, 0.44),
                           max(cargo_mask(v_local_pos, vec2(0.20, 0.44), 0.165, 0.38),
                               cargo_mask(v_local_pos, vec2(0.30, -0.36), 0.150, 0.34)));
+  canvas_mask = max(canvas_mask, v_cover);
   float cargo_core = max(barrel_mask, canvas_mask);
   vec2 grain_uv = abs(v_local_normal.z) > 0.65 ? v_local_pos.xy : v_local_pos.zy;
   if (abs(v_local_normal.y) > 0.70) {

@@ -62,9 +62,9 @@ void VegetationPipeline::initialize_stone_pipeline() {
   constexpr float k_radial_jitter = 0.11F;
   constexpr float k_y_jitter = 0.030F;
 
-  constexpr float k_apex_offset_x = 0.09F;
+  constexpr float k_apex_offset_x = -0.16F;
   constexpr float k_apex_height = 0.70F;
-  constexpr float k_apex_offset_z = -0.08F;
+  constexpr float k_apex_offset_z = 0.06F;
 
   auto jitter = [](int ring, int vertex, int salt) -> float {
     uint32_t hash = static_cast<uint32_t>(ring + 1) * 0x9E3779B9U ^
@@ -86,13 +86,13 @@ void VegetationPipeline::initialize_stone_pipeline() {
     float cz;
   };
   const Ring rings[] = {
-      {-0.07F, 0.33F, 0.10F, 1.08F, 1.16F, -0.04F, 0.02F},
-      {0.05F, 0.47F, 0.02F, 1.14F, 1.00F, 0.00F, -0.02F},
-      {0.19F, 0.53F, -0.06F, 1.06F, 1.10F, 0.03F, -0.01F},
-      {0.33F, 0.49F, 0.14F, 0.97F, 1.12F, 0.05F, -0.02F},
-      {0.46F, 0.40F, 0.06F, 1.05F, 0.90F, 0.03F, -0.05F},
-      {0.58F, 0.26F, 0.22F, 0.93F, 1.00F, 0.06F, -0.06F},
-      {0.66F, 0.12F, 0.30F, 0.90F, 1.04F, 0.08F, -0.07F},
+      {-0.07F, 0.37F, 0.08F, 1.10F, 1.01F, 0.00F, 0.00F},
+      {0.05F, 0.45F, 0.05F, 1.11F, 0.99F, 0.01F, 0.00F},
+      {0.17F, 0.48F, 0.03F, 1.13F, 0.98F, 0.00F, 0.01F},
+      {0.28F, 0.46F, 0.04F, 1.12F, 0.99F, -0.03F, 0.02F},
+      {0.42F, 0.40F, 0.06F, 1.09F, 1.01F, -0.07F, 0.04F},
+      {0.52F, 0.34F, 0.06F, 1.11F, 0.94F, -0.10F, 0.05F},
+      {0.59F, 0.28F, 0.07F, 1.09F, 0.89F, -0.11F, 0.06F},
   };
   static_assert(std::size(rings) == static_cast<std::size_t>(k_rings));
 
@@ -108,7 +108,9 @@ void VegetationPipeline::initialize_stone_pipeline() {
       float const rx = r.radius * perturb * r.sx * std::cos(angle);
       float const rz = r.radius * perturb * r.sz * std::sin(angle);
 
-      float const ry = r.y + k_y_jitter * (jitter(ri, i, 2) - 0.5F) * 2.0F;
+      // The upper ledge dips towards one broken face.
+      float const crown_dip = ri >= 4 ? 0.24F * rx : 0.0F;
+      float const ry = r.y - crown_dip + k_y_jitter * (jitter(ri, i, 2) - 0.5F) * 2.0F;
       ring_pts[ri][i] = QVector3D(rx + r.cx, ry, rz + r.cz);
     }
   }

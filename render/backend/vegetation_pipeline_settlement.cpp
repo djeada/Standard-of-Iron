@@ -45,17 +45,21 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
   struct FireCampVertex {
     QVector3D position;
     QVector2D tex_coord;
+    QVector3D normal{};
   };
 
   constexpr float k_flame_part = 0.0F;
   constexpr float k_hearth_part = 3.0F;
   constexpr float k_smoke_part = 4.0F;
+  constexpr float k_stone_part = 5.0F;
   constexpr int k_hearth_segments = 18;
+  constexpr int k_stones = 9;
+  constexpr int k_stone_sides = 6;
 
   std::vector<FireCampVertex> vertices;
-  vertices.reserve(8 + 1 + k_hearth_segments);
+  vertices.reserve(8 + 1 + k_hearth_segments + k_stones * k_stone_sides * 9);
   std::vector<unsigned short> indices;
-  indices.reserve(12 + static_cast<std::size_t>(k_hearth_segments) * 3);
+  indices.reserve(12 + k_hearth_segments * 3 + k_stones * k_stone_sides * 9);
 
   auto append_card = [&](float part) {
     auto const base = static_cast<unsigned short>(vertices.size());
@@ -80,12 +84,45 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
     indices.push_back(static_cast<unsigned short>(hearth_centre + 1 +
                                                   ((segment + 1) % k_hearth_segments)));
   }
+  // Local XZ is stored in the same coordinates as the ash disc. A buried
+  // rim and an offset shoulder give each fieldstone a flat, chipped crown.
+  for (int stone = 0; stone < k_stones; ++stone) {
+    float const bearing = MathConstants::k_two_pi * stone / k_stones;
+    QVector3D const radial(std::cos(bearing), 0.0F, std::sin(bearing));
+    QVector3D const tangent(-radial.z(), 0.0F, radial.x());
+    auto const centre = radial * (0.77F + 0.025F * std::sin(stone * 2.4F));
+    float const height = 0.12F + 0.032F * std::cos(stone * 3.1F);
+    auto const crown = centre + radial * 0.035F + QVector3D(0.0F, height * 1.2F, 0.0F);
+    auto rim = [&](int side, bool upper) {
+      float const a = MathConstants::k_two_pi * side / k_stone_sides + 0.17F * stone;
+      auto const offset = tangent * (0.25F * std::cos(a)) + radial * (0.16F * std::sin(a));
+      return centre + offset * (upper ? 0.73F : 1.0F) +
+             QVector3D(0.0F, upper ? height : -0.038F, 0.0F);
+    };
+    auto face = [&](const QVector3D& a, const QVector3D& b, const QVector3D& c) {
+      auto const normal = QVector3D::crossProduct(b - a, c - a).normalized();
+      for (auto const& point : {a, b, c}) {
+        indices.push_back(static_cast<unsigned short>(vertices.size()));
+        vertices.push_back({{0.0F, point.y(), k_stone_part}, {point.x(), point.z()}, normal});
+      }
+    };
+    for (int side = 0; side < k_stone_sides; ++side) {
+      auto const a = rim(side, false);
+      auto const b = rim(side + 1, false);
+      auto const c = rim(side + 1, true);
+      auto const d = rim(side, true);
+      face(a, b, c);
+      face(a, c, d);
+      face(d, c, crown);
+    }
+  }
   append_card(k_smoke_part);
   append_card(k_flame_part);
 
-  constexpr std::array<VertexAttributeLayout, 2> k_firecamp_attributes{{
+  constexpr std::array<VertexAttributeLayout, 3> k_firecamp_attributes{{
       {0, vec3, offsetof(FireCampVertex, position)},
       {1, vec2, offsetof(FireCampVertex, tex_coord)},
+      {2, vec3, offsetof(FireCampVertex, normal)},
   }};
   constexpr std::array<GLuint, 3> k_firecamp_instance_locations{3, 4, 5};
   upload_static_instanced_mesh(*this,
@@ -120,11 +157,11 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   append_parts(verts, idx, std::span{k_supply_cart_beams});
   append_parts(verts, idx, std::span{k_supply_cart_tapers});
 
-  constexpr int k_wheel_sides = 32;
+  constexpr int k_wheel_sides = 24;
   constexpr float k_front_wheel_r = 0.26F;
   constexpr float k_rear_wheel_r = 0.34F;
-  constexpr float k_front_wheel_t = 0.070F;
-  constexpr float k_rear_wheel_t = 0.090F;
+  constexpr float k_front_wheel_t = 0.052F;
+  constexpr float k_rear_wheel_t = 0.052F;
 
   append_spoked_wheel_xaxis(verts,
                             idx,
@@ -238,14 +275,8 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
                      0.020F);
   }
 
-  for (int lash = 0; lash < 3; ++lash) {
-    float const x = -0.32F + 0.32F * static_cast<float>(lash);
-    append_prop_beam(
-        verts, idx, {x, 1.108F, 0.10F}, {x, 0.912F, 0.10F}, 0.020F, 0.092F);
-  }
-
   for (int hoop = 0; hoop < 2; ++hoop) {
-    float const z = 0.10F + 0.34F * static_cast<float>(hoop);
+    float const z = -0.09F + 0.53F * static_cast<float>(hoop);
     constexpr int k_arc = 10;
     for (int seg = 0; seg < k_arc; ++seg) {
       float const a0 =
@@ -254,10 +285,36 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
           3.14159265F * static_cast<float>(seg + 1) / static_cast<float>(k_arc);
       append_prop_beam(verts,
                        idx,
-                       {-std::cos(a0) * 0.58F, 0.96F + std::sin(a0) * 0.40F, z},
-                       {-std::cos(a1) * 0.58F, 0.96F + std::sin(a1) * 0.40F, z},
+                       {-std::cos(a0) * 0.58F, 0.96F + std::sin(a0) * 0.38F, z},
+                       {-std::cos(a1) * 0.58F, 0.96F + std::sin(a1) * 0.38F, z},
                        0.030F,
                        0.032F);
+    }
+  }
+
+  // Stretch a short tilt over the rear hoops, leaving the forward load visible.
+  // Bow the fabric between supports and let the hem droop at each end.
+  constexpr int k_panels = 12;
+  auto cover_point = [](float angle, float z, float sag) {
+    return QVector3D(-std::cos(angle) * 0.612F,
+                     0.96F + std::sin(angle) * (0.425F - sag), z);
+  };
+  constexpr std::array<float, 5> k_cover_z{-0.14F, -0.09F, 0.175F, 0.44F, 0.50F};
+  constexpr std::array<float, 5> k_cover_sag{0.014F, 0.0F, 0.035F, 0.0F, 0.016F};
+  for (int panel = 0; panel < k_panels; ++panel) {
+    float const a = 3.14159265F * panel / k_panels;
+    float const b = 3.14159265F * (panel + 1) / k_panels;
+    for (std::size_t row = 1; row < k_cover_z.size(); ++row) {
+      auto const p0 = cover_point(a, k_cover_z[row - 1], k_cover_sag[row - 1]);
+      auto const p1 = cover_point(a, k_cover_z[row], k_cover_sag[row]);
+      auto const p2 = cover_point(b, k_cover_z[row], k_cover_sag[row]);
+      auto const p3 = cover_point(b, k_cover_z[row - 1], k_cover_sag[row - 1]);
+      auto const normal = QVector3D::crossProduct(p1 - p0, p3 - p0).normalized();
+      // Half-length normals select the existing canvas material on both sides.
+      append_quad(verts, idx, p0, p1, p2, p3, normal * 0.5F);
+      QVector3D const lining(0.0F, 0.008F, 0.0F);
+      append_quad(verts, idx, p3 - lining, p2 - lining, p1 - lining, p0 - lining,
+                  normal * -0.5F);
     }
   }
 

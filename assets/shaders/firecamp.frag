@@ -51,27 +51,7 @@ vec4 shade_hearth() {
   colour = mix(colour, charcoal, bed);
   colour += ember * heat * clamp(intensity_val, 0.7, 1.4);
 
-  if (r < 0.56 || r > 0.98) {
-    return vec4(colour, ash_mask * 0.94);
-  }
-
-  // An uneven ring of fieldstones contains the coal bed.
-  float angle = atan(uv.y, uv.x) + flame_phase;
-  float stone_angle = angle * (9.0 / 6.2831853);
-  float across = (fract(stone_angle) - 0.5) * 2.0;
-  float ring_radius = 0.77 + (edge_noise - 0.5) * 0.12;
-  float outward = (r - ring_radius) / 0.14;
-  vec2 stone_uv = vec2(across * 1.08, outward);
-  float stone_dist = dot(stone_uv, stone_uv);
-  float stone_mask = 1.0 - smoothstep(0.68, 1.0, stone_dist);
-  vec3 stone = mix(vec3(0.19, 0.17, 0.15), vec3(0.38, 0.34, 0.28), edge_noise);
-  vec3 radial_dir = vec3(uv.x, 0.0, uv.y) / max(r, 0.001);
-  vec3 tangent_dir = vec3(-radial_dir.z, 0.0, radial_dir.x);
-  vec3 stone_normal = normalize(v_ground_normal + radial_dir * clamp(outward, -1.0, 1.0) +
-                                tangent_dir * across);
-  colour = mix(colour, stone * environment_lighting(stone_normal, 0.2), stone_mask);
-
-  return vec4(colour, max(ash_mask * 0.94, stone_mask));
+  return vec4(colour, ash_mask * 0.94);
 }
 
 vec4 shade_smoke() {
@@ -127,7 +107,11 @@ vec4 shade_flame() {
 
 void main() {
   vec4 result;
-  if (v_part == 1) {
+  if (v_part == 3) {
+    float grain = soi_noise_95f501(tex_coord * 8.0 + flame_phase);
+    vec3 stone = mix(vec3(0.19, 0.17, 0.15), vec3(0.38, 0.34, 0.28), grain);
+    result = vec4(stone * environment_lighting(v_ground_normal, 0.2), 1.0);
+  } else if (v_part == 1) {
     result = shade_hearth();
   } else if (v_part == 2) {
     result = shade_smoke();
