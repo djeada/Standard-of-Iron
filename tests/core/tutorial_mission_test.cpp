@@ -146,7 +146,10 @@ protected:
   void run_seconds(float seconds) {
     const int ticks = static_cast<int>(seconds / k_tick);
     for (int tick = 0; tick < ticks; ++tick) {
-      m_world.update(k_tick);
+      // Through the session clock, as the other tests here: orders given to
+      // the world wait in the command log for a tick to seal them.
+      m_session->advance(
+          k_tick, 1, Game::Session::SessionContext::OverloadPolicy::KeepBacklog);
     }
   }
 

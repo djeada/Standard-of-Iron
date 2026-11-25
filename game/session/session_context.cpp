@@ -376,7 +376,7 @@ void SessionContext::service_stopped_clock() {
                         replay_player() != nullptr || m_state->commands.replay_only();
   world.service_stopped_frame([&] {
     if (!recorded) {
-      m_state->commands.drain(world, m_state->clock.tick());
+      m_state->commands.drain_stopped(world);
     }
   });
 }

@@ -21,9 +21,18 @@ auto CommandQueue::submit(Source source, int owner_id, Payload payload) -> bool 
 auto CommandQueue::drain(Engine::Core::World& world,
                          std::uint64_t tick,
                          const RecordHandler& handle_record) -> std::size_t {
+  return execute(world, m_log.seal_inputs(tick), handle_record);
+}
 
+auto CommandQueue::drain_stopped(Engine::Core::World& world) -> std::size_t {
+  return execute(world, m_log.take_unsealed_inputs(), {});
+}
+
+auto CommandQueue::execute(Engine::Core::World& world,
+                           const CommandLog::Entries& entries,
+                           const RecordHandler& handle_record) -> std::size_t {
   std::size_t executed = 0;
-  for (const auto& entry : m_log.seal_inputs(tick)) {
+  for (const auto& entry : entries) {
     const auto* payload = std::get_if<Payload>(&entry->payload);
     if (payload == nullptr) {
       if (handle_record) {

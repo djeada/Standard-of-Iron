@@ -86,6 +86,24 @@ auto CommandLog::seal_inputs(std::uint64_t tick) -> Entries {
   return found != m_ticks.end() ? found->second : Entries{};
 }
 
+auto CommandLog::take_unsealed_inputs() -> Entries {
+  const std::lock_guard lock(m_mutex);
+  Entries taken;
+  if (m_follower) {
+    return taken;
+  }
+  for (auto it = m_ticks.lower_bound(m_next_input_tick); it != m_ticks.end(); ++it) {
+    auto& entries = it->second;
+    const auto first_order =
+        std::stable_partition(entries.begin(), entries.end(), [](const auto& entry) {
+          return !std::holds_alternative<Payload>(entry->payload);
+        });
+    taken.insert(taken.end(), first_order, entries.end());
+    entries.erase(first_order, entries.end());
+  }
+  return taken;
+}
+
 void CommandLog::complete_tick(std::uint64_t tick) {
   const std::lock_guard lock(m_mutex);
   if (tick <= m_completed_tick) {

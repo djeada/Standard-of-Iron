@@ -80,10 +80,23 @@ CampaignPlaythroughTest.*
 # Runs the opening of both full-size cities with their garrisons and residents.
 ShippedSkirmishMaps/SkirmishStartingStrengthTest.EveryStartingSquadTakesTheFieldAtFullStrength/carthage
 ShippedSkirmishMaps/SkirmishStartingStrengthTest.EveryStartingSquadTakesTheFieldAtFullStrength/rome
+# Runs the first minutes of every full-size city seat with its garrison, camp
+# workers and AI: 34 s and 29 s for Carthage and Rome on a pull-request runner
+# in Debug.
+ShippedSkirmishMaps/SkirmishCampStartTest.*
 
 # campaign_tests
 TutorialMissionTest.TheRaidClosesOnThePlayerCampWhileTheCommanderKeepsHisPost
 TutorialMissionTest.TheScoutingPartyWaitsToBeAttacked
+# Eight game minutes of the outpost's economy, and the starting army fighting
+# both scouts to the end: 48 s and 21 s on a pull-request runner in Debug.
+TutorialMissionTest.TheOutpostHoldsItsCampThroughTheEconomySteps
+TutorialMissionTest.TheScoutFightIsTheTwoScoutsAlone
+
+# ai_tests
+# A plain player opening against the computer's, played tick by tick for the
+# whole match: 250 s on a pull-request runner in Debug.
+PlayerProxyGrowthTest.APlainOpeningKeepsUpWithTheComputer
 
 # tools_tests
 BalanceSimTest.*
