@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <ranges>
 #include <vector>
 
 #include "core/ambient_session.h"

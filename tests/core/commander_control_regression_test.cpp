@@ -463,7 +463,7 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
 
   EXPECT_TRUE(contains(engine_source,
                        "if (m_commander_view_model->active()) {\n"
-                       "    m_commander_view_model->exit_mode();\n"
+                       "    m_commander_view_model->leave_commander_mode();\n"
                        "  }\n\n"
                        "  reset_preload_interaction_state();"));
   const auto save_controller_source =
@@ -474,10 +474,11 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
   EXPECT_TRUE(contains(save_controller_source,
                        "m_hooks.leave_commander_mode();\n\n"
                        "  m_progress_slot = slot_name;"));
-  EXPECT_TRUE(contains(wiring_source,
-                       "if (m_commander_view_model->active()) {\n"
-                       "                  m_commander_view_model->exit_mode();\n"
-                       "                }"));
+  EXPECT_TRUE(
+      contains(wiring_source,
+               "if (m_commander_view_model->active()) {\n"
+               "                  m_commander_view_model->leave_commander_mode();\n"
+               "                }"));
 }
 
 TEST(CommanderControlRegressionTest,

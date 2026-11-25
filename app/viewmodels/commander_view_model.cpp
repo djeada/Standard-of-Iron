@@ -250,8 +250,10 @@ void CommanderViewModel::enter_mode() {
 
 void CommanderViewModel::exit_mode() {
   const auto frame_lock = m_host.lock_frame();
-  if (ignores_player_input() ||
-      queue_action(Game::Command::CommanderAction::ExitControl)) {
+  if (!m_applying_logged_action && follows_replay()) {
+    return;
+  }
+  if (!finale_active() && queue_action(Game::Command::CommanderAction::ExitControl)) {
     return;
   }
   leave_commander_mode();

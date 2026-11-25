@@ -5,6 +5,7 @@
 #include <QStringList>
 
 #include <algorithm>
+#include <ranges>
 
 #include "core/component_core.h"
 #include "core/component_gameplay.h"

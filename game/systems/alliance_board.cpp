@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <ranges>
 
 #include "../core/component_core.h"
 #include "../core/world.h"
@@ -155,8 +156,8 @@ void AllianceBoard::clear() {
   m_appeal_answers.clear();
   m_appeal_replies.clear();
   m_goodwill.clear();
+  // Call IDs are per match. Appeal IDs must outlive a board reset for the UI.
   m_last_call_id = 0;
-  m_last_appeal_id = 0;
 }
 
 auto ally_call_kind_key(AllyCallKind kind) -> const char* {

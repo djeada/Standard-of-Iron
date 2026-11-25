@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 
 #include "../command/command_queue.h"
 #include "../command/json_u64.h"

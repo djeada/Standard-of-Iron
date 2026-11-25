@@ -28,7 +28,7 @@ XDG_CONFIG_HOME="$scratch/cfg" ./standard_of_iron --mission-file "$mission" \
     tail -20 "$scratch/record.log"
     exit 1
   }
-printf 'Recorded %s bytes of command log\n' "$(wc -c < "$replay")"
+printf 'Recorded %s bytes of command log\n' "$(wc -c <"$replay")"
 
 set +e
 XDG_CONFIG_HOME="$scratch/cfg" ./standard_of_iron --replay "$replay" --replay-verify >"$scratch/replay.log" 2>&1
