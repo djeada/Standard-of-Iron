@@ -1,12 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <deque>
 #include <functional>
-#include <mutex>
-#include <vector>
 
-#include "command.h"
+#include "command_log.h"
 #include "command_validator.h"
 
 namespace Engine::Core {
@@ -18,6 +15,7 @@ namespace Game::Command {
 class CommandQueue {
 public:
   using Observer = std::function<void(const Command&)>;
+  using RecordHandler = std::function<void(const LogEntry&)>;
 
   using RejectionObserver = std::function<void(const Command&, Rejection)>;
 
@@ -28,37 +26,41 @@ public:
   auto operator=(const CommandQueue&) -> CommandQueue& = delete;
   auto operator=(CommandQueue&&) -> CommandQueue& = delete;
 
-  void submit(Command command);
+  auto submit(Command command) -> bool;
 
-  void submit(Source source, int owner_id, Payload payload);
+  auto submit(Source source, int owner_id, Payload payload) -> bool;
 
-  auto drain(Engine::Core::World& world, std::uint64_t tick) -> std::size_t;
+  auto drain(Engine::Core::World& world,
+             std::uint64_t tick,
+             const RecordHandler& handle_record = {}) -> std::size_t;
 
   [[nodiscard]] auto pending() const -> std::size_t;
 
-  void clear();
+  void clear(std::uint64_t completed_tick = 0);
+
+  [[nodiscard]] auto log() -> CommandLog& { return m_log; }
+  [[nodiscard]] auto log() const -> const CommandLog& { return m_log; }
 
   void set_observer(Observer observer) { m_observer = std::move(observer); }
   void set_rejection_observer(RejectionObserver observer) {
     m_rejection_observer = std::move(observer);
   }
 
-  void set_replay_only(bool replay_only) { m_replay_only = replay_only; }
-  [[nodiscard]] auto replay_only() const -> bool { return m_replay_only; }
-  [[nodiscard]] auto dropped_count() const -> std::uint64_t { return m_dropped; }
+  void set_replay_only(bool replay_only) { m_log.set_follower(replay_only); }
+  [[nodiscard]] auto replay_only() const -> bool { return m_log.follower(); }
+  [[nodiscard]] auto dropped_count() const -> std::uint64_t {
+    return m_log.dropped_inputs();
+  }
 
   [[nodiscard]] auto accepted_count() const -> std::uint64_t { return m_accepted; }
   [[nodiscard]] auto rejected_count() const -> std::uint64_t { return m_rejected; }
 
 private:
-  mutable std::mutex m_mutex;
-  std::deque<Command> m_pending;
+  CommandLog m_log;
   Observer m_observer;
   RejectionObserver m_rejection_observer;
   std::uint64_t m_accepted = 0;
   std::uint64_t m_rejected = 0;
-  std::uint64_t m_dropped = 0;
-  bool m_replay_only = false;
 };
 
 auto submit(Engine::Core::World& world,

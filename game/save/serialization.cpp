@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "../core/component_economy.h"
+#include "../core/component_gameplay.h"
 #include "../core/death_sequence.h"
 #include "../core/entity.h"
 #include "../core/world.h"
@@ -34,11 +35,17 @@
 namespace Engine::Core {
 
 auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
+  return serialize_entity(entity, WorldCapture::Save);
+}
+
+auto Serialization::serialize_entity(const Entity* entity,
+                                     WorldCapture capture) -> QJsonObject {
   QJsonObject entity_obj;
   entity_obj["id"] = static_cast<qint64>(entity->get_id());
 
-  EntityCodec::write_core(entity, entity_obj);
-  write_movement(entity, entity_obj);
+  const bool replay_checkpoint = capture == WorldCapture::ReplayCheckpoint;
+  EntityCodec::write_core(entity, entity_obj, replay_checkpoint);
+  write_movement(entity, entity_obj, replay_checkpoint);
   EntityCodec::write_combat(entity, entity_obj);
   EntityCodec::write_ability(entity, entity_obj);
   EntityCodec::write_commander(entity, entity_obj);
@@ -98,6 +105,9 @@ void read_entities(World* world, const QJsonObject& world_obj) {
                                             : world->create_entity_with_id(entity_id);
     if (entity != nullptr) {
       Serialization::deserialize_entity(entity, entity_obj);
+      if (entity_obj.value("pending_removal").toBool()) {
+        world->emplace<PendingRemovalComponent>(entity->get_id());
+      }
     }
   }
 
@@ -109,7 +119,8 @@ void read_entities(World* world, const QJsonObject& world_obj) {
 }
 
 void read_terrain(Game::Session::SessionContext& session,
-                  const QJsonObject& world_obj) {
+                  const QJsonObject& world_obj,
+                  Serialization::WorldCapture capture) {
   if (!world_obj.contains("terrain")) {
     return;
   }
@@ -134,37 +145,45 @@ void read_terrain(Game::Session::SessionContext& session,
                                      terrain_obj);
 
   auto& terrain_service = session.terrain();
-  terrain_service.restore_from_serialized(width,
-                                          height,
-                                          tile_size,
-                                          temp_height_map->get_height_data(),
-                                          temp_height_map->getTerrainTypes(),
-                                          temp_height_map->get_river_segments(),
-                                          roads,
-                                          temp_height_map->get_bridges(),
-                                          biome,
-                                          world_props,
-                                          authored_world_props,
-                                          temp_height_map->get_lakes(),
-                                          temp_height_map->hill_navigation(),
-                                          temp_height_map->get_fords());
+  terrain_service.restore_from_serialized(
+      width,
+      height,
+      tile_size,
+      temp_height_map->get_height_data(),
+      temp_height_map->getTerrainTypes(),
+      temp_height_map->get_river_segments(),
+      roads,
+      temp_height_map->get_bridges(),
+      biome,
+      world_props,
+      authored_world_props,
+      temp_height_map->get_lakes(),
+      temp_height_map->hill_navigation(),
+      temp_height_map->get_fords(),
+      capture == Serialization::WorldCapture::ReplayCheckpoint);
 }
 
 } // namespace
 
-auto Serialization::serialize_world(const World* world) -> QJsonDocument {
+auto Serialization::serialize_world(const World* world,
+                                    WorldCapture capture) -> QJsonDocument {
   QJsonObject world_obj;
   QJsonArray entities_array;
 
-  world->for_each_entity([&entities_array](Entity& entity) {
-    if (entity.get_component<ConstructionPreviewComponent>() != nullptr) {
+  world->for_each_entity([&entities_array, capture](Entity& entity) {
+    if (capture == WorldCapture::Save &&
+        (entity.registry()->has<ConstructionPreviewComponent>(entity.get_id()) ||
+         is_collapsing_structure(entity))) {
       return;
     }
-
-    if (is_collapsing_structure(entity)) {
-      return;
+    auto snapshot = serialize_entity(&entity, capture);
+    if (capture == WorldCapture::ReplayCheckpoint) {
+      EntityCodec::write_checkpoint_components(entity, snapshot);
+      if (entity.registry()->has<PendingRemovalComponent>(entity.get_id())) {
+        snapshot["pending_removal"] = true;
+      }
     }
-    entities_array.append(serialize_entity(&entity));
+    entities_array.append(snapshot);
   });
 
   auto& session = Game::Session::session_for(*world);
@@ -180,7 +199,9 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
   return QJsonDocument(world_obj);
 }
 
-void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
+void Serialization::deserialize_world(World* world,
+                                      const QJsonDocument& doc,
+                                      WorldCapture capture) {
   auto world_obj = doc.object();
   read_entities(world, world_obj);
 
@@ -191,7 +212,7 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
 
   session.army_formations().from_json(world_obj["army_formations"].toObject());
 
-  read_terrain(session, world_obj);
+  read_terrain(session, world_obj, capture);
 }
 
 auto Serialization::save_to_file(const QString& filename,

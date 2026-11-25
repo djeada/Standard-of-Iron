@@ -1,25 +1,35 @@
+#include <QBuffer>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryDir>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <limits>
+#include <random>
 #include <variant>
 
 #include "game/command/command.h"
 #include "game/command/command_codec.h"
 #include "game/command/command_queue.h"
+#include "game/command/command_system.h"
 #include "game/command/commander_input.h"
 #include "game/command/json_u64.h"
+#include "game/command/log_format.h"
 #include "game/command/replay.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
+#include "game/save/replay_checkpoint.h"
+#include "game/session/deterministic_rng.h"
 #include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 
 namespace {
 
@@ -117,6 +127,19 @@ auto every_payload() -> std::vector<Payload> {
   all.emplace_back(PlaceBuilding{.building_type = "defense_tower",
                                  .position = QVector3D(16.0F, 0.0F, 17.0F),
                                  .rotation_y = 45.0F});
+  all.emplace_back(Game::Systems::AllyTributeAnswer{
+      .requester = 2, .giver = 3, .requested = 50, .granted = 25});
+  all.emplace_back(AIAllyCall{.target = 42, .target_owner = 2, .target_z = -6.0F});
+  all.emplace_back(
+      Game::Systems::AllyCallAnswer{.call_id = 5, .requester = 2, .ally = 3});
+  all.emplace_back(
+      Game::Systems::AllyAppeal{.appeal_id = 72, .from_ally = 3, .to_owner = 2});
+  all.emplace_back(
+      AIAllyAppealReply{.reply = {.appeal_id = 72, .from_ally = 3, .to_owner = 2},
+                        .goodwill_change = 0.2F,
+                        .answers_player = true});
+  all.emplace_back(
+      SetGarrisonLeash{.x = 3.0F, .z = 5.0F, .half_x = 2.0F, .half_z = 6.0F});
   return all;
 }
 
@@ -211,7 +234,7 @@ struct Match {
   std::unique_ptr<Game::Session::ScopedSession> scope;
 };
 
-TEST(ReplayTest, RecordsWhatTheQueueAcceptedAndPlaysItBackOnTheSameTicks) {
+TEST(ReplayTest, RecordsPreValidationInputsAndAppliesThemOnTheSameTicks) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
   const QString path = dir.filePath("match.soireplay");
@@ -231,11 +254,13 @@ TEST(ReplayTest, RecordsWhatTheQueueAcceptedAndPlaysItBackOnTheSameTicks) {
     auto& queue = match.session.commands();
     queue.submit(Source::LocalPlayer, 1, Game::Command::SetHold{.units = {mine}});
     queue.submit(Source::LocalPlayer, 1, Game::Command::SetHold{.units = {theirs}});
-    queue.drain(match.session.world(), 5);
+    queue.drain(match.session.world(), 1);
+    queue.log().complete_tick(1);
     queue.submit(
         Source::AI, 1, Game::Command::SetRunMode{.units = {mine}, .active = true});
-    queue.drain(match.session.world(), 9);
-    EXPECT_EQ(recorder->recorded_count(), 2U);
+    queue.drain(match.session.world(), 2);
+    queue.log().complete_tick(2);
+    EXPECT_EQ(recorder->recorded_count(), 3U);
     recorder->finish();
   }
 
@@ -244,10 +269,13 @@ TEST(ReplayTest, RecordsWhatTheQueueAcceptedAndPlaysItBackOnTheSameTicks) {
   ASSERT_TRUE(file.has_value()) << error.toStdString();
   EXPECT_EQ(file->header.kind, "skirmish");
   EXPECT_EQ(file->header.launch["players"].toInt(), 2);
-  ASSERT_EQ(file->commands.size(), 2U);
-  EXPECT_EQ(file->commands[0].submitted_tick, 5U);
-  EXPECT_EQ(file->commands[1].submitted_tick, 9U);
-  EXPECT_EQ(file->last_tick(), 9U);
+  ASSERT_EQ(file->command_count(), 3U);
+  const auto first = file->entries_at(1);
+  ASSERT_EQ(first.size(), 3U);
+  EXPECT_LT(first[0]->seq, first[1]->seq);
+  EXPECT_TRUE(std::holds_alternative<Game::Command::SetHold>(
+      std::get<Payload>(first[1]->payload)));
+  EXPECT_EQ(file->last_tick(), 2U);
 
   Match again;
   const EntityID mine = again.spawn(1);
@@ -261,16 +289,15 @@ TEST(ReplayTest, RecordsWhatTheQueueAcceptedAndPlaysItBackOnTheSameTicks) {
 
   auto* player = again.session.replay_player();
   ASSERT_NE(player, nullptr);
-  for (std::uint64_t tick = 0; tick <= 9; ++tick) {
+  EXPECT_FALSE(again.holding(mine));
+  for (std::uint64_t tick = 1; tick <= 2; ++tick) {
     player->feed(tick, queue);
     queue.drain(again.session.world(), tick);
-    if (tick < 5) {
-      EXPECT_FALSE(again.holding(mine)) << "hold applied before its tick " << tick;
-    }
   }
   EXPECT_TRUE(player->finished());
   EXPECT_TRUE(again.holding(mine));
   EXPECT_EQ(queue.accepted_count(), 2U);
+  EXPECT_EQ(queue.rejected_count(), 1U);
 
   again.session.set_replay_player(nullptr);
   queue.submit(Source::LocalPlayer, 1, Game::Command::Stop{.units = {mine}});
@@ -283,12 +310,27 @@ auto write_replay(const QString& path,
                   const QJsonObject& header,
                   const QByteArray& body) -> bool {
   QFile file(path);
-  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+  using namespace Game::Command;
+  if (!file.open(QIODevice::WriteOnly) || file.write(k_log_magic) < 0 ||
+      !write_log_frame(file, header)) {
     return false;
   }
-  file.write(QJsonDocument(header).toJson(QJsonDocument::Compact));
-  file.write("\n");
-  file.write(body);
+  if (!body.isEmpty()) {
+    auto object = QJsonDocument::fromJson(body).object();
+    const auto tick = object.take("tick");
+    const QString kind =
+        object.contains("commander_action")  ? QStringLiteral("commander_action")
+        : object.contains("commander_input") ? QStringLiteral("commander_input")
+        : object.contains("digest")          ? QStringLiteral("digest")
+                                             : QStringLiteral("command");
+    return write_log_frame(file,
+                           {{"kind", kind},
+                            {"tick", tick},
+                            {"seq", "1"},
+                            {"source", "ai"},
+                            {"owner", 1},
+                            {"body", object}});
+  }
   return true;
 }
 
@@ -305,7 +347,7 @@ TEST(ReplayTest, RefusesAFileWithALineItCannotApply) {
                            "\"tick\":3,\"payload\":{}}\n"));
   QString error;
   EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
-  EXPECT_TRUE(error.contains("bad.soireplay:2")) << error.toStdString();
+  EXPECT_TRUE(error.contains("invalid command log record")) << error.toStdString();
 }
 
 TEST(ReplayTest, RefusesAFileRecordedByAnotherSimulationBuild) {
@@ -332,7 +374,7 @@ TEST(ReplayTest, RefusesAFileRecordedAgainstOtherContent) {
   EXPECT_TRUE(error.contains("content")) << error.toStdString();
 }
 
-TEST(ReplayTest, AcceptsAHeaderRecordedBeforeFingerprintsExisted) {
+TEST(ReplayTest, RequiresTheBuildThatRecordedTheReplay) {
   QTemporaryDir dir;
   const QString path = dir.filePath("legacy.soireplay");
   QJsonObject header;
@@ -341,7 +383,8 @@ TEST(ReplayTest, AcceptsAHeaderRecordedBeforeFingerprintsExisted) {
   ASSERT_TRUE(write_replay(path, header, ""));
   QString error;
   const auto loaded = Game::Command::ReplayFile::load(path, &error);
-  EXPECT_TRUE(loaded.has_value()) << error.toStdString();
+  EXPECT_FALSE(loaded.has_value());
+  EXPECT_FALSE(error.isEmpty());
 }
 
 TEST(ReplayTest, RoundTripsItsOwnHeader) {
@@ -356,6 +399,164 @@ TEST(ReplayTest, RoundTripsItsOwnHeader) {
   ASSERT_TRUE(loaded.has_value()) << error.toStdString();
   EXPECT_EQ(loaded->header.build_id, Game::Command::simulation_build_id());
   EXPECT_EQ(loaded->header.content_digest, Game::Command::simulation_content_digest());
+}
+
+TEST(ReplayTest, ACheckpointRestoresAWorldAndContinuesWithTheLogTail) {
+  using namespace Game::Command;
+  using Game::Session::SessionContext;
+  const auto advance = [](Match& match) {
+    return match.session.advance(match.session.clock().tick_seconds(),
+                                 1,
+                                 SessionContext::OverloadPolicy::KeepBacklog);
+  };
+  QTemporaryDir temp;
+  const auto path = temp.filePath("checkpoint.soireplay");
+  Match live;
+  auto& session = live.session;
+  session.owners().set_owner_team(2, 1);
+  const auto unit = live.spawn(1);
+  session.world().add_system(std::make_unique<CommandSystem>());
+  session.economy().set(1, Game::Systems::ResourceType::Gold, 123);
+  (void)session.rng().next_u64();
+  ReplayHeader header;
+  header.checkpoint_interval = 2;
+  header.digest_interval = 1;
+  auto recorder = std::make_unique<ReplayRecorder>();
+  ASSERT_TRUE(recorder->begin(path, header, session.commands(), [&session]() {
+    return Game::Save::capture_replay_checkpoint(session);
+  }));
+  session.set_replay_recorder(std::move(recorder));
+  session.commands().submit(Source::LocalPlayer, 1, SetHold{.units = {unit}});
+  session.commands().submit(
+      Source::AI,
+      2,
+      Game::Systems::AllyAppeal{.appeal_id = 11,
+                                .from_ally = 2,
+                                .to_owner = 1,
+                                .resource = Game::Systems::ResourceType::Gold,
+                                .amount = 20});
+  ASSERT_EQ(advance(live), 1);
+  ASSERT_EQ(advance(live), 1);
+  const auto before = Game::Session::subsystem_digests(session);
+  ASSERT_NE(session.alliance().open_appeal(11), nullptr);
+  session.commands().submit(
+      Source::LocalPlayer, 1, AllyAppealAnswer{.appeal_id = 11, .accept = true});
+  session.commands().submit(
+      Source::LocalPlayer, 1, SetHold{.units = {unit}, .active = false});
+  ASSERT_EQ(advance(live), 1);
+  ASSERT_EQ(advance(live), 1);
+  EXPECT_EQ(session.economy().get(1, Game::Systems::ResourceType::Gold), 103);
+  const auto expected = Game::Session::subsystem_digests(session);
+  session.replay_recorder()->finish();
+
+  QString error;
+  auto file = ReplayFile::load(path, &error);
+  ASSERT_TRUE(file) << error.toStdString();
+  EXPECT_EQ(file->checkpoint_at_or_before(1), nullptr);
+  const auto* checkpoint = file->checkpoint_at_or_before(3);
+  ASSERT_NE(checkpoint, nullptr);
+  EXPECT_EQ(checkpoint->tick, 2U);
+  Match restored;
+  restored.session.world().add_system(std::make_unique<CommandSystem>());
+  restored.session.set_replay_player(std::make_unique<ReplayPlayer>(std::move(*file)));
+  ASSERT_EQ(Game::Save::seek_replay(restored.session, 2), 2U);
+  EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, before.root);
+  EXPECT_EQ(restored.session.advance_from_log(10), 2);
+  EXPECT_FALSE(restored.session.replay_player()->divergence());
+  EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, expected.root);
+}
+
+TEST(ReplayTest, SeeksWithTwoCommandersUnderIndependentDirectControl) {
+  using namespace Game::Command;
+  using namespace Engine::Core;
+  using Game::Session::SessionContext;
+  Match live;
+  auto& session = live.session;
+  session.owners().register_owner_with_id(3, Game::Systems::OwnerType::Player, "ally");
+  session.owners().set_local_player_id(1);
+  ASSERT_EQ(session.human_owners(), (std::vector<int>{1, 3}));
+  ASSERT_EQ(session.local_owner(), 1);
+  session.world().add_system(std::make_unique<CommandSystem>());
+  const auto first = live.spawn(1);
+  const auto second = live.spawn(3);
+  for (const auto id : {first, second}) {
+    auto* commander = session.world().get_entity(id);
+    commander->get_component<TransformComponent>()->position.x =
+        id == first ? -8.0F : 8.0F;
+    commander->get_component<UnitComponent>()->spawn_type =
+        Game::Units::SpawnType::Swordsman;
+    commander->add_component<CommanderComponent>();
+    commander->add_component<MovementComponent>();
+  }
+
+  QTemporaryDir temp;
+  ASSERT_TRUE(temp.isValid());
+  const auto path = temp.filePath("commander-checkpoint.soireplay");
+  ReplayHeader header;
+  header.checkpoint_interval = 2;
+  header.digest_interval = 1;
+  auto recorder = std::make_unique<ReplayRecorder>();
+  ASSERT_TRUE(recorder->begin(path, header, session.commands(), [&session]() {
+    return Game::Save::capture_replay_checkpoint(session);
+  }));
+  session.set_replay_recorder(std::move(recorder));
+  auto& log = session.commands().log();
+  const auto action = [&](std::uint64_t tick, int owner, CommanderAction value) {
+    log.append(
+        tick, Source::LocalPlayer, owner, CommanderActionRecord{.action = value});
+  };
+  const auto frame = [&](std::uint64_t tick, int owner, EntityID id, bool dodge) {
+    CommanderInputFrame input{.commander = id, .view_yaw = 30.0F, .sequence = tick};
+    input.set(CommanderInputFrame::Forward, true);
+    input.set(CommanderInputFrame::Run, true);
+    input.set(CommanderInputFrame::DodgePressed, dodge);
+    log.append(tick, Source::LocalPlayer, owner, input);
+  };
+  action(1, 1, CommanderAction::EnterControl);
+  action(1, 3, CommanderAction::EnterControl);
+  frame(1, 1, second, true);
+  frame(1, 1, first, false);
+  frame(1, 3, second, false);
+  frame(2, 1, first, true);
+  frame(2, 3, second, false);
+  frame(3, 1, first, false);
+  action(3, 3, CommanderAction::ExitControl);
+  frame(4, 1, first, false);
+  action(4, 3, CommanderAction::EnterControl);
+  frame(4, 3, second, false);
+  const auto advance = [&] {
+    return session.advance(
+        session.clock().tick_seconds(), 1, SessionContext::OverloadPolicy::KeepBacklog);
+  };
+  ASSERT_EQ(advance(), 1);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(first)->fpv_controlled);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  EXPECT_FALSE(session.world().try_get<CommanderComponent>(second)->dodge_active);
+  ASSERT_EQ(advance(), 1);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(first)->dodge_active);
+  ASSERT_EQ(advance(), 1);
+  EXPECT_FALSE(session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  ASSERT_EQ(advance(), 1);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  const auto expected = Game::Session::subsystem_digests(session);
+  session.replay_recorder()->finish();
+
+  QString error;
+  auto file = ReplayFile::load(path, &error);
+  ASSERT_TRUE(file) << error.toStdString();
+  Match restored;
+  restored.session.world().add_system(std::make_unique<CommandSystem>());
+  restored.session.set_replay_player(std::make_unique<ReplayPlayer>(std::move(*file)));
+  ASSERT_EQ(Game::Save::seek_replay(restored.session, 3), 2U);
+  EXPECT_FALSE(restored.session.local_owner());
+  EXPECT_EQ(restored.session.human_owners(), (std::vector<int>{1, 3}));
+  EXPECT_FALSE(
+      restored.session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  ASSERT_EQ(restored.session.advance_from_log(10), 1);
+  EXPECT_TRUE(
+      restored.session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  EXPECT_FALSE(restored.session.replay_player()->divergence());
+  EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, expected.root);
 }
 
 } // namespace
@@ -428,27 +629,28 @@ TEST(CommanderInputRecordTest, RecordedFramesComeBackAtTheTickTheyWereAppliedOn)
   {
     Game::Command::ReplayRecorder recorder;
     ASSERT_TRUE(recorder.begin(path, header, queue));
-    recorder.record_commander_input(12, first);
-    recorder.record_commander_input(30, second);
+    queue.log().append(1, Source::LocalPlayer, 1, first);
+    queue.log().complete_tick(1);
+    queue.log().append(2, Source::LocalPlayer, 1, second);
+    queue.log().complete_tick(2);
     recorder.finish();
   }
 
   QString error;
   auto file = Game::Command::ReplayFile::load(path, &error);
   ASSERT_TRUE(file.has_value()) << error.toStdString();
-  EXPECT_EQ(file->commander_inputs.size(), 2U);
-
-  Game::Command::ReplayPlayer player(std::move(*file));
-  EXPECT_EQ(player.commander_input_count(), 2U);
-  EXPECT_EQ(player.commander_input(11), nullptr);
-  ASSERT_NE(player.commander_input(12), nullptr);
-  EXPECT_TRUE(
-      player.commander_input(12)->held(Game::Command::CommanderInputFrame::Forward));
-  EXPECT_FLOAT_EQ(player.commander_input(12)->view_yaw, 90.0F);
-  ASSERT_NE(player.commander_input(30), nullptr);
-  EXPECT_TRUE(player.commander_input(30)->held(
-      Game::Command::CommanderInputFrame::JumpPressed));
-  EXPECT_EQ(player.commander_input(31), nullptr);
+  const auto first_tick = file->entries_at(1);
+  ASSERT_EQ(first_tick.size(), 2U);
+  const auto& first_frame =
+      std::get<Game::Command::CommanderInputFrame>(first_tick.front()->payload);
+  EXPECT_TRUE(first_frame.held(Game::Command::CommanderInputFrame::Forward));
+  EXPECT_FLOAT_EQ(first_frame.view_yaw, 90.0F);
+  const auto second_tick = file->entries_at(2);
+  ASSERT_EQ(second_tick.size(), 3U);
+  const auto& second_frame =
+      std::get<Game::Command::CommanderInputFrame>(second_tick.front()->payload);
+  EXPECT_TRUE(second_frame.held(Game::Command::CommanderInputFrame::JumpPressed));
+  EXPECT_TRUE(file->entries_at(3).empty());
 }
 
 TEST(CommanderInputRecordTest, AFileWithoutCommanderInputStillLoads) {
@@ -461,58 +663,47 @@ TEST(CommanderInputRecordTest, AFileWithoutCommanderInputStillLoads) {
   QString error;
   auto file = Game::Command::ReplayFile::load(path, &error);
   ASSERT_TRUE(file.has_value()) << error.toStdString();
-  EXPECT_TRUE(file->commander_inputs.empty());
+  EXPECT_TRUE(file->records.empty());
 }
 
-TEST(CommanderInputRecordTest, ModeAndLockActionsReplayOnceBeforeTheFollowingTick) {
+TEST(CommanderInputRecordTest, ActionsAndFramesShareTheLogOrder) {
+  using namespace Game::Command;
   QTemporaryDir dir;
-  ASSERT_TRUE(dir.isValid());
   const QString path = dir.filePath("commander_actions.soireplay");
-
-  Game::Command::CommandQueue queue;
-  Game::Command::ReplayHeader header;
+  CommandQueue queue;
+  ReplayHeader header;
   header.kind = QStringLiteral("skirmish");
-  header.digest_interval = 0;
-
-  {
-    Game::Command::ReplayRecorder recorder;
-    ASSERT_TRUE(recorder.begin(path, header, queue));
-    recorder.record_commander_action(
-        40, {.action = Game::Command::CommanderAction::EnterControl});
-    recorder.record_commander_action(
-        52,
-        {.action = Game::Command::CommanderAction::CycleLockOn,
-         .view_yaw = 171.5F,
-         .view_pitch = -6.0F});
-    recorder.record_commander_action(
-        52, {.action = Game::Command::CommanderAction::ToggleWeaponStance});
-    recorder.record_commander_action(
-        90, {.action = Game::Command::CommanderAction::ExitControl});
-    recorder.finish();
-  }
+  ReplayRecorder recorder;
+  ASSERT_TRUE(recorder.begin(path, header, queue));
+  queue.log().append(1,
+                     Source::LocalPlayer,
+                     1,
+                     CommanderActionRecord{.action = CommanderAction::EnterControl});
+  queue.log().append(1, Source::LocalPlayer, 1, CommanderInputFrame{.commander = 2});
+  queue.log().append(1,
+                     Source::LocalPlayer,
+                     1,
+                     CommanderActionRecord{.action = CommanderAction::CycleLockOn,
+                                           .view_yaw = 171.5F,
+                                           .view_pitch = -6.0F});
+  queue.log().complete_tick(1);
+  recorder.finish();
 
   QString error;
-  auto file = Game::Command::ReplayFile::load(path, &error);
-  ASSERT_TRUE(file.has_value()) << error.toStdString();
-  ASSERT_EQ(file->commander_actions.size(), 4U);
-
-  Game::Command::ReplayPlayer player(std::move(*file));
-  EXPECT_TRUE(player.take_commander_actions(40).empty());
-  const auto entered = player.take_commander_actions(41);
-  ASSERT_EQ(entered.size(), 1U);
-  EXPECT_EQ(entered.front().action, Game::Command::CommanderAction::EnterControl);
-  EXPECT_TRUE(player.take_commander_actions(41).empty());
-
-  const auto locked = player.take_commander_actions(53);
-  ASSERT_EQ(locked.size(), 2U);
-  EXPECT_EQ(locked[0].action, Game::Command::CommanderAction::CycleLockOn);
-  EXPECT_FLOAT_EQ(locked[0].view_yaw, 171.5F);
-  EXPECT_FLOAT_EQ(locked[0].view_pitch, -6.0F);
-  EXPECT_EQ(locked[1].action, Game::Command::CommanderAction::ToggleWeaponStance);
-
-  const auto exited = player.take_commander_actions(1000);
-  ASSERT_EQ(exited.size(), 1U);
-  EXPECT_EQ(exited.front().action, Game::Command::CommanderAction::ExitControl);
+  auto file = ReplayFile::load(path, &error);
+  ASSERT_TRUE(file) << error.toStdString();
+  CommandQueue follower;
+  follower.set_replay_only(true);
+  ReplayPlayer player(std::move(*file));
+  player.feed(1, follower);
+  player.feed(1, follower);
+  const auto entries = follower.log().entries_at(1);
+  ASSERT_EQ(entries.size(), 5U);
+  EXPECT_EQ(std::get<CommanderActionRecord>(entries[0]->payload).action,
+            CommanderAction::EnterControl);
+  EXPECT_EQ(std::get<CommanderInputFrame>(entries[1]->payload).commander, 2U);
+  EXPECT_FLOAT_EQ(std::get<CommanderActionRecord>(entries[2]->payload).view_yaw,
+                  171.5F);
 }
 
 TEST(CommanderInputRecordTest, AnUnknownCommanderActionIsAMalformedReplay) {
@@ -524,7 +715,7 @@ TEST(CommanderInputRecordTest, AnUnknownCommanderActionIsAMalformedReplay) {
       path, header.to_json(), R"({"commander_action":"teleport","tick":3})"));
   QString error;
   EXPECT_FALSE(Game::Command::ReplayFile::load(path, &error).has_value());
-  EXPECT_TRUE(error.contains("commander action")) << error.toStdString();
+  EXPECT_TRUE(error.contains("invalid command log record")) << error.toStdString();
 }
 
 constexpr std::array<std::uint64_t, 8> k_u64_boundary_values = {
@@ -591,59 +782,88 @@ TEST(ReplayTest, HeaderSeedRoundTripsThroughTheFile) {
   }
 }
 
-TEST(ReplayTest, RecordTicksRoundTripThroughTheFile) {
+TEST(ReplayTest, LogPositionsRoundTripWithoutLosingPrecision) {
+  using namespace Game::Command;
+  for (const std::uint64_t tick : k_u64_boundary_values) {
+    const LogEntry entry{tick, 1, 1, Source::AI, Payload{Stop{.units = {tick}}}};
+    const auto decoded = log_entry_from_json(to_json(entry));
+    ASSERT_TRUE(decoded);
+    EXPECT_EQ(decoded->tick, tick);
+    ASSERT_EQ(std::get<Stop>(std::get<Payload>(decoded->payload)).units,
+              (std::vector<Engine::Core::EntityID>{tick}));
+  }
+}
+
+TEST(ReplayTest, RecoversAtTheLastCompleteTickAfterATruncatedFrame) {
+  using namespace Game::Command;
   QTemporaryDir dir;
-  ASSERT_TRUE(dir.isValid());
-  const QString path = dir.filePath("ticks.soireplay");
-
-  Game::Command::CommandQueue queue;
-  Game::Command::ReplayHeader header;
-  header.kind = QStringLiteral("skirmish");
-  header.reference = QStringLiteral("map");
-  header.rng_seed = 0x5EED5EED5EED5EEDULL;
-  header.digest_interval = 1;
-
-  Game::Session::SubsystemDigests digests;
-  digests.root = 12345ULL;
-
-  Game::Command::CommanderInputFrame input;
-  input.commander = 3;
-
-  Game::Command::CommanderActionRecord action;
-  action.action = Game::Command::CommanderAction::EnterControl;
-
+  const QString path = dir.filePath("truncated.soireplay");
+  CommandQueue queue;
+  ReplayRecorder recorder;
+  ASSERT_TRUE(recorder.begin(path, ReplayHeader{}, queue));
+  queue.submit(Source::LocalPlayer, 1, Stop{.units = {1}});
+  queue.log().complete_tick(1);
+  queue.submit(Source::LocalPlayer, 1, Stop{.units = {2}});
+  recorder.finish();
   {
-    Game::Command::ReplayRecorder recorder;
-    ASSERT_TRUE(recorder.begin(path, header, queue));
-    for (const std::uint64_t tick : k_u64_boundary_values) {
-      recorder.record_digest(tick, digests);
-      recorder.record_commander_input(tick, input);
-      recorder.record_commander_action(tick, action);
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::ReadWrite));
+    ASSERT_TRUE(file.resize(file.size() - 6));
+  }
+  QString error;
+  auto file = ReplayFile::load(path, &error);
+  ASSERT_TRUE(file) << error.toStdString();
+  EXPECT_TRUE(file->recovered_tail);
+  EXPECT_EQ(file->last_tick(), 1U);
+  EXPECT_EQ(file->command_count(), 1U);
+}
 
-      Command cmd;
-      cmd.source = Source::AI;
-      cmd.owner_id = 1;
-      cmd.submitted_tick = tick;
-      cmd.payload = Game::Command::Stop{.units = {1}};
-      recorder.record(cmd);
-    }
-    recorder.finish();
+TEST(ReplayTest, RejectsCorruptedFrames) {
+  using namespace Game::Command;
+  QTemporaryDir dir;
+  const QString path = dir.filePath("corrupt.soireplay");
+  CommandQueue queue;
+  ReplayRecorder recorder;
+  ASSERT_TRUE(recorder.begin(path, ReplayHeader{}, queue));
+  queue.log().complete_tick(1);
+  recorder.finish();
+  {
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::ReadWrite));
+    ASSERT_TRUE(file.seek(file.size() - 1));
+    ASSERT_EQ(file.write("!"), 1);
+  }
+  QString error;
+  EXPECT_FALSE(ReplayFile::load(path, &error));
+  EXPECT_TRUE(error.contains("invalid command log record"));
+}
+
+TEST(ReplayFrameTest, AcceptsOnlyCompleteAndIntactFrames) {
+  using namespace Game::Command;
+  QBuffer output;
+  ASSERT_TRUE(output.open(QIODevice::WriteOnly));
+  const QJsonObject record{{"kind", "tick_complete"}, {"tick", "1"}, {"seq", "1"}};
+  ASSERT_TRUE(write_log_frame(output, record));
+  const QByteArray bytes = output.data();
+  for (qsizetype length = 0; length < bytes.size(); ++length) {
+    QBuffer input;
+    input.setData(bytes.left(length));
+    ASSERT_TRUE(input.open(QIODevice::ReadOnly));
+    QJsonObject decoded;
+    EXPECT_EQ(read_log_frame(input, decoded),
+              length == 0 ? FrameStatus::End : FrameStatus::Truncated)
+        << length;
   }
 
-  QString error;
-  const auto loaded = Game::Command::ReplayFile::load(path, &error);
-  ASSERT_TRUE(loaded.has_value()) << error.toStdString();
-  ASSERT_EQ(loaded->digests.size(), k_u64_boundary_values.size());
-  ASSERT_EQ(loaded->commander_inputs.size(), k_u64_boundary_values.size());
-  ASSERT_EQ(loaded->commander_actions.size(), k_u64_boundary_values.size());
-  ASSERT_EQ(loaded->commands.size(), k_u64_boundary_values.size());
-
-  for (std::size_t i = 0; i < k_u64_boundary_values.size(); ++i) {
-    const std::uint64_t expected = k_u64_boundary_values[i];
-    EXPECT_EQ(loaded->digests[i].tick, expected);
-    EXPECT_EQ(loaded->commander_inputs[i].tick, expected);
-    EXPECT_EQ(loaded->commander_actions[i].tick, expected);
-    EXPECT_EQ(loaded->commands[i].submitted_tick, expected);
+  std::mt19937 rng(1692);
+  for (int trial = 0; trial < 512; ++trial) {
+    auto mutated = bytes;
+    const auto index = static_cast<qsizetype>(rng() % mutated.size());
+    mutated[index] ^= static_cast<char>(1U << (rng() % 8));
+    QBuffer input(&mutated);
+    ASSERT_TRUE(input.open(QIODevice::ReadOnly));
+    QJsonObject decoded;
+    EXPECT_NE(read_log_frame(input, decoded), FrameStatus::Valid) << trial;
   }
 }
 

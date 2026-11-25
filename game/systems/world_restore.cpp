@@ -21,23 +21,7 @@ auto rebuild_registries_after_load(Engine::Core::World* world,
     return result;
   }
 
-  const auto& services = Game::Session::services_for(*world);
-  auto& owner_registry = *services.owners;
-
-  auto& troops = *services.troop_counts;
-  troops.rebuild_from_world(*world);
-
-  auto& stats_registry = *services.stats;
-  stats_registry.rebuild_from_world(*world);
-
-  const auto& all_owners = owner_registry.get_all_owners();
-  for (const auto& owner : all_owners) {
-    if (owner.type == Game::Systems::OwnerType::Player ||
-        owner.type == Game::Systems::OwnerType::AI) {
-      stats_registry.mark_game_start(owner.owner_id);
-    }
-  }
-
+  rebuild_world_counts(*world);
   rebuild_building_collisions(world);
 
   for (auto [entity_id, unit] : world->view<Engine::Core::UnitComponent>()) {
@@ -46,8 +30,26 @@ auto rebuild_registries_after_load(Engine::Core::World* world,
       break;
     }
   }
-
   return result;
+}
+
+void rebuild_world_counts(Engine::Core::World& world) {
+  const auto& services = Game::Session::services_for(world);
+  auto& owner_registry = *services.owners;
+
+  auto& troops = *services.troop_counts;
+  troops.rebuild_from_world(world);
+
+  auto& stats_registry = *services.stats;
+  stats_registry.rebuild_from_world(world);
+
+  const auto& all_owners = owner_registry.get_all_owners();
+  for (const auto& owner : all_owners) {
+    if (owner.type == Game::Systems::OwnerType::Player ||
+        owner.type == Game::Systems::OwnerType::AI) {
+      stats_registry.mark_game_start(owner.owner_id);
+    }
+  }
 }
 
 void rebuild_building_collisions(Engine::Core::World* world) {

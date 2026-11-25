@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
+class QJsonObject;
+
 namespace Engine::Core {
 using EntityID = std::uint64_t;
 }
@@ -329,6 +331,8 @@ public:
 
   // A copy of every footprint, taken where the simulation is not writing them.
   [[nodiscard]] auto footprint_snapshot() const -> BuildingFootprintSnapshot;
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   void set_navigation_passages(std::vector<NavigationPassage> passages);
 

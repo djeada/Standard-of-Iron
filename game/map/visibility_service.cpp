@@ -1,5 +1,9 @@
 #include "visibility_service.h"
 
+#include <QByteArray>
+#include <QJsonArray>
+#include <QJsonObject>
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -16,6 +20,7 @@
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 #include "game/core/presentation_coverage.h"
+#include "terrain.h"
 
 namespace Game::Map {
 
@@ -135,12 +140,36 @@ auto VisibilityService::step(Engine::Core::World& world, int player_id) -> bool 
   return true;
 }
 
+void VisibilityService::step_on_tick(Engine::Core::World& world,
+                                     int player_id,
+                                     std::uint64_t tick,
+                                     std::uint64_t interval) {
+  if (m_result_tick && tick >= *m_result_tick) {
+    std::unique_lock lock(m_queue_mutex);
+    m_queue_cv.wait(lock, [this] { return m_completed_result.has_value(); });
+    auto result = std::move(*m_completed_result);
+    m_completed_result.reset();
+    m_result_tick.reset();
+    lock.unlock();
+    integrate_result(std::move(result));
+  }
+  if (tick % interval != 0 || m_result_tick) {
+    return;
+  }
+  auto sources = gather_vision_sources(world, player_id);
+  if (sources != m_last_sources) {
+    m_last_sources = sources;
+    m_result_tick = tick + 1;
+    enqueue_job(compose_job_payload(std::move(sources)));
+  }
+}
+
 auto VisibilityService::gather_vision_sources(
     Engine::Core::World& world, int player_id) const -> std::vector<VisionSource> {
   std::vector<VisionSource> sources;
   const float range_padding = m_tile_size * k_half_cell_offset;
   const float inverse_tile_size_sq = 1.0F / (m_tile_size * m_tile_size);
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  const auto& owner_registry = *Game::Session::services_for(world).owners;
 
   auto add_source =
       [&](float world_x, float world_z, int cell_radius, float radius_sq) {
@@ -256,6 +285,7 @@ void VisibilityService::worker_loop() {
       if (!m_completed_result.has_value() || result.changed) {
         m_completed_result = std::move(result);
       }
+      m_queue_cv.notify_all();
     }
   }
 }
@@ -405,6 +435,41 @@ void VisibilityService::reveal_all() {
                                 static_cast<std::uint8_t>(VisibilityState::Visible)));
 }
 
+void VisibilityService::reveal_scouted_areas(
+    std::span<const ScoutedArea> scouted_areas) {
+  if (!scouted_areas.empty() && is_initialized()) {
+    const int width = get_width();
+    const int height = get_height();
+    const float tile_size = get_tile_size();
+    std::vector<std::uint8_t> known(
+        static_cast<std::size_t>(width) * static_cast<std::size_t>(height), 0U);
+    const float half_width = static_cast<float>(width) * 0.5F - 0.5F;
+    const float half_height = static_cast<float>(height) * 0.5F - 0.5F;
+    for (const auto& area : scouted_areas) {
+      const float centre_x = area.x / tile_size + half_width;
+      const float centre_z = area.z / tile_size + half_height;
+      const float radius = area.radius / tile_size;
+      const int min_z = std::max(0, static_cast<int>(std::floor(centre_z - radius)));
+      const int max_z =
+          std::min(height - 1, static_cast<int>(std::ceil(centre_z + radius)));
+      const int min_x = std::max(0, static_cast<int>(std::floor(centre_x - radius)));
+      const int max_x =
+          std::min(width - 1, static_cast<int>(std::ceil(centre_x + radius)));
+      for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+        for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+          const float dx = static_cast<float>(grid_x) - centre_x;
+          const float dz = static_cast<float>(grid_z) - centre_z;
+          if ((dx * dx) + (dz * dz) <= radius * radius) {
+            known[static_cast<std::size_t>(grid_z) * static_cast<std::size_t>(width) +
+                  static_cast<std::size_t>(grid_x)] = 1U;
+          }
+        }
+      }
+    }
+    (void)restore_explored(known, width, height);
+  }
+}
+
 auto VisibilityService::restore_explored(const std::vector<std::uint8_t>& explored,
                                          int width,
                                          int height) -> bool {
@@ -457,7 +522,161 @@ void VisibilityService::reset_worker_state() {
   m_completed_result.reset();
   m_generation.store(0, std::memory_order_release);
   m_last_sources.clear();
+  m_result_tick.reset();
   reset_throttle();
+}
+
+auto SimulationVisibility::grid_for(int owner) -> VisibilityService& {
+  return m_grids[owner];
+}
+
+auto SimulationVisibility::grid_for(int owner) const -> const VisibilityService* {
+  const auto found = m_grids.find(owner);
+  return found != m_grids.end() ? &found->second : nullptr;
+}
+
+void SimulationVisibility::advance(Engine::Core::World& world,
+                                   const Game::Systems::OwnerRegistry& owners,
+                                   const TerrainHeightMap& map,
+                                   std::uint64_t tick,
+                                   double tick_seconds) {
+  constexpr double refresh_seconds = 0.075;
+  const auto interval = static_cast<std::uint64_t>(
+      std::max(1.0, std::ceil(refresh_seconds / tick_seconds)));
+  for (const int owner : owners.get_player_owner_ids()) {
+    auto& visibility = grid_for(owner);
+    if (!visibility.is_initialized()) {
+      visibility.initialize(map.get_width(), map.get_height(), map.get_tile_size());
+      visibility.compute_immediate(world, owner);
+      visibility.reveal_scouted_areas(m_scouted_areas);
+    }
+    visibility.step_on_tick(world, owner, tick, interval);
+  }
+}
+
+void SimulationVisibility::set_scouted_areas(const std::vector<ScoutedArea>& areas) {
+  m_scouted_areas = areas;
+}
+
+void SimulationVisibility::clear() {
+  m_grids.clear();
+  m_scouted_areas.clear();
+}
+
+auto SimulationVisibility::generation() const -> std::uint64_t {
+  std::uint64_t result = 0;
+  for (const auto& [owner, visibility] : m_grids) {
+    if (const auto snapshot = visibility.snapshot_ptr()) {
+      result = (result * 1099511628211ULL) ^ static_cast<std::uint64_t>(owner);
+      result = (result * 1099511628211ULL) ^ snapshot->version;
+    }
+  }
+  return result;
+}
+
+auto SimulationVisibility::capture_state() const -> QJsonObject {
+  QJsonArray grids;
+  for (const auto& [owner, service] : m_grids) {
+    const auto grid = service.snapshot_ptr();
+    if (!grid || !grid->initialized) {
+      continue;
+    }
+    const QByteArray cells(reinterpret_cast<const char*>(grid->cells.data()),
+                           static_cast<qsizetype>(grid->cells.size()));
+    QJsonArray sources;
+    for (const auto& source : service.m_last_sources) {
+      sources.append(QJsonArray{source.center_z,
+                                source.center_x,
+                                source.cell_radius,
+                                source.expanded_radius_cells_sq});
+    }
+    QJsonObject row{{"owner", owner},
+                    {"version", QString::number(grid->version)},
+                    {"cells", QString::fromLatin1(cells.toBase64())},
+                    {"sources", sources}};
+    if (service.m_result_tick) {
+      row["result_tick"] = QString::number(*service.m_result_tick);
+    }
+    grids.append(row);
+  }
+  QJsonArray areas;
+  for (const auto& area : m_scouted_areas) {
+    areas.append(QJsonArray{area.x, area.z, area.radius});
+  }
+  return {{"grids", grids}, {"scouted_areas", areas}};
+}
+
+auto SimulationVisibility::restore_state(const QJsonObject& state,
+                                         const TerrainHeightMap* map,
+                                         std::uint64_t completed_tick) -> bool {
+  const auto grids = state.value("grids");
+  const auto areas = state.value("scouted_areas");
+  if (!grids.isArray() || !areas.isArray() ||
+      (map == nullptr && !grids.toArray().isEmpty())) {
+    return false;
+  }
+  SimulationVisibility restored;
+  for (const auto value : areas.toArray()) {
+    const auto area = value.toArray();
+    if (area.size() != 3) {
+      return false;
+    }
+    restored.m_scouted_areas.push_back({static_cast<float>(area[0].toDouble()),
+                                        static_cast<float>(area[1].toDouble()),
+                                        static_cast<float>(area[2].toDouble())});
+  }
+  for (const auto value : grids.toArray()) {
+    const auto row = value.toObject();
+    const int owner = row.value("owner").toInt();
+    bool version_valid = false;
+    const auto version = row.value("version").toString().toULongLong(&version_valid);
+    const auto cells =
+        QByteArray::fromBase64Encoding(row.value("cells").toString().toLatin1(),
+                                       QByteArray::AbortOnBase64DecodingErrors);
+    const auto size = static_cast<qsizetype>(map->get_width()) * map->get_height();
+    if (owner <= 0 || restored.m_grids.contains(owner) || !version_valid ||
+        version == 0 || !cells || cells.decoded.size() != size ||
+        std::any_of(cells.decoded.begin(), cells.decoded.end(), [](unsigned char cell) {
+          return cell > 2;
+        })) {
+      return false;
+    }
+    auto& service = restored.grid_for(owner);
+    service.initialize(map->get_width(), map->get_height(), map->get_tile_size());
+    auto snapshot = std::make_shared<VisibilityService::Snapshot>(service.snapshot());
+    snapshot->version = version;
+    snapshot->cells.assign(cells.decoded.begin(), cells.decoded.end());
+    service.m_published_snapshot = std::move(snapshot);
+    for (const auto source_value : row.value("sources").toArray()) {
+      const auto source = source_value.toArray();
+      if (source.size() != 4) {
+        return false;
+      }
+      constexpr int k_max_coordinate = 1 << 24;
+      const int z = source[0].toInt(k_max_coordinate);
+      const int x = source[1].toInt(k_max_coordinate);
+      const int radius = source[2].toInt(-1);
+      const auto radius_sq = static_cast<float>(source[3].toDouble(-1.0));
+      if (z <= -k_max_coordinate || z >= k_max_coordinate || x <= -k_max_coordinate ||
+          x >= k_max_coordinate || radius < 0 || radius >= k_max_coordinate ||
+          !std::isfinite(radius_sq) || radius_sq < 0.0F) {
+        return false;
+      }
+      service.m_last_sources.push_back({z, x, radius, radius_sq});
+    }
+    if (row.contains("result_tick")) {
+      bool tick_valid = false;
+      const auto tick = row.value("result_tick").toString().toULongLong(&tick_valid);
+      if (!tick_valid || tick <= completed_tick || tick - completed_tick != 1) {
+        return false;
+      }
+      service.m_result_tick = tick;
+      service.enqueue_job(service.compose_job_payload(service.m_last_sources));
+    }
+  }
+  m_grids.swap(restored.m_grids);
+  m_scouted_areas.swap(restored.m_scouted_areas);
+  return true;
 }
 
 void VisibilityService::publish_snapshot_locked(std::vector<std::uint8_t> cells) {

@@ -537,6 +537,8 @@ public:
   QString text;
 
   int owner_id;
+  int personal_owner_id = k_owner_everyone;
+  QString personal_text;
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "MISSION_ANNOUNCEMENT";
   }
@@ -544,18 +546,26 @@ public:
 
 class MusicTriggerEvent : public Event {
 public:
-  MusicTriggerEvent(std::string music_id, float volume = 1.0F, bool crossfade = true)
+  MusicTriggerEvent(std::string music_id,
+                    float volume = 1.0F,
+                    bool crossfade = true,
+                    int owner_id = k_owner_everyone)
       : music_id(std::move(music_id))
       , volume(volume)
-      , crossfade(crossfade) {}
+      , crossfade(crossfade)
+      , owner_id(owner_id) {}
   std::string music_id;
   float volume;
   bool crossfade;
+  int owner_id;
 };
 
 class MusicStopEvent : public Event {
 public:
-  MusicStopEvent() = default;
+  explicit MusicStopEvent(int owner_id = k_owner_everyone)
+      : owner_id(owner_id) {}
+
+  int owner_id;
 };
 
 class CombatHitEvent : public Event {

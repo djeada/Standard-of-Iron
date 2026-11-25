@@ -12,12 +12,14 @@
 #include <cstdint>
 #include <vector>
 
+#include "../command/json_u64.h"
 #include "../core/component.h"
 #include "../core/death_sequence.h"
 #include "../core/entity.h"
 #include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
+#include "../util/checkpoint_values.h"
 #include "entity_codec.h"
 #include "serialization.h"
 
@@ -220,15 +222,32 @@ void read_patrol(Entity* entity, const QJsonObject& json) {
   }
 }
 
-void write_ai_controlled(const Entity* entity, QJsonObject& entity_obj) {
-  if (entity->get_component<AIControlledComponent>() != nullptr) {
-    entity_obj["aiControlled"] = true;
+void write_ai_controlled(const Entity* entity,
+                         QJsonObject& entity_obj,
+                         bool replay_checkpoint) {
+  if (const auto* ai = entity->get_component<AIControlledComponent>()) {
+    if (!replay_checkpoint) {
+      entity_obj["aiControlled"] = true;
+      return;
+    }
+    entity_obj["aiControlled"] = QJsonObject{{"leash_x", ai->leash_x},
+                                             {"leash_z", ai->leash_z},
+                                             {"leash_half_x", ai->leash_half_x},
+                                             {"leash_half_z", ai->leash_half_z},
+                                             {"sallying", ai->sallying}};
   }
 }
 
 void read_ai_controlled(Entity* entity, const QJsonObject& json) {
-  if (json.contains("aiControlled") && json["aiControlled"].toBool()) {
-    entity->add_component<AIControlledComponent>();
+  const auto value = json.value("aiControlled");
+  if (value.isObject() || value.toBool()) {
+    auto* ai = entity->add_component<AIControlledComponent>();
+    const auto saved = value.toObject();
+    ai->leash_x = static_cast<float>(saved.value("leash_x").toDouble());
+    ai->leash_z = static_cast<float>(saved.value("leash_z").toDouble());
+    ai->leash_half_x = static_cast<float>(saved.value("leash_half_x").toDouble());
+    ai->leash_half_z = static_cast<float>(saved.value("leash_half_z").toDouble());
+    ai->sallying = saved.value("sallying").toBool();
   }
 }
 
@@ -407,21 +426,102 @@ void read_terrain_context(Entity* entity, const QJsonObject& json) {
   }
 }
 
+template <typename Facts>
+auto movement_progress_fields(Facts& facts) {
+  auto& p = facts.progress;
+  auto& stall = p.stall;
+  auto& t = facts.traversal;
+  return std::tie(facts.motor.blocked,
+                  facts.motor.has_contact,
+                  facts.motor.contact_nx,
+                  facts.motor.contact_nz,
+                  facts.last_accepted_speed,
+                  p.state,
+                  p.previous_state,
+                  p.remaining_arclength,
+                  p.route_advance,
+                  p.lateral_route_error,
+                  p.no_progress_seconds,
+                  p.no_progress_advance,
+                  p.order_seconds,
+                  p.tracked_order,
+                  p.state_seconds,
+                  p.blocked_steps,
+                  p.repath_count,
+                  p.repath_attempts,
+                  p.repath_reason,
+                  p.arrived_short,
+                  p.short_route_replans,
+                  p.holding_at_obstruction,
+                  p.holding_recheck_seconds,
+                  stall.objective_valid,
+                  stall.objective_x,
+                  stall.objective_z,
+                  stall.stalled_seconds,
+                  stall.window_seconds,
+                  stall.window_reference_x,
+                  stall.window_reference_z,
+                  stall.window_valid,
+                  stall.no_closer_seconds,
+                  stall.queued_seconds,
+                  stall.rung,
+                  stall.recovery_attempts,
+                  stall.tracked_order,
+                  stall.objective_abandoned,
+                  stall.abandoned_x,
+                  stall.abandoned_z,
+                  stall.abandon_count,
+                  t.mode,
+                  t.target_mode,
+                  t.portal_id,
+                  t.normal_files,
+                  t.current_files,
+                  t.target_files,
+                  t.corridor_half_width,
+                  t.desired_half_width,
+                  t.soldier_body_radius,
+                  t.file_spacing,
+                  t.lateral_scale,
+                  t.transition_progress,
+                  t.mode_dwell_seconds,
+                  t.about_faced);
+}
+
+void write_movement_progress(const Entity* entity, QJsonObject& json) {
+  if (const auto* facts =
+          entity->registry()->try_get<const MovementFactsComponent>(entity->get_id())) {
+    json["movement_progress"] =
+        Game::CheckpointValues::write_tuple(movement_progress_fields(*facts));
+  }
+}
+
+void read_movement_progress(Entity* entity, const QJsonObject& json) {
+  MovementFactsComponent facts;
+  if (Game::CheckpointValues::read_tuple(json.value("movement_progress"),
+                                         movement_progress_fields(facts))) {
+    entity->registry()->emplace<MovementFactsComponent>(entity->get_id(),
+                                                        std::move(facts));
+  }
+}
+
 } // namespace
 
-void write_core(const Entity* entity, QJsonObject& entity_obj) {
+void write_core(const Entity* entity, QJsonObject& entity_obj, bool replay_checkpoint) {
   write_transform(entity, entity_obj);
   write_renderable(entity, entity_obj);
   write_unit(entity, entity_obj);
   write_player_order_intent(entity, entity_obj);
   write_patrol(entity, entity_obj);
-  write_ai_controlled(entity, entity_obj);
+  write_ai_controlled(entity, entity_obj, replay_checkpoint);
   write_formation_mode(entity, entity_obj);
   write_army_formation_membership(entity, entity_obj);
   write_unit_layout_state(entity, entity_obj);
   write_stamina(entity, entity_obj);
   write_wading(entity, entity_obj);
   write_terrain_context(entity, entity_obj);
+  if (replay_checkpoint) {
+    write_movement_progress(entity, entity_obj);
+  }
 }
 
 void read_core(Entity* entity, const QJsonObject& json) {
@@ -437,13 +537,16 @@ void read_core(Entity* entity, const QJsonObject& json) {
   read_stamina(entity, json);
   read_wading(entity, json);
   read_terrain_context(entity, json);
+  read_movement_progress(entity, json);
 }
 
 } // namespace Engine::Core::EntityCodec
 
 namespace Engine::Core {
 
-void Serialization::write_movement(const Entity* entity, QJsonObject& entity_obj) {
+void Serialization::write_movement(const Entity* entity,
+                                   QJsonObject& entity_obj,
+                                   bool replay_checkpoint) {
   if (const auto* movement = entity->get_component<MovementComponent>()) {
     QJsonObject movement_obj;
     movement_obj["has_target"] = movement->has_target;
@@ -456,6 +559,34 @@ void Serialization::write_movement(const Entity* entity, QJsonObject& entity_obj
     movement_obj["path_index"] = static_cast<int>(movement->path_index);
     movement_obj["precise_arrival"] = movement->precise_arrival;
     movement_obj["navigation_clearance"] = movement->navigation_clearance;
+    if (replay_checkpoint) {
+      movement_obj["travelled"] = movement->travelled;
+      movement_obj["escape_active"] = movement->escape_active;
+      movement_obj["escape_x"] = movement->escape_x;
+      movement_obj["escape_z"] = movement->escape_z;
+      movement_obj["has_requested_goal"] = movement->has_requested_goal;
+      movement_obj["requested_goal_x"] = movement->requested_goal_x;
+      movement_obj["requested_goal_z"] = movement->requested_goal_z;
+      movement_obj["issuer_retargets"] = movement->issuer_retargets;
+      movement_obj["structure_approach_target_id"] =
+          Game::Command::u64_to_json(movement->structure_approach_target_id);
+      movement_obj["can_enter_forest"] = movement->can_enter_forest;
+      movement_obj["order_sequence"] =
+          Game::Command::u64_to_json(movement->order_sequence);
+      movement_obj["route_revision"] =
+          Game::Command::u64_to_json(movement->route_revision);
+      movement_obj["topology_revision"] =
+          Game::Command::u64_to_json(movement->topology_revision);
+      movement_obj["route_id"] = Game::Command::u64_to_json(movement->route_id);
+      movement_obj["route_lane_offset"] = movement->route_lane_offset;
+      movement_obj["route_lane_min_scale"] = movement->route_lane_min_scale;
+      movement_obj["route_opening_waypoint_index"] =
+          Game::Command::u64_to_json(movement->route_opening_waypoint_index);
+      movement_obj["route_reform_waypoint_index"] =
+          Game::Command::u64_to_json(movement->route_reform_waypoint_index);
+      movement_obj["declared_group_pace"] = movement->declared_group_pace;
+      movement_obj["following_formation_slot"] = movement->following_formation_slot;
+    }
 
     QJsonArray path_array;
     for (const auto& waypoint : movement->path) {
@@ -483,6 +614,36 @@ void Serialization::read_movement(Entity* entity, const QJsonObject& json) {
     movement->precise_arrival = movement_obj["precise_arrival"].toBool(false);
     movement->navigation_clearance = std::max(
         0.0F, static_cast<float>(movement_obj["navigation_clearance"].toDouble(0.5)));
+    const auto id_field = [&movement_obj](const char* key) {
+      return Game::Command::u64_from_json(movement_obj.value(QLatin1String(key)))
+          .value_or(0);
+    };
+    movement->travelled = static_cast<float>(movement_obj["travelled"].toDouble());
+    movement->escape_active = movement_obj["escape_active"].toBool();
+    movement->escape_x = static_cast<float>(movement_obj["escape_x"].toDouble());
+    movement->escape_z = static_cast<float>(movement_obj["escape_z"].toDouble());
+    movement->has_requested_goal = movement_obj["has_requested_goal"].toBool();
+    movement->requested_goal_x =
+        static_cast<float>(movement_obj["requested_goal_x"].toDouble());
+    movement->requested_goal_z =
+        static_cast<float>(movement_obj["requested_goal_z"].toDouble());
+    movement->issuer_retargets = movement_obj["issuer_retargets"].toBool();
+    movement->structure_approach_target_id = id_field("structure_approach_target_id");
+    movement->can_enter_forest = movement_obj["can_enter_forest"].toBool(true);
+    movement->order_sequence = id_field("order_sequence");
+    movement->route_revision = id_field("route_revision");
+    movement->topology_revision = id_field("topology_revision");
+    movement->route_id = id_field("route_id");
+    movement->route_lane_offset =
+        static_cast<float>(movement_obj["route_lane_offset"].toDouble());
+    movement->route_lane_min_scale =
+        static_cast<float>(movement_obj["route_lane_min_scale"].toDouble(1.0));
+    movement->route_opening_waypoint_index = id_field("route_opening_waypoint_index");
+    movement->route_reform_waypoint_index = id_field("route_reform_waypoint_index");
+    movement->declared_group_pace =
+        static_cast<float>(movement_obj["declared_group_pace"].toDouble());
+    movement->following_formation_slot =
+        movement_obj["following_formation_slot"].toBool();
     movement->clear_path();
     const auto path_array = movement_obj["path"].toArray();
     movement->path.reserve(path_array.size());

@@ -237,7 +237,7 @@ void ArenaScenarioRunner::set_animation_time(float seconds) {
 }
 
 void ArenaScenarioRunner::observe_commander_presentation(
-    const App::Core::CommanderPresentationTrace& trace) {
+    const Game::Commander::CommanderPresentationTrace& trace) {
   m_impl->commander_trace = trace;
 }
 

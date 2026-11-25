@@ -31,6 +31,14 @@ void dispatch(World& world, const Command& command) {
           std::vector<Engine::Core::EntityID> attackers;
           attackers.reserve(payload.units.size());
           for (auto const id : payload.units) {
+            if (payload.sally) {
+              if (auto* controlled =
+                      world.try_get<Engine::Core::AIControlledComponent>(id)) {
+                controlled->sallying = true;
+                controlled->leash_half_x = 0.0F;
+                controlled->leash_half_z = 0.0F;
+              }
+            }
             auto const* unit = world.try_get<Engine::Core::UnitComponent>(id);
             if (unit != nullptr &&
                 unit->spawn_type == Game::Units::SpawnType::SiegeTower) {
@@ -84,6 +92,15 @@ void dispatch(World& world, const Command& command) {
           apply_ally_call(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, AllyAppealAnswer>) {
           apply_ally_appeal_answer(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, AIAllyCall>) {
+          apply_ai_diplomacy(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, Game::Systems::AllyTributeAnswer> ||
+                             std::is_same_v<T, Game::Systems::AllyCallAnswer> ||
+                             std::is_same_v<T, Game::Systems::AllyAppeal> ||
+                             std::is_same_v<T, AIAllyAppealReply>) {
+          apply_ai_diplomacy(world, payload);
+        } else if constexpr (std::is_same_v<T, SetGarrisonLeash>) {
+          apply_garrison_leash(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, RollStones>) {
           apply_roll_stones(world, payload);
         } else if constexpr (std::is_same_v<T, CrossByRaft>) {

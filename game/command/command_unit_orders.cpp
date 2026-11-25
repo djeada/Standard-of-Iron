@@ -297,6 +297,7 @@ void apply_commander_ability(World& world, const UseCommanderAbility& order) {
     if (!plan.fully_placeable_for(subject)) {
       return;
     }
+    commander->fpv_controlled = false;
     commander->begin_flag_rally(
         plan.resolved_target.x(), plan.resolved_target.z(), false);
     if (auto* stamina = entity->get_component<Engine::Core::StaminaComponent>()) {

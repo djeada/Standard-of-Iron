@@ -64,6 +64,7 @@
         "game/camera_framing",
         "game/systems/unit_activity",
         "game/util/asset_text",
+        "game/util/checkpoint_values",
         "game/util/json_vec_utils",
         "game/util/planar_math",
         "game/session/simulation_clock",
@@ -345,6 +346,7 @@
         "game/systems/arrow_projectile",
         "game/systems/stone_projectile",
         "game/systems/projectile_system",
+        "game/systems/projectile_checkpoint",
         "game/systems/engagement_slot_system",
         "game/systems/target_commitment_system",
         "game/systems/healing_beam",
@@ -409,7 +411,7 @@
     },
     "session": {
       "targets": ["game_sim"],
-      "paths": ["game/session/", "game/command/"],
+      "paths": ["game/session/", "game/command/", "game/commander/"],
       "files": ["game/map/match_loader", "game/map/skirmish_camp_start"],
       "may_use": [
         "domain_types",

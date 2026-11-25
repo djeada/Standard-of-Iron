@@ -450,6 +450,13 @@ auto TerrainService::find_harvestable_world_prop_by_id(
                                is_harvestable_world_prop_type);
 }
 
+auto TerrainService::reserved_world_props() const -> std::vector<std::uint64_t> {
+  std::vector<std::uint64_t> ids(m_reserved_world_prop_ids.begin(),
+                                 m_reserved_world_prop_ids.end());
+  std::sort(ids.begin(), ids.end());
+  return ids;
+}
+
 auto TerrainService::is_world_prop_reserved(std::uint64_t world_prop_id) const -> bool {
   return world_prop_id != 0 && m_reserved_world_prop_ids.contains(world_prop_id);
 }

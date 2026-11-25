@@ -6,6 +6,7 @@
 #include "app/commander/commander_control_controller.h"
 #include "app/commander/commander_mode_coordinator.h"
 #include "game/audio/audio_cues.h"
+#include "game/commander/commander_motor.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
@@ -154,7 +155,7 @@ TEST_F(CommanderControlControllerTest, JumpForwardStopsAtBlockedGroundCells) {
   EXPECT_TRUE(commander_data->jump_active);
   EXPECT_LT(transform->position.z, 1.0F)
       << "an airborne commander passed into a blocked cell";
-  EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+  EXPECT_TRUE(Game::Commander::CommanderMotor::is_walkable_at(
       *commander, transform->position.x, transform->position.z));
 }
 
@@ -238,7 +239,7 @@ TEST_F(CommanderControlControllerTest, JumpTowardAnObstacleLandsOnWalkableGround
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
   }
 
-  EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+  EXPECT_TRUE(Game::Commander::CommanderMotor::is_walkable_at(
       *commander, transform->position.x, transform->position.z))
       << "landed at " << transform->position.x << ", " << transform->position.z;
 

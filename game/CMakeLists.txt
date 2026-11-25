@@ -36,6 +36,7 @@ add_library(
     engine_core
     STATIC
     core/entity.cpp
+    core/player_feedback.cpp
     core/registry.cpp
     core/component.cpp
     core/system.cpp
@@ -457,6 +458,7 @@ add_library(
     systems/arrow_visual_profile.cpp
     systems/combat_status_effect_system.cpp
     systems/projectile_system.cpp
+    systems/projectile_checkpoint.cpp
     systems/arrow_projectile.cpp
     systems/stone_projectile.cpp
     systems/commander_system.cpp
@@ -502,8 +504,25 @@ target_link_libraries(soi_wildlife PUBLIC engine_core PRIVATE soi_combat)
 add_library(
     game_sim
     STATIC
+    commander/commander_abilities.cpp
+    commander/commander_body_facing.cpp
+    commander/commander_defence.cpp
+    commander/commander_entity_access.cpp
+    commander/commander_handoff.cpp
+    commander/commander_input_port.cpp
+    commander/commander_latency_probe.cpp
+    commander/commander_locomotion.cpp
+    commander/commander_lunge.cpp
+    commander/commander_motor.cpp
+    commander/commander_primary_scan.cpp
+    commander/commander_runtime.cpp
+    commander/commander_strike.cpp
+    commander/commander_targeting.cpp
+    commander/commander_tick_trace.cpp
+    commander/commander_wall_deck.cpp
     command/command.cpp
     command/command_codec.cpp
+    command/command_log.cpp
     command/commander_input.cpp
     command/command_dispatcher.cpp
     command/command_unit_orders.cpp
@@ -513,6 +532,7 @@ add_library(
     command/command_system.cpp
     command/command_validator.cpp
     command/json_u64.cpp
+    command/log_format.cpp
     command/replay.cpp
     map/match_loader.cpp
     map/skirmish_camp_start.cpp
@@ -560,14 +580,10 @@ add_library(
 target_include_directories(game_sim PUBLIC . ${CMAKE_SOURCE_DIR})
 target_link_libraries(game_sim PUBLIC soi_wildlife soi_combat soi_economy soi_movement)
 
-# A replay is only replayable by the binary that recorded it: the determinism
-# contract is same-binary, and release floating-point options let two builds of
-# the same source disagree. Stamping the commit into the header is what lets
-# playback refuse a file it cannot reproduce instead of reporting a divergence
-# that is really a version mismatch. An archive with no git (a source tarball)
-# gets "unknown", which compares equal to itself and so never blocks playback.
+# The replay header identifies the build that can play the command log.
+# Floating-point settings can differ across targets built from the same revision.
 find_package(Git QUIET)
-set(SOI_SIMULATION_BUILD_ID "unknown")
+set(SOI_SIMULATION_REV "unknown")
 if(GIT_FOUND)
     execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse --short=12 HEAD
@@ -577,9 +593,25 @@ if(GIT_FOUND)
         ERROR_QUIET
     )
     if(SOI_GIT_REV)
-        set(SOI_SIMULATION_BUILD_ID "${SOI_GIT_REV}")
+        set(SOI_SIMULATION_REV "${SOI_GIT_REV}")
     endif()
 endif()
+if(MSVC OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(SOI_FP_MODE "precise")
+else()
+    set(SOI_FP_MODE "fast-math-finite-checks")
+endif()
+string(
+    SHA256 SOI_SIMULATION_FLAGS_HASH
+    "${CMAKE_CXX_FLAGS}|${CMAKE_CXX_FLAGS_DEBUG}|${CMAKE_CXX_FLAGS_RELEASE}|${CMAKE_CXX_FLAGS_RELWITHDEBINFO}|${CMAKE_CXX_FLAGS_MINSIZEREL}|${CMAKE_OSX_ARCHITECTURES}"
+)
+string(SUBSTRING "${SOI_SIMULATION_FLAGS_HASH}" 0 12 SOI_SIMULATION_FLAGS_HASH)
+string(
+    CONCAT SOI_SIMULATION_BUILD_ID
+    "${SOI_SIMULATION_REV}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-"
+    "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}-${SOI_FP_MODE}-$<CONFIG>-"
+    "Qt${Qt6_VERSION}-${SOI_SIMULATION_FLAGS_HASH}"
+)
 # Only replay.cpp reads the build ID. A target-wide definition would invalidate
 # every simulation object and its precompiled header whenever HEAD changes.
 set_property(
@@ -708,6 +740,8 @@ add_library(
     # what made engine_core and game_sim a declared static-library cycle. It was
     # never the ECS's job: nothing in game/core/ calls it.
     save/serialization.cpp
+    save/replay_checkpoint.cpp
+    save/component_checkpoint_codec.cpp
     save/component_core_codec.cpp
     save/component_combat_codec.cpp
     save/component_ability_codec.cpp

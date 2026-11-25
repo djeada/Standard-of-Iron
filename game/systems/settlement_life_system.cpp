@@ -1,5 +1,6 @@
 #include "settlement_life_system.h"
 
+#include <QJsonArray>
 #include <QVector3D>
 
 #include <algorithm>
@@ -13,6 +14,7 @@
 #include "../map/map_definition.h"
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
+#include "game/util/checkpoint_values.h"
 #include "owner_registry.h"
 #include "systems/movement/command_service.h"
 #include "systems/navigation/nav_grid.h"
@@ -374,6 +376,14 @@ void adopt_idle_civilians(Engine::Core::World& world) {
 }
 
 } // namespace
+
+auto SettlementLifeSystem::capture_checkpoint() const -> QJsonArray {
+  return Game::CheckpointValues::write(m_adoption_cooldown, m_alarm_cooldown);
+}
+
+auto SettlementLifeSystem::restore_checkpoint(const QJsonArray& state) -> bool {
+  return Game::CheckpointValues::read(state, m_adoption_cooldown, m_alarm_cooldown);
+}
 
 void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {

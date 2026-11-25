@@ -10,33 +10,32 @@
 
 namespace Game::Command {
 
-void CommandQueue::submit(Command command) {
-  const std::lock_guard<std::mutex> lock(m_mutex);
-  if (m_replay_only && !command.replayed && command.source != Source::Replay) {
-    ++m_dropped;
-    return;
-  }
-  m_pending.push_back(std::move(command));
+auto CommandQueue::submit(Command command) -> bool {
+  return submit(command.source, command.owner_id, std::move(command.payload));
 }
 
-void CommandQueue::submit(Source source, int owner_id, Payload payload) {
-  submit(
-      Command{.source = source, .owner_id = owner_id, .payload = std::move(payload)});
+auto CommandQueue::submit(Source source, int owner_id, Payload payload) -> bool {
+  return m_log.submit(source, owner_id, std::move(payload));
 }
 
 auto CommandQueue::drain(Engine::Core::World& world,
-                         std::uint64_t tick) -> std::size_t {
-
-  std::deque<Command> batch;
-  {
-    const std::lock_guard<std::mutex> lock(m_mutex);
-    batch.swap(m_pending);
-  }
+                         std::uint64_t tick,
+                         const RecordHandler& handle_record) -> std::size_t {
 
   std::size_t executed = 0;
-  for (auto& command : batch) {
-    command.submitted_tick = tick;
-
+  for (const auto& entry : m_log.seal_inputs(tick)) {
+    const auto* payload = std::get_if<Payload>(&entry->payload);
+    if (payload == nullptr) {
+      if (handle_record) {
+        handle_record(*entry);
+      }
+      continue;
+    }
+    const Command command{.source = entry->source,
+                          .owner_id = entry->owner,
+                          .submitted_tick = entry->tick,
+                          .payload = *payload,
+                          .replayed = m_log.follower()};
     auto validation = validate(world, command);
     if (!validation.accepted()) {
       ++m_rejected;
@@ -58,13 +57,11 @@ auto CommandQueue::drain(Engine::Core::World& world,
 }
 
 auto CommandQueue::pending() const -> std::size_t {
-  const std::lock_guard<std::mutex> lock(m_mutex);
-  return m_pending.size();
+  return m_log.pending_commands();
 }
 
-void CommandQueue::clear() {
-  const std::lock_guard<std::mutex> lock(m_mutex);
-  m_pending.clear();
+void CommandQueue::clear(std::uint64_t completed_tick) {
+  m_log.reset(completed_tick);
   m_accepted = 0;
   m_rejected = 0;
 }
@@ -104,8 +101,7 @@ auto submit(Engine::Core::World& world,
                   "queue.";
     return false;
   }
-  session->commands().submit(source, owner_id, std::move(payload));
-  return true;
+  return session->commands().submit(source, owner_id, std::move(payload));
 }
 
 auto dispatch_immediately(Engine::Core::World& world,

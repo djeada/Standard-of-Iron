@@ -1,19 +1,22 @@
 #include "replay.h"
 
 #include <QCryptographicHash>
+#include <QDebug>
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
 #include <QJsonDocument>
 #include <QStringList>
-#include <QTextStream>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <ranges>
+#include <tuple>
 
-#include "command_codec.h"
 #include "command_queue.h"
 #include "json_u64.h"
+#include "log_format.h"
 #include "utils/resource_utils.h"
 
 namespace Game::Command {
@@ -64,12 +67,12 @@ auto ReplayHeader::compatibility_error() const -> QString {
         .arg(k_replay_format_version);
   }
   const QString current_build = simulation_build_id();
-  if (!build_id.isEmpty() && build_id != current_build) {
+  if (build_id != current_build) {
     return QStringLiteral("recorded by simulation build %1, this is %2")
         .arg(build_id, current_build);
   }
   const QString current_content = simulation_content_digest();
-  if (!content_digest.isEmpty() && content_digest != current_content) {
+  if (content_digest != current_content) {
     return QStringLiteral("recorded against content %1, this is %2")
         .arg(content_digest, current_content);
   }
@@ -87,12 +90,13 @@ auto ReplayHeader::to_json() const -> QJsonObject {
   object["tick_seconds"] = tick_seconds;
   object["rng_seed"] = u64_to_json(rng_seed);
   object["digest_interval"] = static_cast<int>(digest_interval);
+  object["checkpoint_interval"] = static_cast<qint64>(checkpoint_interval);
   return object;
 }
 
 auto ReplayHeader::from_json(const QJsonObject& object) -> std::optional<ReplayHeader> {
   const auto version = object.value(QLatin1String("replay_format"));
-  if (!version.isDouble() || version.toInt() != k_replay_format_version) {
+  if (!version.isDouble() || version.toInt() < 1) {
     return std::nullopt;
   }
   ReplayHeader header;
@@ -104,13 +108,12 @@ auto ReplayHeader::from_json(const QJsonObject& object) -> std::optional<ReplayH
   header.launch = object.value(QLatin1String("launch")).toObject();
   header.tick_seconds =
       object.value(QLatin1String("tick_seconds")).toDouble(1.0 / 60.0);
-  if (object.contains(QLatin1String("rng_seed"))) {
-    const auto parsed_seed = u64_from_json(object.value(QLatin1String("rng_seed")));
-    if (!parsed_seed.has_value()) {
-      return std::nullopt;
-    }
-    header.rng_seed = *parsed_seed;
+  const auto parsed_seed = u64_from_json(object.value(QLatin1String("rng_seed")));
+  if (!parsed_seed || !std::isfinite(header.tick_seconds) ||
+      header.tick_seconds <= 0.0) {
+    return std::nullopt;
   }
+  header.rng_seed = *parsed_seed;
   const auto interval_val = object.value(QLatin1String("digest_interval"));
   if (!interval_val.isUndefined()) {
     const qint64 interval = interval_val.toInteger(-1);
@@ -121,6 +124,14 @@ auto ReplayHeader::from_json(const QJsonObject& object) -> std::optional<ReplayH
     header.digest_interval = static_cast<std::uint32_t>(interval);
   } else {
     header.digest_interval = 0;
+  }
+  const auto checkpoint_interval = object.value(QLatin1String("checkpoint_interval"));
+  if (!checkpoint_interval.isUndefined()) {
+    const auto interval = checkpoint_interval.toInteger(-1);
+    if (interval < 0 || interval > std::numeric_limits<std::uint32_t>::max()) {
+      return std::nullopt;
+    }
+    header.checkpoint_interval = static_cast<std::uint32_t>(interval);
   }
   return header;
 }
@@ -133,301 +144,268 @@ ReplayRecorder::~ReplayRecorder() {
 
 auto ReplayRecorder::begin(const QString& path,
                            const ReplayHeader& header,
-                           CommandQueue& queue) -> bool {
+                           CommandQueue& queue,
+                           CaptureCheckpoint capture_checkpoint) -> bool {
   finish();
   auto file = std::make_unique<QFile>(path);
-  if (!file->open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+  auto metadata = header;
+  if (!capture_checkpoint) {
+    metadata.checkpoint_interval = 0;
+  }
+  constexpr qint64 magic_bytes = sizeof(k_log_magic) - 1;
+  if (!file->open(QIODevice::WriteOnly | QIODevice::Truncate) ||
+      file->write(k_log_magic, magic_bytes) != magic_bytes ||
+      !write_log_frame(*file, metadata.to_json()) || !file->flush()) {
     return false;
   }
-  file->write(QJsonDocument(header.to_json()).toJson(QJsonDocument::Compact));
-  file->write("\n");
   m_file = std::move(file);
   m_path = path;
   m_count = 0;
+  m_failed = false;
   m_digest_interval = header.digest_interval;
-  m_queue = &queue;
-  queue.set_observer([this](const Command& command) { record(command); });
+  m_checkpoint_interval = metadata.checkpoint_interval;
+  m_capture_checkpoint = std::move(capture_checkpoint);
+  m_log = &queue.log();
+  m_log->attach_writer([this](const LogEntry& entry) { write(entry); },
+                       [this]() { flush(); });
+  if (m_failed) {
+    finish();
+    return false;
+  }
   return true;
 }
 
-void ReplayRecorder::record(const Command& command) {
-  if (!m_file) {
+void ReplayRecorder::write(const LogEntry& entry) {
+  if (m_failed) {
     return;
   }
-  m_file->write(QJsonDocument(to_json(command)).toJson(QJsonDocument::Compact));
-  m_file->write("\n");
-  ++m_count;
+  if (!write_log_frame(*m_file, to_json(entry))) {
+    m_failed = true;
+    qWarning() << "Replay: cannot write log record to" << m_path;
+  } else if (std::holds_alternative<Payload>(entry.payload)) {
+    ++m_count;
+  }
 }
 
-void ReplayRecorder::record_digest(std::uint64_t tick,
-                                   const Game::Session::SubsystemDigests& digests) {
-  if (!m_file || m_digest_interval == 0 || tick % m_digest_interval != 0) {
-    return;
+void ReplayRecorder::flush() {
+  if (!m_failed && !m_file->flush()) {
+    m_failed = true;
+    qWarning() << "Replay: cannot flush" << m_path << m_file->errorString();
   }
-  QJsonObject object;
-  object["digest"] = QString::number(digests.root);
-  QJsonObject parts;
-  parts["identity"] = QString::number(digests.identity);
-  parts["movement"] = QString::number(digests.movement);
-  parts["combat"] = QString::number(digests.combat);
-  parts["status"] = QString::number(digests.status);
-  parts["economy"] = QString::number(digests.economy);
-  parts["wildlife"] = QString::number(digests.wildlife);
-  parts["session"] = QString::number(digests.session);
-  parts["systems"] = QString::number(digests.systems);
-  object["parts"] = parts;
-
-  object["tick"] = u64_to_json(tick);
-  m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
-  m_file->write("\n");
-}
-
-void ReplayRecorder::record_commander_input(std::uint64_t tick,
-                                            const CommanderInputFrame& frame) {
-  if (!m_file) {
-    return;
-  }
-  QJsonObject object = to_json(frame);
-  object["tick"] = u64_to_json(tick);
-  m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
-  m_file->write("\n");
-}
-
-void ReplayRecorder::record_commander_action(std::uint64_t tick,
-                                             const CommanderActionRecord& record) {
-  if (!m_file) {
-    return;
-  }
-  QJsonObject object = to_json(record);
-  object["tick"] = u64_to_json(tick);
-  m_file->write(QJsonDocument(object).toJson(QJsonDocument::Compact));
-  m_file->write("\n");
 }
 
 void ReplayRecorder::finish() {
-  if (m_queue != nullptr) {
-    m_queue->set_observer({});
-    m_queue = nullptr;
+  if (m_log != nullptr) {
+    m_log->finish_match();
+    m_log->detach_writer();
+    m_log = nullptr;
   }
-  if (m_file) {
-    m_file->flush();
-    m_file->close();
-    m_file.reset();
-  }
+  m_file.reset();
+  m_capture_checkpoint = {};
 }
 
 auto ReplayRecorder::recording() const -> bool {
-  return m_file != nullptr;
+  return m_file != nullptr && !m_failed;
 }
+
+auto ReplayRecorder::digest_due(std::uint64_t tick) const -> bool {
+  return recording() && m_digest_interval != 0 && tick % m_digest_interval == 0;
+}
+
+auto ReplayRecorder::checkpoint_at(std::uint64_t tick) const
+    -> std::optional<Checkpoint> {
+  if (!recording() || m_checkpoint_interval == 0 || tick % m_checkpoint_interval != 0) {
+    return std::nullopt;
+  }
+  auto snapshot = m_capture_checkpoint();
+  if (snapshot.isEmpty()) {
+    return std::nullopt;
+  }
+  return Checkpoint{std::move(snapshot)};
+}
+
+namespace {
+
+auto older_format_error(QFile& file) -> QString {
+  file.seek(0);
+  const auto header = QJsonDocument::fromJson(file.readLine(64 * 1024)).object();
+  const int version = header.value(QLatin1String("replay_format")).toInt();
+  if (version > 0) {
+    const auto build = header.value(QLatin1String("build_id")).toString();
+    return QStringLiteral(
+               "replay format %1 requires its original simulation build (%2)")
+        .arg(version)
+        .arg(build.isEmpty() ? QStringLiteral("build ID unavailable") : build);
+  }
+  return QStringLiteral("missing command log signature");
+}
+
+template <typename T>
+auto count_records(const CommandLog::Entries& records) -> std::size_t {
+  return static_cast<std::size_t>(std::ranges::count_if(records, [](const auto& entry) {
+    return std::holds_alternative<T>(entry->payload);
+  }));
+}
+
+auto digest_at(const ReplayFile& file,
+               std::uint64_t tick) -> const Game::Session::SubsystemDigests* {
+  for (const auto& entry : file.entries_at(tick)) {
+    if (const auto* digest =
+            std::get_if<Game::Session::SubsystemDigests>(&entry->payload)) {
+      return digest;
+    }
+  }
+  return nullptr;
+}
+
+} // namespace
 
 auto ReplayFile::load(const QString& path,
                       QString* error) -> std::optional<ReplayFile> {
+  const auto fail = [&](const QString& message) -> std::optional<ReplayFile> {
+    if (error != nullptr) {
+      *error = QStringLiteral("%1: %2").arg(path, message);
+    }
+    return std::nullopt;
+  };
   QFile file(path);
-  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    if (error != nullptr) {
-      *error = QStringLiteral("cannot open %1").arg(path);
-    }
-    return std::nullopt;
+  if (!file.open(QIODevice::ReadOnly)) {
+    return fail(file.errorString());
   }
-  QTextStream in(&file);
+  if (file.read(sizeof(k_log_magic) - 1) != k_log_magic) {
+    return fail(older_format_error(file));
+  }
+  QJsonObject object;
+  if (read_log_frame(file, object) != FrameStatus::Valid) {
+    return fail(QStringLiteral("invalid command log header"));
+  }
+  auto header = ReplayHeader::from_json(object);
+  if (!header) {
+    return fail(QStringLiteral("invalid replay metadata"));
+  }
+  if (const auto incompatible = header->compatibility_error();
+      !incompatible.isEmpty()) {
+    return fail(incompatible);
+  }
+
   ReplayFile replay;
-  int line_number = 0;
-  bool header_read = false;
-  while (!in.atEnd()) {
-    const QString line = in.readLine().trimmed();
-    ++line_number;
-    if (line.isEmpty()) {
-      continue;
+  replay.header = std::move(*header);
+  std::uint64_t last_seq = 0;
+  bool ended = false;
+  for (;;) {
+    const auto offset = file.pos();
+    const auto status = read_log_frame(file, object);
+    if (status == FrameStatus::End || status == FrameStatus::Truncated) {
+      replay.recovered_tail = !ended || status == FrameStatus::Truncated;
+      break;
     }
-    QJsonParseError parse_error{};
-    const auto document = QJsonDocument::fromJson(line.toUtf8(), &parse_error);
-    if (parse_error.error != QJsonParseError::NoError || !document.isObject()) {
-      if (error != nullptr) {
-        *error = QStringLiteral("%1:%2: not a JSON object").arg(path).arg(line_number);
-      }
-      return std::nullopt;
+    auto entry =
+        status == FrameStatus::Valid ? log_entry_from_json(object) : std::nullopt;
+    if (!entry || ended || entry->seq <= last_seq) {
+      return fail(QStringLiteral("invalid command log record at byte %1").arg(offset));
     }
-    if (!header_read) {
-      auto header = ReplayHeader::from_json(document.object());
-      if (!header.has_value()) {
-        if (error != nullptr) {
-          *error = QStringLiteral("%1:%2: not a replay header this build reads")
-                       .arg(path)
-                       .arg(line_number);
-        }
-        return std::nullopt;
+    last_seq = entry->seq;
+    if (std::holds_alternative<TickComplete>(entry->payload)) {
+      if (entry->tick != replay.completed_tick + 1) {
+        return fail(
+            QStringLiteral("missing tick before record at byte %1").arg(offset));
       }
-      if (const QString incompatible = header->compatibility_error();
-          !incompatible.isEmpty()) {
-        if (error != nullptr) {
-          *error = QStringLiteral("%1: cannot be replayed by this build (%2)")
-                       .arg(path, incompatible);
-        }
-        return std::nullopt;
+      replay.completed_tick = entry->tick;
+    } else if (std::holds_alternative<MatchEnd>(entry->payload)) {
+      if (entry->tick != replay.completed_tick) {
+        return fail(QStringLiteral("invalid match end at byte %1").arg(offset));
       }
-      replay.header = std::move(*header);
-      header_read = true;
-      continue;
+      ended = true;
+    } else if (entry->tick <= replay.completed_tick) {
+      return fail(
+          QStringLiteral("input arrived after its tick closed at byte %1").arg(offset));
     }
-    const auto object = document.object();
-    if (object.contains(QLatin1String("digest"))) {
-      bool ok = false;
-      const auto digest =
-          object.value(QLatin1String("digest")).toString().toULongLong(&ok);
-      const auto tick = u64_from_json(object.value(QLatin1String("tick")));
-      if (!ok || !tick.has_value()) {
-        if (error != nullptr) {
-          *error =
-              QStringLiteral("%1:%2: malformed digest line").arg(path).arg(line_number);
-        }
-        return std::nullopt;
-      }
-      RecordedDigest recorded;
-      recorded.tick = *tick;
-      recorded.digest = digest;
-      if (const auto parts = object.value(QLatin1String("parts")); parts.isObject()) {
-        const auto values = parts.toObject();
-        const auto read = [&values](const char* key) {
-          return values.value(QLatin1String(key)).toString().toULongLong();
-        };
-        recorded.parts.identity = read("identity");
-        recorded.parts.movement = read("movement");
-        recorded.parts.combat = read("combat");
-        recorded.parts.status = read("status");
-        recorded.parts.economy = read("economy");
-        recorded.parts.wildlife = read("wildlife");
-        recorded.parts.session = read("session");
-        recorded.parts.systems = read("systems");
-        recorded.parts.root = digest;
-        recorded.has_parts = true;
-      }
-      replay.digests.push_back(recorded);
-      continue;
-    }
-    if (object.contains(QLatin1String("commander_input"))) {
-      auto frame = commander_input_from_json(object);
-      const auto tick = u64_from_json(object.value(QLatin1String("tick")));
-      if (!frame.has_value() || !tick.has_value()) {
-        if (error != nullptr) {
-          *error = QStringLiteral("%1:%2: malformed commander input line")
-                       .arg(path)
-                       .arg(line_number);
-        }
-        return std::nullopt;
-      }
-      replay.commander_inputs.push_back({*tick, *frame});
-      continue;
-    }
-    if (object.contains(QLatin1String("commander_action"))) {
-      auto record = commander_action_from_json(object);
-      const auto tick = u64_from_json(object.value(QLatin1String("tick")));
-      if (!record.has_value() || !tick.has_value()) {
-        if (error != nullptr) {
-          *error = QStringLiteral("%1:%2: malformed commander action line")
-                       .arg(path)
-                       .arg(line_number);
-        }
-        return std::nullopt;
-      }
-      replay.commander_actions.push_back({*tick, *record});
-      continue;
-    }
-    auto command = from_json(object);
-    if (!command.has_value()) {
-      if (error != nullptr) {
-        *error = QStringLiteral("%1:%2: not a command this build applies")
-                     .arg(path)
-                     .arg(line_number);
-      }
-      return std::nullopt;
-    }
-    replay.commands.push_back(std::move(*command));
+    replay.records.push_back(std::make_shared<const LogEntry>(std::move(*entry)));
   }
-  if (!header_read) {
-    if (error != nullptr) {
-      *error = QStringLiteral("%1: empty replay").arg(path);
-    }
-    return std::nullopt;
-  }
+
+  // A crash can leave complete frames for an unfinished tick, as can input delay
+  // when a match ends. Only a completed tick is safe to replay.
+  std::erase_if(replay.records, [&replay](const auto& entry) {
+    return entry->tick > replay.completed_tick;
+  });
+  std::ranges::sort(replay.records, {}, [](const auto& entry) {
+    return std::tie(entry->tick, entry->seq);
+  });
   return replay;
 }
 
-auto ReplayFile::last_tick() const -> std::uint64_t {
-  return commands.empty() ? 0 : commands.back().submitted_tick;
+auto ReplayFile::entries_at(std::uint64_t tick) const
+    -> std::span<const CommandLog::Entries::value_type> {
+  const auto entries = std::ranges::equal_range(
+      records, tick, {}, [](const auto& entry) { return entry->tick; });
+  return {entries.begin(), entries.end()};
+}
+
+auto ReplayFile::command_count() const -> std::size_t {
+  return count_records<Payload>(records);
+}
+
+auto ReplayFile::digest_count() const -> std::size_t {
+  return count_records<Game::Session::SubsystemDigests>(records);
+}
+
+auto ReplayFile::checkpoint_at_or_before(std::uint64_t tick) const -> const LogEntry* {
+  auto end = std::ranges::upper_bound(
+      records, tick, {}, [](const auto& entry) { return entry->tick; });
+  while (end != records.begin()) {
+    const auto& entry = *--end;
+    if (std::holds_alternative<Checkpoint>(entry->payload)) {
+      return entry.get();
+    }
+  }
+  return nullptr;
 }
 
 ReplayPlayer::ReplayPlayer(ReplayFile file)
     : m_file(std::move(file)) {
+}
 
-  std::stable_sort(m_file.commands.begin(),
-                   m_file.commands.end(),
-                   [](const Command& a, const Command& b) {
-                     return a.submitted_tick < b.submitted_tick;
-                   });
+auto ReplayPlayer::digest_due(std::uint64_t tick) const -> bool {
+  return digest_at(m_file, tick) != nullptr;
 }
 
 auto ReplayPlayer::check(std::uint64_t tick,
                          const Game::Session::SubsystemDigests& digests) -> bool {
-  while (m_next_digest < m_file.digests.size() &&
-         m_file.digests[m_next_digest].tick < tick) {
-    ++m_next_digest;
-  }
-  if (m_next_digest >= m_file.digests.size() ||
-      m_file.digests[m_next_digest].tick != tick) {
+  const auto* recorded = digest_at(m_file, tick);
+  if (recorded == nullptr) {
     return true;
   }
-  const auto& entry = m_file.digests[m_next_digest];
-  const auto recorded = entry.digest;
-  const std::uint64_t digest = digests.root;
-  const char* subsystem =
-      entry.has_parts ? Game::Session::name_of_first_difference(entry.parts, digests)
-                      : nullptr;
-  ++m_next_digest;
   ++m_checked;
-  if (recorded == digest) {
+  const char* subsystem = Game::Session::name_of_first_difference(*recorded, digests);
+  if (subsystem == nullptr) {
     return true;
   }
-  if (!m_divergence.has_value()) {
-    m_divergence = ReplayDivergence{
-        .tick = tick, .recorded = recorded, .observed = digest, .subsystem = subsystem};
+  if (!m_divergence) {
+    m_divergence = ReplayDivergence{.tick = tick,
+                                    .recorded = recorded->root,
+                                    .observed = digests.root,
+                                    .subsystem = subsystem};
   }
   return false;
 }
 
-auto ReplayPlayer::commander_input(std::uint64_t tick) const
-    -> const CommanderInputFrame* {
-  const auto found =
-      std::lower_bound(m_file.commander_inputs.begin(),
-                       m_file.commander_inputs.end(),
-                       tick,
-                       [](const RecordedCommanderInput& entry, std::uint64_t value) {
-                         return entry.tick < value;
-                       });
-  if (found == m_file.commander_inputs.end() || found->tick != tick) {
-    return nullptr;
-  }
-  return &found->frame;
-}
-
-auto ReplayPlayer::take_commander_actions(std::uint64_t tick)
-    -> std::vector<CommanderActionRecord> {
-  std::vector<CommanderActionRecord> due;
-  while (m_next_action < m_file.commander_actions.size() &&
-         m_file.commander_actions[m_next_action].tick < tick) {
-    due.push_back(m_file.commander_actions[m_next_action].record);
-    ++m_next_action;
-  }
-  return due;
-}
-
 void ReplayPlayer::feed(std::uint64_t tick, CommandQueue& queue) {
-  while (m_next < m_file.commands.size() &&
-         m_file.commands[m_next].submitted_tick <= tick) {
-    Command command = m_file.commands[m_next];
-    command.replayed = true;
-    queue.submit(std::move(command));
-    ++m_next;
+  while (m_next < m_file.records.size() && m_file.records[m_next]->tick <= tick) {
+    const auto& entry = *m_file.records[m_next++];
+    if (entry.tick == tick && queue.log().append_replicated(entry) &&
+        std::holds_alternative<Payload>(entry.payload)) {
+      ++m_fed;
+    }
   }
+}
+
+void ReplayPlayer::resume_after(std::uint64_t tick) {
+  const auto next = std::ranges::upper_bound(
+      m_file.records, tick, {}, [](const auto& entry) { return entry->tick; });
+  m_next = static_cast<std::size_t>(next - m_file.records.begin());
+  m_fed = 0;
+  m_checked = 0;
+  m_divergence.reset();
 }
 
 } // namespace Game::Command

@@ -52,6 +52,8 @@ public:
 
   [[nodiscard]] auto serialize_state() const -> QJsonObject;
   void restore_state(const QJsonObject& state);
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   [[nodiscard]] auto settings() const noexcept -> const WildlifeSettings& {
     return m_settings;

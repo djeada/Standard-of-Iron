@@ -78,13 +78,16 @@ World::World(bool presentation_enabled, bool render_snapshot)
     this->on_component_changed(entity_id, type_id, component_type, added);
   });
   if (!m_is_render_snapshot) {
-    std::atomic_store_explicit(&m_render_snapshot,
-                               std::shared_ptr<World>(new World(false, true)),
-                               std::memory_order_release);
+    std::atomic_store_explicit(
+        &m_render_snapshot, make_render_world(), std::memory_order_release);
   }
 }
 
 World::~World() = default;
+
+auto World::make_render_world() -> std::shared_ptr<World> {
+  return std::shared_ptr<World>(new World(false, true));
+}
 
 void World::shutdown_systems() {
   while (!m_systems.empty()) {
@@ -485,7 +488,7 @@ void World::publish_render_snapshot() {
   auto free_buffer = [&](std::size_t index) {
     auto& candidate = m_render_snapshot_buffers[index];
     if (candidate == nullptr) {
-      candidate = std::shared_ptr<World>(new World(false, true));
+      candidate = make_render_world();
       return true;
     }
     return candidate != published && candidate.use_count() <= 1;

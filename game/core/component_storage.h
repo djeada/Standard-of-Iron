@@ -58,6 +58,7 @@ public:
 
   virtual auto erase(EntityID entity_id) -> bool = 0;
   virtual void clear() = 0;
+  virtual void swap_dense(std::uint32_t first, std::uint32_t second) = 0;
 
 protected:
   auto track(EntityID entity_id) -> std::uint32_t {
@@ -83,6 +84,12 @@ protected:
   void reset_tracking() {
     m_dense.clear();
     m_sparse.clear();
+  }
+
+  void swap_tracked(std::uint32_t first, std::uint32_t second) {
+    std::swap(m_dense[first], m_dense[second]);
+    m_sparse[Handle::index_of(m_dense[first])] = first;
+    m_sparse[Handle::index_of(m_dense[second])] = second;
   }
 
 private:
@@ -171,6 +178,11 @@ public:
     m_free_slots.clear();
     m_used_slots = 0;
     reset_tracking();
+  }
+
+  void swap_dense(std::uint32_t first, std::uint32_t second) override {
+    std::swap(m_slot_by_dense[first], m_slot_by_dense[second]);
+    swap_tracked(first, second);
   }
 
 private:

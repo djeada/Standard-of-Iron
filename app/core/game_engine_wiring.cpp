@@ -163,7 +163,7 @@ void GameEngine::wire_loading_and_saves() {
           .leave_commander_mode =
               [this]() {
                 if (m_commander_view_model->active()) {
-                  m_commander_view_model->exit_mode();
+                  m_commander_view_model->leave_commander_mode();
                 }
               },
           .autosave_allowed =
@@ -469,10 +469,14 @@ void GameEngine::wire_event_subscriptions() {
             const Engine::Core::LocalAudience audience{
                 m_level.is_spectator_mode ? Engine::Core::k_owner_everyone
                                           : m_runtime.local_owner_id};
-            if (e.text.isEmpty() || !audience.addresses(e.owner_id)) {
+            const auto& text =
+                audience.is_local(e.personal_owner_id) && !e.personal_text.isEmpty()
+                    ? e.personal_text
+                    : e.text;
+            if (text.isEmpty() || !audience.addresses(e.owner_id)) {
               return;
             }
-            m_mission->queue_announcement(e.text);
+            m_mission->queue_announcement(text);
           });
 
   m_combat_hit_subscription =

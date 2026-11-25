@@ -6,32 +6,55 @@
 #include <cmath>
 #include <utility>
 
-#include "app/commander/commander_entity_access.h"
-#include "app/commander/commander_heading.h"
-#include "app/commander/commander_tick_trace.h"
 #include "game/audio/audio_cues.h"
+#include "game/command/command_queue.h"
+#include "game/commander/commander_entity_access.h"
+#include "game/commander/commander_heading.h"
+#include "game/commander/commander_runtime.h"
 #include "game/core/component.h"
-#include "game/core/simulation_timing.h"
 #include "game/core/world.h"
-#include "game/systems/combat_actions/combat_action_definition.h"
-#include "game/systems/combat_actions/melee_intent_solver.h"
-#include "game/systems/navigation/walkability.h"
-#include "game/systems/rpg_combat_system/rpg_bow_aim.h"
-#include "game/systems/rpg_combat_system/rpg_commander_damage.h"
+#include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "scene/camera.h"
 
 namespace {
 
 constexpr float k_fov_hip = 68.0F;
-constexpr float k_turn_speed_degrees = 105.0F;
 
 } // namespace
 
 void CommanderControlController::set_latency_probe(
-    App::Core::CommanderLatencyProbe* probe) {
+    Game::Commander::CommanderLatencyProbe* probe) {
   m_latency_probe = probe;
   m_input_port.set_latency_probe(probe);
   m_look.set_latency_probe(probe);
+  m_runtime->set_latency_probe(probe);
+}
+
+CommanderControlController::CommanderControlController()
+    : m_preview_runtime(std::make_unique<Game::Commander::CommanderRuntime>())
+    , m_runtime(m_preview_runtime.get()) {
+}
+
+CommanderControlController::~CommanderControlController() {
+  bind_runtime(nullptr);
+}
+
+auto CommanderControlController::last_refusal() const
+    -> const Game::Commander::CommanderRefusal& {
+  return m_runtime->last_refusal();
+}
+
+auto CommanderControlController::is_dodge_rolling() const -> bool {
+  return m_runtime->locomotion().dodge_state() == DodgeState::Rolling;
+}
+
+void CommanderControlController::set_presentation_trace_enabled(bool enabled) {
+  m_trace_enabled = enabled;
+  m_runtime->set_trace_enabled(enabled);
+  if (!enabled) {
+    m_trace = {};
+  }
 }
 
 void CommanderControlController::snap_presentation_pose() {
@@ -40,8 +63,9 @@ void CommanderControlController::snap_presentation_pose() {
 
 void CommanderControlController::release_all_input() {
   m_input_port.release_all();
-  m_locomotion.release_input();
-  m_strike.release_input();
+  if (!m_match_runtime) {
+    m_runtime->release_all_input();
+  }
   m_look.suspend_mouse();
 }
 
@@ -56,28 +80,19 @@ auto CommanderControlController::pointer_captured() const -> bool {
 void CommanderControlController::reset() {
   release_all_input();
   snap_presentation_pose();
-  m_body_facing.reset();
   m_look.reset();
   m_camera_rig.reset();
-  m_tick_aim_ray.reset();
-  m_locomotion.reset();
-  m_lunge.reset();
-  m_targeting.reset();
-  m_defence.reset();
-  m_strike.reset();
-  m_abilities.reset();
+  if (!m_match_runtime) {
+    m_runtime->reset();
+  }
 }
 
 void CommanderControlController::release_for_rally() {
-  release_all_input();
-  m_body_facing.reset();
+  m_input_port.release_all();
   m_look.reset();
-  m_tick_aim_ray.reset();
-  m_lunge.reset();
-  m_targeting.reset();
-  m_defence.reset();
-  m_strike.reset();
-  m_abilities.reset();
+  if (!m_match_runtime) {
+    m_runtime->release_for_rally();
+  }
 }
 
 void CommanderControlController::set_view_yaw(float yaw) {
@@ -193,98 +208,6 @@ auto CommanderControlController::sample_frame_intent(QQuickWindow* window)
   return m_look.sample_frame_intent(m_input_port.locked_copy());
 }
 
-void CommanderControlController::toggle_close_camera_mode(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) const {
-  auto* commander = controlled_commander(world, commander_id, local_owner_id);
-  if (commander == nullptr) {
-    return;
-  }
-  if (auto* cmd = commander->get_component<Engine::Core::CommanderComponent>()) {
-    cmd->close_camera_mode = !cmd->close_camera_mode;
-  }
-}
-
-void CommanderControlController::toggle_weapon_stance(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) {
-  auto* commander = controlled_commander(world, commander_id, local_owner_id);
-  if (commander == nullptr) {
-    return;
-  }
-  if (Game::Systems::RpgCombat::toggle_weapon_stance(*commander)) {
-    if (auto* intents = Engine::Core::get_or_add_component<
-            Engine::Core::CombatIntentQueueComponent>(commander)) {
-      Engine::Core::CombatActionIntent transition;
-      transition.type = Engine::Core::CommanderCombatIntentType::WeaponSwitch;
-      transition.pressed_at = intents->clock;
-      intents->push(transition);
-    }
-    Game::Audio::play_cue(Game::Audio::Cue::k_combat_guard_raise);
-  } else {
-    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
-  }
-}
-
-auto CommanderControlController::locked_target_id() const -> Engine::Core::EntityID {
-  return m_targeting.locked_id();
-}
-
-auto CommanderControlController::focus_target_id() const -> Engine::Core::EntityID {
-  return m_targeting.locked_id();
-}
-
-void CommanderControlController::cycle_lock_on_target(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) {
-  if (!m_targeting.cycle_lock(world, commander_id, local_owner_id, m_look.yaw())) {
-    m_abilities.refuse("commander.cycle_lock_on");
-  }
-}
-
-void CommanderControlController::toggle_lock_on_target(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) {
-  if (m_targeting.toggle_lock(world, commander_id, local_owner_id, m_look.yaw()) ==
-      App::Core::CommanderTargeting::LockToggle::NoTarget) {
-    m_abilities.refuse("commander.cycle_lock_on");
-  }
-}
-
-void CommanderControlController::switch_lock_on_target(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id,
-    int direction) {
-  if (!m_targeting.switch_lock(world, commander_id, local_owner_id, direction)) {
-    m_abilities.refuse("commander.cycle_lock_on");
-  }
-}
-
-void CommanderControlController::note_refusal(const char* action) {
-  m_abilities.refuse(action);
-}
-
-auto CommanderControlController::controlled_commander(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) const -> Engine::Core::Entity* {
-  return App::Core::controlled_commander(world, commander_id, local_owner_id);
-}
-
-auto CommanderControlController::find_primary_target(
-    Engine::Core::World& world,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id,
-    float extra_reach) -> Engine::Core::EntityID {
-  return m_targeting.find_primary_target(
-      world, commander_id, local_owner_id, m_look.yaw(), extra_reach);
-}
-
 auto CommanderControlController::queued_intent_count(
     Engine::Core::World& world,
     Engine::Core::EntityID commander_id,
@@ -324,584 +247,6 @@ void CommanderControlController::update_camera_presentation(
   update_camera(world, *commander, camera, dt);
 }
 
-void CommanderControlController::capture_input(Engine::Core::World& world,
-                                               Engine::Core::EntityID commander_id,
-                                               float dt) {
-  m_input_port.capture_tick();
-  if (dt <= 0.0F) {
-    return;
-  }
-  std::optional<std::pair<QVector3D, QVector3D>> live_ray;
-  if (m_camera_rig.eye_valid() && m_camera_rig.forward_valid()) {
-    live_ray = std::make_pair(m_camera_rig.eye(), m_camera_rig.forward());
-  }
-  m_tick_aim_ray = live_ray;
-  if (auto const replayed = m_input_port.exchange_recorded(
-          world,
-          commander_id,
-          {.yaw = m_look.yaw(), .pitch = m_look.pitch(), .aim_ray = live_ray});
-      replayed.has_value()) {
-    m_look.set_yaw(replayed->yaw);
-    m_look.set_pitch(replayed->pitch);
-    m_tick_aim_ray = replayed->aim_ray;
-  }
-}
-
-auto CommanderControlController::hold_for_rally(Engine::Core::World& world,
-                                                const App::Core::CommanderHandles& body,
-                                                Render::GL::Camera* camera,
-                                                float dt) -> bool {
-  body.commander_data->fpv_motion_vx = 0.0F;
-  body.commander_data->fpv_motion_vz = 0.0F;
-  body.commander_data->fpv_motion_requested = false;
-
-  m_input_port.release_for_rally();
-  m_locomotion.hold_for_rally();
-  follow_body_while_rallying(App::Core::wrap_angle_degrees(body.transform.rotation.y),
-                             dt);
-
-  if (body.movement != nullptr) {
-    body.movement->set_manual_velocity(0.0F, 0.0F);
-  }
-  m_defence.hold_for_rally(body.entity, dt);
-
-  m_presentation.publish_sample(body.entity, body.transform, dt);
-  if (camera != nullptr) {
-    update_camera(world, body.entity, *camera, dt);
-  }
-  return true;
-}
-
-void CommanderControlController::follow_body_while_rallying(float body_yaw, float dt) {
-  constexpr float k_idle_before_follow_seconds = 0.8F;
-  constexpr float k_follow_rate = 2.5F;
-  float const yaw = m_look.yaw();
-  bool const looked =
-      !m_rally_view_valid ||
-      std::abs(App::Core::signed_angle_delta(yaw, m_rally_view_yaw)) > 0.01F;
-  m_rally_look_idle = looked ? 0.0F : m_rally_look_idle + dt;
-  if (m_rally_look_idle >= k_idle_before_follow_seconds) {
-    m_look.set_yaw(App::Core::wrap_angle_degrees(
-        yaw + (App::Core::signed_angle_delta(body_yaw, yaw) *
-               (1.0F - std::exp(-k_follow_rate * dt)))));
-  }
-  m_rally_view_yaw = m_look.yaw();
-  m_rally_view_valid = true;
-}
-
-void CommanderControlController::steer_view(Engine::Core::World& world,
-                                            Engine::Core::Entity& commander,
-                                            float dt) {
-  auto const& tick = m_input_port.tick();
-  m_look.set_yaw(
-      m_targeting.steer_view_toward_lock(world,
-                                         commander,
-                                         {.view_yaw = m_look.yaw(),
-                                          .run = tick.run,
-                                          .backward = tick.backward,
-                                          .dodge_pressed = tick.dodge_pressed,
-                                          .dt = dt}));
-
-  if (m_targeting.locked_id() == 0) {
-
-    if (tick.turn_left) {
-      m_look.set_yaw(m_look.yaw() + k_turn_speed_degrees * dt);
-    }
-    if (tick.turn_right) {
-      m_look.set_yaw(m_look.yaw() - k_turn_speed_degrees * dt);
-    }
-  }
-  m_look.set_yaw(App::Core::wrap_angle_degrees(m_look.yaw()));
-}
-
-auto CommanderControlController::advance_jump_stage(
-    const App::Core::CommanderHandles& body, const TickFacts& facts, float dt) -> bool {
-  auto const& tick = m_input_port.tick();
-  bool const hold_press =
-      tick.jump_pressed &&
-      (facts.recovering_soon() ||
-       m_locomotion.frees_within(k_commander_movement_buffer_seconds));
-  auto const jump = m_locomotion.advance_jump(
-      body,
-      {.jump_pressed = tick.jump_pressed && !hold_press,
-       .primary_held = tick.primary_held,
-       .guard_held = tick.guard_held,
-       .ability_requested = tick.shield_bash_pressed || tick.vanguard_rush_pressed ||
-                            tick.second_wind_pressed,
-       .staggered = facts.staggered(),
-       .dt = dt});
-  m_input_port.record_jump(jump.edge);
-  if (hold_press) {
-    m_input_port.carry_jump_edge();
-  } else {
-    m_input_port.clear_jump_edge();
-  }
-  return jump.active;
-}
-
-auto CommanderControlController::start_dodge_stage(
-    Engine::Core::World& world,
-    const App::Core::CommanderHandles& body,
-    const TickFacts& facts,
-    const MotionOutcome& motion) -> App::Core::MoveBasis {
-  auto const& tick = m_input_port.tick();
-  auto const basis =
-      App::Core::CommanderLocomotion::move_basis(m_look.yaw(),
-                                                 motion.forward_axis,
-                                                 motion.right_axis,
-                                                 body.transform,
-                                                 m_targeting.locked_position(world));
-  bool const hold_press =
-      tick.dodge_pressed &&
-      (facts.recovering_soon() ||
-       m_locomotion.frees_within(k_commander_movement_buffer_seconds));
-  m_input_port.record_dodge(
-      m_locomotion.try_start_dodge(body,
-                                   {.pressed = tick.dodge_pressed && !hold_press,
-                                    .staggered = facts.staggered(),
-                                    .has_direction = tick.has_dodge_direction,
-                                    .direction = tick.dodge_direction,
-                                    .move = basis.move,
-                                    .forward = basis.forward},
-                                   m_latency_probe));
-  if (hold_press) {
-    m_input_port.carry_dodge_edge();
-  } else {
-    m_input_port.clear_dodge_edge();
-  }
-  return basis;
-}
-
-auto CommanderControlController::advance_motion(Engine::Core::World& world,
-                                                const App::Core::CommanderHandles& body,
-                                                const TickFacts& facts,
-                                                float dt) -> MotionOutcome {
-  auto const& tick = m_input_port.tick();
-  MotionOutcome out;
-  out.forward_axis = tick.forward_axis();
-  out.right_axis = tick.right_axis();
-  out.previous_position = QVector3D(
-      body.transform.position.x, body.transform.position.y, body.transform.position.z);
-
-  m_locomotion.decay_dodge_kick(dt);
-  out.jump_active = advance_jump_stage(body, facts, dt);
-  App::Core::CommanderDefence::advance_upkeep(body.entity, tick.guard_held, dt);
-  auto const basis = start_dodge_stage(world, body, facts, out);
-
-  auto const footing =
-      App::Core::CommanderMotor::is_on_wall(body.entity)
-          ? Game::Systems::Walkability::SlopeFooting{}
-          : Game::Systems::Walkability::slope_footing(out.previous_position);
-  out.report = m_locomotion.advance_motion(
-      body,
-      m_motor,
-      {.move = facts.staggered() ? QVector3D() : basis.move,
-       .forward_axis = out.forward_axis,
-       .right_axis = out.right_axis,
-       .run_held = tick.run,
-       .drawing_bow = facts.drawing_bow,
-       .jump_active = out.jump_active,
-       .squared_up = squared_up(facts),
-       .wading = world.try_get<Engine::Core::WadingComponent>(body.entity.get_id()),
-       .slope_grade = footing.on_slope ? footing.grade : 0.0F,
-       .slope_downhill = footing.on_slope ? footing.downhill : QVector3D(),
-       .holds_footing = facts.attack_animation_active || tick.guard_held,
-       .dt = dt});
-
-  out.report.lunge_distance =
-      m_lunge.apply(world,
-                    body.entity,
-                    body.transform,
-                    m_motor,
-                    m_locomotion.dodge_state() != DodgeState::None,
-                    body.commander_data != nullptr && body.commander_data->jump_active,
-                    m_look.yaw(),
-                    dt);
-  if (out.report.lunge_distance > 1.0e-5F) {
-    out.report.source = App::Core::CommanderDisplacementSource::StrikeLunge;
-  }
-  m_locomotion.commit_motion(out.report, out.forward_axis, out.right_axis, dt);
-  return out;
-}
-
-void CommanderControlController::face_body(const App::Core::CommanderHandles& body,
-                                           const TickFacts& facts,
-                                           const MotionOutcome& motion,
-                                           float dt) {
-  auto const& tick = m_input_port.tick();
-  float action_redirect_authority = 1.0F;
-  if (facts.attack_animation_active) {
-    if (auto const* definition =
-            Game::Systems::CombatActions::find_combat_action_definition(
-                static_cast<Game::Systems::CombatActions::CombatActionId>(
-                    facts.active_action->combat_action_id))) {
-      action_redirect_authority =
-          Game::Systems::CombatActions::melee_interruption_at(
-              *definition, facts.active_action->normalized_action_time)
-              .redirect_authority;
-    }
-  }
-
-  bool const dodging = m_locomotion.dodge_state() != DodgeState::None;
-  std::optional<float> travel_yaw;
-  if (!dodging && !motion.jump_active && motion.report.move.lengthSquared() > 1.0e-4F) {
-    travel_yaw = std::atan2(motion.report.move.x(), motion.report.move.z()) *
-                 App::Core::k_radians_to_degrees;
-  }
-
-  float const body_yaw =
-      m_body_facing.advance({.view_yaw = m_look.yaw(),
-                             .attack_animation_active = facts.attack_animation_active,
-                             .action_redirect_authority = action_redirect_authority,
-                             .strike_aim_offset = m_lunge.aim_offset(),
-                             .must_face_view = !dodging && squared_up(facts),
-                             .snap_to_view = !dodging && tick.primary_held,
-                             .travel_yaw = travel_yaw,
-                             .dt = dt});
-  body.transform.rotation.y = body_yaw;
-  body.transform.desired_yaw = body_yaw;
-  body.transform.has_desired_yaw = true;
-}
-
-auto CommanderControlController::sync_direct_control(
-    const App::Core::CommanderHandles& body,
-    const MotionOutcome& motion) -> DirectControlSync {
-  DirectControlSync sync;
-  sync.aim = Game::Systems::RpgCombat::sync_commander_aim(
-      body.entity,
-      {.view_yaw_degrees = m_look.yaw(),
-       .view_pitch_degrees = m_look.pitch(),
-       .move_speed = m_locomotion.move_speed(),
-       .running = m_locomotion.move_running(),
-       .primary_held = m_input_port.tick().primary_held,
-       .camera_origin =
-           m_tick_aim_ray.has_value() ? m_tick_aim_ray->first : QVector3D(),
-       .camera_origin_valid = m_tick_aim_ray.has_value(),
-       .camera_forward = m_tick_aim_ray.has_value() ? m_tick_aim_ray->second
-                                                    : QVector3D(0.0F, 0.0F, 1.0F),
-       .camera_forward_valid = m_tick_aim_ray.has_value(),
-       .camera_fov_degrees = m_camera_rig.fov()});
-  m_locomotion.publish_fpv_motion(body, motion.report.requested_speed);
-  sync.traced_stamina = m_locomotion.engage_manual_motion(body, m_latency_probe);
-  return sync;
-}
-
-void CommanderControlController::activate_abilities(
-    Engine::Core::World& world,
-    const App::Core::CommanderHandles& body,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) {
-  auto const& tick = m_input_port.tick();
-  App::Core::CommanderAbilityRequest request;
-  request.shield_bash = tick.shield_bash_pressed;
-  request.vanguard_rush = tick.vanguard_rush_pressed;
-  request.second_wind = tick.second_wind_pressed;
-  m_input_port.clear_ability_edges();
-
-  if (!request.any()) {
-    return;
-  }
-  App::Core::CommanderAbilityContext context;
-  context.world = &world;
-  context.commander = &body.entity;
-  context.commander_id = commander_id;
-  context.local_owner_id = local_owner_id;
-  context.view_yaw = m_look.yaw();
-  context.dodging = m_locomotion.dodge_state() != DodgeState::None;
-  context.airborne = m_locomotion.jump_airborne();
-  context.locked_target_id = m_targeting.locked_id();
-  context.soft_target_id = m_targeting.soft_id();
-  context.motor = &m_motor;
-  static_cast<void>(m_abilities.activate(request, context));
-}
-
-void CommanderControlController::queue_pressed_intents(
-    const App::Core::CommanderHandles& body,
-    Engine::Core::CombatIntentQueueComponent& intents,
-    const Engine::Core::RpgCommanderAimComponent* aim) {
-  auto const& tick = m_input_port.tick();
-  auto const* guard =
-      body.entity.get_component<Engine::Core::CommanderGuardComponent>();
-  bool const primary_was_pressed = tick.primary_pressed;
-  bool const queued = m_strike.queue_intents(
-      body.entity,
-      intents,
-      tick,
-      {.dodge_clear = m_locomotion.dodge_state() == DodgeState::None,
-       .guarding = guard != nullptr && guard->active,
-       .bow_stance =
-           aim != nullptr && aim->stance == Engine::Core::FpvWeaponStance::Bow,
-       .jump_followup_pending = m_locomotion.jump_followup_pending()});
-  if (queued) {
-    m_input_port.consume_press_edges(primary_was_pressed);
-    m_locomotion.clear_jump_followup();
-  }
-}
-
-auto CommanderControlController::dispatch_front_intent(
-    Engine::Core::World& world,
-    const App::Core::CommanderHandles& body,
-    Engine::Core::CombatIntentQueueComponent& intents,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) -> bool {
-  return m_strike.dispatch_pending(
-      {.world = world,
-       .commander_id = commander_id,
-       .local_owner_id = local_owner_id,
-       .view_yaw = m_look.yaw(),
-       .move_right_axis = m_locomotion.move_right_axis(),
-       .move_forward_axis = m_locomotion.move_forward_axis(),
-       .commander_position = QVector3D(body.transform.position.x,
-                                       body.transform.position.y,
-                                       body.transform.position.z)},
-      m_targeting,
-      body.entity,
-      intents,
-      {.feedback = m_feedback, .probe = m_latency_probe});
-}
-
-void CommanderControlController::advance_swing(const App::Core::CommanderHandles& body,
-                                               float dt) {
-  auto const& tick = m_input_port.tick();
-  m_strike.advance_melee(body.entity,
-                         {.aim_delta_x = App::Core::rightward_look_delta(
-                              m_look.yaw(), m_look.previous_yaw()),
-                          .aim_delta_y = m_look.pitch() - m_look.previous_pitch(),
-                          .view_pitch = m_look.pitch(),
-                          .move_right_axis = m_locomotion.move_right_axis(),
-                          .move_forward_axis = m_locomotion.move_forward_axis(),
-                          .primary_held = tick.primary_held,
-                          .guard_held = tick.guard_held,
-                          .dt = dt});
-  m_look.remember_previous_view();
-
-  if (auto const kick = m_strike.observe_hits(body.entity); kick.has_value()) {
-    m_camera_rig.add_impact_kick(*kick);
-  }
-}
-
-auto CommanderControlController::advance_strike(
-    Engine::Core::World& world,
-    const App::Core::CommanderHandles& body,
-    const TickFacts& facts,
-    Engine::Core::RpgCommanderAimComponent* aim,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id,
-    float dt) -> std::optional<QueueOutcome> {
-  m_strike.advance_hold_timers(body.commander_data,
-                               m_input_port.tick().primary_held,
-                               facts.attack_animation_active,
-                               dt);
-
-  QueueOutcome queue;
-  queue.intents = App::Core::CommanderStrike::open_queue(body.entity, dt);
-  queue.dodge_grace_remaining =
-      App::Core::CommanderDefence::advance_dodge_grace(body.entity, dt);
-
-  bool const waiting_for_release = aim != nullptr && aim->relaxed_from_overhold;
-  bool const body_can_take_input =
-      m_locomotion.dodge_state() != DodgeState::Rolling && !waiting_for_release;
-
-  if (queue.intents != nullptr && body_can_take_input) {
-    queue_pressed_intents(body, *queue.intents, aim);
-  }
-  m_input_port.settle_primary_press();
-
-  if (queue.intents != nullptr && !queue.intents->empty() && body_can_take_input &&
-      !dispatch_front_intent(
-          world, body, *queue.intents, commander_id, local_owner_id)) {
-    return std::nullopt;
-  }
-
-  advance_swing(body, dt);
-  return queue;
-}
-
-void CommanderControlController::advance_targeting(
-    Engine::Core::World& world,
-    const App::Core::CommanderHandles& body,
-    Engine::Core::RpgCommanderAimComponent* aim,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id,
-    float dt) {
-  auto const aim_candidate_id = m_targeting.resolve_aim_candidate(
-      world, body.entity, commander_id, local_owner_id, aim, m_look.yaw());
-
-  m_defence.publish_resolved_feedback(
-      body.entity, commander_id, body.transform, m_feedback);
-
-  if (auto const kick = m_targeting.publish_targets(body.entity, aim_candidate_id, dt);
-      kick.has_value()) {
-    m_camera_rig.add_impact_kick(*kick);
-  }
-}
-
-void CommanderControlController::record_trace(const App::Core::CommanderHandles& body,
-                                              const TickFacts& facts,
-                                              const MotionOutcome& motion,
-                                              const QueueOutcome& queue,
-                                              float traced_stamina,
-                                              float dt) {
-  auto const& tick = m_input_port.tick();
-  App::Core::record_tick_trace(
-      m_trace,
-      body.entity,
-      dt,
-      {.edges = m_input_port.edges(),
-       .frame_index = m_look.frame_intent().frame_index,
-       .forward_axis = motion.forward_axis,
-       .right_axis = motion.right_axis,
-       .run_held = tick.run,
-       .primary_held = tick.primary_held,
-       .guard_held = tick.guard_held,
-       .primary_held_duration = m_strike.primary_held_duration(),
-       .view_yaw = m_look.yaw(),
-       .view_pitch = m_look.pitch(),
-       .previous_view_yaw = m_look.previous_yaw(),
-       .previous_view_pitch = m_look.previous_pitch()},
-      {.transform = body.transform,
-       .direct_control =
-           body.commander_data != nullptr && body.commander_data->fpv_controlled,
-       .report = motion.report,
-       .previous_position = motion.previous_position,
-       .smoothed_speed = m_locomotion.planar_speed(),
-       .grounded = !motion.jump_active,
-       .dt = dt,
-       .pose = m_presentation.pose(),
-       .camera = m_camera_rig.trace()},
-      {.action = facts.active_action,
-       .intents = queue.intents,
-       .dodge_state = m_locomotion.dodge_state(),
-       .dodge_timer = m_locomotion.dodge_timer(),
-       .dodge_grace_remaining = queue.dodge_grace_remaining,
-       .locked_target_id = m_targeting.locked_id(),
-       .locked_target_slot = m_targeting.locked_slot(),
-       .soft_target_id = m_targeting.soft_id(),
-       .soft_target_slot = m_targeting.soft_slot(),
-       .hit_confirm_sequence = m_targeting.observed_hit_confirm_sequence(),
-       .stamina = traced_stamina,
-       .health = body.unit.health});
-}
-
-auto CommanderControlController::resolve_handles(
-    Engine::Core::Entity& commander,
-    Engine::Core::TransformComponent& transform,
-    Engine::Core::UnitComponent& unit) -> App::Core::CommanderHandles {
-  auto* movement = commander.get_component<Engine::Core::MovementComponent>();
-  if (movement == nullptr) {
-    movement = commander.add_component<Engine::Core::MovementComponent>();
-  }
-  return {commander,
-          transform,
-          unit,
-          commander.get_component<Engine::Core::CommanderComponent>(),
-          movement};
-}
-
-auto CommanderControlController::squared_up(const TickFacts& facts) const -> bool {
-  auto const& tick = m_input_port.tick();
-  return tick.primary_held || tick.guard_held || facts.drawing_bow ||
-         facts.attack_animation_active || m_targeting.locked_id() != 0;
-}
-
-auto CommanderControlController::read_tick_facts(const Engine::Core::World& world,
-                                                 const Engine::Core::Entity& commander)
-    -> TickFacts {
-  auto const* aim_state =
-      commander.get_component<Engine::Core::RpgCommanderAimComponent>();
-  auto const* active_action =
-      commander.get_component<Engine::Core::RpgCommanderActionComponent>();
-  auto const* stagger =
-      world.try_get<Engine::Core::StaggerComponent>(commander.get_id());
-  return {.active_action = active_action,
-          .attack_animation_active =
-              active_action != nullptr && active_action->action_running,
-          .drawing_bow = aim_state != nullptr && aim_state->is_drawing(),
-          .stagger_remaining =
-              stagger != nullptr ? std::max(0.0F, stagger->remaining) : 0.0F};
-}
-
-void CommanderControlController::present_tick(Engine::Core::World& world,
-                                              const App::Core::CommanderHandles& body,
-                                              Render::GL::Camera* camera,
-                                              float dt) {
-  m_presentation.publish_sample(body.entity, body.transform, dt);
-  if (camera != nullptr) {
-    update_camera(world, body.entity, *camera, dt);
-  }
-}
-
-auto CommanderControlController::advance_combat(Engine::Core::World& world,
-                                                const App::Core::CommanderHandles& body,
-                                                const TickFacts& facts,
-                                                const MotionOutcome& motion,
-                                                Engine::Core::EntityID commander_id,
-                                                int local_owner_id,
-                                                float dt) -> bool {
-  auto const sync = sync_direct_control(body, motion);
-  m_defence.apply_guard(body.entity,
-                        {.guard_held = m_input_port.tick().guard_held,
-                         .dodging = m_locomotion.dodge_state() != DodgeState::None,
-                         .airborne = motion.jump_active,
-                         .staggered = facts.staggered(),
-                         .dt = dt},
-                        m_latency_probe);
-  activate_abilities(world, body, commander_id, local_owner_id);
-
-  auto const queue =
-      advance_strike(world, body, facts, sync.aim, commander_id, local_owner_id, dt);
-  if (!queue.has_value()) {
-    return false;
-  }
-  advance_targeting(world, body, sync.aim, commander_id, local_owner_id, dt);
-  if (m_latency_probe != nullptr) {
-    m_latency_probe->note_simulation_response();
-  }
-  if (m_trace_enabled) {
-    record_trace(body, facts, motion, *queue, sync.traced_stamina, dt);
-  }
-  return true;
-}
-
-auto CommanderControlController::update_impl(Engine::Core::World& world,
-                                             Engine::Core::EntityID commander_id,
-                                             int local_owner_id,
-                                             Render::GL::Camera* camera,
-                                             float dt) -> bool {
-  auto* commander =
-      App::Core::controlled_commander(world, commander_id, local_owner_id);
-  if (commander == nullptr) {
-    return false;
-  }
-  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
-  auto* unit = commander->get_component<Engine::Core::UnitComponent>();
-  if (transform == nullptr || unit == nullptr) {
-    return false;
-  }
-
-  capture_input(world, commander_id, dt);
-  auto const body = resolve_handles(*commander, *transform, *unit);
-  auto const facts = read_tick_facts(world, *commander);
-
-  if (body.commander_data != nullptr && body.commander_data->flag_rally_in_progress &&
-      !body.commander_data->fpv_controlled) {
-    return hold_for_rally(world, body, camera, dt);
-  }
-  m_rally_view_valid = false;
-
-  if (body.movement != nullptr) {
-    body.movement->stop();
-    body.movement->set_rest_position(transform->position.x, transform->position.z);
-  }
-
-  steer_view(world, *commander, dt);
-  m_motor.bind_world(&world);
-  auto const motion = advance_motion(world, body, facts, dt);
-  face_body(body, facts, motion, dt);
-  present_tick(world, body, camera, dt);
-  return advance_combat(world, body, facts, motion, commander_id, local_owner_id, dt);
-}
-
 void CommanderControlController::update_camera(Engine::Core::World& world,
                                                Engine::Core::Entity& commander,
                                                Render::GL::Camera& camera,
@@ -915,22 +260,210 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   feed.dt = dt;
   feed.view_yaw = m_look.yaw();
   feed.view_pitch = m_look.pitch();
-  feed.move_speed = m_locomotion.move_speed();
-  feed.move_right_axis = m_locomotion.move_right_axis();
-  feed.move_running = m_locomotion.move_running();
-  feed.dodge_fov_kick = m_locomotion.dodge_fov_kick();
-  feed.dodge_rolling = m_locomotion.dodge_state() == DodgeState::Rolling;
-  feed.dodge_timer = m_locomotion.dodge_timer();
-  feed.dodge_direction = m_locomotion.dodge_direction();
-  feed.lock_target_position = m_targeting.locked_position(world);
+  feed.move_speed = m_runtime->locomotion().move_speed();
+  feed.move_right_axis = m_runtime->locomotion().move_right_axis();
+  feed.move_running = m_runtime->locomotion().move_running();
+  feed.dodge_fov_kick = m_runtime->locomotion().dodge_fov_kick();
+  feed.dodge_rolling = m_runtime->locomotion().dodge_state() == DodgeState::Rolling;
+  feed.dodge_timer = m_runtime->locomotion().dodge_timer();
+  feed.dodge_direction = m_runtime->locomotion().dodge_direction();
+  feed.lock_target_position = m_runtime->targeting().locked_position(world);
 
   auto const pose = m_presentation.advance_pose(commander, *transform, dt);
   auto const inputs = App::Core::build_camera_inputs(world, commander, feed, pose);
 
   float const previous_bob_phase = m_camera_rig.update(camera, inputs);
+  if (m_trace_enabled) {
+    m_trace.camera = m_camera_rig.trace();
+    m_trace.motor.presented_position =
+        QVector3D(pose.position.x, pose.position.y, pose.position.z);
+    m_trace.motor.presented_yaw = pose.yaw;
+    m_trace.motor.presentation_alpha = pose.alpha;
+    m_trace.motor.presentation_extrapolated = pose.extrapolated;
+  }
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_camera_response();
   }
   App::Core::play_footstep_if_stride_landed(
       m_camera_rig, world, commander.get_id(), feed.move_running, previous_bob_phase);
+}
+
+void CommanderControlController::set_feedback_bus(Game::Core::PlayerFeedbackBus* bus) {
+  m_feedback = bus;
+  m_runtime->set_feedback_bus(bus);
+}
+
+void CommanderControlController::bind_runtime(
+    std::shared_ptr<Game::Commander::CommanderRuntime> runtime) {
+  if (m_match_runtime) {
+    m_match_runtime->set_feedback_bus(nullptr);
+    m_match_runtime->set_latency_probe(nullptr);
+  }
+  m_match_runtime = std::move(runtime);
+  m_runtime = m_match_runtime ? m_match_runtime.get() : m_preview_runtime.get();
+  m_runtime->set_latency_probe(m_latency_probe);
+  m_runtime->set_feedback_bus(m_feedback);
+  m_runtime->set_trace_enabled(m_trace_enabled);
+}
+
+auto CommanderControlController::input_edges() const
+    -> Game::Commander::CommanderInputTrace {
+  auto edges = m_runtime->input_edges();
+  const auto& physical = m_input_port.edges();
+  edges.primary_press_sequence = physical.primary_press_sequence;
+  edges.primary_release_sequence = physical.primary_release_sequence;
+  edges.guard_press_sequence = physical.guard_press_sequence;
+  edges.guard_release_sequence = physical.guard_release_sequence;
+  edges.dodge_request_sequence = physical.dodge_request_sequence;
+  edges.jump_request_sequence = physical.jump_request_sequence;
+  edges.primary_dropped_sequence += physical.primary_dropped_sequence;
+  edges.dodge_refused_sequence += physical.dodge_refused_sequence;
+  edges.jump_refused_sequence += physical.jump_refused_sequence;
+  return edges;
+}
+
+auto CommanderControlController::capture_input(Engine::Core::EntityID commander_id)
+    -> Game::Command::CommanderInputFrame {
+  std::optional<std::pair<QVector3D, QVector3D>> ray;
+  if (m_camera_rig.eye_valid() && m_camera_rig.forward_valid()) {
+    ray = std::make_pair(m_camera_rig.eye(), m_camera_rig.forward());
+  }
+  auto frame = m_input_port.take_snapshot().to_record(
+      commander_id, view_yaw(), view_pitch(), ray);
+  frame.camera_fov = m_camera_rig.fov();
+  return frame;
+}
+
+auto CommanderControlController::update_impl(Engine::Core::World& world,
+                                             Engine::Core::EntityID commander_id,
+                                             int owner,
+                                             Render::GL::Camera* camera,
+                                             float dt) -> bool {
+  if (controlled_commander(world, commander_id, owner) == nullptr) {
+    return false;
+  }
+  if (m_match_runtime) {
+    auto& session = Game::Session::session_for(world);
+    const auto tick = session.clock().tick();
+    if (!session.log_follower() && tick != 0 && dt > 0.0F) {
+      session.commands().log().append(
+          tick, Game::Command::Source::LocalPlayer, owner, capture_input(commander_id));
+    }
+    return true;
+  }
+  if (!m_runtime->advance(
+          world, commander_id, owner, capture_input(commander_id), dt)) {
+    return false;
+  }
+  publish_runtime_tick(world, commander_id, dt);
+  if (camera != nullptr) {
+    update_camera_presentation(world, commander_id, *camera, dt);
+  }
+  return true;
+}
+
+void CommanderControlController::publish_runtime_tick(
+    Engine::Core::World& world, Engine::Core::EntityID commander_id, float dt) {
+  auto* commander = world.get_entity(commander_id);
+  auto* transform = world.try_get<Engine::Core::TransformComponent>(commander_id);
+  if (commander == nullptr || transform == nullptr) {
+    return;
+  }
+  set_view_yaw(m_runtime->view_yaw());
+  set_view_pitch(m_runtime->view_pitch());
+  if (const auto kick = m_runtime->take_impact_kick(); kick != 0.0F) {
+    m_camera_rig.add_impact_kick(kick);
+  }
+  m_presentation.publish_sample(*commander, *transform, dt);
+  if (m_trace_enabled) {
+    m_trace = m_runtime->trace();
+    m_trace.input.frame_index = m_look.frame_intent().frame_index;
+    const auto edges = input_edges();
+    m_trace.input.primary_press_sequence = edges.primary_press_sequence;
+    m_trace.input.primary_release_sequence = edges.primary_release_sequence;
+    m_trace.input.guard_press_sequence = edges.guard_press_sequence;
+    m_trace.input.guard_release_sequence = edges.guard_release_sequence;
+    m_trace.input.dodge_request_sequence = edges.dodge_request_sequence;
+    m_trace.input.jump_request_sequence = edges.jump_request_sequence;
+  }
+}
+
+auto CommanderControlController::controlled_commander(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int owner) const -> Engine::Core::Entity* {
+  return Game::Commander::CommanderRuntime::controlled_commander(
+      world, commander_id, owner);
+}
+
+auto CommanderControlController::find_primary_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int owner,
+    float extra_reach) -> Engine::Core::EntityID {
+  if (m_match_runtime) {
+    return m_runtime->targeting().soft_id();
+  }
+  m_runtime->set_view(view_yaw(), view_pitch());
+  return m_runtime->find_primary_target(world, commander_id, owner, extra_reach);
+}
+
+auto CommanderControlController::locked_target_id() const -> Engine::Core::EntityID {
+  return m_runtime->targeting().locked_id();
+}
+
+auto CommanderControlController::focus_target_id() const -> Engine::Core::EntityID {
+  return locked_target_id();
+}
+
+void CommanderControlController::note_refusal(const char* action) {
+  m_runtime->note_refusal(action);
+}
+
+void CommanderControlController::toggle_close_camera_mode(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) const {
+  if (!m_match_runtime) {
+    m_runtime->toggle_close_camera_mode(world, commander_id, local_owner_id);
+  }
+}
+
+void CommanderControlController::toggle_weapon_stance(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) {
+  if (!m_match_runtime) {
+    m_runtime->toggle_weapon_stance(world, commander_id, local_owner_id);
+  }
+}
+
+void CommanderControlController::cycle_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) {
+  if (!m_match_runtime) {
+    m_runtime->set_view(view_yaw(), view_pitch());
+    m_runtime->cycle_lock_on_target(world, commander_id, local_owner_id);
+  }
+}
+
+void CommanderControlController::toggle_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) {
+  if (!m_match_runtime) {
+    m_runtime->set_view(view_yaw(), view_pitch());
+    m_runtime->toggle_lock_on_target(world, commander_id, local_owner_id);
+  }
+}
+
+void CommanderControlController::switch_lock_on_target(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id,
+    int direction) {
+  if (!m_match_runtime) {
+    m_runtime->switch_lock_on_target(world, commander_id, local_owner_id, direction);
+  }
 }

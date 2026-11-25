@@ -3,6 +3,8 @@
 #include <QJsonArray>
 #include <QString>
 
+#include <cmath>
+#include <limits>
 #include <string_view>
 #include <type_traits>
 
@@ -15,7 +17,7 @@ namespace Game::Command {
 namespace {
 
 auto id_to_json(Engine::Core::EntityID id) -> QJsonValue {
-  return QJsonValue(static_cast<qint64>(id));
+  return u64_to_json(id);
 }
 
 auto ids_to_json(const std::vector<Engine::Core::EntityID>& ids) -> QJsonArray {
@@ -56,11 +58,14 @@ public:
   [[nodiscard]] auto ok() const -> bool { return m_ok; }
 
   auto id(const char* key) -> Engine::Core::EntityID {
-    const auto value = m_object.value(QLatin1String(key));
-    if (!value.isDouble()) {
-      return fail<Engine::Core::EntityID>();
-    }
-    return static_cast<Engine::Core::EntityID>(value.toDouble());
+    return entity_id(m_object.value(QLatin1String(key)));
+  }
+
+  auto unsigned_id(const char* key) -> std::uint32_t {
+    const auto value = id(key);
+    return value <= std::numeric_limits<std::uint32_t>::max()
+               ? static_cast<std::uint32_t>(value)
+               : fail<std::uint32_t>();
   }
 
   auto ids(const char* key) -> std::vector<Engine::Core::EntityID> {
@@ -70,10 +75,7 @@ public:
       return fail<std::vector<Engine::Core::EntityID>>();
     }
     for (const auto item : value.toArray()) {
-      if (!item.isDouble()) {
-        return fail<std::vector<Engine::Core::EntityID>>();
-      }
-      out.push_back(static_cast<Engine::Core::EntityID>(item.toDouble()));
+      out.push_back(entity_id(item));
     }
     return out;
   }
@@ -101,10 +103,7 @@ public:
       return fail<std::vector<float>>();
     }
     for (const auto item : value.toArray()) {
-      if (!item.isDouble()) {
-        return fail<std::vector<float>>();
-      }
-      out.push_back(static_cast<float>(item.toDouble()));
+      out.push_back(read_float(item));
     }
     return out;
   }
@@ -117,8 +116,18 @@ public:
     return value.toDouble();
   }
 
-  auto real(const char* key) -> float { return static_cast<float>(number(key)); }
-  auto integer(const char* key) -> int { return static_cast<int>(number(key)); }
+  auto real(const char* key) -> float {
+    return read_float(m_object.value(QLatin1String(key)));
+  }
+  auto integer(const char* key) -> int {
+    const double value = number(key);
+    if (!std::isfinite(value) || std::trunc(value) != value ||
+        value < std::numeric_limits<int>::min() ||
+        value > std::numeric_limits<int>::max()) {
+      return fail<int>();
+    }
+    return static_cast<int>(value);
+  }
 
   auto has(const char* key) const -> bool {
     return m_object.contains(QLatin1String(key));
@@ -160,18 +169,28 @@ private:
     return T{};
   }
 
+  auto entity_id(const QJsonValue& value) -> Engine::Core::EntityID {
+    const auto parsed = u64_from_json(value);
+    return parsed ? *parsed : fail<Engine::Core::EntityID>();
+  }
+
+  auto read_float(const QJsonValue& value) -> float {
+    const double real = value.toDouble(std::numeric_limits<double>::infinity());
+    if (!std::isfinite(real) || std::abs(real) > std::numeric_limits<float>::max()) {
+      return fail<float>();
+    }
+    return static_cast<float>(real);
+  }
+
   auto read_vec(const QJsonValue& value) -> QVector3D {
     if (!value.isArray()) {
       return fail<QVector3D>();
     }
     const auto array = value.toArray();
-    if (array.size() != 3 || !array[0].isDouble() || !array[1].isDouble() ||
-        !array[2].isDouble()) {
+    if (array.size() != 3) {
       return fail<QVector3D>();
     }
-    return {static_cast<float>(array[0].toDouble()),
-            static_cast<float>(array[1].toDouble()),
-            static_cast<float>(array[2].toDouble())};
+    return {read_float(array[0]), read_float(array[1]), read_float(array[2])};
   }
 
   const QJsonObject& m_object;
@@ -194,6 +213,7 @@ void encode(QJsonObject& o, const AttackTarget& p) {
   o["units"] = ids_to_json(p.units);
   o["target"] = id_to_json(p.target);
   o["should_chase"] = p.should_chase;
+  o["sally"] = p.sally;
 }
 void encode(QJsonObject& o, const Stop& p) {
   o["units"] = ids_to_json(p.units);
@@ -262,8 +282,59 @@ void encode(QJsonObject& o, const AllyCall& p) {
   o["kind"] = enum_value(p.kind);
 }
 void encode(QJsonObject& o, const AllyAppealAnswer& p) {
-  o["appeal"] = static_cast<qint64>(p.appeal_id);
+  o["appeal"] = u64_to_json(p.appeal_id);
   o["accept"] = p.accept;
+}
+void encode(QJsonObject& o, const Game::Systems::AllyTributeAnswer& p) {
+  o["requester"] = p.requester;
+  o["giver"] = p.giver;
+  o["resource"] = enum_value(p.resource);
+  o["requested"] = p.requested;
+  o["granted"] = p.granted;
+  o["verdict"] = enum_value(p.verdict);
+}
+void encode(QJsonObject& o, const AIAllyCall& p) {
+  o["kind"] = enum_value(p.kind);
+  o["target"] = id_to_json(p.target);
+  o["target_owner"] = p.target_owner;
+  o["target_x"] = p.target_x;
+  o["target_z"] = p.target_z;
+}
+void encode(QJsonObject& o, const Game::Systems::AllyCallAnswer& p) {
+  o["call"] = u64_to_json(p.call_id);
+  o["requester"] = p.requester;
+  o["ally"] = p.ally;
+  o["kind"] = enum_value(p.kind);
+  o["target"] = id_to_json(p.target);
+  o["verdict"] = enum_value(p.verdict);
+}
+void encode(QJsonObject& o, const Game::Systems::AllyAppeal& p) {
+  o["appeal"] = u64_to_json(p.appeal_id);
+  o["from"] = p.from_ally;
+  o["to"] = p.to_owner;
+  o["kind"] = enum_value(p.kind);
+  o["resource"] = enum_value(p.resource);
+  o["amount"] = p.amount;
+  o["target"] = id_to_json(p.target);
+  o["target_x"] = p.target_x;
+  o["target_z"] = p.target_z;
+}
+void encode(QJsonObject& o, const AIAllyAppealReply& p) {
+  o["appeal"] = u64_to_json(p.reply.appeal_id);
+  o["from"] = p.reply.from_ally;
+  o["to"] = p.reply.to_owner;
+  o["kind"] = enum_value(p.reply.kind);
+  o["follow_up"] = enum_value(p.reply.follow_up);
+  o["resource"] = enum_value(p.reply.resource);
+  o["amount"] = p.reply.amount;
+  o["goodwill_change"] = p.goodwill_change;
+  o["answers_player"] = p.answers_player;
+}
+void encode(QJsonObject& o, const SetGarrisonLeash& p) {
+  o["x"] = p.x;
+  o["z"] = p.z;
+  o["half_x"] = p.half_x;
+  o["half_z"] = p.half_z;
 }
 void encode(QJsonObject& o, const RollStones& p) {
   o["units"] = ids_to_json(p.units);
@@ -372,7 +443,8 @@ template <>
 auto decode<AttackTarget>(Reader& r) -> AttackTarget {
   return {.units = r.ids("units"),
           .target = r.id("target"),
-          .should_chase = r.boolean("should_chase")};
+          .should_chase = r.boolean("should_chase"),
+          .sally = r.has("sally") && r.boolean("sally")};
 }
 template <>
 auto decode<Stop>(Reader& r) -> Stop {
@@ -448,12 +520,12 @@ auto decode<Trade>(Reader& r) -> Trade {
 template <>
 auto decode<AllyTribute>(Reader& r) -> AllyTribute {
   AllyTribute p;
-  p.ally_owner = static_cast<int>(r.number("ally"));
+  p.ally_owner = r.integer("ally");
   const auto key = QString::fromStdString(r.text("resource"));
   if (!Game::Systems::resource_type_from_key(key, p.resource)) {
     p.resource = Game::Systems::ResourceType::Wood;
   }
-  p.amount = static_cast<int>(r.number("amount"));
+  p.amount = r.integer("amount");
   p.request = r.boolean("request");
   return p;
 }
@@ -464,8 +536,70 @@ auto decode<AllyCall>(Reader& r) -> AllyCall {
 }
 template <>
 auto decode<AllyAppealAnswer>(Reader& r) -> AllyAppealAnswer {
-  return {.appeal_id = static_cast<std::uint32_t>(r.number("appeal")),
-          .accept = r.boolean("accept")};
+  return {.appeal_id = r.unsigned_id("appeal"), .accept = r.boolean("accept")};
+}
+template <>
+auto decode<Game::Systems::AllyTributeAnswer>(Reader& r)
+    -> Game::Systems::AllyTributeAnswer {
+  using namespace Game::Systems;
+  return {.requester = r.integer("requester"),
+          .giver = r.integer("giver"),
+          .resource = r.enumeration("resource", ResourceType::Iron),
+          .requested = r.integer("requested"),
+          .granted = r.integer("granted"),
+          .verdict = r.enumeration("verdict", AllyTributeVerdict::RefusedStingy)};
+}
+template <>
+auto decode<AIAllyCall>(Reader& r) -> AIAllyCall {
+  return {.kind = r.enumeration("kind", Game::Systems::AllyCallKind::Attack),
+          .target = r.id("target"),
+          .target_owner = r.integer("target_owner"),
+          .target_x = r.real("target_x"),
+          .target_z = r.real("target_z")};
+}
+template <>
+auto decode<Game::Systems::AllyCallAnswer>(Reader& r) -> Game::Systems::AllyCallAnswer {
+  using namespace Game::Systems;
+  return {.call_id = r.unsigned_id("call"),
+          .requester = r.integer("requester"),
+          .ally = r.integer("ally"),
+          .kind = r.enumeration("kind", AllyCallKind::Attack),
+          .target = r.id("target"),
+          .verdict = r.enumeration("verdict", AllyCallVerdict::RefusedUnwilling)};
+}
+template <>
+auto decode<Game::Systems::AllyAppeal>(Reader& r) -> Game::Systems::AllyAppeal {
+  using namespace Game::Systems;
+  return {.appeal_id = r.unsigned_id("appeal"),
+          .from_ally = r.integer("from"),
+          .to_owner = r.integer("to"),
+          .kind = r.enumeration("kind", AllyAppealKind::Attack),
+          .resource = r.enumeration("resource", ResourceType::Iron),
+          .amount = r.integer("amount"),
+          .target = r.id("target"),
+          .target_x = r.real("target_x"),
+          .target_z = r.real("target_z")};
+}
+template <>
+auto decode<AIAllyAppealReply>(Reader& r) -> AIAllyAppealReply {
+  using namespace Game::Systems;
+  return {
+      .reply = {.appeal_id = r.unsigned_id("appeal"),
+                .from_ally = r.integer("from"),
+                .to_owner = r.integer("to"),
+                .kind = r.enumeration("kind", AllyAppealKind::Attack),
+                .follow_up = r.enumeration("follow_up", AllyAppealFollowUp::Withdrawn),
+                .resource = r.enumeration("resource", ResourceType::Iron),
+                .amount = r.integer("amount")},
+      .goodwill_change = r.real("goodwill_change"),
+      .answers_player = r.boolean("answers_player")};
+}
+template <>
+auto decode<SetGarrisonLeash>(Reader& r) -> SetGarrisonLeash {
+  return {.x = r.real("x"),
+          .z = r.real("z"),
+          .half_x = r.real("half_x"),
+          .half_z = r.real("half_z")};
 }
 template <>
 auto decode<RollStones>(Reader& r) -> RollStones {
@@ -624,8 +758,11 @@ auto decode_by_name(std::string_view name,
 } // namespace
 
 auto source_from_name(std::string_view name) -> std::optional<Source> {
-  for (const Source source :
-       {Source::LocalPlayer, Source::AI, Source::Replay, Source::Script}) {
+  for (const Source source : {Source::LocalPlayer,
+                              Source::AI,
+                              Source::Replay,
+                              Source::Script,
+                              Source::Network}) {
     if (name == source_name(source)) {
       return source;
     }

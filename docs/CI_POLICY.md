@@ -57,7 +57,7 @@ Two checks in `scripts/check-test-speed.py` keep the split from silently degradi
 - a test that runs in the fast profile and exceeds the per-test time budget fails the lane, catching newly slow tests before they can make CI time out; and
 - an extended-test manifest pattern that matches no test also fails the lane, preventing fixture renames from quietly disabling a gate.
 
-The pull-request path intentionally does **not** run the battlefield verifier, replay round-trip, QML suite, simulation performance budgets, or terrain-probe build.
+The pull-request path verifies a short headless replay. Extended validation records a full bot skirmish with scripted player orders and replays it in two fresh processes. Extended validation also runs the battlefield verifier, QML suite, simulation performance budgets, and terrain-probe build.
 
 ## Weekly and manual validation
 

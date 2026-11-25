@@ -3,7 +3,7 @@
 #include <cmath>
 #include <limits>
 
-#include "app/commander/commander_heading.h"
+#include "game/commander/commander_heading.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/core/world_spatial_index.h"
@@ -12,6 +12,9 @@
 #include "game/util/asset_text.h"
 
 namespace App::Core {
+
+using Game::Commander::k_radians_to_degrees;
+using Game::Commander::signed_angle_delta;
 
 namespace {
 

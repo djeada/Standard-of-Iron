@@ -2,6 +2,7 @@
 
 #include <QHash>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QString>
 #include <QVector3D>
 
@@ -60,6 +61,8 @@ public:
                                       int wave_index) const -> int;
   void restore_state(const QJsonArray& state);
   [[nodiscard]] auto serialize_state() const -> QJsonArray;
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   void update(Engine::Core::World* world, float delta_time) override;
 

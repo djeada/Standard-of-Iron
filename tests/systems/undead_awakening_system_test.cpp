@@ -699,6 +699,7 @@ TEST_F(UndeadAwakeningSystemTest, LosingTheShrineBreaksTheGarrisonAndClearsTheZo
 TEST_F(UndeadAwakeningSystemTest, BreakingTheGarrisonPaysTheAuthoredClearReward) {
   Engine::Core::World world;
   Game::Systems::UndeadAwakeningSystem system(undead_services());
+  Game::Systems::OwnerRegistry::instance().set_local_player_id(2);
 
   Game::Map::MapDefinition map_definition = make_shrine_map();
   ASSERT_FALSE(map_definition.undead_zones.empty());

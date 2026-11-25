@@ -12,6 +12,8 @@
 #include "app/persistence/game_state_restorer.h"
 #include "app/session/level_orchestrator.h"
 #include "app/world/visibility_coordinator.h"
+#include "game/command/command_queue.h"
+#include "game/command/replay.h"
 #include "game/core/world.h"
 #include "game/map/map_context.h"
 #include "game/map/map_transformer.h"
@@ -108,6 +110,11 @@ void SaveLoadCoordinator::apply_runtime_snapshot(
   session.economy().restore_harvested(snapshot.harvested_by_owner);
 
   session.clock().restore(snapshot.simulation_tick);
+  session.clock().set_paused(false);
+  session.clock().set_time_scale(snapshot.time_scale);
+  session.set_replay_recorder(nullptr);
+  session.set_replay_player(nullptr);
+  session.commands().clear(snapshot.simulation_tick);
   session.rng().restore(snapshot.rng_seed, snapshot.rng_draw_count);
 
   context.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);

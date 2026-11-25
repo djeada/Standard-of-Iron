@@ -258,13 +258,21 @@ auto AudioEventHandler::initialize() -> bool {
 
   m_music_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>(
-          [](const Engine::Core::MusicTriggerEvent& event) {
-            on_music_trigger(event);
+          [this](const Engine::Core::MusicTriggerEvent& event) {
+            if (event.owner_id == Engine::Core::k_owner_everyone ||
+                m_audience.is_local(event.owner_id)) {
+              on_music_trigger(event);
+            }
           });
 
   m_music_stop_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::MusicStopEvent>(
-          [](const Engine::Core::MusicStopEvent& event) { on_music_stop(event); });
+          [this](const Engine::Core::MusicStopEvent& event) {
+            if (event.owner_id == Engine::Core::k_owner_everyone ||
+                m_audience.is_local(event.owner_id)) {
+              on_music_stop(event);
+            }
+          });
 
   m_combat_hit_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(

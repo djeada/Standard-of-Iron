@@ -1,6 +1,11 @@
 #include "combat_system.h"
 
+#include <QJsonObject>
+
+#include <utility>
+
 #include "../core/world.h"
+#include "../util/checkpoint_values.h"
 #include "combat_system/attack_processor.h"
 #include "combat_system/combat_state_processor.h"
 #include "combat_system/combat_utils.h"
@@ -11,6 +16,29 @@
 #include "combat_system/threat_alert.h"
 
 namespace Game::Systems {
+
+auto CombatSystem::capture_checkpoint() const -> QJsonObject {
+  QJsonObject cooldowns;
+  for (const auto& [id, cooldown] : m_auto_engagement.m_scan_cooldowns) {
+    cooldowns[QString::number(id)] = cooldown;
+  }
+  return cooldowns;
+}
+
+auto CombatSystem::restore_checkpoint(const QJsonObject& state) -> bool {
+  decltype(m_auto_engagement.m_scan_cooldowns) cooldowns;
+  for (auto it = state.begin(); it != state.end(); ++it) {
+    Engine::Core::EntityID id = 0;
+    float cooldown = 0.0F;
+    if (!Game::CheckpointValues::decode(QJsonValue(it.key()), id) ||
+        !Game::CheckpointValues::decode(it.value(), cooldown) || id == 0 ||
+        cooldown <= 0.0F || !cooldowns.emplace(id, cooldown).second) {
+      return false;
+    }
+  }
+  m_auto_engagement.m_scan_cooldowns.swap(cooldowns);
+  return true;
+}
 
 void CombatSystem::update(Engine::Core::World* world, float delta_time) {
   Combat::rebuild_combat_query_context(world, m_query_context);

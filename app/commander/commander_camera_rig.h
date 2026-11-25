@@ -6,6 +6,7 @@
 #include <optional>
 #include <span>
 
+#include "game/commander/commander_presentation_trace.h"
 #include "game/systems/nav_grid_types.h"
 
 namespace Engine::Core {
@@ -26,12 +27,8 @@ class Camera;
 
 namespace App::Core {
 
-enum class CommanderFramingState : std::uint8_t {
-  Explore,
-  Melee,
-  DuelLock,
-  BowAim
-};
+using Game::Commander::CommanderCameraTrace;
+using Game::Commander::CommanderFramingState;
 
 struct CommanderCameraState {
   float yaw{0.0F};
@@ -40,37 +37,6 @@ struct CommanderCameraState {
   float pitch_velocity{0.0F};
   QVector3D visual_anchor{};
   bool anchor_valid{false};
-};
-
-struct CommanderCameraTrace {
-  bool valid{false};
-  QVector3D commander_position{};
-  QVector3D visual_anchor{};
-  float anchor_lag{0.0F};
-  QVector3D pivot{};
-  QVector3D eye_unconstrained{};
-  QVector3D target_unconstrained{};
-  QVector3D eye_resolved{};
-  QVector3D target_resolved{};
-  float boom_unconstrained{0.0F};
-  float boom_resolved{0.0F};
-  float boom_clear_fraction{1.0F};
-  float terrain_clear_fraction{1.0F};
-  float occlusion_fraction{1.0F};
-  float terrain_lift{0.0F};
-  float eye_clearance{0.0F};
-  float crowd_lift{0.0F};
-
-  bool sight_line_clear{true};
-  float fov{0.0F};
-  float yaw{0.0F};
-  float pitch{0.0F};
-  float yaw_velocity{0.0F};
-  float pitch_velocity{0.0F};
-  float ground_y{0.0F};
-  CommanderFramingState framing_state{CommanderFramingState::Explore};
-  bool framing_changed{false};
-  float dt{0.0F};
 };
 
 struct CommanderCameraInputs {

@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+class QJsonObject;
+
 namespace Game::Systems {
 
 struct RouteSpan {
@@ -111,6 +113,8 @@ public:
   void set_spans(std::vector<RouteSpan> spans) { m_spans = std::move(spans); }
   [[nodiscard]] auto span_at(float s) const -> const RouteSpan*;
   [[nodiscard]] auto spans() const -> const std::vector<RouteSpan>& { return m_spans; }
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  auto restore_checkpoint(const QJsonObject& state) -> bool;
 
 private:
   struct Vertex {

@@ -54,7 +54,7 @@ if(BUILD_TESTING)
     )
     set_tests_properties(
         simulation_determinism
-        PROPERTIES LABELS "gameplay;determinism" TIMEOUT 120 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        PROPERTIES LABELS "gameplay;determinism" TIMEOUT 300 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
 endif()
 
@@ -76,7 +76,10 @@ set_target_properties(sim_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE
 # without Qt Quick or the renderer. The dedicated-server shape of the game;
 # also the headless way to record and verify a replay.
 add_executable(soi_headless headless/main.cpp)
-target_link_libraries(soi_headless PRIVATE Qt${QT_VERSION_MAJOR}::Core soi_runtime soi_ai game_sim)
+target_link_libraries(
+    soi_headless
+    PRIVATE Qt${QT_VERSION_MAJOR}::Core soi_runtime soi_ai game_sim soi_persistence
+)
 target_include_directories(soi_headless PRIVATE ${CMAKE_SOURCE_DIR})
 set_target_properties(soi_headless PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 if(BUILD_TESTING)

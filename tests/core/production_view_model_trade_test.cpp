@@ -116,7 +116,7 @@ TEST_F(ProductionViewModelTradeTest, ResourcesGoToAnAllyAndARequestIsQueuedForIt
       << "an enemy is not a trading partner";
 
   ASSERT_TRUE(m_view_model->request_from_ally(3, QStringLiteral("gold"), 50));
-  m_session.commands().drain(m_session.world(), 1);
+  m_session.commands().drain(m_session.world(), 2);
   const auto asked = m_session.marketplace().take_ally_requests_for(3);
   ASSERT_EQ(asked.size(), 1U);
   EXPECT_EQ(asked.front().requester, 1);
@@ -159,7 +159,7 @@ TEST_F(ProductionViewModelTradeTest, AnsweringAnAppealThatLapsedClosesTheCardQui
                        .resource = ResourceType::Wood,
                        .amount = 100});
   EXPECT_TRUE(m_view_model->answer_ally_appeal(live, true));
-  m_session.commands().drain(m_session.world(), 1);
+  m_session.commands().drain(m_session.world(), 2);
   EXPECT_EQ(economy.get(1, ResourceType::Wood), 200);
   EXPECT_EQ(economy.get(3, ResourceType::Wood), 100);
   EXPECT_EQ(refusals, 0);

@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <span>
+#include <string>
 #include <typeindex>
 #include <utility>
 #include <vector>
@@ -18,6 +19,17 @@
 #include "system_access_recorder.h"
 
 namespace Engine::Core {
+
+struct ComponentOrder {
+  std::string type;
+  std::vector<EntityID> entities;
+};
+
+struct RegistryCheckpoint {
+  std::vector<std::uint32_t> generations;
+  std::vector<std::uint32_t> free_slots;
+  std::vector<ComponentOrder> component_orders;
+};
 
 [[nodiscard]] auto this_thread_lock_token() noexcept -> std::uint64_t;
 
@@ -106,6 +118,8 @@ public:
     return Handle::make(index, m_slots[index].generation);
   }
   void reserve_indices_below(std::uint32_t index);
+  [[nodiscard]] auto capture_checkpoint() const -> RegistryCheckpoint;
+  auto restore_checkpoint(const RegistryCheckpoint& state) -> bool;
 
   template <typename T, typename... Args>
   auto emplace(EntityID entity_id, Args&&... args) -> T* {

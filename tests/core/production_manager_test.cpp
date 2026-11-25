@@ -108,8 +108,12 @@ protected:
     return screen_pos;
   }
 
-  auto preview_entities() -> std::vector<Engine::Core::Entity*> {
-    return world.collect_entities_with<Engine::Core::ConstructionPreviewComponent>();
+  static auto preview_entities(const ProductionManager& manager)
+      -> std::vector<Engine::Core::Entity*> {
+    const auto preview = manager.construction_preview_world();
+    return preview != nullptr ? preview->collect_entities_with<
+                                    Engine::Core::ConstructionPreviewComponent>()
+                              : std::vector<Engine::Core::Entity*>{};
   }
 
   auto find_spawned_unit(Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
@@ -297,7 +301,7 @@ TEST_F(ProductionManagerTest, NonWallBuilderConstructionStartsWithoutGhostPrevie
   EXPECT_FALSE(manager.construction_preview_active());
   EXPECT_FALSE(manager.construction_preview_valid());
   EXPECT_FALSE(builder_prod->has_construction_site);
-  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_TRUE(preview_entities(manager).empty());
 }
 
 TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
@@ -315,10 +319,11 @@ TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
   EXPECT_EQ(manager.construction_preview_segment_count(), 0);
   EXPECT_FALSE(builder_prod->has_construction_site);
 
+  const auto next_entity = world.get_next_entity_id();
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
 
-  auto previews = preview_entities();
+  auto previews = preview_entities(manager);
   ASSERT_EQ(previews.size(), 1U);
   EXPECT_TRUE(manager.construction_preview_active());
   EXPECT_TRUE(manager.construction_preview_valid());
@@ -331,12 +336,13 @@ TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
 
   manager.on_construction_scroll(1.0F);
 
-  previews = preview_entities();
+  previews = preview_entities(manager);
   ASSERT_EQ(previews.size(), 1U);
   preview_transform =
       previews.front()->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(preview_transform, nullptr);
   EXPECT_FLOAT_EQ(preview_transform->rotation.y, 90.0F);
+  EXPECT_EQ(world.get_next_entity_id(), next_entity);
 }
 
 TEST_F(ProductionManagerTest, WallConstructionKeepsRotatedSingleSegmentOrientation) {
@@ -377,7 +383,7 @@ TEST_F(ProductionManagerTest,
   manager.on_construction_mouse_move(hover_screen.x(), hover_screen.y(), viewport);
   manager.on_construction_scroll(1.0F);
 
-  auto previews = preview_entities();
+  auto previews = preview_entities(manager);
   ASSERT_EQ(previews.size(), 1U);
   EXPECT_TRUE(manager.construction_preview_valid());
 
@@ -408,12 +414,12 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation
 
   EXPECT_TRUE(manager.is_placing_construction());
   EXPECT_FALSE(manager.construction_preview_active());
-  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_TRUE(preview_entities(manager).empty());
 
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
 
-  auto previews = preview_entities();
+  auto previews = preview_entities(manager);
   ASSERT_EQ(previews.size(), 1U);
   EXPECT_TRUE(manager.construction_preview_active());
   EXPECT_TRUE(manager.construction_preview_valid());
@@ -424,7 +430,7 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation
 
   manager.on_construction_scroll(2.0F);
 
-  previews = preview_entities();
+  previews = preview_entities(manager);
   ASSERT_EQ(previews.size(), 1U);
   preview_transform =
       previews.front()->get_component<Engine::Core::TransformComponent>();
@@ -435,7 +441,7 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation
 
   EXPECT_FALSE(manager.is_placing_construction());
   EXPECT_FALSE(manager.construction_preview_active());
-  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_TRUE(preview_entities(manager).empty());
 
   auto* tower = find_spawned_unit(Game::Units::SpawnType::DefenseTower);
   ASSERT_NE(tower, nullptr);
@@ -469,7 +475,7 @@ TEST_F(ProductionManagerTest, DirectMarketplacePlacementSpawnsAndRegistersBuildi
   manager.on_construction_confirm();
 
   EXPECT_FALSE(manager.is_placing_construction());
-  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_TRUE(preview_entities(manager).empty());
 
   auto* marketplace = find_spawned_unit(Game::Units::SpawnType::Marketplace);
   ASSERT_NE(marketplace, nullptr);
@@ -548,7 +554,7 @@ TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueue
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
 
-  auto previews = preview_entities();
+  auto previews = preview_entities(manager);
   ASSERT_EQ(previews.size(), 1U);
 
   manager.on_construction_scroll(3.0F);
@@ -561,14 +567,9 @@ TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueue
   EXPECT_TRUE(builder_prod->has_construction_site);
   EXPECT_FLOAT_EQ(builder_prod->construction_site_rotation_y, 15.0F);
 
-  previews = preview_entities();
-  ASSERT_EQ(previews.size(), 1U)
-      << "the ghost must stay standing over the site being built";
-  const auto* handed_over =
-      previews.front()->get_component<Engine::Core::ConstructionPreviewComponent>();
-  ASSERT_NE(handed_over, nullptr);
-  EXPECT_TRUE(handed_over->site_ghost);
-  EXPECT_EQ(handed_over->product_type, "defense_tower");
+  EXPECT_TRUE(preview_entities(manager).empty());
+  EXPECT_TRUE(world.collect_entities_with<Engine::Core::ConstructionPreviewComponent>()
+                  .empty());
 }
 
 TEST_F(ProductionManagerTest,
@@ -634,12 +635,12 @@ TEST_F(ProductionManagerTest, ResettingMidPlacementClearsEveryPreviewEntity) {
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
   manager.on_construction_pointer_pressed(screen.x(), screen.y(), viewport);
-  ASSERT_FALSE(preview_entities().empty());
+  ASSERT_FALSE(preview_entities(manager).empty());
   EXPECT_EQ(manager.placement_phase(), App::Economy::PlacementPhase::Previewing);
 
   manager.reset_transient_state();
 
-  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_TRUE(preview_entities(manager).empty());
   EXPECT_FALSE(manager.is_placing_construction());
   EXPECT_EQ(manager.construction_preview_segment_count(), 0);
   EXPECT_FALSE(manager.construction_preview_active());
@@ -781,7 +782,7 @@ TEST_F(ProductionManagerTest,
   EXPECT_TRUE(manager.is_placing_construction());
   EXPECT_FALSE(manager.construction_preview_active());
   EXPECT_FALSE(manager.construction_preview_valid());
-  EXPECT_TRUE(preview_entities().empty());
+  EXPECT_TRUE(preview_entities(manager).empty());
 }
 
 TEST_F(ProductionManagerTest, GenericCollectPicksTreeFromElevatedClick) {

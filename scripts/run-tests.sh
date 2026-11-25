@@ -185,6 +185,18 @@ if [ "${run_acceptance}" -eq 1 ]; then
       status=1
       failed+=("headless_replay_round_trip")
     fi
+    echo "--- headless_replay_map_checkpoint ---"
+    if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh \
+      assets/maps/map_forest.json 120 7; then
+      status=1
+      failed+=("headless_replay_map_checkpoint")
+    fi
+    echo "--- headless_replay_wall_checkpoint ---"
+    if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh \
+      assets/maps/map_sepulcher_bridge.json 20 7; then
+      status=1
+      failed+=("headless_replay_wall_checkpoint")
+    fi
   else
     echo "error: ${bin_dir}/soi_headless not built." >&2
     status=1
@@ -193,8 +205,8 @@ if [ "${run_acceptance}" -eq 1 ]; then
 fi
 
 # The fast profile still proves one behavioural invariant end to end: a short
-# recorded bot skirmish replays to the same digests, AI and system state
-# included. The full profile runs the longer round trip above instead.
+# recorded bot skirmish replays to the same subsystem digests. The full
+# profile runs the skirmish through elimination.
 if [ "${run_extended}" -eq 0 ] && [ -z "${selected_suites}" ]; then
   headless=$(resolve soi_headless)
   if [ -n "${headless}" ]; then
@@ -204,6 +216,10 @@ if [ "${run_extended}" -eq 0 ] && [ -z "${selected_suites}" ]; then
       status=1
       failed+=("headless_replay_round_trip")
     fi
+  else
+    echo "error: ${bin_dir}/soi_headless not built." >&2
+    status=1
+    failed+=("headless_replay_round_trip (not built)")
   fi
 fi
 

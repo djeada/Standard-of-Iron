@@ -6,6 +6,8 @@
 #include "core/entity_id.h"
 #include "systems/resource_types.h"
 
+class QJsonArray;
+
 namespace Engine::Core {
 class World;
 }
@@ -96,11 +98,16 @@ public:
 
   void queue_ally_request(const AllyTributeRequest& request);
   [[nodiscard]] auto
+  ally_requests_for(int giver) const -> std::vector<AllyTributeRequest>;
+  auto remove_ally_request(const AllyTributeAnswer& answer) -> bool;
+  [[nodiscard]] auto
   take_ally_requests_for(int giver) -> std::vector<AllyTributeRequest>;
 
   void record_ally_answer(const AllyTributeAnswer& answer);
   [[nodiscard]] auto take_ally_answers() -> std::vector<AllyTributeAnswer>;
 
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonArray;
+  [[nodiscard]] auto restore_checkpoint(const QJsonArray& state) -> bool;
   void clear_ally_exchange();
 
 private:

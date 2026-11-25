@@ -6,6 +6,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
+#include "../util/checkpoint_values.h"
 
 namespace Game::Wildlife {
 
@@ -49,6 +50,32 @@ auto threat_strength_of(const Engine::Core::UnitComponent& unit) -> float {
   }
 }
 
+auto write_threat_field(const ThreatField& field) -> QJsonArray {
+  QJsonArray rows;
+  for (const auto& source : field.sources()) {
+    rows.append(Game::CheckpointValues::write(
+        source.x, source.z, source.strength, source.civilian));
+  }
+  return rows;
+}
+
+auto read_threat_field(const QJsonValue& value, ThreatField& field) -> bool {
+  if (!value.isArray()) {
+    return false;
+  }
+  field.clear();
+  for (const auto row : value.toArray()) {
+    ThreatSource source;
+    if (!Game::CheckpointValues::read(
+            row, source.x, source.z, source.strength, source.civilian)) {
+      return false;
+    }
+    field.add(source);
+  }
+  field.finalize();
+  return true;
+}
+
 } // namespace
 
 auto is_civilian_spawn(Game::Units::SpawnType type) -> bool {
@@ -61,6 +88,38 @@ void WildlifeCensus::reset() {
   m_animals.clear();
   m_quarry.clear();
   m_threats.clear();
+  m_interest.clear();
+}
+
+auto WildlifeCensus::capture_checkpoint() const -> QJsonObject {
+  QJsonArray quarry;
+  for (const auto& target : m_quarry) {
+    quarry.append(
+        Game::CheckpointValues::write(target.id, target.x, target.z, target.civilian));
+  }
+  return {{"quarry", quarry},
+          {"threats", write_threat_field(m_threats)},
+          {"interest", write_threat_field(m_interest)}};
+}
+
+auto WildlifeCensus::restore_checkpoint(const QJsonObject& state) -> bool {
+  const auto quarry = state.value("quarry");
+  if (!quarry.isArray() || !read_threat_field(state.value("threats"), m_threats) ||
+      !read_threat_field(state.value("interest"), m_interest)) {
+    return false;
+  }
+  m_quarry.clear();
+  const auto rows = quarry.toArray();
+  m_quarry.reserve(rows.size());
+  for (const auto row : rows) {
+    QuarryRef target;
+    if (!Game::CheckpointValues::read(
+            row, target.id, target.x, target.z, target.civilian)) {
+      return false;
+    }
+    m_quarry.push_back(target);
+  }
+  return true;
 }
 
 auto WildlifeCensus::tier_for(float world_x,

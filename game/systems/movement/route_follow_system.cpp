@@ -1,10 +1,13 @@
 #include "route_follow_system.h"
 
+#include <QJsonObject>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 
 #include "core/entity.h"
+#include "game/util/checkpoint_values.h"
 #include "movement_orders_assignment.h"
 #include "route_follow_system_arrival.h"
 #include "route_follow_system_progress.h"
@@ -283,6 +286,36 @@ auto RouteFollowSystem::route_for(Engine::Core::EntityID entity_id) const
     -> const MovementRoute* {
   auto const found = m_routes.find(entity_id);
   return found == m_routes.end() ? nullptr : &found->second;
+}
+
+auto RouteFollowSystem::capture_checkpoint() const -> QJsonObject {
+  QJsonObject routes;
+  for (const auto& [id, route] : m_routes) {
+    routes[QString::number(static_cast<qulonglong>(id))] = route.capture_checkpoint();
+  }
+  return {{"routes", routes},
+          {"prune_tick", Game::CheckpointValues::encode(m_prune_tick)}};
+}
+
+auto RouteFollowSystem::restore_checkpoint(const QJsonObject& state) -> bool {
+  std::uint64_t prune_tick = 0;
+  if (!state.value("routes").isObject() ||
+      !Game::CheckpointValues::decode(state.value("prune_tick"), prune_tick)) {
+    return false;
+  }
+  decltype(m_routes) restored;
+  const auto routes = state.value("routes").toObject();
+  for (auto it = routes.begin(); it != routes.end(); ++it) {
+    bool valid = false;
+    const auto id = it.key().toULongLong(&valid);
+    auto& route = restored[id];
+    if (!valid || id == 0 || !route.restore_checkpoint(it.value().toObject())) {
+      return false;
+    }
+  }
+  m_routes.swap(restored);
+  m_prune_tick = prune_tick;
+  return true;
 }
 
 auto RouteFollowSystem::access() const -> Engine::Core::SystemAccess {

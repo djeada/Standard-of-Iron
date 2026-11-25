@@ -42,7 +42,6 @@ protected:
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*registry);
     Game::Map::MapTransformer::setFactoryRegistry(std::move(registry));
-    Game::Map::MapTransformer::set_local_owner_id(1);
   }
 
   void TearDown() override {
@@ -278,10 +277,9 @@ TEST_F(MapTransformerStructureTest, BaseAssignmentsDoNotLeakIntoTheNextMatch) {
 
 TEST_F(MapTransformerStructureTest, AnObservedMatchPutsEverySlotUnderAiControl) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::set_local_owner_id(1);
 
   auto def = two_camp_map();
-  Game::Map::MapTransformer::apply_to_world(def, world, {.spectator_mode = true});
+  Game::Map::MapTransformer::apply_to_world(def, world, {.human_owners = {}});
 
   auto& owners = Game::Systems::OwnerRegistry::instance();
   EXPECT_TRUE(owners.is_ai(1)) << "the followed slot was left without an AI";
@@ -292,10 +290,9 @@ TEST_F(MapTransformerStructureTest, AnObservedMatchPutsEverySlotUnderAiControl) 
 
 TEST_F(MapTransformerStructureTest, APlayedMatchStillSeatsTheLocalPlayer) {
   Engine::Core::World world;
-  Game::Map::MapTransformer::set_local_owner_id(1);
 
   auto def = two_camp_map();
-  Game::Map::MapTransformer::apply_to_world(def, world, {.spectator_mode = false});
+  Game::Map::MapTransformer::apply_to_world(def, world, {.human_owners = {1}});
 
   auto& owners = Game::Systems::OwnerRegistry::instance();
   EXPECT_TRUE(owners.is_player(1));
@@ -303,18 +300,16 @@ TEST_F(MapTransformerStructureTest, APlayedMatchStillSeatsTheLocalPlayer) {
 }
 
 TEST_F(MapTransformerStructureTest, SpectatorModeDoesNotLeakIntoTheNextMatch) {
-  Game::Map::MapTransformer::set_local_owner_id(1);
   auto def = two_camp_map();
 
   {
     Engine::Core::World watched;
-    Game::Map::MapTransformer::apply_to_world(def, watched, {.spectator_mode = true});
+    Game::Map::MapTransformer::apply_to_world(def, watched, {.human_owners = {}});
     ASSERT_TRUE(
         Game::Systems::OwnerRegistry::instance().get_player_owner_ids().empty());
   }
 
   Game::Systems::OwnerRegistry::instance().clear();
-  Game::Map::MapTransformer::set_local_owner_id(1);
 
   Engine::Core::World world;
   Game::Map::MapTransformer::apply_to_world(def, world);
