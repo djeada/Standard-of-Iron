@@ -97,6 +97,9 @@ struct EntityLine {
   std::int64_t poise = -1;
   std::int64_t morale = -1;
   int routing = -1;
+  bool in_forest = false;
+  bool concealed = false;
+  std::uint64_t seen_by = 0;
 
   std::int64_t production_remaining = -1;
   int production_queue = -1;
@@ -180,6 +183,12 @@ auto collect(const Engine::Core::World& world) -> std::vector<EntityLine> {
       line.morale = quantise(morale->morale);
       line.routing = static_cast<int>(morale->routing);
     }
+    if (const auto* cover =
+            world.try_get<Engine::Core::ForestCoverComponent>(line.id)) {
+      line.in_forest = cover->in_forest;
+      line.concealed = cover->concealed;
+      line.seen_by = cover->seen_by;
+    }
     if (const auto* production =
             world.try_get<Engine::Core::ProductionComponent>(line.id)) {
       line.production_remaining = quantise(production->time_remaining);
@@ -257,6 +266,9 @@ void mix_status(std::uint64_t& digest, const EntityLine& line) {
   mix(digest, line.id);
   mix(digest, static_cast<std::uint64_t>(line.morale));
   mix(digest, static_cast<std::uint64_t>(line.routing));
+  mix(digest, line.in_forest);
+  mix(digest, line.concealed);
+  mix(digest, line.seen_by);
   mix(digest, static_cast<std::uint64_t>(line.capturing_player));
   mix(digest, static_cast<std::uint64_t>(line.capture_progress));
 }

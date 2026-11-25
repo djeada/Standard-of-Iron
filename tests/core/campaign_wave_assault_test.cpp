@@ -165,7 +165,8 @@ public:
 
     for (int second = 0; second < seconds; ++second) {
       for (int step = 0; step < 60; ++step) {
-        m_world.update(k_tick);
+        m_session->advance(
+            k_tick, 1, Game::Session::SessionContext::OverloadPolicy::KeepBacklog);
       }
 
       const float distance = closest_living(m_world, m_spawned, camp);

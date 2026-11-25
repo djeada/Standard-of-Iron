@@ -189,7 +189,8 @@ TEST_F(TutorialMissionTest, TheScoutingPartyWaitsToBeAttacked) {
   }
 
   for (int tick = 0; tick < 60 * 20; ++tick) {
-    m_world.update(k_tick);
+    m_session->advance(
+        k_tick, 1, Game::Session::SessionContext::OverloadPolicy::KeepBacklog);
   }
 
   for (std::size_t i = 0; i < scouts.size(); ++i) {
@@ -236,7 +237,8 @@ TEST_F(TutorialMissionTest, TheRaidClosesOnThePlayerCampWhileTheCommanderKeepsHi
 
   const float at_spawn = closest();
   for (int tick = 0; tick < 60 * 40; ++tick) {
-    m_world.update(k_tick);
+    m_session->advance(
+        k_tick, 1, Game::Session::SessionContext::OverloadPolicy::KeepBacklog);
   }
   EXPECT_LT(closest(), at_spawn - 10.0F)
       << "the raid never marched on the camp the defend step guards";
@@ -269,7 +271,8 @@ TEST_F(TutorialMissionTest, TheFallenRomanCommanderIsAnnouncedByNationName) {
   ASSERT_NE(roman_commander, nullptr);
   roman_commander->get_component<UnitComponent>()->health = 0;
   for (int tick = 0; tick < 10; ++tick) {
-    m_world.update(k_tick);
+    m_session->advance(
+        k_tick, 1, Game::Session::SessionContext::OverloadPolicy::KeepBacklog);
   }
 
   const auto lost =

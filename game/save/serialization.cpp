@@ -113,7 +113,8 @@ void read_entities(World* world, const QJsonObject& world_obj) {
 }
 
 void read_terrain(Game::Session::SessionContext& session,
-                  const QJsonObject& world_obj) {
+                  const QJsonObject& world_obj,
+                  Serialization::WorldCapture capture) {
   if (!world_obj.contains("terrain")) {
     return;
   }
@@ -138,20 +139,22 @@ void read_terrain(Game::Session::SessionContext& session,
                                      terrain_obj);
 
   auto& terrain_service = session.terrain();
-  terrain_service.restore_from_serialized(width,
-                                          height,
-                                          tile_size,
-                                          temp_height_map->get_height_data(),
-                                          temp_height_map->getTerrainTypes(),
-                                          temp_height_map->get_river_segments(),
-                                          roads,
-                                          temp_height_map->get_bridges(),
-                                          biome,
-                                          world_props,
-                                          authored_world_props,
-                                          temp_height_map->get_lakes(),
-                                          temp_height_map->hill_navigation(),
-                                          temp_height_map->get_fords());
+  terrain_service.restore_from_serialized(
+      width,
+      height,
+      tile_size,
+      temp_height_map->get_height_data(),
+      temp_height_map->getTerrainTypes(),
+      temp_height_map->get_river_segments(),
+      roads,
+      temp_height_map->get_bridges(),
+      biome,
+      world_props,
+      authored_world_props,
+      temp_height_map->get_lakes(),
+      temp_height_map->hill_navigation(),
+      temp_height_map->get_fords(),
+      capture == Serialization::WorldCapture::ReplayCheckpoint);
 }
 
 } // namespace
@@ -190,7 +193,9 @@ auto Serialization::serialize_world(const World* world,
   return QJsonDocument(world_obj);
 }
 
-void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
+void Serialization::deserialize_world(World* world,
+                                      const QJsonDocument& doc,
+                                      WorldCapture capture) {
   auto world_obj = doc.object();
   read_entities(world, world_obj);
 
@@ -201,7 +206,7 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
 
   session.army_formations().from_json(world_obj["army_formations"].toObject());
 
-  read_terrain(session, world_obj);
+  read_terrain(session, world_obj, capture);
 }
 
 auto Serialization::save_to_file(const QString& filename,

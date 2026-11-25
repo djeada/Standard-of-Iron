@@ -81,7 +81,7 @@ auto commander_trace_json(const Game::Commander::CommanderPresentationTrace& tra
       {QStringLiteral("slid"), motor.slid},
       {QStringLiteral("separation_push"), motor.separation_push},
       {QStringLiteral("movement_mode"),
-       QString::fromLatin1(App::Core::movement_mode_name(motor.movement_mode))},
+       QString::fromLatin1(Game::Commander::movement_mode_name(motor.movement_mode))},
       {QStringLiteral("steering_source"), QString::fromLatin1(motor.steering_source)},
       {QStringLiteral("static_walkable"), motor.static_walkable},
       {QStringLiteral("dynamic_push"), json_vector(motor.dynamic_push)},

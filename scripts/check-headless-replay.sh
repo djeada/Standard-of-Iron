@@ -34,7 +34,11 @@ done
 
 ticks=$(sed -n 's/.* ran \([0-9]*\) ticks .*/\1/p' "$scratch/live.log")
 last_checkpoint=$(((ticks - 1) / checkpoint_interval * checkpoint_interval))
+middle_checkpoint=$((ticks / 2 / checkpoint_interval * checkpoint_interval))
 checkpoints=("$checkpoint_interval")
+if ((middle_checkpoint > checkpoint_interval && middle_checkpoint < last_checkpoint)); then
+  checkpoints+=("$middle_checkpoint")
+fi
 if ((last_checkpoint > checkpoint_interval)); then
   checkpoints+=("$last_checkpoint")
 fi

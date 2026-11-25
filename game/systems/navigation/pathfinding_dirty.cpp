@@ -1,4 +1,5 @@
 #include <QJsonArray>
+#include <QJsonObject>
 
 #include <algorithm>
 #include <array>
@@ -124,18 +125,57 @@ auto Pathfinding::obstruction_revision() const -> std::uint64_t {
   return m_obstruction_revision.load(std::memory_order_acquire);
 }
 
-auto Pathfinding::capture_checkpoint() const -> QJsonArray {
+auto Pathfinding::capture_checkpoint() const -> QJsonObject {
   using Game::CheckpointValues::write;
+  const std::shared_lock grid_lock(m_navigation_mutex);
+  const std::scoped_lock pending_lock(m_dirty_mutex, m_nav_change_mutex);
+  const auto encode_grid = [](const std::vector<std::uint8_t>& cells) {
+    return QString::fromLatin1(
+        QByteArray::fromRawData(reinterpret_cast<const char*>(cells.data()),
+                                static_cast<qsizetype>(cells.size()))
+            .toBase64());
+  };
   const auto release = last_obstruction_release();
-  return write(navigation_revision(),
-               obstruction_revision(),
-               release.located,
-               release.center.x(),
-               release.center.z(),
-               m_navigation_grid_dirty.load(std::memory_order_acquire));
+  QJsonArray dirty_regions;
+  for (const auto& region : m_dirty_regions) {
+    dirty_regions.append(write(region.min_x, region.max_x, region.min_z, region.max_z));
+  }
+  QJsonArray changes;
+  for (const auto& change : m_nav_changes) {
+    changes.append(
+        write(change.revision, change.min_x, change.max_x, change.min_z, change.max_z));
+  }
+  const bool topology_pending =
+      m_applied_terrain_topology_revision.load(std::memory_order_acquire) !=
+      m_terrain->navigation_topology_revision();
+  const bool props_pending =
+      m_terrain->is_initialized() &&
+      m_applied_world_props_revision.load(std::memory_order_acquire) !=
+          m_terrain->world_props_revision();
+  QJsonObject state{{"cells", encode_grid(m_navigation_grid.m_cells)},
+                    {"clearance", encode_grid(m_clearance_penalty)},
+                    {"revisions",
+                     write(navigation_revision(),
+                           obstruction_revision(),
+                           release.located,
+                           release.center.x(),
+                           release.center.z(),
+                           m_navigation_grid_dirty.load(std::memory_order_acquire),
+                           m_full_update_required,
+                           topology_pending)},
+                    {"dirty_regions", dirty_regions},
+                    {"changes", changes}};
+  if (props_pending) {
+    QJsonObject old_props;
+    for (const auto& [cell, value] : m_world_prop_cells) {
+      old_props[QString::number(cell)] = static_cast<int>(value);
+    }
+    state["old_props"] = old_props;
+  }
+  return state;
 }
 
-auto Pathfinding::restore_checkpoint(const QJsonArray& state) -> bool {
+auto Pathfinding::restore_checkpoint(const QJsonObject& state) -> bool {
   using Game::CheckpointValues::read;
   std::uint64_t nav_revision = 0;
   std::uint64_t release_revision = 0;
@@ -143,19 +183,108 @@ auto Pathfinding::restore_checkpoint(const QJsonArray& state) -> bool {
   float x = 0.0F;
   float z = 0.0F;
   bool dirty = false;
-  if (!read(state, nav_revision, release_revision, located, x, z, dirty)) {
+  bool full_update = false;
+  bool topology_pending = false;
+  if (!read(state.value("revisions"),
+            nav_revision,
+            release_revision,
+            located,
+            x,
+            z,
+            dirty,
+            full_update,
+            topology_pending) ||
+      !state.value("cells").isString() || !state.value("clearance").isString() ||
+      !state.value("dirty_regions").isArray() || !state.value("changes").isArray()) {
     return false;
   }
+  const auto decode_grid = [&state](const char* key) {
+    return QByteArray::fromBase64Encoding(
+        state.value(QLatin1String(key)).toString().toLatin1(),
+        QByteArray::AbortOnBase64DecodingErrors);
+  };
+  const auto cells = decode_grid("cells");
+  const auto clearance = decode_grid("clearance");
+  const auto area = static_cast<qsizetype>(m_width) * m_height;
+  if (!cells || cells.decoded.size() != area || !clearance ||
+      (!clearance.decoded.isEmpty() && clearance.decoded.size() != area) ||
+      std::ranges::any_of(cells.decoded, [](unsigned char cell) {
+        return cell > static_cast<unsigned char>(CellValue::Forest);
+      })) {
+    return false;
+  }
+  std::vector<DirtyRegion> dirty_regions;
+  for (const auto row : state.value("dirty_regions").toArray()) {
+    DirtyRegion region{0, -1, 0, -1};
+    if (!read(row, region.min_x, region.max_x, region.min_z, region.max_z) ||
+        !in_bounds(region.min_x, region.min_z) ||
+        !in_bounds(region.max_x, region.max_z) || region.min_x > region.max_x ||
+        region.min_z > region.max_z) {
+      return false;
+    }
+    dirty_regions.push_back(region);
+  }
+  std::vector<NavChange> changes;
+  const auto change_rows = state.value("changes").toArray();
+  if (change_rows.size() > static_cast<qsizetype>(k_max_tracked_nav_changes)) {
+    return false;
+  }
+  for (const auto row : change_rows) {
+    auto& change = changes.emplace_back();
+    if (!read(row,
+              change.revision,
+              change.min_x,
+              change.max_x,
+              change.min_z,
+              change.max_z) ||
+        change.revision > nav_revision || !in_bounds(change.min_x, change.min_z) ||
+        ((change.max_x != -1 || change.max_z != -1) &&
+         !in_bounds(change.max_x, change.max_z))) {
+      return false;
+    }
+  }
+  const bool props_pending = state.contains("old_props");
+  std::unordered_map<int, CellValue> old_props;
+  if (props_pending) {
+    const auto encoded = state.value("old_props");
+    if (!encoded.isObject()) {
+      return false;
+    }
+    const auto props = encoded.toObject();
+    for (auto it = props.begin(); it != props.end(); ++it) {
+      bool ok = false;
+      const int cell = it.key().toInt(&ok);
+      const int value = it.value().toInt(-1);
+      if (!ok || cell < 0 || cell >= area || value < 0 ||
+          value > static_cast<int>(CellValue::Forest)) {
+        return false;
+      }
+      old_props.emplace(cell, static_cast<CellValue>(value));
+    }
+  }
+  // Rebuild the terrain indices against the newly loaded map, then restore
+  // the published grid and pending edits as they stood at the checkpoint.
   update_navigation_grid();
+  const std::unique_lock grid_lock(m_navigation_mutex);
+  const std::scoped_lock pending_lock(m_dirty_mutex, m_nav_change_mutex);
+  m_navigation_grid.m_cells.assign(cells.decoded.begin(), cells.decoded.end());
+  m_clearance_penalty.assign(clearance.decoded.begin(), clearance.decoded.end());
+  m_dirty_regions = std::move(dirty_regions);
+  m_full_update_required = full_update;
+  m_nav_changes = std::move(changes);
+  if (props_pending) {
+    m_world_prop_cells = std::move(old_props);
+    m_applied_world_props_revision.store(0, std::memory_order_release);
+  }
+  if (topology_pending) {
+    m_applied_terrain_topology_revision.store(0, std::memory_order_release);
+  }
   m_navigation_revision.store(nav_revision, std::memory_order_release);
   m_obstruction_revision.store(release_revision, std::memory_order_release);
   m_obstruction_center_located.store(located, std::memory_order_relaxed);
   m_obstruction_center_x.store(x, std::memory_order_relaxed);
   m_obstruction_center_z.store(z, std::memory_order_relaxed);
-  m_nav_changes.clear();
-  if (dirty) {
-    mark_navigation_grid_dirty();
-  }
+  m_navigation_grid_dirty.store(dirty, std::memory_order_release);
   return true;
 }
 

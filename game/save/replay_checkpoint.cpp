@@ -23,6 +23,7 @@
 #include "../session/world_digest.h"
 #include "../systems/alliance_board.h"
 #include "../systems/combat_system.h"
+#include "../systems/economy/gather_loop_system.h"
 #include "../systems/economy/marketplace_system.h"
 #include "../systems/global_stats_registry.h"
 #include "../systems/movement/movement_system.h"
@@ -31,7 +32,10 @@
 #include "../systems/navigation/pathfinding.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/projectile_system.h"
+#include "../systems/settlement_life_system.h"
+#include "../systems/undead_awakening_system.h"
 #include "../systems/world_restore.h"
+#include "../wildlife/wildlife_system.h"
 #include "entity_codec.h"
 #include "serialization.h"
 
@@ -172,6 +176,14 @@ auto capture_replay_checkpoint(Game::Session::SessionContext& session) -> QByteA
   const auto* combat = world.get_system<Game::Systems::CombatSystem>();
   const auto* movement = world.get_system<Game::Systems::MovementSystem>();
   const auto* pathfinder = session.navigation().pathfinder();
+  const auto* gather = world.get_system<Game::Systems::GatherLoopSystem>();
+  const auto* settlement = world.get_system<Game::Systems::SettlementLifeSystem>();
+  const auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  const auto* wildlife = world.get_system<Game::Wildlife::WildlifeSystem>();
+  QJsonArray reserved_props;
+  for (const auto id : session.terrain().reserved_world_props()) {
+    reserved_props.append(u64_to_json(id));
+  }
   QJsonArray words;
   for (const auto word : rng.words) {
     words.append(u64_to_json(word));
@@ -208,6 +220,16 @@ auto capture_replay_checkpoint(Game::Session::SessionContext& session) -> QByteA
       {"alliance", session.alliance().capture_checkpoint()},
       {"tribute", session.marketplace().capture_checkpoint()},
       {"stats", session.stats().serialize_counters()},
+      {"reserved_props", reserved_props},
+      {"gather_cooldown",
+       gather != nullptr ? QJsonValue(gather->think_cooldown()) : QJsonValue()},
+      {"settlement",
+       settlement != nullptr ? QJsonValue(settlement->capture_checkpoint())
+                             : QJsonValue()},
+      {"undead",
+       undead != nullptr ? QJsonValue(undead->capture_checkpoint()) : QJsonValue()},
+      {"wildlife",
+       wildlife != nullptr ? QJsonValue(wildlife->capture_checkpoint()) : QJsonValue()},
       {"resources", encode_resources(session.economy().snapshot())},
       {"harvested", encode_resources(session.economy().harvested_snapshot())}};
   const auto bytes = QJsonDocument(state).toJson(QJsonDocument::Compact);
@@ -259,7 +281,19 @@ auto restore_replay_checkpoint(Game::Session::SessionContext& session,
   const Game::Session::ScopedThreadSession scope(session);
   auto& target = session.world();
   target.clear();
-  Engine::Core::Serialization::deserialize_world(&target, QJsonDocument(world));
+  Engine::Core::Serialization::deserialize_world(
+      &target,
+      QJsonDocument(world),
+      Engine::Core::Serialization::WorldCapture::ReplayCheckpoint);
+  if (!state.value("reserved_props").isArray()) {
+    return false;
+  }
+  for (const auto row : state.value("reserved_props").toArray()) {
+    const auto id = u64_from_json(row);
+    if (!id || !session.terrain().reserve_world_prop(*id)) {
+      return false;
+    }
+  }
   for (const auto value : world.value("entities").toArray()) {
     const auto row = value.toObject();
     auto* entity = target.get_entity(
@@ -300,7 +334,7 @@ auto restore_replay_checkpoint(Game::Session::SessionContext& session,
   (void)Game::Persistence::rebuild_registries_after_load(&target, 0);
   if (auto* pathfinder = session.navigation().pathfinder();
       pathfinder != nullptr &&
-      !pathfinder->restore_checkpoint(state.value("navigation").toArray())) {
+      !pathfinder->restore_checkpoint(state.value("navigation").toObject())) {
     return false;
   }
   if (auto* movement = target.get_system<Game::Systems::MovementSystem>();
@@ -318,6 +352,19 @@ auto restore_replay_checkpoint(Game::Session::SessionContext& session,
       !session.marketplace().restore_checkpoint(state.value("tribute").toArray())) {
     return false;
   }
+  if (auto* gather = target.get_system<Game::Systems::GatherLoopSystem>()) {
+    const auto cooldown = state.value("gather_cooldown").toDouble(-1.0);
+    if (cooldown < 0.0 ||
+        cooldown > Game::Systems::GatherLoopSystem::k_think_interval) {
+      return false;
+    }
+    gather->restore_think_cooldown(static_cast<float>(cooldown));
+  }
+  if (auto* settlement = target.get_system<Game::Systems::SettlementLifeSystem>();
+      settlement != nullptr &&
+      !settlement->restore_checkpoint(state.value("settlement").toArray())) {
+    return false;
+  }
   session.stats().restore_counters(state.value("stats").toArray());
   session.clock().restore(*tick);
   session.clock().set_time_scale(speed);
@@ -329,6 +376,16 @@ auto restore_replay_checkpoint(Game::Session::SessionContext& session,
       decode_resources(state.value(QLatin1String("harvested"))));
   (void)Game::Session::SessionSnapshot::restore(
       {.world = &target}, state.value(QLatin1String("systems")).toObject());
+  if (auto* undead = target.get_system<Game::Systems::UndeadAwakeningSystem>();
+      undead != nullptr &&
+      !undead->restore_checkpoint(state.value("undead").toObject())) {
+    return false;
+  }
+  if (auto* wildlife = target.get_system<Game::Wildlife::WildlifeSystem>();
+      wildlife != nullptr &&
+      !wildlife->restore_checkpoint(state.value("wildlife").toObject())) {
+    return false;
+  }
   return true;
 }
 

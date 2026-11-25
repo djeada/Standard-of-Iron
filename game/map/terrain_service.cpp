@@ -229,7 +229,8 @@ void TerrainService::restore_from_serialized(
     const std::vector<WorldProp>& authored_world_props,
     const std::vector<Lake>& lakes,
     const HillNavigation& hills,
-    const std::vector<FordCrossing>& fords) {
+    const std::vector<FordCrossing>& fords,
+    bool replay_checkpoint) {
   m_sealed = false;
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
@@ -237,11 +238,15 @@ void TerrainService::restore_from_serialized(
   m_height_map->restore_from_data(
       heights, terrain_types, rivers, bridges, lakes, hills, fords);
   m_biome_settings = biome;
-  m_coord_system = CoordSystem::Grid;
+  if (replay_checkpoint) {
+    m_reserved_world_prop_ids.clear();
+  } else {
+    m_coord_system = CoordSystem::Grid;
+  }
 
   m_road_segments = roads;
   rebuild_road_spatial_index();
-  if (authored_world_props.empty()) {
+  if (authored_world_props.empty() && !replay_checkpoint) {
     m_authored_world_props = world_props;
     normalize_world_props(m_authored_world_props);
     m_world_props = m_authored_world_props;
@@ -251,7 +256,7 @@ void TerrainService::restore_from_serialized(
     normalize_world_props(m_authored_world_props);
     normalize_world_props(m_world_props);
   }
-  if (!has_runtime_harvest_props(m_world_props) &&
+  if (!replay_checkpoint && !has_runtime_harvest_props(m_world_props) &&
       world_props_match(m_authored_world_props, m_world_props)) {
     m_world_props = build_runtime_world_props(
         *m_height_map, m_biome_settings, m_coord_system, m_authored_world_props);

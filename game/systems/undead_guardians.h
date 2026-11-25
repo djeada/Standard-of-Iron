@@ -31,6 +31,8 @@ public:
                                               int spawn_count) const -> QVector3D;
 
 private:
+  friend class UndeadAwakeningSystem;
+
   void enforce_leash(Engine::Core::World& world, const UndeadRuntimeZone& zone) const;
   void station_guardian(Engine::Core::World& world,
                         const UndeadRuntimeZone& zone,

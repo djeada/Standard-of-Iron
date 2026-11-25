@@ -187,7 +187,7 @@ if [ "${run_acceptance}" -eq 1 ]; then
     fi
     echo "--- headless_replay_map_checkpoint ---"
     if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh \
-      assets/maps/map_forest.json 24 7; then
+      assets/maps/map_forest.json 120 7; then
       status=1
       failed+=("headless_replay_map_checkpoint")
     fi

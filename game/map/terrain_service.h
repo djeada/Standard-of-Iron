@@ -201,6 +201,7 @@ public:
   [[nodiscard]] auto find_harvestable_world_prop_by_id(
       std::uint64_t world_prop_id) const -> std::optional<WorldPropTarget>;
   [[nodiscard]] auto is_world_prop_reserved(std::uint64_t world_prop_id) const -> bool;
+  [[nodiscard]] auto reserved_world_props() const -> std::vector<std::uint64_t>;
   [[nodiscard]] auto reserve_world_prop(std::uint64_t world_prop_id) -> bool;
   void release_world_prop(std::uint64_t world_prop_id);
   [[nodiscard]] auto harvest_world_prop(std::uint64_t world_prop_id) -> bool;
@@ -242,7 +243,8 @@ public:
                                const std::vector<WorldProp>& authored_world_props = {},
                                const std::vector<Lake>& lakes = {},
                                const HillNavigation& hills = {},
-                               const std::vector<FordCrossing>& fords = {});
+                               const std::vector<FordCrossing>& fords = {},
+                               bool replay_checkpoint = false);
 
   [[nodiscard]] auto ford_profile_at(float world_x,
                                      float world_z) const -> const FordProfile*;

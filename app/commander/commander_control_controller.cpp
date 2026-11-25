@@ -88,7 +88,7 @@ void CommanderControlController::reset() {
 }
 
 void CommanderControlController::release_for_rally() {
-  m_input_port.release_for_rally();
+  m_input_port.release_all();
   m_look.reset();
   if (!m_match_runtime) {
     m_runtime->release_for_rally();
@@ -316,6 +316,9 @@ auto CommanderControlController::input_edges() const
   edges.guard_release_sequence = physical.guard_release_sequence;
   edges.dodge_request_sequence = physical.dodge_request_sequence;
   edges.jump_request_sequence = physical.jump_request_sequence;
+  edges.primary_dropped_sequence += physical.primary_dropped_sequence;
+  edges.dodge_refused_sequence += physical.dodge_refused_sequence;
+  edges.jump_refused_sequence += physical.jump_refused_sequence;
   return edges;
 }
 

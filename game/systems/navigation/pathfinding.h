@@ -14,7 +14,7 @@
 
 #include "systems/nav_grid_types.h"
 
-class QJsonArray;
+class QJsonObject;
 
 namespace Game::Map {
 class TerrainService;
@@ -62,6 +62,8 @@ public:
     }
 
   private:
+    friend class Pathfinding;
+
     int m_width{0};
     int m_height{0};
     std::vector<std::uint8_t> m_cells;
@@ -167,8 +169,8 @@ public:
                                const Point& end,
                                Passability passability = Passability::Light) -> bool;
 
-  [[nodiscard]] auto capture_checkpoint() const -> QJsonArray;
-  [[nodiscard]] auto restore_checkpoint(const QJsonArray& state) -> bool;
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
     return m_navigation_revision.load(std::memory_order_acquire);
@@ -471,7 +473,7 @@ private:
   mutable std::shared_mutex m_navigation_mutex;
   mutable std::mutex m_path_cache_mutex;
 
-  std::mutex m_dirty_mutex;
+  mutable std::mutex m_dirty_mutex;
   std::vector<DirtyRegion> m_dirty_regions;
   bool m_full_update_required{true};
   std::atomic<std::uint64_t> m_applied_world_props_revision{0};
@@ -489,7 +491,7 @@ private:
   std::uint64_t m_path_cache_revision{0};
   std::uint64_t m_path_cache_clock{0};
   std::unordered_map<PathCacheKey, CachedPath, PathCacheKeyHash> m_path_cache;
-  std::mutex m_nav_change_mutex;
+  mutable std::mutex m_nav_change_mutex;
   std::vector<NavChange> m_nav_changes;
   mutable std::mutex m_region_mutex;
   std::array<RegionMap, k_passability_count> m_region_maps;

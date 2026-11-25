@@ -42,7 +42,9 @@ public:
   static auto
   serialize_world(const class World* world,
                   WorldCapture capture = WorldCapture::Save) -> QJsonDocument;
-  static void deserialize_world(class World* world, const QJsonDocument& doc);
+  static void deserialize_world(class World* world,
+                                const QJsonDocument& doc,
+                                WorldCapture capture = WorldCapture::Save);
 
   static auto serialize_terrain(
       const Game::Map::TerrainHeightMap* height_map,
