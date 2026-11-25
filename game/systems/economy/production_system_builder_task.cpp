@@ -134,8 +134,10 @@ void start_idle_auto_gather(Engine::Core::World& world,
                             float delta_time) {
   const auto* economy = Game::Session::services_for(world).economy;
   const auto* unit = world.try_get<Engine::Core::UnitComponent>(worker.get_id());
-  const auto* movement = world.try_get<Engine::Core::MovementComponent>(worker.get_id());
-  const auto* carry = world.try_get<Engine::Core::ResourceCarryComponent>(worker.get_id());
+  const auto* movement =
+      world.try_get<Engine::Core::MovementComponent>(worker.get_id());
+  const auto* carry =
+      world.try_get<Engine::Core::ResourceCarryComponent>(worker.get_id());
   const bool eligible =
       economy != nullptr && economy->idle_builders_gather() && unit != nullptr &&
       unit->health > 0 && movement != nullptr && !movement->get_has_target() &&
@@ -176,7 +178,8 @@ void advance_queued_work_if_idle(Engine::Core::World& world,
     builder.queued_structure_sites.erase(builder.queued_structure_sites.begin());
     begin_structure_site(
         worker, builder, next.construction_type, next.x, next.z, next.rotation_y);
-    if (auto* movement = world.try_get<Engine::Core::MovementComponent>(worker.get_id())) {
+    if (auto* movement =
+            world.try_get<Engine::Core::MovementComponent>(worker.get_id())) {
       movement->set_rest_position(next.x, next.z);
     }
     return;

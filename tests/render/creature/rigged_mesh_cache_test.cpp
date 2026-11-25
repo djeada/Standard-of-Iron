@@ -3,22 +3,22 @@
 #include <QMatrix4x4>
 
 #include <condition_variable>
-#include <memory>
-#include <vector>
 #include <gtest/gtest.h>
+#include <memory>
 #include <mutex>
 #include <thread>
 #include <type_traits>
+#include <vector>
 
-#include "render/creature/elephant/elephant_spec.h"
 #include "animation/bpat/bpat_reader.h"
+#include "render/creature/elephant/elephant_spec.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
-#include "render/frame/bone_palette_arena.h"
-#include "render/geom/instance_block.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
+#include "render/frame/bone_palette_arena.h"
+#include "render/geom/instance_block.h"
 #include "render/geom/rigged_mesh.h"
 
 namespace {
@@ -469,8 +469,15 @@ TEST(RiggedMeshCache, ARefilledAtlasKeepsItsOldPaletteBlockForTheQueuedFrame) {
   RiggedMeshCache cache;
   cache.set_palette_blocks_enabled(true);
   auto const& spec = Render::Humanoid::humanoid_creature_spec();
-  const auto* entry = cache.get_or_bake_prehashed(
-      spec, CreatureLOD::Full, Render::Humanoid::humanoid_bind_palette(), 0U, {}, 0x77U, 1U, 31U);
+  const auto* entry =
+      cache.get_or_bake_prehashed(spec,
+                                  CreatureLOD::Full,
+                                  Render::Humanoid::humanoid_bind_palette(),
+                                  0U,
+                                  {},
+                                  0x77U,
+                                  1U,
+                                  31U);
   ASSERT_NE(entry, nullptr);
   ASSERT_NE(entry->skin_atlas, nullptr);
   auto const first_storage = give_atlas_frames(*entry, 4U, 8U);
@@ -499,8 +506,15 @@ TEST(RiggedMeshCache, APaletteBlockWritesTheBindPoseForFramesItsAtlasLacks) {
   RiggedMeshCache cache;
   cache.set_palette_blocks_enabled(true);
   auto const& spec = Render::Humanoid::humanoid_creature_spec();
-  const auto* entry = cache.get_or_bake_prehashed(
-      spec, CreatureLOD::Full, Render::Humanoid::humanoid_bind_palette(), 0U, {}, 0x78U, 1U, 32U);
+  const auto* entry =
+      cache.get_or_bake_prehashed(spec,
+                                  CreatureLOD::Full,
+                                  Render::Humanoid::humanoid_bind_palette(),
+                                  0U,
+                                  {},
+                                  0x78U,
+                                  1U,
+                                  32U);
   ASSERT_NE(entry, nullptr);
   auto const storage = give_atlas_frames(*entry, 2U, 8U);
   entry->skin_atlas->frame_total = 6U;
@@ -510,8 +524,7 @@ TEST(RiggedMeshCache, APaletteBlockWritesTheBindPoseForFramesItsAtlasLacks) {
   std::vector<std::byte> bytes(block.size_bytes());
   block.write_to(bytes);
   const auto* floats = reinterpret_cast<const float*>(bytes.data());
-  const std::size_t last_frame =
-      5U * Render::GL::BonePaletteArena::k_palette_floats;
+  const std::size_t last_frame = 5U * Render::GL::BonePaletteArena::k_palette_floats;
   EXPECT_FLOAT_EQ(floats[0], 2.0F) << "a covered frame carries the atlas pose";
   EXPECT_FLOAT_EQ(floats[last_frame], 1.0F) << "an uncovered frame is the identity";
 }

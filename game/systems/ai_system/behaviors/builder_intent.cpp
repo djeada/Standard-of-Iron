@@ -183,8 +183,8 @@ void wish_for_basics(const AISnapshot& snapshot,
 // The buildings that make a nation play differently (NATION_ASYMMETRY.md
 // section 9): Carthage's Mercenary Camp and Elephant Stables, Rome's Fabrica
 // and a Castra toward the enemy. One of each, once the town can feed itself.
-auto nation_building_count(const AISnapshot& snapshot, Game::Units::SpawnType type)
-    -> int {
+auto nation_building_count(const AISnapshot& snapshot,
+                           Game::Units::SpawnType type) -> int {
   int count = 0;
   for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building && entity.health > 0 && entity.spawn_type == type) {

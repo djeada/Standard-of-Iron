@@ -53,16 +53,16 @@ struct RecruitQuote {
 
 // A band of `nation` offered for `unit_type`; with no band nation named, the
 // owner's own band of that troop or, failing that, the first one.
-[[nodiscard]] auto resolve_band(const Nation& nation,
-                                Game::Units::TroopType unit_type,
-                                std::optional<NationID> band_nation)
-    -> const MercenaryBand*;
+[[nodiscard]] auto
+resolve_band(const Nation& nation,
+             Game::Units::TroopType unit_type,
+             std::optional<NationID> band_nation) -> const MercenaryBand*;
 
-[[nodiscard]] auto quote_recruit(const Engine::Core::World& world,
-                                 int owner_id,
-                                 Game::Units::TroopType unit_type,
-                                 std::optional<NationID> band_nation = std::nullopt)
-    -> RecruitQuote;
+[[nodiscard]] auto
+quote_recruit(const Engine::Core::World& world,
+              int owner_id,
+              Game::Units::TroopType unit_type,
+              std::optional<NationID> band_nation = std::nullopt) -> RecruitQuote;
 
 // A finished, living building of `type` that `owner_id` holds.
 [[nodiscard]] auto owner_has_standing(const Engine::Core::World& world,

@@ -92,8 +92,15 @@ void SelectionController::on_click_select(qreal sx,
   }
 
   if (!additive) {
-    Engine::Core::EntityID const foreign = Game::Systems::PickingService::pick_single(
-        float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height, 0, false);
+    Engine::Core::EntityID const foreign =
+        Game::Systems::PickingService::pick_single(float(sx),
+                                                   float(sy),
+                                                   *m_world,
+                                                   *cam,
+                                                   viewport_width,
+                                                   viewport_height,
+                                                   0,
+                                                   false);
     if (foreign != 0U && can_inspect(foreign, local_owner_id)) {
       const bool changed = m_selection_system->inspected_entity() != foreign ||
                            !m_selection_system->get_selected_units().empty();
@@ -351,7 +358,8 @@ auto SelectionController::control_group_members(int group, int local_owner_id)
   return alive;
 }
 
-auto SelectionController::control_group_size(int group, int local_owner_id) const -> int {
+auto SelectionController::control_group_size(int group,
+                                             int local_owner_id) const -> int {
   if (m_selection_system == nullptr || m_world == nullptr ||
       !Game::Session::SelectionService::is_control_group(group)) {
     return 0;

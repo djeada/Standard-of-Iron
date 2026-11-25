@@ -9,8 +9,8 @@
 #include <memory>
 #include <utility>
 
-#include "game/map/skirmish_camp_start.h"
 #include "game/map/map_definition.h"
+#include "game/map/skirmish_camp_start.h"
 
 namespace Engine::Core {
 class World;
@@ -102,8 +102,8 @@ public:
   // A skirmish raises every seat's camp (homes, a farm, crews and two squads)
   // around its barracks. Campaign missions author their own start and leave it off.
   void set_camp_start_enabled(bool enabled) { m_camp_start = enabled; }
-  [[nodiscard]] auto camp_start_reports() const
-      -> const std::vector<Game::Map::CampStartReport>& {
+  [[nodiscard]] auto
+  camp_start_reports() const -> const std::vector<Game::Map::CampStartReport>& {
     return m_camp_reports;
   }
 

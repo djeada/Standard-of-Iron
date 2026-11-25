@@ -146,9 +146,9 @@ private:
   void submit_order(int owner_id, App::Core::OrderRequest request);
   void end_placement(Handoff handoff = Handoff::Discard);
 
-  [[nodiscard]] auto
-  collect_available_builders(bool include_busy,
-                             bool include_raising = false) -> std::vector<Engine::Core::EntityID>;
+  [[nodiscard]] auto collect_available_builders(bool include_busy,
+                                                bool include_raising = false)
+      -> std::vector<Engine::Core::EntityID>;
   [[nodiscard]] auto
   builder_center(const std::vector<Engine::Core::EntityID>& builder_ids) -> QVector3D;
   [[nodiscard]] auto preview_owner() const -> App::Economy::PreviewOwner;

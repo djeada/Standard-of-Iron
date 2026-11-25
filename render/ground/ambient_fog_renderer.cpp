@@ -84,10 +84,10 @@ void AmbientFogRenderer::build_instances() {
         // ground has no edge to point at.
         const float rx = (inst.center.x() - zone.x) / (zone_w * 0.5F);
         const float rz = (inst.center.z() - zone.z) / (zone_h * 0.5F);
-        const float reach = std::clamp(
-            (std::sqrt(rx * rx + rz * rz) - k_fade_start) / (1.0F - k_fade_start),
-            0.0F,
-            1.0F);
+        const float reach = std::clamp((std::sqrt(rx * rx + rz * rz) - k_fade_start) /
+                                           (1.0F - k_fade_start),
+                                       0.0F,
+                                       1.0F);
         const float thinning = 1.0F - reach * reach * (3.0F - 2.0F * reach);
         inst.alpha = (0.18F + 0.22F * density) * thinning;
         if (inst.alpha < 0.01F) {

@@ -297,9 +297,10 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
                           SpawnType::ElephantStables,
                           SpawnType::Fabrica,
                           SpawnType::Castra}) {
-    reg.register_factory(type, [](Engine::Core::World& world, const SpawnParams& params) {
-      return NationBuilding::Create(world, params);
-    });
+    reg.register_factory(type,
+                         [](Engine::Core::World& world, const SpawnParams& params) {
+                           return NationBuilding::Create(world, params);
+                         });
   }
 
   reg.register_factory(SpawnType::Farm,

@@ -1,15 +1,15 @@
-#include <cmath>
-#include "nation_recruitment.h"
-#include "systems/nation_registry.h"
 #include "marketplace_system.h"
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include "core/ambient_session.h"
 #include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "nation_recruitment.h"
+#include "systems/nation_registry.h"
 #include "systems/player_feedback.h"
 #include "systems/player_resource_registry.h"
 #include "units/spawn_type.h"

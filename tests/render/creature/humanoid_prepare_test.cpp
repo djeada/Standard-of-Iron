@@ -10155,11 +10155,11 @@ TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
 
   auto const archetype_id = find_archetype_id("troops/roman/builder");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(
-      extra_role_color_count(archetype_id),
-      k_roman_builder_tunic_role_count + Render::GL::k_straw_hat_role_count +
-          Render::GL::k_tool_belt_role_count + Render::GL::k_work_apron_role_count +
-          Render::GL::k_arm_guards_role_count);
+  EXPECT_EQ(extra_role_color_count(archetype_id),
+            k_roman_builder_tunic_role_count + Render::GL::k_straw_hat_role_count +
+                Render::GL::k_tool_belt_role_count +
+                Render::GL::k_work_apron_role_count +
+                Render::GL::k_arm_guards_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
@@ -12409,15 +12409,15 @@ TEST(HumanoidPrepare, FellingAndQuarryingPutTheMatchingToolInTheHand) {
   using Job = Animation::HumanoidWorkJob;
   using Role = Animation::HumanoidConstructionRole;
 
-  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(Job::Chop,
-                                                                  Role::Hammer),
-            Animation::k_humanoid_felling_axe_variant);
-  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(
-                Job::Quarry, Role::KneelingChisel),
+  EXPECT_EQ(
+      Animation::humanoid_construction_tool_variant_for_job(Job::Chop, Role::Hammer),
+      Animation::k_humanoid_felling_axe_variant);
+  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(Job::Quarry,
+                                                                  Role::KneelingChisel),
             Animation::k_humanoid_quarry_pick_variant);
-  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(Job::Butcher,
-                                                                  Role::Hammer),
-            Animation::humanoid_construction_variant_for_role(Role::Hammer))
+  EXPECT_EQ(
+      Animation::humanoid_construction_tool_variant_for_job(Job::Butcher, Role::Hammer),
+      Animation::humanoid_construction_variant_for_role(Role::Hammer))
       << "the sheep still gets the mallet";
   EXPECT_EQ(
       Animation::humanoid_construction_tool_variant_for_job(Job::Build, Role::Saw),
@@ -12481,8 +12481,8 @@ TEST(HumanoidPrepare, FellingAndQuarryingPutTheMatchingToolInTheHand) {
           Animation::humanoid_construction_role_for_job(Job::Butcher);
       selection = resolve_humanoid_animation_selection(spec, anim, seed);
       EXPECT_EQ(selection.resolved_archetype,
-                table->archetype_for_variant[
-                    Animation::humanoid_construction_variant_for_role(Role::Hammer)]);
+                table->archetype_for_variant
+                    [Animation::humanoid_construction_variant_for_role(Role::Hammer)]);
     }
   }
 }

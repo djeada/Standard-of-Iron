@@ -416,8 +416,8 @@ void parse_economy_traits(const QJsonObject& obj,
   const QJsonObject veterancy = ensure_object(obj.value("veterancy"));
   traits.veteran_troop = Game::Units::try_parse_troop_type(
       read_string(veterancy, "troop", {}).toStdString());
-  traits.battles_for_first_rank =
-      read_int_opt(veterancy, "first_rank_battles").value_or(traits.battles_for_first_rank);
+  traits.battles_for_first_rank = read_int_opt(veterancy, "first_rank_battles")
+                                      .value_or(traits.battles_for_first_rank);
   traits.battles_for_second_rank = read_int_opt(veterancy, "second_rank_battles")
                                        .value_or(traits.battles_for_second_rank);
 }
@@ -426,8 +426,8 @@ auto parse_mercenary_band(const QJsonObject& obj)
     -> std::optional<Game::Systems::MercenaryBand> {
   Game::Systems::MercenaryBand band;
   band.id = read_string(obj, "id", {}).toStdString();
-  const auto troop = Game::Units::try_parse_troop_type(
-      read_string(obj, "troop", {}).toStdString());
+  const auto troop =
+      Game::Units::try_parse_troop_type(read_string(obj, "troop", {}).toStdString());
   const auto nation = Game::Systems::nation_id_from_string(
       read_string(obj, "nation", {}).toStdString());
   if (band.id.empty() || !troop.has_value() || !nation.has_value()) {

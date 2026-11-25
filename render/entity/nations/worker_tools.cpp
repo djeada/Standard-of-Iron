@@ -94,9 +94,8 @@ auto build_dolabra() -> RenderArchetype {
                          0.019F,
                          k_wood_slot),
       generated_sphere(QVector3D(0.0F, 0.0F, 0.0F), 0.025F, k_wood_slot),
-      generated_box(QVector3D(0.0F, 0.78F, 0.0F),
-                    QVector3D(0.062F, 0.090F, 0.052F),
-                    k_iron_slot),
+      generated_box(
+          QVector3D(0.0F, 0.78F, 0.0F), QVector3D(0.062F, 0.090F, 0.052F), k_iron_slot),
       generated_box(QVector3D(0.052F, 0.78F, 0.0F),
                     QVector3D(0.076F, 0.078F, 0.032F),
                     k_iron_slot),

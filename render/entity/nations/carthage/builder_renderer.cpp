@@ -38,6 +38,7 @@
 #include "render/entity/nations/carthage/builder_parts.h"
 #include "render/entity/nations/carthage/builder_style.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/entity/nations/worker_tools.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
@@ -49,7 +50,6 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/entity/nations/worker_tools.h"
 #include "render/equipment/render_archetype_registry.h"
 #include "render/equipment/renderer_constants.h"
 #include "render/frame/frame_submitter.h"
@@ -507,9 +507,8 @@ void apply_builder_palette_overrides(const BuilderStyleConfig& style,
                                      const QVector3D& team_tint,
                                      std::uint32_t seed,
                                      HumanoidVariant& variant) {
-  variant.palette.skin = style.skin_color
-                             ? Humanoid::saturate_color(*style.skin_color)
-                             : make_skin_tone(seed, k_punic_skin_depth);
+  variant.palette.skin = style.skin_color ? Humanoid::saturate_color(*style.skin_color)
+                                          : make_skin_tone(seed, k_punic_skin_depth);
   Humanoid::apply_uniform_palette(variant.palette, style, team_tint);
 }
 

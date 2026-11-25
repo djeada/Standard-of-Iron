@@ -28,8 +28,9 @@ namespace {
 // this key; current builds only read it once, on the first launch.
 void save_legacy_auto_graphics_quality(Render::GraphicsQuality quality) {
   auto settings = App::Core::UserSettings::open();
-  settings.setValue(QString::fromLatin1(App::Core::UserSettings::kAutoGraphicsQualityKey),
-                    static_cast<int>(quality));
+  settings.setValue(
+      QString::fromLatin1(App::Core::UserSettings::kAutoGraphicsQualityKey),
+      static_cast<int>(quality));
   settings.sync();
 }
 

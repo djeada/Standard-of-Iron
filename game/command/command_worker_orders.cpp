@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "../systems/economy/nation_recruitment.h"
 #include "../core/component_economy.h"
 #include "../formation/army_formation_service.h"
 #include "../map/terrain_service.h"
@@ -16,6 +15,7 @@
 #include "../systems/economy/civilian_delivery_system.h"
 #include "../systems/economy/construction_cost_catalog.h"
 #include "../systems/economy/food_targets.h"
+#include "../systems/economy/nation_recruitment.h"
 #include "../systems/economy/production_system_builder_task.h"
 #include "../systems/economy/production_system_shared_site.h"
 #include "../systems/movement/command_service.h"
@@ -193,7 +193,8 @@ void apply_start_construction(World& world,
       order.site.z(),
       0,
       order.rotation_y,
-      order.queue ? std::span<const EntityID>{} : std::span<const EntityID>{order.units});
+      order.queue ? std::span<const EntityID>{}
+                  : std::span<const EntityID>{order.units});
   if (verdict != Game::Systems::GroundVerdict::Clear ||
       Game::Systems::troops_stand_on(world,
                                      order.construction_type,
@@ -212,10 +213,11 @@ void apply_start_construction(World& world,
     }
     const bool raising = Game::Systems::ProductionTasks::is_raising_structure(*builder);
     if (order.queue && raising) {
-      builder->queued_structure_sites.push_back({.construction_type = order.construction_type,
-                                                 .x = order.site.x(),
-                                                 .z = order.site.z(),
-                                                 .rotation_y = order.rotation_y});
+      builder->queued_structure_sites.push_back(
+          {.construction_type = order.construction_type,
+           .x = order.site.x(),
+           .z = order.site.z(),
+           .rotation_y = order.rotation_y});
       assigned_any = true;
       continue;
     }

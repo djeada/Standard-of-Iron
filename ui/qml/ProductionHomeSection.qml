@@ -166,9 +166,9 @@ Rectangle {
             onToggled: {
                 if (panel.production && panel.production.set_home_reporting)
                     panel.production.set_home_reporting(checked);
-                checked = Qt.binding(function() {
-                    return homeProductionContent.prod.reports_to_barracks !== false;
-                });
+                checked = Qt.binding(function () {
+                        return homeProductionContent.prod.reports_to_barracks !== false;
+                    });
             }
         }
     }

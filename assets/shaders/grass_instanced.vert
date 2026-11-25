@@ -193,9 +193,9 @@ void main() {
              root_occlusion;
   lit += surface_color * environment_primary_color() * transmission * 0.20;
 
-  float exposure =
-      environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0) *
-      ground_daylight_gain(ground_open_light());
+  float exposure = environment_exposure() *
+                   (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0) *
+                   ground_daylight_gain(ground_open_light());
   v_color = lit * exposure;
   v_alpha = coverage_fade;
   v_edge = a_uv.x * 2.0 - 1.0;

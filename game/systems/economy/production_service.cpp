@@ -269,16 +269,14 @@ auto ProductionService::plan_batch(Engine::Core::World& world,
   return plan;
 }
 
-auto ProductionService::start_production_batch(
-    Engine::Core::World& world,
-    Engine::Core::EntityID building_id,
-    Game::Units::TroopType unit_type,
-    int count) -> int {
+auto ProductionService::start_production_batch(Engine::Core::World& world,
+                                               Engine::Core::EntityID building_id,
+                                               Game::Units::TroopType unit_type,
+                                               int count) -> int {
   int started = 0;
   const int wanted = std::clamp(count, 1, k_barracks_queue_limit);
   while (started < wanted &&
-         start_production(world, building_id, unit_type) ==
-             ProductionResult::Success) {
+         start_production(world, building_id, unit_type) == ProductionResult::Success) {
     ++started;
   }
   return started;

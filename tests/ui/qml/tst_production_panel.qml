@@ -215,7 +215,6 @@ TestCase {
         compare(gatheringNotes.length, 1);
         verify(!gatheringNotes[0].visible, "a worker at an ore seam is not building; no hold notice");
         idle.destroy();
-
         var panel = testCase.makePanel(constructingProduction, null, fundedPlayer);
         var notes = testCase.collect(panel, "builderBusyNote");
         compare(notes.length, 1);

@@ -14,9 +14,9 @@ Rectangle {
         for (var group = 1; group < strip.sizes.length; ++group) {
             if (strip.sizes[group] > 0)
                 rows.push({
-                    "group": group,
-                    "count": strip.sizes[group]
-                });
+                        "group": group,
+                        "count": strip.sizes[group]
+                    });
         }
         return rows;
     }

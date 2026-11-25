@@ -10,8 +10,8 @@
 
 #include "audio/cue_ids.h"
 #include "core/ambient_session.h"
-#include "core/component_core.h"
 #include "core/component_combat.h"
+#include "core/component_core.h"
 #include "core/component_economy.h"
 #include "core/component_structures.h"
 #include "core/event_manager.h"
@@ -117,7 +117,8 @@ auto NationEconomySystem::trade_income_per_minute(const Engine::Core::World& wor
   auto markets =
       standing_buildings(world, owner_id, Game::Units::SpawnType::Marketplace);
   if (static_cast<int>(markets.size()) > traits.trade_income_max_buildings) {
-    markets.resize(static_cast<std::size_t>(std::max(0, traits.trade_income_max_buildings)));
+    markets.resize(
+        static_cast<std::size_t>(std::max(0, traits.trade_income_max_buildings)));
   }
   const auto farms = standing_buildings(world, owner_id, Game::Units::SpawnType::Farm);
   int total = 0;
@@ -205,7 +206,8 @@ void NationEconomySystem::pay_trade_income(Engine::Core::World& world, int owner
   auto markets =
       standing_buildings(world, owner_id, Game::Units::SpawnType::Marketplace);
   if (static_cast<int>(markets.size()) > traits.trade_income_max_buildings) {
-    markets.resize(static_cast<std::size_t>(std::max(0, traits.trade_income_max_buildings)));
+    markets.resize(
+        static_cast<std::size_t>(std::max(0, traits.trade_income_max_buildings)));
   }
   const auto farms = standing_buildings(world, owner_id, Game::Units::SpawnType::Farm);
   for (const auto market : markets) {
@@ -233,15 +235,15 @@ auto NationEconomySystem::call_levy(Engine::Core::World& world, int owner_id) ->
     if (production == nullptr || centre == nullptr) {
       continue;
     }
-    const int men =
-        traits.levy_men_per_home * count_near(world, homes, *centre, traits.levy_radius);
+    const int men = traits.levy_men_per_home *
+                    count_near(world, homes, *centre, traits.levy_radius);
     raised += grant_manpower(
         owner_id, barracks, *production, men, production->manpower_limit());
   }
   if (raised > 0) {
     announce(owner_id,
-             QCoreApplication::translate("NationEconomy",
-                                         "Levy day: %1 citizens answer the call to arms.")
+             QCoreApplication::translate(
+                 "NationEconomy", "Levy day: %1 citizens answer the call to arms.")
                  .arg(raised),
              Game::Audio::Cue::k_alert_reinforcements);
   }
@@ -290,20 +292,16 @@ void NationEconomySystem::refund_fallen_squads(Engine::Core::World& world) {
         transform == nullptr) {
       continue;
     }
-    const int establishment =
-        unit.squad_strength > 0
-            ? unit.squad_strength
-            : TroopProfileService::instance()
-                  .get_profile_ref(unit.nation_id, *troop)
-                  .individuals_per_unit;
-    const int refund = static_cast<int>(std::lround(
-        static_cast<float>(establishment) * nation->economy.loss_refund_share));
+    const int establishment = unit.squad_strength > 0
+                                  ? unit.squad_strength
+                                  : TroopProfileService::instance()
+                                        .get_profile_ref(unit.nation_id, *troop)
+                                        .individuals_per_unit;
+    const int refund = static_cast<int>(std::lround(static_cast<float>(establishment) *
+                                                    nation->economy.loss_refund_share));
     if (refund > 0) {
-      fallen.push_back(Fallen{id,
-                              unit.owner_id,
-                              refund,
-                              transform->position.x,
-                              transform->position.z});
+      fallen.push_back(Fallen{
+          id, unit.owner_id, refund, transform->position.x, transform->position.z});
     }
   }
 
@@ -363,10 +361,10 @@ void NationEconomySystem::heal_in_camps(Engine::Core::World& world, float second
           planar_distance(*transform, *centre) > nation->economy.camp_heal_radius) {
         continue;
       }
-      const int amount = std::max(
-          1,
-          static_cast<int>(std::lround(static_cast<float>(unit.max_health) *
-                                       nation->economy.camp_heal_per_second * seconds)));
+      const int amount = std::max(1,
+                                  static_cast<int>(std::lround(
+                                      static_cast<float>(unit.max_health) *
+                                      nation->economy.camp_heal_per_second * seconds)));
       (void)restore_health(unit.owner_id, id, unit, amount, unit.max_health);
     }
   }
@@ -381,9 +379,9 @@ auto NationEconomySystem::promote(Engine::Core::UnitComponent& unit, int rank) -
   const float scale = after / before;
   unit.max_health =
       static_cast<int>(std::lround(static_cast<float>(unit.max_health) * scale));
-  unit.health = std::min(
-      unit.max_health,
-      static_cast<int>(std::lround(static_cast<float>(unit.health) * scale)));
+  unit.health =
+      std::min(unit.max_health,
+               static_cast<int>(std::lround(static_cast<float>(unit.health) * scale)));
   unit.rank = static_cast<std::uint8_t>(rank);
   return true;
 }
@@ -426,7 +424,7 @@ void NationEconomySystem::track_veterans(Engine::Core::World& world, float secon
       ++unit.battles_survived;
     }
     const int battles = unit.battles_survived;
-    const int rank = battles >= nation->economy.battles_for_second_rank ? 2
+    const int rank = battles >= nation->economy.battles_for_second_rank  ? 2
                      : battles >= nation->economy.battles_for_first_rank ? 1
                                                                          : 0;
     if (promote(unit, rank)) {

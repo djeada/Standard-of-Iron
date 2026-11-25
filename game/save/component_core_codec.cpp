@@ -152,9 +152,10 @@ void read_unit(Entity* entity, const QJsonObject& json) {
             : Game::Units::spawn_typeToTroopType(unit->spawn_type).has_value();
     unit->render_individuals_per_unit_override =
         unit_obj["render_individuals_per_unit_override"].toInt(0);
-    unit->battles_survived =
-        static_cast<std::uint8_t>(std::clamp(unit_obj["battles_survived"].toInt(0), 0, 255));
-    unit->rank = static_cast<std::uint8_t>(std::clamp(unit_obj["rank"].toInt(0), 0, 255));
+    unit->battles_survived = static_cast<std::uint8_t>(
+        std::clamp(unit_obj["battles_survived"].toInt(0), 0, 255));
+    unit->rank =
+        static_cast<std::uint8_t>(std::clamp(unit_obj["rank"].toInt(0), 0, 255));
     unit->squad_strength = unit_obj["squad_strength"].toInt(0);
     unit->render_rider = unit_obj["render_rider"].toBool(true);
     unit->death_sequence_override =

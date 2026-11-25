@@ -159,8 +159,8 @@ Item {
 
                     visible: false
                     text: spectatorRoot.board.map(function (army) {
-                        return army.name;
-                    }).join("\n")
+                            return army.name;
+                        }).join("\n")
                     font.pixelSize: Design.Typography.body
                 }
 

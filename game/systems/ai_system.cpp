@@ -30,24 +30,24 @@
 #include "ai_system/behaviors/commander_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/economy_behavior.h"
-#include "ai_system/behaviors/mercenary_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/garrison_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/gold_vein_behavior.h"
 #include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/local_engagement_behavior.h"
+#include "ai_system/behaviors/mercenary_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/rampart_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "ai_system/behaviors/squad_discipline_behavior.h"
 #include "core/event_manager.h"
 #include "nation_registry.h"
-#include "systems/economy/nation_economy_system.h"
 #include "owner_registry.h"
 #include "player_resource_registry.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/ai_system/ai_worker.h"
+#include "systems/economy/nation_economy_system.h"
 
 namespace Game::Systems {
 
@@ -179,7 +179,8 @@ auto AISystem::submit_decision_job(AIInstance& ai,
       world, ai.context.player_id, &ai.known_objectives);
   snapshot.game_time = m_total_game_time;
   if (const auto* levy = world.get_system<NationEconomySystem>()) {
-    snapshot.seconds_to_next_levy = levy->seconds_to_next_levy(world, ai.context.player_id);
+    snapshot.seconds_to_next_levy =
+        levy->seconds_to_next_levy(world, ai.context.player_id);
   }
   snapshot.pledges = ai.pledges;
   if (ai.context.strategy_config.posture == AI::AIPosture::Garrison) {

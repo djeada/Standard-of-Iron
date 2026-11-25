@@ -32,8 +32,8 @@ void begin_structure_site(const Engine::Core::Entity& worker,
                           float z,
                           float rotation_y);
 
-[[nodiscard]] auto is_raising_structure(
-    const Engine::Core::BuilderProductionComponent& builder) -> bool;
+[[nodiscard]] auto
+is_raising_structure(const Engine::Core::BuilderProductionComponent& builder) -> bool;
 
 void advance_queued_work_if_idle(Engine::Core::World& world,
                                  Engine::Core::Entity& worker,

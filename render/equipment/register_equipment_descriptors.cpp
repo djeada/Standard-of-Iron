@@ -452,7 +452,8 @@ void register_helmet_descriptors() {
              base_count,
              max_count);
        },
-       .role_count = static_cast<std::uint8_t>(Render::GL::k_craftsman_cap_role_count)});
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_craftsman_cap_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
       "palla_veil",

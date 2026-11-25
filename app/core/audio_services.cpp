@@ -66,7 +66,8 @@ void AudioServices::set_frontend_context(const QString& context) {
   start_frontend_playlist(music.track_id, music.playlist_size);
 }
 
-void AudioServices::start_frontend_playlist(const QString& track_id, int playlist_size) {
+void AudioServices::start_frontend_playlist(const QString& track_id,
+                                            int playlist_size) {
   m_playlist_track = track_id;
   m_playlist_clock.start();
   if (track_id.isEmpty() || playlist_size < 2) {

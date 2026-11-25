@@ -74,16 +74,16 @@ Details settled while building phases 0-3, in the spirit of the decisions above.
 From `assets/data/nations/roman_republic.json`, `carthage.json`, `troops/base.json`,
 `commander_catalog.cpp` and `assets/data/ai/doctrines.json`.
 
-| Aspect | Rome | Carthage | Difference |
-| --- | --- | --- | --- |
-| Buildings | barracks, home, farm, market, temple, tower, walls | same | art only |
-| Economy | food -> civilians -> 18 men; wood, stone, iron, gold | same | none |
-| Core troops | archer, legionary, triarius, equites, horse archer, horse spear, healer, 4 siege, builder | same 12 types | stats within ~10% |
-| Unique troops | velites (10 iron) | slinger (0 iron), elephant | 2 units |
-| Squad sizes | legionary 18, triarius 26, archer 24 | citizen infantry 16, spear 28, archer 22 | small |
-| Defensive layout | testudo (missiles x0.15, 0.42 speed) | shield wall (missiles x0.45, 0.58 speed) | real but narrow |
-| Commanders | Fabius: regen aura, spearmen; Scipio: attack aura, swordsmen; Marcellus: speed aura, archers | Hanno: regen, spearmen; Hannibal: attack, swordsmen; Hasdrubal: speed, archers | **exact mirrors** |
-| AI town plans | Bulwark, Star Camp, Vanguard Chevron | Ring Town, Barcid Triangle, Hexagon | shape only |
+| Aspect           | Rome                                                                                         | Carthage                                                                       | Difference        |
+| ---------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------- |
+| Buildings        | barracks, home, farm, market, temple, tower, walls                                           | same                                                                           | art only          |
+| Economy          | food -> civilians -> 18 men; wood, stone, iron, gold                                         | same                                                                           | none              |
+| Core troops      | archer, legionary, triarius, equites, horse archer, horse spear, healer, 4 siege, builder    | same 12 types                                                                  | stats within ~10% |
+| Unique troops    | velites (10 iron)                                                                            | slinger (0 iron), elephant                                                     | 2 units           |
+| Squad sizes      | legionary 18, triarius 26, archer 24                                                         | citizen infantry 16, spear 28, archer 22                                       | small             |
+| Defensive layout | testudo (missiles x0.15, 0.42 speed)                                                         | shield wall (missiles x0.45, 0.58 speed)                                       | real but narrow   |
+| Commanders       | Fabius: regen aura, spearmen; Scipio: attack aura, swordsmen; Marcellus: speed aura, archers | Hanno: regen, spearmen; Hannibal: attack, swordsmen; Hasdrubal: speed, archers | **exact mirrors** |
+| AI town plans    | Bulwark, Star Camp, Vanguard Chevron                                                         | Ring Town, Barcid Triangle, Hexagon                                            | shape only        |
 
 Two facts from the headless duels run for `PLAY_BIG_SOON.md` matter here: both nations
 hit the army cap by minute 3-5 and then bank 3,500-10,600 gold they cannot spend. Gold
@@ -91,17 +91,17 @@ is the natural lever to split them.
 
 ## 2. The design in one table
 
-| | Rome: the Republic in arms | Carthage: the merchant empire |
-| --- | --- | --- |
-| Turns into an army | men (citizen levy) | gold (hired bands) |
-| Scarce | iron, time | citizens, steady gold |
-| Rhythm | steady flow plus a levy pulse every 2 minutes | bursts: hire a whole band at once, then pay for it |
-| Unique buildings | Castra (marching camp), Via (road), Fabrica (armoury) | Mercenary Camp, Emporion / Harbour, Elephant Stables |
-| Core of the army | legion: velites, hastati, principes, triarii, few equites | small citizen phalanx plus Gauls, Iberians, Balearics, Numidians, elephants |
-| Strength | replaces losses, digs in anywhere, grinds | fast, varied, decisive in one battle |
-| Weakness | slow, poor cavalry, iron-hungry heavy infantry | expensive, fragile loyalty, few men of its own |
-| Wins by | attrition: lose battles, win the war | annihilation: one perfect battle, envelopment |
-| Loses by | being out-manoeuvred before the levy arrives | running out of money |
+|                    | Rome: the Republic in arms                                | Carthage: the merchant empire                                               |
+| ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Turns into an army | men (citizen levy)                                        | gold (hired bands)                                                          |
+| Scarce             | iron, time                                                | citizens, steady gold                                                       |
+| Rhythm             | steady flow plus a levy pulse every 2 minutes             | bursts: hire a whole band at once, then pay for it                          |
+| Unique buildings   | Castra (marching camp), Via (road), Fabrica (armoury)     | Mercenary Camp, Emporion / Harbour, Elephant Stables                        |
+| Core of the army   | legion: velites, hastati, principes, triarii, few equites | small citizen phalanx plus Gauls, Iberians, Balearics, Numidians, elephants |
+| Strength           | replaces losses, digs in anywhere, grinds                 | fast, varied, decisive in one battle                                        |
+| Weakness           | slow, poor cavalry, iron-hungry heavy infantry            | expensive, fragile loyalty, few men of its own                              |
+| Wins by            | attrition: lose battles, win the war                      | annihilation: one perfect battle, envelopment                               |
+| Loses by           | being out-manoeuvred before the levy arrives              | running out of money                                                        |
 
 ## 3. Rome
 
@@ -123,23 +123,23 @@ is the natural lever to split them.
 
 ### 3.2 Unique buildings
 
-| Building | Cost | Does | Reuses |
-| --- | --- | --- | --- |
-| Castra (marching camp) | 120 wood, 14 s, any crews | Palisade square with gates; a resource drop-off; units inside heal 1% a second; the barracks rally point can target it and new squads walk there | wall plan service (`wall_plan_service.cpp`) for the palisade, barracks yard depot code, healing system |
-| Via (road) | 5 wood a segment, drag to place | +25% move speed for every unit on it, +40% for haulers; never blocks | wall-link drag placement, terrain road decal (maps already author `roads`) |
-| Fabrica | 80 wood, 60 stone | Infantry iron -33% | barracks body and renderer slot |
+| Building               | Cost                            | Does                                                                                                                                             | Reuses                                                                                                 |
+| ---------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Castra (marching camp) | 120 wood, 14 s, any crews       | Palisade square with gates; a resource drop-off; units inside heal 1% a second; the barracks rally point can target it and new squads walk there | wall plan service (`wall_plan_service.cpp`) for the palisade, barracks yard depot code, healing system |
+| Via (road)             | 5 wood a segment, drag to place | +25% move speed for every unit on it, +40% for haulers; never blocks                                                                             | wall-link drag placement, terrain road decal (maps already author `roads`)                             |
+| Fabrica                | 80 wood, 60 stone               | Infantry iron -33%                                                                                                                               | barracks body and renderer slot                                                                        |
 
 ### 3.3 Roster
 
-| Slot | Today | Proposed | Notes |
-| --- | --- | --- | --- |
-| Skirmisher | velites 16 | velites 16, 10 iron | unchanged |
-| Line | legionary 18, 30 iron | **hastati** 18, 20 iron | the levy's line infantry |
-| Veteran line | - | **principes**: hastati squads that survive two battles are promoted, +15% health, +10% damage, new shield emblem | rank, no recruit |
-| Reserve | triarius 26 | triarii 26, only from a barracks with a Fabrica | elite, few |
-| Cavalry | equites, horse spear, horse archer | equites (horse spear stats) only, capped at 4 squads | Rome's cavalry was weak |
-| Missile | auxiliary archer | Cretan archers, cost 40 gold instead of iron | Rome hired Cretan archers; gives Rome a small gold sink |
-| Siege | onager, ballista, aries, turris | unchanged, Marcellus builds them 30% faster | siege of Syracuse |
+| Slot         | Today                              | Proposed                                                                                                         | Notes                                                   |
+| ------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Skirmisher   | velites 16                         | velites 16, 10 iron                                                                                              | unchanged                                               |
+| Line         | legionary 18, 30 iron              | **hastati** 18, 20 iron                                                                                          | the levy's line infantry                                |
+| Veteran line | -                                  | **principes**: hastati squads that survive two battles are promoted, +15% health, +10% damage, new shield emblem | rank, no recruit                                        |
+| Reserve      | triarius 26                        | triarii 26, only from a barracks with a Fabrica                                                                  | elite, few                                              |
+| Cavalry      | equites, horse spear, horse archer | equites (horse spear stats) only, capped at 4 squads                                                             | Rome's cavalry was weak                                 |
+| Missile      | auxiliary archer                   | Cretan archers, cost 40 gold instead of iron                                                                     | Rome hired Cretan archers; gives Rome a small gold sink |
+| Siege        | onager, ballista, aries, turris    | unchanged, Marcellus builds them 30% faster                                                                      | siege of Syracuse                                       |
 
 Rank (principes, then a third "triarius-veteran" tier) is new code: a per-squad
 battle count on `UnitComponent`, promotion on survival, saved with the unit. Medium.
@@ -173,13 +173,13 @@ where to dig in.
   owner but carries the ally nation in `UnitComponent::nation_id`, so it renders and
   fights with that nation's profile.
 
-| Band | Men | Gold | Contract | Upkeep / min | Character |
-| --- | --- | --- | --- | --- | --- |
-| Gallic warband | 16 | 110 | 8 s | 6 | hits hard, breaks fast |
-| Iberian scutarii | 16 | 130 | 8 s | 7 | steady line |
-| Balearic slingers | 16 | 90 | 6 s | 5 | longest-ranged foot |
-| Numidian horse | 9 | 140 | 9 s | 8 | fastest unit, javelins |
-| Iberian / Gallic cavalry | 9 | 150 | 10 s | 8 | shock horse |
+| Band                     | Men | Gold | Contract | Upkeep / min | Character              |
+| ------------------------ | --- | ---- | -------- | ------------ | ---------------------- |
+| Gallic warband           | 16  | 110  | 8 s      | 6            | hits hard, breaks fast |
+| Iberian scutarii         | 16  | 130  | 8 s      | 7            | steady line            |
+| Balearic slingers        | 16  | 90   | 6 s      | 5            | longest-ranged foot    |
+| Numidian horse           | 9   | 140  | 9 s      | 8            | fastest unit, javelins |
+| Iberian / Gallic cavalry | 9   | 150  | 10 s     | 8            | shock horse            |
 
 - **Upkeep.** Charged every minute. At zero gold, bands are unpaid: -20% morale and a
   warning. After 60 s unpaid, the band with the lowest loyalty leaves (becomes neutral
@@ -196,15 +196,15 @@ where to dig in.
 
 ### 4.4 Roster
 
-| Slot | Proposed | Source of men |
-| --- | --- | --- |
-| Citizen line | Liby-Phoenician spear (28), citizen infantry (16) | reserve |
-| Elite | Sacred Band: citizen infantry from a barracks with a temple; +20% health | reserve |
-| Missile | Libyan archers (reserve), Balearic slingers (gold) | both |
-| Cavalry | Numidian horse (gold), Iberian/Gallic horse (gold); the horse archer becomes Numidian javelin riders | gold |
-| Shock | elephants (stables) | gold + food |
-| Foot mercenaries | Gauls, Iberians | gold |
-| Siege | as today; Hannibal's catapults +10% range | reserve |
+| Slot             | Proposed                                                                                             | Source of men |
+| ---------------- | ---------------------------------------------------------------------------------------------------- | ------------- |
+| Citizen line     | Liby-Phoenician spear (28), citizen infantry (16)                                                    | reserve       |
+| Elite            | Sacred Band: citizen infantry from a barracks with a temple; +20% health                             | reserve       |
+| Missile          | Libyan archers (reserve), Balearic slingers (gold)                                                   | both          |
+| Cavalry          | Numidian horse (gold), Iberian/Gallic horse (gold); the horse archer becomes Numidian javelin riders | gold          |
+| Shock            | elephants (stables)                                                                                  | gold + food   |
+| Foot mercenaries | Gauls, Iberians                                                                                      | gold          |
+| Siege            | as today; Hannibal's catapults +10% range                                                            | reserve       |
 
 ### 4.5 Recruitment rhythm
 
@@ -226,14 +226,14 @@ Today the three commanders of each nation mirror the other nation's three exactl
 (regen/spearmen, attack/swordsmen, speed/archers). Keep the auras and signature moves;
 add one trait each that plays into the nation's economy.
 
-| Commander | Historical hook | Trait proposed |
-| --- | --- | --- |
-| Fabius Maximus "Cunctator" | delaying war after Trasimene, 217 BC | enemy crews inside his territory gather 20% slower; walls and towers 20% cheaper |
-| Scipio (Africanus) | took New Carthage 209 BC; Masinissa's Numidians joined him | after minute 10 may hire Numidian horse from a captured Carthaginian camp; attack aura unchanged |
-| Marcellus, "the Sword of Rome" | siege of Syracuse 214-212 BC | siege engines 30% faster to build; levy pulse every 90 s instead of 120 |
-| Hannibal Barca | held a many-nation army together in Italy for 15 years; Cannae 216 BC | halves unpaid-morale loss; +15% damage on flank and rear attacks |
-| Hasdrubal Barca | ran the Iberian silver country | +50% gold from silver and veins; Iberian bands 20% cheaper |
-| Hanno the Great | led the anti-Barcid, Africa-first faction | Emporion income +50%; armies hold back (garrison doctrine already) |
+| Commander                      | Historical hook                                                       | Trait proposed                                                                                   |
+| ------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Fabius Maximus "Cunctator"     | delaying war after Trasimene, 217 BC                                  | enemy crews inside his territory gather 20% slower; walls and towers 20% cheaper                 |
+| Scipio (Africanus)             | took New Carthage 209 BC; Masinissa's Numidians joined him            | after minute 10 may hire Numidian horse from a captured Carthaginian camp; attack aura unchanged |
+| Marcellus, "the Sword of Rome" | siege of Syracuse 214-212 BC                                          | siege engines 30% faster to build; levy pulse every 90 s instead of 120                          |
+| Hannibal Barca                 | held a many-nation army together in Italy for 15 years; Cannae 216 BC | halves unpaid-morale loss; +15% damage on flank and rear attacks                                 |
+| Hasdrubal Barca                | ran the Iberian silver country                                        | +50% gold from silver and veins; Iberian bands 20% cheaper                                       |
+| Hanno the Great                | led the anti-Barcid, Africa-first faction                             | Emporion income +50%; armies hold back (garrison doctrine already)                               |
 
 ## 7. Historical grounding (brief)
 
@@ -288,6 +288,7 @@ Today the AI plays both nations with the same economy logic; only doctrine share
 town plans differ (`ai_doctrine_catalog.cpp`, `doctrines.json`, `town_plans.json`).
 
 **Rome AI**
+
 - Macro targets (`ai_macro_targets.cpp`): homes before barracks; one Fabrica at the
   third barracks; one castra toward the enemy before the first wave.
 - Waves (`ai_attack_wave.cpp`): time the commit to land just after a levy pulse; on a
@@ -296,6 +297,7 @@ town plans differ (`ai_doctrine_catalog.cpp`, `doctrines.json`, `town_plans.json
 - Retreat earlier; losses refund men.
 
 **Carthage AI**
+
 - Treasury model in `EconomyBehavior`: income per minute vs upkeep. Never hire a band
   whose upkeep pushes income below zero for more than 2 minutes.
 - Production (`production_behavior.cpp`): the Mercenary Camp is a recruitment building
@@ -308,6 +310,7 @@ town plans differ (`ai_doctrine_catalog.cpp`, `doctrines.json`, `town_plans.json
   fixes.
 
 **Both**
+
 - `doctrines.json` gains the new fields; `generate-town-plans.py` gains the new
   buildings as plan steps (mind the 9 m anchor clearance that silently dropped every
   marketplace before).
@@ -319,6 +322,7 @@ town plans differ (`ai_doctrine_catalog.cpp`, `doctrines.json`, `town_plans.json
 Each phase ships on its own and keeps the game playable.
 
 **Phase 0 - spikes (1-2 days, O or D).**
+
 - Spawn a Gallic band owned by a Carthage player (`UnitComponent::nation_id` =
   Gauls) in the arena; confirm render, formation profile, combat profile and save/load.
 - Find the hook for a per-minute gold charge (`MarketplaceSystem` or a new small
@@ -326,6 +330,7 @@ Each phase ships on its own and keeps the game playable.
 - Player-proxy duel harness from `PLAY_BIG_SOON.md` section 9.
 
 **Phase 1 - data identity (data only, low risk, S5).**
+
 - Roster cuts (Decision 5), squad sizes and costs from sections 3.3 and 4.4 where they
   are plain numbers: hastati iron 20, Cretan archers, Carthage civilian grant.
 - Commander doctrine fields that already exist (recruitment shares) aligned with
@@ -334,21 +339,25 @@ Each phase ships on its own and keeps the game playable.
   `TroopCatalogLoaderTest` with the data.
 
 **Phase 2 - Carthage gold army (code, M-L).**
+
 - Mercenary Camp (a barracks variant with its own recruit list via
   `recruiting_building_for`), gold-priced bands with per-unit nation, upkeep and
   desertion, Emporion income, Elephant Stables. AI treasury model and mercenary share.
 - Art: camp and stables renderers (F1/F2, reuse barracks parts).
 
 **Phase 3 - Rome levy army (code, M-L).**
+
 - Levy pulse, loss refund, Fabrica modifier, castra (palisade plan + depot + heal),
   rank promotion. AI levy timing and castra.
 
 **Phase 4 - roads, harbour, commander traits, dark layer (code, M).**
+
 - Roads (Decision 3), Harbour on coastal maps, the six traits, shrine piety and
   skeleton contracts, dispatch and invoice texts (`qsTr`; orchestrator runs
   translations).
 
 **Phase 5 - balance (O with S agents).**
+
 - Headless duel matrix at Normal, 30 minutes, 3 seeds each: win rate per nation,
   minute of first wave, gold at minute 20, men at 3/7/15 minutes.
 - Campaign playthrough harness: adjust floors where nation data moved missions.

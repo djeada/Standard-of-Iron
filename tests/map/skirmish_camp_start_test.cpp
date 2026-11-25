@@ -56,8 +56,8 @@ auto every_seat(const Game::Map::MapDefinition& def) -> QVariantList {
     config["team_id"] = seat;
     config["colorHex"] = QStringLiteral("#808080");
     config["isHuman"] = seat == 1;
-    config["nationId"] = seat % 2 == 1 ? QStringLiteral("roman_republic")
-                                       : QStringLiteral("carthage");
+    config["nationId"] =
+        seat % 2 == 1 ? QStringLiteral("roman_republic") : QStringLiteral("carthage");
     configs.append(config);
   }
   return configs;
@@ -130,8 +130,9 @@ TEST_P(SkirmishCampStartTest, EverySeatStartsWithAWorkingCamp) {
 
     const auto* hall = world.get_entity(camp.barracks);
     ASSERT_NE(hall, nullptr) << where.str();
-    EXPECT_GE(hall->get_component<Engine::Core::ProductionComponent>()->manpower_available,
-              200)
+    EXPECT_GE(
+        hall->get_component<Engine::Core::ProductionComponent>()->manpower_available,
+        200)
         << where.str() << ": barracks reserve";
     const auto gate = Game::Systems::barracks_gate(
                           *hall->get_component<Engine::Core::TransformComponent>())

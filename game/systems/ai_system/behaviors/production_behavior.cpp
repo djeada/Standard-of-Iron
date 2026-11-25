@@ -12,9 +12,9 @@
 #include "../../economy/civilian_delivery_system.h"
 #include "../../economy/production_service.h"
 #include "../../nation_registry.h"
-#include "../ai_doctrine_rules.h"
 #include "../ai_base_manager.h"
 #include "../ai_doctrine_catalog.h"
+#include "../ai_doctrine_rules.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/commander_catalog.h"
@@ -42,13 +42,13 @@ constexpr float k_rally_tolerance_sq = 4.0F;
 [[nodiscard]] auto roster_allows(const Game::Systems::TroopType& troop,
                                  const AISnapshot& snapshot) -> bool {
   if (troop.requires_building.has_value()) {
-    const bool standing = std::any_of(
-        snapshot.friendly_units.begin(),
-        snapshot.friendly_units.end(),
-        [&troop](const EntitySnapshot& entity) {
-          return entity.is_building && entity.health > 0 &&
-                 entity.spawn_type == *troop.requires_building;
-        });
+    const bool standing =
+        std::any_of(snapshot.friendly_units.begin(),
+                    snapshot.friendly_units.end(),
+                    [&troop](const EntitySnapshot& entity) {
+                      return entity.is_building && entity.health > 0 &&
+                             entity.spawn_type == *troop.requires_building;
+                    });
     if (!standing) {
       return false;
     }
@@ -369,7 +369,8 @@ struct ArmStrength {
   if (context.marketplace_count > 0 &&
       stock.get(Game::Systems::ResourceType::Iron) < k_iron_short) {
     spendable.set(Game::Systems::ResourceType::Gold,
-                  spendable.get(Game::Systems::ResourceType::Gold) - k_gold_kept_for_iron);
+                  spendable.get(Game::Systems::ResourceType::Gold) -
+                      k_gold_kept_for_iron);
   }
   return spendable;
 }

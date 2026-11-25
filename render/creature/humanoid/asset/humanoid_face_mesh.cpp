@@ -248,9 +248,8 @@ auto build_humanoid_face_mesh(const QVector3D& cranium_centre,
                    k_skin_role,
                    FaceFeatureTone::EyeWhite,
                    k_eye_segments);
-    Feature const socket{.centre = eye.centre,
-                         .extent = k_socket_extent,
-                         .rim_lift = k_eye_rim_lift};
+    Feature const socket{
+        .centre = eye.centre, .extent = k_socket_extent, .rim_lift = k_eye_rim_lift};
     face.skin_shade(socket, k_white_extent, k_socket_shade, k_socket_edge_shade);
     QVector2D const catchlight(k_catchlight_radius, k_catchlight_radius);
     face.ring_band(eye,

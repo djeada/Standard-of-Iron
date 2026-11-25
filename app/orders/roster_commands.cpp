@@ -130,22 +130,24 @@ auto recruit_refusal(Engine::Core::World& world,
     return App::Core::no_eligible_units_reason(App::Core::OrderKind::Recruit);
   case Game::Systems::ProductionResult::NeedsBuilding: {
     auto refusal = App::Core::no_eligible_units_reason(App::Core::OrderKind::Recruit);
-    const auto needs = Game::Systems::quote_recruit(world, local_owner_id, product, band)
-                           .requires_building;
+    const auto needs =
+        Game::Systems::quote_recruit(world, local_owner_id, product, band)
+            .requires_building;
     refusal.text =
         needs == Game::Units::SpawnType::Fabrica
-            ? QCoreApplication::translate("RosterCommands",
-                                          "Triarii are armed at a Fabrica. Build one first.")
+            ? QCoreApplication::translate(
+                  "RosterCommands", "Triarii are armed at a Fabrica. Build one first.")
             : QCoreApplication::translate("RosterCommands",
                                           "This troop needs another building first.");
     return refusal;
   }
   case Game::Systems::ProductionResult::TypeLimitReached: {
     auto refusal = App::Core::barracks_full_reason();
-    refusal.text = QCoreApplication::translate(
-                       "RosterCommands", "You already field the most of these: %1 squads.")
-                       .arg(Game::Systems::quote_recruit(world, local_owner_id, product, band)
-                                .max_squads);
+    refusal.text =
+        QCoreApplication::translate("RosterCommands",
+                                    "You already field the most of these: %1 squads.")
+            .arg(Game::Systems::quote_recruit(world, local_owner_id, product, band)
+                     .max_squads);
     return refusal;
   }
   case Game::Systems::ProductionResult::QueueFull:
@@ -188,8 +190,7 @@ auto batch_shortfall_text(int queued,
     why = QCoreApplication::translate("RosterCommands", "the queue is full");
     break;
   }
-  return QCoreApplication::translate("RosterCommands",
-                                     "Queued %1 of %2 recruits: %3.")
+  return QCoreApplication::translate("RosterCommands", "Queued %1 of %2 recruits: %3.")
       .arg(queued)
       .arg(wanted)
       .arg(why);
@@ -235,25 +236,26 @@ void RosterCommands::recruit_near_selected(const QString& unit_type,
           building);
       return;
     }
-    App::Orders::submit_local_command(
-        m_world,
-        Game::Command::Produce{.building = building, .product = product, .band_nation = band});
+    App::Orders::submit_local_command(m_world,
+                                      Game::Command::Produce{.building = building,
+                                                             .product = product,
+                                                             .band_nation = band});
     return;
   }
 
   if (click == RecruitClick::Repeat) {
-    App::Orders::submit_local_command(
-        m_world,
-        Game::Command::Produce{
-            .building = building, .product = product, .toggle_repeat = true});
+    App::Orders::submit_local_command(m_world,
+                                      Game::Command::Produce{.building = building,
+                                                             .product = product,
+                                                             .toggle_repeat = true});
     return;
   }
 
-  const int wanted =
-      click == RecruitClick::Batch ? Game::Systems::ProductionService::k_recruit_batch
-                                   : 1;
-  const auto plan = Game::Systems::ProductionService::plan_batch(
-      *m_world, building, product, wanted);
+  const int wanted = click == RecruitClick::Batch
+                         ? Game::Systems::ProductionService::k_recruit_batch
+                         : 1;
+  const auto plan =
+      Game::Systems::ProductionService::plan_batch(*m_world, building, product, wanted);
   if (plan.count <= 0) {
     (void)m_orders.reject_on(
         App::Core::OrderKind::Recruit,
@@ -261,14 +263,16 @@ void RosterCommands::recruit_near_selected(const QString& unit_type,
         building);
     return;
   }
-  App::Orders::submit_local_command(
-      m_world,
-      Game::Command::Produce{
-          .building = building, .product = product, .count = plan.count});
+  App::Orders::submit_local_command(m_world,
+                                    Game::Command::Produce{.building = building,
+                                                           .product = product,
+                                                           .count = plan.count});
   if (plan.count < wanted) {
-    auto refusal = recruit_refusal(*m_world, plan.limit, building, product, local_owner_id);
+    auto refusal =
+        recruit_refusal(*m_world, plan.limit, building, product, local_owner_id);
     refusal.text = batch_shortfall_text(plan.count, wanted, plan.limit);
-    (void)m_orders.reject_on(App::Core::OrderKind::Recruit, std::move(refusal), building);
+    (void)m_orders.reject_on(
+        App::Core::OrderKind::Recruit, std::move(refusal), building);
   }
 }
 

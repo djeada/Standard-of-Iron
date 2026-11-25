@@ -203,7 +203,8 @@ auto raise_building(Engine::Core::World& world,
                     const QVector3D& centre,
                     const QVector3D& gate,
                     float rotation_y,
-                    const std::vector<Game::Systems::SiteKeepOut>& keep_out) -> EntityID {
+                    const std::vector<Game::Systems::SiteKeepOut>& keep_out)
+    -> EntityID {
   const auto site =
       camp_site(world, type_name, wanted, centre, gate, rotation_y, keep_out);
   if (!site.has_value()) {
@@ -233,8 +234,8 @@ auto place_troop(Engine::Core::World& world,
 
 } // namespace
 
-auto apply_skirmish_camp_start(Engine::Core::World& world, const CampStart& camp)
-    -> std::vector<CampStartReport> {
+auto apply_skirmish_camp_start(Engine::Core::World& world,
+                               const CampStart& camp) -> std::vector<CampStartReport> {
   std::vector<CampStartReport> reports;
   const auto& services = Game::Session::services_for(world);
   if (services.owners == nullptr || services.nations == nullptr) {
@@ -246,7 +247,8 @@ auto apply_skirmish_camp_start(Engine::Core::World& world, const CampStart& camp
   for (const Seat& seat : seats_with_a_barracks(world)) {
     const auto* transform =
         world.try_get<Engine::Core::TransformComponent>(seat.barracks->get_id());
-    auto* production = world.try_get<Engine::Core::ProductionComponent>(seat.barracks->get_id());
+    auto* production =
+        world.try_get<Engine::Core::ProductionComponent>(seat.barracks->get_id());
     if (transform == nullptr || production == nullptr) {
       continue;
     }
@@ -281,7 +283,8 @@ auto apply_skirmish_camp_start(Engine::Core::World& world, const CampStart& camp
     for (int i = 0; i < camp.homes; ++i) {
       const float side = home_sides[static_cast<std::size_t>(i) % home_sides.size()];
       const float row = static_cast<float>(i / 2);
-      const QVector3D wanted = frame.centre - frame.outward * (k_home_back + row * 7.0F) +
+      const QVector3D wanted = frame.centre -
+                               frame.outward * (k_home_back + row * 7.0F) +
                                frame.across * (side * k_home_side);
       if (const auto id = raise_building(world,
                                          seat,
@@ -319,8 +322,7 @@ auto apply_skirmish_camp_start(Engine::Core::World& world, const CampStart& camp
     }
 
     const QVector3D muster = gate.position + gate.outward * 5.0F;
-    const int missing_crews =
-        camp.builder_crews - seat.builder_crews;
+    const int missing_crews = camp.builder_crews - seat.builder_crews;
     for (int i = 0; i < missing_crews; ++i) {
       const float side = (i % 2 == 0) ? -1.0F : 1.0F;
       const QVector3D wanted = muster + frame.across * (side * (5.0F + 2.5F * i));

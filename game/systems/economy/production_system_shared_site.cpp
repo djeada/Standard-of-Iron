@@ -222,11 +222,10 @@ void refund_queued_sites(Engine::Core::World& world, Engine::Core::EntityID crew
       if (other_ref.get_id() == crew || owner_of(other_ref.get_id()) != owner_id) {
         continue;
       }
-      if ((raises_shared_site(other) &&
-           same(other.product_type,
-                other.construction_site_x,
-                other.construction_site_z,
-                other.construction_site_rotation_y)) ||
+      if ((raises_shared_site(other) && same(other.product_type,
+                                             other.construction_site_x,
+                                             other.construction_site_z,
+                                             other.construction_site_rotation_y)) ||
           std::any_of(other.queued_structure_sites.begin(),
                       other.queued_structure_sites.end(),
                       [&](const auto& queued) {

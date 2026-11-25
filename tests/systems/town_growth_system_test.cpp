@@ -21,7 +21,10 @@ struct HomeHandles {
   Engine::Core::UnitComponent* unit{nullptr};
 };
 
-auto add_home(Engine::Core::World& world, int owner_id, float x, float z) -> HomeHandles {
+auto add_home(Engine::Core::World& world,
+              int owner_id,
+              float x,
+              float z) -> HomeHandles {
   HomeHandles home;
   home.entity = world.create_entity();
   auto* transform = home.entity->add_component<Engine::Core::TransformComponent>();

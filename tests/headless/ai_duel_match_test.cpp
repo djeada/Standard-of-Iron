@@ -771,8 +771,8 @@ protected:
         castra += unit.spawn_type == Game::Units::SpawnType::Castra ? 1 : 0;
         elephants += unit.spawn_type == Game::Units::SpawnType::Elephant ? 1 : 0;
         principes += unit.rank > 0 ? 1 : 0;
-        bands += session.world().try_get<Engine::Core::MercenaryContractComponent>(id) !=
-                         nullptr
+        bands += session.world().try_get<Engine::Core::MercenaryContractComponent>(
+                     id) != nullptr
                      ? 1
                      : 0;
       }
@@ -793,8 +793,8 @@ protected:
                   castra,
                   principes,
                   nation_economy != nullptr
-                      ? static_cast<double>(
-                            nation_economy->seconds_to_next_levy(session.world(), side.first))
+                      ? static_cast<double>(nation_economy->seconds_to_next_levy(
+                            session.world(), side.first))
                       : -1.0,
                   men_in_the_field(session, side.first));
     }

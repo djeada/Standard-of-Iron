@@ -27,9 +27,9 @@ match ends with thousands of small soldiers on the field.
 
 ## 1. What the playtest showed
 
-| Match | Player at the end | Computer at the end |
-| --- | --- | --- |
-| Amber Delta, Rome vs Normal CPU, lost at 7 min | 36 men trained (2 squads) | 527 men trained |
+| Match                                            | Player at the end           | Computer at the end         |
+| ------------------------------------------------ | --------------------------- | --------------------------- |
+| Amber Delta, Rome vs Normal CPU, lost at 7 min   | 36 men trained (2 squads)   | 527 men trained             |
 | The Two Fords, Carthage vs Rome Normal, 10.5 min | 104 men trained, 1 barracks | 561 men trained, 7 barracks |
 
 On Amber Delta the player bought two legionary squads with the starting 60 iron and
@@ -47,15 +47,15 @@ gap is still real: see the fielded-men curve in section 3.
 
 ### 2.1 Starting position (skirmish)
 
-| What | Value | Source |
-| --- | --- | --- |
-| Gold | 500 for every seat (map value ignored) | `game_config.h` `starting_gold`, `skirmish_runtime_coordinator.cpp` |
-| Food / wood / stone / iron | per map; Amber Delta 260 / 240 / 100 / 60 | `assets/maps/*.json` `starting_resources` |
-| Iron across skirmish maps | 60 (Amber Delta) to 150 (Copper Canyons) | same |
-| Buildings | 1 barracks | map `structures` |
-| Units | 1 builder crew (12 men), 1 healer | map `spawns` |
-| Recruitment reserve | 140 men in the starting barracks | `max_population: 140`, `barracks.cpp` |
-| Army cap | 360-900 men per map (Amber Delta 500) | `max_troops_per_player` |
+| What                       | Value                                     | Source                                                              |
+| -------------------------- | ----------------------------------------- | ------------------------------------------------------------------- |
+| Gold                       | 500 for every seat (map value ignored)    | `game_config.h` `starting_gold`, `skirmish_runtime_coordinator.cpp` |
+| Food / wood / stone / iron | per map; Amber Delta 260 / 240 / 100 / 60 | `assets/maps/*.json` `starting_resources`                           |
+| Iron across skirmish maps  | 60 (Amber Delta) to 150 (Copper Canyons)  | same                                                                |
+| Buildings                  | 1 barracks                                | map `structures`                                                    |
+| Units                      | 1 builder crew (12 men), 1 healer         | map `spawns`                                                        |
+| Recruitment reserve        | 140 men in the starting barracks          | `max_population: 140`, `barracks.cpp`                               |
+| Army cap                   | 360-900 men per map (Amber Delta 500)     | `max_troops_per_player`                                             |
 
 ### 2.2 What things cost
 
@@ -63,16 +63,16 @@ Recruit prices are men from the barracks reserve plus resources. Men come from t
 nation file (`production.cost`, always equal to the squad size); resources come from
 `assets/data/troops/base.json` unless the nation overrides them.
 
-| Recruit (Rome / Carthage) | Men | Wood | Iron | Food | Iron per man |
-| --- | --- | --- | --- | --- | --- |
-| Legionary / Citizen Infantry | 18 / 16 | 10 | 30 | - | 1.67 / 1.88 |
-| Triarius / Liby-Phoenician Spear | 26 / 28 | 30 | 15 | - | 0.58 / 0.54 |
-| Auxiliary / Libyan Archer | 24 / 22 | 30 | 10 | - | 0.42 / 0.45 |
-| Velites (Rome) | 16 | 20 | 10 | - | 0.63 |
-| Balearic Slinger (Carthage) | 16 | 20 | 0 | - | 0 |
-| Equites / Numidian Cavalry | 9 | 15 | 30 | 30 | 3.33 |
-| Builder crew | 12 | 20 | - | - | - |
-| Civilian (from a home) | home's own | - | - | 20 | - |
+| Recruit (Rome / Carthage)        | Men        | Wood | Iron | Food | Iron per man |
+| -------------------------------- | ---------- | ---- | ---- | ---- | ------------ |
+| Legionary / Citizen Infantry     | 18 / 16    | 10   | 30   | -    | 1.67 / 1.88  |
+| Triarius / Liby-Phoenician Spear | 26 / 28    | 30   | 15   | -    | 0.58 / 0.54  |
+| Auxiliary / Libyan Archer        | 24 / 22    | 30   | 10   | -    | 0.42 / 0.45  |
+| Velites (Rome)                   | 16         | 20   | 10   | -    | 0.63         |
+| Balearic Slinger (Carthage)      | 16         | 20   | 0    | -    | 0            |
+| Equites / Numidian Cavalry       | 9          | 15   | 30   | 30   | 3.33         |
+| Builder crew                     | 12         | 20   | -    | -    | -            |
+| Civilian (from a home)           | home's own | -    | -    | 20   | -            |
 
 Buildings (`assets/data/construction/catalog.json`): home 50 wood 15 stone (10 s),
 farm 40 wood 10 stone (8 s), barracks 100 wood 60 stone (10 s), marketplace 60 wood
@@ -94,10 +94,10 @@ drop-off, `resource_delivery_system.cpp` `is_live_depot`). Work times are in
 Per full crew, per minute, by one-way distance from node to barracks (speed 2.1 m/s):
 
 | Distance | Wood | Stone | Iron |
-| --- | --- | --- | --- |
-| 30 m | 118 | 52 | 44 |
-| 45 m | 87 | 38 | 33 |
-| 60 m | 70 | 30 | 26 |
+| -------- | ---- | ----- | ---- |
+| 30 m     | 118  | 52    | 44   |
+| 45 m     | 87   | 38    | 33   |
+| 60 m     | 70   | 30    | 26   |
 
 The nearest authored ore on Amber Delta is 42 m from the player's barracks, so one
 iron crew earns about one legionary squad a minute.
@@ -158,15 +158,15 @@ each barracks 630 men of reserve, not the 140 a skirmish barracks gets, so the f
 minutes are faster than a real skirmish. Population is men in the field, workers
 included, against a cap of 560.
 
-| Minute | Scipio (Rome) | Fabius (Rome) | Marcellus (Rome) | Hanno (Carthage) |
-| --- | --- | --- | --- | --- |
-| 1 | 165 (9 crews) | 165 (12 crews) | 165 (9 crews) | 158 (11 crews) |
-| 2 | 282, market up | 351, market up | 276, 2nd barracks | 370, market up |
-| 3 | 406 | 514 | 368 | 520 |
-| 5 | 528 (cap) | 157 (losing) | 199 (losing) | 507 (cap) |
-| 7 | 527 | 0 (eliminated) | 0 | 517 |
-| 15 | 528, gold 4,283 | - | - | 517, gold 3,554 |
-| 30 | 527, gold 10,663 | - | - | 517, gold 6,622 |
+| Minute | Scipio (Rome)    | Fabius (Rome)  | Marcellus (Rome)  | Hanno (Carthage) |
+| ------ | ---------------- | -------------- | ----------------- | ---------------- |
+| 1      | 165 (9 crews)    | 165 (12 crews) | 165 (9 crews)     | 158 (11 crews)   |
+| 2      | 282, market up   | 351, market up | 276, 2nd barracks | 370, market up   |
+| 3      | 406              | 514            | 368               | 520              |
+| 5      | 528 (cap)        | 157 (losing)   | 199 (losing)      | 507 (cap)        |
+| 7      | 527              | 0 (eliminated) | 0                 | 517              |
+| 15     | 528, gold 4,283  | -              | -                 | 517, gold 3,554  |
+| 30     | 527, gold 10,663 | -              | -                 | 517, gold 6,622  |
 
 What the AI does that the player does not:
 
@@ -210,13 +210,13 @@ Men in the field per side (workers included), 1v1 on a 500-900 cap map at Normal
 competent player who is not an expert. The Normal AI should land within 15% of the same
 line; it already does until the cap.
 
-| Time | Target | Today, player | Today, AI (skirmish) |
-| --- | --- | --- | --- |
-| 0:00 | 70 (camp start) | 13 (1 crew, 1 healer) | 13 |
-| 3:00 | 250-300 | ~50 (estimate) | 400-520 in the duel fixture (630 reserve) |
-| 7:00 | 500-600 | 36 trained | 527 trained |
-| 15:00 | 1,000-1,200 | - | at cap (500-900) |
-| 25:00 | 1,800-2,000 (new cap) | - | - |
+| Time  | Target                | Today, player         | Today, AI (skirmish)                      |
+| ----- | --------------------- | --------------------- | ----------------------------------------- |
+| 0:00  | 70 (camp start)       | 13 (1 crew, 1 healer) | 13                                        |
+| 3:00  | 250-300               | ~50 (estimate)        | 400-520 in the duel fixture (630 reserve) |
+| 7:00  | 500-600               | 36 trained            | 527 trained                               |
+| 15:00 | 1,000-1,200           | -                     | at cap (500-900)                          |
+| 25:00 | 1,800-2,000 (new cap) | -                     | -                                         |
 
 Pass condition, checked headlessly (section 9): a scripted "player proxy" that issues
 at most 30 orders a minute reaches at least 80% of the AI's men at 7 and 15 minutes on
@@ -245,14 +245,14 @@ Every seat on every skirmish map gets, authored in the map JSON (`structures`,
 `spawns`; the base-reseating translation in `map_transformer.cpp` already moves a
 retinue with its base):
 
-| Item | Today | Proposed |
-| --- | --- | --- |
-| Barracks reserve | 140 | 200 |
-| Homes | 0 | 2 (6 civilians = 108 men waiting) |
-| Farms | 0 | 1 |
-| Builder crews | 1 | 3 |
-| Fighting squads | 0 | 2 (Rome: legionaries + velites; Carthage: citizen infantry + slingers) |
-| Wood / stone / iron / food | 240 / 100 / 60 / 260 (Amber Delta) | 300 / 150 / 200 / 300 on every map |
+| Item                       | Today                              | Proposed                                                               |
+| -------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
+| Barracks reserve           | 140                                | 200                                                                    |
+| Homes                      | 0                                  | 2 (6 civilians = 108 men waiting)                                      |
+| Farms                      | 0                                  | 1                                                                      |
+| Builder crews              | 1                                  | 3                                                                      |
+| Fighting squads            | 0                                  | 2 (Rome: legionaries + velites; Carthage: citizen infantry + slingers) |
+| Wood / stone / iron / food | 240 / 100 / 60 / 260 (Amber Delta) | 300 / 150 / 200 / 300 on every map                                     |
 
 Men on the field at 0:00: 36 (crews) + 34 (Rome's two squads) + healer and
 commander, about 70, with 108 more waiting in the two homes. The AI gets the same start. Campaign missions keep their own
@@ -369,12 +369,12 @@ Measured facts (`docs/PERFORMANCE.md`, November 2026; `sim-tick` profile):
 
 What the targets cost:
 
-| Scale | Squads (about 20 men each) | Sim tick, all in melee | Verdict |
-| --- | --- | --- | --- |
-| 1v1, 2,000 men each | ~200 | ~3 ms | Fits. |
-| 4 players, 2,000 each | ~400 | ~5.5 ms | Fits. |
-| 1v1, 5,000 each | ~500 | ~7 ms | Fits the sim; GPU unmeasured. |
-| 4 players, 5,000 each | ~1,000 | ~14 ms | At the budget; not proposed. |
+| Scale                 | Squads (about 20 men each) | Sim tick, all in melee | Verdict                       |
+| --------------------- | -------------------------- | ---------------------- | ----------------------------- |
+| 1v1, 2,000 men each   | ~200                       | ~3 ms                  | Fits.                         |
+| 4 players, 2,000 each | ~400                       | ~5.5 ms                | Fits.                         |
+| 1v1, 5,000 each       | ~500                       | ~7 ms                  | Fits the sim; GPU unmeasured. |
+| 4 players, 5,000 each | ~1,000                     | ~14 ms                 | At the budget; not proposed.  |
 
 Proposed caps: 2,000 men per side on 1v1 and 2-player maps, 1,500 on 4-6 player maps.
 Before shipping the caps, two measurements, both quick:
@@ -388,21 +388,21 @@ Before shipping the caps, two measurements, both quick:
 
 ## 8. Ranked changes
 
-| # | Change | Impact | Effort | Kind | Owner |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Civilians auto-deliver, homes auto-recruit (6.1) | Very high | S-M | code | S5 |
-| 2 | Camp start on every skirmish map (6.2) | High | S | data | S5 |
-| 3 | Ore 45 per trip, iron 200 at start, iron-for-gold hint (6.3) | High | S | constant + data + small code | S5 |
-| 4 | Builders resume work, idle crews auto-gather (6.4) | High | S-M | code | S1 |
-| 5 | Shift = 5, Ctrl = repeat, queue 10 (6.5) | High | S | code | S1 |
-| 6 | Home lifetime 6, built barracks reserve 120 (6.7) | Medium | S | constant | S5 |
-| 7 | Teach the opening (6.12) | Medium | S | text | S1 |
-| 8 | Map caps to 1,500-2,000 after the two measurements (7) | High | S + measurement | data | O |
-| 9 | Several sites per crew (6.6) | Medium | M | code | S1 |
-| 10 | Late gold sink (6.11) | Medium (high once caps rise) | M | code | with D2 |
-| 11 | Forward depot (6.8) | Medium | M | code | with D2 |
-| 12 | Visible city growth (6.10) | High for feel | L | code + art | F1 |
-| 13 | Fix "trained" to count fighting men only, not crews, civilians or splits | Low (honest reporting) | S | code | S3 (B5) |
+| #   | Change                                                                   | Impact                       | Effort          | Kind                         | Owner   |
+| --- | ------------------------------------------------------------------------ | ---------------------------- | --------------- | ---------------------------- | ------- |
+| 1   | Civilians auto-deliver, homes auto-recruit (6.1)                         | Very high                    | S-M             | code                         | S5      |
+| 2   | Camp start on every skirmish map (6.2)                                   | High                         | S               | data                         | S5      |
+| 3   | Ore 45 per trip, iron 200 at start, iron-for-gold hint (6.3)             | High                         | S               | constant + data + small code | S5      |
+| 4   | Builders resume work, idle crews auto-gather (6.4)                       | High                         | S-M             | code                         | S1      |
+| 5   | Shift = 5, Ctrl = repeat, queue 10 (6.5)                                 | High                         | S               | code                         | S1      |
+| 6   | Home lifetime 6, built barracks reserve 120 (6.7)                        | Medium                       | S               | constant                     | S5      |
+| 7   | Teach the opening (6.12)                                                 | Medium                       | S               | text                         | S1      |
+| 8   | Map caps to 1,500-2,000 after the two measurements (7)                   | High                         | S + measurement | data                         | O       |
+| 9   | Several sites per crew (6.6)                                             | Medium                       | M               | code                         | S1      |
+| 10  | Late gold sink (6.11)                                                    | Medium (high once caps rise) | M               | code                         | with D2 |
+| 11  | Forward depot (6.8)                                                      | Medium                       | M               | code                         | with D2 |
+| 12  | Visible city growth (6.10)                                               | High for feel                | L               | code + art                   | F1      |
+| 13  | Fix "trained" to count fighting men only, not crews, civilians or splits | Low (honest reporting)       | S               | code                         | S3 (B5) |
 
 Order of work: 1-7 together as one tuning pass (none of them needs another), then
 measure (section 9), then 8, then 9-12.
@@ -430,11 +430,11 @@ orders a minute, cap 900. It asserts 80% at minute 7 and passes;
 `SOI_PROXY_NARRATE=1` prints the full curve.
 
 | Minute | Computer men | Proxy men (fighting) |
-| --- | --- | --- |
-| 1 | 234 | 232 (170) |
-| 3 | 430 | 502 (442) |
-| 7 | 833 | 718 (658) |
-| 15 | 900 (cap) | 770 (710) |
+| ------ | ------------ | -------------------- |
+| 1      | 234          | 232 (170)            |
+| 3      | 430          | 502 (442)            |
+| 7      | 833          | 718 (658)            |
+| 15     | 900 (cap)    | 770 (710)            |
 
 The playtest player had 36 men at 7 minutes before these changes. The proxy stops at
 about 770 because its script never builds past a second barracks and burns its gold

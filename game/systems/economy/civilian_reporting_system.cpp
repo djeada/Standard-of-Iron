@@ -68,7 +68,8 @@ auto by_id(std::vector<Engine::Core::Entity*> entities)
   return entities;
 }
 
-auto is_free_to_report(const Engine::Core::World& world, Engine::Core::EntityID id) -> bool {
+auto is_free_to_report(const Engine::Core::World& world,
+                       Engine::Core::EntityID id) -> bool {
   if (world.has<Engine::Core::CivilianDeliveryComponent>(id) ||
       world.has<Engine::Core::PlayerOrderIntentComponent>(id) ||
       world.has<Engine::Core::AttackTargetComponent>(id)) {
@@ -79,8 +80,9 @@ auto is_free_to_report(const Engine::Core::World& world, Engine::Core::EntityID 
 
 // Queues one civilian at a home without the recruit fanfare a player's click
 // gets: the same rules, costs and floating numbers, no audio cue per family.
-auto queue_civilian(Engine::Core::World& world, EntityID home_id, int owner_id)
-    -> bool {
+auto queue_civilian(Engine::Core::World& world,
+                    EntityID home_id,
+                    int owner_id) -> bool {
   if (ProductionService::can_start_production(
           world, home_id, Game::Units::TroopType::Civilian) !=
       ProductionResult::Success) {
@@ -139,8 +141,8 @@ void CivilianReportingSystem::update(Engine::Core::World* world, float delta_tim
       if (production == nullptr) {
         break;
       }
-      const int room = std::max(0, production->manpower_limit() -
-                                       production->manpower_available);
+      const int room =
+          std::max(0, production->manpower_limit() - production->manpower_available);
       barracks.push_back({.id = entity->get_id(),
                           .owner_id = unit->owner_id,
                           .position = position_of(*transform),
@@ -231,7 +233,8 @@ void CivilianReportingSystem::update(Engine::Core::World* world, float delta_tim
     if (destination == nullptr) {
       continue;
     }
-    auto* delivery = world->emplace<Engine::Core::CivilianDeliveryComponent>(civilian.id);
+    auto* delivery =
+        world->emplace<Engine::Core::CivilianDeliveryComponent>(civilian.id);
     if (delivery == nullptr) {
       continue;
     }

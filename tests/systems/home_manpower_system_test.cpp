@@ -285,9 +285,8 @@ TEST_F(HomeManpowerSystemTest, InitialBarracksSpawnStartsWithAuthoredManpowerRes
   Game::Units::SpawnParams small_built_params = built_params;
   small_built_params.max_population = 60;
   auto small_barracks = Game::Units::Barracks::Create(world, small_built_params);
-  auto* small_production =
-      world.get_entity(small_barracks->id())
-          ->get_component<Engine::Core::ProductionComponent>();
+  auto* small_production = world.get_entity(small_barracks->id())
+                               ->get_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(small_production, nullptr);
   EXPECT_EQ(small_production->manpower_available, 0);
   EXPECT_EQ(small_production->manpower_limit(),

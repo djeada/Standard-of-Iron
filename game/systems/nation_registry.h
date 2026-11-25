@@ -169,7 +169,8 @@ struct Nation {
 
   [[nodiscard]] auto find_band(Game::Units::TroopType unit_type,
                                NationID band_nation) const -> const MercenaryBand*;
-  [[nodiscard]] auto find_band(const std::string& band_id) const -> const MercenaryBand*;
+  [[nodiscard]] auto
+  find_band(const std::string& band_id) const -> const MercenaryBand*;
   // The building that recruits `unit_type` for this nation.
   [[nodiscard]] auto
   recruiting_building(Game::Units::TroopType unit_type) const -> Game::Units::SpawnType;

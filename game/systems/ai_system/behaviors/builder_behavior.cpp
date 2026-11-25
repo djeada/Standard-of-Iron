@@ -5,8 +5,8 @@
 #include <utility>
 
 #include "../../nation_registry.h"
-#include "../ai_doctrine_rules.h"
 #include "../ai_base_manager.h"
+#include "../ai_doctrine_rules.h"
 #include "../ai_settlement_frame.h"
 #include "builder_affordability.h"
 #include "builder_catalog.h"

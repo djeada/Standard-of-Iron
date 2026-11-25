@@ -267,7 +267,8 @@ auto SessionContext::advance(double real_dt,
 
 void SessionContext::service_stopped_clock() {
   auto& world = m_state->world;
-  const bool recorded = m_state->replay_recorder != nullptr || replay_player() != nullptr;
+  const bool recorded =
+      m_state->replay_recorder != nullptr || replay_player() != nullptr;
   world.service_stopped_frame([&] {
     if (!recorded) {
       m_state->commands.drain(world, m_state->clock.tick());

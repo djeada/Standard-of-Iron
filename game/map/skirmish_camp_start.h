@@ -33,8 +33,7 @@ struct CampStartReport {
 // missile squad of the seat's nation at its gate, and a deeper barracks reserve.
 // Anything that finds no clear ground is skipped, never stacked. Call once, after
 // the map's units and the navigation grid exist and before the match runs.
-auto apply_skirmish_camp_start(Engine::Core::World& world,
-                               const CampStart& camp = {})
+auto apply_skirmish_camp_start(Engine::Core::World& world, const CampStart& camp = {})
     -> std::vector<CampStartReport>;
 
 } // namespace Game::Map

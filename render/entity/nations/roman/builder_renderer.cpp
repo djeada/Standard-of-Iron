@@ -604,8 +604,9 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ar.register_archetype("worker_quarry_pick", [] {
     (void)WorkerTools::archetype(WorkerTools::Kind::QuarryPick);
   });
-  ar.register_archetype(
-      "worker_dolabra", [] { (void)WorkerTools::archetype(WorkerTools::Kind::Dolabra); });
+  ar.register_archetype("worker_dolabra", [] {
+    (void)WorkerTools::archetype(WorkerTools::Kind::Dolabra);
+  });
 }
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {

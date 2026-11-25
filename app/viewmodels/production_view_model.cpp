@@ -1,4 +1,3 @@
-#include "app/economy/hiring_readout.h"
 #include "app/viewmodels/production_view_model.h"
 
 #include <QColor>
@@ -12,6 +11,7 @@
 #include <vector>
 
 #include "app/core/client_context.h"
+#include "app/economy/hiring_readout.h"
 #include "app/economy/production_manager.h"
 #include "app/economy/production_readouts.h"
 #include "app/orders/command_controller.h"
@@ -124,11 +124,10 @@ void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
     // of five, Ctrl toggles repeat. Reading them here keeps the QML signal
     // chain (card -> panel -> HUD -> main) a plain unit type.
     const auto modifiers = QGuiApplication::keyboardModifiers();
-    const auto click = (modifiers & Qt::ControlModifier) != 0
-                           ? App::Controllers::RecruitClick::Repeat
-                       : (modifiers & Qt::ShiftModifier) != 0
-                           ? App::Controllers::RecruitClick::Batch
-                           : App::Controllers::RecruitClick::Single;
+    const auto click =
+        (modifiers & Qt::ControlModifier) != 0 ? App::Controllers::RecruitClick::Repeat
+        : (modifiers & Qt::ShiftModifier) != 0 ? App::Controllers::RecruitClick::Batch
+                                               : App::Controllers::RecruitClick::Single;
     m_context.commands->recruit_near_selected(
         unit_type, m_context.local_owner_id, click);
   }
@@ -449,11 +448,11 @@ void ProductionViewModel::set_home_reporting(bool active) {
   if (homes.empty()) {
     return;
   }
-  Game::Command::submit(*m_context.world,
-                        Game::Command::Source::LocalPlayer,
-                        m_context.local_owner_id,
-                        Game::Command::SetHomeReporting{.units = std::move(homes),
-                                                        .active = active});
+  Game::Command::submit(
+      *m_context.world,
+      Game::Command::Source::LocalPlayer,
+      m_context.local_owner_id,
+      Game::Command::SetHomeReporting{.units = std::move(homes), .active = active});
   emit player_state_stale();
 }
 

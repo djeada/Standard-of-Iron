@@ -20,8 +20,8 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/default_content.h"
 #include "game/systems/combat_system/attack_stat_modifiers.h"
+#include "game/systems/default_content.h"
 #include "game/systems/economy/nation_economy_system.h"
 #include "game/systems/economy/nation_recruitment.h"
 #include "game/systems/economy/production_service.h"
@@ -124,13 +124,15 @@ protected:
     params.is_initial_spawn = true;
     params.max_population = 200;
     params.enables_production = true;
-    params.nation_id = nation.value_or(
-        m_session->nations().get_nation_for_player(owner)->id);
+    params.nation_id =
+        nation.value_or(m_session->nations().get_nation_for_player(owner)->id);
     auto unit = m_factory->create(type, world(), params);
     return unit ? unit->id() : 0;
   }
 
-  auto unit_of(EntityID id) -> UnitComponent* { return world().try_get<UnitComponent>(id); }
+  auto unit_of(EntityID id) -> UnitComponent* {
+    return world().try_get<UnitComponent>(id);
+  }
 
   void run_for(double seconds) {
     const double step = m_session->clock().tick_seconds();
@@ -142,7 +144,9 @@ protected:
     }
   }
 
-  auto gold(int owner) -> int { return m_session->economy().get(owner, ResourceType::Gold); }
+  auto gold(int owner) -> int {
+    return m_session->economy().get(owner, ResourceType::Gold);
+  }
 
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory;
   std::unique_ptr<SessionContext> m_session;
@@ -152,16 +156,16 @@ protected:
 // Phase 0 spike: a Carthaginian player's Gallic band keeps its owner but draws,
 // fights and saves as a Gaul.
 TEST_F(NationAsymmetryTest, AGallicBandOwnedByCarthageFightsAndSavesAsGauls) {
-  const EntityID band = spawn(SpawnType::Swordsman, k_carthage, 40, 40, NationID::Gauls);
+  const EntityID band =
+      spawn(SpawnType::Swordsman, k_carthage, 40, 40, NationID::Gauls);
   ASSERT_NE(band, 0U);
   const auto* unit = unit_of(band);
   ASSERT_NE(unit, nullptr);
   EXPECT_EQ(unit->owner_id, k_carthage);
   EXPECT_EQ(unit->nation_id, NationID::Gauls);
 
-  const auto& gaul =
-      Game::Systems::TroopProfileService::instance().get_profile_ref(NationID::Gauls,
-                                                                     TroopType::Swordsman);
+  const auto& gaul = Game::Systems::TroopProfileService::instance().get_profile_ref(
+      NationID::Gauls, TroopType::Swordsman);
   const auto& punic = Game::Systems::TroopProfileService::instance().get_profile_ref(
       NationID::Carthage, TroopType::Swordsman);
   ASSERT_NE(gaul.combat.max_health, punic.combat.max_health)
@@ -190,7 +194,8 @@ TEST_F(NationAsymmetryTest, RomanPricesFollowTheRepublicsRoster) {
   EXPECT_EQ(cretans.resources.get(ResourceType::Gold), 40);
   EXPECT_EQ(cretans.resources.get(ResourceType::Iron), 0);
 
-  const auto hastati = Game::Systems::quote_recruit(world(), k_rome, TroopType::Swordsman);
+  const auto hastati =
+      Game::Systems::quote_recruit(world(), k_rome, TroopType::Swordsman);
   EXPECT_TRUE(hastati.offered);
   EXPECT_EQ(hastati.resources.get(ResourceType::Iron), 20);
   EXPECT_EQ(hastati.building, SpawnType::Barracks);
@@ -258,13 +263,15 @@ TEST_F(NationAsymmetryTest, CarthageHiresAGallicWarbandForGoldAtTheCamp) {
       continue;
     }
     EXPECT_EQ(unit.nation_id, NationID::Gauls);
-    const auto* contract = world().try_get<Engine::Core::MercenaryContractComponent>(id);
+    const auto* contract =
+        world().try_get<Engine::Core::MercenaryContractComponent>(id);
     ASSERT_NE(contract, nullptr) << "a hired band carries its contract";
     EXPECT_EQ(contract->upkeep_per_minute, 7);
     ++bands;
   }
   EXPECT_EQ(bands, 1);
-  EXPECT_EQ(Game::Systems::NationEconomySystem::upkeep_per_minute(world(), k_carthage), 7);
+  EXPECT_EQ(Game::Systems::NationEconomySystem::upkeep_per_minute(world(), k_carthage),
+            7);
 }
 
 // Phase 2: elephants come only from the stables, for gold and food, no reserve.
@@ -287,7 +294,8 @@ TEST_F(NationAsymmetryTest, ElephantsComeFromTheStablesForGoldAndFood) {
 // Phase 2: bands are paid every minute; an unpaid band loses heart and strikes
 // softer until it is paid again. Nobody deserts (decision 2).
 TEST_F(NationAsymmetryTest, UnpaidBandsFightWorseUntilPaid) {
-  const EntityID band = spawn(SpawnType::Swordsman, k_carthage, 40, 40, NationID::Gauls);
+  const EntityID band =
+      spawn(SpawnType::Swordsman, k_carthage, 40, 40, NationID::Gauls);
   const EntityID foe = spawn(SpawnType::Swordsman, k_rome, 42, 40);
   auto* contract = world().emplace<Engine::Core::MercenaryContractComponent>(band);
   ASSERT_NE(contract, nullptr);
@@ -325,9 +333,11 @@ TEST_F(NationAsymmetryTest, TheEmporionEarnsGoldForTheFarmsAroundIt) {
   spawn(SpawnType::Farm, k_carthage, 40, 55);
   spawn(SpawnType::Farm, k_carthage, 90, 90);
   spawn(SpawnType::Marketplace, k_rome, 10, 80);
-  EXPECT_EQ(Game::Systems::NationEconomySystem::trade_income_per_minute(world(), k_carthage),
-            30 + 2 * 5);
-  EXPECT_EQ(Game::Systems::NationEconomySystem::trade_income_per_minute(world(), k_rome), 0);
+  EXPECT_EQ(
+      Game::Systems::NationEconomySystem::trade_income_per_minute(world(), k_carthage),
+      30 + 2 * 5);
+  EXPECT_EQ(
+      Game::Systems::NationEconomySystem::trade_income_per_minute(world(), k_rome), 0);
   const int before = gold(k_carthage);
   Game::Systems::NationEconomySystem::pay_trade_income(world(), k_carthage);
   EXPECT_EQ(gold(k_carthage), before + 40);
@@ -408,7 +418,7 @@ TEST_F(NationAsymmetryTest, HastatiThatSurviveTwoBattlesBecomePrincipes) {
   auto* unit = unit_of(hastati);
   ASSERT_NE(unit, nullptr);
   const int base_health = unit->max_health;
-  run_for(1.2);  // the veterans' roll is called once a second
+  run_for(1.2); // the veterans' roll is called once a second
   for (int battle = 0; battle < 2; ++battle) {
     unit->health -= 10;
     run_for(1.2);
@@ -416,8 +426,7 @@ TEST_F(NationAsymmetryTest, HastatiThatSurviveTwoBattlesBecomePrincipes) {
   }
   EXPECT_EQ(unit->battles_survived, 2);
   EXPECT_EQ(unit->rank, 1);
-  EXPECT_EQ(unit->max_health,
-            static_cast<int>(std::lround(base_health * 1.15F)));
+  EXPECT_EQ(unit->max_health, static_cast<int>(std::lround(base_health * 1.15F)));
 
   const QJsonObject saved =
       Engine::Core::Serialization::serialize_entity(world().get_entity(hastati));

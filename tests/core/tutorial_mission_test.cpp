@@ -428,7 +428,8 @@ TEST_F(TutorialMissionTest, TheScoutFightIsTheTwoScoutsAlone) {
               static_cast<double>(garrison_moved));
   for (const auto scout : scouts) {
     auto* entity = m_world.get_entity(scout);
-    EXPECT_TRUE(entity == nullptr || entity->get_component<UnitComponent>()->health <= 0)
+    EXPECT_TRUE(entity == nullptr ||
+                entity->get_component<UnitComponent>()->health <= 0)
         << "the scouts outlasted the player's whole starting army";
   }
   EXPECT_LT(garrison_moved, 13.0F) << "the outpost garrison joined the scout fight";
@@ -446,8 +447,8 @@ TEST_F(TutorialMissionTest, ShowMeOnStoneAndIronPointsAtTheBouldersAndOre) {
   const float half = static_cast<float>(m_level.grid_width) * 0.5F;
   for (const auto& value : points) {
     const auto point = value.toMap();
-    const QVector3D at(point.value("world_x").toFloat(), 0.0F,
-                       point.value("world_z").toFloat());
+    const QVector3D at(
+        point.value("world_x").toFloat(), 0.0F, point.value("world_z").toFloat());
     EXPECT_LT(std::abs(at.x()), half) << "Show me left the map";
     EXPECT_LT(std::abs(at.z()), half) << "Show me left the map";
     float nearest = std::numeric_limits<float>::max();
@@ -457,8 +458,8 @@ TEST_F(TutorialMissionTest, ShowMeOnStoneAndIronPointsAtTheBouldersAndOre) {
         continue;
       }
       const QVector3D world = terrain.world_prop_world_position(prop);
-      nearest = std::min(nearest,
-                         (QVector3D(world.x(), 0.0F, world.z()) - at).length());
+      nearest =
+          std::min(nearest, (QVector3D(world.x(), 0.0F, world.z()) - at).length());
     }
     EXPECT_LT(nearest, 0.5F) << "a Show me point is not on a boulder or ore vein: "
                              << at.x() << "," << at.z();
@@ -490,14 +491,14 @@ TEST_F(TutorialMissionTest, ShowMeOnTheAssaultPointsAtTheRomanCommandersCamp) {
        .terrain = &m_session->terrain()});
   ASSERT_FALSE(points.isEmpty());
   const auto lead = points.front().toMap();
-  const QVector3D first(lead.value("world_x").toFloat(), 0.0F,
-                        lead.value("world_z").toFloat());
+  const QVector3D first(
+      lead.value("world_x").toFloat(), 0.0F, lead.value("world_z").toFloat());
   EXPECT_LT((first - position(roman_commander)).length(), 0.5F)
       << "the assault is won on the Roman commander; Show me must lead with him";
   for (const auto& value : points) {
     const auto point = value.toMap();
-    const QVector3D at(point.value("world_x").toFloat(), 0.0F,
-                       point.value("world_z").toFloat());
+    const QVector3D at(
+        point.value("world_x").toFloat(), 0.0F, point.value("world_z").toFloat());
     EXPECT_LT((at - position(roman_commander)).length(), 21.0F);
     EXPECT_GT((at - position(own_barracks)).length(), 30.0F)
         << "Show me framed the player's own camp";

@@ -21,8 +21,8 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
-#include "game/systems/economy/production_system_builder_task.h"
 #include "game/systems/economy/food_targets.h"
+#include "game/systems/economy/production_system_builder_task.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/structure_placement_service.h"
@@ -609,8 +609,7 @@ void ProductionManager::confirm_builder_structure() {
   // A crew already raising something would drop it for a new site, so a site
   // placed for busy builders always joins their queue; Shift asks for the same
   // from an idle crew and keeps the placement open for the next site.
-  const bool chain =
-      (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
+  const bool chain = (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
   const auto& crew = m_session.builders();
   const bool crew_busy = std::any_of(crew.begin(), crew.end(), [&](auto id) {
     const auto* builder =
@@ -738,9 +737,8 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
   return updated_any;
 }
 
-auto ProductionManager::collect_available_builders(bool include_busy,
-                                                   bool include_raising)
-    -> std::vector<Engine::Core::EntityID> {
+auto ProductionManager::collect_available_builders(
+    bool include_busy, bool include_raising) -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> builders;
 
   for (auto id :

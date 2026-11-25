@@ -2,10 +2,10 @@
 
 #include <memory>
 
+#include "../core/ambient_session.h"
 #include "../core/component_gameplay.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
-#include "../core/ambient_session.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
 #include "building_spawn_setup.h"
@@ -42,8 +42,8 @@ NationBuilding::NationBuilding(Engine::Core::World& world, SpawnType type)
     : Unit(world, std::string(spawn_type_name(type))) {
 }
 
-auto NationBuilding::Create(Engine::Core::World& world,
-                            const SpawnParams& params) -> std::unique_ptr<NationBuilding> {
+auto NationBuilding::Create(Engine::Core::World& world, const SpawnParams& params)
+    -> std::unique_ptr<NationBuilding> {
   auto unit =
       std::unique_ptr<NationBuilding>(new NationBuilding(world, params.spawn_type));
   unit->init(params);

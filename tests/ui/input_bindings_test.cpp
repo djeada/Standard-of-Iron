@@ -283,25 +283,26 @@ TEST_F(InputBindingsTest, TheRallyFlagOwnsRAndTiltNoLongerSharesIt) {
             QStringList{QStringLiteral("rts.commander_rally")})
       << "R must mean exactly one thing in the army view";
   EXPECT_TRUE(bindings->actions_for_key(Qt::Key_F, Qt::NoModifier, rts).isEmpty());
-  EXPECT_TRUE(
-      bindings
-          ->default_shortcut_for(QStringLiteral("rts.camera_tilt_up"),
-                                 InputBindings::Alternate)
-          .isEmpty());
+  EXPECT_TRUE(bindings
+                  ->default_shortcut_for(QStringLiteral("rts.camera_tilt_up"),
+                                         InputBindings::Alternate)
+                  .isEmpty());
   EXPECT_FALSE(bindings->has_conflicts());
 }
 
 TEST_F(InputBindingsTest, ContextualCommandsConflictWithTheGeneralOneTheyShareAKey) {
   auto* bindings = InputBindings::instance();
 
-  const auto conflicts = bindings->conflicts_for(
-      QStringLiteral("rts.camera_tilt_up"), QStringLiteral("R"), InputBindings::Primary);
+  const auto conflicts = bindings->conflicts_for(QStringLiteral("rts.camera_tilt_up"),
+                                                 QStringLiteral("R"),
+                                                 InputBindings::Primary);
   EXPECT_EQ(conflicts, QStringList{QStringLiteral("rts.commander_rally")})
       << "a clash with a contextual command must be flagged, not silently won";
-  EXPECT_FALSE(bindings->assign(QStringLiteral("rts.camera_tilt_up"),
-                                QStringLiteral("R")));
+  EXPECT_FALSE(
+      bindings->assign(QStringLiteral("rts.camera_tilt_up"), QStringLiteral("R")));
 
-  bindings->assign_overriding(QStringLiteral("rts.camera_tilt_up"), QStringLiteral("R"));
+  bindings->assign_overriding(QStringLiteral("rts.camera_tilt_up"),
+                              QStringLiteral("R"));
   EXPECT_FALSE(bindings->has_conflicts());
   EXPECT_EQ(bindings->actions_for_key(Qt::Key_R,
                                       Qt::NoModifier,

@@ -1,4 +1,5 @@
 #include <QLineF>
+
 #include <cmath>
 #include <gtest/gtest.h>
 #include <numbers>
@@ -1239,8 +1240,8 @@ TEST_F(InputCommandHandlerTest, SelectIdleBuildersTakesOnlyBuildersWithNoJob) {
       << "a builder raising a Home or hauling wood is not idle, and neither is "
          "the enemy's";
 
-  idle->get_component<Engine::Core::BuilderProductionComponent>()->has_construction_site =
-      true;
+  idle->get_component<Engine::Core::BuilderProductionComponent>()
+      ->has_construction_site = true;
   idle->get_component<Engine::Core::BuilderProductionComponent>()->product_type =
       "home";
   EXPECT_EQ(input_handler->select_idle_builders(1), 0);

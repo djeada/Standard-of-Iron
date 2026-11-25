@@ -1273,9 +1273,10 @@ void main() {
   // stretched down a wall reads as a draped cloth. The rim is kept ragged and
   // narrow so the sward hangs over the lip instead of fading down the face.
   float cliff_ragged = (rock_breakup - 0.5) * 0.14 + slope_soil_breakup * 0.07;
-  float cliff_face =
-      smoothstep(k_soi_cliff_start, k_soi_cliff_start + k_soi_cliff_width, slope + cliff_ragged) *
-      (1.0 - 0.80 * entry_core);
+  float cliff_face = smoothstep(k_soi_cliff_start,
+                                k_soi_cliff_start + k_soi_cliff_width,
+                                slope + cliff_ragged) *
+                     (1.0 - 0.80 * entry_core);
   // A hill's gentle flank is turf. Only what the cliff rule calls a face keeps
   // the rock and its bedding; the old slope rule painted strata across any
   // bank a soldier can walk up.
@@ -1334,10 +1335,10 @@ void main() {
     // against white, not a pale blue slope that melts into the drifts.
     float cold_rock = biome_alpine * clamp(u_snow_coverage, 0.0, 1.0);
     vec3 crag = vec3(dot(cliff_stone, vec3(0.299, 0.587, 0.114)));
-    cliff_stone = mix(cliff_stone,
-                      mix(cliff_stone, crag, 0.60) * k_soi_snow_crag_tone,
-                      cold_rock);
-    rock_color = mix(rock_color, cliff_stone, cliff_face * (1.0 - 0.55 * mountain_surface));
+    cliff_stone = mix(
+        cliff_stone, mix(cliff_stone, crag, 0.60) * k_soi_snow_crag_tone, cold_rock);
+    rock_color =
+        mix(rock_color, cliff_stone, cliff_face * (1.0 - 0.55 * mountain_surface));
     float face_weight = smoothstep(0.22, 0.62, slope);
     rock_color *=
         1.0 + pattern.bedding * (0.16 + 0.10 * mountain_surface) * face_weight;
@@ -1347,7 +1348,8 @@ void main() {
                      rock_color * vec3(1.06, 1.0, 0.90),
                      smoothstep(-0.30, -0.05, -pattern.streak) * face_weight * 0.35);
     rock_color *= 1.0 - fracture * (0.060 + 0.075 * u_rock_detail_strength) *
-                            mix(0.35, 1.0, face_weight) * (1.0 + k_soi_cliff_joint * cliff_face);
+                            mix(0.35, 1.0, face_weight) *
+                            (1.0 + k_soi_cliff_joint * cliff_face);
     rock_color *= 1.0 + (rock_detail * k_soi_cliff_block_tone) * cliff_face;
     rock_color *= 1.0 - chipping * (0.045 + 0.050 * u_rock_detail_strength);
     rock_color *= 1.0 + rock_grain * 0.075;
@@ -1496,8 +1498,8 @@ void main() {
       // desert. The drift field also tilts the shading normal further down,
       // so the sun models the drifts instead of a pattern being painted on.
       float drift_fade = band_limit(coord_footprint, k_soi_snow_drift_frequency * 4.0);
-      vec2 drift_coord = world_coord * k_soi_snow_drift_frequency +
-                         domain_warp * 0.9 + vec2(14.0, -52.0);
+      vec2 drift_coord = world_coord * k_soi_snow_drift_frequency + domain_warp * 0.9 +
+                         vec2(14.0, -52.0);
       vec4 drift = (HAS_MICRODETAIL) ? micro_sample(drift_coord)
                                      : vec4(gradient_noise(drift_coord), 0.0, 0.0, 0.0);
       float settled =
@@ -1532,8 +1534,8 @@ void main() {
                         alpine_cover * (1.0 - rock_mask));
     terrain_color *= 1.0 - 0.16 * alpine_snow_thin * (1.0 - alpine_snow_core);
     // Snow sits on every ledge of a crag and slides off the risers.
-    float ledge_snow = strata_ledge * alpine_cover * (1.0 - alpine_snow_slope_retention) *
-                       k_soi_snow_ledge_amount;
+    float ledge_snow = strata_ledge * alpine_cover *
+                       (1.0 - alpine_snow_slope_retention) * k_soi_snow_ledge_amount;
     alpine_snow_mask *= 1.0 - k_soi_snow_cliff_shed * cliff_face;
     alpine_snow_mask = max(alpine_snow_mask, ledge_snow);
     float exposed_face = alpine_cover * (1.0 - alpine_snow_slope_retention);
@@ -1615,7 +1617,8 @@ void main() {
   // straw where the soil drains, deeper sward in the damp hollows and scuffs
   // of bare earth, each with an edge you can point at. The fields are the
   // baked atlas channels, so this costs arithmetic only.
-  float mosaic_ragged = (thatch_field - 0.5) * k_soi_mosaic_ragged + worn_breakup * 0.05;
+  float mosaic_ragged =
+      (thatch_field - 0.5) * k_soi_mosaic_ragged + worn_breakup * 0.05;
   float mosaic_dry_bias = biome_dry * 0.012 + biome_rocky * 0.012 +
                           biome_alpine * 0.010 - biome_forest * 0.025 -
                           (u_moisture_level - 0.5) * 0.024;
@@ -1634,10 +1637,9 @@ void main() {
   float mosaic_level = 1.0 - smoothstep(0.10, 0.30, slope);
   float bare_field = soil_field * 0.56 + material_patch * 0.30 + earth_field * 0.14 +
                      understory_patch * 0.05 + mosaic_dry_bias * 0.5;
-  float bare_patch_edge = smoothstep(k_soi_mosaic_bare_edge,
-                                     k_soi_mosaic_bare_edge + 0.022,
-                                     bare_field) *
-                          mosaic_level * (1.0 - 0.75 * forest_cover);
+  float bare_patch_edge =
+      smoothstep(k_soi_mosaic_bare_edge, k_soi_mosaic_bare_edge + 0.022, bare_field) *
+      mosaic_level * (1.0 - 0.75 * forest_cover);
   // The noise atlas ends at the map border; beyond it every field clamps to
   // its edge texel, so on the edge ring a "patch" is a whole ridge painted
   // straw or bare. Out there the sward stays one plain turf.
@@ -1650,8 +1652,8 @@ void main() {
                       u_grass_dry * k_soi_mosaic_straw_tone,
                       straw_patch * grass_cover * k_soi_mosaic_straw_amount);
   terrain_color = biome_grass_color(terrain_color, u_ground_type, cured, grass_cover);
-  vec3 lush_stand =
-      biome_grass_color(mix(u_grass_primary, u_grass_secondary, 0.35), u_ground_type, 0.0, 1.0);
+  vec3 lush_stand = biome_grass_color(
+      mix(u_grass_primary, u_grass_secondary, 0.35), u_ground_type, 0.0, 1.0);
   vec3 deep_sward_color =
       mix(terrain_color, lush_stand, k_soi_mosaic_deep_green) * k_soi_mosaic_deep_tone;
   terrain_color = mix(terrain_color,
@@ -1811,9 +1813,10 @@ void main() {
   vec3 relief_offset =
       vec3(relief_gradient.x, 0.0, relief_gradient.y) * projection_weights.y +
       relief_side_offset;
-  vec3 detail_normal = normalize(
-      normal - relief_offset * relief_amp -
-      vec3(snow_drift_gradient.x, 0.0, snow_drift_gradient.y) * k_soi_snow_drift_relief);
+  vec3 detail_normal =
+      normalize(normal - relief_offset * relief_amp -
+                vec3(snow_drift_gradient.x, 0.0, snow_drift_gradient.y) *
+                    k_soi_snow_drift_relief);
 
   float ndl = soi_wrapped_diffuse(detail_normal);
   float concavity =
@@ -1870,8 +1873,10 @@ void main() {
   vec3 open_ground_light = ground_open_light();
   vec3 open_ground_lit =
       terrain_color * open_ground_light * u_ambient_boost * environment_exposure();
-  lit_color = ground_shade_grade(
-      lit_color, open_ground_lit, mix(k_ground_shade_tone, k_soi_snow_shade_tone, snow_cover));
+  lit_color =
+      ground_shade_grade(lit_color,
+                         open_ground_lit,
+                         mix(k_ground_shade_tone, k_soi_snow_shade_tone, snow_cover));
 #if SOI_SURFACE_DETAIL
   if (snow_cover > 0.05) {
     // Sun glints off single crystals: sparse, tiny, and gone at battle zoom.
@@ -1881,11 +1886,10 @@ void main() {
       vec2 in_crystal = fract(world_coord * 30.0) - 0.5;
       sparkle_fade *= 1.0 - smoothstep(0.10, 0.34, length(in_crystal));
       float chance = fract(sin(dot(crystal, vec2(127.1, 311.7))) * 43758.5453);
-      vec3 facet = normalize(detail_normal + (vec3(fract(chance * 37.0),
-                                                   0.0,
-                                                   fract(chance * 91.0)) -
-                                              vec3(0.5, 0.0, 0.5)) *
-                                                 0.9);
+      vec3 facet = normalize(detail_normal +
+                             (vec3(fract(chance * 37.0), 0.0, fract(chance * 91.0)) -
+                              vec3(0.5, 0.0, 0.5)) *
+                                 0.9);
       float glint = pow(max(dot(reflect(-L, facet), view_dir), 0.0), 24.0);
       lit_color += sun_light * step(0.955, chance) * glint * k_soi_snow_sparkle *
                    snow_cover * sparkle_fade * smoothstep(0.03, 0.42, ndl) *

@@ -126,7 +126,8 @@ protected:
 
     Game::Systems::initialize_default_content(session.nations());
     session.nations().set_player_nation(k_ai, Game::Systems::NationID::RomanRepublic);
-    session.nations().set_player_nation(k_proxy, Game::Systems::NationID::RomanRepublic);
+    session.nations().set_player_nation(k_proxy,
+                                        Game::Systems::NationID::RomanRepublic);
 
     Game::Map::MapDefinition map_definition;
     map_definition.grid.width = k_map_size;
@@ -283,7 +284,9 @@ protected:
       give(Game::Command::SetAutoGather{.units = idle_builders, .active = true});
     }
 
-    const auto stock = [&](ResourceType type) { return economy.get(k_proxy, type); };
+    const auto stock = [&](ResourceType type) {
+      return economy.get(k_proxy, type);
+    };
     const auto build = [&](const char* type, float distance) {
       if (gathering_builders.empty()) {
         return;
@@ -303,8 +306,8 @@ protected:
     if (markets == 0 && stock(ResourceType::Gold) >= 50 &&
         stock(ResourceType::Wood) >= 60 && stock(ResourceType::Stone) >= 40) {
       build("marketplace", 14.0F);
-    } else if (homes < 2 + static_cast<int>(minute) && stock(ResourceType::Wood) >= 50 &&
-               stock(ResourceType::Stone) >= 15) {
+    } else if (homes < 2 + static_cast<int>(minute) &&
+               stock(ResourceType::Wood) >= 50 && stock(ResourceType::Stone) >= 15) {
       build("home", 18.0F);
     } else if (farms < 1 + homes / 3 && stock(ResourceType::Wood) >= 40 &&
                stock(ResourceType::Stone) >= 10) {
@@ -314,7 +317,8 @@ protected:
       build("barracks", 16.0F);
     }
 
-    if (markets > 0 && stock(ResourceType::Iron) < 30 && stock(ResourceType::Gold) >= 20) {
+    if (markets > 0 && stock(ResourceType::Iron) < 30 &&
+        stock(ResourceType::Gold) >= 20) {
       give(Game::Command::Trade{.resource = ResourceType::Iron,
                                 .direction = Game::Command::TradeDirection::Buy});
     }
@@ -328,8 +332,8 @@ protected:
                            : (static_cast<int>(minute * 12.0F) % 2 == 0)
                                ? Game::Units::TroopType::Swordsman
                                : Game::Units::TroopType::Velites;
-      if (Game::Systems::ProductionService::can_start_production(world, hall, product) ==
-          Game::Systems::ProductionResult::Success) {
+      if (Game::Systems::ProductionService::can_start_production(
+              world, hall, product) == Game::Systems::ProductionResult::Success) {
         give(Game::Command::Produce{.building = hall, .product = product});
       }
     }

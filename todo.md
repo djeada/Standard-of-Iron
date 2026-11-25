@@ -4,6 +4,7 @@ Status: started 2026-11-24. Source: two hand-played sessions on a fresh build
 (tutorial won; Crossing the Rhone lost; Two Fords and Amber Delta skirmishes lost
 to Normal AI; Frostmere Basin observed). Every item below was seen on screen,
 not inferred from code. Owners, by difficulty:
+
 - **O** = Opus orchestrator: plan, review, integration, commits, final playtest.
 - **S1, S3, S4, S5** = Sonnet agents: straightforward fixes, one stream each.
 - **T, D, N** = Opus agents: tutorial and AI behaviour (T), play-big-soon economy (D),
@@ -132,8 +133,8 @@ within ~10%; only elephants/slingers vs velites and shield wall vs testudo diffe
 Parked until the Fable limit resets (2026-11-29 16:00): F1 broadleaf trees (second
 attempt unseen), hedgerows (farm_hedgerow started), change 12; F2 follow-ups below.
 
-
 Terrain toward the inspiration screenshot:
+
 - [x] Snow reads as sand: wavy ripple pattern everywhere; needs a snow material.
 - [x] Cliffs are stretched striped grass; rock/cliff material.
 - [x] Teal-black cliff shadows on Two Fords / Amber Delta; grade.
@@ -143,6 +144,7 @@ Terrain toward the inspiration screenshot:
 - [x] Hills render as steep blue-white mesas on Frostmere.
 
 Units:
+
 - [ ] Roman builder HUD icon still shows a crested legionary (assets/visuals/icons/builder_rome.png) - F2.
 - [ ] Still close at RTS zoom: Roman archer vs legionary; Roman vs Carthaginian cavalry - F2.
 - [x] render_tests: EveryBuildingKindDrawsCatalogDescriptions fails, carthage/castra draws nothing - N.
@@ -152,6 +154,7 @@ Units:
       capture cleanly before fixing.
 
 Maps:
+
 - [ ] Amber Delta: player barracks yard overhangs the cliff edge.
 - [ ] Sepulcher shrine fog blob has a hard edge; loose black debris around it.
 - [x] Tan blob on the Rhone river near the start.

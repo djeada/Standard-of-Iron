@@ -183,10 +183,10 @@ auto set_rally(const EntitySnapshot& building,
   if (main == nullptr) {
     return;
   }
-  const float x = context.station.source != StationSource::None ? context.station.x
-                                                                : main->rally_x;
-  const float z = context.station.source != StationSource::None ? context.station.z
-                                                                : main->rally_z;
+  const float x =
+      context.station.source != StationSource::None ? context.station.x : main->rally_x;
+  const float z =
+      context.station.source != StationSource::None ? context.station.z : main->rally_z;
   if (building.production.rally_set &&
       planar(building.production.rally_x, building.production.rally_z, x, z) < 2.0F) {
     return;
@@ -231,13 +231,12 @@ void MercenaryBehavior::execute(const AISnapshot& snapshot,
     set_rally(*stables, context, out_commands);
     const auto* elephant = nation->get_troop(Game::Units::TroopType::Elephant);
     const bool wanted =
-        recruitment != nullptr &&
-        std::find(recruitment->preferred.begin(),
-                  recruitment->preferred.end(),
-                  "elephant") != recruitment->preferred.end();
-    if (elephant != nullptr &&
-        (elephant->max_squads <= 0 ||
-         squads_of(snapshot, Game::Units::SpawnType::Elephant) < elephant->max_squads)) {
+        recruitment != nullptr && std::find(recruitment->preferred.begin(),
+                                            recruitment->preferred.end(),
+                                            "elephant") != recruitment->preferred.end();
+    if (elephant != nullptr && (elephant->max_squads <= 0 ||
+                                squads_of(snapshot, Game::Units::SpawnType::Elephant) <
+                                    elephant->max_squads)) {
       const int gold_cost = elephant->resource_costs.get(ResourceType::Gold);
       const int food_cost = elephant->resource_costs.get(ResourceType::Food);
       constexpr int k_rich = 600;

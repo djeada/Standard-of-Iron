@@ -348,9 +348,8 @@ auto humanoid_construction_variant_for_role(HumanoidConstructionRole role) noexc
   return 0U;
 }
 
-auto humanoid_construction_tool_variant_for_job(HumanoidWorkJob job,
-                                                HumanoidConstructionRole role) noexcept
-    -> std::uint8_t {
+auto humanoid_construction_tool_variant_for_job(
+    HumanoidWorkJob job, HumanoidConstructionRole role) noexcept -> std::uint8_t {
   if (job == HumanoidWorkJob::Chop && role == HumanoidConstructionRole::Hammer) {
     return k_humanoid_felling_axe_variant;
   }

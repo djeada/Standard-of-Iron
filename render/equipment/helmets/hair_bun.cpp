@@ -316,7 +316,8 @@ auto attach_worker_headwear(const RenderArchetype& archetype,
   spec.palette_role_remap[k_headwear_main_slot] = base_role_byte;
   spec.palette_role_remap[k_headwear_band_slot] =
       static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[k_headwear_hair_slot] = Render::Humanoid::k_humanoid_hair_role;
+  spec.palette_role_remap[k_headwear_hair_slot] =
+      Render::Humanoid::k_humanoid_hair_role;
   return spec;
 }
 

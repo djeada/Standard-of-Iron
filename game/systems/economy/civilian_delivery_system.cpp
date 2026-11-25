@@ -1,4 +1,3 @@
-#include "nation_recruitment.h"
 #include "civilian_delivery_system.h"
 
 #include <algorithm>
@@ -7,6 +6,7 @@
 
 #include "core/component_economy.h"
 #include "core/world.h"
+#include "nation_recruitment.h"
 #include "recruitment_gate.h"
 #include "systems/building_collision_registry.h"
 #include "systems/player_feedback.h"

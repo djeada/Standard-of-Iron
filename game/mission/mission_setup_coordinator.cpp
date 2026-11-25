@@ -163,7 +163,6 @@ void name_ai_owner_after_nation(Game::Systems::OwnerRegistry& owners,
   owners.set_owner_name(owner_id, name);
 }
 
-
 void name_owner_after_commander(Game::Systems::OwnerRegistry& owners,
                                 const Engine::Core::UnitComponent& commander) {
   const auto troop_type = Game::Units::spawn_typeToTroopType(commander.spawn_type);
@@ -174,10 +173,9 @@ void name_owner_after_commander(Game::Systems::OwnerRegistry& owners,
   if (definition == nullptr || definition->display_name.empty()) {
     return;
   }
-  owners.set_owner_name(
-      commander.owner_id,
-      Game::Util::tr_asset_std(Game::Util::k_commanders_context,
-                               definition->display_name));
+  owners.set_owner_name(commander.owner_id,
+                        Game::Util::tr_asset_std(Game::Util::k_commanders_context,
+                                                 definition->display_name));
 }
 
 } // namespace

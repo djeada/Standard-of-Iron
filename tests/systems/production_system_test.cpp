@@ -23,10 +23,10 @@
 #include "game/systems/harvest_yields.h"
 #include "game/systems/movement/movement_pipeline.h"
 #include "game/systems/movement/order_service.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
-#include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_catalog_loader.h"
@@ -1105,9 +1105,9 @@ protected:
 
 TEST_F(BarracksQueueTest, ABarracksQueueHoldsTenRecruits) {
   using Game::Systems::ProductionService;
-  EXPECT_EQ(ProductionService::start_production_batch(
-                world, barracks->get_id(), k_line, 10),
-            10);
+  EXPECT_EQ(
+      ProductionService::start_production_batch(world, barracks->get_id(), k_line, 10),
+      10);
   EXPECT_EQ(in_line(), 10);
   EXPECT_EQ(ProductionService::start_production(world, barracks->get_id(), k_line),
             Game::Systems::ProductionResult::QueueFull);
@@ -1191,7 +1191,8 @@ protected:
     auto* builder = world.create_entity();
     builder->add_component<Engine::Core::TransformComponent>(2.0F, 0.0F, 2.0F);
     builder->add_component<Engine::Core::MovementComponent>();
-    auto* unit = builder->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
+    auto* unit =
+        builder->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
     unit->owner_id = 1;
     unit->spawn_type = Game::Units::SpawnType::Builder;
     unit->health = 100;
@@ -1261,7 +1262,8 @@ TEST_F(BuilderQueueTest, AnIdleCrewStartsGatheringWhatItsOwnerHasLeastOf) {
   for (int second = 0; second < 9; ++second) {
     system.update(&session.world(), 1.0F);
   }
-  EXPECT_FALSE(work->auto_gather) << "a crew that has been idle for 9 s is still resting";
+  EXPECT_FALSE(work->auto_gather)
+      << "a crew that has been idle for 9 s is still resting";
 
   for (int second = 0; second < 2; ++second) {
     system.update(&session.world(), 1.0F);

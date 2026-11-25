@@ -60,16 +60,16 @@ auto collect_site_ghosts(Engine::Core::World& world) -> std::vector<SiteGhost> {
                 candidate, queued_owner, queued.construction_type, queued.x, queued.z);
           });
       if (!known && construction_build_time(queued.construction_type) > 0.0F) {
-        sites.push_back(SiteGhost{
-            .owner_id = queued_owner,
-            .nation_id = queued_unit != nullptr
-                             ? queued_unit->nation_id
-                             : Game::Systems::NationID::RomanRepublic,
-            .product_type = queued.construction_type,
-            .x = queued.x,
-            .z = queued.z,
-            .rotation_y = queued.rotation_y,
-            .progress = 0.0F});
+        sites.push_back(
+            SiteGhost{.owner_id = queued_owner,
+                      .nation_id = queued_unit != nullptr
+                                       ? queued_unit->nation_id
+                                       : Game::Systems::NationID::RomanRepublic,
+                      .product_type = queued.construction_type,
+                      .x = queued.x,
+                      .z = queued.z,
+                      .rotation_y = queued.rotation_y,
+                      .progress = 0.0F});
       }
     }
     if (!raises_shared_site(builder)) {

@@ -41,19 +41,22 @@ auto offer(const QString& key,
   entry["build_time"] = static_cast<double>(quote.build_time);
   entry["men"] = quote.individuals;
   entry["upkeep_per_minute"] = upkeep;
-  entry["affordable"] = have_gold >= quote.resources.get(Game::Systems::ResourceType::Gold);
+  entry["affordable"] =
+      have_gold >= quote.resources.get(Game::Systems::ResourceType::Gold);
   return entry;
 }
 
 } // namespace
 
-auto selected_hiring_state(Engine::Core::World* world, int local_owner_id) -> QVariantMap {
+auto selected_hiring_state(Engine::Core::World* world,
+                           int local_owner_id) -> QVariantMap {
   QVariantMap m;
   m["has_hiring"] = false;
   if (world == nullptr) {
     return m;
   }
-  const auto& selected = Game::Session::session_for(*world).selection().get_selected_units();
+  const auto& selected =
+      Game::Session::session_for(*world).selection().get_selected_units();
   const Engine::Core::UnitComponent* building = nullptr;
   Engine::Core::EntityID building_id = 0;
   for (const auto id : selected) {
@@ -75,11 +78,12 @@ auto selected_hiring_state(Engine::Core::World* world, int local_owner_id) -> QV
   m["has_hiring"] = true;
   m["building_type"] =
       QString::fromStdString(Game::Units::spawn_typeToString(building->spawn_type));
-  m["nation_id"] = QString::fromStdString(Game::Systems::nation_id_to_string(nation->id));
+  m["nation_id"] =
+      QString::fromStdString(Game::Systems::nation_id_to_string(nation->id));
   m["upkeep_per_minute"] =
       Game::Systems::NationEconomySystem::upkeep_per_minute(*world, local_owner_id);
-  m["income_per_minute"] =
-      Game::Systems::NationEconomySystem::trade_income_per_minute(*world, local_owner_id);
+  m["income_per_minute"] = Game::Systems::NationEconomySystem::trade_income_per_minute(
+      *world, local_owner_id);
   if (const auto* production =
           world->try_get<Engine::Core::ProductionComponent>(building_id)) {
     m["in_progress"] = production->in_progress;
@@ -94,15 +98,15 @@ auto selected_hiring_state(Engine::Core::World* world, int local_owner_id) -> QV
     for (const auto& band : nation->mercenary_bands) {
       const auto quote = Game::Systems::quote_recruit(
           *world, local_owner_id, band.unit_type, band.nation);
-      offers.append(offer(QString::fromStdString(
-                              Game::Systems::nation_id_to_string(band.nation) + "/" +
-                              Game::Units::troop_typeToString(band.unit_type)),
-                          tr_asset(k_units_context, band.display_name),
-                          band.unit_type,
-                          band.nation,
-                          quote,
-                          band.upkeep_per_minute,
-                          gold));
+      offers.append(offer(
+          QString::fromStdString(Game::Systems::nation_id_to_string(band.nation) + "/" +
+                                 Game::Units::troop_typeToString(band.unit_type)),
+          tr_asset(k_units_context, band.display_name),
+          band.unit_type,
+          band.nation,
+          quote,
+          band.upkeep_per_minute,
+          gold));
     }
   } else {
     for (const auto& troop : nation->available_troops) {
@@ -112,14 +116,14 @@ auto selected_hiring_state(Engine::Core::World* world, int local_owner_id) -> QV
       }
       const auto quote =
           Game::Systems::quote_recruit(*world, local_owner_id, troop.unit_type);
-      offers.append(
-          offer(QString::fromStdString(Game::Units::troop_typeToString(troop.unit_type)),
-                tr_asset(k_units_context, troop.display_name),
-                troop.unit_type,
-                nation->id,
-                quote,
-                0,
-                gold));
+      offers.append(offer(
+          QString::fromStdString(Game::Units::troop_typeToString(troop.unit_type)),
+          tr_asset(k_units_context, troop.display_name),
+          troop.unit_type,
+          nation->id,
+          quote,
+          0,
+          gold));
     }
   }
   m["offers"] = offers;

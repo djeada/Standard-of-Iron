@@ -2,9 +2,9 @@
 
 #include <algorithm>
 #include <array>
-#include <string>
 #include <cmath>
 #include <limits>
+#include <string>
 
 #include "../../../map/terrain_service.h"
 #include "../../building_collision_registry.h"

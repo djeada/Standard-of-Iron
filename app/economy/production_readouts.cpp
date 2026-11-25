@@ -126,9 +126,9 @@ auto selected_builder_state(Engine::Core::World* world) -> QVariantMap {
       // The nation-only buildings this crew's nation raises (NATION_ASYMMETRY.md).
       QStringList nation_buildings;
       if (const auto* unit = world->try_get<Engine::Core::UnitComponent>(id)) {
-        if (const auto* nation = Game::Session::session_for(*world)
-                                     .nations()
-                                     .get_nation_for_player(unit->owner_id)) {
+        if (const auto* nation =
+                Game::Session::session_for(*world).nations().get_nation_for_player(
+                    unit->owner_id)) {
           for (const auto& building : nation->unique_buildings) {
             nation_buildings.append(QString::fromStdString(building));
           }

@@ -1,18 +1,17 @@
 #include <QJsonArray>
 
-#include <memory>
-
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "game/core/component_core.h"
 #include "game/core/event_manager.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
+#include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
-#include "game/systems/default_content.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/spawn_type.h"
@@ -53,7 +52,8 @@ protected:
 
   void TearDown() override { scope.reset(); }
 
-  auto squad(int owner, SpawnType type = SpawnType::Swordsman) -> Engine::Core::EntityID {
+  auto squad(int owner,
+             SpawnType type = SpawnType::Swordsman) -> Engine::Core::EntityID {
     auto* entity = session.world().create_entity();
     auto* unit =
         entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 1.0F);
@@ -120,8 +120,8 @@ TEST_F(BattleStatsTest, TrainedCountsOnlySoldiersABarracksRecruited) {
 
   // A squad split, scripted reinforcement or awakened undead spawns a unit
   // with is_initial_spawn = false but is not a recruit.
-  session.stats().on_unit_spawned(
-      Engine::Core::UnitSpawnedEvent(squad(k_rome), k_rome, SpawnType::Swordsman, false));
+  session.stats().on_unit_spawned(Engine::Core::UnitSpawnedEvent(
+      squad(k_rome), k_rome, SpawnType::Swordsman, false));
   session.stats().on_unit_spawned(Engine::Core::UnitSpawnedEvent(
       squad(k_rome, SpawnType::Builder), k_rome, SpawnType::Builder, false));
   EXPECT_EQ(stats(k_rome).troops_recruited, full)

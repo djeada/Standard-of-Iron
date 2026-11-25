@@ -42,7 +42,9 @@ void register_look(EntityRendererRegistry& registry,
       registry,
       nation_slug,
       look.building_type,
-      [archetype_set, selection, set = static_cast<const BuildingArchetypeSet*>(nullptr)](
+      [archetype_set,
+       selection,
+       set = static_cast<const BuildingArchetypeSet*>(nullptr)](
           const DrawContext& ctx,
           const EntityPresentation& presentation,
           ISubmitter& out) mutable {
@@ -54,7 +56,10 @@ void register_look(EntityRendererRegistry& registry,
         }
         const std::array<QVector3D, 1> palette{Render::entity_color(*ctx.entity)};
         submit_building_instance(
-            out, ctx, set->for_state(presented_building_state(presentation, ctx)), palette);
+            out,
+            ctx,
+            set->for_state(presented_building_state(presentation, ctx)),
+            palette);
         draw_building_selection_overlay(out, ctx, selection);
       });
 }

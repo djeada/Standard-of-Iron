@@ -663,18 +663,18 @@ TestCase {
                 "unitCount": 0,
                 "groups": [],
                 "inspected": makeFocus({
-                    "name": "Barracks",
-                    "typeKey": "barracks",
-                    "isBuilding": true,
-                    "isEnemy": false,
-                    "isOwn": false,
-                    "isAlly": false,
-                    "ownerId": 0,
-                    "healthRatio": 1.0,
-                    "health": 1000,
-                    "maxHealth": 1000,
-                    "captureSeconds": 15
-                })
+                        "name": "Barracks",
+                        "typeKey": "barracks",
+                        "isBuilding": true,
+                        "isEnemy": false,
+                        "isOwn": false,
+                        "isAlly": false,
+                        "ownerId": 0,
+                        "healthRatio": 1.0,
+                        "health": 1000,
+                        "maxHealth": 1000,
+                        "captureSeconds": 15
+                    })
             });
         var hint = findChild(summary, "inspectCaptureHint");
         verify(hint !== null && hint.visible, "the neutral barracks card gave no hint about capture");
@@ -687,11 +687,11 @@ TestCase {
                 "unitCount": 0,
                 "groups": [],
                 "inspected": makeFocus({
-                    "typeKey": "barracks",
-                    "isBuilding": true,
-                    "isEnemy": true,
-                    "captureSeconds": 15
-                })
+                        "typeKey": "barracks",
+                        "isBuilding": true,
+                        "isEnemy": true,
+                        "captureSeconds": 15
+                    })
             });
         verify(findChild(enemy, "inspectCaptureHint").text.indexOf("three times") !== -1);
         enemy.destroy();

@@ -32,10 +32,9 @@ auto nation_may_build(const Engine::Core::World& world,
     return true;
   }
   const auto* nation = owner_nation(world, owner_id);
-  return nation != nullptr &&
-         std::find(nation->unique_buildings.begin(),
-                   nation->unique_buildings.end(),
-                   item_type) != nation->unique_buildings.end();
+  return nation != nullptr && std::find(nation->unique_buildings.begin(),
+                                        nation->unique_buildings.end(),
+                                        item_type) != nation->unique_buildings.end();
 }
 
 auto civilian_reserve_grant(const Engine::Core::World& world, int owner_id) -> int {
@@ -112,8 +111,8 @@ auto quote_recruit(const Engine::Core::World& world,
   const Nation* nation = owner_nation(world, owner_id);
   if (nation == nullptr) {
     // No nation catalog loaded: the troop catalog's own numbers, as before.
-    const auto& profile =
-        TroopProfileService::instance().get_profile_ref(NationID::RomanRepublic, unit_type);
+    const auto& profile = TroopProfileService::instance().get_profile_ref(
+        NationID::RomanRepublic, unit_type);
     quote.offered = true;
     quote.building = recruiting_building_for(unit_type);
     quote.manpower = profile.production.cost;
@@ -138,11 +137,10 @@ auto quote_recruit(const Engine::Core::World& world,
     quote.manpower = 0;
     quote.resources.set(ResourceType::Gold, band->gold);
     quote.build_time = band->contract_seconds;
-    quote.individuals = std::max(
-        1,
-        TroopProfileService::instance()
-            .get_profile_ref(band->nation, unit_type)
-            .individuals_per_unit);
+    quote.individuals = std::max(1,
+                                 TroopProfileService::instance()
+                                     .get_profile_ref(band->nation, unit_type)
+                                     .individuals_per_unit);
     return quote;
   }
 
@@ -178,7 +176,8 @@ auto nation_recruit_ruling(const Engine::Core::World& world,
   if (unit == nullptr) {
     return NationRecruitRefusal::WrongBuilding;
   }
-  const RecruitQuote quote = quote_recruit(world, unit->owner_id, unit_type, band_nation);
+  const RecruitQuote quote =
+      quote_recruit(world, unit->owner_id, unit_type, band_nation);
   if (!quote.offered) {
     return NationRecruitRefusal::NotInRoster;
   }

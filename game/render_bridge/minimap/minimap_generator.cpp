@@ -148,10 +148,10 @@ void MinimapGenerator::render_roads(QImage& image,
   for (const auto& road : map_def.roads) {
     const auto [x1, y1] = projection.to_pixel(road.start.x(), road.start.z());
     const auto [x2, y2] = projection.to_pixel(road.end.x(), road.end.z());
-    strokes.push_back(RoadStroke{.from = QPointF(x1, y1),
-                                 .to = QPointF(x2, y2),
-                                 .width = std::max(projection.to_pixel_size(road.width),
-                                                   1.5F)});
+    strokes.push_back(
+        RoadStroke{.from = QPointF(x1, y1),
+                   .to = QPointF(x2, y2),
+                   .width = std::max(projection.to_pixel_size(road.width), 1.5F)});
   }
 
   QImage scratch(image.size(), QImage::Format_ARGB32_Premultiplied);

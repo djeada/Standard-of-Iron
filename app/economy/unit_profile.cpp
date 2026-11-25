@@ -149,9 +149,8 @@ auto unit_profile(const Game::Systems::NationRegistry& nations,
   // NATION_ASYMMETRY.md: whether this nation recruits the troop at all, and
   // where, so a recruit panel only offers what the selected building trains.
   bool recruitable = true;
-  QString recruited_at =
-      QString::fromStdString(Game::Units::spawn_typeToString(
-          Game::Systems::recruiting_building_for(*troop_type)));
+  QString recruited_at = QString::fromStdString(Game::Units::spawn_typeToString(
+      Game::Systems::recruiting_building_for(*troop_type)));
   if (const auto* nation = nations.get_nation(resolved_nation)) {
     if (const auto* troop = nation->get_troop(*troop_type)) {
       recruitable = troop->recruitable;

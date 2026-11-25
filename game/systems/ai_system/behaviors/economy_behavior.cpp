@@ -203,7 +203,8 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
   int hiring_reserve = 0;
   if (context.nation != nullptr) {
     for (const auto& band : context.nation->mercenary_bands) {
-      hiring_reserve = hiring_reserve == 0 ? band.gold : std::min(hiring_reserve, band.gold);
+      hiring_reserve =
+          hiring_reserve == 0 ? band.gold : std::min(hiring_reserve, band.gold);
     }
   }
   for (const auto type : by_urgency) {

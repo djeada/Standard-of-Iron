@@ -159,7 +159,8 @@ void GlobalStatsRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& 
   }
 }
 
-void GlobalStatsRegistry::on_unit_recruited(const Engine::Core::UnitRecruitedEvent& event) {
+void GlobalStatsRegistry::on_unit_recruited(
+    const Engine::Core::UnitRecruitedEvent& event) {
   if (is_frozen(event.owner_id) || !is_soldier(event.spawn_type)) {
     return;
   }

@@ -234,8 +234,9 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
       };
     };
     const auto add = [&](const std::string& suffix, auto build) {
-      out.push_back(
-          {nation + suffix, named(nation + suffix, build), {kind_of(nation, suffix.substr(1))}});
+      out.push_back({nation + suffix,
+                     named(nation + suffix, build),
+                     {kind_of(nation, suffix.substr(1))}});
     };
     add("_mercenary_camp", look.grounds);
     add("_castra", look.grounds);

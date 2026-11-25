@@ -92,8 +92,8 @@ void Barracks::init(const SpawnParams& params) {
       prod->max_units = params.max_population;
       prod->manpower_ceiling = manpower_ceiling_for(nation_id, params.max_population);
       if (!params.is_initial_spawn) {
-        prod->manpower_ceiling = std::max(prod->manpower_ceiling,
-                                          Game::Systems::k_built_barracks_reserve_ceiling);
+        prod->manpower_ceiling = std::max(
+            prod->manpower_ceiling, Game::Systems::k_built_barracks_reserve_ceiling);
       }
       prod->manpower_available = params.is_initial_spawn ? params.max_population : 0;
       prod->in_progress = false;

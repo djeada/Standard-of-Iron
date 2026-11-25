@@ -67,7 +67,8 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
     // Never read past the palettes the atlas actually holds: frames the blob
     // does not cover are written as the bind pose.
     const std::size_t covered =
-        bone_count == 0U ? 0U : std::min<std::size_t>(frames, palettes.size() / bone_count);
+        bone_count == 0U ? 0U
+                         : std::min<std::size_t>(frames, palettes.size() / bone_count);
     QMatrix4x4 const ident;
     for (std::size_t f = covered; f < frames; ++f) {
       float* frame_dst = floats + (f * BonePaletteArena::k_palette_floats);

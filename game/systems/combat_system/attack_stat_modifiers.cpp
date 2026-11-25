@@ -187,8 +187,8 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
   // Veterans strike harder: principes, then the veterans behind them
   // (NATION_ASYMMETRY.md 3.3).
   if (attacker_unit->rank > 0) {
-    multiplier *= 1.0F + Constants::k_rank_damage_bonus *
-                             static_cast<float>(attacker_unit->rank);
+    multiplier *=
+        1.0F + Constants::k_rank_damage_bonus * static_cast<float>(attacker_unit->rank);
   }
 
   auto const* attacker_registry = attacker->registry();

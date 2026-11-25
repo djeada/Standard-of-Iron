@@ -36,7 +36,8 @@ const float k_ground_daylight_max_gain = 1.85;
 
 float ground_daylight_gain(vec3 open_ground_light) {
   float open_luma = max(dot(open_ground_light, k_ground_shade_luma), 1e-3);
-  float gain = clamp(k_ground_daylight_target / open_luma, 1.0, k_ground_daylight_max_gain);
+  float gain =
+      clamp(k_ground_daylight_target / open_luma, 1.0, k_ground_daylight_max_gain);
   float day = 1.0 - environment_darkness_amount();
   return mix(1.0, gain, k_ground_daylight_follow * day);
 }
@@ -62,7 +63,7 @@ const float k_ground_daylight_slope_headroom = 1.12;
 float ground_daylight_gain(vec3 open_ground_light, vec3 lit, vec3 open_lit) {
   float gain = ground_daylight_gain(open_ground_light);
   float luma = max(dot(lit, k_ground_shade_luma), 1e-4);
-  float ceiling = gain * dot(open_lit, k_ground_shade_luma) *
-                  k_ground_daylight_slope_headroom;
+  float ceiling =
+      gain * dot(open_lit, k_ground_shade_luma) * k_ground_daylight_slope_headroom;
   return clamp(ceiling / luma, 1.0, gain);
 }

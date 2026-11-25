@@ -22,10 +22,9 @@ auto steps_over_ground(const Render::GL::HumanoidAnimationContext& anim) noexcep
          Render::Creature::is_moving_animation(anim.inputs.movement_state);
 }
 
-static auto
-construction_tool_variant(const Animation::ArchetypeVariantTable& table,
-                          const Render::GL::HumanoidAnimationContext& anim,
-                          Animation::HumanoidConstructionRole role) noexcept
+static auto construction_tool_variant(const Animation::ArchetypeVariantTable& table,
+                                      const Render::GL::HumanoidAnimationContext& anim,
+                                      Animation::HumanoidConstructionRole role) noexcept
     -> std::uint8_t {
   if (anim.inputs.is_constructing) {
     auto const by_job = Animation::humanoid_construction_tool_variant_for_job(

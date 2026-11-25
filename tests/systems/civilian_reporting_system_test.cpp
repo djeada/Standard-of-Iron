@@ -36,8 +36,8 @@ protected:
     Game::Systems::PlayerResourceRegistry::instance().clear();
   }
 
-  static auto barracks(World& world, QVector3D at, int reserve, int ceiling)
-      -> Entity* {
+  static auto
+  barracks(World& world, QVector3D at, int reserve, int ceiling) -> Entity* {
     auto* entity = world.create_entity();
     entity->add_component<Engine::Core::TransformComponent>()->position = {
         at.x(), 0.0F, at.z()};
@@ -59,8 +59,7 @@ protected:
     unit->spawn_type = Game::Units::SpawnType::Home;
     unit->owner_id = k_owner;
     unit->health = 500;
-    entity->add_component<Engine::Core::HomeComponent>()->reports_to_barracks =
-        reports;
+    entity->add_component<Engine::Core::HomeComponent>()->reports_to_barracks = reports;
     auto* production = entity->add_component<Engine::Core::ProductionComponent>();
     production->product_type = Game::Units::TroopType::Civilian;
     production->build_time = 5.0F;
@@ -91,7 +90,8 @@ protected:
   }
 };
 
-TEST_F(CivilianReportingSystemTest, ACivilianBesideAReportingHomeWalksToABarracksWithRoom) {
+TEST_F(CivilianReportingSystemTest,
+       ACivilianBesideAReportingHomeWalksToABarracksWithRoom) {
   World world;
   auto* hall = barracks(world, {10.0F, 0.0F, 10.0F}, 0, 120);
   home(world, {25.0F, 0.0F, 10.0F}, true);
@@ -133,7 +133,9 @@ TEST_F(CivilianReportingSystemTest, ACivilianThePlayerOrderedIsLeftAlone) {
 
 TEST_F(CivilianReportingSystemTest, HomesRaiseOnlyAsManyCiviliansAsTheBarracksCanTake) {
   World world;
-  barracks(world, {10.0F, 0.0F, 10.0F}, 120 - Game::Systems::k_civilian_delivery_reserve_grant,
+  barracks(world,
+           {10.0F, 0.0F, 10.0F},
+           120 - Game::Systems::k_civilian_delivery_reserve_grant,
            120);
   auto* first = home(world, {25.0F, 0.0F, 10.0F}, true);
   auto* second = home(world, {25.0F, 0.0F, 30.0F}, true);

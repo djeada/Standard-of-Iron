@@ -32,7 +32,8 @@ auto is_previewable_structure_item(const QString& item_type) -> bool {
          item_type == QStringLiteral("temple") || item_type == QStringLiteral("farm") ||
          item_type == QStringLiteral("mercenary_camp") ||
          item_type == QStringLiteral("elephant_stables") ||
-         item_type == QStringLiteral("fabrica") || item_type == QStringLiteral("castra");
+         item_type == QStringLiteral("fabrica") ||
+         item_type == QStringLiteral("castra");
 }
 
 auto item_supports_preview_rotation(const QString& item_type) -> bool {
