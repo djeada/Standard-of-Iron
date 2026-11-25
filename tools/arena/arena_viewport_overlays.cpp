@@ -351,10 +351,6 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
     return;
   }
 
-  // The readout is text from counts that move a few times a second at most.
-  // Laying it out and shaping it every frame cost about a fifth of a small
-  // scene's frame, so it is rendered into an image a few times a second and
-  // only blitted in between.
   constexpr qint64 k_stats_refresh_ms = 250;
   qreal const dpr = devicePixelRatioF();
   bool const stale = m_stats_overlay_image.isNull() ||
@@ -422,7 +418,6 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
     int const box_w = max_w + pad * 2;
     int const box_h = static_cast<int>(lines.size()) * line_h + pad * 2;
 
-    // The image spans from the widget corner so the original coordinates hold.
     m_stats_overlay_image = QImage(QSize(box_w + pad, box_h + pad) * dpr,
                                    QImage::Format_ARGB32_Premultiplied);
     m_stats_overlay_image.setDevicePixelRatio(dpr);
@@ -541,7 +536,6 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
 
 namespace {
 
-// The help box is static text. It is laid out once per variant and blitted.
 auto render_help_box(const QFont& base_font,
                      const QString& title,
                      const QStringList& lines,

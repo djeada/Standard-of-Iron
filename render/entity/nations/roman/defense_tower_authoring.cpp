@@ -269,7 +269,7 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .seed = 353});
 
   {
-    // A trophy and a fire at its foot, and a raven on the roof to watch with.
+
     const Motif::Setter set(desc, state);
     Motif::add_roman_trophy(desc, set.at(-0.52F, 1.04F, 0.8F), 0.85F, 3);
     Motif::add_roman_tripod_fire(desc, set.at(0.52F, 1.04F, 0.8F), 0.80F);

@@ -198,8 +198,7 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
                      };
                      return shortfall(lhs) > shortfall(rhs);
                    });
-  // A nation that hires with gold keeps a band's price back from the market
-  // (NATION_ASYMMETRY.md section 9: the treasury is Carthage's reserve).
+
   int hiring_reserve = 0;
   if (context.nation != nullptr) {
     for (const auto& band : context.nation->mercenary_bands) {

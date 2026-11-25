@@ -734,8 +734,7 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .seed = 223});
 
   {
-    // Incense at the corners of the market floor, and Baal's disc and crescent
-    // over the arch.
+
     const Motif::Setter set(desc, state);
     for (const float side : {-1.0F, 1.0F}) {
       Motif::add_punic_incense_stand(desc, set.at(side * 1.28F, 1.28F, 0.4F), 0.95F);

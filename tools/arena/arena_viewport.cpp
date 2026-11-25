@@ -454,8 +454,7 @@ void ArenaViewport::submit_terrain_layers() {
         include_review_content &&
         (m_scenario_runner == nullptr ||
          !m_scenario_runner->definition().suppress_terrain_scatter);
-    // Rivers, lakes, shores, bridges and roads are terrain, not dressing: a
-    // terrain-only review keeps them (the README promises as much).
+
     terrain_options.include_features =
         (m_scenario_runner == nullptr ||
          !m_scenario_runner->definition().suppress_terrain_features);
@@ -570,8 +569,6 @@ void ArenaViewport::paint_ui_overlays(bool show_debug_overlays) {
     gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   }
 
-  // One painter for the whole overlay pass: every QPainter begin/end on the GL
-  // widget re-binds the paint device, and this ran three times a frame.
   QPainter painter(this);
   if (show_debug_overlays) {
     painter.save();

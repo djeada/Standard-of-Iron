@@ -5043,9 +5043,7 @@ auto ready_wave_context(Game::Systems::AI::AIDoctrine& doctrine)
 } // namespace
 
 TEST_F(AISystemTest, AWaveDoesNotMarchIntoAGarrisonItCannotBeat) {
-  // The duel matrix: Scipio's and Marcellus' waves walked into Hanno's full
-  // garrison at minutes 3-6 and lost their whole army. Three squads must not
-  // march on a camp held by four squads under a tower.
+
   Game::Systems::AI::AIDoctrine doctrine;
   auto context = ready_wave_context(doctrine);
 
@@ -5069,7 +5067,6 @@ TEST_F(AISystemTest, AWaveDoesNotMarchIntoAGarrisonItCannotBeat) {
       << "three squads marched on four squads and a tower";
   EXPECT_EQ(context.wave.declined, 1);
 
-  // The garrison walks out of sight; it is still remembered at its post.
   snapshot.visible_enemies.clear();
   snapshot.game_time = 540.0F;
   Game::Systems::AI::update_attack_wave(snapshot, context);
@@ -5078,7 +5075,6 @@ TEST_F(AISystemTest, AWaveDoesNotMarchIntoAGarrisonItCannotBeat) {
   EXPECT_FALSE(context.wave.committed)
       << "a garrison out of sight was forgotten after a minute";
 
-  // An undefended outlying building is a target the wave can take.
   auto farm = make_enemy_building(95, 40.0F, 160.0F);
   farm.spawn_type = Game::Units::SpawnType::Home;
   snapshot.strategic_objectives.push_back(farm);
@@ -5108,7 +5104,6 @@ TEST_F(AISystemTest, AWaveThatMeetsMoreThanItCanBeatComesHomeWhole) {
   ASSERT_TRUE(context.wave.committed) << "nothing was known to defend the barracks";
   ASSERT_EQ(context.wave.members.size(), 4U);
 
-  // At the gate the wave finds a garrison twice its size.
   for (auto& unit : snapshot.friendly_units) {
     unit.pos_x = 105.0F;
     unit.pos_z = 75.0F;
@@ -5135,7 +5130,6 @@ TEST_F(AISystemTest, AWaveThatMeetsMoreThanItCanBeatComesHomeWhole) {
     EXPECT_LT(x, 60.0F) << "the withdrawal heads for home, not the enemy";
   }
 
-  // An even fight is not a reason to turn back.
   Game::Systems::AI::AIContext even = ready_wave_context(doctrine);
   for (auto& unit : snapshot.friendly_units) {
     unit.pos_x = 40.0F;

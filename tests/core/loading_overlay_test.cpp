@@ -95,8 +95,7 @@ TEST(LoadingOverlayTest, RepeatedUnreadyPollsDoNotPostponeTheDeadline) {
 
   overlay.begin();
   overlay.arm_after_load();
-  // A renderer that never reaches the load keeps reporting load 0 (the engine
-  // passes the armed load only once gameplay rendering runs).
+
   QTimer unready_polls;
   unready_polls.setInterval(5);
   QObject::connect(&unready_polls, &QTimer::timeout, &event_loop, [&]() {
@@ -123,7 +122,7 @@ TEST(LoadingOverlayTest, BlockedStartupComponentsStillTimeOutWithoutFrames) {
   overlay.begin();
   overlay.arm_after_load();
   const auto load = overlay.armed_load();
-  // Frames arrive but startup readiness never completes, then they stop.
+
   int frames = 0;
   QTimer frame_timer;
   frame_timer.setInterval(5);

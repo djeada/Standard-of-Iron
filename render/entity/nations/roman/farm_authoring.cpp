@@ -329,7 +329,7 @@ auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDe
                                  .seed = 353});
 
   {
-    // The hearth fire kept outside the granary, and a raven on its ridge.
+
     const Motif::Setter set(desc, state);
     Motif::add_roman_tripod_fire(desc, set.at(0.04F, 0.72F, 0.1F), 0.26F);
     Motif::add_roman_raven(desc, set.at(0.5F, 0.70F), 60.0F, 0.30F);

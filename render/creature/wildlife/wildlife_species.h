@@ -15,7 +15,6 @@ wolf_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
 
 namespace Render::Wildlife {
 
-// The sheep's and the wolf's contracts with the creature pipeline.
 [[nodiscard]] auto
 sheep_species_contract() noexcept -> const Render::Creature::Pipeline::SpeciesContract&;
 

@@ -24,10 +24,6 @@
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/tree_renderer.h"
 
-// Scatter generation reads the map through a ScatterWorld snapshot so it can
-// run on a worker while the simulation keeps writing the live services. These
-// tests pin that the snapshot changes nothing: same inputs, same bytes.
-
 namespace {
 
 using Game::Map::ScatterWorld;
@@ -126,7 +122,6 @@ TEST_F(ScatterWorldTest, ASnapshotDoesNotSeeLaterChangesToTheLiveMap) {
       Render::Ground::Scatter::generate_grass(frozen, 1.0F).instances;
   const std::size_t props_before = world->terrain().world_props().size();
 
-  // The simulation keeps going: a new building and a new prop on the live map.
   BuildingCollisionRegistry::instance().register_building(9002U, "home", 6.0F, 6.0F, 1);
   WorldProp boulder;
   boulder.type = WorldProp::Type::Boulder;
@@ -150,7 +145,6 @@ TEST_F(ScatterWorldTest, AWorkerRefreshAdoptsTheSameInstancesAsASynchronousOne) 
   configure(sync);
   configure(async);
 
-  // Harvest the pine and the boulder, as the simulation would.
   for (const auto& prop : std::vector<WorldProp>(terrain().world_props())) {
     if (prop.type == WorldProp::Type::PineTree ||
         prop.type == WorldProp::Type::Boulder) {
@@ -190,8 +184,6 @@ TEST_F(ScatterWorldTest, ALayerKeepsItsInstancesUntilTheRefreshIsAdopted) {
   scatter.schedule_runtime_world_props_refresh(terrain().world_props(),
                                                ScatterWorld::capture_live());
 
-  // Whether or not the worker has finished, nothing is swapped in before the
-  // render thread adopts it: the layers still draw what they had.
   EXPECT_TRUE(same_bytes(scatter.tree(pine)->instances(), trees_before));
   EXPECT_TRUE(same_bytes(scatter.boulder()->instances(), boulders_before));
 
@@ -206,11 +198,9 @@ TEST_F(ScatterWorldTest, ReconfiguringDropsARefreshStillInFlight) {
   const std::size_t boulders_before = scatter.boulder()->instances().size();
   ASSERT_GT(boulders_before, 0U);
 
-  // A refresh planned against the map as it is now...
   scatter.schedule_runtime_world_props_refresh(terrain().world_props(),
                                                ScatterWorld::capture_live());
-  // ...then the boulder is harvested and the layers are configured afresh
-  // before that refresh is adopted.
+
   for (const auto& prop : std::vector<WorldProp>(terrain().world_props())) {
     if (prop.type == WorldProp::Type::Boulder) {
       EXPECT_TRUE(terrain().harvest_world_prop(prop.id));

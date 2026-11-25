@@ -10,10 +10,6 @@
 
 namespace App::Bootstrap {
 
-// A default Windows launch runs the game as a child of a small supervisor.
-// The child reports how far startup got through a status file; the supervisor
-// decides from that (not from "a process with this name exists") whether the
-// launch worked, and gives a failed native attempt one fresh software attempt.
 inline constexpr char k_env_startup_attempt[] = "SOI_STARTUP_ATTEMPT";
 inline constexpr char k_env_startup_status_file[] = "SOI_STARTUP_STATUS_FILE";
 inline constexpr char k_env_startup_log_file[] = "SOI_STARTUP_LOG_FILE";
@@ -30,7 +26,7 @@ struct AttemptPlan {
   QString backend;
   std::vector<std::pair<QString, QString>> set_env;
   QStringList unset_env;
-  // The attempt cannot start without this file (the bundled Mesa runtime).
+
   QString required_file;
 };
 
@@ -68,12 +64,8 @@ struct AttemptReport {
 [[nodiscard]] auto failure_diagnostic(const std::vector<AttemptReport>& reports,
                                       const QString& log_path) -> QString;
 
-// Runs the attempts in order and returns the launch's exit code. A launch that
-// reported ready is never retried, whatever the child does afterwards. Needs a
-// QCoreApplication.
 [[nodiscard]] auto run_supervised_startup(const SupervisorConfig& config) -> int;
 
-// Child side. All of these are no-ops outside a supervised launch.
 [[nodiscard]] auto supervised_child() -> bool;
 [[nodiscard]] auto supervised_attempt_name() -> QString;
 void report_startup_stage(const QString& stage);

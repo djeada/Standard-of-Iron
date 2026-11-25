@@ -66,8 +66,6 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
   std::vector<Game::Systems::BuildingFootprint> obstacles;
   obstacles.reserve(map_def.structures.size() + map_def.spawns.size());
 
-  // A turned building reserves its turned ground: a gate at 90 degrees spans
-  // the wall it stands in, not the street through it.
   const auto add = [&obstacles](Game::Units::SpawnType type,
                                 float center_x,
                                 float center_z,

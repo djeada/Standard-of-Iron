@@ -14,10 +14,6 @@
 #include "render/creature/combat_visual_state.h"
 #include "render/creature/movement_state.h"
 
-// What a unit's simulation state asks of its animation, for any species: the
-// creature pipeline resolves it once per instance and each species poses from
-// it.
-
 namespace Render::GL {
 
 using AmbientIdleType = Animation::HumanoidAmbientIdle;

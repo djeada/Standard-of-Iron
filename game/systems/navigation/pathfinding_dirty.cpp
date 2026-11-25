@@ -262,8 +262,7 @@ auto Pathfinding::restore_checkpoint(const QJsonObject& state) -> bool {
       old_props.emplace(cell, static_cast<CellValue>(value));
     }
   }
-  // Rebuild the terrain indices against the newly loaded map, then restore
-  // the published grid and pending edits as they stood at the checkpoint.
+
   update_navigation_grid();
   const std::unique_lock grid_lock(m_navigation_mutex);
   const std::scoped_lock pending_lock(m_dirty_mutex, m_nav_change_mutex);

@@ -70,7 +70,7 @@ auto spotlight_map(const QString& mission_id,
   s.terrain_grid_extent = map.grid.width;
   s.arena_floor_half_extent = static_cast<float>(map.grid.width) * 0.5F;
   s.environment = map.environment;
-  // The map's own flocks and birds: sheep in the market pens and the fields.
+
   s.wildlife = map.wildlife;
   s.environment.start_time =
       std::clamp(map.environment.start_time, k_earliest_hour, k_latest_hour);
@@ -314,11 +314,6 @@ auto spotlight_battle(ArenaScenarioDefinition scenario,
   return scenario;
 }
 
-// A walled city filmed with its commander walking it: the map's own
-// structures and folk, the player's commander under RPG control, and a walk
-// along authored street waypoints. Each leg starts when the commander reaches
-// the waypoint before it, so the walk follows the street however fast he goes;
-// the view turns a few degrees at a time along a densely sampled route.
 struct CityFilm {
   const char* id;
   const char* title;
@@ -366,7 +361,7 @@ auto city_film(const CityFilm& film) -> std::optional<ArenaScenarioDefinition> {
           .arg(QString::fromLatin1(film.title), QString::fromLatin1(film.route_path));
   s.duration_seconds = k_city_film_seconds;
   s.gates_held_open = true;
-  // The whole city lives on camera, not only the ground round the origin.
+
   s.wildlife.near_simulation_radius =
       std::max(s.wildlife.near_simulation_radius, 450.0F);
   s.wildlife.far_simulation_radius = std::max(s.wildlife.far_simulation_radius, 600.0F);
@@ -454,7 +449,7 @@ auto build_spotlight_definitions() -> std::vector<ArenaScenarioDefinition> {
       result.push_back(std::move(*scenario));
     }
   }
-  // SOI_CITY_FILM_MAP=<map.json> films any map the same way (line-ups, test towns).
+
   if (const QByteArray custom = qgetenv("SOI_CITY_FILM_MAP"); !custom.isEmpty()) {
     const std::string path = custom.toStdString();
     const std::string route = qgetenv("SOI_CITY_FILM_ROUTE").toStdString();

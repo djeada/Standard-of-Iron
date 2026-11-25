@@ -1,9 +1,4 @@
-// How big can a human grow beside the computer? One seat is the Normal skirmish
-// AI; the other is a scripted "player proxy" that plays a plain opening through
-// the same commands the HUD sends, at most three orders every five seconds
-// (36 a minute). Both start from a skirmish barracks and the skirmish camp
-// (docs/design/PLAY_BIG_SOON.md), on the same team so the comparison is growth,
-// not who won a fight. SOI_PROXY_NARRATE=1 prints men in the field per minute.
+
 
 #include <QVector3D>
 
@@ -166,7 +161,6 @@ protected:
     return session;
   }
 
-  // A skirmish start: ore 25-45 m out, trees and stone around it.
   static void scatter_resources(Game::Map::MapDefinition& map, int grid_x) {
     const int grid_z = k_map_size / 2;
     const auto add = [&map](Game::Map::WorldProp::Type type, int x, int z) {
@@ -215,7 +209,6 @@ protected:
     }
   }
 
-  // The proxy's whole playbook. Each line is one order a player would click.
   static void proxy_thinks(SessionContext& session, float minute) {
     auto& world = session.world();
     auto& economy = session.economy();
@@ -385,7 +378,6 @@ TEST_F(PlayerProxyGrowthTest, APlainOpeningKeepsUpWithTheComputer) {
     }
   }
 
-  // 75%: observed 654 vs 832 (79%) once the levy and nation tuning landed.
   EXPECT_GE(proxy_at_7.men * 100, ai_at_7.men * 75)
       << "at seven minutes the proxy fields " << proxy_at_7.men << " men to the "
       << "computer's " << ai_at_7.men << "; a plain opening should keep within 75%";

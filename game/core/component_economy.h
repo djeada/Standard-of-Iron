@@ -41,14 +41,9 @@ public:
   float family_generation_interval{12.0F};
   int family_manpower_value{8};
 
-  // The home raises its civilians by itself while food allows, and they walk to a
-  // barracks with room on their own. The player can switch it off per home.
   bool reports_to_barracks{true};
 };
 
-// A squad hired for gold at a Mercenary Camp (NATION_ASYMMETRY.md 4.2). Its
-// upkeep is charged every minute; an unpaid band fights worse until the
-// treasury pays it again (decision 2: no desertion).
 class MercenaryContractComponent {
 public:
   MercenaryContractComponent() = default;

@@ -136,9 +136,6 @@ auto main(int argc, char* argv[]) -> int {
 
   App::Bootstrap::install_opengl_crash_handler();
 
-  // A default launch runs the game as a supervised child so a native OpenGL
-  // failure at any stage gets one fresh attempt with the bundled Mesa runtime.
-  // Explicit backend choices (QT_OPENGL, --force-software) skip the supervisor.
   if (const auto supervised_exit =
           App::Bootstrap::run_default_startup_supervisor(argc, argv);
       supervised_exit.has_value()) {
@@ -456,8 +453,7 @@ auto main(int argc, char* argv[]) -> int {
   if (supervised_attempt) {
     QTimer::singleShot(0, &app, [root_obj, game_engine_ptr = game_engine.get()] {
       App::Bootstrap::report_startup_stage(QStringLiteral("gameplay_renderer"));
-      // Readiness is the gameplay renderer's own first-frame milestone, so a
-      // native context that Qt accepts but the game cannot use never counts.
+
       QObject::connect(game_engine_ptr,
                        &GameEngine::renderer_failed,
                        game_engine_ptr,
@@ -545,9 +541,7 @@ auto main(int argc, char* argv[]) -> int {
             QCoreApplication::exit(10);
             return;
           }
-          // A direct launch can fail while resolving the mission as well as
-          // while loading its battlefield. Stop treating UI errors as launch
-          // failures when the first playable frames arrive.
+
           const auto startup_error =
               QObject::connect(game_engine_ptr,
                                &GameEngine::last_error_changed,

@@ -6,8 +6,6 @@
 
 #include "render/entity/building_archetype_desc.h"
 
-// The yard every nation's home is authored with, and the variant count the
-// home archetypes are baked for. Nothing here draws.
 namespace Render::GL {
 
 inline constexpr int k_home_visual_variant_count = 6;

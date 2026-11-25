@@ -24,7 +24,7 @@ using Opening = TenementOpening;
 using Side = TenementSide;
 
 constexpr float k_pi = 3.14159265F;
-// Deep enough that the shop reads as a room behind the counter, not a niche.
+
 constexpr float k_shop_depth = 0.76F;
 constexpr float k_parapet = 0.17F;
 
@@ -93,7 +93,7 @@ private:
         return {{-0.96F, 0.10F, p, p + 0.74F}, {0.50F, 0.90F, p, p + 0.80F}};
       }
     }
-    // The street sees little of a Punic house: small square lights set high.
+
     const float fy = floor_y(storey);
     const bool bay = storey == m_traits.balcony_storey;
     const float sill = fy + 0.30F;
@@ -237,7 +237,7 @@ private:
   accent(Side side, float x0, float x1, float y0, float y1, float proud, float depth) {
     const float outer = face(side) + (outward(side) * proud);
     const float inner = outer - (outward(side) * depth);
-    // Paint on plaster: mineral, whatever the pigment.
+
     BuildingPartMaterial const paint(m_desc, k_building_material_stone);
     slot_box(x0,
              x1,
@@ -276,7 +276,6 @@ private:
                     (salt % 2) == 0 ? k_leaf : k_leaf_light);
   }
 
-  // A painted frame round a small light, and a wooden lattice in it.
   void add_light(Side side, const Opening& opening, int salt) {
     if (!standing(opening)) {
       return;
@@ -355,7 +354,6 @@ private:
     }
   }
 
-  // The low painted band that runs along a Punic street front.
   void add_base_band(const std::vector<Opening>& openings) {
     BuildingPartLabel const label(m_desc, "base_band");
     std::vector<Opening> sorted = openings;
@@ -394,8 +392,7 @@ private:
                                      k_tenement_cloth_slot);
     }
     BuildingPartMaterial const timber(m_desc, k_building_material_wood);
-    // Carried on struts off the wall, over the heads of the street: a post
-    // on the pavement would stand where the lot has no footprint.
+
     for (const float x : {x0 + 0.04F, x1 - 0.04F}) {
       m_desc.add_cylinder(QVector3D(x, edge_y - 0.15F, wall_z),
                           QVector3D(x, edge_y, edge_z - 0.02F),
@@ -494,7 +491,7 @@ private:
              0.018F,
              0.09F,
              BuildingPalette::k_wood_dark);
-        // A plank counter on trestles, and the day's wares on it.
+
         box(shop.x0 + 0.04F,
             shop.x1 - 0.20F,
             p + 0.25F,
@@ -535,7 +532,7 @@ private:
                             weathered(BuildingPalette::k_brick, ware + 31, 0.12F));
       }
       if (intact()) {
-        // Dyed cloth hung out for sale.
+
         BuildingPartMaterial const cloth(m_desc, k_building_material_cloth);
         slot_box(shop.x1 - 0.17F,
                  shop.x1 - 0.03F,
@@ -551,7 +548,7 @@ private:
                shop.y1 - 0.02F,
                -0.036F,
                0.014F);
-        // Each variant hangs its awning at its own height and reach.
+
         constexpr std::array<float, k_tenement_variant_count> k_lift{
             0.0F, 0.09F, -0.015F, 0.13F, 0.04F, -0.01F, 0.11F, 0.06F};
         constexpr std::array<float, k_tenement_variant_count> k_reach{
@@ -578,7 +575,6 @@ private:
     }
   }
 
-  // A screened timber bay hung on the street wall: the women's window.
   void add_bay(int storey) {
     BuildingPartLabel const label(m_desc, "screened_bay");
     const float fy = floor_y(storey);
@@ -676,7 +672,7 @@ private:
     if (m_traits.ground != TenementGround::Passage) {
       add_light(Side::Rear, ground[1], 71);
     }
-    // The spout that carries the roof's rain to the court cistern.
+
     m_desc.add_cylinder(QVector3D(0.98F, m_top - 0.04F, k_rear + 0.02F),
                         QVector3D(0.98F, m_top - 0.07F, k_rear - 0.02F),
                         0.020F,
@@ -721,7 +717,7 @@ private:
     if (intact()) {
       run(k_half_width - 0.07F, k_half_width, k_rear + 0.07F, k_front - 0.07F);
     }
-    // A painted line under the parapet, and stepped merlons at the corners.
+
     accent(
         Side::Front, -k_half_width, right, m_top - 0.06F, m_top - 0.02F, 0.012F, 0.04F);
     for (const float x : {-k_half_width + 0.08F, 0.0F, k_half_width - 0.08F}) {
@@ -756,7 +752,7 @@ private:
                         BuildingPalette::k_brick);
 
     if (m_traits.roof == TenementRoof::Terrace) {
-      // The upper room and its shaded sitting place.
+
       const float room_top = deck + 0.50F;
       slot_box(-1.04F,
                -0.30F,
@@ -799,7 +795,7 @@ private:
                k_front - 0.12F,
                k_tenement_cloth_slot);
     } else {
-      // A cistern head, whitewashed, and the reed mats laid out to dry.
+
       m_desc.add_cylinder(QVector3D(-0.62F, deck, k_rear + 0.44F),
                           QVector3D(-0.62F, deck + 0.10F, k_rear + 0.44F),
                           0.22F,
@@ -840,9 +836,7 @@ auto tenement_vent(int variant) -> QVector3D {
 auto build_tenement_desc(BuildingState state, int variant) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc("carthage_tenement_variant_" + std::to_string(variant));
   PunicTenementBuilder(desc, state, variant).build();
-  // The dark course the whole street stands on: black basalt under the
-  // whitewash, knee-high and standing proud of the wall all round, with a
-  // dressed lip, so the white house sits on the street rather than on air.
+
   {
     BuildingPartMaterial const stone(desc, k_building_material_stone);
     const float foot = TenementLot::k_pavement_top;
@@ -875,8 +869,7 @@ auto build_tenement_desc(BuildingState state, int variant) -> BuildingArchetypeD
           Motif::Carthage::k_basalt);
     }
   }
-  // Horns on the corners of the roof and cedar beam ends under the parapet:
-  // from above, a Punic street is a line of them.
+
   const Motif::Setter set(desc, state);
   for (const float side : {-1.0F, 1.0F}) {
     for (const float z : {TenementLot::k_front - 0.11F, TenementLot::k_rear + 0.11F}) {

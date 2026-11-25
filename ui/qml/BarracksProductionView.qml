@@ -34,8 +34,6 @@ Item {
             var entry = root.panel.recruit_unit_cards[i];
             if (entry.carthage_only === true && root.prod.nation_id !== "carthage")
                 continue;
-            // A nation's roster decides what its barracks offers: Rome has no
-            // horse archers, Carthage hires its horse and elephants elsewhere.
             var info = root.panel.get_unit_production_info(entry.unit_type, root.prod.nation_id);
             if (info && (info.recruitable === false || (info.recruited_at && info.recruited_at !== "barracks")))
                 continue;

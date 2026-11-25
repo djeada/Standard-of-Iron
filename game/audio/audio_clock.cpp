@@ -7,8 +7,7 @@ namespace Game::Audio::Clock {
 namespace {
 
 std::atomic<bool> g_rendered{false};
-// Rendered time is kept as steady-clock ticks so it can start where the wall clock
-// stood when rendering began and stay comparable with any time point taken before.
+
 std::atomic<std::int64_t> g_rendered_ticks{0};
 
 } // namespace

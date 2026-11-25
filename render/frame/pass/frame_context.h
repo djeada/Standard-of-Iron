@@ -24,11 +24,8 @@ class Texture;
 
 namespace Render::Pass {
 
-// Resources one pass produces during the frame and a later pass reads. They
-// live here, not on the pass that wrote them.
 struct SurfaceResources {
-  // The terrain's ground-cover mask, written when the terrain surface draws and
-  // read by the grass pass that follows it.
+
   struct GroundCover {
     Render::GL::Texture* texture{nullptr};
     QVector2D uv_scale{0.0F, 0.0F};
@@ -37,9 +34,6 @@ struct SurfaceResources {
   GroundCover ground_cover;
 };
 
-// Everything one frame is drawn from. The scene fills the scene half when it
-// walks the world; the backend fills the view half before it executes the draw
-// queue. Passes and pipelines read it instead of reaching into each other.
 struct FrameContext {
   Render::GL::Renderer* renderer{nullptr};
   Engine::Core::World* world{nullptr};

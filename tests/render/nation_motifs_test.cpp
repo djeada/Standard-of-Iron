@@ -30,14 +30,14 @@ TEST(NationMotifSurface, FindsTheTopOfWhateverStandsUnderAPoint) {
   BuildingArchetypeDesc desc("surface_probe");
   desc.add_box(QVector3D(0.0F, 0.1F, 0.0F), QVector3D(1.0F, 0.1F, 1.0F), {});
   desc.add_box(QVector3D(0.5F, 0.6F, 0.0F), QVector3D(0.2F, 0.4F, 0.2F), {});
-  // A roof slab pitched 30 degrees about x, its middle at y = 2.
+
   desc.add_rotated_box(QVector3D(0.0F, 2.0F, 0.0F),
                        QVector3D(1.0F, 0.02F, 0.5F),
                        QVector3D(30.0F, 0.0F, 0.0F),
                        {});
   desc.add_cylinder(
       QVector3D(-0.6F, 0.2F, -0.6F), QVector3D(-0.6F, 0.9F, -0.6F), 0.1F, {});
-  // Only there once the building is damaged.
+
   desc.add_box(QVector3D(0.0F, 3.0F, 0.0F),
                QVector3D(0.3F, 0.3F, 0.3F),
                {},
@@ -46,10 +46,10 @@ TEST(NationMotifSurface, FindsTheTopOfWhateverStandsUnderAPoint) {
   EXPECT_FLOAT_EQ(Motif::surface_top(desc, -0.9F, 0.9F), 0.2F) << "the slab";
   EXPECT_FLOAT_EQ(Motif::surface_top(desc, 5.0F, 5.0F), 0.0F) << "nothing: the ground";
   EXPECT_FLOAT_EQ(Motif::surface_top(desc, -0.6F, -0.6F, 1.5F), 0.9F) << "the post";
-  // The roof is over everything; under a ceiling the query sees what it covers.
+
   EXPECT_GT(Motif::surface_top(desc, 0.5F, 0.0F), 1.9F);
   EXPECT_FLOAT_EQ(Motif::surface_top(desc, 0.5F, 0.0F, 1.5F), 1.0F) << "the pier";
-  // A pitched slab is higher on one side of its middle than the other.
+
   const float high = Motif::surface_top(desc, 0.0F, 0.3F);
   const float low = Motif::surface_top(desc, 0.0F, -0.3F);
   EXPECT_NEAR(std::abs(high - low), 2.0F * 0.3F * std::tan(30.0F * 0.0174533F), 0.01F);
@@ -93,7 +93,6 @@ TEST(NationMotifs, EveryNationKeepsItsOwnFireAtItsOwnBuildings) {
       EXPECT_EQ(building.ghost ? orange : ghost, 0)
           << building.name << " burns the other nation's fire";
 
-      // A fire is put out when the building falls.
       const BuildingArchetypeDesc ruin = entry.build(BuildingState::Destroyed);
       for (const auto& part : ruin.parts()) {
         if (part.name.starts_with(Motif::k_fire_label)) {

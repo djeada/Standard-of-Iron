@@ -11,7 +11,6 @@
 
 namespace Render::Creature {
 
-// Per-entity animation memory of a humanoid, kept between frames.
 struct HumanoidAnimationStateComponent {
   float idle_duration{0.0F};
   float last_sample_time{0.0F};

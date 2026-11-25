@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the mounted_pose_controller*.cpp translation units; not a public header.
-
 #include <QString>
 #include <QVector3D>
 

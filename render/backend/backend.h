@@ -384,11 +384,10 @@ private:
 
   std::array<float, 4> m_clear_color{0.055F, 0.065F, 0.05F, 1.0F};
   RenderContext m_context;
-  // Pointers into m_context and the pipelines, refreshed every frame.
+
   DrawResources m_draw_resources;
   void refresh_draw_resources();
-  // The resources stage: uploads every instance block and texture image the
-  // queue names before any pass draws, so pipelines only look them up.
+
   void sync_frame_resources(const DrawQueue& queue);
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;

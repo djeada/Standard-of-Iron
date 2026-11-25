@@ -37,8 +37,6 @@ struct Harness {
   QString launches;
   QString pids;
 
-  // `native` and `mesa` are shell fragments; they see $SOI_STARTUP_STATUS_FILE
-  // exactly as the real child does.
   Harness(const QString& native,
           const QString& mesa,
           const QString& mesa_required_file = QString()) {

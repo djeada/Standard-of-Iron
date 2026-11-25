@@ -13,14 +13,8 @@ class World;
 
 namespace Game::Systems {
 
-// Every figure is counted in soldiers (the men of a squad), never in squads or
-// entities, so a log line, the battle report and the spectator board can only
-// ever disagree if the tallies themselves do. Tallies stop moving for an owner
-// once the match has ended for them: the collapse that follows a defeat
-// disbands the rest of the army, and that is not part of the battle.
 struct PlayerStats {
 
-  // Soldiers a barracks trained: no builder crews, civilians or squad splits.
   int troops_recruited = 0;
 
   int enemies_killed = 0;

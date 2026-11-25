@@ -39,7 +39,6 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  // The backend's GPU copies of skinned meshes and palette atlases.
   void set_gpu_tables(GL::RiggedMeshGpuTable* meshes,
                       GL::InstanceBufferTable* blocks) noexcept {
     m_meshes = meshes;

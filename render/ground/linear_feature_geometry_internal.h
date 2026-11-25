@@ -1,8 +1,5 @@
 #pragma once
 
-// Internal to the linear feature geometry: the height sampling and blending
-// helpers that the ribbon, bridge and riverbank builders share.
-
 #include <QVector3D>
 
 #include <algorithm>

@@ -149,8 +149,6 @@ public:
     return m_camera_rig.trace();
   }
 
-  // The game command system owns the runtime for a match. Unbound preview
-  // worlds use the same runtime with a directly supplied input frame.
   void bind_runtime(std::shared_ptr<Game::Commander::CommanderRuntime> runtime);
   void publish_runtime_tick(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,

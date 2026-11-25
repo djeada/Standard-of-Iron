@@ -18,8 +18,6 @@
 #include "render/geom/primitives.h"
 #include "render/math/math_utils.h"
 
-// The palms or firs dressed around the Carthaginian barracks, picked by the
-// map climate.
 namespace Render::GL::Carthage {
 
 using namespace barracks_detail;

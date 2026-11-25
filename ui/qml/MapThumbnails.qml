@@ -6,14 +6,10 @@ Item {
     property var previewSource: (typeof game !== "undefined" && game.setup) ? game.setup : null
     property var previewStore: (typeof map_preview_provider !== "undefined") ? map_preview_provider : null
     property var cache: ({})
-    // Bumped every time a thumbnail finishes, so rows that asked for one earlier
-    // re-evaluate their source.
+
     property int revision: 0
     property var queue: []
 
-    // Drawing a battlefield is slow on big maps and runs on the GUI thread, so a
-    // row never draws its own: it asks, shows its placeholder, and the queue
-    // fills thumbnails in one at a time between frames.
     function source_for(authored, map_path) {
         if (authored && authored !== "")
             return authored;

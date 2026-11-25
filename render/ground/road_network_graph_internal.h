@@ -1,9 +1,5 @@
 #pragma once
 
-// Internal to road_network_geometry.cpp: the road graph stage. Segments become
-// a graph (nodes merged on a grid, crossings split, junctions classified) and
-// the graph becomes chains of edges the surface builder walks.
-
 #include <QVector2D>
 #include <QVector3D>
 

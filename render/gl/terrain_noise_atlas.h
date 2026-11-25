@@ -29,8 +29,6 @@ public:
 
   void bake_microdetail(bool low_detail);
 
-  // Returns true once the attempt is settled (baked, or failed for good) and
-  // false when it could not run at all (no context, empty terrain).
   [[nodiscard]] auto bake_atlas(const AtlasBakeParams& params) -> bool;
 
   [[nodiscard]] auto microdetail_texture() const noexcept -> unsigned int {

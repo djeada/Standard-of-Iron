@@ -12,11 +12,6 @@ namespace Render::GL {
 class ResourceManager;
 class ShaderCache;
 
-// The GPU state one backend owns: shared textures and meshes, compiled
-// shaders, and its copies of every Mesh, InstanceBlock and TextureImage it has
-// drawn. It is created on the
-// backend's context and destroyed with the backend, so two backends in one
-// process never share GL objects and nothing outlives the context that made it.
 class RenderContext {
 public:
   RenderContext();
@@ -27,8 +22,6 @@ public:
   RenderContext(RenderContext&&) = delete;
   auto operator=(RenderContext&&) -> RenderContext& = delete;
 
-  // Creates the resources and loads the default shaders. Needs a current
-  // context. False if the resources could not be created.
   auto initialize() -> bool;
 
   [[nodiscard]] auto resources() const noexcept -> ResourceManager* {
@@ -47,9 +40,6 @@ public:
   }
 
 private:
-  // Destroyed bottom-up: textures, instance buffers and uploaded meshes, then
-  // shaders,
-  // then shared resources.
   std::unique_ptr<ResourceManager> m_resources;
   std::unique_ptr<ShaderCache> m_shaders;
   MeshGpuTable m_meshes;

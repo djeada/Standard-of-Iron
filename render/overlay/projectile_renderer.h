@@ -22,7 +22,6 @@ struct SpentProjectile;
 
 namespace Render::GL {
 
-// The arrow, stone and sphere meshes projectiles draw, for prewarming.
 void for_each_projectile_mesh(const MeshVisitor& visit);
 
 enum class ProjectileRelation : std::uint8_t {

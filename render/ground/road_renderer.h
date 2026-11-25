@@ -25,7 +25,6 @@ public:
 
   void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  // Every mesh this renderer draws, for prewarming a backend's MeshGpuTable.
   void for_each_mesh(const MeshVisitor& visit) const;
 
   [[nodiscard]] auto surface_count() const -> std::size_t { return m_surfaces.size(); }

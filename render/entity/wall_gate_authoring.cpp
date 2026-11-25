@@ -283,9 +283,6 @@ void add_piers(BuildingArchetypeDesc& desc,
   }
 }
 
-// The gate of a stone curtain: a tower either side of the passage, and the
-// wall carried over it on an arch. The palette's "wood" tones are the wall's
-// stone here, as they are for every solid-masonry wall.
 void add_stone_gatehouse(BuildingArchetypeDesc& desc,
                          const WallPalette& palette,
                          const WallGeometry& geometry) {
@@ -314,7 +311,7 @@ void add_stone_gatehouse(BuildingArchetypeDesc& desc,
                  QVector3D(k_half_x + 0.06F, 0.035F, half_z + 0.06F),
                  palette.wood_light,
                  k_mask_intact);
-    // Merlons round the tower head: the corners and the middle of each face.
+
     for (int mx = -1; mx <= 1; ++mx) {
       for (int mz = -1; mz <= 1; ++mz) {
         if (mx == 0 && mz == 0) {
@@ -330,7 +327,7 @@ void add_stone_gatehouse(BuildingArchetypeDesc& desc,
                      falls ? BuildingStateMask::Normal : k_mask_intact);
       }
     }
-    // Loops that look down the road, front and back.
+
     for (const float face : {-1.0F, 1.0F}) {
       for (const float y : {wall_top * 0.52F, wall_top + 0.60F}) {
         desc.add_box(QVector3D(cx, y, face * (half_z + 0.004F)),
@@ -339,7 +336,7 @@ void add_stone_gatehouse(BuildingArchetypeDesc& desc,
                      k_mask_intact);
       }
     }
-    // What is left standing once it has been thrown down.
+
     desc.add_box(QVector3D(cx, 0.45F, 0.0F),
                  QVector3D(k_half_x * 0.92F,
                            0.45F + (0.35F * decay_hash(static_cast<int>(side) + 9)),
@@ -348,8 +345,6 @@ void add_stone_gatehouse(BuildingArchetypeDesc& desc,
                  BuildingStateMask::Destroyed);
   }
 
-  // The curtain over the passage, its ends let into the towers, and the
-  // stepped haunches it springs from.
   const float crown = leaf_height(geometry) + 0.10F;
   const float spring = crown - 0.50F;
   const float curtain_top = wall_top + 0.45F;
@@ -384,7 +379,7 @@ void add_stone_gatehouse(BuildingArchetypeDesc& desc,
                  palette.masonry_accent,
                  k_mask_intact);
   }
-  // The walk across, behind its own battlements.
+
   for (int merlon = -3; merlon <= 3; ++merlon) {
     for (const float face : {-1.0F, 1.0F}) {
       desc.add_box(QVector3D(static_cast<float>(merlon) * 0.78F,
@@ -404,8 +399,7 @@ auto build_wall_gate_desc(std::string_view name_prefix,
                           const WallGeometry& geometry) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc(std::string(name_prefix) + "_gate");
   desc.set_material(k_building_material_wood);
-  // Each nation hangs its own mark over a gate: Rome an ox skull and garland,
-  // Carthage ivory. The family is named for the nation it belongs to.
+
   const bool roman = name_prefix.starts_with("roman");
   const bool punic = name_prefix.starts_with("carthage");
   if (geometry.stone_gatehouse) {

@@ -73,8 +73,7 @@ auto forest_canopy_species(const TerrainScatterRules& rules,
   auto const scale = [&](TreeSpecies species) {
     return biome_settings.tree_density_scale[static_cast<std::size_t>(species)];
   };
-  // Pine woods belong where pines grow. On meadow and steppe ground the
-  // rules forbid them, and a forest drawn there is the biome's broadleaf.
+
   if (rules.tree(TreeSpecies::Pine).allowed && scale(TreeSpecies::Pine) > 0.0F) {
     return TreeSpecies::Pine;
   }

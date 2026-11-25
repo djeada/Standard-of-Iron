@@ -76,7 +76,6 @@ private:
   std::unique_ptr<InstanceBlock> m_instance_block;
   bool m_instances_dirty = false;
 
-  // The fog mask texels; backends upload the changed region.
   std::unique_ptr<TextureImage> m_mask_texture;
   std::vector<unsigned char> m_mask_texels;
   std::vector<float> m_mask_filter_rows;

@@ -5,8 +5,6 @@
 #include "game/core/component_economy.h"
 #include "render/entity/building_archetype_desc.h"
 
-// The crop field and scarecrow every nation's farm is authored from, one
-// archetype per growth stage. Nothing here draws.
 namespace Render::GL {
 
 inline constexpr int k_farm_render_stage_count = 5;

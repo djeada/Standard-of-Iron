@@ -10,7 +10,7 @@ in vec3 world_pos;
 uniform float time;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
-// 1 in a sheltered harbour, canal or pool: the water barely stirs.
+
 uniform float u_water_calm;
 uniform vec3 u_camera_pos;
 uniform vec3 u_soil_color;

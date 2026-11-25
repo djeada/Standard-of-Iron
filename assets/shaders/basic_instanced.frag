@@ -23,11 +23,10 @@ const float k_plinth_strength = 0.65;
 const vec3 k_plinth_tint = vec3(0.66, 0.60, 0.52);
 const vec3 k_lamplight_spill = vec3(0.30, 0.17, 0.07);
 const float k_street_bounce_gain = 2.4;
-// The darkest roof tone soi_building_instance_tint() hands out, and the hue an
-// old roof drifts to.
+
 const float k_roof_tone_low = 0.74;
 const vec3 k_roof_tone_old = vec3(0.97, 0.90, 0.86);
-// How much of its orange the most faded roof keeps, and what it fades to.
+
 const float k_roof_colour_low = 0.45;
 const vec3 k_roof_faded = vec3(1.10, 1.00, 0.88);
 
@@ -82,14 +81,10 @@ void main() {
                      (1.0 - smoothstep(0.62, 0.80, tint_luma));
   if (soi_material == k_material_mineral || soi_material == k_material_ceramic) {
     color *= mix(vec3(1.0), v_instance_tint.rgb, plaster);
-    // Every roof has weathered to its own tone, from sun-bleached to mossy
-    // brown, so a town seen from above is not one sheet of orange.
-    // A tint of exactly one (anything that is not a placed building) is left
-    // untouched.
+
     float roof_fresh = smoothstep(k_roof_tone_low, 1.0, v_instance_tint.a);
     vec3 roof_tone = mix(k_roof_tone_old, vec3(1.0), roof_fresh) * v_instance_tint.a;
-    // And its own depth of colour: new tile is orange, old tile has gone to
-    // buff and brown. Drawn from the same tone, so no two roofs agree on both.
+
     float roof_age =
         abs(v_instance_tint.a - 1.0) > 1e-4 ? fract(v_instance_tint.a * 53.7) : 1.0;
     float roof_luma = dot(color, vec3(0.299, 0.587, 0.114));
@@ -121,9 +116,7 @@ void main() {
   color += soi_material_response(albedo, normal, v_world_pos, soi_material);
   float shadow_amount = directional_shadow_amount(v_world_pos, surface_normal);
   color = mix(color, color * environment_shadow_tint(), shadow_amount);
-  // A wall the sun does not reach is still lit by the sunlit street and the
-  // houses across it. Without that fill, shaded plaster takes only the sky and
-  // the cool shadow tint and turns slate blue.
+
   float unlit = max(shadow_amount, 1.0 - soi_wrapped_diffuse(normal));
   color += albedo * environment_sun_bounce() *
            (unlit * wall_face * k_street_bounce_gain * environment_exposure());

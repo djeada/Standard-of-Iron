@@ -163,7 +163,7 @@ auto MarketplaceSystem::sell_resource(const Engine::Core::World& world,
   default:
     return false;
   }
-  // Carthage's Emporion sells dearer (NATION_ASYMMETRY.md 4.1).
+
   sell_price = sell_price_with_nation(world, owner_id, sell_price);
   trade_resources(owner_id,
                   find_marketplace(world, owner_id),

@@ -30,8 +30,6 @@ public:
 
   [[nodiscard]] static auto base_markers(const QString& map_path) -> QVariantList;
 
-  // Previews keep each map's parsed definition and painted terrain until the
-  // file changes on disk; tests that rewrite a map in place can drop them.
   static void clear_cache();
 
 private:

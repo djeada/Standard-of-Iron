@@ -26,7 +26,7 @@ struct SpatialChunk {
   std::size_t first = 0;
   std::size_t count = 0;
   std::vector<std::uint8_t> accepted;
-  // The chunk's visible instances, packed; backends upload it.
+
   std::unique_ptr<Render::GL::InstanceBlock> block;
   std::size_t visible_count = 0;
   bool all_accepted = false;
@@ -221,9 +221,6 @@ auto refresh_chunk_acceptance(const std::vector<Instance>& instances,
   return true;
 }
 
-// Partitions the instances into chunks and gives each chunk an instance block
-// with its full size reserved, so backends can size their buffers before the
-// first frame draws them.
 template <typename Instance, typename Params, typename PositionAccessor>
 void prepare_filtered_blocks(FilteredRendererState<Instance, Params>& state,
                              PositionAccessor position_accessor) {

@@ -87,9 +87,7 @@ void TerrainRenderer::stamp_building_ground() {
   constexpr float k_path_value = 1.25F;
   constexpr float k_yard_encoding = 2.0F;
   constexpr float k_deg_to_rad = 0.017453292F;
-  // Where buildings crowd together the ground between them is a town's beaten
-  // earth, not a row of separate yards with lawn left over in the middle. Each
-  // building spreads its weight out to k_town_reach; the sum is the density.
+
   constexpr float k_town_reach = 22.0F;
   constexpr float k_town_full_lot = 16.0F;
   constexpr float k_town_floor = 4.0F;
@@ -140,8 +138,7 @@ void TerrainRenderer::stamp_building_ground() {
     float const radius = std::sqrt(footprint.half_width * footprint.half_width +
                                    footprint.half_depth * footprint.half_depth) +
                          outer;
-    // A wall segment or a statue plinth is not a household: weigh a building
-    // by the ground it covers.
+
     float const lot_weight = std::clamp(
         (4.0F * footprint.half_width * footprint.half_depth) / k_town_full_lot,
         0.08F,
@@ -227,9 +224,6 @@ void TerrainRenderer::stamp_building_ground() {
               });
   }
 
-  // A garden in a court: the trees and plants a map sets among the houses keep
-  // their ground green, so a planted court reads as a garden and not as more
-  // beaten earth. Each one claims a patch round itself; patches run together.
   std::vector<float> garden(town_density.size(), 0.0F);
   bool any_garden = false;
   if (const auto* terrain = world().terrain(); terrain != nullptr) {
@@ -261,8 +255,6 @@ void TerrainRenderer::stamp_building_ground() {
     }
   }
 
-  // Town ground is encoded above the yard range: 2 is a full yard, 3 a fully
-  // built-up street or court.
   for (int z = 0; z < m_height; ++z) {
     for (int x = 0; x < m_width; ++x) {
       std::size_t const cell =
@@ -275,7 +267,7 @@ void TerrainRenderer::stamp_building_ground() {
           (1.0F - planted);
       float& verge = texel(x, z, 1U);
       if (planted > 0.0F) {
-        // The garden also wins back the yard a house would have trodden bare.
+
         verge *= 1.0F - (0.85F * planted);
       }
       if (town > 0.0F) {

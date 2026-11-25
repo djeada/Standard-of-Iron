@@ -105,8 +105,7 @@ auto generate_trees(const ScatterRequest& request,
         continue;
       }
       const QVector3D surface = terrain_service.world_prop_world_position(prop);
-      // A pine wood grades down to saplings at its edge. A broadleaf at a
-      // third of its size is a bush, so those keep most of their stature.
+
       const float stand =
           canopy_height_factor(request.ecology, surface.x(), surface.z());
       const float stature =

@@ -33,8 +33,7 @@ public:
       , m_biome_settings(biome_settings)
       , m_climate_profile(Game::Map::make_climate_profile(biome_settings)) {
     build_point_anchors(world_props);
-    // Roads, rivers and bridges come from `terrain` (a scatter snapshot's copy)
-    // or, when null, the live service.
+
     build_linear_anchors(terrain != nullptr ? *terrain
                                             : Game::Map::TerrainService::instance());
   }

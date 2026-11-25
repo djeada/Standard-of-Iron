@@ -315,7 +315,7 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
 
   const float water_render_margin = std::max(tile_size * 0.70F, 0.10F);
   const float joined_water_inset = tile_size * 0.75F;
-  // A basin's corners turn inside a few degrees: give them the vertices.
+
   const int angular_segments =
       std::clamp(static_cast<int>(std::ceil(two_pi * std::max(half_width, half_depth) /
                                             std::max(tile_size * 0.65F, 0.25F))),
@@ -345,7 +345,6 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
                        lake.center.z() + rotated_z};
     vertex.normal = {0.0F, 1.0F, 0.0F};
 
-    // Well inside another lake this one has no shore to show.
     if (shore_distance < 0.5F) {
       for (const Game::Map::Lake& other : waters) {
         if (&other != &lake &&
@@ -357,15 +356,11 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
       }
     }
 
-    // v is the distance to the shore the water shader works from: 0 at the
-    // water's edge, 0.5 where the lake is as deep as it gets.
     vertex.tex_coord = {0.5F + local_x / (half_width * 2.2F),
                         std::clamp(shore_distance, 0.0F, 0.5F)};
     vertices.push_back(vertex);
   };
 
-  // A lake with a set reach keeps its shallows that many world units wide all
-  // the way round, in the outer rings; the rest of the surface is deep water.
   const float reach = Game::Map::lake_shallows_reach(lake);
   const int shallow_rings =
       reach > 0.0F ? std::min(k_shallow_rings, radial_rings - 1) : 0;

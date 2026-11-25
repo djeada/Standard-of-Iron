@@ -94,7 +94,7 @@ void main() {
   v_normal = soi_transform_normal(mat3(model), a_normal);
   v_tex_coord = a_tex_coord;
   v_ground_height = a_instance_model_col1.w;
-  // A run of buildings that share a tone seed weathers as one.
+
   v_instance_tint = soi_building_instance_tint(
       a_instance_state.w > 0.5
           ? vec2(a_instance_state.w * 0.731, a_instance_state.w * 1.917)

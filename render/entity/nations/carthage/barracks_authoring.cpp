@@ -915,8 +915,7 @@ auto build_barracks_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .seed = 487});
 
   {
-    // Ivory crossed over the gate, stelae for the men who did not come back,
-    // and the stands that burn for them.
+
     const Motif::Setter set(desc, state);
     Motif::add_punic_tusks(
         desc, QVector3D(0.0F, set.at(0.0F, 1.46F).y(), 1.50F), 1.10F, 1.7F);

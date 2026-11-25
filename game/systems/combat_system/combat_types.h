@@ -21,10 +21,9 @@ inline constexpr float k_spearman_vs_cavalry_multiplier = 2.5F;
 inline constexpr float k_infantry_melee_vs_siege_multiplier = 3.0F;
 
 inline constexpr float k_archer_vs_elephant_multiplier = 1.68F;
-// An unpaid mercenary band (NATION_ASYMMETRY.md 4.2, decision 2) strikes this
-// much of its usual blow until the treasury pays it.
+
 inline constexpr float k_unpaid_mercenary_damage_multiplier = 0.8F;
-// A promoted squad's extra blow per rank (Roman principes +10%, veterans +20%).
+
 inline constexpr float k_rank_damage_bonus = 0.10F;
 inline constexpr float k_archer_high_ground_multiplier = 1.8F;
 inline constexpr float k_spearman_high_ground_multiplier = 1.8F;

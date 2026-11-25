@@ -32,8 +32,7 @@ struct PendingDelete {
 struct DeferredDeletes {
   std::mutex mutex;
   std::vector<PendingDelete> pending;
-  // Groups whose context is gone: their names died with it, so a name released
-  // into one later is counted as deleted rather than queued for ever.
+
   std::unordered_set<GlShareGroup> dead_groups;
 };
 

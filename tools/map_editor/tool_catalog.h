@@ -48,8 +48,7 @@ struct ToolSpec {
   const char* element_type;
   const char* description;
   const char* usage_hint;
-  // The presentation style a structure tool places (see
-  // Game::Visuals::k_building_visual_styles), or null for the plain building.
+
   const char* style = nullptr;
 };
 

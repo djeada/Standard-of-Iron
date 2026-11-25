@@ -10,7 +10,6 @@
 
 namespace Render::Creature {
 
-// Per-entity horse state: gait memory and the baked anatomy.
 struct HorseAnimationStateComponent {
   Render::GL::GaitType current_gait{Render::GL::GaitType::IDLE};
   Render::GL::GaitType target_gait{Render::GL::GaitType::IDLE};

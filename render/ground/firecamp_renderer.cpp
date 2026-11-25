@@ -293,7 +293,6 @@ auto FireCampRenderer::plan_world_props_refresh(
           biome = m_biome_settings,
           world_props = std::move(world_props),
           world = std::move(world)]() mutable -> Ground::Scatter::ScatterAdoption {
-    // configure() copied the live height map; the snapshot holds the same map.
     const auto* height_map = world->terrain().get_height_map();
     auto grid = height_map != nullptr
                     ? Ground::Scatter::ScatterGridData::copy_of(*height_map)

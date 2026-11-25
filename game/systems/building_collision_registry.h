@@ -101,9 +101,6 @@ struct NavigationPassage {
   Engine::Core::EntityID source_entity_id{0};
 };
 
-// The building and authored-obstacle footprints at one moment, for a reader on
-// another thread (scatter generation runs on a worker). It answers the same two
-// questions as the registry, with the same code.
 struct BuildingFootprintSnapshot {
   std::vector<BuildingFootprint> buildings;
   std::vector<BuildingFootprint> obstacles;
@@ -329,7 +326,6 @@ public:
       float radius,
       Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
 
-  // A copy of every footprint, taken where the simulation is not writing them.
   [[nodiscard]] auto footprint_snapshot() const -> BuildingFootprintSnapshot;
   [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
   [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;

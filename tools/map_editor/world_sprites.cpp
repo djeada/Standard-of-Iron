@@ -238,8 +238,6 @@ void paint_home(const Local& local, const QColor& owner, unsigned seed) {
                                  : QRectF(-0.95, 1.0, 0.42, 0.42));
 }
 
-// A town house fills its lot and turns its ridge along the street, so a
-// terrace reads as one long roof with the party walls ruled across it.
 void paint_tenement(const Local& local, const QColor& owner, unsigned seed) {
   const QRectF lot(-2.15, -2.2, 4.3, 4.4);
   owner_plate(local.painter, lot, owner);
@@ -248,7 +246,7 @@ void paint_tenement(const Local& local, const QColor& owner, unsigned seed) {
   painter.setPen(hairline(k_roof_ridge, 0.07F));
   painter.drawLine(QLineF(lot.left(), lot.top(), lot.left(), lot.bottom()));
   painter.drawLine(QLineF(lot.right(), lot.top(), lot.right(), lot.bottom()));
-  // The street front: a strip of pavement and an awning.
+
   painter.setPen(Qt::NoPen);
   painter.setBrush(QColor(196, 188, 170));
   painter.drawRect(QRectF(lot.left(), lot.bottom(), lot.width(), 0.5));
@@ -259,8 +257,6 @@ void paint_tenement(const Local& local, const QColor& owner, unsigned seed) {
   }
 }
 
-// A portico: the tiled range at the back, the open walk and its columns in
-// front.
 void paint_portico(const Local& local, const QColor& owner) {
   const QRectF lot(-2.75, -2.75, 5.5, 5.5);
   owner_plate(local.painter, lot, owner);
@@ -275,7 +271,6 @@ void paint_portico(const Local& local, const QColor& owner) {
   }
 }
 
-// A dock: warehouse, quay, and a hull lying off its front.
 void paint_dock(const Local& local, const QColor& owner, unsigned seed) {
   const QRectF lot(-2.75, -2.75, 5.5, 5.5);
   owner_plate(local.painter, lot, owner);

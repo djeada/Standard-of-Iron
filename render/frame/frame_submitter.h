@@ -28,13 +28,8 @@ class Shader;
 class Texture;
 struct RainBatchParams;
 
-// The frame a domain renderer draws into. Ground, entity and geometry
-// renderers take this rather than the scene renderer, so the domain layers
-// depend on what a frame offers and not on how the scene builds one. The scene
-// renderer is the implementation.
 class FrameSubmitter : public ISubmitter {
 public:
-  // What is being drawn and from where.
   [[nodiscard]] virtual auto get_animation_time() const -> float = 0;
   [[nodiscard]] virtual auto camera() const -> Camera* = 0;
   [[nodiscard]] virtual auto
@@ -51,7 +46,6 @@ public:
   [[nodiscard]] virtual auto
   building_ground() const noexcept -> const Render::Ground::BuildingGroundSet& = 0;
 
-  // Shared GPU resources.
   [[nodiscard]] virtual auto resources() const -> const DrawResources* = 0;
   [[nodiscard]] virtual auto get_mesh_cube() const -> Mesh* = 0;
   [[nodiscard]] virtual auto get_white_texture() const -> Texture* = 0;
@@ -62,7 +56,6 @@ public:
   virtual void set_current_shader(Shader* shader) = 0;
   [[nodiscard]] virtual auto get_current_shader() const -> Shader* = 0;
 
-  // World surfaces and effects beyond the per-entity commands of ISubmitter.
   virtual void terrain_surface(const TerrainSurfaceCmd& cmd) = 0;
   virtual void terrain_feature(const TerrainFeatureCmd& cmd) = 0;
   virtual void terrain_scatter(const TerrainScatterCmd& cmd) = 0;

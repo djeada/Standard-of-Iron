@@ -28,12 +28,8 @@ struct GameplayConfig {
   float formation_spacing_default = 1.0F;
   int max_troops_per_player = 560;
 
-  // The skirmish treasury the setup screen shows before the player picks one.
-  // Every shipped skirmish map authors this much gold in starting_resources.
   static constexpr int k_default_skirmish_treasury = 500;
 
-  // Gold the player picked on the setup screen's Treasury chip. Unset, a match
-  // starts with the gold its map authors.
   int starting_gold = k_default_skirmish_treasury;
   bool starting_gold_chosen = false;
 };
@@ -155,8 +151,6 @@ public:
     return m_gameplay.starting_gold;
   }
 
-  // True once the player picked a treasury; only then does it replace the gold
-  // the map authors.
   [[nodiscard]] auto has_chosen_starting_gold() const noexcept -> bool {
     return m_gameplay.starting_gold_chosen;
   }

@@ -102,12 +102,6 @@ struct MeleeFootingEase {
   float z{0.0F};
 };
 
-// A soldier in melee: where his pull toward his foe and the push off the bodies round
-// him disagree, the spot the simulation publishes can flip a hand's breadth from one
-// frame to the next, and drawn as given he zig-zagged about 10 cm a frame. The drawn
-// spot eases toward the published one instead (render only: the simulation keeps its
-// exact answer); a real step, which takes several frames, goes through, and a jump
-// beyond a stride is taken at once.
 [[nodiscard]] auto ease_melee_footing(SoldierTurnSmoothingState& state,
                                       float target_x,
                                       float target_z,

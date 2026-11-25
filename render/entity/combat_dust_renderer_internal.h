@@ -1,9 +1,5 @@
 #pragma once
 
-// Internal to the combat dust renderer: the commander swing and the blood and
-// stone-impact marks, split out of combat_dust_renderer.cpp, and what they
-// share with it.
-
 #include <QMatrix4x4>
 #include <QVector3D>
 

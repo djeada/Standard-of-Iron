@@ -68,10 +68,7 @@ public:
   void clear_map_bounds() { m_map_bounds = {}; }
 
   void set_rts_constraints(bool enabled) { m_rts_constraints = enabled; }
-  // The pitch band of a camera that is not the RTS camera, in degrees below
-  // (negative) or above (positive) the horizon. The default keeps the eye at
-  // least five degrees above what it looks at; a street-level view that looks
-  // up at a facade has to widen it.
+
   void set_pitch_band(float min_deg, float max_deg) {
     m_pitch_min_deg = min_deg;
     m_pitch_max_deg = max_deg;
@@ -118,13 +115,11 @@ public:
 
   void pan_eased(float right_dist, float forward_dist);
   void zoom_distance_eased(float delta);
-  // Eased zoom with explicit distance limits, for tools whose scene is larger
-  // (or closer) than the game's RTS band. Each call replaces the limits.
+
   void zoom_distance_eased(float delta, float min_distance, float max_distance);
 
   void set_zoom_anchor(float nx, float ny);
-  // Drops queued pan and zoom easing so a jump (reset, scenario framing) is not
-  // dragged back by input that was still settling.
+
   void cancel_eased_motion();
   [[nodiscard]] auto has_pending_motion() const -> bool {
     return m_orbit_pending || m_pan_request_pending ||

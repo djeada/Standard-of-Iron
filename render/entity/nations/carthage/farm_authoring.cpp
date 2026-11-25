@@ -384,7 +384,7 @@ auto build_farm_desc_impl(BuildingState state, int stage) -> BuildingArchetypeDe
                                  .seed = 457});
 
   {
-    // Horns on the store's roof and a boundary stele at the corner of the land.
+
     const Motif::Setter set(desc, state);
     for (const float x : {0.13F, 0.76F}) {
       for (const float z : {0.48F, 0.88F}) {

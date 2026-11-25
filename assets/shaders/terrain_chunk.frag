@@ -251,8 +251,7 @@ PaintedSward soi_painted_sward(vec2 p, float softness, float sparsity) {
       if (seed < mix(0.05, 0.20, sparsity)) {
         continue;
       }
-      // Only a higher rank can replace the current winner, so a tuft that
-      // cannot outrank it is never shaded.
+
       float rank = seed + 0.001;
       if (rank <= best_rank) {
         continue;
@@ -589,10 +588,7 @@ void main() {
   vec3 facet_normal = geom_normal();
   VisibilityMask visibility = visibility_mask_fetch(v_world_pos.xz);
   if (u_horizon_dressing > 0.5) {
-    // The peaks beyond the map edge are scenery, not territory: the fog-of-war
-    // mask has no cells out there, so sampling it clamps to the nearest edge
-    // cell and an unexplored edge painted every foothill as a flat dark lens
-    // on the lit surround.
+
     visibility.seen_now = 1.0;
     visibility.known = 1.0;
   }
@@ -616,9 +612,7 @@ void main() {
 
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
-  // The apron of the edge ring is flagged as a foot all the way to the map
-  // border. Left on, the foot's earth and scree drew a beige strip between a
-  // green map and its mountains; out there it is the same turf as the map.
+
   feature_foot *= 1.0 - step(0.5, u_horizon_dressing);
   float feature_interior = 1.0 - smoothstep(0.18, 0.88, feature_foot);
 
@@ -1269,17 +1263,12 @@ void main() {
   rock_mask = max(rock_mask, mountain_outcrop * 0.75);
   rock_mask *= 1.0 - soil_mix * 0.55;
 
-  // A face too steep to walk is bare rock, whatever the turf around it: grass
-  // stretched down a wall reads as a draped cloth. The rim is kept ragged and
-  // narrow so the sward hangs over the lip instead of fading down the face.
   float cliff_ragged = (rock_breakup - 0.5) * 0.14 + slope_soil_breakup * 0.07;
   float cliff_face = smoothstep(k_soi_cliff_start,
                                 k_soi_cliff_start + k_soi_cliff_width,
                                 slope + cliff_ragged) *
                      (1.0 - 0.80 * entry_core);
-  // A hill's gentle flank is turf. Only what the cliff rule calls a face keeps
-  // the rock and its bedding; the old slope rule painted strata across any
-  // bank a soldier can walk up.
+
   rock_mask *= mix(1.0 - k_soi_flank_turf * hill_surface, 1.0, cliff_face);
   rock_mask = max(rock_mask, cliff_face * k_soi_cliff_rock);
 
@@ -1331,8 +1320,7 @@ void main() {
     rock_color = mix(rock_color, hill_earth, hill_face * 0.72);
     vec3 cliff_stone = mix(u_rock_low, u_rock_high, 0.30 + 0.55 * rock_value);
     cliff_stone = mix(cliff_stone, u_grass_dry, k_soi_cliff_warmth) * k_soi_cliff_tone;
-    // Under snow the rock is the dark thing in the picture: cold grey crag
-    // against white, not a pale blue slope that melts into the drifts.
+
     float cold_rock = biome_alpine * clamp(u_snow_coverage, 0.0, 1.0);
     vec3 crag = vec3(dot(cliff_stone, vec3(0.299, 0.587, 0.114)));
     cliff_stone = mix(
@@ -1492,11 +1480,7 @@ void main() {
                             alpine_snow_color,
                             alpine_snow_core);
     {
-      // Snow lies smooth. What shapes it is the wind, in broad rounded drifts
-      // that catch the light on one flank and hold blue shade in the lee;
-      // parallel ripples are what sand does, and they made this ground a
-      // desert. The drift field also tilts the shading normal further down,
-      // so the sun models the drifts instead of a pattern being painted on.
+
       float drift_fade = band_limit(coord_footprint, k_soi_snow_drift_frequency * 4.0);
       vec2 drift_coord = world_coord * k_soi_snow_drift_frequency + domain_warp * 0.9 +
                          vec2(14.0, -52.0);
@@ -1517,7 +1501,7 @@ void main() {
       float crust_fade = 0.0;
 #endif
       if (crust_fade > k_soi_band_epsilon) {
-        // Wind crust: a faint, irregular scale pattern, only up close.
+
         vec2 crust = cellular_distances(world_coord * k_soi_snow_crust_frequency +
                                         domain_warp * 0.6 + vec2(-7.0, 19.0));
         float scale_edge = 1.0 - smoothstep(0.02, 0.16, crust.y - crust.x);
@@ -1527,13 +1511,12 @@ void main() {
                         (1.0 - alpine_snow_core * k_soi_snow_tuft_burial);
       alpine_snow_mask *= 1.0 - tuft_poke * 0.85;
     }
-    // Ground showing through snow is frozen and wet: dark turf and earth, not
-    // the dry tan that read as sand beside white.
+
     terrain_color = mix(terrain_color,
                         terrain_color * k_soi_snow_frozen_ground,
                         alpine_cover * (1.0 - rock_mask));
     terrain_color *= 1.0 - 0.16 * alpine_snow_thin * (1.0 - alpine_snow_core);
-    // Snow sits on every ledge of a crag and slides off the risers.
+
     float ledge_snow = strata_ledge * alpine_cover *
                        (1.0 - alpine_snow_slope_retention) * k_soi_snow_ledge_amount;
     alpine_snow_mask *= 1.0 - k_soi_snow_cliff_shed * cliff_face;
@@ -1613,10 +1596,6 @@ void main() {
   float cured =
       smoothstep(0.47, 0.80, meadow_drift + biome_dry * 0.08 - drainage_field * 0.18);
 
-  // A meadow is a patchwork, not a gradient: stands of fresh grass, sun-cured
-  // straw where the soil drains, deeper sward in the damp hollows and scuffs
-  // of bare earth, each with an edge you can point at. The fields are the
-  // baked atlas channels, so this costs arithmetic only.
   float mosaic_ragged =
       (thatch_field - 0.5) * k_soi_mosaic_ragged + worn_breakup * 0.05;
   float mosaic_dry_bias = biome_dry * 0.012 + biome_rocky * 0.012 +
@@ -1640,9 +1619,7 @@ void main() {
   float bare_patch_edge =
       smoothstep(k_soi_mosaic_bare_edge, k_soi_mosaic_bare_edge + 0.022, bare_field) *
       mosaic_level * (1.0 - 0.75 * forest_cover);
-  // The noise atlas ends at the map border; beyond it every field clamps to
-  // its edge texel, so on the edge ring a "patch" is a whole ridge painted
-  // straw or bare. Out there the sward stays one plain turf.
+
   float in_map = 1.0 - step(0.5, u_horizon_dressing);
   straw_patch *= in_map;
   deep_patch *= in_map;
@@ -1717,8 +1694,7 @@ void main() {
                         (0.90 + 0.14 * smoothstep(-0.25, 0.25, talus_breakup));
     terrain_color = mix(terrain_color, packed_earth, yard * k_soi_yard_amount);
     if (town_ground > 0.002) {
-      // Streets and courts of a built-up quarter: pale beaten earth, scuffed
-      // darker where carts and feet keep it damp, never lawn.
+
       float town_edge = smoothstep(
           0.10 + verge_breakup * 0.30, 0.55 + verge_breakup * 0.30, town_ground);
       vec3 beaten_earth = mix(u_soil_color, vec3(0.60, 0.53, 0.42), 0.70) *
@@ -1879,7 +1855,7 @@ void main() {
                          mix(k_ground_shade_tone, k_soi_snow_shade_tone, snow_cover));
 #if SOI_SURFACE_DETAIL
   if (snow_cover > 0.05) {
-    // Sun glints off single crystals: sparse, tiny, and gone at battle zoom.
+
     float sparkle_fade = band_limit(coord_footprint, 30.0);
     if (sparkle_fade > k_soi_band_epsilon) {
       vec2 crystal = floor(world_coord * 30.0);

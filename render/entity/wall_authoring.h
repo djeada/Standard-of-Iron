@@ -8,9 +8,6 @@
 
 #include "render/entity/building_archetype_desc.h"
 
-// Palisade and wall geometry, shared by every nation: the six junction
-// variants, the wall walk, the ladder. Authored as BuildingArchetypeDescs and
-// baked by the building archetype catalog; nothing here draws.
 namespace Render::GL {
 
 enum class WallVariant {
@@ -55,8 +52,7 @@ struct WallGeometry {
   float berm_height{0.18F};
   float masonry_half_width{0.28F};
   float masonry_height{1.34F};
-  // The gate is built in the wall's stone, two towers and an arch between
-  // them, instead of the timber gatehouse every field wall gets.
+
   bool stone_gatehouse{false};
 };
 
@@ -77,7 +73,6 @@ auto build_wall_variant_desc(std::string_view name_prefix,
                              const WallGeometry& geometry,
                              WallVariant variant) -> BuildingArchetypeDesc;
 
-// The wall segment renderer kinds and the variant each one draws.
 auto wall_renderer_variants()
     -> const std::array<std::pair<std::string_view, WallVariant>, 7>&;
 

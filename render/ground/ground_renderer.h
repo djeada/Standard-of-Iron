@@ -20,7 +20,7 @@ class Texture;
 class GroundRenderer : public IDrawSource {
 public:
   static constexpr float k_ground_plane_y = -0.08F;
-  // Clearance kept between the plane and a lake bed it has to duck under.
+
   static constexpr float k_bed_clearance = 0.04F;
 
   void configure(float tile_size, int width, int height) {
@@ -67,8 +67,6 @@ private:
   static auto biome_equals(const Game::Map::BiomeSettings& a,
                            const Game::Map::BiomeSettings& b) -> bool;
 
-  // Where the plane lies: just under the ground, or under the lowest lake bed
-  // when a map sets its water lower than that.
   float m_plane_y = k_ground_plane_y;
   float m_tile_size = 1.0F;
   int m_width = 50;

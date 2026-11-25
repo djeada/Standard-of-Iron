@@ -10,9 +10,6 @@
 #include "render/entity/building_decay.h"
 #include "render/entity/building_state.h"
 
-// The building presentation systems turn snapshot state into parameters with
-// no GL and no submitter: these tests drive them from a plain World.
-
 namespace {
 
 using Engine::Core::DeathSequenceProfile;

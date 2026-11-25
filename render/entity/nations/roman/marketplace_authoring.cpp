@@ -730,8 +730,7 @@ auto build_marketplace_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .seed = 181});
 
   {
-    // Fires at the corners of the market floor, and a raven on the arch
-    // waiting for whatever falls off a stall.
+
     const Motif::Setter set(desc, state);
     for (const float side : {-1.0F, 1.0F}) {
       Motif::add_roman_tripod_fire(desc, set.at(side * 1.30F, 1.30F, 0.4F), 0.95F);

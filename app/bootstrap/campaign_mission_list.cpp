@@ -22,8 +22,6 @@ auto campaign_mission_list_requested_from_argv(int argc, char* argv[]) -> bool {
 auto print_campaign_mission_list(int argc, char* argv[]) -> int {
   QCoreApplication const app(argc, argv);
 
-  // Only the references go to stdout so scripts can read it line by line;
-  // the loaders' own log lines and every problem go to stderr.
   const auto index = Game::Mission::load_campaign_mission_index();
   QTextStream out(stdout);
   for (const QString& reference : index.references) {

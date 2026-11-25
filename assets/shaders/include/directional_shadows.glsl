@@ -189,8 +189,6 @@ float directional_shadow_occlusion(vec3 world_position, vec3 normal) {
 #endif
 }
 
-// How much of the directional shadow tint a surface takes, cast shadow and
-// cloud shadow together.
 float directional_shadow_amount(vec3 world_position, vec3 normal) {
   float amount = directional_shadow_occlusion(world_position, normal) *
                  environment_shadow_strength();

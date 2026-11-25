@@ -21,11 +21,9 @@ constexpr float k_quay = 0.10F;
 constexpr float k_shed_front = -0.18F;
 constexpr float k_shed_height = 0.92F;
 constexpr float k_wall = 0.08F;
-// How far the quay face and the hulls reach below the quay: past any waterline.
+
 constexpr float k_keel = -0.62F;
-// Where the water is expected to lie against the quay: a dock wants a bank to
-// stand on, so its sea or basin is a lake with "height": -0.6, whose surface
-// then lies about half a world unit below the ground.
+
 constexpr float k_waterline = -0.32F;
 constexpr QVector3D k_void{0.11F, 0.095F, 0.08F};
 constexpr QVector3D k_rope{0.52F, 0.43F, 0.28F};
@@ -118,7 +116,6 @@ private:
     }
   }
 
-  // The warehouse at the back of the quay.
   void add_shed() {
     BuildingPartLabel const label(m_desc, "warehouse");
     const float inner = k_half - k_wall;
@@ -149,7 +146,7 @@ private:
                  -k_half + k_wall,
                  k_shed_front,
                  k_lot_wall_slot);
-    // The quay front: a wide cart door between two piers, a hatch above it.
+
     const float door_top = k_quay + 0.70F;
     m_parts.slot(-inner,
                  -0.52F,
@@ -331,7 +328,6 @@ private:
     m_parts.post(0.20F, 1.02F, k_quay + 0.035F, k_quay + 0.06F, 0.075F, k_rope * 0.92F);
   }
 
-  // A derrick: a post, a boom swung out over the berth, and its tackle.
   void add_crane() {
     if (!intact()) {
       return;
@@ -362,7 +358,6 @@ private:
                 m_look.timber_light);
   }
 
-  // Nets drying where no vessel lies.
   void add_net_rack() {
     if (!intact()) {
       return;
@@ -400,8 +395,6 @@ private:
                  weathered(m_look.timber_light, 11, 0.08F));
   }
 
-  // A hull lying alongside, bow to +x. `ship` rigs it with a mast, a furled
-  // sail, a deckhouse and steering oars; otherwise it is an open boat.
   void add_ship(
       float centre_x, float quay_gap_z, float half_length, float half_beam, bool ship) {
     BuildingPartLabel const label(m_desc, ship ? "ship" : "boat");
@@ -425,7 +418,7 @@ private:
         const float keel = k_keel + (0.20F * t * t);
         const QVector3D plank = weathered(m_look.hull, index + 40, 0.08F);
         if (destroyed()) {
-          // Burnt to the waterline: only the frames near the keel are left.
+
           if ((index % 2) == 0) {
             m_parts.box(x - (step * 0.2F),
                         x + (step * 0.2F),
@@ -462,7 +455,7 @@ private:
                       std::max(outer, inner) + 0.006F,
                       m_look.timber_light);
         }
-        // The wale, picked out in paint.
+
         {
           BuildingPartMaterial const paint(m_desc, k_building_material_wood);
           for (const float side : {-1.0F, 1.0F}) {
@@ -479,7 +472,7 @@ private:
       const float bow = centre_x + half_length;
       const float stern = centre_x - half_length;
       const float post = ship ? 0.30F : 0.14F;
-      // Stem and stern posts.
+
       m_desc.add_rotated_box(QVector3D(bow + 0.03F, gunwale(1.0F) + (post * 0.45F), zc),
                              QVector3D(0.045F, post, 0.045F),
                              QVector3D(0.0F, 0.0F, -18.0F),
@@ -503,7 +496,7 @@ private:
                       zc + 0.012F,
                       m_look.hull * 0.8F);
         } else {
-          // The goose-neck that curls back over a Roman merchantman's stern.
+
           m_desc.add_rotated_box(QVector3D(stern + 0.02F, gunwale(1.0F) + 0.70F, zc),
                                  QVector3D(0.04F, 0.13F, 0.04F),
                                  QVector3D(0.0F, 0.0F, -38.0F),
@@ -513,7 +506,7 @@ private:
     }
     const float mid_deck = gunwale(0.0F) - 0.055F;
     if (!ship) {
-      // Oars shipped along the thwarts, and the day's catch.
+
       BuildingPartMaterial const timber(m_desc, k_building_material_wood);
       m_parts.box(centre_x - 0.5F,
                   centre_x + 0.5F,
@@ -548,13 +541,12 @@ private:
       return;
     }
 
-    // Mast, yard and the furled sail.
     const float mast_x = centre_x + 0.12F;
     const float mast_top = intact() ? k_quay + 2.05F : k_quay + 0.95F;
     {
       BuildingPartMaterial const timber(m_desc, k_building_material_wood);
       m_parts.post(mast_x, zc, mid_deck, mast_top, 0.034F, m_look.timber);
-      // Deckhouse aft.
+
       const float stern = centre_x - half_length;
       m_parts.box(stern + 0.36F,
                   stern + 0.80F,
@@ -570,7 +562,7 @@ private:
                   zc - 0.25F,
                   zc + 0.25F,
                   m_look.timber_dark);
-      // Steering oars on both quarters.
+
       for (const float side : {-1.0F, 1.0F}) {
         m_desc.add_rotated_box(QVector3D(stern + 0.30F,
                                          k_waterline + 0.14F,
@@ -579,7 +571,7 @@ private:
                                QVector3D(0.0F, 0.0F, 22.0F),
                                m_look.timber_light);
       }
-      // The gangway to the quay.
+
       m_parts.box(centre_x - 0.62F,
                   centre_x - 0.40F,
                   k_quay + 0.012F,
@@ -605,7 +597,7 @@ private:
                   zc + 0.10F,
                   k_sack);
     }
-    // An eye on each bow, so the ship can see its way.
+
     const float bow_t = 0.74F;
     const float bow_x = centre_x + (half_length * bow_t);
     const float bow_beam = half_beam * std::sqrt(1.0F - (bow_t * bow_t));
@@ -642,7 +634,7 @@ private:
                              QVector3D(0.075F, 0.035F, 0.004F),
                              k_lot_team_slot);
     }
-    // Stays to stem and stern, shrouds to the rails.
+
     const QVector3D masthead(mast_x, mast_top - 0.04F, zc);
     m_parts.cylinder(masthead,
                      QVector3D(centre_x + half_length, gunwale(1.0F) + 0.30F, zc),
@@ -717,8 +709,7 @@ auto build_dock_desc(const DockLook& look,
                      int variant) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc(std::string(look.name_prefix) + std::to_string(variant));
   DockBuilder(desc, look, state, variant).build();
-  // The harbour light at the corner of the quay: Rome's tripod, or the stand
-  // Carthage burns its incense in; and each puts its own mark on the roof.
+
   const Motif::Setter set(desc, state);
   const QVector3D corner = set.at(-1.24F, 1.14F, 0.5F);
   if (look.tiled_roof) {

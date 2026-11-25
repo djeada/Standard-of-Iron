@@ -238,8 +238,6 @@ public:
   bool is_initial_spawn;
 };
 
-// A barracks (or temple) handed a trained squad to its owner. Splits, builder
-// crews, civilians and scripted spawns are not recruits and never publish this.
 class UnitRecruitedEvent : public Event {
 public:
   UnitRecruitedEvent(EntityID unit_id, int owner_id, Game::Units::SpawnType spawn_type)

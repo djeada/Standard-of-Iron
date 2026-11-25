@@ -20,7 +20,6 @@
 namespace Render::GL {
 namespace {
 
-// The baked variants and activity anchors of one nation's tenement, built once.
 struct TenementKit {
   std::array<const BuildingArchetypeSet*, k_tenement_variant_count> sets{};
   std::array<HomeSmokeAnchor, k_tenement_variant_count> anchors{};
@@ -51,7 +50,7 @@ auto build_kit(const TenementRendererConfig& config)
         .cloth_span = 0.0F,
         .lamp = QVector3D(door - 0.34F, 0.66F, TenementLot::k_front + 0.07F),
         .shutter_width = 0.0F,
-        // Washing dries over the court, strung from the first floor.
+
         .line_a = QVector3D(-0.92F, line_y, TenementLot::k_rear - 0.05F),
         .line_b = QVector3D(0.84F, line_y, TenementLot::k_rear - 0.05F),
         .line_pole = false,

@@ -29,7 +29,7 @@ public:
   void start_campaign_mission(const QString& mission_path,
                               int& selected_player_id,
                               const QString& difficulty = QString());
-  // The mission file start_campaign_mission loads for this mission id.
+
   [[nodiscard]] static auto resolve_mission_file(const QString& mission_id) -> QString;
   bool start_mission_file(const QString& file_path,
                           int& selected_player_id,

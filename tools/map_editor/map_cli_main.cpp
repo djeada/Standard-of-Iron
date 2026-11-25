@@ -194,8 +194,6 @@ auto run_apply(const QStringList& args) -> int {
   return 0;
 }
 
-// A blank map in world coordinates (origin at the centre), the frame the big
-// authored maps use.
 auto run_new(const QStringList& args) -> int {
   bool width_ok = false;
   bool height_ok = false;

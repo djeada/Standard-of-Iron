@@ -142,11 +142,6 @@ public:
 
   void ensure_render_snapshot();
 
-  // One pass of the simulation thread while the clock is stopped: runs
-  // `before_publish` (the caller drains orders there), applies the deferred
-  // mutations they queued and republishes the render snapshot. No system runs
-  // and no tick is counted, so the world does not advance - only what the
-  // player changed (a placement ghost, a queued recruit) becomes visible.
   void service_stopped_frame(const std::function<void()>& before_publish);
   [[nodiscard]] static auto make_render_world() -> std::shared_ptr<World>;
 

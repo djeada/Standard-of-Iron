@@ -36,11 +36,7 @@ constexpr float k_contact_turn_degrees = 180.0F;
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
 constexpr float k_weapon_contact_distance = 0.72F;
-// Against another formation a soldier keeps to his slot (0.20 spacing of give) unless
-// his way to his foe is clear of his own comrades: then he steps into the gap, up to
-// this many spacings, so the men behind a fallen front rank and the files on a shrunken
-// enemy's flank close up and fight instead of standing in place. Close in, each side
-// covers half the gap (the foe steps too); further out he walks all but a stand-off.
+
 constexpr float k_blocked_press_spacings = 0.20F;
 constexpr float k_front_line_press_spacings = 1.0F;
 constexpr float k_mutual_press_share = 0.5F;
@@ -220,9 +216,6 @@ auto front_line_is_clear(const FormationCombat::FormationLayout& layout,
   return true;
 }
 
-// A step beyond a slot's give must not carry a man onto ground his unit cannot stand
-// on (a slope, a wall, a river bank): fighting at the foot of a hill, a front rank that
-// stepped into the gap left by the fallen walked up the slope.
 auto press_stays_walkable(const EntityFrame& frame,
                           const Soldier& directive,
                           const LocalContactVector& toward,
@@ -257,7 +250,6 @@ auto press_stays_walkable(const EntityFrame& frame,
   return true;
 }
 
-// Returns how far the soldier stepped toward his foe this frame.
 auto press_toward_target(const EntityFrame& frame,
                          const SlotContext& slot,
                          Engine::Core::Entity* opponent,
@@ -291,12 +283,10 @@ auto press_toward_target(const EntityFrame& frame,
                                          directive.local_z,
                                          contact_vector);
   if (!front_clear) {
-    // His nearest foe is screened by his own comrades: go for the nearest foe he can
-    // reach with a clear path instead, which wraps the files round the enemy's flank.
+
     float const reach_limit = frame.layout.spacing * k_front_line_press_spacings +
                               k_weapon_contact_distance + frame.layout.spacing;
-    // Only a foe about as near as his own: in a full-strength clash the rear ranks keep
-    // formation instead of wrapping round the enemy's flanks.
+
     float const near_enough = contact_vector.distance + frame.layout.spacing * 0.5F;
     float best = std::numeric_limits<float>::max();
     for (auto const& foe : opponent_layout.live_slots) {
@@ -351,9 +341,7 @@ auto press_toward_target(const EntityFrame& frame,
                  contact_vector,
                  std::min(gap_to_close,
                           layout.spacing * k_front_line_press_spacings))) {
-    // Half the gap, or all but the stand-off when that is more: a man walking up to a
-    // distant foe stops short enough that the foe can still step in without the two
-    // bodies meeting inside each other, and close enough to reach him.
+
     float const own_share = std::max(gap_to_close * k_mutual_press_share,
                                      gap_to_close - k_mutual_press_gap);
     pull_distance = std::min(own_share, layout.spacing * k_front_line_press_spacings);
@@ -419,7 +407,7 @@ void apply_assigned_engagement(const EntityFrame& frame,
       frame.world.try_get<Engine::Core::AttackComponent>(frame.entity.get_id());
   float const weapon_reach =
       attack != nullptr ? attack->melee_range : frame.layout.spacing * 0.65F;
-  // Reach is judged from where the soldier stands after stepping toward his foe.
+
   float const stepped = press_toward_target(
       frame, slot, opponent, opponent_layout, retained, rank, directive);
   bool const opponent_within_reach =
@@ -578,8 +566,7 @@ void carry_fallen_soldier_offset(const EntityFrame& frame,
   directive.local_yaw = previous->local_yaw;
   directive.crowd_offset_x = previous->crowd_offset_x;
   directive.crowd_offset_z = previous->crowd_offset_z;
-  // He falls where he stood: a man still stepping toward his foe had not reached the
-  // spot his slot and offsets describe.
+
   directive.local_x = previous->local_x;
   directive.local_z = previous->local_z;
 }

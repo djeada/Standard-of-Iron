@@ -39,7 +39,6 @@ constexpr std::array<Nation, 2> k_nations{
     {{"roman", &Render::GL::Roman::build_tenement_desc},
      {"carthage", &Render::GL::Carthage::build_tenement_desc}}};
 
-// Every vertex a tenement variant draws, in building-local units.
 template <typename Visit>
 void for_each_vertex(const Nation& nation,
                      int variant,
@@ -137,7 +136,7 @@ TEST(TenementLot, NoVariantReachesIntoTheNeighbouringLot) {
             nation, variant, state, [&](const QVector3D& point, float, float) {
               reach = std::max(reach, std::abs(point.x()));
             });
-        // Destroyed houses spill rubble; standing ones keep to their lot.
+
         const float allowed =
             state == BuildingState::Normal ? Lot::k_half_width + 0.02F : 1.45F;
         EXPECT_LE(reach, allowed) << nation.name << " variant " << variant << " state "
@@ -148,9 +147,7 @@ TEST(TenementLot, NoVariantReachesIntoTheNeighbouringLot) {
 }
 
 TEST(TenementLot, NothingAtWalkingHeightStandsOutsideTheFootprint) {
-  // Awnings, balconies and signs hang over the pavement above head height, and
-  // jars and steps sit below the knee. What a body could walk into has to stay
-  // on the lot: nothing drawn may be a blocker the navigation grid cannot see.
+
   const auto nav = Game::Systems::BuildingCollisionRegistry::get_building_size("home");
   const QVector3D scale = Game::Units::building_transform_scale("home");
   const float half_depth = (nav.depth * 0.5F) / scale.z();

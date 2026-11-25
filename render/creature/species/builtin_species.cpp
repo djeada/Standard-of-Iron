@@ -1,5 +1,4 @@
-// The one place that names every built-in species. Adding a species means a
-// folder under render/creature/ with its SpeciesContract, plus one line here.
+
 
 #include "render/creature/elephant/elephant_species.h"
 #include "render/creature/horse/horse_species.h"

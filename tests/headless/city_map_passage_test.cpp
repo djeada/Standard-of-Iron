@@ -1,10 +1,4 @@
-// Rome and Carthage are dense cities behind stone walls: thousands of houses,
-// porticoes and towers, walls with angled legs, and gates on their straight
-// ones. These tests load the shipped maps into a live world, with every
-// structure on the navigation grid, and march real troops in: one through every
-// gate (a gate only opens for a friendly troop that walks up to it, so the
-// static grid cannot answer this), and others from the roads outside to the
-// squares in the middle. With every gate shut, the walls must hold.
+
 
 #include <QDir>
 #include <QString>
@@ -115,7 +109,6 @@ protected:
            Game::Systems::Pathfinding::k_unreachable_region;
   }
 
-  // The nearest open ground to a point: a road point can sit under a statue.
   static auto open_point_near(const QVector3D& at, int reach = 4) -> QVector3D {
     const Point origin = NavGrid::world_to_grid(at.x(), at.z());
     for (int radius = 0; radius <= reach; ++radius) {
@@ -184,11 +177,6 @@ protected:
     }
   }
 
-  // A troop on one side of each gate is ordered to the other, across the wall.
-  // The gates are held open: this checks the passage the map leaves through
-  // every gatehouse, not when the gate system decides to swing it (planning
-  // treats a shut gate as wall, so with another gate in reach a troop may
-  // rightly take that one).
   auto gate_marches(int minimum_gates) -> std::vector<March> {
     for (auto [id, gate] : m_session->world().view<Engine::Core::GateComponent>()) {
       (void)id;

@@ -133,8 +133,7 @@ auto planned_settlement_offset(const AIContext& context,
   if (is_siege_engine_building(building_type)) {
     return expanding_ring_offset(context, construction_index, 8, 12.0F, 5.0F);
   }
-  // The nation-only buildings (NATION_ASYMMETRY.md) are big and go up late, once
-  // the plan has claimed the near ground: search ring after ring beyond it.
+
   if (const auto spawn = Game::Units::spawn_typeFromString(
           building_type != nullptr ? std::string(building_type) : std::string());
       spawn.has_value() && Game::Units::is_nation_building_spawn(*spawn)) {

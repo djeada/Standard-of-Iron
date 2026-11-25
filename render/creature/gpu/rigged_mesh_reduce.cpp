@@ -17,20 +17,13 @@ namespace Render::GL {
 
 namespace {
 
-// Normals keep the shading of a simplified surface; texture coordinates keep
-// the painted hair, face and pelt patterns in place.
 constexpr std::size_t k_attribute_count = 5;
 constexpr float k_normal_weight = 0.5F;
 constexpr float k_tex_coord_weight = 1.0F;
 constexpr float k_min_saving = 0.10F;
 
-// Weights are compared in steps of 1/16: a vertex merged into a neighbour of
-// the same class follows that neighbour's skinning, which differs by at most
-// this much bone influence, under half a pixel at the sizes the copy is drawn.
 constexpr float k_weight_steps = 16.0F;
 
-// The skinning a vertex follows: its bones with their quantised weights. Bones
-// whose weight rounds to nothing do not count.
 auto skin_class(const RiggedVertex& vertex) noexcept -> std::uint64_t {
   std::uint64_t key = 0;
   for (std::size_t k = 0; k < vertex.bone_indices.size(); ++k) {
@@ -42,10 +35,6 @@ auto skin_class(const RiggedVertex& vertex) noexcept -> std::uint64_t {
   return key;
 }
 
-// Vertices simplification must not move or merge away: every vertex of a
-// triangle whose corners follow different skinning or carry different colour
-// roles. Everything else collapses only within one skinning class, so the copy
-// animates like the full mesh.
 auto locked_vertices(const std::vector<RiggedVertex>& vertices,
                      const std::vector<std::uint32_t>& indices,
                      std::size_t triangle_index_count) -> std::vector<unsigned char> {
@@ -101,8 +90,7 @@ auto reduce_rigged_mesh(const RiggedMesh& mesh,
 
   std::vector<std::uint32_t> reduced(triangle_index_count);
   float result_error = 0.0F;
-  // The error bound decides where simplification stops; the index target only
-  // keeps it from stopping early.
+
   const std::size_t reduced_count =
       meshopt_simplifyWithAttributes(reduced.data(),
                                      indices.data(),

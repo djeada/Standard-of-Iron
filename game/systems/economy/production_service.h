@@ -29,8 +29,7 @@ enum class ProductionResult {
   CommanderNotRecruitable,
   AlreadyInProgress,
   QueueFull,
-  // NATION_ASYMMETRY.md: not on the owner's nation's roster, missing the
-  // building it needs (a Fabrica for triarii), or at its squad cap.
+
   NotInRoster,
   NeedsBuilding,
   TypeLimitReached
@@ -59,8 +58,6 @@ struct ProductionState {
 
 class ProductionService {
 public:
-  // `band` names the nation of a mercenary band hired at a Mercenary Camp;
-  // left empty, the owner's own troop (or its default band) is meant.
   static auto
   can_start_production(Engine::Core::World& world,
                        Engine::Core::EntityID building_id,

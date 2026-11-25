@@ -28,9 +28,6 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings);
 
-  // Plans regenerating the grass at `density` against `world`, a snapshot of
-  // the live map. The job runs on a worker and reads only what it captured;
-  // its adoption runs on the render thread.
   [[nodiscard]] auto plan_grass(float density,
                                 std::shared_ptr<const Game::Map::ScatterWorld> world)
       -> Render::Ground::Scatter::ScatterJob;

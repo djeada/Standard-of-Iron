@@ -83,9 +83,6 @@ build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& segmen
     const LinearFeatureRibbonSettings& settings)
     -> std::vector<LinearFeatureJunctionMesh>;
 
-// `waters` are the lakes of the map, this one among them or not: where this
-// lake's edge lies inside another there is no shore, a harbour basin opening
-// on the sea being one water with it.
 [[nodiscard]] auto build_lake_surface_mesh(const Game::Map::Lake& lake,
                                            float tile_size,
                                            float y_offset = 0.12F,

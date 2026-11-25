@@ -308,9 +308,7 @@ void update_wall_entity_visuals(Engine::Core::World& world,
 
     connection_mask = 0U;
   }
-  // A free-angled piece stands in a run of its own kind, laid end to end
-  // along its yaw: it wears the straight run (parapet and walk), not the
-  // capped stub of a lone piece, though the lattice sees no neighbours.
+
   const std::uint8_t look_mask =
       (wall->freeform && !is_gate)
           ? static_cast<std::uint8_t>(WallNetworkService::k_connection_east |
@@ -369,7 +367,7 @@ auto WallNetworkService::freeform_run(float start_x,
       !Engine::Core::WallSegmentComponent::is_freeform_rotation(yaw)) {
     return pieces;
   }
-  // Pieces are two units long; a slightly closer pitch hides the joins.
+
   constexpr float k_freeform_pitch = 1.9F;
   const int count =
       std::max(1, static_cast<int>(std::ceil(run_length / k_freeform_pitch)));

@@ -187,8 +187,7 @@ struct Shot {
   std::vector<Jolt> jolts;
   float near_plane{0.0F};
   float ground_clearance{-1.0F};
-  // A free rig at eye level may look along the street and up at a facade; the
-  // default pitch band lifts the eye until it looks five degrees down.
+
   bool street_level{false};
   LightingOverride lighting;
 

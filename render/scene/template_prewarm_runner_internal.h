@@ -1,8 +1,5 @@
 #pragma once
 
-// Internal to the template prewarm runner: the per-item helpers that
-// template_prewarm_runner.cpp defines and template_prewarm_units.cpp calls.
-
 #include <QDebug>
 #include <QStringList>
 #include <qglobal.h>

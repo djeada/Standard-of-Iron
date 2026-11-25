@@ -79,10 +79,7 @@ function(soi_add_pch_owner name header)
     set(owner_source "${CMAKE_BINARY_DIR}/pch/${name}.cpp")
     file(GENERATE OUTPUT "${owner_source}" CONTENT "namespace soi_pch {}\n")
     add_library(${name} STATIC "${owner_source}")
-    target_precompile_headers(
-        ${name}
-        PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${header}>"
-    )
+    target_precompile_headers(${name} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${header}>")
     if(ARGN)
         target_link_libraries(${name} PRIVATE ${ARGN})
     endif()
@@ -135,11 +132,7 @@ function(soi_precompile_common_headers)
         set(owner "")
         if(share_pch)
             get_target_property(target_options ${target} COMPILE_OPTIONS)
-            get_property(
-                target_definitions
-                DIRECTORY "${source_dir}"
-                PROPERTY COMPILE_DEFINITIONS
-            )
+            get_property(target_definitions DIRECTORY "${source_dir}" PROPERTY COMPILE_DEFINITIONS)
             get_target_property(pic ${target} POSITION_INDEPENDENT_CODE)
             if(NOT target_options)
                 set(target_options "")
@@ -154,14 +147,19 @@ function(soi_precompile_common_headers)
                     set(has_root_definitions OFF)
                 endif()
             endforeach()
-            if(has_root_definitions
-               AND target_options STREQUAL "${root_options}"
-               AND NOT type STREQUAL "SHARED_LIBRARY")
+            if(
+                has_root_definitions
+                AND target_options STREQUAL "${root_options}"
+                AND NOT type STREQUAL "SHARED_LIBRARY"
+            )
                 soi_link_closure(${target} closure)
                 set(qt_libraries ${closure})
                 list(FILTER qt_libraries INCLUDE REGEX "^Qt6::")
                 if(qt_libraries)
-                    if(target MATCHES "_tests$" AND ("GTest::gtest" IN_LIST closure OR "gtest" IN_LIST closure))
+                    if(
+                        target MATCHES "_tests$"
+                        AND ("GTest::gtest" IN_LIST closure OR "gtest" IN_LIST closure)
+                    )
                         set(owner soi_pch_qt_test)
                     else()
                         set(owner soi_pch_qt)
@@ -173,10 +171,7 @@ function(soi_precompile_common_headers)
         endif()
 
         if(owner STREQUAL "")
-            target_precompile_headers(
-                ${target}
-                PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${pch_header}>"
-            )
+            target_precompile_headers(${target} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${pch_header}>")
             continue()
         endif()
         if(NOT owner IN_LIST owners_created)

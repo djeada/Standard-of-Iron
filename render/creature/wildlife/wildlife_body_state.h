@@ -8,7 +8,6 @@
 
 namespace Render::Creature::Pipeline {
 
-// A prepared sheep or wolf body, ready for CreatureRenderBatch::add_quadruped.
 struct PreparedWildlifeBodyState {
   CreatureGraphOutput graph{};
   Render::GL::WildlifeVariant variant{};

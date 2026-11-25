@@ -12,8 +12,6 @@
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/nations/roman/tenement_builder.h"
 
-// What makes the insula a street house: shop fronts, doorways, shutters,
-// balconies, and the court side.
 namespace Render::GL::Roman::TenementDetail {
 
 using namespace TenementLot;
@@ -75,7 +73,7 @@ void TenementBuilder::add_window_dressing(Side side,
   const QVector3D timber = weathered(BuildingPalette::k_cedar_light, salt + 3, 0.10F) *
                            (intact() ? 1.0F : 0.8F);
   if (pick < 0.22F) {
-    // Closed against the sun.
+
     trim(side, opening.x0, opening.x1, opening.y0, opening.y1, -0.026F, 0.016F, timber);
     trim(side,
          ((opening.x0 + opening.x1) * 0.5F) - 0.006F,
@@ -152,7 +150,6 @@ void TenementBuilder::add_shop_front() {
          0.09F,
          BuildingPalette::k_cedar_dark);
 
-    // The counter with its sunken storage jars.
     const float counter_top = p + 0.31F;
     slot_box(-0.96F,
              -0.16F,
@@ -186,7 +183,6 @@ void TenementBuilder::add_shop_front() {
       m_desc.add_cylinder(mouth, mouth + QVector3D(0.0F, 0.009F, 0.0F), 0.044F, k_void);
     }
 
-    // Shelves of wares against the back wall.
     for (int shelf = 0; shelf < 2; ++shelf) {
       const float y = p + 0.42F + (0.20F * static_cast<float>(shelf));
       box(-0.92F,
@@ -210,7 +206,6 @@ void TenementBuilder::add_shop_front() {
       }
     }
 
-    // Night shutters stacked against the jamb.
     for (int board = 0; board < 3; ++board) {
       const float z = k_front - 0.070F - (0.022F * static_cast<float>(board));
       box(0.10F,
@@ -255,8 +250,7 @@ void TenementBuilder::add_shop_front() {
 
   {
     BuildingPartLabel const label(m_desc, "awning");
-    // No two shops in a street hang their awning alike: each variant sets it
-    // at its own height and reach.
+
     constexpr std::array<float, k_tenement_variant_count> k_lift{
         0.0F, 0.08F, -0.04F, 0.12F, 0.03F, -0.02F, 0.10F, 0.05F};
     constexpr std::array<float, k_tenement_variant_count> k_reach{
@@ -390,7 +384,6 @@ void TenementBuilder::add_door_front() {
     }
   }
 
-  // A stone bench for clients waiting on the patron.
   box(0.44F,
       0.98F,
       p,
@@ -440,7 +433,7 @@ void TenementBuilder::add_passage_dressing() {
   }
   add_window_dressing(
       Side::Front, Opening{-0.92F, -0.64F, p + 0.56F, p + 0.82F}, 77, false);
-  // Wheel guards at the passage mouth.
+
   for (const float side : {-1.0F, 1.0F}) {
     m_desc.add_cone(QVector3D(side * 0.37F, p, k_front + 0.04F),
                     QVector3D(side * 0.37F, p + 0.20F, k_front + 0.04F),
@@ -448,8 +441,7 @@ void TenementBuilder::add_passage_dressing() {
                     BuildingPalette::k_limestone_dark);
   }
   if (intact()) {
-    // Proud of the wall but behind both the keystone below it and the string
-    // course above it: two faces on one plane flicker.
+
     m_desc.add_palette_box(QVector3D(0.0F, p + 0.975F, k_front - 0.004F),
                            QVector3D(0.11F, 0.035F, 0.014F),
                            k_tenement_team_slot);
@@ -555,8 +547,6 @@ void TenementBuilder::add_balcony(int storey) {
   }
 }
 
-// The cheap way to add a storey: a timber frame with plastered panels
-// (opus craticium) on top of the masonry house.
 auto TenementBuilder::timber_framed(int storey) const -> bool {
   return storey == m_traits.storeys - 1 && m_traits.roof == TenementRoof::Gable &&
          (m_variant % 3) == 1;
@@ -615,7 +605,7 @@ void TenementBuilder::add_upper_storey_dressing() {
       }
     }
     if (storey == 1 && storey != m_traits.balcony_storey) {
-      // The upper floor's joists run through the wall and show their ends.
+
       BuildingPartLabel const label(m_desc, "joist_ends");
       for (int joist = 0; joist < 9; ++joist) {
         const float x = -0.96F + (0.24F * static_cast<float>(joist));
@@ -699,7 +689,6 @@ void TenementBuilder::add_rear_dressing() {
     }
   }
 
-  // The rain pipe from the eave to the court, let into the wall face.
   m_desc.add_cylinder(
       QVector3D(1.02F, 0.06F, k_rear - 0.002F),
       QVector3D(1.02F,
@@ -709,7 +698,7 @@ void TenementBuilder::add_rear_dressing() {
       BuildingPalette::k_terracotta_dark);
 
   if ((m_variant % 2) == 0) {
-    // Firewood and a water jar under a tiled canopy.
+
     if (intact()) {
       const float high = p + 0.90F;
       const float low = p + 0.80F;

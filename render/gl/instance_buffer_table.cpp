@@ -39,7 +39,7 @@ auto InstanceBufferTable::resolve(const InstanceBlock* block) -> Buffer* {
       bytes = m_scratch.data();
     }
     if (block->reserved_bytes() > 0) {
-      // Reserved: size once, then update in place.
+
       entry.buffer->reserve(std::max(block->reserved_bytes(), block->size_bytes()));
       entry.buffer->update_sub_data(bytes, block->size_bytes());
     } else {

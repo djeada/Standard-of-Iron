@@ -19,7 +19,6 @@ enum class CreatureMeshLod : std::uint8_t {
   Minimal = 1,
 };
 
-// One bit per CreatureMeshLod.
 [[nodiscard]] constexpr auto
 mesh_lod_mask(std::initializer_list<CreatureMeshLod> lods) noexcept -> std::uint8_t {
   std::uint8_t mask = 0;

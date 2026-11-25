@@ -60,9 +60,6 @@ private:
   std::unique_ptr<App::Models::AudioSystemProxy> m_proxy;
   QString m_frontend_context;
 
-  // A menu or campaign screen can be left open for many minutes. Each of its
-  // tracks is a one-minute loop, so once the current one has played through the
-  // playlist moves on instead of repeating it.
   std::unique_ptr<QTimer> m_playlist_timer;
   QString m_playlist_track;
   QElapsedTimer m_playlist_clock;

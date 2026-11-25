@@ -8,9 +8,6 @@
 
 namespace Render::GL {
 
-// Axis-aligned parts by their extents instead of centre and half size, which is
-// how a building standing on a lot is easiest to author: this wall runs from
-// here to there. Degenerate boxes are dropped.
 class LotParts {
 public:
   explicit LotParts(BuildingArchetypeDesc& desc)
@@ -33,9 +30,6 @@ public:
                    color);
   }
 
-  // A box that takes its colour from the instance palette. `material` names
-  // what the paint is on; a palette colour left unclassified is sorted into
-  // cloth, leather or metal by its brightness.
   void slot(float x0,
             float x1,
             float y0,

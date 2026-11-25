@@ -37,8 +37,6 @@ namespace {
 
 using Engine::Core::EntityID;
 
-// Homes stand behind the barracks, the farm off to one side, and the gate side
-// stays open for the muster and the builders' haul to the yard.
 constexpr float k_home_back = 11.0F;
 constexpr float k_home_side = 7.5F;
 constexpr float k_farm_back = 6.0F;
@@ -60,8 +58,7 @@ auto seats_with_a_barracks(Engine::Core::World& world) -> std::vector<Seat> {
   const auto& owners = *Game::Session::services_for(world).owners;
   std::map<int, Seat> by_owner;
   std::map<int, int> crews_by_owner;
-  // One pass over the units: each seat's lowest-id barracks and its builder
-  // crews, so placing a seat's camp never rescans the world.
+
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
     if (unit != nullptr && unit->health > 0 &&
@@ -139,9 +136,6 @@ auto spawn(Engine::Core::World& world,
   return unit ? unit->id() : 0;
 }
 
-// The nearest clear ground to `wanted`: first the builders' own ring search
-// around it, then a 2 m lattice over the camp (the reach the farmland test
-// guarantees room in), nearest to `wanted` first.
 auto camp_site(const Engine::Core::World& world,
                const char* type_name,
                const QVector3D& wanted,
@@ -150,8 +144,7 @@ auto camp_site(const Engine::Core::World& world,
                float rotation_y,
                const std::vector<Game::Systems::SiteKeepOut>& keep_out)
     -> std::optional<QVector3D> {
-  // The camp's buildings stand where its crews can walk from the gate: a
-  // terrace above the barracks is level ground nobody can reach.
+
   const Game::Systems::SiteAcceptor reachable = [&gate](float x, float z) {
     return Game::Systems::site_access_on_foot(gate.x(), gate.z(), x, z) !=
            Game::Systems::SiteAccess::CutOff;
@@ -267,7 +260,7 @@ auto apply_skirmish_camp_start(Engine::Core::World& world,
 
     const Frame frame = frame_of(*transform);
     const float yaw = transform->rotation.y;
-    // Buildings that face a quarter turn keep their nav footprint tight.
+
     const float quarter_turn_yaw = std::round(yaw / 90.0F) * 90.0F;
     const auto gate = Game::Systems::barracks_gate(*transform);
     const auto yard = Game::Systems::stockpile_drop_point(

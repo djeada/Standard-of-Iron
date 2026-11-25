@@ -7,18 +7,9 @@
 
 namespace Render::GL {
 
-// Generates one name of `kind` on the current context and counts it (profiling
-// counters and the live-object census). Returns 0 without a current context.
-// Program and Shader names come from glCreateProgram/glCreateShader; pass the
-// shader stage in `shader_type` for the latter.
 [[nodiscard]] auto generate_gl_object(DeferredGlObject kind,
                                       unsigned int shader_type = 0U) -> unsigned int;
 
-// Move-only owner of one GL object name. The name is released through
-// release_gl_object(): deleted at once when its share group's context is current,
-// otherwise queued for drain_deferred_gl_deletes(), so a handle may be destroyed on
-// any thread. This and FenceHandle are the only places render/ may call
-// glGen*/glCreate*/glDelete* (scripts/check-gl-ownership.py).
 template <DeferredGlObject Kind>
 class GlHandle {
 public:
@@ -41,8 +32,6 @@ public:
     return *this;
   }
 
-  // A fresh object on the current context; empty when there is none or the
-  // driver refused.
   [[nodiscard]] static auto create(unsigned int shader_type = 0U) -> GlHandle {
     GlHandle handle;
     handle.m_name = generate_gl_object(Kind, shader_type);
@@ -57,7 +46,6 @@ public:
   [[nodiscard]] explicit operator bool() const noexcept { return m_name != 0U; }
   [[nodiscard]] auto share_group() const noexcept -> GlShareGroup { return m_group; }
 
-  // Deletes the object now if its context is current, else queues it.
   void reset() noexcept {
     if (m_name == 0U) {
       return;
@@ -66,7 +54,6 @@ public:
     m_group = k_unknown_share_group;
   }
 
-  // Replaces the object with a fresh one.
   auto recreate(unsigned int shader_type = 0U) -> bool {
     *this = create(shader_type);
     return valid();
@@ -77,7 +64,6 @@ private:
   GlShareGroup m_group = k_unknown_share_group;
 };
 
-// A GL name owned by some handle elsewhere, held only to bind or read it.
 using BorrowedGlName = unsigned int;
 
 using BufferHandle = GlHandle<DeferredGlObject::Buffer>;
@@ -90,7 +76,6 @@ using RenderbufferHandle = GlHandle<DeferredGlObject::Renderbuffer>;
 using SamplerHandle = GlHandle<DeferredGlObject::Sampler>;
 using QueryHandle = GlHandle<DeferredGlObject::Query>;
 
-// Move-only owner of a GL fence (glFenceSync). Released like a GlHandle.
 class FenceHandle {
 public:
   FenceHandle() noexcept = default;
@@ -112,10 +97,8 @@ public:
     return *this;
   }
 
-  // Inserts a fence after the commands issued so far on the current context.
   [[nodiscard]] static auto insert() -> FenceHandle;
 
-  // The GLsync, as an opaque pointer (cast with static_cast<GLsync>).
   [[nodiscard]] auto get() const noexcept -> void* { return m_sync; }
   [[nodiscard]] auto valid() const noexcept -> bool { return m_sync != nullptr; }
   [[nodiscard]] explicit operator bool() const noexcept { return m_sync != nullptr; }

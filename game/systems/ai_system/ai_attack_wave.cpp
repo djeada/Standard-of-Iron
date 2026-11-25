@@ -231,13 +231,9 @@ auto committable_units(const AISnapshot& snapshot,
   return result;
 }
 
-// Weighing a target before marching on it (and a fight while in it). Units are
-// counted the way TacticalUtils::assess_engagement counts them: one per squad,
-// scaled by health; a tower or a commander is worth more than a squad.
 constexpr float k_sighting_memory_seconds = 120.0F;
 constexpr float k_sighting_cleared_metres = 10.0F;
-// Squads near a target defend it in full; those further out can still march
-// in before the fight is decided and count for half.
+
 constexpr float k_defence_reach = 40.0F;
 constexpr float k_reinforcement_reach = 80.0F;
 constexpr float k_reinforcement_weight = 0.5F;
@@ -285,8 +281,7 @@ void note_enemy_sightings(const AISnapshot& snapshot, AIContext& context) {
                              .weight = field_weight(contact),
                              .seen_at = snapshot.game_time};
   }
-  // A remembered squad is forgotten when it is too old, or when our own men
-  // stand where it was and do not see it: it fell or marched off.
+
   for (auto it = sightings.begin(); it != sightings.end();) {
     bool gone = snapshot.game_time - it->second.seen_at > k_sighting_memory_seconds;
     if (!gone && !in_view.contains(it->first)) {
@@ -319,8 +314,6 @@ auto towers_covering(const AISnapshot& snapshot, float x, float z) -> float {
   return weight;
 }
 
-// What stands to defend a point, from what this side sees or saw lately: the
-// squads around it and the towers that reach it.
 auto defence_at(const AISnapshot& snapshot,
                 const AIContext& context,
                 float x,
@@ -346,9 +339,6 @@ auto strength_of(const std::vector<const EntitySnapshot*>& units) -> float {
   return strength;
 }
 
-// The nearest target, in doctrine order, that this force clearly outweighs.
-// Returns nullptr when every known target is defended too well (or none is
-// known; `any_known` tells the two apart).
 auto select_beatable_target(const AISnapshot& snapshot,
                             const AIContext& context,
                             float from_x,
@@ -727,8 +717,6 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       return;
     }
 
-    // A wave that meets more than it can beat comes home in one piece instead
-    // of feeding the garrison squad by squad.
     std::vector<const EntitySnapshot*> marching_now;
     marching_now.reserve(wave.members.size());
     for (const auto id : wave.members) {
@@ -757,10 +745,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
                      static_cast<float>(std::max(1, wave.initial_size));
       wave.last_strength = ours;
       wave.last_defence = theirs;
-      // Only a wave at the enemy's works turns back: there the garrison and
-      // towers stay put and the wave can walk away. In an open-field fight
-      // against a moving army, turning its back only gets the column cut down
-      // on the road (duel matrix: Scipio routed while Hanno lost nobody).
+
       const bool at_their_works =
           towers_covering(snapshot, centre_x, centre_z) > 0.0F ||
           (wave.target_id != 0 && gap <= k_target_battle_metres && [&] {
@@ -805,9 +790,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
         wave.ended_at = snapshot.game_time;
         return;
       }
-      // A scouting or re-targeting wave weighs what it has just found before
-      // walking into it: a target it cannot beat gives way to one it can, or
-      // the wave turns for home before the fight rather than after it.
+
       if (ours < k_commit_ratio *
                      defence_at(snapshot, context, target->pos_x, target->pos_z)) {
         bool any_known = false;
@@ -904,8 +887,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   if (!settled && !out_of_patience) {
     return;
   }
-  // Rome times its blow to land just after a levy (NATION_ASYMMETRY.md 9): with
-  // the next one close, the wave waits for it so the reserve refills behind it.
+
   constexpr float k_levy_wait_seconds = 20.0F;
   if (snapshot.seconds_to_next_levy >= 0.0F &&
       snapshot.seconds_to_next_levy < k_levy_wait_seconds &&
@@ -923,10 +905,6 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   centre_x /= static_cast<float>(available.size());
   centre_z /= static_cast<float>(available.size());
 
-  // Weigh the targets before marching: commit only on one this force clearly
-  // outweighs (its garrison and the towers that reach it), the nearest such
-  // in doctrine order. If every known target is too strong, stay home and
-  // keep growing; a long drought lowers the bar to an even fight.
   const int column = std::min(static_cast<int>(available.size()),
                               wave_capacity_for(context, required));
   std::vector<const EntitySnapshot*> column_units(

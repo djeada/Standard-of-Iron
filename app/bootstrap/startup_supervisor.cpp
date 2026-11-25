@@ -168,7 +168,7 @@ auto run_attempt(const SupervisorConfig& config,
                    .arg(waited.elapsed()));
       log.block(QStringLiteral("attempt %1 log").arg(index),
                 read_text(attempt_log_path));
-      // The launch worked; from here the supervisor only waits for the exit.
+
       process.waitForFinished(-1);
       break;
     }
@@ -293,8 +293,7 @@ auto run_supervised_startup(const SupervisorConfig& config) -> int {
     int launch_exit_code = 0;
     AttemptReport report = run_attempt(config, plan, index, log, launch_exit_code);
     const bool ready = report.ready;
-    // Exiting cleanly before readiness is the child answering a request that
-    // never needs a renderer, not a failed launch.
+
     const bool clean_exit =
         report.started && !report.timed_out && !report.crashed && report.exit_code == 0;
     reports.push_back(std::move(report));

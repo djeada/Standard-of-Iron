@@ -11,7 +11,6 @@ namespace {
 
 using Render::Geom::clamp_vec_01;
 
-// Limewash over brick: ochres, creams and the odd rose, never bare white.
 constexpr std::array<QVector3D, 7> k_roman_washes{
     QVector3D(0.90F, 0.80F, 0.60F),
     QVector3D(0.88F, 0.70F, 0.47F),
@@ -22,7 +21,6 @@ constexpr std::array<QVector3D, 7> k_roman_washes{
     QVector3D(0.80F, 0.60F, 0.44F),
 };
 
-// The painted dado along the street: Pompeian red, burnt ochre, umber.
 constexpr std::array<QVector3D, 5> k_roman_accents{
     QVector3D(0.58F, 0.21F, 0.16F),
     QVector3D(0.63F, 0.40F, 0.20F),
@@ -39,7 +37,6 @@ constexpr std::array<QVector3D, 5> k_roman_cloths{
     QVector3D(0.38F, 0.47F, 0.30F),
 };
 
-// Whitewash, and the sand and shell it is mixed from.
 constexpr std::array<QVector3D, 6> k_punic_washes{
     QVector3D(0.94F, 0.91F, 0.83F),
     QVector3D(0.92F, 0.86F, 0.72F),
@@ -49,7 +46,6 @@ constexpr std::array<QVector3D, 6> k_punic_washes{
     QVector3D(0.86F, 0.76F, 0.62F),
 };
 
-// Paint: Egyptian blue, oxblood, a sea green, saffron.
 constexpr std::array<QVector3D, 5> k_punic_accents{
     QVector3D(0.20F, 0.36F, 0.56F),
     QVector3D(0.55F, 0.17F, 0.17F),
@@ -58,7 +54,6 @@ constexpr std::array<QVector3D, 5> k_punic_accents{
     QVector3D(0.78F, 0.56F, 0.20F),
 };
 
-// Dyed cloth: purple first, as Carthage should.
 constexpr std::array<QVector3D, 5> k_punic_cloths{
     QVector3D(0.42F, 0.16F, 0.40F),
     QVector3D(0.60F, 0.20F, 0.22F),

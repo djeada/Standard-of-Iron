@@ -152,8 +152,7 @@ QString MapCanvas::preview_error() const {
 
 void MapCanvas::invalidate_world_backdrop(WorldPreviewChange change) {
   ++m_backdrop_requested;
-  // Terrain and paths are baked into the raster. Scenery edits draw live while
-  // the worker refreshes their effect on procedural decoration.
+
   if (change == WorldPreviewChange::Terrain) {
     m_backdrop_required = m_backdrop_requested;
   }
@@ -1994,7 +1993,7 @@ void MapCanvas::erase_at_position(const QPoint& pos) {
   std::unique_ptr<Command> cmd =
       ElementOps::make_remove(*m_map_data, hit.kind, hit.index);
   if (cmd) {
-    // A deletion shifts later indices in this category.
+
     clear_selection();
     m_map_data->execute_command(std::move(cmd));
   }

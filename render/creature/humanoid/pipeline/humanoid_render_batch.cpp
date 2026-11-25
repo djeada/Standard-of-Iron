@@ -1,5 +1,4 @@
-// The CreatureRenderBatch humanoid entry points: the body request with its
-// animation selection, blend layers, role colours and wear.
+
 
 #include "render/creature/humanoid/pipeline/humanoid_render_batch.h"
 

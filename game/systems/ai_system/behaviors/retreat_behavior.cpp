@@ -43,7 +43,6 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
-    // A wave called off by the attack planner walks home whole.
     if (withdrawing.contains(entity.id)) {
       constexpr float k_home_metres = 14.0F;
       if (distance_squared(entity.pos_x,

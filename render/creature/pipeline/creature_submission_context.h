@@ -12,16 +12,10 @@ class SnapshotMeshCache;
 
 namespace Render::Creature::Pipeline {
 
-// A creature at most this tall on screen draws the reduced copy of its full
-// mesh (see Render::GL::reduce_rigged_mesh); taller ones draw the full mesh.
 inline constexpr float k_reduced_geometry_max_height_px = 60.0F;
 
-// When a creature counts as small on screen this frame. Set once per frame
-// before creatures are prepared, then only read, so prepare workers may share
-// it.
 class ReducedGeometryRule {
 public:
-  // Disabled: every creature draws its full mesh.
   ReducedGeometryRule() = default;
   ReducedGeometryRule(const QVector3D& camera_position, float focal_length_px) noexcept
       : m_camera(camera_position)
@@ -30,9 +24,6 @@ public:
             (k_reduced_geometry_max_height_px * k_reduced_geometry_max_height_px))
       , m_enabled(focal_length_px > 0.0F) {}
 
-  // Whether a mesh `mesh_height` units tall, placed by `world_from_unit`,
-  // projects to at most k_reduced_geometry_max_height_px. Squared throughout,
-  // so it costs no square root per creature.
   [[nodiscard]] auto small_on_screen(const QMatrix4x4& world_from_unit,
                                      float mesh_height) const noexcept -> bool {
     if (!m_enabled || !(mesh_height > 0.0F)) {

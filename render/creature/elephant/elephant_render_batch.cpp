@@ -1,4 +1,4 @@
-// The CreatureRenderBatch elephant entry points, with the outgoing clip blend.
+
 
 #include "render/creature/elephant/elephant_render_batch.h"
 

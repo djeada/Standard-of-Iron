@@ -100,15 +100,8 @@ evaluate_creature_lod(const CreatureGraphInputs& inputs,
     const CreatureGraphInputs& inputs,
     const CreatureLodDecision& lod_decision) noexcept -> CreatureGraphOutput;
 
-// The bodies one preparation pass draws: rows for the shadow pass and render
-// requests for the creature pipeline. It names no species; each species adds
-// its bodies through free functions in its own folder (add_humanoid in
-// humanoid/pipeline/humanoid_render_batch.h, add_quadruped in the horse,
-// elephant and wildlife render_batch headers).
 class CreatureRenderBatch {
 public:
-  // The asset handle and role colours the last request resolved, so a run of
-  // identical bodies skips both lookups. Cleared with the batch.
   struct RequestReuseCache {
     const void* variant{nullptr};
     CreatureAssetId asset{k_invalid_creature_asset};
@@ -133,8 +126,7 @@ public:
 
   [[nodiscard]] auto
   requests() const noexcept -> std::span<const Render::Creature::CreatureRenderRequest>;
-  // The requests already added, for an entry point that layers onto the one it
-  // just added.
+
   [[nodiscard]] auto
   mutable_requests() noexcept -> std::span<Render::Creature::CreatureRenderRequest> {
     return requests_;

@@ -101,7 +101,7 @@ struct RiverSegment {
   WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
 
   std::optional<FordProfile> ford;
-  // Sheltered water (a harbour ring, a canal): drawn with slow, small ripples.
+
   bool calm = false;
 };
 
@@ -112,16 +112,14 @@ struct FordCrossing {
   FordProfile profile;
 };
 
-// How far a lake's bed lies under its water level.
 inline constexpr float k_lake_bed_depth = 0.10F;
 
-// The outline of a lake inside its width and depth.
 enum class LakeShape : std::uint8_t {
-  // An ellipse with a wandering shore: a lake, a bay, an open coast.
+
   Natural,
-  // A true ellipse: a dug pool, a round harbour.
+
   Round,
-  // A rectangle with eased corners: a harbour basin, a dock, a canal reach.
+
   Basin,
 };
 
@@ -132,7 +130,7 @@ struct Lake {
   float rotation_deg = 0.0F;
   WaterElevationMode elevation_mode = WaterElevationMode::Terrain;
   LakeShape shape = LakeShape::Natural;
-  // Sheltered water (a harbour basin, a garden pool): slow, small ripples.
+
   bool calm = false;
 };
 
@@ -167,16 +165,13 @@ lake_shape_from_name(std::string_view name) noexcept -> std::optional<LakeShape>
   return std::nullopt;
 }
 
-// How far the shore stands from the centre at an angle, as a multiple of the
-// ellipse through the lake's width and depth.
 [[nodiscard]] inline auto lake_boundary_scale(const Lake& lake,
                                               float local_angle) noexcept -> float {
   if (lake.shape == LakeShape::Round) {
     return 1.0F;
   }
   if (lake.shape == LakeShape::Basin) {
-    // A superellipse: straight sides out to the full width and depth, and
-    // corners eased enough to be drawn and walked round.
+
     constexpr float k_exponent = 12.0F;
     const float c = std::abs(std::cos(local_angle));
     const float s = std::abs(std::sin(local_angle));
@@ -190,10 +185,6 @@ lake_shape_from_name(std::string_view name) noexcept -> std::optional<LakeShape>
                     1.10F);
 }
 
-// How far in from the shore a lake's shallows reach, in world units: the
-// stretch over which the bed shows and the water's edge breaks up. Zero keeps
-// them in proportion to the lake, which suits a pond and ruins a sea: there
-// the mud flats would run out for a bowshot.
 [[nodiscard]] inline auto lake_shallows_reach(const Lake& lake) noexcept -> float {
   constexpr float k_open_water_half_extent = 34.0F;
   constexpr float k_open_water_reach = 20.0F;

@@ -199,8 +199,7 @@ void GroundRenderer::sync_biome_from_service() {
   if (!service.is_initialized()) {
     return;
   }
-  // A plane above the water would hide it: a sea authored below the ground
-  // takes the plane down with it. Lakes level with the ground leave it be.
+
   float plane_y = k_ground_plane_y;
   if (const auto* height_map = service.get_height_map()) {
     if (const auto bed = height_map->lowest_lake_bed();

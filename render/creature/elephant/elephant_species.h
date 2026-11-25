@@ -12,8 +12,6 @@ elephant_creature_visual_definition() noexcept -> const CreatureVisualDefinition
 
 namespace Render::Elephant {
 
-// The elephant's contract with the creature pipeline: asset, visual
-// definition, feet, whole-mesh skinning bones and LOD geometry.
 [[nodiscard]] auto elephant_species_contract() noexcept
     -> const Render::Creature::Pipeline::SpeciesContract&;
 

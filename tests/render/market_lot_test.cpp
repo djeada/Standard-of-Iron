@@ -23,8 +23,6 @@ namespace {
 using Render::GL::BuildingState;
 namespace Lot = Render::GL::MarketLot;
 
-// The furthest a description reaches along x and how high it stands, in
-// building-local units.
 struct Extent {
   float reach_x{0.0F};
   float top{0.0F};
@@ -139,7 +137,7 @@ TEST(MarketLot, TheBasilicaStandsWellOverThePlainWalk) {
 }
 
 TEST(MarketLot, ARunOfPorticoesSharesOneSeedHoweverLongItIs) {
-  // Along x, facing +z.
+
   const std::uint32_t along_x = Render::GL::lot_run_seed(0.0F, -36.75F, 0.0F, 1.0F);
   for (int lot = 1; lot < 30; ++lot) {
     EXPECT_EQ(
@@ -147,14 +145,14 @@ TEST(MarketLot, ARunOfPorticoesSharesOneSeedHoweverLongItIs) {
         along_x)
         << "lot " << lot;
   }
-  // Along z, facing +x: the same holds whichever way the run lies.
+
   const std::uint32_t along_z = Render::GL::lot_run_seed(-69.75F, 50.0F, 1.0F, 0.0F);
   for (int lot = 1; lot < 20; ++lot) {
     EXPECT_EQ(Render::GL::lot_run_seed(
                   -69.75F, 50.0F + (5.5F * static_cast<float>(lot)), 1.0F, 0.0F),
               along_z);
   }
-  // The stoa across the square is another building.
+
   EXPECT_NE(Render::GL::lot_run_seed(0.0F, -5.25F, 0.0F, -1.0F), along_x);
   EXPECT_NE(Render::GL::lot_run_seed(0.0F, -31.25F, 0.0F, 1.0F), along_x);
 
@@ -167,7 +165,7 @@ TEST(MarketLot, ARunOfPorticoesSharesOneSeedHoweverLongItIs) {
 }
 
 TEST(MarketLot, NeighbouringDocksNeverBothMoorAShip) {
-  // A ship is longer than its lot: two side by side would lie in each other.
+
   constexpr float k_pitch = 5.5F;
   for (const bool along_x : {true, false}) {
     int ships = 0;

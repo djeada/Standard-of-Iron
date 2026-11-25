@@ -119,8 +119,6 @@ Item {
         };
     }
 
-    // Reading the campaign files and syncing progress takes a noticeable
-    // moment on slow disks. Let the screen appear first, then refresh it.
     onVisibleChanged: {
         if (visible && typeof game !== "undefined" && game.setup.load_campaigns)
             campaign_refresh_timer.restart();

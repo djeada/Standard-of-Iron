@@ -523,7 +523,6 @@ auto build_city_definitions() -> std::vector<ArenaScenarioDefinition> {
   std::vector<ArenaScenarioDefinition> result;
   result.push_back(imperial_capital());
 
-  // Keep the city's acceptance checks in the wet-night review variant.
   auto wet_night = imperial_capital();
   wet_night.id = QStringLiteral("city_review_aurelia_wet_night");
   wet_night.label = QStringLiteral("Aurelia Magna: Wet Night");

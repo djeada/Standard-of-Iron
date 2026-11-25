@@ -10,10 +10,6 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/render_request.h"
 
-// The species-independent half of adding a body to a CreatureRenderBatch. Each
-// species' batch entry points (the add_humanoid / add_quadruped overloads,
-// defined in the species folders) build their request with these helpers.
-
 namespace Render::Creature::Pipeline::BatchSupport {
 
 [[nodiscard]] inline auto hash_combine(std::uint64_t seed,
@@ -55,8 +51,6 @@ struct RoleColorCacheKeyHash {
   }
 };
 
-// Resolved role-colour palettes by asset, archetype and variant. Each species
-// keeps its own thread-local cache.
 using RoleColorCache =
     std::unordered_map<RoleColorCacheKey,
                        std::shared_ptr<const Render::RoleColorPalette>,
@@ -71,16 +65,11 @@ build_request(const CreatureGraphOutput& output,
 [[nodiscard]] auto
 default_archetype_for(CreatureKind kind) noexcept -> Render::Creature::ArchetypeId;
 
-// Fills req.role_colors from the asset's fill_role_colors and the archetype's
-// extra role-colour functions, both reading `variant`.
 void populate_role_colors(RoleColorCache& cache,
                           Render::Creature::CreatureRenderRequest& req,
                           const void* variant,
                           std::uint64_t variant_hash);
 
-// The common start of a quadruped body: the shadow row (shadow pass only) and
-// the request with asset, archetype, render handle and clip variant set. False
-// when the body is culled or the species has no asset; nothing is added then.
 [[nodiscard]] auto
 build_quadruped_body(CreatureRenderBatch& batch,
                      const CreatureGraphOutput& output,

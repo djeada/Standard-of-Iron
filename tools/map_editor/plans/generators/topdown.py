@@ -18,7 +18,6 @@ def P(x, z):
     return ((x + W / 2) * S, (z + H / 2) * S)
 
 
-# terrain rises
 for t in m.get("terrain", []):
     if t.get("type") in ("flat", "hill", "mountain"):
         w, dp = t.get("width", t.get("radius", 10) * 2), t.get(
@@ -29,7 +28,7 @@ for t in m.get("terrain", []):
             [P(x - w / 2, z - dp / 2), P(x + w / 2, z + dp / 2)],
             fill=(150, 160, 110) if t["type"] != "mountain" else (130, 120, 110),
         )
-# lakes (sampled)
+
 waters = [
     Water(
         lake["x"],
@@ -110,7 +109,7 @@ for s in m.get("structures", []):
     key = s.get("style") or t
     n[key] = n.get(key, 0) + 1
     d.polygon(pts, fill=COL.get(key, (200, 0, 200)), outline=(60, 40, 30))
-    # front tick
+
     fx, fz = s["x"] + sn * dp / 2, s["z"] + c * dp / 2
     d.line([P(s["x"], s["z"]), P(fx, fz)], fill=(30, 30, 30), width=1)
 for q in m.get("world_props", []):

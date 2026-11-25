@@ -1,9 +1,5 @@
 #pragma once
 
-// Every humanoid baker clip, in clip-id order, as one authored constexpr table.
-// It is over 1,000 lines on purpose: the order is the clip id, and splitting
-// the table would scatter one list that is read and reviewed as a whole.
-
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>

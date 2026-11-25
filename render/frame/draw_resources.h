@@ -6,11 +6,6 @@ class Mesh;
 class Shader;
 class Texture;
 
-// The shared GPU objects a draw command may point at: stock meshes, the white
-// texture and the shaders that domain renderers select by hand. The backend
-// owns every one of them and fills this view; entity, creature, ground and
-// overlay code only copies the pointers into commands and never includes a
-// render/gl header.
 class DrawResources {
 public:
   struct Parts {

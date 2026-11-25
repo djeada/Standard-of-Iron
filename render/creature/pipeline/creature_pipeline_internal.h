@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the creature_pipeline*.cpp translation units; not a public header.
-
 #include <QQuaternion>
 #include <QVector4D>
 

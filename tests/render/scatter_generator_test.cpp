@@ -85,8 +85,6 @@ constexpr std::array k_prop_types{WorldPropType::FireCamp,
                                   WorldPropType::Statue,
                                   WorldPropType::CursedGoldVein};
 
-// A fertile 64x64 meadow with one authored prop of every type, loaded into the
-// session terrain service the way a mission does.
 class ScatterGeneratorTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -170,8 +168,7 @@ TEST_F(ScatterGeneratorTest, WorldPropLayersPlaceTheirPropsAndNothingElse) {
   EXPECT_EQ(generate_weapon_racks(req).size(), 1U);
   EXPECT_EQ(generate_ruins(req).size(), 1U);
   EXPECT_EQ(generate_dead_trees(req).size(), 1U);
-  // A boulder or an iron-ore prop is a small cluster: the authored rock plus
-  // satellites around it.
+
   EXPECT_GE(generate_boulders(req).size(), 1U);
   EXPECT_GE(generate_iron_ore(req).size(), 1U);
   EXPECT_EQ(generate_magic_shrines(req).size(), 1U);

@@ -20,9 +20,6 @@
 #include "render/frame/draw_context.h"
 #include "render/frame/submitter.h"
 
-// The registry maps a kind to its catalog descriptions, its presentation
-// systems and its submission. None of this needs a GL context.
-
 namespace {
 using namespace Render::GL;
 
@@ -48,7 +45,6 @@ public:
   void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
-// Built in place: the nation-variant renderers keep a reference to their registry.
 auto built_in_registry() -> const EntityRendererRegistry& {
   static EntityRendererRegistry registry;
   static const bool registered = [] {
@@ -104,7 +100,6 @@ TEST(EntityRegistry, EveryBuildingKindDrawsCatalogDescriptionsAndEveryEntryHasAK
   const auto kinds = registry.kinds();
   const std::set<std::string> registered(kinds.begin(), kinds.end());
 
-  // Built from primitives at draw time, with no baked description.
   const std::set<std::string> primitive_only{
       building_renderer_key("iron_sepulcher", "barracks")};
 

@@ -55,10 +55,6 @@ auto grass_patch_density(float gx, float gz, uint32_t seed) -> float {
   return k_grass_patch_floor + k_grass_patch_gain * t * t * (3.0F - 2.0F * t);
 }
 
-// A soldier is drawn about 0.9 m tall. At the old 0.56 / 1.90 a tall tuft stood
-// to his thigh and splayed nearly a metre across, so blades poked through
-// feet and selection rings and the sward read as reeds at the play camera.
-// These keep the tallest tuft below the knee and under half a metre wide.
 constexpr float k_grass_height_scale = 0.36F;
 constexpr float k_grass_width_scale = 1.10F;
 
@@ -152,8 +148,6 @@ inline auto section_for(Game::Map::TerrainType type) -> int {
 
 namespace {
 
-// The grass layer's generator, kept as a class so the placement passes share
-// the grid and seed exactly as they did inside the renderer.
 class GrassGenerator {
 public:
   GrassGenerator(const ScatterRequest& request, float requested_density)

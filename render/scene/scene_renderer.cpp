@@ -241,9 +241,7 @@ void Renderer::allow_bakes_after_preset_change() {
   if (!m_forbids_runtime_bake && !m_async_prewarm.current()) {
     return;
   }
-  // The match was prewarmed for another preset (LOD tiers differ between
-  // presets). Forbidding bakes now would leave units with no mesh, so they
-  // would vanish; bake what is missing on demand until the next load.
+
   cancel_async_template_prewarm();
   set_forbids_runtime_bake(false);
   qInfo() << "Renderer: graphics preset changed mid-match; baking missing unit "

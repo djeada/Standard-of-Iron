@@ -44,7 +44,6 @@ public:
 
   [[nodiscard]] auto describe(bool renderer_up, bool gpu_resources_up) const -> QString;
 
-  // The GUI thread owns load preparation and the timer.
   auto begin() -> quint64;
   [[nodiscard]] auto current_load() const -> quint64 {
     return active() ? m_load_sequence : 0;

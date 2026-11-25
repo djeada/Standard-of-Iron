@@ -50,8 +50,7 @@ TEST_F(GlDeferredDeleteTest, ANullNameIsNotQueued) {
 
 TEST_F(GlDeferredDeleteTest, ANameFromADeadShareGroupIsDroppedNotReplayed) {
   const std::size_t before = Render::GL::deferred_gl_delete_count();
-  // Far above the ids real contexts get (they count up from 1), so marking
-  // these dead cannot drop a later test's live context group.
+
   constexpr Render::GL::GlShareGroup k_first = 0x7fff0011U;
   constexpr Render::GL::GlShareGroup k_second = 0x7fff0012U;
 

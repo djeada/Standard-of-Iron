@@ -85,8 +85,7 @@ TEST(GlContextLifetime, GlDestructionWithoutCurrentContextNeverCallsGl) {
   texture.reset();
   shader.reset();
   resources.reset();
-  // Two textures and the wear volume. Its meshes are geometry only; their GL
-  // objects belong to whichever MeshGpuTable uploaded them.
+
   constexpr std::size_t k_resource_manager_names = 2U + 1U;
   EXPECT_EQ(Render::GL::deferred_gl_delete_count(),
             before + 2U + k_resource_manager_names)

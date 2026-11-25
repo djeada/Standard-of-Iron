@@ -214,8 +214,6 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     return result;
   }
 
-  // Campaign missions author their own economy; only skirmishes get the idle-crew
-  // gathering, the same split the camp start uses.
   Game::Session::session_for(world).set_idle_builders_gather(
       allow_default_player_barracks);
 

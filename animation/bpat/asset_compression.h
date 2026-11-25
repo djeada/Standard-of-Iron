@@ -25,7 +25,6 @@ auto write_compressed_asset(const std::filesystem::path& path,
                             std::string& error,
                             int level = k_asset_compression_level) -> bool;
 
-// For build caches. Keep a matching frame and its sidecar untouched.
 auto write_cached_asset(const std::filesystem::path& path,
                         const std::filesystem::path& sidecar,
                         std::string_view bytes,

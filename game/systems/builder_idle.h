@@ -5,10 +5,6 @@
 
 namespace Game::Systems {
 
-// A builder is idle when it has no job and no standing gather order: not on a
-// construction or task, not hauling for a resource. One rule, shared by the
-// economy summary and the "select idle builders" hotkey, so the count a player
-// reads is the squad the key finds.
 [[nodiscard]] inline auto
 builder_is_idle(const Engine::Core::BuilderProductionComponent* builder) -> bool {
   if (builder == nullptr) {

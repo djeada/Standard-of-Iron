@@ -24,11 +24,6 @@ BiomeGrassPalette biome_grass_palette(int ground_type) {
   return BiomeGrassPalette(vec3(1.0), vec3(1.0));
 }
 
-// Living grass reflects nearly as much red as green and little blue. The
-// authored biome primaries are emerald - green twice red, blue level with red
-// on the river maps - and no light makes that read as a meadow: it reads as
-// felt. This moves a green-dominant colour to a leaf green of the same
-// brightness and leaves straw, soil and rock alone.
 const float k_sward_red_share = 0.71;
 const float k_sward_blue_share = 0.50;
 const float k_sward_natural_amount = 0.88;

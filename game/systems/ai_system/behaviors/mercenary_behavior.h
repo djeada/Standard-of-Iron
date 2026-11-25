@@ -4,10 +4,6 @@
 
 namespace Game::Systems::AI {
 
-// Carthage turns gold into an army (NATION_ASYMMETRY.md section 9): hire
-// mercenary bands at the Mercenary Camp and elephants at the Elephant Stables,
-// in bursts, while a treasury model keeps the upkeep payable: no band is hired
-// whose upkeep would leave the treasury empty within two minutes.
 class MercenaryBehavior : public AIBehavior {
 public:
   void execute(const AISnapshot& snapshot,

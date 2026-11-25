@@ -54,8 +54,7 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
 
   const std::size_t stride = BonePaletteArena::k_palette_bytes;
   const std::size_t bytes = static_cast<std::size_t>(atlas.frame_total) * stride;
-  // The block writes the padded palettes straight from the atlas storage when a
-  // backend uploads it, so the atlas is never held twice on the CPU.
+
   auto writer = [storage = atlas.palette_storage,
                  palettes = atlas.palettes,
                  frame_total = atlas.frame_total,
@@ -64,8 +63,7 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
     auto* floats = reinterpret_cast<float*>(destination.data());
     const std::size_t frames = std::min<std::size_t>(
         frame_total, destination.size() / BonePaletteArena::k_palette_bytes);
-    // Never read past the palettes the atlas actually holds: frames the blob
-    // does not cover are written as the bind pose.
+
     const std::size_t covered =
         bone_count == 0U ? 0U
                          : std::min<std::size_t>(frames, palettes.size() / bone_count);
@@ -384,8 +382,7 @@ auto RiggedMeshCache::evict_unused_over_budget() -> std::uint64_t {
                ? m_attachment_meshes.erase(it)
                : std::next(it);
     }
-    // A null copy (nothing worth simplifying) stays, so the mesh is not
-    // simplified again when an entry drawing it comes back.
+
     for (auto it = m_reduced_meshes.begin(); it != m_reduced_meshes.end();) {
       it = (it->second != nullptr && it->second.use_count() == 1)
                ? m_reduced_meshes.erase(it)

@@ -51,8 +51,6 @@ auto describe_leaks(const LiveCounts& before, const LiveCounts& after) -> std::s
   return out.str();
 }
 
-// CI runs this file under Xvfb + Mesa with SOI_REQUIRE_GL=1, where a missing
-// context is a failure rather than a skip.
 auto gl_required() -> bool {
   return qEnvironmentVariableIntValue("SOI_REQUIRE_GL") != 0;
 }
@@ -115,7 +113,7 @@ void render_frames(Render::GL::Backend& backend, int frames) {
     queue.submit(cylinder);
     Render::GL::GridCmd grid;
     queue.submit(grid);
-    // Translucent linear features take the water pipeline's blended path.
+
     for (const auto kind :
          {Render::GL::LinearFeatureKind::Road, Render::GL::LinearFeatureKind::Water}) {
       Render::GL::TerrainFeatureCmd feature;
@@ -131,8 +129,6 @@ void render_frames(Render::GL::Backend& backend, int frames) {
   }
 }
 
-// One full backend lifetime: initialise every pipeline, draw a few frames with
-// profiling on (so timer queries and fences are made), tear down.
 auto run_backend_lifetime(int frames) -> bool {
   auto backend = std::make_unique<Render::GL::Backend>();
   if (!backend->initialize()) {

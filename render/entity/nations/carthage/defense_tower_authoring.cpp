@@ -285,7 +285,7 @@ auto build_tower_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
                                  .seed = 397});
 
   {
-    // A stele and a burning stand at its foot.
+
     const Motif::Setter set(desc, state);
     Motif::add_punic_stele(desc, set.at(-0.52F, 1.04F, 0.8F), 0.95F, 1.0F, 6);
     Motif::add_punic_incense_stand(desc, set.at(0.52F, 1.04F, 0.8F), 0.80F);

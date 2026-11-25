@@ -11,14 +11,6 @@ inline constexpr float k_raft_deck_half_length = 1.9F;
 
 inline constexpr float k_raft_deck_half_width = 2.7F;
 
-// How a passenger unit's formation is laid onto a raft deck.
-//
-// Boarding narrows the unit to as many files as the deck is wide, but the layout's
-// own file and rank spacing (and a deep unit's extra ranks) still made a 24-man
-// company about twice the deck, and the outer men stood on open water at deck
-// height. The fit centres the live slots on the deck and squeezes each axis just
-// enough that every body stays on the planks; a unit that already fits is only
-// centred.
 struct RaftDeckFit {
   float centre_x{0.0F};
   float centre_z{0.0F};
@@ -33,8 +25,6 @@ struct RaftDeckFit {
   }
 };
 
-// Files run along the deck's width (across the passenger's facing); ranks along its
-// length (the crossing direction the passenger faces).
 [[nodiscard]] inline auto
 raft_deck_fit(const FormationCombat::FormationLayout& layout) noexcept -> RaftDeckFit {
   auto const& placed = layout.live_slots.empty() ? layout.all_slots : layout.live_slots;
@@ -54,8 +44,7 @@ raft_deck_fit(const FormationCombat::FormationLayout& layout) noexcept -> RaftDe
   }
   fit.centre_x = (min_x + max_x) * 0.5F;
   fit.centre_z = (min_z + max_z) * 0.5F;
-  // A body keeps its radius inside the deck edge, but never less than a hand's
-  // breadth of standing room for the slot centres.
+
   float const body = std::clamp(layout.body_radius, 0.0F, 0.45F);
   float const room_x = std::max(0.1F, k_raft_deck_half_width - body);
   float const room_z = std::max(0.1F, k_raft_deck_half_length - body);

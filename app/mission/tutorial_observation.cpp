@@ -188,8 +188,7 @@ auto nearest_props(const Game::Map::TerrainService* terrain,
     if (!matches(prop.type)) {
       continue;
     }
-    // Authored props may be in grid space (the tutorial meadow is); the anchor
-    // and the camera are in world space.
+
     const QVector3D position = terrain->world_prop_world_position(prop);
     const float dx = position.x() - anchor.x();
     const float dz = position.z() - anchor.z();
@@ -362,9 +361,7 @@ auto resolve_tutorial_focus_points(const TutorialFocusInputs& inputs) -> QVarian
     return to_points(units.commander, 1);
 
   case TutorialFocusTarget::EnemyCamp: {
-    // The assault is won by killing the commander, so he leads the list and the
-    // camera; his barracks join only when they stand with him. Averaging a
-    // commander and a camp far apart would frame the empty ground between.
+
     if (units.enemy_commanders.empty()) {
       return to_points(units.enemy_barracks, 2);
     }

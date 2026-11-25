@@ -179,9 +179,6 @@ auto build_olive_tree_mesh() -> TreeMesh {
   tree.stem(root, QVector3D(-0.018F, 0.20F, 0.012F), 0.15F, 0.10F, 11U);
   tree.stem(QVector3D(-0.018F, 0.20F, 0.012F), fork, 0.10F, 0.075F, 13U);
 
-  // One full dome carries the silhouette and the branch crowns swell out of
-  // it, so the tree reads as a rounded broadleaf mass at battle zoom; as six
-  // separate flat pads round a small core it read as a bush on a stick.
   tree.crown(QVector3D(0.0F, 0.80F, 0.02F), QVector3D(0.42F, 0.36F, 0.40F), 0.3F, 101U);
   tree.crown(
       QVector3D(0.03F, 1.00F, -0.01F), QVector3D(0.28F, 0.19F, 0.27F), 1.1F, 131U);

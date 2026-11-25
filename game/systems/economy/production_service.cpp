@@ -142,7 +142,7 @@ auto production_ruling(Engine::Core::World& world,
     return ProductionResult::TypeLimitReached;
   }
   const auto* production = building.get_component<Engine::Core::ProductionComponent>();
-  // Roster costs, a band's gold and the Fabrica's discount (NATION_ASYMMETRY.md).
+
   const RecruitQuote quote = quote_recruit(world, unit->owner_id, unit_type, band);
   const int production_cost = quote.manpower;
   const int manpower_available =
@@ -165,13 +165,13 @@ auto production_ruling(Engine::Core::World& world,
       return ProductionResult::GlobalTroopLimitReached;
     }
   }
-  const int max_queue_size =
-      is_home ? ProductionService::k_home_queue_limit
-      // A Mercenary Camp holds one contract at a time (NATION_ASYMMETRY.md 11).
-      : unit->spawn_type == Game::Units::SpawnType::MercenaryCamp ? 1
-      : unit->spawn_type == Game::Units::SpawnType::Barracks
-          ? ProductionService::k_barracks_queue_limit
-          : ProductionService::k_other_queue_limit;
+  const int max_queue_size = is_home ? ProductionService::k_home_queue_limit
+
+                             : unit->spawn_type == Game::Units::SpawnType::MercenaryCamp
+                                 ? 1
+                             : unit->spawn_type == Game::Units::SpawnType::Barracks
+                                 ? ProductionService::k_barracks_queue_limit
+                                 : ProductionService::k_other_queue_limit;
   int total_in_queue = 0;
   if (production != nullptr) {
     total_in_queue = (production->in_progress ? 1 : 0) +

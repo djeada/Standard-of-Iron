@@ -36,9 +36,6 @@ public:
 
   Game::Systems::NationID original_nation_id{Game::Systems::NationID::RomanRepublic};
 
-  // Presentation only: the look the structure was authored with (see
-  // Game::Visuals::k_building_visual_styles). Systems that recompute a
-  // structure's renderer key, as the wall network does, keep to it.
   std::string visual_style;
 };
 
@@ -69,9 +66,6 @@ public:
   bool repeat_active{false};
   Game::Units::TroopType repeat_product{Game::Units::TroopType::Archer};
 
-  // The nation of the squad in training when it is not the owner's own: a
-  // mercenary band (NATION_ASYMMETRY.md 4.2). A hiring building holds one
-  // contract at a time, so this covers the job in progress only.
   bool has_product_nation{false};
   Game::Systems::NationID product_nation{Game::Systems::NationID::RomanRepublic};
 

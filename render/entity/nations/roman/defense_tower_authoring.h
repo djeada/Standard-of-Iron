@@ -18,11 +18,8 @@
 #include "render/geom/primitives.h"
 #include "render/math/math_utils.h"
 
-// The defense tower geometry, authored as BuildingArchetypeDescs and baked by
-// the building archetype catalog. Nothing here draws or reads frame state.
 namespace Render::GL::Roman {
 
-// Palette and layout shared by the authoring and the defense tower renderer.
 namespace defense_tower_detail {
 
 using Render::Geom::clamp_vec_01;

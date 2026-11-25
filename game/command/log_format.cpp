@@ -161,7 +161,7 @@ auto to_json(const LogEntry& entry) -> QJsonObject {
       [&entry](const auto& payload) -> std::pair<const char*, QJsonObject> {
         using T = std::decay_t<decltype(payload)>;
         if constexpr (std::is_same_v<T, Payload>) {
-          // Reuse the command codec. The outer envelope owns the ordering and source.
+
           auto command =
               to_json(Command{entry.source, entry.owner, entry.tick, payload});
           command.remove(QLatin1String("source"));

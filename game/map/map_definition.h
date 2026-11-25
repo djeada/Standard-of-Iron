@@ -86,7 +86,6 @@ struct StructureEntry {
   float rotation = 0.0F;
   QString nation;
 
-  // Presentation only; one of Game::Visuals::k_building_visual_styles.
   QString style;
 };
 

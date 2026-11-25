@@ -35,7 +35,7 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ARENA = ROOT / "build" / "bin" / "arena_app"
 
-# Frames at the head of a run pay shader and pipeline warm-up.
+
 WARMUP_FRAMES = 60
 
 
@@ -97,8 +97,7 @@ def run_arena(binary: str | None, args: list[str], log: pathlib.Path) -> int:
     arena = pathlib.Path(binary).resolve() if binary else ARENA
     if not arena.exists():
         sys.exit(f"{arena} is missing; build the arena_app target first")
-    # Promo capture insists on Ultra for marketing footage; review frames are
-    # taken at the preset under review.
+
     env = dict(os.environ, SOI_PROMO_ALLOW_LOW_QUALITY="1")
     with log.open("w") as handle:
         return subprocess.run(
@@ -214,7 +213,7 @@ def cmd_map(args: argparse.Namespace) -> None:
             "far": 1800,
         }
         if "hour" in view:
-            # A view may fix its own hour (night pairs); the light is locked there.
+
             environment = dict(staged.get("environment", {}))
             environment.update(start_time=float(view["hour"]), time_mode="locked")
             staged["environment"] = environment
@@ -271,7 +270,7 @@ def cmd_compare(args: argparse.Namespace) -> None:
     def frames_of(directory: str) -> dict[str, pathlib.Path]:
         found = {}
         for frame in sorted(pathlib.Path(directory).rglob("*.png")):
-            # 03_aur_B_gate.png -> aur_B_gate: pair by shot name, not by order.
+
             found[frame.stem.split("_", 1)[-1]] = frame
         return found
 
@@ -375,8 +374,6 @@ def cmd_perf(args: argparse.Namespace) -> None:
         "hardware": config.get("reference_hardware", hardware()),
         "frames_measured": len(measured),
         "warmup_frames_dropped": len(frames) - len(measured),
-        # Wall clock on a shared desktop is noisy: compare the minimum and the
-        # counters before trusting a percentile.
         "frame_time_ms": summarise([float(f["frame_time_ms"]) for f in measured]),
         "render_cpu_ms": {
             stage: summarise(values) for stage, values in sorted(breakdown.items())
@@ -401,8 +398,6 @@ def cmd_perf(args: argparse.Namespace) -> None:
             "gl_texture_storage": totals.get("gl_texture_storage_bytes"),
         },
         "gl_programs_linked": totals.get("programs_linked"),
-        # Process start to first frame: asset load, world build and bake, taken
-        # as the wall clock the frames themselves do not account for.
         "startup_seconds": round(
             max(
                 0.0,

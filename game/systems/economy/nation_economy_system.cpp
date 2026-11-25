@@ -38,7 +38,6 @@ auto planar_distance(const Engine::Core::TransformComponent& a,
   return std::hypot(a.position.x - b.position.x, a.position.z - b.position.z);
 }
 
-// Live buildings of one type an owner holds, oldest first.
 auto standing_buildings(const Engine::Core::World& world,
                         int owner_id,
                         Game::Units::SpawnType type)

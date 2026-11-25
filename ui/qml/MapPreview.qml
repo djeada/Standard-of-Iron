@@ -22,10 +22,6 @@ Rectangle {
 
     signal base_activated(string key)
 
-    // Map, seat and colour changes arrive in bursts (a new map resets every
-    // seat), and drawing a battlefield the first time is slow on weak PCs.
-    // Collect a burst into one render, and start it after the screen has
-    // painted its spinner instead of inside the click that asked for it.
     function refresh_preview() {
         if (!map_path || map_path === "" || !player_configs || player_configs.length === 0) {
             render_timer.stop();

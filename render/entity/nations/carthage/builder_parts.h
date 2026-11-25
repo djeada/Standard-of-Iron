@@ -1,9 +1,5 @@
 #pragma once
 
-// Internal to builder_renderer.cpp: the equipment archetype parts (palettes,
-// cached archetypes, attachments) it registers. Each cache is defined once,
-// in builder_parts.cpp.
-
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>

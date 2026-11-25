@@ -14,7 +14,6 @@
 namespace Render::GL {
 namespace {
 
-// Grey-gold tufa, the stone of the old Roman circuit.
 const WallPalette k_roman_palette{.wood_light = QVector3D(0.80F, 0.76F, 0.64F),
                                   .wood_mid = QVector3D(0.70F, 0.66F, 0.55F),
                                   .wood_dark = QVector3D(0.48F, 0.45F, 0.38F),
@@ -26,7 +25,6 @@ const WallPalette k_roman_palette{.wood_light = QVector3D(0.80F, 0.76F, 0.64F),
                                   .alternate_starts_light = true,
                                   .horned_masonry = false};
 
-// Whitewashed sandstone, as the sea walls of Carthage were.
 const WallPalette k_carthage_palette{.wood_light = QVector3D(0.90F, 0.85F, 0.73F),
                                      .wood_mid = QVector3D(0.82F, 0.75F, 0.61F),
                                      .wood_dark = QVector3D(0.55F, 0.49F, 0.39F),

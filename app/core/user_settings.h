@@ -18,8 +18,7 @@ namespace App::Core::UserSettings {
 inline constexpr char kOrganization[] = "djeada";
 inline constexpr char kApplication[] = "StandardOfIron";
 inline constexpr char kGraphicsQualityKey[] = "graphics/quality_level";
-// Preset the game stepped down to on its own because battles ran too slowly.
-// Used only while the player has not picked a preset themselves.
+
 inline constexpr char kAutoGraphicsQualityKey[] = "graphics/auto_quality_level";
 inline constexpr char kLanguageKey[] = "ui/language";
 inline constexpr char kMasterVolumeKey[] = "audio/master_volume";
@@ -153,10 +152,7 @@ inline void apply_saved_graphics_quality() {
   auto& graphics = Render::GraphicsSettings::instance();
   graphics.set_quality_chosen_by_user(level.has_value());
   if (!level.has_value()) {
-    // No choice of the player's yet. Profiles from builds that lowered the
-    // preset during battles kept the settled preset here; start from it so a
-    // slow PC is not sent back to High. The renderer then fixes the preset
-    // once for this adapter and the engine saves it as the player's.
+
     const auto settled = load_auto_graphics_quality_level();
     const auto fallback = static_cast<int>(Render::k_default_graphics_quality);
     graphics.set_quality(static_cast<Render::GraphicsQuality>(

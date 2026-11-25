@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the humanoid_manifest*.cpp translation units; not a public header.
-
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>

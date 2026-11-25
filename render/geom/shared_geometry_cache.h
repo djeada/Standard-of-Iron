@@ -31,8 +31,6 @@ public:
 
   [[nodiscard]] auto get_or_build(std::uint64_t key, const Builder& build) -> Mesh*;
 
-  // Visits every cached mesh, under the cache lock; used to prewarm a
-  // backend's MeshGpuTable.
   void for_each_mesh(const MeshVisitor& visit) const;
 
   [[nodiscard]] auto size() const -> std::size_t;

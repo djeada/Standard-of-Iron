@@ -14,8 +14,6 @@
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/nations/roman/tenement_builder.h"
 
-// The insula's shell: lot, party walls, facade slabs with their openings, and
-// what damage leaves standing.
 namespace Render::GL::Roman::TenementDetail {
 
 using namespace TenementLot;
@@ -222,8 +220,6 @@ void TenementBuilder::add_shell() {
   }
 }
 
-// The carriage passage: a round-headed opening, cut as stepped strips that
-// the voussoirs then cover.
 void TenementBuilder::add_passage_front() {
   auto openings = front_openings(0);
   wall_storey(Side::Front, 0, openings);
@@ -307,7 +303,7 @@ auto tenement_vent(int variant) -> QVector3D {
 auto build_tenement_desc(BuildingState state, int variant) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc("roman_tenement_variant_" + std::to_string(variant));
   TenementBuilder(desc, state, variant).build();
-  // The dark course the whole street stands on: tufa under the limewash.
+
   {
     BuildingPartMaterial const stone(desc, k_building_material_stone);
     const float foot = TenementLot::k_pavement_top;
@@ -318,8 +314,7 @@ auto build_tenement_desc(BuildingState state, int variant) -> BuildingArchetypeD
                    Motif::Rome::k_tufa_dark);
     }
   }
-  // A palmette where the ridge meets each party wall, so a terrace of roofs
-  // has the rhythm a Roman street does; and on some of them a raven.
+
   const Motif::Setter set(desc, state);
   if (tenement_traits(variant).roof == TenementRoof::Gable) {
     const QVector3D ridge =

@@ -128,7 +128,6 @@ public:
   [[nodiscard]] auto last_frame_delta() const -> float { return m_last_frame_delta; }
   auto get_animation_time() const -> float override { return m_accumulated_time; }
 
-  // Pins the animation clock, for reproducible captures.
   void set_animation_time(float seconds) {
     m_accumulated_time = seconds;
     m_last_frame_delta = 0.0F;
@@ -453,10 +452,8 @@ public:
   using TemplatePrewarmProgressCallback =
       std::function<bool(const TemplatePrewarmProgress&)>;
 
-  // Builds a whole world frame: begin_frame, then the stages in the order
-  // build_world_frame_passes() declares, then end_frame.
   void render_frame(const WorldFrameSources& sources);
-  // The world stage alone: the scene walk and the passes that follow it.
+
   void render_world(Engine::Core::World* world);
   void run_frame_source_terrain();
   void run_frame_source_overlays();
@@ -659,9 +656,7 @@ private:
   AsyncTemplatePrewarm m_async_prewarm;
   bool m_loading_overlay_active = false;
   bool m_forbids_runtime_bake = false;
-  // Graphics preset generation the unit templates were prewarmed for. A
-  // preset change mid-match (from Settings) needs
-  // templates at LODs nobody prewarmed, so the bake ban is lifted then.
+
   std::uint32_t m_prewarmed_graphics_generation = 0;
 
   void set_forbids_runtime_bake(bool forbidden);

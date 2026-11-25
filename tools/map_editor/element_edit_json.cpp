@@ -267,8 +267,7 @@ auto linear_from_json(const QJsonObject& json,
                                        MapJsonKeys::player_id,
                                        MapJsonKeys::nation,
                                        MapJsonKeys::waypoints});
-  // A river's height is its water level, set or left to the ground it runs
-  // through: it is written back exactly as it was given.
+
   if (elem.type == QStringLiteral("river") && json.contains(MapJsonKeys::height)) {
     elem.extra_fields[MapJsonKeys::height] = json[MapJsonKeys::height];
   }
