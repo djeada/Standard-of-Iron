@@ -18,6 +18,11 @@
 # Set SOI_TEST_REPORT_DIR to collect GoogleTest JSON reports, one per suite;
 # scripts/check-test-speed.py reads them to keep the fast profile fast.
 #
+# Set SOI_TEST_JOBS=N (N > 1) to run the suites N at a time. Each suite is its
+# own process with its own report, so nothing is shared between them; the
+# acceptance binaries and the short replay run as one more concurrent task, so
+# they still run exactly once. The default, 1, is the plain sequential run.
+#
 # usage: scripts/run-tests.sh [build-dir] [extra gtest args...]
 
 set -uo pipefail
@@ -113,10 +118,66 @@ resolve() {
   fi
 }
 
+# Concurrent mode: this process becomes a coordinator that starts one copy of
+# itself per suite (SOI_TEST_SUITES narrows each copy to its suite, which also
+# keeps the acceptance block below out of it) and, when nothing narrowed the
+# run, one copy for the acceptance binaries and the short replay
+# (SOI_REPLAY_ONLY runs those and no suite). The heaviest suites start first so
+# the run ends when the longest one does rather than a long one after the rest.
+test_jobs=${SOI_TEST_JOBS:-1}
+case "${test_jobs}" in
+  '' | *[!0-9]* | 0)
+    echo "error: SOI_TEST_JOBS must be a positive integer, got '${test_jobs}'" >&2
+    exit 2
+    ;;
+esac
+if [ "${test_jobs}" -gt 1 ] && [ "${SOI_REPLAY_ONLY:-0}" != "1" ] &&
+  [ -z "${SOI_TEST_CHILD:-}" ] && [ "${#suites[@]}" -gt 0 ] &&
+  { [ -z "${selected_suites}" ] || [ "${SOI_RUN_ACCEPTANCE:-0}" != "1" ]; }; then
+  heavy_first=(combat_balance_tests app_tests render_tests)
+  ordered=()
+  for suite in "${heavy_first[@]}"; do
+    for candidate in "${suites[@]}"; do
+      if [ "${candidate}" = "${suite}" ]; then
+        ordered+=("${suite}")
+      fi
+    done
+  done
+  for candidate in "${suites[@]}"; do
+    is_heavy=0
+    for suite in "${heavy_first[@]}"; do
+      if [ "${candidate}" = "${suite}" ]; then
+        is_heavy=1
+      fi
+    done
+    if [ "${is_heavy}" -eq 0 ]; then
+      ordered+=("${candidate}")
+    fi
+  done
+
+  extra_args=""
+  if [ $# -gt 0 ]; then
+    extra_args=$(printf ' %q' "$@")
+  fi
+  parallel_tasks=()
+  if [ -z "${selected_suites}" ]; then
+    parallel_tasks+=("acceptance and replay::SOI_TEST_CHILD=1 SOI_REPLAY_ONLY=1 bash $(printf '%q' "${BASH_SOURCE[0]}") $(printf '%q' "${build_dir}")${extra_args}")
+  fi
+  for suite in "${ordered[@]}"; do
+    parallel_tasks+=("${suite}::SOI_TEST_CHILD=1 SOI_RUN_ACCEPTANCE=0 SOI_TEST_SUITES=${suite} bash $(printf '%q' "${BASH_SOURCE[0]}") $(printf '%q' "${build_dir}")${extra_args}")
+  done
+  exec bash "${repo_root}/scripts/run-parallel.sh" --jobs "${test_jobs}" \
+    --title "Test suites (${profile})" -- "${parallel_tasks[@]}"
+fi
+
+if [ "${SOI_REPLAY_ONLY:-0}" = "1" ]; then
+  suites=()
+fi
+
 status=0
 failed=()
 
-for suite in "${suites[@]}"; do
+for suite in "${suites[@]+"${suites[@]}"}"; do
   binary=$(resolve "${suite}")
   if [ -z "${binary}" ]; then
     echo "error: ${bin_dir}/${suite} not built." >&2

@@ -28,6 +28,7 @@ import os
 import re
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -42,6 +43,16 @@ is not this project's business, so the ceiling sits several times above that: it
 is here to catch the class of test that took this lane from minutes to ninety
 minutes, every one of which costs tens of seconds, not to argue over a test that
 grew from one second to three.
+"""
+
+DEFAULT_TOTAL_BUDGET_MS = 900000
+"""A ceiling for the sum of every fast-profile test's own time.
+
+The sum is the same however the suites are scheduled, so it measures what the
+tests cost and not how well they were overlapped. It was about 400 s on a
+pull-request runner when this was written; the ceiling leaves room for a slow
+neighbour and trips when the profile has roughly doubled, which a per-test
+budget never would: a hundred tests of nine seconds each pass it.
 """
 
 SUITES = (
@@ -144,8 +155,14 @@ def timings_from_report(path: Path) -> list[tuple[str, float]]:
     return timings
 
 
-def check_budget(report_dir: Path, budget_ms: int) -> tuple[list[str], list[str]]:
-    """Overspending tests, and the slowest few for the run summary."""
+def check_budget(
+    report_dir: Path, budget_ms: int, total_budget_ms: int
+) -> tuple[list[str], list[str], list[str], str | None]:
+    """Overspending tests, the slowest few, per-suite totals, and a total overrun.
+
+    The last item is a message when the summed test time is over
+    `total_budget_ms`, otherwise None.
+    """
     reports = sorted(report_dir.glob("*.json"))
     if not reports:
         raise RuntimeError(
@@ -167,7 +184,26 @@ def check_budget(report_dir: Path, budget_ms: int) -> tuple[list[str], list[str]
     slowest = [
         f"{milliseconds:7.0f} ms  {name}" for milliseconds, name, _ in measured[:10]
     ]
-    return over, slowest
+
+    per_suite: dict[str, float] = {}
+    for milliseconds, _, suite in measured:
+        per_suite[suite] = per_suite.get(suite, 0.0) + milliseconds
+    suite_totals = [
+        f"{milliseconds / 1000.0:7.1f} s  {suite}"
+        for suite, milliseconds in sorted(
+            per_suite.items(), key=lambda item: item[1], reverse=True
+        )
+    ]
+
+    total = sum(per_suite.values())
+    total_over = None
+    if total > total_budget_ms:
+        total_over = (
+            f"the fast profile's tests add up to {total / 1000.0:.0f} s, over the "
+            f"{total_budget_ms / 1000.0:.0f} s aggregate budget. Per suite:\n  "
+            + "\n  ".join(suite_totals)
+        )
+    return over, slowest, suite_totals + [f"{total / 1000.0:7.1f} s  total"], total_over
 
 
 def check_manifest(manifest: Path, build_dir: Path) -> list[str]:
@@ -178,6 +214,7 @@ def check_manifest(manifest: Path, build_dir: Path) -> list[str]:
 
     known: set[str] = set()
     missing_binaries: list[str] = []
+    binaries: list[Path] = []
     for suite in SUITES:
         binary = build_dir / "bin" / suite
         if not binary.exists():
@@ -185,13 +222,19 @@ def check_manifest(manifest: Path, build_dir: Path) -> list[str]:
         if not binary.exists():
             missing_binaries.append(suite)
             continue
-        known.update(list_tests(binary))
+        binaries.append(binary)
 
     if missing_binaries:
         raise RuntimeError(
             "cannot validate the manifest without every test binary; missing: "
             + ", ".join(missing_binaries)
         )
+
+    # Listing starts each binary, which costs seconds apiece; they are
+    # independent, so they are listed together.
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for names in pool.map(list_tests, binaries):
+            known.update(names)
 
     stale: list[str] = []
     for pattern in patterns:
@@ -228,6 +271,35 @@ def self_test() -> int:
         failures.append(f"{DEFAULT_MANIFEST} parsed to nothing")
     if any("#" in pattern or " " in pattern for pattern in patterns):
         failures.append("manifest parsing left a comment or a space in a pattern")
+
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as scratch:
+        report = Path(scratch) / "demo_tests.json"
+        report.write_text(
+            json.dumps(
+                {
+                    "testsuites": [
+                        {
+                            "name": "S",
+                            "testsuite": [
+                                {"name": "A", "time": "2.000s"},
+                                {"name": "B", "time": "3.000s"},
+                            ],
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        over, _, totals, total_over = check_budget(Path(scratch), 2500, 10000)
+        if over != ["S.B (3000 ms in demo_tests)"] or total_over is not None:
+            failures.append(f"check_budget misjudged a 5 s total: {over} {total_over}")
+        if not totals[-1].strip().startswith("5.0 s"):
+            failures.append(f"check_budget summed the suite wrongly: {totals}")
+        _, _, _, total_over = check_budget(Path(scratch), 2500, 4000)
+        if total_over is None:
+            failures.append("check_budget missed a total over the aggregate budget")
 
     for failure in failures:
         print(f"self-test: {failure}", file=sys.stderr)
@@ -277,6 +349,15 @@ def main() -> int:
         help=f"per-test ceiling in the fast profile (default: {DEFAULT_BUDGET_MS})",
     )
     parser.add_argument(
+        "--total-budget-ms",
+        type=int,
+        default=DEFAULT_TOTAL_BUDGET_MS,
+        help=(
+            "ceiling for the summed time of every test in the fast profile "
+            f"(default: {DEFAULT_TOTAL_BUDGET_MS})"
+        ),
+    )
+    parser.add_argument(
         "--self-test",
         action="store_true",
         help="check this script's own pattern matching and parsing, then exit",
@@ -303,7 +384,9 @@ def main() -> int:
 
     if arguments.report_dir is not None:
         try:
-            over, slowest = check_budget(arguments.report_dir, arguments.budget_ms)
+            over, slowest, suite_totals, total_over = check_budget(
+                arguments.report_dir, arguments.budget_ms, arguments.total_budget_ms
+            )
         except RuntimeError as error:
             print(f"error: {error}", file=sys.stderr)
             return 1
@@ -315,8 +398,13 @@ def main() -> int:
                 "with the reason it belongs to the extended profile:\n  "
                 + "\n  ".join(over)
             )
+        if total_over:
+            problems.append(total_over)
         summary_lines += ["", "Slowest tests in the fast profile:", "", "```"]
         summary_lines += slowest
+        summary_lines.append("```")
+        summary_lines += ["", "Summed test time per suite:", "", "```"]
+        summary_lines += suite_totals
         summary_lines.append("```")
 
     if problems:

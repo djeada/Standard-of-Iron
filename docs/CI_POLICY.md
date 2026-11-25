@@ -33,6 +33,12 @@ SOI_TEST_PROFILE=pr scripts/run-tests.sh
 
 All nine test binaries are built and executed. The pull-request profile excludes only the individual tests listed in `tests/extended_tests.txt`.
 
+The lane runs the suites three at a time (`SOI_TEST_JOBS=3`): each suite is its own process with its own JSON report, and the acceptance binaries and the short headless replay run as one more concurrent task, so the replay still runs exactly once. `scripts/run-parallel.sh` does the scheduling, prints each task's log in one piece and writes a duration table to the job summary. The default, `SOI_TEST_JOBS=1`, is the plain sequential run developers get from `make test`.
+
+After the tests, translation coverage, audio wiring, the validator integration test and the promo first-frame test run together through the same script. They share no inputs, and each was a single core for 100+ seconds. The validator integration test already validates all of `assets/`, so there is no separate `content_validator assets` step.
+
+`scripts/check-test-speed.py` enforces two budgets: 10 s for any one test, and 900 s for the summed test time (the sum is independent of how the suites overlap, so it tracks what the tests cost). Its summary lists the slowest tests and the time per suite. ccache statistics are in the job summary from the ccache step.
+
 ### Compiler cache
 
 "A few minutes with a warm cache" only holds while the cache survives, and on 27–28 September 2026 it did not: every pull-request build compiled all ~1480 objects from scratch, about 40 minutes. The repository gets 10 GB of Actions cache and GitHub evicts the least recently used entries past that. Weekly, extended and release-tag runs each saved 0.5–1.3 GB, the total reached 11.4 GB, and the pull-request cache was the one that went. The rules that keep it alive:
