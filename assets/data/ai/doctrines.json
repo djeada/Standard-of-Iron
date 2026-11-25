@@ -55,7 +55,7 @@
       "formation": "line",
       "recruitment": {
         "ranged_share": 0.35,
-        "cavalry_share": 0.15,
+        "cavalry_share": 0.12,
         "siege_share": 0.08,
         "preferred": ["swordsman", "velites", "horse_swordsman", "catapult"]
       },
@@ -76,7 +76,7 @@
       "formation": "wedge",
       "recruitment": {
         "ranged_share": 0.3,
-        "cavalry_share": 0.3,
+        "cavalry_share": 0.15,
         "siege_share": 0.0,
         "preferred": ["horse_swordsman", "velites", "swordsman"]
       },
@@ -99,6 +99,7 @@
         "ranged_share": 0.4,
         "cavalry_share": 0.05,
         "siege_share": 0.1,
+        "mercenary_share": 0.15,
         "preferred": ["spearman", "slinger"]
       },
       "wave": {
@@ -117,13 +118,14 @@
       "town_plan": "punic_raider_camp",
       "formation": "line",
       "recruitment": {
-        "ranged_share": 0.7,
+        "ranged_share": 0.5,
         "cavalry_share": 0.25,
         "siege_share": 0.0,
-        "preferred": ["horse_archer", "slinger"]
+        "mercenary_share": 0.7,
+        "preferred": ["horse_archer", "swordsman", "slinger"]
       },
       "wave": {
-        "size": 5,
+        "size": 6,
         "regroup_seconds": 20.0,
         "spent_fraction": 0.3,
         "target_priority": ["economy", "army", "barracks", "any"]
@@ -141,6 +143,7 @@
         "ranged_share": 0.4,
         "cavalry_share": 0.2,
         "siege_share": 0.12,
+        "mercenary_share": 0.6,
         "preferred": ["elephant", "swordsman", "horse_swordsman", "catapult"]
       },
       "wave": {

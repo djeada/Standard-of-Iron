@@ -25,6 +25,21 @@ void load_onto_hauler(
     int amount,
     Engine::Core::CarriedFoodForm food_form = Engine::Core::CarriedFoodForm::Grain);
 
+void begin_structure_site(const Engine::Core::Entity& worker,
+                          Engine::Core::BuilderProductionComponent& builder,
+                          const std::string& construction_type,
+                          float x,
+                          float z,
+                          float rotation_y);
+
+[[nodiscard]] auto is_raising_structure(
+    const Engine::Core::BuilderProductionComponent& builder) -> bool;
+
+void advance_queued_work_if_idle(Engine::Core::World& world,
+                                 Engine::Core::Entity& worker,
+                                 Engine::Core::BuilderProductionComponent& builder,
+                                 float delta_time);
+
 void complete_harvest_task(Engine::Core::World& world,
                            Engine::Core::Entity& worker,
                            Engine::Core::BuilderProductionComponent& builder);

@@ -9,9 +9,9 @@
 namespace Render::GL {
 
 // Rough class of a GPU from its GL_RENDERER string, used only to pick a
-// sensible preset before the player has chosen one. It errs towards "discrete"
-// for anything it does not recognise: the battle-time frame-rate governor
-// steps down later if that guess was too generous.
+// sensible preset on the very first launch, before the player has chosen one.
+// It errs towards "discrete" for anything it does not recognise; the player
+// lowers the preset in Settings if that guess was too generous.
 enum class AdapterClass {
   Software,
   BasicIntegrated,

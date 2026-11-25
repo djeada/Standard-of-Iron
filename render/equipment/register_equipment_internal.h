@@ -187,6 +187,10 @@ auto build_turban_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_pileus_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
+auto build_straw_hat_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_craftsman_cap_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
 auto build_palla_veil_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_headwrap_attachment(std::uint8_t base_role_byte)

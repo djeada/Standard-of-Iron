@@ -101,6 +101,16 @@ void OrdersViewModel::select_all_troops() {
   }
 }
 
+auto OrdersViewModel::select_idle_builders() -> int {
+  Engine::Core::note_coverage(Engine::Core::CoverageEvent::SelectionChange);
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.input == nullptr) {
+    return 0;
+  }
+  return m_context.input->select_idle_builders(m_context.local_owner_id);
+}
+
 void OrdersViewModel::select_all_of_type(const QString& unit_type) {
   Engine::Core::note_coverage(Engine::Core::CoverageEvent::SelectionChange);
   m_host.ensure_initialized();
@@ -690,8 +700,25 @@ auto OrdersViewModel::action_states() const -> QVariantMap {
 }
 
 void OrdersViewModel::publish_frame() {
-  m_readout.publish(
-      {.command_mode = App::Core::get_current_action_mode(action_context(m_context))});
+  App::Core::OrdersReadout readout{
+      .command_mode = App::Core::get_current_action_mode(action_context(m_context))};
+  if (m_context.selection != nullptr) {
+    for (std::size_t group = 0; group < readout.control_group_sizes.size(); ++group) {
+      readout.control_group_sizes[group] = m_context.selection->control_group_size(
+          static_cast<int>(group), m_context.local_owner_id);
+    }
+  }
+  m_readout.publish(std::move(readout));
+}
+
+auto OrdersViewModel::control_group_sizes() const -> QVariantList {
+  QVariantList sizes;
+  const auto readout = m_readout.read();
+  for (int group = 0; group < 10; ++group) {
+    sizes.append(readout ? readout->control_group_sizes[static_cast<std::size_t>(group)]
+                         : 0);
+  }
+  return sizes;
 }
 
 auto OrdersViewModel::command_mode() const -> QString {

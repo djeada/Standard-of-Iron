@@ -146,6 +146,23 @@ auto unit_profile(const Game::Systems::NationRegistry& nations,
   info["build_time"] = static_cast<double>(profile.production.build_time);
   info["individuals_per_unit"] = profile.individuals_per_unit;
 
+  // NATION_ASYMMETRY.md: whether this nation recruits the troop at all, and
+  // where, so a recruit panel only offers what the selected building trains.
+  bool recruitable = true;
+  QString recruited_at =
+      QString::fromStdString(Game::Units::spawn_typeToString(
+          Game::Systems::recruiting_building_for(*troop_type)));
+  if (const auto* nation = nations.get_nation(resolved_nation)) {
+    if (const auto* troop = nation->get_troop(*troop_type)) {
+      recruitable = troop->recruitable;
+      info["max_squads"] = troop->max_squads;
+    }
+    recruited_at = QString::fromStdString(
+        Game::Units::spawn_typeToString(nation->recruiting_building(*troop_type)));
+  }
+  info["recruitable"] = recruitable;
+  info["recruited_at"] = recruited_at;
+
   const auto& catalog_class =
       Game::Units::TroopCatalog::instance().get_class_or_fallback(*troop_type);
   if (catalog_class.formation_profile) {

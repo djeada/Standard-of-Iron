@@ -199,6 +199,56 @@ auto refund_abandoned_site(Engine::Core::World& world,
   return true;
 }
 
+void refund_queued_sites(Engine::Core::World& world, Engine::Core::EntityID crew) {
+  auto* builder = world.try_get<Engine::Core::BuilderProductionComponent>(crew);
+  if (builder == nullptr || builder->queued_structure_sites.empty()) {
+    return;
+  }
+  const auto owner_of = [&world](Engine::Core::EntityID id) {
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(id);
+    return unit != nullptr ? unit->owner_id : 0;
+  };
+  const int owner_id = owner_of(crew);
+  const auto sites = std::move(builder->queued_structure_sites);
+  builder->queued_structure_sites.clear();
+  for (const auto& site : sites) {
+    const auto same = [&site](const std::string& type, float x, float z, float yaw) {
+      return type == site.construction_type && x == site.x && z == site.z &&
+             yaw == site.rotation_y;
+    };
+    bool still_wanted = false;
+    for (auto [other_ref, other] :
+         world.entity_view<Engine::Core::BuilderProductionComponent>()) {
+      if (other_ref.get_id() == crew || owner_of(other_ref.get_id()) != owner_id) {
+        continue;
+      }
+      if ((raises_shared_site(other) &&
+           same(other.product_type,
+                other.construction_site_x,
+                other.construction_site_z,
+                other.construction_site_rotation_y)) ||
+          std::any_of(other.queued_structure_sites.begin(),
+                      other.queued_structure_sites.end(),
+                      [&](const auto& queued) {
+                        return same(queued.construction_type,
+                                    queued.x,
+                                    queued.z,
+                                    queued.rotation_y);
+                      })) {
+        still_wanted = true;
+        break;
+      }
+    }
+    if (!still_wanted) {
+      grant_resources_at(owner_id,
+                         site.x,
+                         0.0F,
+                         site.z,
+                         construction_cost_info(site.construction_type).resource_costs);
+    }
+  }
+}
+
 void abandon_paid_site(Engine::Core::World& world,
                        Engine::Core::EntityID crew,
                        int owner_id,

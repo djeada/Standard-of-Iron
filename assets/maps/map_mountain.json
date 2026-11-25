@@ -4348,11 +4348,11 @@
     }
   },
   "starting_resources": {
-    "gold": 250,
-    "food": 140,
-    "wood": 250,
+    "gold": 500,
+    "food": 300,
+    "wood": 300,
     "stone": 160,
-    "iron": 100
+    "iron": 200
   },
   "victory": {
     "type": "elimination",

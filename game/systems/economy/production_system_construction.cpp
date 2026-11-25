@@ -76,6 +76,10 @@ auto spawn_type_for_product(const std::string& product_type)
   if (product_type == "temple") {
     return SpawnType::Temple;
   }
+  if (const auto nation_building = Game::Units::spawn_typeFromString(product_type);
+      nation_building.has_value() && Game::Units::is_nation_building_spawn(*nation_building)) {
+    return nation_building;
+  }
   return std::nullopt;
 }
 

@@ -4,6 +4,7 @@
 
 #include "app/economy/resource_text.h"
 #include "app/economy/unit_profile.h"
+#include "game/core/component_core.h"
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
 #include "game/session/selection_service.h"
@@ -12,6 +13,7 @@
 #include "game/systems/economy/construction_cost_catalog.h"
 #include "game/systems/economy/food_targets.h"
 #include "game/systems/economy/marketplace_system.h"
+#include "game/systems/economy/nation_economy_system.h"
 #include "game/systems/economy/production_service.h"
 #include "game/systems/harvest_yields.h"
 #include "game/systems/nation_id.h"
@@ -53,6 +55,12 @@ auto selected_barracks_state(Engine::Core::World* world,
 
   m["has_barracks"] = st.has_barracks;
   m["in_progress"] = st.in_progress;
+  // Rome's levy countdown (NATION_ASYMMETRY.md 3.1); negative for no levy.
+  m["levy_seconds"] = -1.0;
+  if (auto* levy = world->get_system<Game::Systems::NationEconomySystem>()) {
+    m["levy_seconds"] =
+        static_cast<double>(levy->seconds_to_next_levy(*world, local_owner_id));
+  }
   m["product_type"] =
       QString::fromStdString(Game::Units::troop_typeToString(st.product_type));
   m["time_remaining"] = st.time_remaining;
@@ -73,6 +81,10 @@ auto selected_barracks_state(Engine::Core::World* world,
         QString::fromStdString(Game::Units::troop_typeToString(unit_type)));
   }
   m["production_queue"] = queue_list;
+  m["repeat_product"] =
+      st.repeat_active
+          ? QString::fromStdString(Game::Units::troop_typeToString(st.repeat_product))
+          : QString();
 
   return m;
 }
@@ -110,6 +122,19 @@ auto selected_builder_state(Engine::Core::World* world) -> QVariantMap {
       m["time_remaining"] = builder_prod->time_remaining;
       m["build_time"] = builder_prod->build_time;
       m["product_type"] = QString::fromStdString(builder_prod->product_type);
+      m["queued_sites"] = static_cast<int>(builder_prod->queued_structure_sites.size());
+      // The nation-only buildings this crew's nation raises (NATION_ASYMMETRY.md).
+      QStringList nation_buildings;
+      if (const auto* unit = world->try_get<Engine::Core::UnitComponent>(id)) {
+        if (const auto* nation = Game::Session::session_for(*world)
+                                     .nations()
+                                     .get_nation_for_player(unit->owner_id)) {
+          for (const auto& building : nation->unique_buildings) {
+            nation_buildings.append(QString::fromStdString(building));
+          }
+        }
+      }
+      m["nation_buildings"] = nation_buildings;
       return m;
     }
   }
@@ -238,6 +263,7 @@ auto selected_home_state(Engine::Core::World* world,
   m["product_type"] = "";
   m["production_queue"] = QVariantList{};
   m["nation_id"] = "";
+  m["reports_to_barracks"] = true;
 
   if (world == nullptr) {
     return m;
@@ -246,6 +272,15 @@ auto selected_home_state(Engine::Core::World* world,
   auto* selection_system = &Game::Session::session_for(*world).selection();
   if (selection_system == nullptr) {
     return m;
+  }
+
+  for (const auto id : selection_system->get_selected_units()) {
+    const auto* unit = world->try_get<Engine::Core::UnitComponent>(id);
+    const auto* home = world->try_get<Engine::Core::HomeComponent>(id);
+    if (unit != nullptr && home != nullptr && unit->owner_id == local_owner_id) {
+      m["reports_to_barracks"] = home->reports_to_barracks;
+      break;
+    }
   }
 
   Game::Systems::ProductionState st;

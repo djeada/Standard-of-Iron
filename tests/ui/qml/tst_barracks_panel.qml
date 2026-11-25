@@ -432,7 +432,7 @@ TestCase {
             verify(slot.width > 0 && slot.height > 0, "a queue slot collapsed");
         }
         compare(occupied, 3, "the queue did not mark one in-progress plus two queued units");
-        compare(empty, 2, "the queue did not leave two empty slots");
+        compare(empty, 7, "the queue did not leave the other seven of its ten slots empty");
         var progress = testCase.collect(view, "barracksProductionProgress")[0];
         verify(progress !== undefined, "the production progress bar is missing");
         verify(progress.visible, "a barracks that is recruiting hides its progress bar");

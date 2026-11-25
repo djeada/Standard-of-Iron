@@ -45,6 +45,7 @@ public:
                         int local_owner_id);
   void on_right_click_clear_selection();
   void select_all_player_troops(int local_owner_id);
+  auto select_idle_builders(int local_owner_id) -> std::size_t;
 
   void select_all_player_units_of_type(const QString& unit_type, int local_owner_id);
   void select_single_unit(Engine::Core::EntityID id, int local_owner_id);
@@ -60,6 +61,7 @@ public:
   auto recall_control_group(int group, bool additive, int local_owner_id) -> bool;
   [[nodiscard]] auto control_group_members(int group, int local_owner_id)
       -> std::vector<Engine::Core::EntityID>;
+  [[nodiscard]] auto control_group_size(int group, int local_owner_id) const -> int;
 
   [[nodiscard]] auto has_units_selected() const -> bool;
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;

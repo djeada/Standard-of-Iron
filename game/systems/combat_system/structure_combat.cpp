@@ -132,6 +132,12 @@ structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint
     return 1.15F;
   case SpawnType::Temple:
     return 1.45F;
+  case SpawnType::MercenaryCamp:
+  case SpawnType::ElephantStables:
+  case SpawnType::Fabrica:
+    return 1.25F;
+  case SpawnType::Castra:
+    return 0.8F;
   case SpawnType::Farm:
     return 0.7F;
   case SpawnType::Home:
@@ -246,6 +252,10 @@ auto structure_attack_profile(const Engine::Core::Entity* attacker)
   case SpawnType::Marketplace:
   case SpawnType::Temple:
   case SpawnType::Farm:
+  case SpawnType::MercenaryCamp:
+  case SpawnType::ElephantStables:
+  case SpawnType::Fabrica:
+  case SpawnType::Castra:
   case SpawnType::Sheep:
   case SpawnType::Wolf:
     profile.damage_multiplier = 0.0F;

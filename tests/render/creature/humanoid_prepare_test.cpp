@@ -95,15 +95,16 @@
 #include "render/equipment/armor/work_apron_renderer.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
+#include "render/equipment/helmets/hair_bun.h"
 #include "render/equipment/helmets/historical_helmets.h"
 #include "render/equipment/helmets/roman_heavy_helmet.h"
-#include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"
 #include "render/equipment/weapons/roman_scutum.h"
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
+#include "render/frame/role_color_palette.h"
 #include "render/frame/submitter.h"
 #include "render/frame/world_view.h"
 #include "render/geom/rigged_mesh.h"
@@ -10156,7 +10157,7 @@ TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(
       extra_role_color_count(archetype_id),
-      k_roman_builder_tunic_role_count + Render::GL::k_roman_light_helmet_role_count +
+      k_roman_builder_tunic_role_count + Render::GL::k_straw_hat_role_count +
           Render::GL::k_tool_belt_role_count + Render::GL::k_work_apron_role_count +
           Render::GL::k_arm_guards_role_count);
 }
@@ -10188,7 +10189,7 @@ TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(
       extra_role_color_count(archetype_id),
-      k_carthage_builder_headwrap_role_count + k_carthage_builder_robes_role_count +
+      Render::GL::k_craftsman_cap_role_count + k_carthage_builder_robes_role_count +
           Render::GL::k_tool_belt_role_count + Render::GL::k_work_apron_role_count +
           Render::GL::k_arm_guards_role_count);
 }
@@ -12398,6 +12399,90 @@ TEST(HumanoidPrepare, BuilderToolMatchesRetainedWorkRoleThroughTransitions) {
           selection.resolved_archetype,
           table.archetype_for_variant[Animation::seeded_visual_variant_index(seed, 4)]);
       EXPECT_NE(selection.state, AnimationStateId::AttackSword);
+    }
+  }
+}
+
+TEST(HumanoidPrepare, FellingAndQuarryingPutTheMatchingToolInTheHand) {
+  using namespace Render::Creature;
+  using namespace Render::Creature::Pipeline;
+  using Job = Animation::HumanoidWorkJob;
+  using Role = Animation::HumanoidConstructionRole;
+
+  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(Job::Chop,
+                                                                  Role::Hammer),
+            Animation::k_humanoid_felling_axe_variant);
+  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(
+                Job::Quarry, Role::KneelingChisel),
+            Animation::k_humanoid_quarry_pick_variant);
+  EXPECT_EQ(Animation::humanoid_construction_tool_variant_for_job(Job::Butcher,
+                                                                  Role::Hammer),
+            Animation::humanoid_construction_variant_for_role(Role::Hammer))
+      << "the sheep still gets the mallet";
+  EXPECT_EQ(
+      Animation::humanoid_construction_tool_variant_for_job(Job::Build, Role::Saw),
+      Animation::humanoid_construction_variant_for_role(Role::Saw));
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  for (std::string const nation : {"roman", "carthage"}) {
+    SCOPED_TRACE(nation);
+    std::string const key = "troops/" + nation + "/builder";
+    const auto* builder = dynamic_cast<const Render::GL::HumanoidRendererBase*>(
+        registry.get_preparer(registry.get_handle(key)));
+    ASSERT_NE(builder, nullptr);
+    const auto& spec = builder->visual_spec();
+    const auto* table = spec.animation_manifest.variant_table;
+    ASSERT_NE(table, nullptr);
+    ASSERT_GT(table->variant_stride, Animation::k_humanoid_quarry_pick_variant);
+
+    auto const axe = find_archetype_id(key + "/felling_axe");
+    auto const pick = find_archetype_id(key + "/quarry_pick");
+    ASSERT_NE(axe, k_invalid_archetype);
+    ASSERT_NE(pick, k_invalid_archetype);
+    EXPECT_EQ(table->archetype_for_variant[Animation::k_humanoid_felling_axe_variant],
+              axe);
+    EXPECT_EQ(table->archetype_for_variant[Animation::k_humanoid_quarry_pick_variant],
+              pick);
+
+    const auto* idle = ArchetypeRegistry::instance().get(spec.archetype_id);
+    ASSERT_NE(idle, nullptr);
+    for (auto const tool : {axe, pick}) {
+      const auto* desc = ArchetypeRegistry::instance().get(tool);
+      ASSERT_NE(desc, nullptr);
+      EXPECT_EQ(desc->bake_attachment_count, idle->bake_attachment_count + 1);
+      EXPECT_LE(desc->role_count, Render::RoleColorPalette::k_capacity + 1U)
+          << "every role of the kit plus the tool must fit the palette";
+    }
+
+    for (std::uint32_t seed = 0; seed < 16; ++seed) {
+      Render::GL::HumanoidAnimationContext anim;
+      anim.inputs.is_constructing = true;
+      anim.construction_blend = 1.0F;
+
+      anim.inputs.construction_job = static_cast<std::uint8_t>(Job::Chop);
+      anim.construction_role = Animation::humanoid_construction_role_for_job(Job::Chop);
+      auto selection = resolve_humanoid_animation_selection(spec, anim, seed);
+      EXPECT_EQ(selection.resolved_archetype, axe);
+      EXPECT_EQ(selection.clip_id,
+                Animation::humanoid_construction_clip_for_role(Role::Hammer))
+          << "felling keeps the overhead swing";
+
+      anim.inputs.construction_job = static_cast<std::uint8_t>(Job::Quarry);
+      anim.construction_role =
+          Animation::humanoid_construction_role_for_job(Job::Quarry);
+      selection = resolve_humanoid_animation_selection(spec, anim, seed);
+      EXPECT_EQ(selection.resolved_archetype, pick);
+      EXPECT_EQ(selection.clip_id,
+                Animation::humanoid_construction_clip_for_role(Role::KneelingChisel));
+
+      anim.inputs.construction_job = static_cast<std::uint8_t>(Job::Butcher);
+      anim.construction_role =
+          Animation::humanoid_construction_role_for_job(Job::Butcher);
+      selection = resolve_humanoid_animation_selection(spec, anim, seed);
+      EXPECT_EQ(selection.resolved_archetype,
+                table->archetype_for_variant[
+                    Animation::humanoid_construction_variant_for_role(Role::Hammer)]);
     }
   }
 }

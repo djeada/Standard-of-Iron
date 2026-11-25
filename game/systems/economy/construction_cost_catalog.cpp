@@ -262,6 +262,26 @@ auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo {
     info.resource_costs.set(ResourceType::Gold, 50);
     return info;
   }
+  if (item_type == "mercenary_camp") {
+    info.resource_costs.set(ResourceType::Wood, 100);
+    info.resource_costs.set(ResourceType::Stone, 40);
+    return info;
+  }
+  if (item_type == "elephant_stables") {
+    info.resource_costs.set(ResourceType::Wood, 120);
+    info.resource_costs.set(ResourceType::Stone, 80);
+    info.resource_costs.set(ResourceType::Gold, 30);
+    return info;
+  }
+  if (item_type == "fabrica") {
+    info.resource_costs.set(ResourceType::Wood, 80);
+    info.resource_costs.set(ResourceType::Stone, 60);
+    return info;
+  }
+  if (item_type == "castra") {
+    info.resource_costs.set(ResourceType::Wood, 120);
+    return info;
+  }
 
   return info;
 }
@@ -269,6 +289,15 @@ auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo {
 auto builtin_build_time(std::string_view item_type) -> float {
   if (item_type == "temple") {
     return 18.0F;
+  }
+  if (item_type == "mercenary_camp" || item_type == "fabrica") {
+    return 12.0F;
+  }
+  if (item_type == "elephant_stables") {
+    return 16.0F;
+  }
+  if (item_type == "castra") {
+    return 14.0F;
   }
   if (item_type == "catapult") {
     return 15.0F;

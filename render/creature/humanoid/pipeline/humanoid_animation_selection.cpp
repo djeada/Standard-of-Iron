@@ -22,6 +22,22 @@ auto steps_over_ground(const Render::GL::HumanoidAnimationContext& anim) noexcep
          Render::Creature::is_moving_animation(anim.inputs.movement_state);
 }
 
+static auto
+construction_tool_variant(const Animation::ArchetypeVariantTable& table,
+                          const Render::GL::HumanoidAnimationContext& anim,
+                          Animation::HumanoidConstructionRole role) noexcept
+    -> std::uint8_t {
+  if (anim.inputs.is_constructing) {
+    auto const by_job = Animation::humanoid_construction_tool_variant_for_job(
+        static_cast<Animation::HumanoidWorkJob>(anim.inputs.construction_job), role);
+    if (by_job < table.variant_stride &&
+        table.archetype_for_variant[by_job] != Animation::k_invalid_visual_archetype) {
+      return by_job;
+    }
+  }
+  return Animation::humanoid_construction_variant_for_role(role);
+}
+
 void update_clip_id(HumanoidAnimationSelection& selection) noexcept {
   auto const clip_id =
       Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
@@ -357,8 +373,8 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
             variant != nullptr ? static_cast<std::uint8_t>(variant->facial_hair.style)
                                : std::uint8_t{0U},
         .has_variant_index_hint = variant != nullptr,
-        .forced_variant_index =
-            Animation::humanoid_construction_variant_for_role(job_role),
+        .forced_variant_index = construction_tool_variant(
+            *spec.animation_manifest.variant_table, anim, job_role),
         .has_forced_variant_index = job_forces_tool,
     });
 
@@ -395,8 +411,7 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
           .table = table,
           .pose_intent = Render::Creature::PoseIntent::Construct,
           .seed = seed,
-          .forced_variant_index =
-              Animation::humanoid_construction_variant_for_role(role),
+          .forced_variant_index = construction_tool_variant(*table, anim, role),
           .has_forced_variant_index = role != Animation::HumanoidConstructionRole::None,
       });
       if (tool.archetype_changed) {

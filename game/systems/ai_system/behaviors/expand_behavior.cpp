@@ -9,6 +9,7 @@
 
 #include "../../../core/ownership_constants.h"
 #include "../../nation_registry.h"
+#include "../ai_doctrine_rules.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -19,7 +20,7 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
                              AIContext& context,
                              float delta_time,
                              std::vector<AICommand>& out_commands) {
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return;
   }
 
@@ -159,7 +160,7 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
 
 auto ExpandBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return false;
   }
 

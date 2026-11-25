@@ -48,6 +48,7 @@ auto BattleStats::player_stats(Game::Session::SessionContext& session,
     result["troopsRecruited"] = stats->troops_recruited;
     result["enemiesKilled"] = stats->enemies_killed;
     result["losses"] = stats->losses;
+    result["lossesToWild"] = stats->losses_to_wild;
     result["barracksOwned"] = stats->barracks_owned;
     result["playTimeSec"] = stats->play_time_sec;
     result["gameEnded"] = stats->game_ended;
@@ -55,6 +56,7 @@ auto BattleStats::player_stats(Game::Session::SessionContext& session,
     result["troopsRecruited"] = 0;
     result["enemiesKilled"] = 0;
     result["losses"] = 0;
+    result["lossesToWild"] = 0;
     result["barracksOwned"] = 0;
     result["playTimeSec"] = 0.0F;
     result["gameEnded"] = false;

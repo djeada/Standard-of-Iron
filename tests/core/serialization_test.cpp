@@ -909,6 +909,7 @@ TEST_F(SerializationTest, HomeComponentRoundTrip) {
   home->family_generation_cooldown = 3.5F;
   home->family_generation_interval = 9.0F;
   home->family_manpower_value = 12;
+  home->reports_to_barracks = false;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -923,6 +924,18 @@ TEST_F(SerializationTest, HomeComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->family_generation_cooldown, 3.5F);
   EXPECT_FLOAT_EQ(deserialized->family_generation_interval, 9.0F);
   EXPECT_EQ(deserialized->family_manpower_value, 12);
+  EXPECT_FALSE(deserialized->reports_to_barracks)
+      << "a home the player switched off stays off after a load";
+
+  QJsonObject older_save = json;
+  QJsonObject older_home = older_save["home"].toObject();
+  older_home.remove("reports_to_barracks");
+  older_save["home"] = older_home;
+  auto* older_entity = world->create_entity();
+  Serialization::deserialize_entity(older_entity, older_save);
+  ASSERT_NE(older_entity->get_component<HomeComponent>(), nullptr);
+  EXPECT_TRUE(older_entity->get_component<HomeComponent>()->reports_to_barracks)
+      << "a save written before homes reported loads with them reporting";
 }
 
 TEST_F(SerializationTest, RenderableComponentSerialization) {

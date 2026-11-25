@@ -39,6 +39,8 @@ struct FocusTargetInfo {
   int attacked_by_selection = 0;
   int attacked_by_local = 0;
   int attackers_incoming = 0;
+
+  double capture_seconds = 0.0;
 };
 
 [[nodiscard]] auto

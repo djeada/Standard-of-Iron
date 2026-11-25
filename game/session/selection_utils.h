@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 #include "game/core/component_core.h"
@@ -9,8 +10,11 @@
 
 namespace Game::Selection {
 
+// Drops what can no longer be commanded: the dead, and - when `owner` is given -
+// anything that now belongs to somebody else (a barracks the enemy captured).
 inline void sanitize_selection(Engine::Core::World* world,
-                               Game::Session::SelectionService* selection_system) {
+                               Game::Session::SelectionService* selection_system,
+                               std::optional<int> owner = std::nullopt) {
   if ((world == nullptr) || (selection_system == nullptr)) {
     return;
   }
@@ -19,7 +23,8 @@ inline void sanitize_selection(Engine::Core::World* world,
   to_keep.reserve(sel.size());
   for (auto id : sel) {
     const auto* unit = world->try_get<Engine::Core::UnitComponent>(id);
-    if (unit != nullptr && unit->health > 0) {
+    if (unit != nullptr && unit->health > 0 &&
+        (!owner.has_value() || unit->owner_id == *owner)) {
       to_keep.push_back(id);
     }
   }

@@ -134,6 +134,24 @@ public:
 
   std::string auto_gather_priority{};
 
+  struct QueuedStructureSite {
+    std::string construction_type{};
+    float x{0.0F};
+    float z{0.0F};
+    float rotation_y{0.0F};
+  };
+
+  std::vector<QueuedStructureSite> queued_structure_sites{};
+
+  bool resume_gather_order{false};
+  std::string resume_gather_product_type{};
+  float resume_gather_anchor_x{0.0F};
+  float resume_gather_anchor_z{0.0F};
+  bool resume_auto_gather{false};
+  std::string resume_auto_gather_priority{};
+
+  float idle_seconds{0.0F};
+
   BuilderTaskFault fault{BuilderTaskFault::None};
   float fault_display_remaining{0.0F};
 
@@ -147,6 +165,42 @@ public:
   void clear_auto_gather() {
     auto_gather = false;
     auto_gather_priority.clear();
+  }
+
+  [[nodiscard]] auto has_work_to_resume() const -> bool {
+    return resume_gather_order || resume_auto_gather;
+  }
+
+  void clear_resume() {
+    resume_gather_order = false;
+    resume_gather_product_type.clear();
+    resume_gather_anchor_x = 0.0F;
+    resume_gather_anchor_z = 0.0F;
+    resume_auto_gather = false;
+    resume_auto_gather_priority.clear();
+  }
+
+  void remember_gather_work() {
+    resume_gather_order = has_gather_order;
+    resume_gather_product_type = gather_product_type;
+    resume_gather_anchor_x = gather_anchor_x;
+    resume_gather_anchor_z = gather_anchor_z;
+    resume_auto_gather = auto_gather;
+    resume_auto_gather_priority = auto_gather_priority;
+  }
+
+  void resume_remembered_work() {
+    if (resume_gather_order) {
+      has_gather_order = true;
+      gather_product_type = resume_gather_product_type;
+      gather_anchor_x = resume_gather_anchor_x;
+      gather_anchor_z = resume_gather_anchor_z;
+    }
+    if (resume_auto_gather) {
+      auto_gather = true;
+      auto_gather_priority = resume_auto_gather_priority;
+    }
+    clear_resume();
   }
 };
 

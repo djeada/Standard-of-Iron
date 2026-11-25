@@ -51,6 +51,8 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Helmet, "skull_face");
   registry.register_equipment_id(EquipmentCategory::Helmet, "turban");
   registry.register_equipment_id(EquipmentCategory::Helmet, "pileus");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "straw_hat");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "craftsman_cap");
   registry.register_equipment_id(EquipmentCategory::Helmet, "palla_veil");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_fabius");
   registry.register_equipment_id(EquipmentCategory::Helmet, "commander_scipio");

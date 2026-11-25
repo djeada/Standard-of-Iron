@@ -1,5 +1,7 @@
 #include "render/entity/nations/roman/spearman_style.h"
 
+#include <QVector3D>
+
 #include <array>
 
 #include "render/equipment/material_palette.h"
@@ -10,7 +12,7 @@ namespace {
 const std::array<SpearmanStyleRegistration, 1> k_styles{{
     {"roman_republic",
      SpearmanStyleConfig{
-         .cloth_color = Nation::k_roman_materials.cloth,
+         .cloth_color = QVector3D(0.80F, 0.59F, 0.22F),
          .leather_color = Nation::k_roman_materials.leather,
          .leather_dark_color = Nation::k_roman_materials.dark_leather,
          .metal_color = Nation::k_roman_materials.metal,

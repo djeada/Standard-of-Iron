@@ -244,6 +244,17 @@ auto nation_loader_logger() -> QLoggingCategory& {
   entry.build_time = static_cast<float>(
       production.value("build_time").toDouble(base_class.production.build_time));
   entry.priority = production.value("priority").toInt(base_class.production.priority);
+  entry.recruitable = read_bool(production, "recruitable", entry.recruitable);
+  if (const QString at = read_string(production, "recruited_at", {}); !at.isEmpty()) {
+    entry.recruited_at = Game::Units::spawn_typeFromString(at.trimmed().toStdString());
+  }
+  entry.max_squads = read_int_opt(production, "max_squads").value_or(0);
+  if (const QString needs = read_string(production, "requires_building", {});
+      !needs.isEmpty()) {
+    entry.requires_building =
+        Game::Units::spawn_typeFromString(needs.trimmed().toStdString());
+  }
+  entry.fabrica_discount = read_bool(production, "fabrica_discount", false);
 
   nation.available_troops.push_back(entry);
 
@@ -365,6 +376,73 @@ auto nation_loader_logger() -> QLoggingCategory& {
   }
 
   return true;
+}
+
+void parse_economy_traits(const QJsonObject& obj,
+                          Game::Systems::NationEconomyTraits& traits) {
+  const auto read_float = [&obj](const char* key, float fallback) {
+    return read_float_opt(obj, key).value_or(fallback);
+  };
+  const auto read_int = [&obj](const char* key, int fallback) {
+    return read_int_opt(obj, key).value_or(fallback);
+  };
+  traits.civilian_reserve_grant =
+      read_int("civilian_reserve_grant", traits.civilian_reserve_grant);
+  const QJsonObject levy = ensure_object(obj.value("levy"));
+  traits.levy_interval_seconds =
+      read_float_opt(levy, "interval_seconds").value_or(traits.levy_interval_seconds);
+  traits.levy_men_per_home =
+      read_int_opt(levy, "men_per_home").value_or(traits.levy_men_per_home);
+  traits.levy_radius = read_float_opt(levy, "radius").value_or(traits.levy_radius);
+  traits.loss_refund_share = read_float("loss_refund_share", traits.loss_refund_share);
+  const QJsonObject trade = ensure_object(obj.value("trade_income"));
+  traits.trade_income_per_minute =
+      read_int_opt(trade, "per_minute").value_or(traits.trade_income_per_minute);
+  traits.trade_income_per_farm =
+      read_int_opt(trade, "per_farm").value_or(traits.trade_income_per_farm);
+  traits.trade_income_radius =
+      read_float_opt(trade, "radius").value_or(traits.trade_income_radius);
+  traits.trade_income_max_buildings =
+      read_int_opt(trade, "max_buildings").value_or(traits.trade_income_max_buildings);
+  traits.trade_sell_multiplier =
+      read_float_opt(trade, "sell_multiplier").value_or(traits.trade_sell_multiplier);
+  traits.fabrica_iron_multiplier =
+      read_float("fabrica_iron_multiplier", traits.fabrica_iron_multiplier);
+  const QJsonObject camp = ensure_object(obj.value("camp"));
+  traits.camp_heal_per_second =
+      read_float_opt(camp, "heal_per_second").value_or(traits.camp_heal_per_second);
+  traits.camp_heal_radius =
+      read_float_opt(camp, "heal_radius").value_or(traits.camp_heal_radius);
+  const QJsonObject veterancy = ensure_object(obj.value("veterancy"));
+  traits.veteran_troop = Game::Units::try_parse_troop_type(
+      read_string(veterancy, "troop", {}).toStdString());
+  traits.battles_for_first_rank =
+      read_int_opt(veterancy, "first_rank_battles").value_or(traits.battles_for_first_rank);
+  traits.battles_for_second_rank = read_int_opt(veterancy, "second_rank_battles")
+                                       .value_or(traits.battles_for_second_rank);
+}
+
+auto parse_mercenary_band(const QJsonObject& obj)
+    -> std::optional<Game::Systems::MercenaryBand> {
+  Game::Systems::MercenaryBand band;
+  band.id = read_string(obj, "id", {}).toStdString();
+  const auto troop = Game::Units::try_parse_troop_type(
+      read_string(obj, "troop", {}).toStdString());
+  const auto nation = Game::Systems::nation_id_from_string(
+      read_string(obj, "nation", {}).toStdString());
+  if (band.id.empty() || !troop.has_value() || !nation.has_value()) {
+    return std::nullopt;
+  }
+  band.unit_type = *troop;
+  band.nation = *nation;
+  band.display_name =
+      read_string(obj, "display_name", QString::fromStdString(band.id)).toStdString();
+  band.gold = read_int_opt(obj, "gold").value_or(band.gold);
+  band.contract_seconds =
+      read_float_opt(obj, "contract_seconds").value_or(band.contract_seconds);
+  band.upkeep_per_minute =
+      read_int_opt(obj, "upkeep_per_minute").value_or(band.upkeep_per_minute);
+  return band;
 }
 
 } // namespace
@@ -492,6 +570,16 @@ auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> 
       read_string(root, "ai_profile", QStringLiteral("standard")).toStdString();
   nation.selectable_in_skirmish =
       read_bool(root, "selectable_in_skirmish", nation.selectable_in_skirmish);
+
+  parse_economy_traits(ensure_object(root.value("economy")), nation.economy);
+  nation.unique_buildings = read_string_array(root, "unique_buildings");
+  for (const auto value : ensure_array(root.value("mercenary_bands"))) {
+    if (auto band = parse_mercenary_band(ensure_object(value))) {
+      nation.mercenary_bands.push_back(std::move(*band));
+    } else {
+      qCWarning(nation_loader_logger()) << "Skipped a mercenary band in" << path;
+    }
+  }
 
   const QJsonArray troops = ensure_array(root.value(k_nation_troops_key));
   for (const auto value : troops) {

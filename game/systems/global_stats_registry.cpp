@@ -7,9 +7,11 @@
 
 #include "../core/ambient_session.h"
 #include "../core/component_core.h"
+#include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../session/simulation_clock.h"
 #include "core/event_manager.h"
+#include "nation_registry.h"
 #include "owner_registry.h"
 #include "troop_count_registry.h"
 #include "units/spawn_type.h"
@@ -19,6 +21,11 @@ namespace {
 
 auto counts_as_troop(Game::Units::SpawnType spawn_type) -> bool {
   return Game::Units::is_troop_spawn(spawn_type);
+}
+
+auto is_soldier(Game::Units::SpawnType spawn_type) -> bool {
+  return counts_as_troop(spawn_type) && spawn_type != Game::Units::SpawnType::Builder &&
+         spawn_type != Game::Units::SpawnType::Civilian;
 }
 
 auto men_of(Engine::Core::EntityID unit_id, Game::Units::SpawnType spawn_type) -> int {
@@ -31,6 +38,19 @@ auto men_of(Engine::Core::EntityID unit_id, Game::Units::SpawnType spawn_type) -
   return std::max(1, troop_type_men(NationID::RomanRepublic, spawn_type));
 }
 
+auto killer_is_contender(int killer_owner_id) -> bool {
+  if (killer_owner_id == 0) {
+    return true;
+  }
+  if (Game::Core::is_neutral_owner(killer_owner_id)) {
+    return false;
+  }
+  const auto* nations = Game::Session::ambient_services().nations;
+  const auto* nation =
+      nations != nullptr ? nations->get_nation_for_player(killer_owner_id) : nullptr;
+  return nation == nullptr || nation->has_economy;
+}
+
 } // namespace
 
 auto GlobalStatsRegistry::instance() -> GlobalStatsRegistry& {
@@ -41,6 +61,10 @@ void GlobalStatsRegistry::initialize() {
   m_unit_spawned_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
           [this](const Engine::Core::UnitSpawnedEvent& e) { on_unit_spawned(e); });
+
+  m_unit_recruited_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::UnitRecruitedEvent>(
+          [this](const Engine::Core::UnitRecruitedEvent& e) { on_unit_recruited(e); });
 
   m_unit_died_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
@@ -65,6 +89,7 @@ auto GlobalStatsRegistry::serialize_counters() const -> QJsonArray {
     entry["troops_recruited"] = stats.troops_recruited;
     entry["enemies_killed"] = stats.enemies_killed;
     entry["losses"] = stats.losses;
+    entry["losses_to_wild"] = stats.losses_to_wild;
     counters.append(entry);
   }
   return counters;
@@ -80,6 +105,7 @@ void GlobalStatsRegistry::restore_counters(const QJsonArray& counters) {
     stats.troops_recruited = entry.value("troops_recruited").toInt();
     stats.enemies_killed = entry.value("enemies_killed").toInt();
     stats.losses = entry.value("losses").toInt();
+    stats.losses_to_wild = entry.value("losses_to_wild").toInt();
   }
 }
 
@@ -117,63 +143,81 @@ void GlobalStatsRegistry::mark_game_end(int owner_id) {
   }
 }
 
+auto GlobalStatsRegistry::is_frozen(int owner_id) const -> bool {
+  const auto it = m_player_stats.find(owner_id);
+  return it != m_player_stats.end() && it->second.game_ended;
+}
+
 void GlobalStatsRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
+  if (is_frozen(event.owner_id)) {
+    return;
+  }
   auto& stats = m_player_stats[event.owner_id];
 
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     stats.barracks_owned++;
+  }
+}
+
+void GlobalStatsRegistry::on_unit_recruited(const Engine::Core::UnitRecruitedEvent& event) {
+  if (is_frozen(event.owner_id) || !is_soldier(event.spawn_type)) {
     return;
   }
-  if (event.is_initial_spawn || !counts_as_troop(event.spawn_type)) {
-    return;
-  }
-  stats.troops_recruited += men_of(event.unit_id, event.spawn_type);
+  m_player_stats[event.owner_id].troops_recruited +=
+      men_of(event.unit_id, event.spawn_type);
 }
 
 void GlobalStatsRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
 
   const int men =
       counts_as_troop(event.spawn_type) ? men_of(event.unit_id, event.spawn_type) : 0;
-  if (men > 0) {
-    auto it = m_player_stats.find(event.owner_id);
-    if (it != m_player_stats.end()) {
-      it->second.losses += men;
-    }
-  }
 
-  if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+  if (!is_frozen(event.owner_id)) {
     auto it = m_player_stats.find(event.owner_id);
     if (it != m_player_stats.end()) {
-      it->second.barracks_owned--;
-      if (it->second.barracks_owned < 0) {
-        it->second.barracks_owned = 0;
+      if (!event.disbanded) {
+        it->second.losses += men;
+        if (men > 0 && !killer_is_contender(event.killer_owner_id)) {
+          it->second.losses_to_wild += men;
+        }
+      }
+      if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+        it->second.barracks_owned--;
+        if (it->second.barracks_owned < 0) {
+          it->second.barracks_owned = 0;
+        }
       }
     }
   }
 
-  if (event.killer_owner_id != 0 && event.killer_owner_id != event.owner_id) {
+  if (event.disbanded || men <= 0 || event.killer_owner_id == 0 ||
+      event.killer_owner_id == event.owner_id || is_frozen(event.killer_owner_id)) {
+    return;
+  }
 
-    auto& owner_registry = OwnerRegistry::instance();
-
-    if (owner_registry.are_enemies(event.killer_owner_id, event.owner_id)) {
-      auto& stats = m_player_stats[event.killer_owner_id];
-
-      stats.enemies_killed += men;
-    }
+  const bool wild_killer = Game::Core::is_neutral_owner(event.killer_owner_id);
+  if (wild_killer ||
+      OwnerRegistry::instance().are_enemies(event.killer_owner_id, event.owner_id)) {
+    m_player_stats[event.killer_owner_id].enemies_killed += men;
   }
 }
 
 void GlobalStatsRegistry::on_barrack_captured(
     const Engine::Core::BarrackCapturedEvent& event) {
 
-  auto prev_it = m_player_stats.find(event.previous_owner_id);
-  if (prev_it != m_player_stats.end() && event.previous_owner_id != -1) {
-    prev_it->second.barracks_owned--;
-    if (prev_it->second.barracks_owned < 0) {
-      prev_it->second.barracks_owned = 0;
+  if (!is_frozen(event.previous_owner_id)) {
+    auto prev_it = m_player_stats.find(event.previous_owner_id);
+    if (prev_it != m_player_stats.end() && event.previous_owner_id != -1) {
+      prev_it->second.barracks_owned--;
+      if (prev_it->second.barracks_owned < 0) {
+        prev_it->second.barracks_owned = 0;
+      }
     }
   }
 
+  if (is_frozen(event.new_owner_id)) {
+    return;
+  }
   auto& new_stats = m_player_stats[event.new_owner_id];
   new_stats.barracks_owned++;
 }
@@ -184,11 +228,13 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World& world) {
   std::unordered_map<int, int> troops_recruited_values;
   std::unordered_map<int, int> enemies_killed_values;
   std::unordered_map<int, int> losses_values;
+  std::unordered_map<int, int> wild_losses_values;
   for (auto& [owner_id, stats] : m_player_stats) {
     start_times[owner_id] = stats.game_start_sim_sec;
     troops_recruited_values[owner_id] = stats.troops_recruited;
     enemies_killed_values[owner_id] = stats.enemies_killed;
     losses_values[owner_id] = stats.losses;
+    wild_losses_values[owner_id] = stats.losses_to_wild;
   }
 
   m_player_stats.clear();
@@ -198,6 +244,7 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World& world) {
     m_player_stats[owner_id].troops_recruited = troops_recruited_values[owner_id];
     m_player_stats[owner_id].enemies_killed = enemies_killed_values[owner_id];
     m_player_stats[owner_id].losses = losses_values[owner_id];
+    m_player_stats[owner_id].losses_to_wild = wild_losses_values[owner_id];
   }
 
   for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {

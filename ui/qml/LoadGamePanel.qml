@@ -106,8 +106,10 @@ Item {
     Rectangle {
         id: container
 
-        width: Math.min(parent.width * 0.7, 900)
-        height: Math.min(parent.height * 0.8, 640)
+        // Wide enough for the rows at 1080p, and only as tall as the saves it
+        // holds (never shorter than room for the empty-state message).
+        width: Math.min(parent.width * 0.72, Design.Metrics.space24 * 54)
+        height: Math.min(parent.height * 0.86, Design.Metrics.space24 * 36, content_column.implicitHeight + Theme.spacingXLarge * 2)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         color: Theme.panelBase
@@ -139,6 +141,8 @@ Item {
         }
 
         ColumnLayout {
+            id: content_column
+
             anchors.fill: parent
             anchors.margins: Theme.spacingXLarge
             spacing: Theme.spacingLarge
@@ -195,6 +199,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.preferredHeight: Math.max(Design.Metrics.space24 * 8, loadListView.contentHeight + Theme.spacingSmall * 2)
                 color: Theme.cardBase
                 border.color: Theme.border
                 border.width: 1
@@ -206,7 +211,7 @@ Item {
                     visible: loadListModel.count === 0
                     text: qsTr("No saved games yet. Save a battle from the menu, or press the quicksave key while you play.")
                     color: Theme.textHint
-                    font.pixelSize: Design.Typography.bodyLarge
+                    font.pixelSize: Design.Typography.subheading
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                 }

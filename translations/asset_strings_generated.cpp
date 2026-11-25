@@ -13,8 +13,8 @@ namespace {
 
 // clang-format off
 [[maybe_unused]] const char* const k_asset_strings[] = {
-    // 1173 strings across 9 contexts.
-    // ---- Missions (473) ----
+    // 1175 strings across 9 contexts.
+    // ---- Missions (474) ----
     QT_TRANSLATE_NOOP("Missions", "202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal's eighty elephants could be driven or let pass. Masinissa's Numidian horse on the right and Laelius's Italian cavalry on the left drove Hannibal's cavalry off the field. Hannibal's three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher's intervention is the campaign's deliberate dark-fantasy break from history."),
     QT_TRANSLATE_NOOP("Missions", "216-211 BC: after Cannae, Capua went over to Hannibal, and his army wintered there in 216-215. Rome answered by containment rather than battle: Quintus Fabius Maximus, the Delayer and 'shield of Rome', shadowed Hannibal and stripped the country, while Marcus Claudius Marcellus, the 'sword of Rome', held Nola against him in 216, 215 and 214 BC. In 212 the consuls closed a ring of siege works around Capua, and the city fell in 211 after Hannibal's march on Rome failed to draw the legions off. This mission is a dark-fantasy composite: it compresses those years into one defence, puts Fabius, the allied legions and Marcellus at the head of a siege army on the field at once, and adds the Iron Sepulcher, which history does not record."),
     QT_TRANSLATE_NOOP("Missions", "218 BC, late autumn: Hannibal crossed the Alps in about fifteen days with a multinational army, cavalry, baggage train, and surviving elephants. At the first ascent the Allobroges held the heights above a defile; Hannibal seized their posts by night, yet they still fell on the strung-out column, and the track killed as many men and animals as their spears. Higher up, mountain Gauls who had come with olive branches led the army into a ravine and rolled rocks down onto it from above (Polybius 3.50-53; Livy 21.32-35). Ancient sources disagree on the route. Historical: the Gallic ambushes, the rockfall, the snow and the hunt for supplies. Altered: Roman officers and camps in the passes paying the tribes - no Roman force stood in the Alps - and the Iron Sepulcher's grave-lights."),
@@ -137,6 +137,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "High-pass skirmishers"),
     QT_TRANSLATE_NOOP("Missions", "His rams, his grain, his camp. Marcellus may walk back to Nola and explain."),
     QT_TRANSLATE_NOOP("Missions", "Hold Hannibal's Punic quarter in Campania against three coordinated Roman assaults - Fabius down the Volturnus, the allied wing from the south, and Marcellus's siege column bringing rams and a tower against the walls."),
+    QT_TRANSLATE_NOOP("Missions", "Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river."),
     QT_TRANSLATE_NOOP("Missions", "Hold discipline. Let the Romans commit at the fords. Mago waits in the brush by the eastern crossing until you call him out."),
     QT_TRANSLATE_NOOP("Missions", "Hold the Punic quarter through every consular column."),
     QT_TRANSLATE_NOOP("Missions", "Hold the Sallow Ford"),
@@ -270,6 +271,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Sixty men and a road the shepherds will not walk after dark. The Senate wants a report. Cut timber, raise the camp, and keep everyone off that barrow until I say otherwise."),
     QT_TRANSLATE_NOOP("Missions", "Smoke on the far bank, upstream of the bridge. Hanno son of Bomilcar crossed by night on rafts and skins with his Iberians; the Volcae watching the crossing have not seen him."),
     QT_TRANSLATE_NOOP("Missions", "So the centre gave and the wings closed, and I rode out of it with seventy horse to Venusia. The Senate will come out to thank me for not despairing of the Republic. It is the strangest thanks a man was ever given, and I will take it."),
+    QT_TRANSLATE_NOOP("Missions", "So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time."),
     QT_TRANSLATE_NOOP("Missions", "So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty."),
     QT_TRANSLATE_NOOP("Missions", "So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you."),
     QT_TRANSLATE_NOOP("Missions", "So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well."),
@@ -295,7 +297,6 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Take the rearguard camp"),
     QT_TRANSLATE_NOOP("Missions", "Take the reserve camp"),
     QT_TRANSLATE_NOOP("Missions", "Take the river camp"),
-    QT_TRANSLATE_NOOP("Missions", "Take the second camp on the southern supply road. No bridge reaches its bank of the river."),
     QT_TRANSLATE_NOOP("Missions", "Take the shore camp"),
     QT_TRANSLATE_NOOP("Missions", "Take the shrine on the rise: cut down its guardians, then keep troops beside it until the standard is planted."),
     QT_TRANSLATE_NOOP("Missions", "Take the south ramp under the towers, then put the ram to the south gate or roll the tower against the curtain and send men over it. Get a company inside the outer ring."),
@@ -408,7 +409,6 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "The river reserve"),
     QT_TRANSLATE_NOOP("Missions", "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp. Upstream of Hanno's Iberians the Rhône runs wide and shallow enough to wade - strike the Volcae from both sides at once."),
     QT_TRANSLATE_NOOP("Missions", "The road runs east along the lake. Bring the Gauls down off the western heights to shut its mouth, and the column has only one way left to go."),
-    QT_TRANSLATE_NOOP("Missions", "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time."),
     QT_TRANSLATE_NOOP("Missions", "The screen is coming across the flats. Javelin-men and the Gallic horse in front, my own horse behind them, the usual arrangement. Please try to stand still; it makes the reports so much tidier."),
     QT_TRANSLATE_NOOP("Missions", "The screen's cavalry comes again from the east. Rotate quickly."),
     QT_TRANSLATE_NOOP("Missions", "The second column"),
@@ -471,6 +471,7 @@ namespace {
     QT_TRANSLATE_NOOP("Missions", "Write it down as the weather. Sleet, a river in spate, a morning without bread. Ten thousand of mine cut through your Gauls and walked on to Placentia, and Rome will hear that the storm robbed us, not you."),
     QT_TRANSLATE_NOOP("Missions", "You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by."),
     QT_TRANSLATE_NOOP("Missions", "You cannot cover every gate. Watch the telegraph and move on interior lines."),
+    QT_TRANSLATE_NOOP("Missions", "You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them."),
     QT_TRANSLATE_NOOP("Missions", "You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can."),
     QT_TRANSLATE_NOOP("Missions", "You have my marching town. I built it in a fog and never looked back, because a consul of the people does not look back. Keep it. The column will be through your hills before you have counted the huts."),
     QT_TRANSLATE_NOOP("Missions", "You have the allied camp. Socii - allies. I promised them land for this war, and you have just handed them the first piece of it face down."),
@@ -558,7 +559,7 @@ namespace {
     QT_TRANSLATE_NOOP("Nations", "Testudo"),
     QT_TRANSLATE_NOOP("Nations", "The Iron Sepulcher"),
 
-    // ---- Units (147) ----
+    // ---- Units (148) ----
     QT_TRANSLATE_NOOP("Units", "A tower rolled up to the curtain turned a wall from a barrier into a road."),
     QT_TRANSLATE_NOOP("Units", "African War Elephant"),
     QT_TRANSLATE_NOOP("Units", "An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night."),
@@ -569,7 +570,6 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Aries"),
     QT_TRANSLATE_NOOP("Units", "As brittle as any archer, and it withers as soon as the line in front of it fails."),
     QT_TRANSLATE_NOOP("Units", "Assault tower"),
-    QT_TRANSLATE_NOOP("Units", "Auxiliary Archer"),
     QT_TRANSLATE_NOOP("Units", "Balearic Slinger"),
     QT_TRANSLATE_NOOP("Units", "Balearic islanders served Carthage as specialist slingers, carrying spare slings and a pouch of stones."),
     QT_TRANSLATE_NOOP("Units", "Ballista"),
@@ -594,6 +594,7 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Civilian"),
     QT_TRANSLATE_NOOP("Units", "Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel."),
     QT_TRANSLATE_NOOP("Units", "Costs nothing to raise and never breaks, so it buys time no living troop would."),
+    QT_TRANSLATE_NOOP("Units", "Cretan Archers"),
     QT_TRANSLATE_NOOP("Units", "Cursed Arrow Volley"),
     QT_TRANSLATE_NOOP("Units", "Cursed missile line"),
     QT_TRANSLATE_NOOP("Units", "Defenceless at close quarters. Infantry that reaches it kills it in a few seconds."),
@@ -619,6 +620,7 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Hanno the Great"),
     QT_TRANSLATE_NOOP("Units", "Has no melee worth the name, and spears punish it the moment it is caught."),
     QT_TRANSLATE_NOOP("Units", "Hasdrubal Barca"),
+    QT_TRANSLATE_NOOP("Units", "Hastati"),
     QT_TRANSLATE_NOOP("Units", "Healer"),
     QT_TRANSLATE_NOOP("Units", "Heavy line infantry"),
     QT_TRANSLATE_NOOP("Units", "Horse Archer"),
@@ -632,7 +634,6 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Its arrows carry a curse that drains the will of everything they strike."),
     QT_TRANSLATE_NOOP("Units", "Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow."),
     QT_TRANSLATE_NOOP("Units", "Lancer cavalry"),
-    QT_TRANSLATE_NOOP("Units", "Legionary"),
     QT_TRANSLATE_NOOP("Units", "Liby-Phoenician Spear"),
     QT_TRANSLATE_NOOP("Units", "Libyan Archer"),
     QT_TRANSLATE_NOOP("Units", "Light infantry screen"),
@@ -646,6 +647,7 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Mounted skirmisher"),
     QT_TRANSLATE_NOOP("Units", "Not a soldier. It cannot hold ground and should never be the last thing guarding a camp."),
     QT_TRANSLATE_NOOP("Units", "Numidian Cavalry"),
+    QT_TRANSLATE_NOOP("Units", "Numidian Javelin Riders"),
     QT_TRANSLATE_NOOP("Units", "Onager"),
     QT_TRANSLATE_NOOP("Units", "One slow body, helpless in melee, and it needs the awakened dead between it and the enemy."),
     QT_TRANSLATE_NOOP("Units", "Out-trades everything at range, and massed bows are the answer to a war elephant."),

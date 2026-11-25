@@ -341,6 +341,18 @@ auto build_pileus_attachment(std::uint8_t base_role_byte)
       humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
 }
 
+auto build_straw_hat_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::straw_hat_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
+auto build_craftsman_cap_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::craftsman_cap_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
 auto build_turban_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::turban_make_static_attachment(

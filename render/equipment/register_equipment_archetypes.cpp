@@ -59,6 +59,8 @@ void register_equipment_archetypes() {
   ar.register_archetype("skull_face", [] { (void)skull_face_archetype(); });
   ar.register_archetype("turban", [] { (void)turban_archetype(); });
   ar.register_archetype("pileus", [] { (void)pileus_archetype(); });
+  ar.register_archetype("straw_hat", [] { (void)straw_hat_archetype(); });
+  ar.register_archetype("craftsman_cap", [] { (void)craftsman_cap_archetype(); });
   ar.register_archetype("palla_veil", [] { (void)palla_veil_archetype(); });
   ar.register_archetype("commander_helmet_fabius", [] {
     (void)commander_helmet_archetype(CommanderHelmetStyle::Fabius);

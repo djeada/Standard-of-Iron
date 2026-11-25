@@ -185,6 +185,18 @@ auto MiniaudioBackend::is_track_ready(const QString& id) const -> bool {
   return m_tracks.is_ready(id);
 }
 
+auto MiniaudioBackend::track_length_seconds(const QString& id) const -> float {
+  const int slot = m_tracks.find_slot(id);
+  if (slot < 0) {
+    return 0.0F;
+  }
+  const DecodedTrack* const decoded = m_tracks.track(static_cast<std::size_t>(slot));
+  if (decoded == nullptr || m_sample_rate <= 0) {
+    return 0.0F;
+  }
+  return static_cast<float>(decoded->frames) / static_cast<float>(m_sample_rate);
+}
+
 auto MiniaudioBackend::is_track_decode_pending(const QString& id) const -> bool {
   const int slot = m_tracks.find_slot(id);
   if (slot < 0) {

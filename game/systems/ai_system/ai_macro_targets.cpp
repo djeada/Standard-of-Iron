@@ -34,7 +34,8 @@ auto cheapest_recruit_cost(const AIContext& ctx) -> int {
     if (!is_foot_line_recruit(troop.unit_type)) {
       continue;
     }
-    if (recruiting_building_for(troop.unit_type) != Game::Units::SpawnType::Barracks) {
+    if (!troop.recruitable || ctx.nation->recruiting_building(troop.unit_type) !=
+                                  Game::Units::SpawnType::Barracks) {
       continue;
     }
     cheapest = std::min(cheapest, troop.cost);

@@ -1,5 +1,7 @@
 #include "render/entity/nations/carthage/spearman_style.h"
 
+#include <QVector3D>
+
 #include <array>
 
 #include "render/equipment/material_palette.h"
@@ -10,7 +12,7 @@ namespace {
 const std::array<SpearmanStyleRegistration, 1> k_styles{{
     {"carthage",
      SpearmanStyleConfig{
-         .cloth_color = Nation::k_carthage_materials.accent,
+         .cloth_color = QVector3D(0.37F, 0.17F, 0.47F),
          .leather_color = Nation::k_carthage_materials.leather,
          .leather_dark_color = Nation::k_carthage_materials.dark_leather,
          .metal_color = Nation::k_carthage_materials.metal,

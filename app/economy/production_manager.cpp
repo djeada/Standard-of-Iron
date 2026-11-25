@@ -1,6 +1,7 @@
 #include "app/economy/production_manager.h"
 
 #include <QCoreApplication>
+#include <QGuiApplication>
 #include <QPointF>
 
 #include <algorithm>
@@ -20,6 +21,7 @@
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
+#include "game/systems/economy/production_system_builder_task.h"
 #include "game/systems/economy/food_targets.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -267,7 +269,8 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
   }
 
   const bool harvesting = is_harvest_construction_item(item_type);
-  auto builders = collect_available_builders(harvesting);
+  const bool queueable = placement_kind_for(item_type) == PlacementKind::Structure;
+  auto builders = collect_available_builders(harvesting, queueable);
   if (builders.empty()) {
     emit order_feedback(App::Core::rejected_order(
         harvesting ? App::Core::OrderKind::Gather : App::Core::OrderKind::Build,
@@ -603,11 +606,31 @@ void ProductionManager::confirm_builder_structure() {
     return;
   }
 
+  // A crew already raising something would drop it for a new site, so a site
+  // placed for busy builders always joins their queue; Shift asks for the same
+  // from an idle crew and keeps the placement open for the next site.
+  const bool chain =
+      (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
+  const auto& crew = m_session.builders();
+  const bool crew_busy = std::any_of(crew.begin(), crew.end(), [&](auto id) {
+    const auto* builder =
+        m_world->try_get<Engine::Core::BuilderProductionComponent>(id);
+    return builder != nullptr &&
+           Game::Systems::ProductionTasks::is_raising_structure(*builder);
+  });
   submit_order(owner_id,
-               structure_build_order(m_session.builders(),
+               structure_build_order(crew,
                                      m_session.construction_type(),
                                      m_session.position(),
-                                     m_session.rotation_y()));
+                                     m_session.rotation_y(),
+                                     chain || crew_busy));
+  if (chain) {
+    m_preview.hand_to_construction_site(m_session.construction_type());
+    m_preview.clear_summary();
+    m_preview.set_active(false);
+    m_preview.set_valid(false);
+    return;
+  }
   end_placement(Handoff::BecomeSiteGhost);
 }
 
@@ -715,7 +738,8 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
   return updated_any;
 }
 
-auto ProductionManager::collect_available_builders(bool include_busy)
+auto ProductionManager::collect_available_builders(bool include_busy,
+                                                   bool include_raising)
     -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> builders;
 
@@ -731,6 +755,8 @@ auto ProductionManager::collect_available_builders(bool include_busy)
     if (builder_prod != nullptr && unit != nullptr &&
         unit->spawn_type == Game::Units::SpawnType::Builder && unit->health > 0 &&
         (include_busy ||
+         (include_raising &&
+          Game::Systems::ProductionTasks::is_raising_structure(*builder_prod)) ||
          Game::Systems::is_gather_builder_product(builder_prod->product_type) ||
          (!builder_prod->in_progress && !builder_prod->has_construction_site))) {
       builders.push_back(id);

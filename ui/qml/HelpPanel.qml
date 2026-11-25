@@ -189,8 +189,8 @@ Item {
     Design.IronPanel {
         id: container
 
-        width: Math.min(parent.width * 0.78, Design.Metrics.space24 * 38)
-        height: Math.min(parent.height * 0.86, Design.Metrics.space24 * 30)
+        width: Math.min(parent.width * 0.82, Design.Metrics.space24 * 44)
+        height: Math.min(parent.height * 0.9, Design.Metrics.space24 * 40)
         anchors.centerIn: parent
         raised: true
         accessibleName: qsTr("Field manual")
@@ -287,7 +287,7 @@ Item {
                                 visible: false
                                 text: tab.modelData
                                 font.family: Design.Typography.family
-                                font.pixelSize: Design.Typography.label
+                                font.pixelSize: Design.Typography.body
                                 font.weight: Design.Typography.medium
                             }
 
@@ -295,7 +295,7 @@ Item {
                                 text: tab.modelData
                                 color: tab.checked ? Design.Theme.textPrimary : Design.Theme.textSecondary
                                 font.family: Design.Typography.family
-                                font.pixelSize: Design.Typography.label
+                                font.pixelSize: Design.Typography.body
                                 font.weight: tab.checked ? Design.Typography.medium : Design.Typography.regular
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
@@ -339,7 +339,8 @@ Item {
                         delegate: Column {
                             required property var modelData
 
-                            width: scroller.availableWidth
+                            // Keep a line to about 90 characters; wider is tiring to read.
+                            width: Math.min(scroller.availableWidth, Design.Metrics.space24 * 40)
                             spacing: Design.Metrics.space4
 
                             Text {
@@ -357,7 +358,8 @@ Item {
                                 text: modelData.body
                                 color: Design.Theme.textPrimary
                                 font.family: Design.Typography.family
-                                font.pixelSize: Design.Typography.body
+                                font.pixelSize: Design.Typography.bodyLarge
+                                lineHeight: 1.15
                                 wrapMode: Text.WordWrap
                             }
                         }

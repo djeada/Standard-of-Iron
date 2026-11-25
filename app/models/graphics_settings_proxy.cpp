@@ -11,7 +11,6 @@ GraphicsSettingsProxy::GraphicsSettingsProxy(QObject* parent)
     : QObject(parent) {
   const auto& graphics = Render::GraphicsSettings::instance();
   m_seen_generation = graphics.generation();
-  m_seen_auto_lowered = graphics.auto_lowered_count();
   constexpr int k_poll_interval_ms = 500;
   m_poll.setInterval(k_poll_interval_ms);
   connect(
@@ -21,15 +20,6 @@ GraphicsSettingsProxy::GraphicsSettingsProxy(QObject* parent)
 
 void GraphicsSettingsProxy::poll_render_settings() {
   const auto& graphics = Render::GraphicsSettings::instance();
-  const std::uint32_t auto_lowered = graphics.auto_lowered_count();
-  if (auto_lowered != m_seen_auto_lowered) {
-    m_seen_auto_lowered = auto_lowered;
-    if (!graphics.quality_chosen_by_user()) {
-      App::Core::UserSettings::save_auto_graphics_quality_level(
-          static_cast<int>(graphics.quality()));
-    }
-    emit quality_lowered_automatically(quality_name());
-  }
   const std::uint32_t generation = graphics.generation();
   if (generation != m_seen_generation) {
     m_seen_generation = generation;

@@ -1,6 +1,8 @@
 #version 330 core
+#include "biome_palette.glsl"
 #include "environment_lighting.glsl"
 #include "ground_readability.glsl"
+#include "ground_shade.glsl"
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec4 a_uv;
@@ -158,8 +160,8 @@ void main() {
     taper = max(1.0 - 0.86 * pow(tip, 1.35), 0.06);
     float blade_variation =
         hash11(sway_phase * 5.3 + 11.7 + dot(blade_dir, vec2(3.1, 7.7)));
-    vec3 varied_color =
-        blade_color * k_blade_body_gain * mix(0.86, 1.10, blade_variation);
+    vec3 varied_color = biome_natural_sward(blade_color) * k_blade_body_gain *
+                        mix(0.86, 1.10, blade_variation);
     vec3 root_color = mix(u_soil_color, varied_color, 0.62) * k_blade_root_shade;
     vec3 tip_color = varied_color * k_blade_tip_gain;
     surface_color = mix(root_color, varied_color, smoothstep(0.0, 0.50, tip));
@@ -192,7 +194,8 @@ void main() {
   lit += surface_color * environment_primary_color() * transmission * 0.20;
 
   float exposure =
-      environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
+      environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0) *
+      ground_daylight_gain(ground_open_light());
   v_color = lit * exposure;
   v_alpha = coverage_fade;
   v_edge = a_uv.x * 2.0 - 1.0;

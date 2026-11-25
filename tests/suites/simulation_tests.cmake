@@ -6,6 +6,7 @@ add_executable(
     simulation_tests
     session/map_session_restore_test.cpp
     session/session_context_test.cpp
+    session/battle_stats_test.cpp
     command/command_pipeline_test.cpp
     command/command_codec_test.cpp
     core/entity_handle_test.cpp
@@ -51,6 +52,7 @@ add_executable(
     systems/troop_catalog_loader_test.cpp
     systems/showcase_routine_system_test.cpp
     systems/home_manpower_system_test.cpp
+    systems/town_growth_system_test.cpp
     systems/building_collision_test.cpp
     systems/pathfinding_test.cpp
     core/render_publication_test.cpp

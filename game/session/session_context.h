@@ -126,6 +126,9 @@ public:
 
   [[nodiscard]] auto rng_seed() const -> std::uint64_t;
 
+  void set_idle_builders_gather(bool enabled);
+  [[nodiscard]] auto idle_builders_gather() const -> bool;
+
   enum class OverloadPolicy : std::uint8_t {
 
     DiscardBacklog,
@@ -140,6 +143,8 @@ public:
                const TickFn& per_tick = {}) -> int;
 
   void step();
+
+  void service_stopped_clock();
 
   void reset();
 

@@ -7,6 +7,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
+#include "../systems/recruitment_rules.h"
 #include "../systems/troop_profile_service.h"
 #include "building_spawn_setup.h"
 #include "units/troop_type.h"
@@ -16,7 +17,7 @@ namespace Game::Units {
 
 namespace {
 
-constexpr int k_max_home_civilians = 3;
+constexpr int k_max_home_civilians = Game::Systems::k_home_lifetime_civilians;
 constexpr float k_home_scale_factor = 1.5F;
 constexpr float k_home_rally_offset_x = 2.0F * k_home_scale_factor;
 constexpr float k_home_rally_offset_z = 1.0F * k_home_scale_factor;

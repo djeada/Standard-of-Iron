@@ -72,6 +72,34 @@ auto Nation::get_troop(Game::Units::TroopType unit_type) const -> const TroopTyp
   return nullptr;
 }
 
+auto Nation::find_band(Game::Units::TroopType unit_type,
+                       NationID band_nation) const -> const MercenaryBand* {
+  for (const auto& band : mercenary_bands) {
+    if (band.unit_type == unit_type && band.nation == band_nation) {
+      return &band;
+    }
+  }
+  return nullptr;
+}
+
+auto Nation::find_band(const std::string& band_id) const -> const MercenaryBand* {
+  for (const auto& band : mercenary_bands) {
+    if (band.id == band_id) {
+      return &band;
+    }
+  }
+  return nullptr;
+}
+
+auto Nation::recruiting_building(Game::Units::TroopType unit_type) const
+    -> Game::Units::SpawnType {
+  if (const auto* troop = get_troop(unit_type);
+      troop != nullptr && troop->recruited_at.has_value()) {
+    return *troop->recruited_at;
+  }
+  return recruiting_building_for(unit_type);
+}
+
 auto Nation::get_best_melee_troop() const -> const TroopType* {
   auto melee = get_melee_troops();
   if (melee.empty()) {

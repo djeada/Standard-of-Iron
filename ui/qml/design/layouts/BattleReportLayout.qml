@@ -12,6 +12,7 @@ FocusScope {
     property string missionName: ""
     property string durationText: ""
     property var armies: []
+    property int wildLosses: 0
     property string primaryAction: qsTr("Return to Menu")
     property string secondaryAction: qsTr("Close Report")
     property string retryAction: qsTr("Retry mission")
@@ -639,6 +640,17 @@ FocusScope {
                                 }
                             }
                         }
+                    }
+
+                    Text {
+                        objectName: "battleReportWildNote"
+                        width: parent.width
+                        visible: root.wildLosses > 0
+                        text: qsTr("%1 fell to wild beasts and the restless dead, and are credited to no army.").arg(Design.Numerals.grouped(root.wildLosses))
+                        color: Design.Theme.textDisabled
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        wrapMode: Text.WordWrap
                     }
                 }
             }

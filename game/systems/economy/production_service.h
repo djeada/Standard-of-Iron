@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,7 +28,12 @@ enum class ProductionResult {
   GlobalTroopLimitReached,
   CommanderNotRecruitable,
   AlreadyInProgress,
-  QueueFull
+  QueueFull,
+  // NATION_ASYMMETRY.md: not on the owner's nation's roster, missing the
+  // building it needs (a Fabrica for triarii), or at its squad cap.
+  NotInRoster,
+  NeedsBuilding,
+  TypeLimitReached
 };
 
 struct ProductionState {
@@ -44,6 +50,8 @@ struct ProductionState {
   int villager_cost = 1;
   int manpower_available = 0;
   int queue_size = 0;
+  bool repeat_active = false;
+  Game::Units::TroopType repeat_product = Game::Units::TroopType::Archer;
   bool reserve_short = false;
   int cheapest_recruit_cost = 0;
   std::vector<Game::Units::TroopType> production_queue;
@@ -51,14 +59,46 @@ struct ProductionState {
 
 class ProductionService {
 public:
+  // `band` names the nation of a mercenary band hired at a Mercenary Camp;
+  // left empty, the owner's own troop (or its default band) is meant.
   static auto
   can_start_production(Engine::Core::World& world,
                        Engine::Core::EntityID building_id,
-                       Game::Units::TroopType unit_type) -> ProductionResult;
+                       Game::Units::TroopType unit_type,
+                       std::optional<NationID> band = std::nullopt) -> ProductionResult;
 
-  static auto start_production(Engine::Core::World& world,
-                               Engine::Core::EntityID building_id,
-                               Game::Units::TroopType unit_type) -> ProductionResult;
+  static auto
+  start_production(Engine::Core::World& world,
+                   Engine::Core::EntityID building_id,
+                   Game::Units::TroopType unit_type,
+                   std::optional<NationID> band = std::nullopt) -> ProductionResult;
+
+  static constexpr int k_barracks_queue_limit = 10;
+  static constexpr int k_other_queue_limit = 5;
+  static constexpr int k_home_queue_limit = 3;
+  static constexpr int k_recruit_batch = 5;
+  static constexpr int k_repeat_lookahead = 3;
+
+  struct BatchPlan {
+    int count = 0;
+    ProductionResult limit = ProductionResult::Success;
+  };
+
+  static auto plan_batch(Engine::Core::World& world,
+                         Engine::Core::EntityID building_id,
+                         Game::Units::TroopType unit_type,
+                         int wanted) -> BatchPlan;
+
+  static auto start_production_batch(Engine::Core::World& world,
+                                     Engine::Core::EntityID building_id,
+                                     Game::Units::TroopType unit_type,
+                                     int count) -> int;
+
+  static auto toggle_repeat(Engine::Core::World& world,
+                            Engine::Core::EntityID building_id,
+                            Game::Units::TroopType unit_type) -> bool;
+
+  static void top_up_repeats(Engine::Core::World& world);
 
   static auto set_rally_point(Engine::Core::World& world,
                               Engine::Core::EntityID building_id,

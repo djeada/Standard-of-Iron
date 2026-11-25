@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "animation/clip_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
@@ -48,6 +49,7 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/entity/nations/worker_tools.h"
 #include "render/equipment/render_archetype_registry.h"
 #include "render/equipment/renderer_constants.h"
 #include "render/frame/frame_submitter.h"
@@ -125,13 +127,6 @@ auto carthage_builder_base_archetype() -> Render::Creature::ArchetypeId {
     auto desc = *base_desc;
     desc.debug_name = "troops/carthage/builder/base";
     desc.bake_attachments[desc.bake_attachment_count++] =
-        carthage_headwrap_make_static_attachment(
-            static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head),
-            desc.role_count);
-    desc.role_count =
-        static_cast<std::uint8_t>(desc.role_count + k_carthage_headwrap_role_count);
-    desc.append_extra_role_colors_fn(&carthage_headwrap_extra_role_colors);
-    desc.bake_attachments[desc.bake_attachment_count++] =
         carthage_robes_make_static_attachment(
             static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
             desc.role_count);
@@ -143,15 +138,56 @@ auto carthage_builder_base_archetype() -> Render::Creature::ArchetypeId {
   return archetype;
 }
 
-auto carthage_builder_idle_archetype() -> Render::Creature::ArchetypeId {
+auto carthage_builder_kit_archetype() -> Render::Creature::ArchetypeId {
   static const auto archetype = []() {
     const auto loadout =
         Render::GL::Nation::resolve_equipment_loadout("troops/carthage/builder");
-    const std::array<EquipmentHandle, 3> handles{
-        loadout.tool_belt_handle, loadout.work_apron_handle, loadout.arm_guards_handle};
+    const std::array<EquipmentHandle, 4> handles{loadout.helmet_handle,
+                                                 loadout.tool_belt_handle,
+                                                 loadout.work_apron_handle,
+                                                 loadout.arm_guards_handle};
     return resolve_humanoid_equipment_archetype(
         "troops/carthage/builder", carthage_builder_base_archetype(), handles);
   }();
+  return archetype;
+}
+
+auto carthage_builder_idle_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = []() {
+    return WorkerTools::with_attachment(
+        "troops/carthage/builder/slung_mallet",
+        carthage_builder_kit_archetype(),
+        WorkerTools::back_attachment(WorkerTools::Kind::LongMallet,
+                                     Render::Humanoid::k_humanoid_wood_role),
+        false);
+  }();
+  return archetype;
+}
+
+auto carthage_builder_hand_tool_archetype(std::string_view debug_name,
+                                          WorkerTools::Kind kind)
+    -> Render::Creature::ArchetypeId {
+  auto const idle = carthage_builder_idle_archetype();
+  const auto* idle_desc = Render::Creature::ArchetypeRegistry::instance().get(idle);
+  if (idle_desc == nullptr) {
+    return idle;
+  }
+  return WorkerTools::with_attachment(
+      debug_name,
+      idle,
+      WorkerTools::hand_attachment(kind, idle_desc->role_count),
+      true);
+}
+
+auto carthage_builder_axe_unit_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = carthage_builder_hand_tool_archetype(
+      "troops/carthage/builder/felling_axe", WorkerTools::Kind::FellingAxe);
+  return archetype;
+}
+
+auto carthage_builder_pick_unit_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = carthage_builder_hand_tool_archetype(
+      "troops/carthage/builder/quarry_pick", WorkerTools::Kind::QuarryPick);
   return archetype;
 }
 
@@ -332,7 +368,7 @@ auto carthage_builder_variant_table()
   static const Render::Creature::ArchetypeVariantTable k_table = []() {
     Render::Creature::ArchetypeVariantTable t{};
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
-    t.variant_stride = 5;
+    t.variant_stride = 7;
 
     t.state_for_pose[static_cast<std::size_t>(
         Render::Creature::PoseIntent::AttackMelee)] =
@@ -354,6 +390,16 @@ auto carthage_builder_variant_table()
 
     t.archetype_for_variant[4] = carthage_builder_sickle_unit_archetype();
     t.state_for_variant[4] = Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[Animation::k_humanoid_felling_axe_variant] =
+        carthage_builder_axe_unit_archetype();
+    t.state_for_variant[Animation::k_humanoid_felling_axe_variant] =
+        Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[Animation::k_humanoid_quarry_pick_variant] =
+        carthage_builder_pick_unit_archetype();
+    t.state_for_variant[Animation::k_humanoid_quarry_pick_variant] =
+        Render::Creature::AnimationStateId::AttackSword;
     return t;
   }();
   return k_table;
@@ -455,13 +501,16 @@ auto resolve_builder_style(const DrawContext& ctx) -> const BuilderStyleConfig& 
   return default_style;
 }
 
+constexpr float k_punic_skin_depth = 0.45F;
+
 void apply_builder_palette_overrides(const BuilderStyleConfig& style,
                                      const QVector3D& team_tint,
+                                     std::uint32_t seed,
                                      HumanoidVariant& variant) {
-  if (style.skin_color) {
-    variant.palette.skin = Humanoid::saturate_color(*style.skin_color);
-  }
-  Humanoid::apply_uniform_palette(variant.palette, style, team_tint, {0.0F, 1.0F});
+  variant.palette.skin = style.skin_color
+                             ? Humanoid::saturate_color(*style.skin_color)
+                             : make_skin_tone(seed, k_punic_skin_depth);
+  Humanoid::apply_uniform_palette(variant.palette, style, team_tint);
 }
 
 void apply_carthage_beard(std::uint32_t seed,
@@ -483,7 +532,6 @@ void apply_carthage_beard(std::uint32_t seed,
 void apply_carthage_civilian_palette(const QVector3D& team_tint,
                                      std::uint32_t seed,
                                      HumanoidVariant& variant) {
-  QVector3D const skin_color(0.08F, 0.07F, 0.065F);
   QVector3D const wood_color(0.45F, 0.35F, 0.22F);
   QVector3D const metal_color(0.70F, 0.52F, 0.32F);
   float const robe_roll = hash_01(seed ^ 0xCA77U);
@@ -504,8 +552,7 @@ void apply_carthage_civilian_palette(const QVector3D& team_tint,
       mix_palette_color(variant.palette.wood, wood_color, team_tint, 0.08F, 0.92F);
   variant.palette.metal =
       mix_palette_color(variant.palette.metal, metal_color, team_tint, 0.06F, 0.94F);
-  variant.palette.skin =
-      mix_palette_color(variant.palette.skin, skin_color, team_tint, 0.0F, 1.0F);
+  variant.palette.skin = make_skin_tone(seed, k_punic_skin_depth);
 }
 
 class BuilderRenderer : public HumanoidRendererBase {
@@ -531,7 +578,7 @@ public:
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
     auto const& style = resolve_builder_style(ctx);
-    apply_builder_palette_overrides(style, team_tint, v);
+    apply_builder_palette_overrides(style, team_tint, seed, v);
     apply_carthage_beard(seed, 0.75F, style.force_beard, v);
     seed_missing_humanoid_wear(v, seed);
   }
@@ -542,7 +589,7 @@ public:
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
     auto const& style = resolve_builder_style(ctx);
-    apply_builder_palette_overrides(style, team_tint, v);
+    apply_builder_palette_overrides(style, team_tint, seed, v);
     apply_carthage_beard(seed, 0.75F, style.force_beard, v);
   }
 };
@@ -623,6 +670,9 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
                         [] { (void)carthage_chisel_archetype(); });
   ar.register_archetype("carthage_builder_sickle",
                         [] { (void)carthage_sickle_archetype(); });
+  ar.register_archetype("worker_long_mallet", [] {
+    (void)WorkerTools::archetype(WorkerTools::Kind::LongMallet);
+  });
 }
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {

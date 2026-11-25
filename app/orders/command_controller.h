@@ -127,7 +127,9 @@ public:
                        int viewport_width,
                        int viewport_height,
                        void* camera) -> CommandResult;
-  void recruit_near_selected(const QString& unit_type, int local_owner_id);
+  void recruit_near_selected(const QString& unit_type,
+                             int local_owner_id,
+                             RecruitClick click = RecruitClick::Single);
 
   [[nodiscard]] bool has_patrol_first_waypoint() const {
     return m_patrol.has_first_waypoint();

@@ -11,7 +11,7 @@ The RTS camera supports nine ways to move or restore the view. The same control 
 | Drag pan     | Hold the right mouse button and drag                          | `ui/qml/GameView.qml`, `renderArea` mouse area |
 | Zoom         | Mouse wheel, or `PgUp` / `PgDown`                             | `rts.camera_zoom_*`                            |
 | Rotate       | `Q` / `E`; Shift for a larger step                            | `rts.camera_rotate_*`                          |
-| Tilt         | `R` / `F` or `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step | `rts.camera_tilt_*`                            |
+| Tilt         | `Ctrl+Up` / `Ctrl+Down`; Shift for a larger step | `rts.camera_tilt_*`                            |
 | Minimap jump | Left-click or drag the minimap                                | `ui/qml/HUDTop.qml`, `minimapMouse`            |
 | Follow       | Button in the top bar                                         | `ui/qml/HUDTop.qml`                            |
 | Reset        | `Home`, or the Reset button in the top bar                    | `rts.camera_reset`                             |
@@ -34,7 +34,7 @@ The three basic camera motions should remain distinct in both code and player-fa
 
 `Camera::orbit(yaw, pitch)` remains the lower-level two-axis primitive used by both rotation and tilt.
 
-Tilt is bound to `R` / `F` and, as the primary chords, `Ctrl+Up` / `Ctrl+Down`. `R` is shared with the commander rally action, which is contextual: while a rally flag can be placed, `R` places it and the camera stays still; otherwise `R` tilts up. The formation planner, which used to sit on `F`, is on `V`.
+Tilt is bound to `Ctrl+Up` / `Ctrl+Down`. `R` belongs to the commander rally flag alone; the Settings controls page flags any two actions that share a key in the same input context, on both rows. The formation planner, which used to sit on `F`, is on `V`.
 
 ### The pitch sign convention
 
@@ -236,7 +236,7 @@ Automated tests cover geometry, binding behavior, and legend contents, but sever
 - [ ] Clearing only the alternate with `Backspace` leaves the primary binding intact; **Default** restores both.
 - [ ] `WASD` pans; `A` and `S` no longer mean Stop or Attack, while `C` and `Z` do.
 - [ ] `Ctrl+Up` and `Ctrl+Down` tilt; plain `Up` and `Down` continue to pan when Ctrl is not held.
-- [ ] `R` / `F` tilt up and down. While a rally flag can be placed, `R` places it without moving the camera.
+- [ ] `R` places the rally flag and never moves the camera; Settings flags any key two actions share.
 - [ ] `V` opens the formation planner.
 - [ ] `Home` and the top-bar Reset button land on the same view.
 - [ ] On Cannae, Reset frames the camp and surrounding battlefield rather than a single soldier. On the tutorial, Reset is closer but still wider than one formation.

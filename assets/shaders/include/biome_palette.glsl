@@ -13,25 +13,46 @@ struct BiomeGrassPalette {
 
 BiomeGrassPalette biome_grass_palette(int ground_type) {
   if (ground_type == k_forest_mud)
-    return BiomeGrassPalette(vec3(0.79, 1.17, 1.04), vec3(1.08, 1.04, 0.84));
+    return BiomeGrassPalette(vec3(0.90, 1.03, 0.92), vec3(1.12, 1.05, 0.80));
   if (ground_type == k_grass_dry)
-    return BiomeGrassPalette(vec3(0.94, 1.16, 0.84), vec3(1.27, 1.13, 0.74));
+    return BiomeGrassPalette(vec3(0.96, 1.06, 0.90), vec3(1.22, 1.10, 0.74));
   if (ground_type == k_soil_rocky)
-    return BiomeGrassPalette(vec3(0.88, 1.13, 1.06), vec3(1.12, 1.06, 0.89));
+    return BiomeGrassPalette(vec3(0.98, 1.03, 0.93), vec3(1.12, 1.05, 0.86));
   if (ground_type == k_soil_fertile)
-    return BiomeGrassPalette(vec3(0.81, 1.29, 0.92), vec3(1.22, 1.13, 0.78));
+    return BiomeGrassPalette(vec3(0.93, 1.08, 0.92), vec3(1.22, 1.11, 0.76));
 
   return BiomeGrassPalette(vec3(1.0), vec3(1.0));
+}
+
+// Living grass reflects nearly as much red as green and little blue. The
+// authored biome primaries are emerald - green twice red, blue level with red
+// on the river maps - and no light makes that read as a meadow: it reads as
+// felt. This moves a green-dominant colour to a leaf green of the same
+// brightness and leaves straw, soil and rock alone.
+const float k_sward_red_share = 0.71;
+const float k_sward_blue_share = 0.50;
+const float k_sward_natural_amount = 0.88;
+const float k_sward_value_gain = 1.08;
+const vec3 k_sward_luma = vec3(0.2126, 0.7152, 0.0722);
+
+vec3 biome_natural_sward(vec3 color) {
+  float leafy = smoothstep(0.0, 0.05, color.g - max(color.r, color.b));
+  vec3 natural = vec3(max(color.r, color.g * k_sward_red_share),
+                      color.g,
+                      min(color.b, color.g * k_sward_blue_share));
+  natural *= dot(color, k_sward_luma) / max(dot(natural, k_sward_luma), 1e-4);
+  return mix(color, natural * k_sward_value_gain, leafy * k_sward_natural_amount);
 }
 
 vec3 biome_grass_color(vec3 albedo, int ground_type, float dryness, float cover) {
   BiomeGrassPalette palette = biome_grass_palette(ground_type);
   vec3 tone = mix(palette.fresh, palette.cured, clamp(dryness, 0.0, 1.0));
-  return albedo * mix(vec3(1.0), tone, clamp(cover, 0.0, 1.0));
+  float weight = clamp(cover, 0.0, 1.0);
+  return mix(albedo, biome_natural_sward(albedo) * tone, weight);
 }
 
 vec3 biome_surface_saturation(vec3 albedo, float authored_saturation, float tactical) {
   float luma = dot(albedo, vec3(0.299, 0.587, 0.114));
-  float saturation = clamp(authored_saturation * 1.16, 0.0, 1.16);
+  float saturation = clamp(authored_saturation * 1.07, 0.0, 1.10);
   return mix(vec3(luma), albedo, saturation * mix(1.0, 0.94, tactical));
 }

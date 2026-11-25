@@ -306,6 +306,16 @@ Item {
                 return false;
             game.orders.select_all_troops();
             return true;
+        case "rts.select_idle_builders":
+            if (event.isAutoRepeat || !game.orders.select_idle_builders)
+                return false;
+            if (game.orders.select_idle_builders() > 0) {
+                if (game.camera.center_on_selection)
+                    game.camera.center_on_selection();
+            } else {
+                Design.Notifications.ambient(qsTr("No idle builders"));
+            }
+            return true;
         case "rts.center_on_selection":
             if (!event.isAutoRepeat && game.has_units_selected && game.camera.center_on_selection)
                 game.camera.center_on_selection();

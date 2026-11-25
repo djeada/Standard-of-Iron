@@ -120,6 +120,7 @@ add_library(
     app/economy/production_manager.cpp
     app/economy/wall_placement_session.cpp
     app/economy/production_readouts.cpp
+    app/economy/hiring_readout.cpp
     app/economy/resource_text.cpp
     app/economy/unit_profile.cpp
     # app/persistence -- saving and restoring a match.

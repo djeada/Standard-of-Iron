@@ -31,8 +31,11 @@ void main() {
                            density_field + v_tex_coord.y * 0.18 -
                                abs(v_tex_coord.x - 0.5) * 0.12);
 
-  float edge_fade =
-      smoothstep(0.0, 0.12, v_tex_coord.x) * smoothstep(0.0, 0.12, 1.0 - v_tex_coord.x);
+  // Cards are 1.25 steps wide (k_ring_width_scale), so each shares its outer
+  // fifth with a neighbour; smoothstep ramps there sum to one across the joint.
+  const float k_card_overlap = 0.20;
+  float edge_fade = smoothstep(0.0, k_card_overlap, v_tex_coord.x) *
+                    smoothstep(0.0, k_card_overlap, 1.0 - v_tex_coord.x);
   float base_fade = smoothstep(0.0, 0.05, v_tex_coord.y);
   float top_fade = 1.0 - smoothstep(0.62, 1.0, v_tex_coord.y);
   float height_fade = base_fade * (0.65 + 0.35 * top_fade);

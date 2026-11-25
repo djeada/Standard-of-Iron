@@ -12,6 +12,11 @@ class World;
 
 namespace Game::Systems {
 
+// A marketplace sale price after the owner's nation's trade multiplier.
+[[nodiscard]] auto sell_price_with_nation(const Engine::Core::World& world,
+                                          int owner_id,
+                                          int base_price) -> int;
+
 struct MarketplaceTradeRates {
   int buy_price_food = 10;
   int buy_price_wood = 12;

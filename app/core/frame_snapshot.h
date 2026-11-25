@@ -9,6 +9,7 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <array>
 #include <cstdint>
 
 #include "app/core/published.h"
@@ -60,6 +61,7 @@ struct PlacementReadout {
 struct OrdersReadout {
   QString command_mode = QStringLiteral("normal");
   bool has_commandable_selection = false;
+  std::array<int, 10> control_group_sizes{};
 };
 
 } // namespace App::Core

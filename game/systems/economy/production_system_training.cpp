@@ -14,6 +14,7 @@
 #include "core/world.h"
 #include "game_config.h"
 #include "map/map_transformer.h"
+#include "nation_recruitment.h"
 #include "production_service.h"
 #include "recruitment_gate.h"
 #include "systems/movement/body_profile.h"
@@ -60,15 +61,15 @@ auto production_count_increment(const Engine::Core::UnitComponent* unit_comp,
   return production_cost;
 }
 
-void spawn_recruit(Engine::Core::World& world,
+auto spawn_recruit(Engine::Core::World& world,
                    Engine::Core::Entity& building,
                    Engine::Core::ProductionComponent& prod,
                    const Engine::Core::TransformComponent& transform,
                    const Engine::Core::UnitComponent& owner,
-                   Game::Systems::NationID nation_id) {
+                   Game::Systems::NationID nation_id) -> Engine::Core::EntityID {
   auto reg = Game::Map::MapTransformer::get_factory_registry();
   if (!reg) {
-    return;
+    return 0;
   }
 
   float const exit_offset = 2.5F + 0.2F * float(prod.produced_count % 5);
@@ -101,7 +102,7 @@ void spawn_recruit(Engine::Core::World& world,
 
   auto unit = reg->create(sp.spawn_type, world, sp);
   if (!unit) {
-    return;
+    return 0;
   }
   CommandService::MoveOptions muster;
   muster.kind = MoveOrderKind::ScriptedMove;
@@ -120,7 +121,32 @@ void spawn_recruit(Engine::Core::World& world,
   attach_spawn_flare(
       world, unit->id(), sp.spawn_type, Engine::Core::SpawnFlareStyle::Recruit);
   Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitRecruitedEvent(unit->id(), owner.owner_id, sp.spawn_type));
+  Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent::for_owner(owner.owner_id, "build.unit_ready"));
+  return unit->id();
+}
+
+// A band hired at a Mercenary Camp keeps a contract that the nation economy
+// charges upkeep for (NATION_ASYMMETRY.md 4.2).
+void sign_contract(Engine::Core::World& world,
+                   Engine::Core::EntityID recruit,
+                   const Engine::Core::UnitComponent& camp,
+                   Game::Units::TroopType troop,
+                   Game::Systems::NationID band_nation) {
+  if (recruit == 0 || camp.spawn_type != Game::Units::SpawnType::MercenaryCamp) {
+    return;
+  }
+  const auto* nation = owner_nation(world, camp.owner_id);
+  const auto* band =
+      nation != nullptr ? resolve_band(*nation, troop, band_nation) : nullptr;
+  if (band == nullptr) {
+    return;
+  }
+  auto* contract = world.emplace<Engine::Core::MercenaryContractComponent>(recruit);
+  if (contract != nullptr) {
+    contract->upkeep_per_minute = band->upkeep_per_minute;
+  }
 }
 
 void start_next_queued_job(Engine::Core::ProductionComponent& prod,
@@ -130,6 +156,7 @@ void start_next_queued_job(Engine::Core::ProductionComponent& prod,
   }
   prod.product_type = prod.production_queue.front();
   prod.production_queue.erase(prod.production_queue.begin());
+  prod.has_product_nation = false;
   apply_production_profile(&prod, nation_id, prod.product_type);
   prod.time_remaining = prod.build_time;
   prod.in_progress = true;
@@ -152,8 +179,11 @@ void finish_training_job(Engine::Core::World& world,
       prod.time_remaining = 0.0F;
       return;
     }
-    spawn_recruit(world, building, prod, *t, *u, nation_id);
+    const auto troop_nation = prod.has_product_nation ? prod.product_nation : nation_id;
+    const auto recruit = spawn_recruit(world, building, prod, *t, *u, troop_nation);
+    sign_contract(world, recruit, *u, prod.product_type, troop_nation);
     prod.produced_count += capacity_increment;
+    prod.has_product_nation = false;
   }
 
   prod.in_progress = false;
@@ -168,8 +198,8 @@ void advance_training_job(Engine::Core::World& world,
                           float delta_time) {
   const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
   const auto nation_id = resolve_nation_id(world, owner_id);
-  const auto& current_profile =
-      TroopProfileService::instance().get_profile_ref(nation_id, prod.product_type);
+  const auto& current_profile = TroopProfileService::instance().get_profile_ref(
+      prod.has_product_nation ? prod.product_nation : nation_id, prod.product_type);
   int const capacity_increment =
       production_count_increment(unit_comp, current_profile.production.cost);
 

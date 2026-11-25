@@ -658,6 +658,52 @@ TestCase {
         summary.destroy();
     }
 
+    function test_a_neutral_barracks_says_it_can_be_captured_and_how() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                    "name": "Barracks",
+                    "typeKey": "barracks",
+                    "isBuilding": true,
+                    "isEnemy": false,
+                    "isOwn": false,
+                    "isAlly": false,
+                    "ownerId": 0,
+                    "healthRatio": 1.0,
+                    "health": 1000,
+                    "maxHealth": 1000,
+                    "captureSeconds": 15
+                })
+            });
+        var hint = findChild(summary, "inspectCaptureHint");
+        verify(hint !== null && hint.visible, "the neutral barracks card gave no hint about capture");
+        verify(hint.text.indexOf("captured") !== -1 && hint.text.indexOf("15") !== -1, "the hint must say how long: " + hint.text);
+        summary.destroy();
+    }
+
+    function test_an_enemy_barracks_hint_names_the_outnumbering_rule_and_other_cards_stay_quiet() {
+        var enemy = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                    "typeKey": "barracks",
+                    "isBuilding": true,
+                    "isEnemy": true,
+                    "captureSeconds": 15
+                })
+            });
+        verify(findChild(enemy, "inspectCaptureHint").text.indexOf("three times") !== -1);
+        enemy.destroy();
+        var archer = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({})
+            });
+        verify(!findChild(archer, "inspectCaptureHint").visible, "a unit has nothing to capture");
+        archer.destroy();
+    }
+
     function test_a_second_click_on_a_portrait_centres_the_camera_on_that_unit() {
         var summary = makeSummary(3, makeGroups([{
                         "typeKey": "archer",

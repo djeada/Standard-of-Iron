@@ -238,6 +238,7 @@ add_library(
     units/home.cpp
     units/marketplace.cpp
     units/temple.cpp
+    units/nation_building.cpp
     units/farm.cpp
     units/wall_segment.cpp
     units/wall_gate.cpp
@@ -359,6 +360,7 @@ add_library(
     systems/economy/recruitment_gate.cpp
     systems/economy/production_system_wall.cpp
     systems/economy/civilian_delivery_system.cpp
+    systems/economy/civilian_reporting_system.cpp
     systems/economy/resource_delivery_system.cpp
     systems/economy/gather_loop_system.cpp
     systems/economy/farm_system.cpp
@@ -366,6 +368,8 @@ add_library(
     systems/economy/capture_system.cpp
     systems/economy/marketplace_system.cpp
     systems/economy/nation_collapse_service.cpp
+    systems/economy/nation_recruitment.cpp
+    systems/economy/nation_economy_system.cpp
 )
 target_include_directories(soi_economy PUBLIC .)
 target_link_libraries(soi_economy PUBLIC engine_core PRIVATE soi_movement)
@@ -511,6 +515,7 @@ add_library(
     command/json_u64.cpp
     command/replay.cpp
     map/match_loader.cpp
+    map/skirmish_camp_start.cpp
     systems/forest_cover_system.cpp
     systems/ford_system.cpp
     session/map_session.cpp
@@ -528,6 +533,7 @@ add_library(
     systems/gate_system.cpp
     systems/siege_tower_system.cpp
     systems/home_system.cpp
+    systems/town_growth_system.cpp
     systems/rain_manager.cpp
     session/selection_service.cpp
     systems/settlement_life_system.cpp
@@ -777,6 +783,7 @@ add_library(
     systems/ai_system/behaviors/builder_stall_watch.cpp
     systems/ai_system/behaviors/builder_town_plan.cpp
     systems/ai_system/behaviors/economy_behavior.cpp
+    systems/ai_system/behaviors/mercenary_behavior.cpp
     systems/ai_system/behaviors/squad_discipline_behavior.cpp
     systems/ai_system/behaviors/commander_behavior.cpp
 )

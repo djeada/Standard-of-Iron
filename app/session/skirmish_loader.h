@@ -9,6 +9,7 @@
 #include <memory>
 #include <utility>
 
+#include "game/map/skirmish_camp_start.h"
 #include "game/map/map_definition.h"
 
 namespace Engine::Core {
@@ -98,6 +99,14 @@ public:
     m_on_visibility_initialized = std::move(callback);
   }
 
+  // A skirmish raises every seat's camp (homes, a farm, crews and two squads)
+  // around its barracks. Campaign missions author their own start and leave it off.
+  void set_camp_start_enabled(bool enabled) { m_camp_start = enabled; }
+  [[nodiscard]] auto camp_start_reports() const
+      -> const std::vector<Game::Map::CampStartReport>& {
+    return m_camp_reports;
+  }
+
   auto start(const QString& map_path,
              const QVariantList& player_configs,
              int selected_player_id,
@@ -117,6 +126,8 @@ private:
   Render::GL::MapBoundaryFogRenderer* m_boundary_fog = nullptr;
   Render::GL::AmbientFogRenderer* m_ambient_fog = nullptr;
   Render::GL::RainRenderer* m_rain = nullptr;
+  bool m_camp_start = false;
+  std::vector<Game::Map::CampStartReport> m_camp_reports;
   OwnersUpdatedCallback m_on_owners_updated;
   VisibilityInitializedCallback m_on_visibility_initialized;
 };

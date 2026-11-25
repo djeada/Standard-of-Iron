@@ -22,18 +22,43 @@ namespace Game::Map::Minimap {
 
 namespace {
 
-struct RoadLayerPaths {
-  QPainterPath shadow;
-  QPainterPath surface;
-  QPainterPath highlight;
+struct RoadStroke {
+  QPointF from;
+  QPointF to;
+  float width = 0.0F;
 };
 
-auto stroke_path(const QPainterPath& path, float width) -> QPainterPath {
-  QPainterPathStroker stroker;
-  stroker.setWidth(width);
-  stroker.setCapStyle(Qt::RoundCap);
-  stroker.setJoinStyle(Qt::RoundJoin);
-  return stroker.createStroke(path);
+// One road layer is drawn as opaque strokes into a scratch image and laid onto
+// the map with the layer's opacity, so crossings do not darken (the same look a
+// single filled path gave). Uniting hundreds of stroked outlines into one
+// QPainterPath instead made a Rome or Carthage preview take 40+ seconds.
+void paint_road_layer(QImage& image,
+                      QImage& scratch,
+                      const std::vector<RoadStroke>& strokes,
+                      const QColor& color,
+                      int opacity,
+                      float width_scale,
+                      float width_bias,
+                      float min_width) {
+  scratch.fill(Qt::transparent);
+  {
+    QPainter layer_painter(&scratch);
+    layer_painter.setRenderHint(QPainter::Antialiasing, true);
+    QColor opaque = color;
+    opaque.setAlpha(255);
+    for (const RoadStroke& stroke : strokes) {
+      QPen pen(opaque);
+      pen.setWidthF(std::max(stroke.width * width_scale + width_bias, min_width));
+      pen.setCapStyle(Qt::RoundCap);
+      pen.setJoinStyle(Qt::RoundJoin);
+      layer_painter.setPen(pen);
+      layer_painter.drawLine(stroke.from, stroke.to);
+    }
+  }
+  QPainter painter(&image);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  painter.setOpacity(static_cast<qreal>(opacity) / 255.0);
+  painter.drawImage(0, 0, scratch);
 }
 
 auto structure_icon_size(Game::Units::SpawnType spawn_type) -> float {
@@ -118,35 +143,23 @@ void MinimapGenerator::render_roads(QImage& image,
     return;
   }
 
-  RoadLayerPaths paths;
+  std::vector<RoadStroke> strokes;
+  strokes.reserve(map_def.roads.size());
   for (const auto& road : map_def.roads) {
     const auto [x1, y1] = projection.to_pixel(road.start.x(), road.start.z());
     const auto [x2, y2] = projection.to_pixel(road.end.x(), road.end.z());
-
-    float pixel_width = projection.to_pixel_size(road.width);
-    pixel_width = std::max(pixel_width, 1.5F);
-
-    QPainterPath centerline(QPointF(x1, y1));
-    centerline.lineTo(x2, y2);
-
-    paths.shadow = paths.shadow.united(stroke_path(centerline, pixel_width + 2.0F));
-    paths.surface = paths.surface.united(stroke_path(centerline, pixel_width));
-    paths.highlight = paths.highlight.united(
-        stroke_path(centerline, std::max(pixel_width * 0.35F, 0.8F)));
+    strokes.push_back(RoadStroke{.from = QPointF(x1, y1),
+                                 .to = QPointF(x2, y2),
+                                 .width = std::max(projection.to_pixel_size(road.width),
+                                                   1.5F)});
   }
 
-  QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing, true);
-  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
-  QColor shadow_color = Palette::ROAD_SHADOW;
-  shadow_color.setAlpha(220);
-  painter.fillPath(paths.shadow, shadow_color);
-  painter.fillPath(paths.surface, Palette::ROAD_MAIN);
-
-  QColor highlight_color = Palette::ROAD_HIGHLIGHT;
-  highlight_color.setAlpha(235);
-  painter.fillPath(paths.highlight, highlight_color);
+  QImage scratch(image.size(), QImage::Format_ARGB32_Premultiplied);
+  paint_road_layer(
+      image, scratch, strokes, Palette::ROAD_SHADOW, 220, 1.0F, 2.0F, 0.0F);
+  paint_road_layer(image, scratch, strokes, Palette::ROAD_MAIN, 255, 1.0F, 0.0F, 0.0F);
+  paint_road_layer(
+      image, scratch, strokes, Palette::ROAD_HIGHLIGHT, 235, 0.35F, 0.0F, 0.8F);
 }
 
 void MinimapGenerator::draw_road_segment(

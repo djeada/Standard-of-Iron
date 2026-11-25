@@ -254,6 +254,14 @@ void GameEngine::wire_world_services() {
           &CampaignManager::available_campaigns_changed,
           m_match_setup_view_model.get(),
           &App::ViewModels::MatchSetupViewModel::notify_campaigns_changed);
+
+  // is_mission_match reads the campaign manager's context, so a skirmish that
+  // follows a mission must re-publish it, or the outcome screen keeps calling
+  // the defeat a failed mission.
+  connect(m_campaign_manager.get(),
+          &CampaignManager::current_mission_changed,
+          m_match_setup_view_model.get(),
+          &App::ViewModels::MatchSetupViewModel::notify_current_mission_changed);
 }
 
 auto GameEngine::can_inspect_entity(Engine::Core::EntityID id) const -> bool {
@@ -456,9 +464,12 @@ void GameEngine::wire_event_subscriptions() {
   m_mission_announcement_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>(
           [this](const Engine::Core::MissionAnnouncementEvent& e) {
-            if (e.text.isEmpty() ||
-                !Engine::Core::LocalAudience{m_runtime.local_owner_id}.includes(
-                    e.owner_id)) {
+            // An observer is handed a followed owner id to look through, but
+            // is nobody's addressee: "the vein is yours" is not said to them.
+            const Engine::Core::LocalAudience audience{
+                m_level.is_spectator_mode ? Engine::Core::k_owner_everyone
+                                          : m_runtime.local_owner_id};
+            if (e.text.isEmpty() || !audience.addresses(e.owner_id)) {
               return;
             }
             m_mission->queue_announcement(e.text);

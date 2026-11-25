@@ -510,6 +510,13 @@ void InputCommandHandler::select_all_troops(int local_owner_id) {
   }
 }
 
+auto InputCommandHandler::select_idle_builders(int local_owner_id) -> int {
+  if (m_is_spectator_mode || m_selection_controller == nullptr) {
+    return 0;
+  }
+  return static_cast<int>(m_selection_controller->select_idle_builders(local_owner_id));
+}
+
 void InputCommandHandler::select_all_units_of_type(const QString& unit_type,
                                                    int local_owner_id) {
   if (m_is_spectator_mode || m_selection_controller == nullptr) {

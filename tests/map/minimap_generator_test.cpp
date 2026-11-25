@@ -1,4 +1,5 @@
 #include <QColor>
+#include <QElapsedTimer>
 #include <QImage>
 #include <QVariantList>
 #include <QVariantMap>
@@ -378,6 +379,35 @@ TEST_F(MinimapGeneratorTest, RoadIntersectionsDoNotDarkenAgainstSingleSegment) {
 
   EXPECT_GE(color_luminance(crossing_pixel), color_luminance(single_pixel) - 12);
   EXPECT_LT(color_distance(crossing_pixel, single_pixel), 24);
+}
+
+// Rome and Carthage carry hundreds of short road pieces. Uniting every stroked
+// outline into one path made their skirmish previews take 40+ seconds.
+TEST_F(MinimapGeneratorTest, ACityWorthOfRoadsRendersQuickly) {
+  test_map.grid.width = 800;
+  test_map.grid.height = 800;
+  for (int i = 0; i < 500; ++i) {
+    RoadSegment road;
+    const float offset = static_cast<float>((i * 37) % 700) - 350.0F;
+    const float wobble = static_cast<float>((i * 11) % 60);
+    if (i % 2 == 0) {
+      road.start = QVector3D(offset, 0.0F, -300.0F + wobble);
+      road.end = QVector3D(offset + 40.0F, 0.0F, 300.0F - wobble);
+    } else {
+      road.start = QVector3D(-300.0F + wobble, 0.0F, offset);
+      road.end = QVector3D(300.0F - wobble, 0.0F, offset + 40.0F);
+    }
+    road.width = 3.0F;
+    test_map.roads.push_back(road);
+  }
+
+  MinimapGenerator generator;
+  QElapsedTimer clock;
+  clock.start();
+  const QImage result = generator.generate(test_map);
+
+  EXPECT_FALSE(result.isNull());
+  EXPECT_LT(clock.elapsed(), 3000);
 }
 
 TEST_F(MinimapGeneratorTest, BarracksAndHomesExtendFartherThanOtherBuildingIcons) {

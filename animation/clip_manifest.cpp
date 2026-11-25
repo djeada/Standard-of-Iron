@@ -348,6 +348,19 @@ auto humanoid_construction_variant_for_role(HumanoidConstructionRole role) noexc
   return 0U;
 }
 
+auto humanoid_construction_tool_variant_for_job(HumanoidWorkJob job,
+                                                HumanoidConstructionRole role) noexcept
+    -> std::uint8_t {
+  if (job == HumanoidWorkJob::Chop && role == HumanoidConstructionRole::Hammer) {
+    return k_humanoid_felling_axe_variant;
+  }
+  if (job == HumanoidWorkJob::Quarry &&
+      role == HumanoidConstructionRole::KneelingChisel) {
+    return k_humanoid_quarry_pick_variant;
+  }
+  return humanoid_construction_variant_for_role(role);
+}
+
 auto humanoid_construction_clip_for_role(HumanoidConstructionRole role) noexcept
     -> std::uint16_t {
   switch (role) {

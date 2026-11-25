@@ -61,6 +61,10 @@ enum class CombatRole : std::uint8_t {
   case SpawnType::Marketplace:
   case SpawnType::Temple:
   case SpawnType::Farm:
+  case SpawnType::MercenaryCamp:
+  case SpawnType::ElephantStables:
+  case SpawnType::Fabrica:
+  case SpawnType::Castra:
     return CombatRole::Emplacement;
 
   case SpawnType::Sheep:

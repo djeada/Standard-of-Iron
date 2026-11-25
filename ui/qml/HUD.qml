@@ -484,7 +484,9 @@ Item {
         anchors.bottom: bottomPanel.top
         anchors.bottomMargin: Design.Metrics.space12
 
-        gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active && !commanderMessage.showing
+        // A decided match shows its report; a hint that wakes then (the tutorial's
+        // card closes on victory) would only pop up behind the dialog.
+        gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active && !commanderMessage.showing && !(typeof game !== 'undefined' && game.victory_state !== "")
         onOpen_settings_requested: {
             cameraLegend.dismiss();
             hud.camera_settings_requested();
@@ -537,6 +539,15 @@ Item {
         max_height: Math.max(0, bottomPanel.y - (waveTracker.y + waveTracker.height) - Design.Metrics.space16)
         placing: typeof game !== 'undefined' && game.placement !== undefined && game.placement.is_placing_formation
         visible: placing && !hud.commander_rpg_mode
+    }
+
+    ControlGroupStrip {
+        id: controlGroupStrip
+
+        anchors.bottom: bottomPanel.top
+        anchors.bottomMargin: Design.Metrics.space8
+        anchors.horizontalCenter: parent.horizontalCenter
+        gate: !hud.commander_rpg_mode && !hud.overlay_active && !(typeof game !== 'undefined' && game.is_spectator_mode)
     }
 
     FormationStatusBadge {

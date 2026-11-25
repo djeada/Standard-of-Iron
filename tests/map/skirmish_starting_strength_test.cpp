@@ -164,6 +164,7 @@ TEST_P(SkirmishStartingStrengthTest, EveryStartingSquadTakesTheFieldAtFullStreng
   Render::GL::Renderer renderer{Render::ShaderQuality::None};
   Render::GL::Camera camera;
   App::Core::SkirmishLoader loader{world, renderer, camera};
+  loader.set_camp_start_enabled(true);
   Game::Systems::register_runtime_systems(world);
   int selected_player_id = 1;
   const auto result =

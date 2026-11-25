@@ -1,13 +1,20 @@
 
 
+#include <QMatrix4x4>
+
 #include <condition_variable>
+#include <memory>
+#include <vector>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <thread>
 #include <type_traits>
 
 #include "render/creature/elephant/elephant_spec.h"
+#include "animation/bpat/bpat_reader.h"
 #include "render/creature/gpu/rigged_mesh_cache.h"
+#include "render/frame/bone_palette_arena.h"
+#include "render/geom/instance_block.h"
 #include "render/creature/horse/horse_spec.h"
 #include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/creature/runtime_bake_guard.h"
@@ -431,3 +438,80 @@ TEST(RiggedMeshCache, AllowScopeOnAnotherThreadLeavesTheBarrierAlone) {
 }
 
 } // namespace
+
+namespace {
+
+// Gives an entry's species atlas `frames` frames of palettes, as a blob would.
+auto give_atlas_frames(const Render::GL::RiggedMeshEntry& entry,
+                       std::uint32_t frames,
+                       std::uint32_t bones)
+    -> std::shared_ptr<const std::vector<QMatrix4x4>> {
+  QMatrix4x4 pose;
+  pose.scale(2.0F);
+  auto storage = std::make_shared<const std::vector<QMatrix4x4>>(
+      static_cast<std::size_t>(frames) * bones, pose);
+  auto& atlas = *entry.skin_atlas;
+  atlas.palette_storage = storage;
+  atlas.palettes = *storage;
+  atlas.frame_total = frames;
+  atlas.bone_count = bones;
+  return storage;
+}
+
+} // namespace
+
+// The Amber Delta crash (2026-11-25): an atlas refilled from another animation
+// blob freed its palette block while draw commands queued earlier in the frame
+// still pointed at it, and the shadow pass read the freed block. The old block
+// must outlive the frame.
+TEST(RiggedMeshCache, ARefilledAtlasKeepsItsOldPaletteBlockForTheQueuedFrame) {
+  RuntimeBakeGuardReset const reset;
+  RiggedMeshCache cache;
+  cache.set_palette_blocks_enabled(true);
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  const auto* entry = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, Render::Humanoid::humanoid_bind_palette(), 0U, {}, 0x77U, 1U, 31U);
+  ASSERT_NE(entry, nullptr);
+  ASSERT_NE(entry->skin_atlas, nullptr);
+  auto const first_storage = give_atlas_frames(*entry, 4U, 8U);
+  Render::GL::rigged_entry_ensure_skin_ubo(*entry);
+  ASSERT_NE(entry->skin_atlas->palette_block, nullptr);
+  std::weak_ptr<Render::GL::InstanceBlock> const queued =
+      entry->skin_atlas->palette_block;
+
+  auto const blob = Render::Creature::Bpat::BpatBlob::from_file(
+      "assets/creatures/humanoid_skeleton.bpat");
+  ASSERT_TRUE(blob.loaded()) << "tests run from the repository root";
+  Render::GL::rigged_entry_ensure_skin_atlas_from_blob(*entry, blob);
+  EXPECT_EQ(entry->skin_atlas->palette_block, nullptr);
+  EXPECT_FALSE(queued.expired())
+      << "a command queued this frame still points at the old block";
+
+  for (int frame = 0; frame < 12; ++frame) {
+    cache.begin_frame();
+  }
+  EXPECT_TRUE(queued.expired()) << "the retired block is released a few frames later";
+}
+
+// The palette writer never reads past the palettes its atlas holds.
+TEST(RiggedMeshCache, APaletteBlockWritesTheBindPoseForFramesItsAtlasLacks) {
+  RuntimeBakeGuardReset const reset;
+  RiggedMeshCache cache;
+  cache.set_palette_blocks_enabled(true);
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  const auto* entry = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, Render::Humanoid::humanoid_bind_palette(), 0U, {}, 0x78U, 1U, 32U);
+  ASSERT_NE(entry, nullptr);
+  auto const storage = give_atlas_frames(*entry, 2U, 8U);
+  entry->skin_atlas->frame_total = 6U;
+  Render::GL::rigged_entry_ensure_skin_ubo(*entry);
+  ASSERT_NE(entry->skin_atlas->palette_block, nullptr);
+  const auto& block = *entry->skin_atlas->palette_block;
+  std::vector<std::byte> bytes(block.size_bytes());
+  block.write_to(bytes);
+  const auto* floats = reinterpret_cast<const float*>(bytes.data());
+  const std::size_t last_frame =
+      5U * Render::GL::BonePaletteArena::k_palette_floats;
+  EXPECT_FLOAT_EQ(floats[0], 2.0F) << "a covered frame carries the atlas pose";
+  EXPECT_FLOAT_EQ(floats[last_frame], 1.0F) << "an uncovered frame is the identity";
+}

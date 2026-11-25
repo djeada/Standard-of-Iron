@@ -644,6 +644,14 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   if (!settled && !out_of_patience) {
     return;
   }
+  // Rome times its blow to land just after a levy (NATION_ASYMMETRY.md 9): with
+  // the next one close, the wave waits for it so the reserve refills behind it.
+  constexpr float k_levy_wait_seconds = 20.0F;
+  if (snapshot.seconds_to_next_levy >= 0.0F &&
+      snapshot.seconds_to_next_levy < k_levy_wait_seconds &&
+      !context.barracks_under_threat) {
+    return;
+  }
   wave.departed_under_strength = !settled;
 
   float centre_x = 0.0F;

@@ -52,10 +52,13 @@ auto every_payload() -> std::vector<Payload> {
       SetRallyPoint{.building = 11, .position = QVector3D(6.0F, 0.0F, 7.0F)});
   all.emplace_back(SetGateMode{
       .units = {12}, .mode = Engine::Core::GateComponent::ManualMode::ForcedOpen});
+  all.emplace_back(SetHomeReporting{.units = {12}, .active = false});
   all.emplace_back(SetAutoGather{
       .units = {13}, .active = false, .priority_product_type = "cut_tree"});
-  all.emplace_back(
-      Produce{.building = 14, .product = Game::Units::TroopType::Spearman});
+  all.emplace_back(Produce{.building = 14,
+                           .product = Game::Units::TroopType::Spearman,
+                           .count = 5,
+                           .toggle_repeat = true});
   all.emplace_back(Trade{.resource = Game::Systems::ResourceType::Stone,
                          .direction = TradeDirection::Sell});
   all.emplace_back(AllyTribute{.ally_owner = 3,

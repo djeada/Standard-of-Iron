@@ -130,7 +130,7 @@ void SkirmishRuntimeCoordinator::initialize_player_resources(
   Game::Systems::ResourceAmounts stock = ctx.level.starting_resources;
   if (is_mission) {
     ctx.mission_definition->player_setup.starting_resources.apply_to(stock);
-  } else {
+  } else if (Game::GameConfig::instance().has_chosen_starting_gold()) {
     stock.set(Game::Systems::ResourceType::Gold,
               Game::GameConfig::instance().get_starting_gold());
   }

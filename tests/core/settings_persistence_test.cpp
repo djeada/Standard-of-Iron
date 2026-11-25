@@ -24,6 +24,15 @@
 
 namespace {
 
+// Builds that lowered the preset during battles saved the settled preset under
+// this key; current builds only read it once, on the first launch.
+void save_legacy_auto_graphics_quality(Render::GraphicsQuality quality) {
+  auto settings = App::Core::UserSettings::open();
+  settings.setValue(QString::fromLatin1(App::Core::UserSettings::kAutoGraphicsQualityKey),
+                    static_cast<int>(quality));
+  settings.sync();
+}
+
 class SettingsPersistenceTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -70,21 +79,19 @@ TEST_F(SettingsPersistenceTest, FreshProfileDefaultsToHighGraphics) {
   EXPECT_EQ(Render::k_default_graphics_quality, Render::GraphicsQuality::High);
 }
 
-TEST_F(SettingsPersistenceTest, ASlowPcStartsWhereTheGameLastSettled) {
-  App::Core::UserSettings::save_auto_graphics_quality_level(
-      static_cast<int>(Render::GraphicsQuality::Low));
+TEST_F(SettingsPersistenceTest, AnOlderProfilesSettledPresetIsTheFirstLaunchStart) {
+  save_legacy_auto_graphics_quality(Render::GraphicsQuality::Low);
 
   App::Core::UserSettings::apply_saved_graphics_quality();
 
   EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
             Render::GraphicsQuality::Low);
   EXPECT_FALSE(Render::GraphicsSettings::instance().quality_chosen_by_user())
-      << "an automatic step down must not lock the preset like a player choice";
+      << "the first launch still decides the preset once and saves it";
 }
 
 TEST_F(SettingsPersistenceTest, ThePlayersPresetBeatsTheAutomaticOne) {
-  App::Core::UserSettings::save_auto_graphics_quality_level(
-      static_cast<int>(Render::GraphicsQuality::Low));
+  save_legacy_auto_graphics_quality(Render::GraphicsQuality::Low);
   App::Core::UserSettings::save_graphics_quality_level(
       static_cast<int>(Render::GraphicsQuality::Ultra));
 

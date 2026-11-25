@@ -163,6 +163,23 @@ void name_ai_owner_after_nation(Game::Systems::OwnerRegistry& owners,
   owners.set_owner_name(owner_id, name);
 }
 
+
+void name_owner_after_commander(Game::Systems::OwnerRegistry& owners,
+                                const Engine::Core::UnitComponent& commander) {
+  const auto troop_type = Game::Units::spawn_typeToTroopType(commander.spawn_type);
+  if (!troop_type.has_value()) {
+    return;
+  }
+  const auto* definition = Game::Units::commander_definition(*troop_type);
+  if (definition == nullptr || definition->display_name.empty()) {
+    return;
+  }
+  owners.set_owner_name(
+      commander.owner_id,
+      Game::Util::tr_asset_std(Game::Util::k_commanders_context,
+                               definition->display_name));
+}
+
 } // namespace
 
 auto MissionSetupCoordinator::apply_mission_setup(
@@ -467,6 +484,9 @@ auto MissionSetupCoordinator::apply_mission_setup(
       }
       const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
       if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        if (owner_id == ctx.local_owner_id) {
+          name_owner_after_commander(owner_registry, *unit);
+        }
         return;
       }
     }
@@ -634,6 +654,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
       }
       profile.posture = Game::Systems::AI::AIStrategyFactory::parse_posture(
           ai_setup.posture.value_or(QString()), Game::Systems::AI::AIPosture::Garrison);
+      profile.runs_economy = ai_setup.economy;
       profile.personality.aggression = ai_setup.personality.aggression;
       profile.personality.defense = ai_setup.personality.defense;
       profile.personality.harassment = ai_setup.personality.harassment;

@@ -1,6 +1,7 @@
 #include <optional>
 #include <vector>
 
+#include "../core/component_economy.h"
 #include "../core/component_gameplay.h"
 #include "../formation/army_formation_planner.h"
 #include "../formation/army_formation_registry.h"
@@ -117,6 +118,13 @@ void apply_cross_by_raft(World& world, const CrossByRaft& order) {
 void apply_gate_mode(World& world, const SetGateMode& order) {
   for_each_subject(world, order.units, [&order](Entity& entity) {
     Game::Systems::GateService::set_manual_mode(entity, order.mode);
+  });
+}
+void apply_home_reporting(World& world, const SetHomeReporting& order) {
+  for_each_subject(world, order.units, [&order](Entity& entity) {
+    if (auto* home = entity.get_component<Engine::Core::HomeComponent>()) {
+      home->reports_to_barracks = order.active;
+    }
   });
 }
 void apply_hold(World& world, const SetHold& hold) {

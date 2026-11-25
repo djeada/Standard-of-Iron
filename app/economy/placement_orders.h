@@ -14,7 +14,8 @@ namespace App::Economy {
 [[nodiscard]] auto structure_build_order(const std::vector<std::uint64_t>& builders,
                                          const QString& construction_type,
                                          const QVector3D& site,
-                                         float rotation_y) -> App::Core::OrderRequest;
+                                         float rotation_y,
+                                         bool queue = false) -> App::Core::OrderRequest;
 
 [[nodiscard]] auto
 wall_plan_order(const std::vector<std::uint64_t>& builders,

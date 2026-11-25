@@ -1,16 +1,21 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cstdio>
 #include <gtest/gtest.h>
 #include <limits>
 #include <map>
 #include <memory>
 #include <vector>
 
+#include "app/mission/tutorial_observation.h"
+#include "app/orders/movement_utils.h"
 #include "app/session/skirmish_loader.h"
+#include "app/session/skirmish_runtime_coordinator.h"
 #include "core/component_gameplay.h"
 #include "core/world.h"
 #include "game/core/event_manager.h"
+#include "game/map/map_context.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/mission/campaign_manager.h"
@@ -26,6 +31,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_config.h"
 #include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 #include "tests/support/ai_quiesce.h"
@@ -102,6 +108,46 @@ protected:
       }
     }
     return units;
+  }
+
+  // Men standing, counted the way the battle report counts them.
+  auto men_of(int owner) -> int {
+    int men = 0;
+    for (auto* entity : living_units_of(owner)) {
+      const auto* unit = entity->get_component<UnitComponent>();
+      if (Game::Units::is_building_spawn(unit->spawn_type)) {
+        continue;
+      }
+      men += Engine::Core::resolve_surviving_individual_count(
+          unit->health,
+          unit->max_health,
+          Game::Units::TroopConfig::instance().get_individuals_per_unit(
+              unit->spawn_type));
+    }
+    return men;
+  }
+
+  // What GameEngine does after the mission setup: stock both sides as the map
+  // and mission say, and let the AI make its first decisions. Without it the
+  // outpost has nothing to build or recruit with and nothing can go wrong.
+  void start_the_match() {
+    const auto map = Game::Map::MapContextStore::acquire(m_level.map_path);
+    ASSERT_TRUE(map.valid());
+    m_level.starting_resources = map.definition()->starting_resources;
+    App::Core::SkirmishRuntimeCoordinator runtime;
+    runtime.initialize_player_resources({*m_session,
+                                         m_level,
+                                         k_local_owner,
+                                         &*m_campaign.current_mission_definition(),
+                                         nullptr});
+    App::Core::SkirmishRuntimeCoordinator::prepare_ai_state(&m_world, m_session.get());
+  }
+
+  void run_seconds(float seconds) {
+    const int ticks = static_cast<int>(seconds / k_tick);
+    for (int tick = 0; tick < ticks; ++tick) {
+      m_world.update(k_tick);
+    }
   }
 
   static auto position(Engine::Core::Entity* entity) -> QVector3D {
@@ -279,4 +325,181 @@ TEST_F(TutorialMissionTest, TheFallenRomanCommanderIsAnnouncedByNationName) {
   ASSERT_NE(lost, announcements.end()) << "no announcement for the fallen commander";
   EXPECT_TRUE(lost->contains(QStringLiteral("Roman Republic"))) << lost->toStdString();
   EXPECT_FALSE(lost->contains(QStringLiteral("AI Player"))) << lost->toStdString();
+}
+
+TEST_F(TutorialMissionTest, TheOutpostHoldsItsCampThroughTheEconomySteps) {
+  // The economy steps (wood, stone and iron, a Home, recruits) take a new player
+  // many minutes. The outpost must still be the camp the map drew: no builders,
+  // no town, no recruits, nobody marching out to meet the player on the road.
+  std::map<EntityID, QVector3D> start;
+  for (auto* entity : living_units_of(2)) {
+    start.emplace(entity->get_id(), position(entity));
+  }
+  ASSERT_FALSE(start.empty());
+
+  start_the_match();
+  run_seconds(8.0F * 60.0F);
+
+  int structures = 0;
+  int builders = 0;
+  int newcomers = 0;
+  float furthest = 0.0F;
+  for (auto* entity : living_units_of(2)) {
+    const auto* unit = entity->get_component<UnitComponent>();
+    if (Game::Units::is_building_spawn(unit->spawn_type)) {
+      ++structures;
+    }
+    if (unit->spawn_type == Game::Units::SpawnType::Builder) {
+      ++builders;
+    }
+    const auto known = start.find(entity->get_id());
+    if (known == start.end()) {
+      ++newcomers;
+      continue;
+    }
+    furthest = std::max(furthest, (position(entity) - known->second).length());
+  }
+  std::printf("[outpost] after 8 min: structures=%d builders=%d newcomers=%d "
+              "furthest_move=%.1f\n",
+              structures,
+              builders,
+              newcomers,
+              static_cast<double>(furthest));
+  EXPECT_EQ(structures, 1) << "the outpost built a town: it is one barracks";
+  EXPECT_EQ(builders, 0) << "an outpost has no economy to put builders to";
+  EXPECT_EQ(newcomers, 0) << "the outpost recruited; its garrison is authored";
+  EXPECT_LT(furthest, 13.0F) << "an outpost soldier left his post";
+}
+
+TEST_F(TutorialMissionTest, TheScoutFightIsTheTwoScoutsAlone) {
+  std::vector<EntityID> army;
+  for (auto* entity : living_units_of(k_local_owner)) {
+    const auto type = entity->get_component<UnitComponent>()->spawn_type;
+    if (Game::Units::is_troop_spawn(type) && type != Game::Units::SpawnType::Builder &&
+        entity->get_component<Engine::Core::CommanderComponent>() == nullptr) {
+      army.push_back(entity->get_id());
+    }
+  }
+  std::vector<EntityID> scouts;
+  std::map<EntityID, QVector3D> garrison;
+  for (auto* entity : living_units_of(2)) {
+    const auto* unit = entity->get_component<UnitComponent>();
+    if (Game::Units::is_building_spawn(unit->spawn_type)) {
+      continue;
+    }
+    if (entity->get_component<Engine::Core::HoldModeComponent>() != nullptr &&
+        position(entity).z() > 0.0F) {
+      scouts.push_back(entity->get_id());
+    } else {
+      garrison.emplace(entity->get_id(), position(entity));
+    }
+  }
+  ASSERT_EQ(static_cast<int>(scouts.size()), Game::Mission::k_tutorial_scout_count);
+  ASSERT_FALSE(army.empty());
+
+  // The player spends a minute on the select and move steps, then attacks.
+  start_the_match();
+  run_seconds(60.0F);
+  const int men_before = men_of(k_local_owner);
+  float elapsed = 0.0F;
+  for (const auto scout : scouts) {
+    auto* target = m_world.get_entity(scout);
+    if (target == nullptr || target->get_component<UnitComponent>()->health <= 0) {
+      continue;
+    }
+    ASSERT_TRUE(App::Utils::issue_attack_command(&m_world, army, scout, k_local_owner)
+                    .accepted());
+    while (elapsed < 150.0F && target->get_component<UnitComponent>()->health > 0) {
+      run_seconds(1.0F);
+      elapsed += 1.0F;
+    }
+  }
+  const int men_after = men_of(k_local_owner);
+  float garrison_moved = 0.0F;
+  for (const auto& [id, at] : garrison) {
+    if (auto* entity = m_world.get_entity(id)) {
+      garrison_moved = std::max(garrison_moved, (position(entity) - at).length());
+    }
+  }
+  std::printf("[scouts] fight took %.0f s; player men %d -> %d; garrison moved %.1f\n",
+              static_cast<double>(elapsed),
+              men_before,
+              men_after,
+              static_cast<double>(garrison_moved));
+  for (const auto scout : scouts) {
+    auto* entity = m_world.get_entity(scout);
+    EXPECT_TRUE(entity == nullptr || entity->get_component<UnitComponent>()->health <= 0)
+        << "the scouts outlasted the player's whole starting army";
+  }
+  EXPECT_LT(garrison_moved, 13.0F) << "the outpost garrison joined the scout fight";
+}
+
+TEST_F(TutorialMissionTest, ShowMeOnStoneAndIronPointsAtTheBouldersAndOre) {
+  auto& terrain = m_session->terrain();
+  const auto points = App::Mission::resolve_tutorial_focus_points(
+      {.world = &m_world,
+       .local_owner_id = k_local_owner,
+       .target = Game::Mission::TutorialFocusTarget::StoneAndIron,
+       .owners = &m_session->owners(),
+       .terrain = &terrain});
+  ASSERT_FALSE(points.isEmpty());
+  const float half = static_cast<float>(m_level.grid_width) * 0.5F;
+  for (const auto& value : points) {
+    const auto point = value.toMap();
+    const QVector3D at(point.value("world_x").toFloat(), 0.0F,
+                       point.value("world_z").toFloat());
+    EXPECT_LT(std::abs(at.x()), half) << "Show me left the map";
+    EXPECT_LT(std::abs(at.z()), half) << "Show me left the map";
+    float nearest = std::numeric_limits<float>::max();
+    for (const auto& prop : terrain.world_props()) {
+      if (!Game::Map::is_boulder_world_prop_type(prop.type) &&
+          !Game::Map::is_iron_ore_world_prop_type(prop.type)) {
+        continue;
+      }
+      const QVector3D world = terrain.world_prop_world_position(prop);
+      nearest = std::min(nearest,
+                         (QVector3D(world.x(), 0.0F, world.z()) - at).length());
+    }
+    EXPECT_LT(nearest, 0.5F) << "a Show me point is not on a boulder or ore vein: "
+                             << at.x() << "," << at.z();
+  }
+}
+
+TEST_F(TutorialMissionTest, ShowMeOnTheAssaultPointsAtTheRomanCommandersCamp) {
+  Engine::Core::Entity* roman_commander = nullptr;
+  Engine::Core::Entity* own_barracks = nullptr;
+  for (auto* entity : m_world.collect_entities_with<UnitComponent>()) {
+    const auto* unit = entity->get_component<UnitComponent>();
+    if (unit->owner_id == 2 &&
+        entity->get_component<Engine::Core::CommanderComponent>() != nullptr) {
+      roman_commander = entity;
+    }
+    if (unit->owner_id == k_local_owner &&
+        unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      own_barracks = entity;
+    }
+  }
+  ASSERT_NE(roman_commander, nullptr);
+  ASSERT_NE(own_barracks, nullptr);
+
+  const auto points = App::Mission::resolve_tutorial_focus_points(
+      {.world = &m_world,
+       .local_owner_id = k_local_owner,
+       .target = Game::Mission::TutorialFocusTarget::EnemyCamp,
+       .owners = &m_session->owners(),
+       .terrain = &m_session->terrain()});
+  ASSERT_FALSE(points.isEmpty());
+  const auto lead = points.front().toMap();
+  const QVector3D first(lead.value("world_x").toFloat(), 0.0F,
+                        lead.value("world_z").toFloat());
+  EXPECT_LT((first - position(roman_commander)).length(), 0.5F)
+      << "the assault is won on the Roman commander; Show me must lead with him";
+  for (const auto& value : points) {
+    const auto point = value.toMap();
+    const QVector3D at(point.value("world_x").toFloat(), 0.0F,
+                       point.value("world_z").toFloat());
+    EXPECT_LT((at - position(roman_commander)).length(), 21.0F);
+    EXPECT_GT((at - position(own_barracks)).length(), 30.0F)
+        << "Show me framed the player's own camp";
+  }
 }

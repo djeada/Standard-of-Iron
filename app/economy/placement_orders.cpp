@@ -7,14 +7,16 @@ namespace App::Economy {
 auto structure_build_order(const std::vector<std::uint64_t>& builders,
                            const QString& construction_type,
                            const QVector3D& site,
-                           float rotation_y) -> App::Core::OrderRequest {
+                           float rotation_y,
+                           bool queue) -> App::Core::OrderRequest {
   App::Core::OrderRequest request;
   request.kind = App::Core::OrderKind::Build;
   request.payload = Game::Command::StartConstruction{
       .units = builders,
       .construction_type = construction_type.toStdString(),
       .site = site,
-      .rotation_y = rotation_y};
+      .rotation_y = rotation_y,
+      .queue = queue};
   request.has_destination = true;
   request.destination = site;
   return request;

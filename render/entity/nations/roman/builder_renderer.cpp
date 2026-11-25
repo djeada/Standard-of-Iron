@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "animation/clip_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component_core.h"
 #include "game/core/entity.h"
@@ -36,6 +37,7 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/roman/builder_parts.h"
 #include "render/entity/nations/roman/builder_style.h"
+#include "render/entity/nations/worker_tools.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
@@ -103,7 +105,7 @@ auto roman_builder_base_archetype() -> Render::Creature::ArchetypeId {
   return archetype;
 }
 
-auto roman_builder_idle_archetype() -> Render::Creature::ArchetypeId {
+auto roman_builder_kit_archetype() -> Render::Creature::ArchetypeId {
   static const auto archetype = []() {
     const auto loadout =
         Render::GL::Nation::resolve_equipment_loadout("troops/roman/builder");
@@ -114,6 +116,47 @@ auto roman_builder_idle_archetype() -> Render::Creature::ArchetypeId {
     return resolve_humanoid_equipment_archetype(
         "troops/roman/builder", roman_builder_base_archetype(), handles);
   }();
+  return archetype;
+}
+
+auto roman_builder_idle_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = []() {
+    auto const kit = roman_builder_kit_archetype();
+    const auto* kit_desc = Render::Creature::ArchetypeRegistry::instance().get(kit);
+    if (kit_desc == nullptr) {
+      return kit;
+    }
+    return WorkerTools::with_attachment(
+        "troops/roman/builder/slung_dolabra",
+        kit,
+        WorkerTools::back_attachment(WorkerTools::Kind::Dolabra, kit_desc->role_count),
+        true);
+  }();
+  return archetype;
+}
+
+auto roman_builder_hand_tool_archetype(std::string_view debug_name,
+                                       WorkerTools::Kind kind)
+    -> Render::Creature::ArchetypeId {
+  auto const idle = roman_builder_idle_archetype();
+  const auto* idle_desc = Render::Creature::ArchetypeRegistry::instance().get(idle);
+  if (idle_desc == nullptr) {
+    return idle;
+  }
+  auto const iron_role = static_cast<std::uint8_t>(idle_desc->role_count - 1U);
+  return WorkerTools::with_attachment(
+      debug_name, idle, WorkerTools::hand_attachment(kind, iron_role), false);
+}
+
+auto roman_builder_axe_unit_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = roman_builder_hand_tool_archetype(
+      "troops/roman/builder/felling_axe", WorkerTools::Kind::FellingAxe);
+  return archetype;
+}
+
+auto roman_builder_pick_unit_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = roman_builder_hand_tool_archetype(
+      "troops/roman/builder/quarry_pick", WorkerTools::Kind::QuarryPick);
   return archetype;
 }
 
@@ -285,7 +328,7 @@ auto roman_builder_variant_table() -> const Render::Creature::ArchetypeVariantTa
   static const Render::Creature::ArchetypeVariantTable k_table = []() {
     Render::Creature::ArchetypeVariantTable t{};
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
-    t.variant_stride = 5;
+    t.variant_stride = 7;
 
     t.state_for_pose[static_cast<std::size_t>(
         Render::Creature::PoseIntent::AttackMelee)] =
@@ -307,6 +350,16 @@ auto roman_builder_variant_table() -> const Render::Creature::ArchetypeVariantTa
 
     t.archetype_for_variant[4] = roman_builder_sickle_unit_archetype();
     t.state_for_variant[4] = Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[Animation::k_humanoid_felling_axe_variant] =
+        roman_builder_axe_unit_archetype();
+    t.state_for_variant[Animation::k_humanoid_felling_axe_variant] =
+        Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[Animation::k_humanoid_quarry_pick_variant] =
+        roman_builder_pick_unit_archetype();
+    t.state_for_variant[Animation::k_humanoid_quarry_pick_variant] =
+        Render::Creature::AnimationStateId::AttackSword;
     return t;
   }();
   return k_table;
@@ -545,6 +598,14 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
                         [] { (void)builder_chisel_archetype(); });
   ar.register_archetype("roman_builder_sickle",
                         [] { (void)builder_sickle_archetype(); });
+  ar.register_archetype("worker_felling_axe", [] {
+    (void)WorkerTools::archetype(WorkerTools::Kind::FellingAxe);
+  });
+  ar.register_archetype("worker_quarry_pick", [] {
+    (void)WorkerTools::archetype(WorkerTools::Kind::QuarryPick);
+  });
+  ar.register_archetype(
+      "worker_dolabra", [] { (void)WorkerTools::archetype(WorkerTools::Kind::Dolabra); });
 }
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {

@@ -304,6 +304,10 @@
         <source>Ask allies to defend this barracks.</source>
         <translation>Müttefiklerden bu kışlayı savunmalarını iste.</translation>
     </message>
+    <message>
+        <source>Levy in %1s</source>
+        <translation>Asker toplama %1 sn sonra</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -367,6 +371,10 @@
         <source>Retry mission</source>
         <translation>Görevi yeniden dene</translation>
     </message>
+    <message>
+        <source>%1 fell to wild beasts and the restless dead, and are credited to no army.</source>
+        <translation>%1 kişi yabani hayvanlara ve huzursuz ölülere yenik düştü; hiçbir orduya sayılmaz.</translation>
+    </message>
 </context>
 <context>
     <name>BattleSummary</name>
@@ -375,12 +383,12 @@
         <translation>Görevi yeniden dene</translation>
     </message>
     <message>
-        <source>Play again</source>
-        <translation>Yeniden oyna</translation>
-    </message>
-    <message>
         <source>Held the field: %1</source>
         <translation>Meydanı tutanlar: %1</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Yeniden savaş</translation>
     </message>
 </context>
 <context>
@@ -3030,6 +3038,23 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
 </context>
 <context>
+    <name>ControlGroupStrip</name>
+    <message>
+        <source>Control groups</source>
+        <translation>Kontrol grupları</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2</source>
+        <translation>%1  ·  %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Control group %1 holds %n unit(s). Click, or press %1, to select it.</source>
+        <translation>
+            <numerusform>Kontrol grubu %1 içinde %n birlik var. Seçmek için tıkla ya da %1 tuşuna bas.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
@@ -3459,20 +3484,12 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <translation>Yerleşimin kendi kendini çeviriyor</translation>
     </message>
     <message>
-        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
-        <translation>Bir kışlada inşaatçı devşir, sonra onu odun, taş ya da demir toplamaya yolla.</translation>
-    </message>
-    <message>
         <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
         <translation>Bir inşaatçı seç, Topla&apos;ya bas ve bir ağaca, kayaya, cevher yatağına, olgun tarlaya ya da koyuna tıkla. Yükü bir kışla avlusuna taşır, sonra yenisi için geri döner.</translation>
     </message>
     <message>
         <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
         <translation>Bir inşaatçı seçiliyken İnşa&apos;ya bas ve yedeğini büyütmek için bir Ev ya da devşirme yapmak için bir Kışla yerleştir.</translation>
-    </message>
-    <message>
-        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
-        <translation>Bir kışla seç ve birlik devşir. Her biri yedek ve kaynak harcar; ikisi de kartında yazılıdır.</translation>
     </message>
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
@@ -3505,6 +3522,18 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
         <translation>Düşman suruna yanaşır; yanındaki piyadeler merdivenine tırmanıp sur yoluna geçer.</translation>
+    </message>
+    <message>
+        <source>Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.</source>
+        <translation>Bir kışlada üç inşaatçı yetiştir, sonra Evler kur. Siviller askere dönüşür. Bu arada inşaatçıları odun, taş ya da demir toplamaya gönder.</translation>
+    </message>
+    <message>
+        <source>Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.</source>
+        <translation>Üç inşaatçı yetiştir, sonra Evler kur. Siviller askere dönüşür. Bu arada bir inşaatçı seç, Topla&apos;ya bas ve bir ağaca, kayaya ya da maden yatağına tıkla.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.</source>
+        <translation>Bir kışla seç ve asker topla. Her biri yedek ve kaynak harcar; ikisi de kartında yazar. Karta Shift ile tıklayınca beşi sıraya girer; Ctrl ile tıklayınca yeniden tıklayana kadar toplamaya devam eder.</translation>
     </message>
 </context>
 <context>
@@ -3708,6 +3737,26 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Ladder</source>
         <translation>Merdiven</translation>
+    </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Paralı asker kampı</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Fil ahırları</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Fabrica</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Castra</translation>
+    </message>
+    <message>
+        <source>Emporion</source>
+        <translation>Emporion</translation>
     </message>
 </context>
 <context>
@@ -4602,6 +4651,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     <message>
         <source>Group %1 cleared</source>
         <translation>%1. grup boşaltıldı</translation>
+    </message>
+    <message>
+        <source>No idle builders</source>
+        <translation>Boşta inşaatçı yok</translation>
     </message>
 </context>
 <context>
@@ -5692,6 +5745,10 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
         <source>the whole field</source>
         <translation>bütün meydan</translation>
     </message>
+    <message>
+        <source>Kills %1  Losses %2 (%3 wild)</source>
+        <translation>Öldürme %1  Kayıp %2 (%3 vahşiye)</translation>
+    </message>
 </context>
 <context>
     <name>HUDTop</name>
@@ -6457,6 +6514,14 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
         <translation>Müttefik komutanların istekli olur ve ayıracak adamları varsa bu yapıyı tutmak için adam gönderir.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it, three times its defenders, for %1 s.</source>
+        <translation>Ele geçirilebilir: birliklerini %1 sn boyunca yanında, savunucularının üç katı kadar tut.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it for %1 s.</source>
+        <translation>Ele geçirilebilir: birliklerini %1 sn boyunca yanında tut.</translation>
     </message>
 </context>
 <context>
@@ -7307,14 +7372,6 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Quit</source>
         <translation>Çık</translation>
     </message>
-    <message>
-        <source>Graphics lowered to %1 to keep the battle smooth</source>
-        <translation>Savaşın akıcı kalması için grafikler %1 seviyesine düşürüldü</translation>
-    </message>
-    <message>
-        <source>Pick a preset in Settings to keep your own choice.</source>
-        <translation>Kendi seçiminizi korumak için Ayarlar&apos;dan bir ön ayar seçin.</translation>
-    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7483,10 +7540,6 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <translation>İKİNCİ PÖN SAVAŞI</translation>
     </message>
     <message>
-        <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>Lejyonlar, donanmalar, filler ve çekişmeli ikmal hatları</translation>
-    </message>
-    <message>
         <source>Hannibal Barca</source>
         <translation>Hannibal Barka</translation>
     </message>
@@ -7549,6 +7602,10 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Abandon</source>
         <translation>Bırak</translation>
+    </message>
+    <message>
+        <source>Legions, war elephants, walled towns, and contested supply lines</source>
+        <translation>Lejyonlar, savaş filleri, surlu kentler ve çekişmeli ikmal hatları</translation>
     </message>
 </context>
 <context>
@@ -8927,10 +8984,6 @@ bir harita seç</translation>
         <translation>Yedek konsül hattını besler; onu kes, hat incelir.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Demek izciler geri dönmüyor. Peki - herkes bir yerden başlar ve sen öğle yemeğini bekleyen adamlarla dolu bir karakolu dağıtarak başladın. Roma bir dahakine sayabilen birini yollar.</translation>
-    </message>
-    <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
         <translation>Bütün sefer boyunca yanından geçtiğin mabetler hiçbir zaman dekor değildi. Zama, arkasındaki her haritayı yeniden okur - ve Kabir&apos;in öldürülecek bir komutanı yoktur, yani Trasimeno&apos;dan beri işine yarayan tek kural, burada işe yaramayacak olan kuraldır.</translation>
     </message>
@@ -9923,10 +9976,6 @@ bir harita seç</translation>
         <translation>MÖ 218 kışı: Trebia zaferinden sonra Hannibal, Placentia yakınlarındaki ikmal deposuna saldırdı, ardından bölge halkının güvenlik için toplandığı, İnsubr ovasının tahkimli pazarı Victumulae&apos;yi hücumla aldı. Livius kasabanın hücumla düştüğünü ve yağmalandığını kaydeder. Bu değiştirilmiş tarih kasabaya Romalı bir prefekt, bir iç kale garnizonu ve Placentia yolunda bir yardım kuvveti verir.</translation>
     </message>
     <message>
-        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
-        <translation>Güney ikmal yolundaki ikinci kampı ele geçir. Nehrin o kıyısına hiçbir köprü ulaşmıyor.</translation>
-    </message>
-    <message>
         <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
         <translation>MÖ 202, Afrika&apos;da Zama yakınları: 218 konsülünün oğlu, yakında Africanus diye anılacak olan Publius Cornelius Scipio, manipüllerini alışılmış dama düzeni yerine birbirinin arkasına dizdi ve aralarında velitlerin tuttuğu, Hannibal&apos;ın seksen filinin içine sürülebileceği ya da geçip gitmesine izin verilebileceği düz koridorlar bıraktı. Sağda Masinissa&apos;nın Numidya süvarisi, solda Laelius&apos;un İtalyan süvarisi Hannibal&apos;ın süvarisini alandan sürdü. Hannibal&apos;ın üç hattı - Ligur, Galyalı, Balear ve Mağripli paralı askerler; Kartacalı ve Afrikalı toplama askerler; üçüncü hatta geride tutulan İtalya kıdemlileri - Roma ve Numidya süvarisi geri dönüp üçüncü hatta arkadan vurana dek lejyonlarla başa baş çarpıştı. Demir Kabir&apos;in müdahalesi, seferin tarihten bilinçli olarak kopan kara fantezi hamlesidir.</translation>
     </message>
@@ -10370,6 +10419,18 @@ bir harita seç</translation>
         <source>The third rising</source>
         <translation>Üçüncü diriliş</translation>
     </message>
+    <message>
+        <source>Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>İki kampı da tut: tepe kalesini ve şimdi güney ikmal yolundaki nehir kentini. Hiçbir köprü onun kıyısına uzanmıyor.</translation>
+    </message>
+    <message>
+        <source>So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Demek karakol düştü. Herkes bir yerden başlar, sen de öğle yemeğini bekleyen adamlarla dolu bir kampı dağıtarak başladın. Roma bir dahaki sefere saymayı bilen birini yollayacak.</translation>
+    </message>
+    <message>
+        <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
+        <translation>Gözcülerimi buldun. Çadırlarını saymaya iki adam yolladım, sen bütün kampla karşılık veriyorsun. Haydi öyleyse, ama onları kimin öldürdüğünü bilmek isteyeceğim.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10512,6 +10573,25 @@ bir harita seç</translation>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>NationEconomy</name>
+    <message>
+        <source>The mercenaries were not paid. They fight without heart until the treasury can pay them.</source>
+        <translation>Paralı askerlere ödeme yapılmadı. Hazine ödeyene kadar gönülsüz savaşıyorlar.</translation>
+    </message>
+    <message>
+        <source>Levy day: %1 citizens answer the call to arms.</source>
+        <translation>Asker toplama günü: %1 yurttaş silah çağrısına uyuyor.</translation>
+    </message>
+    <message>
+        <source>A cohort of hastati has come through two battles. They fight as principes now.</source>
+        <translation>Bir hastati kohortu iki savaştan sağ çıktı. Artık principes olarak savaşıyor.</translation>
+    </message>
+    <message>
+        <source>A cohort of principes has seen enough battles to stand with the veterans.</source>
+        <translation>Bir principes kohortu gazilerin yanında duracak kadar savaş gördü.</translation>
     </message>
 </context>
 <context>
@@ -11222,6 +11302,102 @@ Bedel: %2
         <source>Market</source>
         <translation>Pazar</translation>
     </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Paralı asker kampı</translation>
+    </message>
+    <message>
+        <source>Mercenaries</source>
+        <translation>Paralı askerler</translation>
+    </message>
+    <message>
+        <source>Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold
+Every band is paid each minute; also takes in gathered goods</source>
+        <translation>Altın karşılığında Galyalı, İberyalı, Balear sapancı ve Numidyalı atlı tut
+Her takım dakikada bir ödenir; toplanan malları da kabul eder</translation>
+    </message>
+    <message>
+        <source>Build Mercenary Camp
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Paralı asker kampı kur
+%1
+Maliyet: %2
+Yapım süresi: %3 sn</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Fil ahırları</translation>
+    </message>
+    <message>
+        <source>Stables</source>
+        <translation>Ahırlar</translation>
+    </message>
+    <message>
+        <source>The only place war elephants come from
+Each costs gold and food, at most eight alive</source>
+        <translation>Savaş fillerinin geldiği tek yer
+Her biri altın ve yiyeceğe mal olur, en fazla sekiz canlı</translation>
+    </message>
+    <message>
+        <source>Build Elephant Stables
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Fil ahırları kur
+%1
+Maliyet: %2
+Yapım süresi: %3 sn</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Fabrica</translation>
+    </message>
+    <message>
+        <source>The legion&apos;s armoury
+Infantry cost a third less iron; triarii need one</source>
+        <translation>Lejyonun cephaneliği
+Piyade üçte bir daha az demire mal olur; triarii için bir tane gerekir</translation>
+    </message>
+    <message>
+        <source>Build Fabrica
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Fabrica kur
+%1
+Maliyet: %2
+Yapım süresi: %3 sn</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Castra</translation>
+    </message>
+    <message>
+        <source>A marching camp
+Takes in gathered goods and heals troops resting inside</source>
+        <translation>Bir yürüyüş kampı
+Toplanan malları kabul eder ve içinde dinlenen birlikleri iyileştirir</translation>
+    </message>
+    <message>
+        <source>Build Castra
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Castra kur
+%1
+Maliyet: %2
+Yapım süresi: %3 sn</translation>
+    </message>
+    <message>
+        <source>Building: %1 (+%2 queued)</source>
+        <translation>İnşa ediliyor: %1 (+%2 sırada)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.</source>
+        <translation>İnşaatçılar meşgul. Şimdi yerleştirdiğin bir yapı onların sırasına girer ve sırayla yapılır; birkaç tane koymak için Shift&apos;i basılı tut. Surlar onlar bitirene kadar bekler.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionConstructionCard</name>
@@ -11285,6 +11461,41 @@ Bedel: %2
     </message>
 </context>
 <context>
+    <name>ProductionHiringSection</name>
+    <message>
+        <source>MERCENARY CAMP</source>
+        <translation>PARALI ASKER KAMPI</translation>
+    </message>
+    <message>
+        <source>ELEPHANT STABLES</source>
+        <translation>FİL AHIRLARI</translation>
+    </message>
+    <message>
+        <source>Hire a whole band for gold. No reserve, no iron - but every band is paid every minute.</source>
+        <translation>Altın karşılığında bütün bir takımı tut. Yedek yok, demir yok; ama her takım dakikada bir ödenir.</translation>
+    </message>
+    <message>
+        <source>Elephants for gold and food. No reserve; at most eight alive.</source>
+        <translation>Altın ve yiyecek karşılığında filler. Yedek yok; en fazla sekiz canlı.</translation>
+    </message>
+    <message>
+        <source>Upkeep %1 gold a minute - trade brings %2</source>
+        <translation>Bakım dakikada %1 altın; ticaret %2 getiriyor</translation>
+    </message>
+    <message>
+        <source>Contract signed - %1s</source>
+        <translation>Sözleşme imzalandı: %1 sn</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold, %3 food</source>
+        <translation>%1 adam: %2 altın, %3 yiyecek</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold - upkeep %3 a minute</source>
+        <translation>%1 adam: %2 altın, dakikada %3 bakım</translation>
+    </message>
+</context>
+<context>
     <name>ProductionHomeSection</name>
     <message>
         <source>HOME RECRUITMENT</source>
@@ -11295,22 +11506,38 @@ Bedel: %2
         <translation>Elverişli siviller: %1 / %2</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn
-Teslim kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla.</translation>
-    </message>
-    <message>
         <source>families</source>
         <translation>aile</translation>
     </message>
     <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>Bu ev 3 sivilini çoktan verdi</translation>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Civilians walk to a barracks with room and add to its reserve.</source>
+        <translation>%1 topla
+Maliyet: %2
+Yapım süresi: %3 sn
+Siviller yeri olan bir kışlaya yürüyüp yedeğine katılır.</translation>
+    </message>
+    <message>
+        <source>This home has raised all %1 of its civilians</source>
+        <translation>Bu ev %1 sivilinin hepsini yetiştirdi</translation>
+    </message>
+    <message>
+        <source>Raise and send civilians</source>
+        <translation>Sivil yetiştir ve gönder</translation>
+    </message>
+    <message>
+        <source>This home raises its civilians while food allows, and they walk to a barracks with room on their own</source>
+        <translation>Bu ev yiyecek yettikçe sivillerini yetiştirir ve onlar kendiliğinden yeri olan bir kışlaya yürür</translation>
+    </message>
+    <message>
+        <source>On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.</source>
+        <translation>Açık: bu ev yiyecek yettikçe sivillerini yetiştirir ve onlar kendiliğinden yeri olan bir kışlaya yürür. Onları kendin toplayıp teslim etmek için işareti kaldır.</translation>
+    </message>
+    <message>
+        <source>Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.</source>
+        <translation>Kapalı: bu ev seni bekler. Sivilleri burada topla ve Teslim Et ile bir kışlaya gönder.</translation>
     </message>
 </context>
 <context>
@@ -11532,14 +11759,6 @@ Bedel: %2
 Kartaca&apos;ya özel</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn</translation>
-    </message>
-    <message>
         <source>Food</source>
         <translation>Yiyecek</translation>
     </message>
@@ -11638,16 +11857,8 @@ Birliklerine ve müttefiklerine açılır</translation>
         <translation>Devşirilemiyor</translation>
     </message>
     <message>
-        <source>Queue is full (5/5)</source>
-        <translation>Sıra dolu (5/5)</translation>
-    </message>
-    <message>
         <source>Not enough reserve</source>
         <translation>Yeterli yedek yok</translation>
-    </message>
-    <message>
-        <source>Already building...</source>
-        <translation>Zaten inşa ediliyor...</translation>
     </message>
     <message>
         <source>Battering Ram</source>
@@ -11678,6 +11889,32 @@ Yanındaki piyade tırmanıp geçer</translation>
 Another way up onto the wall walk</source>
         <translation>Surunun şehir tarafına dayanır
 Sur yoluna bir başka çıkış</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Shift-click queues five, Ctrl-click keeps recruiting</source>
+        <translation>%1 topla
+Maliyet: %2
+Yapım süresi: %3 sn
+Shift ile tıklama beşini sıraya koyar, Ctrl ile tıklama toplamaya devam eder</translation>
+    </message>
+    <message>
+        <source>Your marketplace sells iron for gold.</source>
+        <translation>Pazarın altın karşılığında demir satıyor.</translation>
+    </message>
+    <message>
+        <source>Build a marketplace to buy iron with gold.</source>
+        <translation>Altınla demir almak için bir pazar kur.</translation>
+    </message>
+    <message>
+        <source>Queue is full (%1/%1)</source>
+        <translation>Sıra dolu (%1/%1)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. Walls can be planned once they finish, or with another builder squad.</source>
+        <translation>İnşaatçılar meşgul. Surlar onlar bitirince ya da başka bir inşaatçı takımıyla planlanabilir.</translation>
     </message>
 </context>
 <context>
@@ -12185,6 +12422,14 @@ Right-click to cancel.</source>
         <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
         <translation>Görüşün ortasına en yakın düşmana kilitlenir; bırakmak için yeniden bas. Sola ve sağa dönme, kilidi yandaki düşmana geçirir.</translation>
     </message>
+    <message>
+        <source>Select idle builders</source>
+        <translation>Boştaki inşaatçıları seç</translation>
+    </message>
+    <message>
+        <source>Selects every builder squad that has no job and centres the view on them.</source>
+        <translation>İşi olmayan tüm inşaatçı takımlarını seçer ve görünümü onlara ortalar.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12195,6 +12440,10 @@ Right-click to cancel.</source>
     <message>
         <source>Show unit details</source>
         <translation>Birim ayrıntılarını göster</translation>
+    </message>
+    <message>
+        <source>Recruiting on repeat. Ctrl-click to stop.</source>
+        <translation>Tekrarlı toplama. Durdurmak için Ctrl ile tıkla.</translation>
     </message>
 </context>
 <context>
@@ -12237,6 +12486,45 @@ Right-click to cancel.</source>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Düşmanlar taşlarının altından tırmanıyor. Yuvarla onları!</translation>
+    </message>
+</context>
+<context>
+    <name>RosterCommands</name>
+    <message>
+        <source>Triarii are armed at a Fabrica. Build one first.</source>
+        <translation>Triarii bir Fabrica&apos;da silahlanır. Önce bir tane kur.</translation>
+    </message>
+    <message>
+        <source>This troop needs another building first.</source>
+        <translation>Bu birlik önce başka bir yapıya ihtiyaç duyar.</translation>
+    </message>
+    <message>
+        <source>You already field the most of these: %1 squads.</source>
+        <translation>Bunlardan zaten en fazlasına sahipsin: %1 takım.</translation>
+    </message>
+    <message>
+        <source>the reserve ran out</source>
+        <translation>yedek tükendi</translation>
+    </message>
+    <message>
+        <source>the stores ran short</source>
+        <translation>erzak yetmedi</translation>
+    </message>
+    <message>
+        <source>the army is at its cap</source>
+        <translation>ordu sınırında</translation>
+    </message>
+    <message>
+        <source>the building is full</source>
+        <translation>yapı dolu</translation>
+    </message>
+    <message>
+        <source>the queue is full</source>
+        <translation>sıra dolu</translation>
+    </message>
+    <message>
+        <source>Queued %1 of %2 recruits: %3.</source>
+        <translation>%2 askerden %1 tanesi sıraya girdi: %3.</translation>
     </message>
 </context>
 <context>
@@ -14001,10 +14289,6 @@ Right-click to cancel.</source>
         <translation>Herhangi bir okçu kadar kırılgandır ve önündeki hat çöker çökmez erir.</translation>
     </message>
     <message>
-        <source>Auxiliary Archer</source>
-        <translation>Yardımcı Okçu</translation>
-    </message>
-    <message>
         <source>Battle caster</source>
         <translation>Savaş büyücüsü</translation>
     </message>
@@ -14159,10 +14443,6 @@ Right-click to cancel.</source>
     <message>
         <source>Lancer cavalry</source>
         <translation>Mızraklı süvari</translation>
-    </message>
-    <message>
-        <source>Legionary</source>
-        <translation>Lejyoner</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
@@ -14479,6 +14759,18 @@ Right-click to cancel.</source>
     <message>
         <source>Vulnerable to cavalry and sustained melee.</source>
         <translation>Süvariye ve uzun süren yakın dövüşe karşı savunmasız.</translation>
+    </message>
+    <message>
+        <source>Cretan Archers</source>
+        <translation>Giritli okçular</translation>
+    </message>
+    <message>
+        <source>Hastati</source>
+        <translation>Hastati</translation>
+    </message>
+    <message>
+        <source>Numidian Javelin Riders</source>
+        <translation>Numidyalı ciritli atlılar</translation>
     </message>
 </context>
 <context>

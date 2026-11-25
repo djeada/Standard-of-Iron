@@ -43,7 +43,7 @@ stamina initializer supplies a component when an eligible unit lacks one.
 This audit does not establish ownership for every combat/death/reaction writer.
 Remaining risks include jump's timed vertical offset and safe-position recovery,
 airborne collision, lunge composition, lock-on writing free-look yaw, and differing
-RTS/direct-control surface handling. Those remain explicitly open in `todo.md`.
+RTS/direct-control surface handling. Those remain explicitly open in the RPG feel plan (`git show 9c835e51a:todo.md`).
 
 ### Verification boundaries
 

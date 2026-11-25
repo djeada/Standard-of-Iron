@@ -205,17 +205,21 @@ public:
                 int owner_id,
                 Game::Units::SpawnType spawn_type,
                 EntityID killer_id = 0,
-                int killer_owner_id = 0)
+                int killer_owner_id = 0,
+                bool disbanded = false)
       : unit_id(unit_id)
       , owner_id(owner_id)
       , spawn_type(spawn_type)
       , killer_id(killer_id)
-      , killer_owner_id(killer_owner_id) {}
+      , killer_owner_id(killer_owner_id)
+      , disbanded(disbanded) {}
   EntityID unit_id;
   int owner_id;
   Game::Units::SpawnType spawn_type;
   EntityID killer_id;
   int killer_owner_id;
+
+  bool disbanded;
 };
 
 class UnitSpawnedEvent : public Event {
@@ -232,6 +236,19 @@ public:
   int owner_id;
   Game::Units::SpawnType spawn_type;
   bool is_initial_spawn;
+};
+
+// A barracks (or temple) handed a trained squad to its owner. Splits, builder
+// crews, civilians and scripted spawns are not recruits and never publish this.
+class UnitRecruitedEvent : public Event {
+public:
+  UnitRecruitedEvent(EntityID unit_id, int owner_id, Game::Units::SpawnType spawn_type)
+      : unit_id(unit_id)
+      , owner_id(owner_id)
+      , spawn_type(spawn_type) {}
+  EntityID unit_id;
+  int owner_id;
+  Game::Units::SpawnType spawn_type;
 };
 
 class BuildingAttackedEvent : public Event {

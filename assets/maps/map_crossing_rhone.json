@@ -6007,24 +6007,6 @@
         {
             "authored": true,
             "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "defense_tower",
-            "x": 391.0,
-            "z": 55.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "settlement": "rhone_hill_fort",
-            "type": "defense_tower",
-            "x": 361.0,
-            "z": 55.0
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
             "player_id": 3,
             "rotation": 0.0,
             "settlement": "rhone_river_town",

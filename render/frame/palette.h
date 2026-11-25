@@ -15,6 +15,8 @@ struct HumanoidPalette {
   QVector3D metal;
 };
 
+auto make_skin_tone(std::uint32_t seed, float depth_bias = 0.0F) -> QVector3D;
+
 auto make_humanoid_palette(const QVector3D& team_tint,
                            uint32_t seed) -> HumanoidPalette;
 

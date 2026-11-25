@@ -35,6 +35,12 @@ struct RiggedSkinAtlas {
   // backend is attached (see RiggedMeshCache::set_palette_blocks_enabled).
   std::shared_ptr<InstanceBlock> palette_block;
   std::size_t frame_stride_bytes{0};
+  // Blocks replaced when the atlas was refilled from another animation blob.
+  // Draw commands queued earlier in the frame still point at them (shadow
+  // passes run after submission), so they are released a few frames later by
+  // RiggedMeshCache::begin_frame, never on the spot.
+  std::vector<std::shared_ptr<InstanceBlock>> retired_palette_blocks;
+  std::uint64_t retired_since_frame{0};
 };
 
 struct RiggedMeshEntry {
@@ -287,6 +293,7 @@ private:
   };
 
   void release_skin_atlases();
+  void release_retired_palette_blocks();
   void recount_residency();
   // The small-on-screen copy of `mesh`, simplified once and shared by every
   // entry drawing it.

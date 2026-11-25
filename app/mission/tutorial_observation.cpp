@@ -149,6 +149,7 @@ namespace {
 
 constexpr int k_max_focus_points = 6;
 constexpr float k_scout_search_radius = 38.0F;
+constexpr float k_camp_radius = 20.0F;
 
 struct FocusCandidate {
   QVector3D position;
@@ -187,9 +188,13 @@ auto nearest_props(const Game::Map::TerrainService* terrain,
     if (!matches(prop.type)) {
       continue;
     }
-    const float dx = prop.x - anchor.x();
-    const float dz = prop.z - anchor.z();
-    candidates.push_back({QVector3D(prop.x, 0.0F, prop.z), dx * dx + dz * dz});
+    // Authored props may be in grid space (the tutorial meadow is); the anchor
+    // and the camera are in world space.
+    const QVector3D position = terrain->world_prop_world_position(prop);
+    const float dx = position.x() - anchor.x();
+    const float dz = position.z() - anchor.z();
+    candidates.push_back(
+        {QVector3D(position.x(), 0.0F, position.z()), dx * dx + dz * dz});
   }
   keep_nearest(candidates, static_cast<std::size_t>(std::max(0, limit)));
   std::sort(candidates.begin(),
@@ -223,7 +228,8 @@ struct OwnedUnits {
   std::vector<QVector3D> barracks;
   std::vector<QVector3D> commander;
   std::vector<QVector3D> enemy_troops;
-  std::vector<QVector3D> enemy_camp;
+  std::vector<QVector3D> enemy_commanders;
+  std::vector<QVector3D> enemy_barracks;
   QVector3D anchor;
   bool has_anchor = false;
 };
@@ -247,8 +253,12 @@ auto collect_units(Engine::Core::World* world,
       if (owners == nullptr || !owners->are_enemies(owner, unit->owner_id)) {
         return;
       }
-      if (commander || unit->spawn_type == Game::Units::SpawnType::Barracks) {
-        units.enemy_camp.push_back(position);
+      if (commander) {
+        units.enemy_commanders.push_back(position);
+        return;
+      }
+      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+        units.enemy_barracks.push_back(position);
         return;
       }
       if (Game::Units::is_troop_spawn(unit->spawn_type) &&
@@ -351,8 +361,24 @@ auto resolve_tutorial_focus_points(const TutorialFocusInputs& inputs) -> QVarian
   case TutorialFocusTarget::Commander:
     return to_points(units.commander, 1);
 
-  case TutorialFocusTarget::EnemyCamp:
-    return to_points(units.enemy_camp, 3);
+  case TutorialFocusTarget::EnemyCamp: {
+    // The assault is won by killing the commander, so he leads the list and the
+    // camera; his barracks join only when they stand with him. Averaging a
+    // commander and a camp far apart would frame the empty ground between.
+    if (units.enemy_commanders.empty()) {
+      return to_points(units.enemy_barracks, 2);
+    }
+    const QVector3D& commander = units.enemy_commanders.front();
+    std::vector<QVector3D> camp{commander};
+    for (const auto& barracks : units.enemy_barracks) {
+      const float dx = barracks.x() - commander.x();
+      const float dz = barracks.z() - commander.z();
+      if (dx * dx + dz * dz <= k_camp_radius * k_camp_radius) {
+        camp.push_back(barracks);
+      }
+    }
+    return to_points(camp, 3);
+  }
 
   case TutorialFocusTarget::EnemyScouts: {
     if (!units.has_anchor) {

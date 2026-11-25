@@ -179,7 +179,8 @@ void UndeadShrine::break_garrison(Engine::Core::World& world,
     unit->health = 0;
     Engine::Core::begin_death_sequence(*entity, 0U);
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::UnitDiedEvent(spawn_id, unit->owner_id, unit->spawn_type));
+        Engine::Core::UnitDiedEvent(
+            spawn_id, unit->owner_id, unit->spawn_type, 0U, 0, true));
   }
   zone.active_spawn_ids.clear();
 

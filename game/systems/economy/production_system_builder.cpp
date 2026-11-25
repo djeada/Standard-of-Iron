@@ -85,6 +85,8 @@ void interrupt_task(BuilderTick& tick) {
                     tick.entity.get_id(),
                     tick.owner_id,
                     Engine::Core::BuilderTaskFault::Interrupted);
+  refund_queued_sites(tick.world, tick.entity.get_id());
+  builder.clear_resume();
   builder.has_construction_site = false;
   builder.at_construction_site = false;
   builder.in_progress = false;
@@ -232,6 +234,7 @@ void advance_builder(Engine::Core::World& world,
 
   drop_lost_wall_site(world, builder);
   assign_queued_wall_site_if_idle(world, entity, builder);
+  advance_queued_work_if_idle(world, entity, builder, delta_time);
   if (!refresh_food_task(world, entity, builder, transform, movement)) {
     return;
   }

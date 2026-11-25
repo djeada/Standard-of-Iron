@@ -66,6 +66,15 @@ Design.IronPanel {
         root.armFocus(null);
     }
 
+    function captureHint(info) {
+        if (!info || !(info.captureSeconds > 0))
+            return "";
+        var seconds = Math.round(info.captureSeconds);
+        if (info.isEnemy)
+            return qsTr("Can be captured: keep your troops beside it, three times its defenders, for %1 s.").arg(seconds);
+        return qsTr("Can be captured: keep your troops beside it for %1 s.").arg(seconds);
+    }
+
     function activateCard() {
         if (root.focusPending()) {
             root.fireFocus();
@@ -391,7 +400,7 @@ Design.IronPanel {
 
             objectName: "selectionInspectCard"
             width: parent.width
-            height: Design.Metrics.space24 * 4 + (root.hasSoldierCount(root.inspected) ? Design.Metrics.space16 : 0) + (allyCallButton.visible ? allyCallButton.implicitHeight + Design.Metrics.space4 : 0)
+            height: Design.Metrics.space24 * 4 + (root.hasSoldierCount(root.inspected) ? Design.Metrics.space16 : 0) + (allyCallButton.visible ? allyCallButton.implicitHeight + Design.Metrics.space4 : 0) + (captureHintText.visible ? captureHintText.implicitHeight + Design.Metrics.space4 : 0)
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -496,6 +505,19 @@ Design.IronPanel {
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
                     elide: Text.ElideRight
+                }
+
+                Text {
+                    id: captureHintText
+
+                    objectName: "inspectCaptureHint"
+                    width: parent.width
+                    visible: text !== ""
+                    text: root.captureHint(root.inspected)
+                    color: Design.Theme.accent
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    wrapMode: Text.WordWrap
                 }
 
                 Design.IronButton {

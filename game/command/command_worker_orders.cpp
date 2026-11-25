@@ -1,10 +1,12 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "../systems/economy/nation_recruitment.h"
 #include "../core/component_economy.h"
 #include "../formation/army_formation_service.h"
 #include "../map/terrain_service.h"
@@ -14,6 +16,7 @@
 #include "../systems/economy/civilian_delivery_system.h"
 #include "../systems/economy/construction_cost_catalog.h"
 #include "../systems/economy/food_targets.h"
+#include "../systems/economy/production_system_builder_task.h"
 #include "../systems/economy/production_system_shared_site.h"
 #include "../systems/movement/command_service.h"
 #include "../systems/movement/order_service.h"
@@ -66,6 +69,7 @@ void take_off_current_task(World& world, Entity* entity) {
   }
   static_cast<void>(
       Game::Systems::ProductionTasks::refund_abandoned_site(world, entity->get_id()));
+  Game::Systems::ProductionTasks::refund_queued_sites(world, entity->get_id());
   Game::Systems::OrderService::clear_builder_task(world, entity);
   leave_army_formation(world, entity->get_id());
 }
@@ -74,23 +78,8 @@ void begin_site_work(const Engine::Core::Entity& worker,
                      const std::string& construction_type,
                      const QVector3D& site,
                      float rotation_y) {
-  builder.clear_auto_gather();
-  builder.product_type = construction_type;
-
-  const auto* unit = worker.get_component<Engine::Core::UnitComponent>();
-  const float hands =
-      unit != nullptr ? std::max(0.05F, Game::Units::squad_fraction(*unit)) : 1.0F;
-  builder.build_time =
-      Game::Systems::construction_build_time(construction_type) / hands;
-  builder.time_remaining = builder.build_time;
-  builder.has_construction_site = true;
-  builder.construction_site_x = site.x();
-  builder.construction_site_z = site.z();
-  builder.construction_site_rotation_y = rotation_y;
-  builder.at_construction_site = false;
-  builder.in_progress = false;
-  builder.construction_complete = false;
-  builder.bypass_movement_active = false;
+  Game::Systems::ProductionTasks::begin_structure_site(
+      worker, builder, construction_type, site.x(), site.z(), rotation_y);
 }
 auto worker_position_or(const Entity& worker, const QVector3D& fallback) -> QVector3D {
   const auto* transform = worker.get_component<Engine::Core::TransformComponent>();
@@ -185,7 +174,8 @@ void apply_auto_gather(World& world, const SetAutoGather& order) {
 void apply_start_construction(World& world,
                               int owner_id,
                               const StartConstruction& order) {
-  if (order.units.empty() || order.construction_type.empty()) {
+  if (order.units.empty() || order.construction_type.empty() ||
+      !Game::Systems::nation_may_build(world, owner_id, order.construction_type)) {
     return;
   }
   const auto costs =
@@ -196,13 +186,14 @@ void apply_start_construction(World& world,
     return;
   }
 
-  const auto verdict = Game::Systems::assess_ground(world,
-                                                    order.construction_type,
-                                                    order.site.x(),
-                                                    order.site.z(),
-                                                    0,
-                                                    order.rotation_y,
-                                                    order.units);
+  const auto verdict = Game::Systems::assess_ground(
+      world,
+      order.construction_type,
+      order.site.x(),
+      order.site.z(),
+      0,
+      order.rotation_y,
+      order.queue ? std::span<const EntityID>{} : std::span<const EntityID>{order.units});
   if (verdict != Game::Systems::GroundVerdict::Clear ||
       Game::Systems::troops_stand_on(world,
                                      order.construction_type,
@@ -219,10 +210,29 @@ void apply_start_construction(World& world,
     if (builder == nullptr) {
       continue;
     }
+    const bool raising = Game::Systems::ProductionTasks::is_raising_structure(*builder);
+    if (order.queue && raising) {
+      builder->queued_structure_sites.push_back({.construction_type = order.construction_type,
+                                                 .x = order.site.x(),
+                                                 .z = order.site.z(),
+                                                 .rotation_y = order.rotation_y});
+      assigned_any = true;
+      continue;
+    }
+    auto resume = *builder;
+    if (!raising) {
+      resume.remember_gather_work();
+    }
     take_off_current_task(world, entity);
     Game::Systems::OrderService::clear_builder_gather_order(entity);
     begin_site_work(
         *entity, *builder, order.construction_type, order.site, order.rotation_y);
+    builder->resume_gather_order = resume.resume_gather_order;
+    builder->resume_gather_product_type = resume.resume_gather_product_type;
+    builder->resume_gather_anchor_x = resume.resume_gather_anchor_x;
+    builder->resume_gather_anchor_z = resume.resume_gather_anchor_z;
+    builder->resume_auto_gather = resume.resume_auto_gather;
+    builder->resume_auto_gather_priority = resume.resume_auto_gather_priority;
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
       movement->set_rest_position(order.site.x(), order.site.z());
     }

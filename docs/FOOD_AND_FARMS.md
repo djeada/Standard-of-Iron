@@ -62,8 +62,8 @@ Food comes from two builder jobs. Both use the normal harvest-delivery loop: the
 
 | Job               | Product key       | Target            | Work | Yield |
 | ----------------- | ----------------- | ----------------- | ---- | ----- |
-| Reap a farm       | `harvest_grain`   | own **ripe** farm | 5 s  | 60    |
-| Slaughter a sheep | `slaughter_sheep` | any live sheep    | 4 s  | 35    |
+| Reap a farm       | `harvest_grain`   | own **ripe** farm | 10 s | 60    |
+| Slaughter a sheep | `slaughter_sheep` | any live sheep    | 8 s  | 35    |
 
 Unlike trees, boulders, and ore seams, farms and sheep are **entities**, not world props. They therefore do not pass through `TerrainService::reserve_world_prop`.
 
@@ -109,10 +109,19 @@ The role and visible tool follow the **job** through `Animation::HumanoidWorkJob
 
 This gives each task a distinct read:
 
-- felling a tree uses the mallet action;
-- quarrying stone or ore uses a kneeling chisel;
+- felling a tree uses the overhead swing with a long felling axe in the hand;
+- quarrying stone or ore uses the kneeling action with a short pick-hammer;
 - reaping uses the sickle; and
 - slaughtering is a mallet bonk on the head, never a blade.
+
+The swing and the tool are separate choices. The clip follows the role, and
+`Animation::humanoid_construction_tool_variant_for_job` picks the tool: felling and
+quarrying have their own entries in the builders' variant tables
+(`k_humanoid_felling_axe_variant`, `k_humanoid_quarry_pick_variant`), while every other
+job keeps the tool of its role. The shared tool meshes live in
+`render/entity/nations/worker_tools.cpp`; the same file slings a long tool across the
+builder's back (a dolabra for Rome, a wooden mallet for Carthage) so a work party reads
+as workers even when it is standing idle.
 
 ### Slaughter is slapstick
 
@@ -146,9 +155,20 @@ The civilian is the only recruit that consumes food:
 civilian.production.resource_costs.food = 20
 ```
 
-A home supports three civilians during its lifetime, and each civilian walked into a barracks adds a household of 18 men to its reserve (`k_civilian_delivery_reserve_grant`). One home therefore converts 60 food into 54 men of reserve: three legionaries.
+A home supports six civilians during its lifetime (`k_home_lifetime_civilians` in `game/systems/recruitment_rules.h`), and each civilian walked into a barracks adds a household of 18 men to its reserve (`k_civilian_delivery_reserve_grant`). One home therefore converts 120 food into 108 men of reserve: six legionaries.
 
-Shipped maps begin with 100–200 food, enough for roughly four to ten civilians depending on the scenario. Beyond that initial reserve, sustained civilian production requires farms or sheep.
+A barracks only takes a household it has room for. The starting barracks of a skirmish holds 200 men of reserve (the camp start in [SKIRMISH_BASES.md](SKIRMISH_BASES.md#every-seat-starts-with-a-camp)); a barracks raised by builders holds at least `k_built_barracks_reserve_ceiling` (120), so a delivery is rarely turned away.
+
+### Civilians report to the barracks on their own
+
+A home reports to the barracks by default (`HomeComponent::reports_to_barracks`, saved with the home). `CivilianReportingSystem` (`game/systems/economy/civilian_reporting_system.cpp`) thinks once a second and does two things for every owner, player and computer alike:
+
+- **Sends civilians.** A civilian within 20 m of a reporting home, or one turned away at a full barracks and still waiting within 12 m of it, is given the same delivery a Deliver order gives: it walks to the gate of the nearest barracks of its owner that still has room for a household, counting the households already on their way there. A civilian the player has given an order of their own (`PlayerOrderIntentComponent`) is left alone.
+- **Raises civilians.** A reporting home that is idle queues its next civilian, under the ordinary recruit rules and costs (20 food, floating numbers, no recruit fanfare), while the owner has fewer civilians waiting or in training than its barracks have room for. A full barracks therefore stops the homes instead of piling up civilians.
+
+The home panel's **Raise and send civilians** box switches a home off and on (`SetHomeReporting` command). Switched off, the home waits for the player: recruit there and send the civilian with Deliver, as before.
+
+Skirmish maps begin with 300–500 food. Beyond that initial reserve, sustained civilian production requires farms or sheep.
 
 The AI does not recruit civilians, so food does not gate AI expansion and the AI does not build farms. It does, however, maintain a **recruit reserve** for wood and iron now that troops consume more of both. `builder_behavior` sends an idle builder to gather whenever wood falls below 80 or iron below 50, rather than waiting until a building itself is blocked by a shortage.
 
@@ -162,11 +182,13 @@ One trip means walking to the target, working, and returning with the load.
 
 | Source    | Work | Yield          |
 | --------- | ---- | -------------- |
-| Tree      | 6 s  | 40 wood        |
-| Boulder   | 6 s  | 35 stone       |
-| Ore seam  | 6 s  | 30 iron        |
-| Ripe farm | 5 s  | 60 food / 60 s |
-| Sheep     | 4 s  | 35 food        |
+| Tree      | 12 s | 80 wood        |
+| Boulder   | 12 s | 35 stone       |
+| Ore seam  | 12 s | 45 iron        |
+| Ripe farm | 10 s | 60 food / 60 s |
+| Sheep     | 8 s  | 35 food        |
+
+Yields live in `game/systems/harvest_yields.h`, work times in `catalog.json`. A crew below full strength works at `squad_fraction^1.5` of that pace.
 
 ### What units and buildings cost
 
@@ -192,7 +214,7 @@ One trip means walking to the target, working, and returning with the load.
 
 The reserve price of a recruit is the number of men in the squad it fields (`formation.individuals_per_unit`), so a nation whose legionaries march eighteen strong pays eighteen men of reserve for one. Siege engines and commanders are one man each; their cost is in resources and time.
 
-The economy is tuned around a simple rhythm. A squad consumes roughly one third of a wood trip and one third of an iron trip, so two builders on timber and one on ore can sustain troop recruitment. A full home's civilian output costs one farm cycle, and the first harvest effectively replaces the farm's 40-wood construction investment in the broader settlement economy.
+The economy is tuned around a simple rhythm. A squad consumes well under half a wood trip (80 wood) and between a quarter and two thirds of an iron trip (45 iron), so one crew on timber and one on ore can sustain troop recruitment. A full home's six civilians cost two farm cycles, and the first harvest effectively replaces the farm's 40-wood construction investment in the broader settlement economy.
 
 Nation variants inherit these resource costs and vary only the squad size (and therefore the men charged) and the production time.
 

@@ -1,6 +1,7 @@
 #include "app/core/audio_services.h"
 
 #include <QDebug>
+#include <QTimer>
 
 #include "app/audio/audio_coordinator.h"
 #include "app/audio/audio_resource_loader.h"
@@ -14,6 +15,13 @@ namespace App::Core {
 AudioServices::AudioServices() = default;
 
 AudioServices::~AudioServices() = default;
+
+namespace {
+constexpr int k_playlist_poll_ms = 500;
+// Start the next track this long before the current one ends, so the short
+// crossfade lands on the sealed tail of the loop.
+constexpr float k_playlist_lead_seconds = 0.25F;
+} // namespace
 
 void AudioServices::initialize_audio_system(QObject* proxy_parent) {
   if (AudioSystem::get_instance().initialize()) {
@@ -54,7 +62,45 @@ void AudioServices::set_frontend_context(const QString& context) {
   }
 
   m_frontend_context = normalized;
-  m_coordinator->apply_frontend_music_context(normalized);
+  const auto music = m_coordinator->apply_frontend_music_context(normalized);
+  start_frontend_playlist(music.track_id, music.playlist_size);
+}
+
+void AudioServices::start_frontend_playlist(const QString& track_id, int playlist_size) {
+  m_playlist_track = track_id;
+  m_playlist_clock.start();
+  if (track_id.isEmpty() || playlist_size < 2) {
+    if (m_playlist_timer) {
+      m_playlist_timer->stop();
+    }
+    return;
+  }
+  if (!m_playlist_timer) {
+    m_playlist_timer = std::make_unique<QTimer>();
+    m_playlist_timer->setInterval(k_playlist_poll_ms);
+    QObject::connect(m_playlist_timer.get(), &QTimer::timeout, [this]() {
+      check_frontend_playlist();
+    });
+  }
+  m_playlist_timer->start();
+}
+
+void AudioServices::check_frontend_playlist() {
+  if (m_playlist_track.isEmpty()) {
+    return;
+  }
+  const float length =
+      AudioSystem::get_instance().music_length_seconds(m_playlist_track.toStdString());
+  if (length <= 0.0F) {
+    m_playlist_clock.restart();
+    return;
+  }
+  const float played = static_cast<float>(m_playlist_clock.elapsed()) / 1000.0F;
+  if (played + k_playlist_lead_seconds < length) {
+    return;
+  }
+  const auto music = m_coordinator->apply_frontend_music_context(m_frontend_context);
+  start_frontend_playlist(music.track_id, music.playlist_size);
 }
 
 void AudioServices::shutdown(const std::string& map_path) {

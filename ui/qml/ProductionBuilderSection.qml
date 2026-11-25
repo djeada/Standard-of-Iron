@@ -108,6 +108,44 @@ Rectangle {
             "default_build_time": 10,
             "fit_icon": true,
             "glyph": Design.Icons.unitGlyph("temple")
+        }, {
+            "item_type": "mercenary_camp",
+            "label": qsTr("Mercenary Camp"),
+            "short_label": qsTr("Mercenaries"),
+            "description": qsTr("Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold\nEvery band is paid each minute; also takes in gathered goods"),
+            "tooltip": qsTr("Build Mercenary Camp\n%1\nCost: %2\nBuild time: %3s"),
+            "default_build_time": 12,
+            "fit_icon": true,
+            "glyph": Design.Icons.unitGlyph("barracks"),
+            "nation_building": true
+        }, {
+            "item_type": "elephant_stables",
+            "label": qsTr("Elephant Stables"),
+            "short_label": qsTr("Stables"),
+            "description": qsTr("The only place war elephants come from\nEach costs gold and food, at most eight alive"),
+            "tooltip": qsTr("Build Elephant Stables\n%1\nCost: %2\nBuild time: %3s"),
+            "default_build_time": 16,
+            "fit_icon": true,
+            "glyph": Design.Icons.unitGlyph("barracks"),
+            "nation_building": true
+        }, {
+            "item_type": "fabrica",
+            "label": qsTr("Fabrica"),
+            "description": qsTr("The legion's armoury\nInfantry cost a third less iron; triarii need one"),
+            "tooltip": qsTr("Build Fabrica\n%1\nCost: %2\nBuild time: %3s"),
+            "default_build_time": 12,
+            "fit_icon": true,
+            "glyph": Design.Icons.unitGlyph("barracks"),
+            "nation_building": true
+        }, {
+            "item_type": "castra",
+            "label": qsTr("Castra"),
+            "description": qsTr("A marching camp\nTakes in gathered goods and heals troops resting inside"),
+            "tooltip": qsTr("Build Castra\n%1\nCost: %2\nBuild time: %3s"),
+            "default_build_time": 14,
+            "fit_icon": true,
+            "glyph": Design.Icons.unitGlyph("barracks"),
+            "nation_building": true
         }]
     property bool has_builder: (panel.selection_tick, (panel.production && panel.production.has_selected_type && panel.production.has_selected_type("builder")))
 
@@ -225,11 +263,31 @@ Rectangle {
                         }
                     }
                 }
+                var queued = builderProductionContent.builder_prod.queued_sites || 0;
+                if (!is_collection_task && queued > 0)
+                    return qsTr("Building: %1 (+%2 queued)").arg(label).arg(queued);
                 return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
             }
             color: "#8D7146"
             font.pixelSize: Design.Typography.caption
             visible: false
+        }
+
+        Text {
+            id: busyNote
+
+            objectName: "builderBusyNote"
+            readonly property bool busy: builderProductionContent.builder_prod.in_progress === true && builderProductionContent.builder_prod.gathering !== true
+
+            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            visible: busy
+            height: busy ? implicitHeight : 0
+            text: qsTr("The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.")
+            color: "#C9A86A"
+            font.pixelSize: Design.Typography.caption
         }
 
         Grid {
@@ -256,6 +314,8 @@ Rectangle {
                     panel: builderSection.panel
                     builder_prod: builderProductionContent.builder_prod
                     spec: modelData
+                    // Nation-only buildings show for the nation that raises them.
+                    visible: modelData.nation_building !== true || (builderProductionContent.builder_prod.nation_buildings || []).indexOf(modelData.item_type) >= 0
                     cardWidth: builderCardGrid.cardWidth
                     cardHeight: builderCardGrid.cardHeight
                 }

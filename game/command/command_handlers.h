@@ -21,6 +21,7 @@ void for_each_subject(Engine::Core::World& world,
 void apply_move(Engine::Core::World& world, const Move& move);
 void apply_stop(Engine::Core::World& world, const Stop& stop);
 void apply_gate_mode(Engine::Core::World& world, const SetGateMode& order);
+void apply_home_reporting(Engine::Core::World& world, const SetHomeReporting& order);
 void apply_hold(Engine::Core::World& world, const SetHold& hold);
 void apply_guard(Engine::Core::World& world, const SetGuard& guard);
 void apply_run_mode(Engine::Core::World& world, const SetRunMode& run);

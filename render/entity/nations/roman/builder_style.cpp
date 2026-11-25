@@ -7,7 +7,7 @@
 
 namespace {
 
-constexpr QVector3D k_roman_tunic{0.72F, 0.58F, 0.42F};
+constexpr QVector3D k_roman_tunic{0.53F, 0.29F, 0.18F};
 
 constexpr QVector3D k_roman_bronze{0.72F, 0.55F, 0.35F};
 
@@ -25,7 +25,7 @@ void register_roman_builder_style() {
   style.wood_color = Nation::k_roman_materials.timber;
   style.apron_color = k_roman_apron;
 
-  style.show_helmet = true;
+  style.show_helmet = false;
   style.show_armor = false;
   style.show_tool_belt = true;
 

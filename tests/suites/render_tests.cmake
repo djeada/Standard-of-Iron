@@ -81,7 +81,6 @@ add_executable(
     render/shader_reload_test.cpp
     render/weather_particle_budget_test.cpp
     render/graphics_lighting_settings_test.cpp
-    render/adaptive_quality_test.cpp
     render/scatter_composition_test.cpp
     render/scatter_gpu_retention_test.cpp
     render/scatter_generator_test.cpp

@@ -49,11 +49,16 @@ enum class SpawnType : std::uint8_t {
   Farm,
   WallLadder,
   Slinger,
-  Velites
+  Velites,
+  // NATION_ASYMMETRY.md: Carthage's gold army and Rome's levy army.
+  MercenaryCamp,
+  ElephantStables,
+  Fabrica,
+  Castra
 };
 
 inline constexpr std::size_t k_spawn_type_count =
-    static_cast<std::size_t>(SpawnType::Velites) + 1U;
+    static_cast<std::size_t>(SpawnType::Castra) + 1U;
 
 constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
   switch (type) {
@@ -129,6 +134,14 @@ constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
     return "farm";
   case SpawnType::WallLadder:
     return "wall_ladder";
+  case SpawnType::MercenaryCamp:
+    return "mercenary_camp";
+  case SpawnType::ElephantStables:
+    return "elephant_stables";
+  case SpawnType::Fabrica:
+    return "fabrica";
+  case SpawnType::Castra:
+    return "castra";
   }
   return "archer";
 }
@@ -207,6 +220,14 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("farm");
   case SpawnType::WallLadder:
     return QStringLiteral("wall_ladder");
+  case SpawnType::MercenaryCamp:
+    return QStringLiteral("mercenary_camp");
+  case SpawnType::ElephantStables:
+    return QStringLiteral("elephant_stables");
+  case SpawnType::Fabrica:
+    return QStringLiteral("fabrica");
+  case SpawnType::Castra:
+    return QStringLiteral("castra");
   }
   return QStringLiteral("archer");
 }
@@ -365,6 +386,22 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
     out = SpawnType::WallLadder;
     return true;
   }
+  if (lowered == QStringLiteral("mercenary_camp")) {
+    out = SpawnType::MercenaryCamp;
+    return true;
+  }
+  if (lowered == QStringLiteral("elephant_stables")) {
+    out = SpawnType::ElephantStables;
+    return true;
+  }
+  if (lowered == QStringLiteral("fabrica")) {
+    out = SpawnType::Fabrica;
+    return true;
+  }
+  if (lowered == QStringLiteral("castra")) {
+    out = SpawnType::Castra;
+    return true;
+  }
   return false;
 }
 
@@ -480,6 +517,18 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "wall_ladder") {
     return SpawnType::WallLadder;
   }
+  if (str == "mercenary_camp") {
+    return SpawnType::MercenaryCamp;
+  }
+  if (str == "elephant_stables") {
+    return SpawnType::ElephantStables;
+  }
+  if (str == "fabrica") {
+    return SpawnType::Fabrica;
+  }
+  if (str == "castra") {
+    return SpawnType::Castra;
+  }
   return std::nullopt;
 }
 
@@ -496,12 +545,24 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
          type == SpawnType::Ram || type == SpawnType::SiegeTower;
 }
 
+// The buildings only one nation raises (NATION_ASYMMETRY.md): Carthage's
+// Mercenary Camp and Elephant Stables, Rome's Fabrica and Castra.
+[[nodiscard]] constexpr auto is_nation_building_spawn(SpawnType type) noexcept -> bool {
+  return type == SpawnType::MercenaryCamp || type == SpawnType::ElephantStables ||
+         type == SpawnType::Fabrica || type == SpawnType::Castra;
+}
+
+// Buildings that hire troops for gold or food alone, with no reserve of men.
+[[nodiscard]] constexpr auto is_hiring_building(SpawnType type) noexcept -> bool {
+  return type == SpawnType::MercenaryCamp || type == SpawnType::ElephantStables;
+}
+
 inline auto is_building_spawn(SpawnType type) -> bool {
   return type == SpawnType::Barracks || type == SpawnType::DefenseTower ||
          type == SpawnType::Home || type == SpawnType::WallSegment ||
          type == SpawnType::Marketplace || type == SpawnType::WallGate ||
          type == SpawnType::Temple || type == SpawnType::Farm ||
-         type == SpawnType::WallLadder;
+         type == SpawnType::WallLadder || is_nation_building_spawn(type);
 }
 
 [[nodiscard]] inline auto is_mended_by_builders(SpawnType type) -> bool {
@@ -705,6 +766,10 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Sheep:
   case SpawnType::Wolf:
   case SpawnType::Elephant:
+  case SpawnType::MercenaryCamp:
+  case SpawnType::ElephantStables:
+  case SpawnType::Fabrica:
+  case SpawnType::Castra:
     return false;
   }
   return false;
@@ -779,6 +844,10 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   case SpawnType::Farm:
     return std::nullopt;
   case SpawnType::WallLadder:
+  case SpawnType::MercenaryCamp:
+  case SpawnType::ElephantStables:
+  case SpawnType::Fabrica:
+  case SpawnType::Castra:
     return std::nullopt;
   case SpawnType::Sheep:
     return TroopType::Sheep;

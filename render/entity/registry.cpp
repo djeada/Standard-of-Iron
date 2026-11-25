@@ -49,6 +49,7 @@
 #include "render/entity/siege_assault_renderer.h"
 #include "render/entity/skirmisher_renderer.h"
 #include "render/entity/temple_renderer.h"
+#include "render/entity/nation_building_renderer.h"
 #include "render/entity/wall_renderer.h"
 #include "render/entity/wildlife/sheep_renderer.h"
 #include "render/entity/wildlife/wolf_renderer.h"
@@ -214,6 +215,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   register_marketplace_renderer(registry);
   register_temple_renderer(registry);
+  register_nation_building_renderers(registry);
   register_farm_renderer(registry);
 
   Wildlife::register_sheep_renderer(registry);

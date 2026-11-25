@@ -24,6 +24,76 @@
     "attack_output_multiplier": 0.75,
     "frontal_arc_degrees": 130.0
   },
+  "economy": {
+    "civilian_reserve_grant": 12,
+    "trade_income": {
+      "per_minute": 30,
+      "per_farm": 5,
+      "radius": 40.0,
+      "max_buildings": 3,
+      "sell_multiplier": 1.5
+    }
+  },
+  "unique_buildings": [
+    "mercenary_camp",
+    "elephant_stables"
+  ],
+  "mercenary_bands": [
+    {
+      "id": "gallic_warband",
+      "display_name": "Gallic Warband",
+      "troop": "swordsman",
+      "nation": "gauls",
+      "gold": 110,
+      "contract_seconds": 8.0,
+      "upkeep_per_minute": 7
+    },
+    {
+      "id": "iberian_scutarii",
+      "display_name": "Iberian Scutarii",
+      "troop": "swordsman",
+      "nation": "iberians",
+      "gold": 130,
+      "contract_seconds": 8.0,
+      "upkeep_per_minute": 8
+    },
+    {
+      "id": "balearic_slingers",
+      "display_name": "Balearic Slingers",
+      "troop": "slinger",
+      "nation": "carthage",
+      "gold": 90,
+      "contract_seconds": 6.0,
+      "upkeep_per_minute": 6
+    },
+    {
+      "id": "numidian_horse",
+      "display_name": "Numidian Horse",
+      "troop": "horse_archer",
+      "nation": "carthage",
+      "gold": 140,
+      "contract_seconds": 9.0,
+      "upkeep_per_minute": 9
+    },
+    {
+      "id": "iberian_cavalry",
+      "display_name": "Iberian Cavalry",
+      "troop": "horse_swordsman",
+      "nation": "iberians",
+      "gold": 150,
+      "contract_seconds": 10.0,
+      "upkeep_per_minute": 9
+    },
+    {
+      "id": "gallic_cavalry",
+      "display_name": "Gallic Cavalry",
+      "troop": "horse_swordsman",
+      "nation": "gauls",
+      "gold": 150,
+      "contract_seconds": 10.0,
+      "upkeep_per_minute": 9
+    }
+  ],
   "troops": [
     {
       "id": "archer",
@@ -74,7 +144,8 @@
         },
         "build_time": 4.5,
         "priority": 11,
-        "is_melee": false
+        "is_melee": false,
+        "recruitable": false
       },
       "combat": {
         "health": 360,
@@ -199,7 +270,8 @@
         "cost": 9,
         "build_time": 9.4,
         "priority": 16,
-        "is_melee": true
+        "is_melee": true,
+        "recruitable": false
       },
       "combat": {
         "health": 1850,
@@ -267,21 +339,22 @@
     },
     {
       "id": "horse_archer",
-      "display_name": "Horse Archer",
+      "display_name": "Numidian Javelin Riders",
       "production": {
         "cost": 10,
         "build_time": 9.0,
         "priority": 12,
-        "is_melee": false
+        "is_melee": false,
+        "recruitable": false
       },
       "combat": {
         "health": 1450,
         "max_health": 1450,
-        "speed": 4.2,
+        "speed": 4.6,
         "vision_range": 18.0,
-        "ranged_range": 8.0,
-        "ranged_damage": 42,
-        "ranged_cooldown": 1.05,
+        "ranged_range": 4.6,
+        "ranged_damage": 54,
+        "ranged_cooldown": 1.45,
         "melee_range": 1.8,
         "melee_damage": 9,
         "melee_cooldown": 0.9,
@@ -305,7 +378,8 @@
         "cost": 9,
         "build_time": 9.5,
         "priority": 13,
-        "is_melee": true
+        "is_melee": true,
+        "recruitable": false
       },
       "combat": {
         "health": 1850,
@@ -335,10 +409,19 @@
       "id": "elephant",
       "display_name": "African War Elephant",
       "production": {
-        "cost": 1,
+        "cost": 0,
         "build_time": 20.0,
         "priority": 2,
-        "is_melee": true
+        "is_melee": true,
+        "recruited_at": "elephant_stables",
+        "max_squads": 8,
+        "resource_costs": {
+          "wood": 0,
+          "stone": 0,
+          "iron": 0,
+          "gold": 150,
+          "food": 90
+        }
       },
       "combat": {
         "health": 6800,

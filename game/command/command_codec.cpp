@@ -225,6 +225,10 @@ void encode(QJsonObject& o, const SetGateMode& p) {
   o["units"] = ids_to_json(p.units);
   o["mode"] = enum_value(p.mode);
 }
+void encode(QJsonObject& o, const SetHomeReporting& p) {
+  o["units"] = ids_to_json(p.units);
+  o["active"] = p.active;
+}
 void encode(QJsonObject& o, const SetAutoGather& p) {
   o["units"] = ids_to_json(p.units);
   o["active"] = p.active;
@@ -233,6 +237,15 @@ void encode(QJsonObject& o, const SetAutoGather& p) {
 void encode(QJsonObject& o, const Produce& p) {
   o["building"] = id_to_json(p.building);
   o["product"] = QString::fromStdString(Game::Units::troop_typeToString(p.product));
+  if (p.count != 1) {
+    o["count"] = p.count;
+  }
+  if (p.toggle_repeat) {
+    o["toggle_repeat"] = true;
+  }
+  if (p.band_nation.has_value()) {
+    o["band_nation"] = Game::Systems::nation_id_to_qstring(*p.band_nation);
+  }
 }
 void encode(QJsonObject& o, const Trade& p) {
   o["resource"] = QLatin1String(Game::Systems::resource_type_key(p.resource));
@@ -296,6 +309,9 @@ void encode(QJsonObject& o, const StartConstruction& p) {
   o["construction_type"] = QString::fromStdString(p.construction_type);
   o["site"] = vec_to_json(p.site);
   o["rotation_y"] = static_cast<double>(p.rotation_y);
+  if (p.queue) {
+    o["queue"] = true;
+  }
 }
 void encode(QJsonObject& o, const StartHarvest& p) {
   o["units"] = ids_to_json(p.units);
@@ -394,6 +410,10 @@ auto decode<SetGateMode>(Reader& r) -> SetGateMode {
                                 Engine::Core::GateComponent::ManualMode::ForcedClosed)};
 }
 template <>
+auto decode<SetHomeReporting>(Reader& r) -> SetHomeReporting {
+  return {.units = r.ids("units"), .active = r.boolean("active")};
+}
+template <>
 auto decode<SetAutoGather>(Reader& r) -> SetAutoGather {
   return {.units = r.ids("units"),
           .active = r.boolean("active"),
@@ -401,8 +421,18 @@ auto decode<SetAutoGather>(Reader& r) -> SetAutoGather {
 }
 template <>
 auto decode<Produce>(Reader& r) -> Produce {
-  return {.building = r.id("building"),
-          .product = Game::Units::troop_typeFromString(r.text("product"))};
+  Produce p{.building = r.id("building"),
+            .product = Game::Units::troop_typeFromString(r.text("product"))};
+  if (r.has("count")) {
+    p.count = r.integer("count");
+  }
+  if (r.has("toggle_repeat")) {
+    p.toggle_repeat = r.boolean("toggle_repeat");
+  }
+  if (r.has("band_nation")) {
+    p.band_nation = Game::Systems::nation_id_from_string(r.text("band_nation"));
+  }
+  return p;
 }
 template <>
 auto decode<Trade>(Reader& r) -> Trade {
@@ -475,10 +505,14 @@ auto decode<ReleaseFormation>(Reader& r) -> ReleaseFormation {
 }
 template <>
 auto decode<StartConstruction>(Reader& r) -> StartConstruction {
-  return {.units = r.ids("units"),
-          .construction_type = r.text("construction_type"),
-          .site = r.vec("site"),
-          .rotation_y = r.real("rotation_y")};
+  StartConstruction p{.units = r.ids("units"),
+                      .construction_type = r.text("construction_type"),
+                      .site = r.vec("site"),
+                      .rotation_y = r.real("rotation_y")};
+  if (r.has("queue")) {
+    p.queue = r.boolean("queue");
+  }
+  return p;
 }
 template <>
 auto decode<StartHarvest>(Reader& r) -> StartHarvest {

@@ -21,6 +21,7 @@
         <file>assets/shaders/include/material_detail.glsl</file>
         <file>assets/shaders/include/biome_palette.glsl</file>
         <file>assets/shaders/include/ground_readability.glsl</file>
+        <file>assets/shaders/include/ground_shade.glsl</file>
         <file>assets/shaders/include/character_wear.glsl</file>
         <file>assets/shaders/include/character_shading.glsl</file>
         <file>assets/shaders/include/terrain_noise.glsl</file>

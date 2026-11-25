@@ -32,6 +32,10 @@ struct DoctrineRecruitment {
 
   float siege_share = 0.0F;
 
+  // Of the gold the treasury can spare, the share spent hiring mercenary bands
+  // (NATION_ASYMMETRY.md section 9: Hannibal 0.6, Hasdrubal 0.5, Hanno 0.3).
+  float mercenary_share = 0.0F;
+
   std::vector<std::string> preferred;
 };
 

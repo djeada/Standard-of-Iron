@@ -161,6 +161,14 @@ auto building_display_name(Game::Units::SpawnType type) -> QString {
     return QCoreApplication::translate("FocusTarget", "Temple");
   case Game::Units::SpawnType::Farm:
     return QCoreApplication::translate("FocusTarget", "Farm");
+  case Game::Units::SpawnType::MercenaryCamp:
+    return QCoreApplication::translate("FocusTarget", "Mercenary Camp");
+  case Game::Units::SpawnType::ElephantStables:
+    return QCoreApplication::translate("FocusTarget", "Elephant Stables");
+  case Game::Units::SpawnType::Fabrica:
+    return QCoreApplication::translate("FocusTarget", "Fabrica");
+  case Game::Units::SpawnType::Castra:
+    return QCoreApplication::translate("FocusTarget", "Castra");
   default:
     break;
   }
@@ -175,6 +183,11 @@ auto is_sepulcher_shrine(const Engine::Core::UnitComponent& unit) -> bool {
 auto building_display_name(const Engine::Core::UnitComponent& unit) -> QString {
   if (is_sepulcher_shrine(unit)) {
     return QCoreApplication::translate("FocusTarget", "Sepulcher Shrine");
+  }
+  // Carthage's trade house is the Emporion (NATION_ASYMMETRY.md section 4.1).
+  if (unit.spawn_type == Game::Units::SpawnType::Marketplace &&
+      unit.nation_id == Game::Systems::NationID::Carthage) {
+    return QCoreApplication::translate("FocusTarget", "Emporion");
   }
   return building_display_name(unit.spawn_type);
 }
@@ -202,6 +215,7 @@ auto focus_target_to_variant(const FocusTargetInfo& info) -> QVariantMap {
   map[QStringLiteral("attackedBySelection")] = info.attacked_by_selection;
   map[QStringLiteral("attackedByLocal")] = info.attacked_by_local;
   map[QStringLiteral("attackersIncoming")] = info.attackers_incoming;
+  map[QStringLiteral("captureSeconds")] = info.capture_seconds;
   return map;
 }
 

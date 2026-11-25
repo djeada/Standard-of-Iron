@@ -331,12 +331,6 @@ void GLView::GLRenderer::render() {
     const std::uint64_t simulation_us = m_engine->take_simulation_tick_us();
     profile.add_phase_us(Render::Profiling::Phase::Simulation, simulation_us);
 
-    double frame_interval_ms = 0.0;
-    if (m_last_frame_time.time_since_epoch().count() != 0) {
-      frame_interval_ms = std::chrono::duration<double, std::milli>(frame_work_start -
-                                                                    m_last_frame_time)
-                              .count();
-    }
     float dt = 1.0F / 60.0F;
     if (m_film_fps > 0) {
       dt = 1.0F / static_cast<float>(m_film_fps);
@@ -363,7 +357,6 @@ void GLView::GLRenderer::render() {
       m_software_blitter.release();
     }
     m_engine->notify_loading_frame_presented(rendered_load);
-    observe_frame_rate(frame_interval_ms, m_benchmark_seconds > 0.0 || m_film_fps > 0);
     if (m_item_pixel_size.isValid() && !m_resize_requested &&
         scaled_framebuffer_size(m_item_pixel_size) != m_size && m_view != nullptr) {
       // The preset's render scale changed. synchronize() only runs when the
@@ -413,25 +406,6 @@ void GLView::GLRenderer::render() {
   }
   if (m_item_visible) {
     update();
-  }
-}
-
-void GLView::GLRenderer::observe_frame_rate(double frame_interval_ms,
-                                            bool cadence_exempt) {
-  auto& graphics = Render::GraphicsSettings::instance();
-  const bool eligible = !cadence_exempt && m_cadence.window_active() &&
-                        m_engine->last_render_was_gameplay();
-  const auto lower = m_quality_governor.observe(frame_interval_ms,
-                                                eligible,
-                                                graphics.quality(),
-                                                graphics.quality_chosen_by_user());
-  if (!lower.has_value()) {
-    return;
-  }
-  if (graphics.lower_quality_automatically(*lower)) {
-    qInfo() << "GLView: battle frame rate stayed below"
-            << qRound(1000.0 / m_quality_governor.policy().slow_frame_ms)
-            << "fps; lowering graphics to" << Render::graphics_quality_key(*lower);
   }
 }
 

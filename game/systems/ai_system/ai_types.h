@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -14,6 +15,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
 #include "../alliance_board.h"
+#include "../nation_id.h"
 #include "../resource_types.h"
 #include "../site_keep_out.h"
 
@@ -218,6 +220,10 @@ struct EntitySnapshot {
 
   bool crop_is_ripe = false;
 
+  // A hired band's upkeep a minute (NATION_ASYMMETRY.md 4.2); 0 for the
+  // owner's own troops.
+  int upkeep_per_minute = 0;
+
   MovementSnapshot movement;
   ProductionSnapshot production;
   BuilderProductionSnapshot builder_production;
@@ -340,6 +346,10 @@ struct AISnapshot {
   std::uint64_t navigation_revision = 0U;
 
   float game_time = 0.0F;
+
+  // Seconds until this owner's next levy (Rome's dilectus), or negative when
+  // its nation has none (NATION_ASYMMETRY.md 3.1).
+  float seconds_to_next_levy = -1.0F;
 };
 
 struct AIStrategyConfig {
@@ -360,6 +370,10 @@ struct AIStrategyConfig {
   AIPosture posture = AIPosture::Field;
   PersonalityInputs personality;
   DifficultyTuning difficulty;
+
+  // false for an authored outpost (mission ai_setups "economy": false): the side
+  // fights with what the map gave it and never builds, gathers, recruits or expands.
+  bool runs_economy = true;
 
   const AIDoctrine* doctrine = nullptr;
 
@@ -397,6 +411,7 @@ struct AIStrategyConfig {
 struct AIPlayerProfile {
   AIStrategy strategy = AIStrategy::Balanced;
   AIPosture posture = AIPosture::Field;
+  bool runs_economy = true;
   AIStrategyConfig::PersonalityInputs personality;
   QString difficulty;
   const AIDoctrine* doctrine = nullptr;
@@ -650,6 +665,8 @@ struct AICommand {
   bool sally = false;
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
+  // A mercenary band's nation when hiring at a Mercenary Camp.
+  std::optional<Game::Systems::NationID> band_nation;
 
   const char* construction_type = nullptr;
   float construction_site_x = 0.0F;

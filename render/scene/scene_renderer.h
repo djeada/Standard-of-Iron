@@ -660,7 +660,7 @@ private:
   bool m_loading_overlay_active = false;
   bool m_forbids_runtime_bake = false;
   // Graphics preset generation the unit templates were prewarmed for. A
-  // preset change mid-match (Settings, or the automatic step-down) needs
+  // preset change mid-match (from Settings) needs
   // templates at LODs nobody prewarmed, so the bake ban is lifted then.
   std::uint32_t m_prewarmed_graphics_generation = 0;
 

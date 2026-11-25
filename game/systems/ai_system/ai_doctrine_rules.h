@@ -6,6 +6,8 @@ namespace Game::Systems::AI {
 
 [[nodiscard]] auto holds_garrison(const AIStrategyConfig& strategy) -> bool;
 [[nodiscard]] auto can_initiate_attack(const AIStrategyConfig& strategy) -> bool;
+// A nation without an economy (the undead), or an owner whose mission runs it as
+// an outpost without one: no building, gathering, recruiting or expanding.
 [[nodiscard]] auto is_no_economy_nation(const AIContext& ctx) -> bool;
 
 [[nodiscard]] auto reactive_attack_size(const AIStrategyConfig& strategy) -> int;

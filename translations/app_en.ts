@@ -304,6 +304,10 @@
         <source>Ask allies to defend this barracks.</source>
         <translation>Ask allies to defend this barracks.</translation>
     </message>
+    <message>
+        <source>Levy in %1s</source>
+        <translation>Levy in %1s</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -367,6 +371,10 @@
         <source>Retry mission</source>
         <translation>Retry mission</translation>
     </message>
+    <message>
+        <source>%1 fell to wild beasts and the restless dead, and are credited to no army.</source>
+        <translation>%1 fell to wild beasts and the restless dead, and are credited to no army.</translation>
+    </message>
 </context>
 <context>
     <name>BattleSummary</name>
@@ -375,12 +383,12 @@
         <translation>Retry mission</translation>
     </message>
     <message>
-        <source>Play again</source>
-        <translation>Play again</translation>
-    </message>
-    <message>
         <source>Held the field: %1</source>
         <translation>Held the field: %1</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Fight it again</translation>
     </message>
 </context>
 <context>
@@ -3030,6 +3038,24 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>ControlGroupStrip</name>
+    <message>
+        <source>Control groups</source>
+        <translation>Control groups</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2</source>
+        <translation>%1  ·  %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Control group %1 holds %n unit(s). Click, or press %1, to select it.</source>
+        <translation>
+            <numerusform>Control group %1 holds %n unit. Click, or press %1, to select it.</numerusform>
+            <numerusform>Control group %1 holds %n units. Click, or press %1, to select it.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
@@ -3439,16 +3465,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Your settlement runs itself</translation>
     </message>
     <message>
-        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
-        <translation>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</translation>
-    </message>
-    <message>
         <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
         <translation>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</translation>
-    </message>
-    <message>
-        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
-        <translation>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -3505,6 +3523,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
         <translation>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</translation>
+    </message>
+    <message>
+        <source>Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.</source>
+        <translation>Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.</translation>
+    </message>
+    <message>
+        <source>Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.</source>
+        <translation>Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.</source>
+        <translation>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.</translation>
     </message>
 </context>
 <context>
@@ -3708,6 +3738,26 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Ladder</source>
         <translation>Ladder</translation>
+    </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Mercenary Camp</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Elephant Stables</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Fabrica</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Castra</translation>
+    </message>
+    <message>
+        <source>Emporion</source>
+        <translation>Emporion</translation>
     </message>
 </context>
 <context>
@@ -4603,6 +4653,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Group %1 cleared</source>
         <translation>Group %1 cleared</translation>
+    </message>
+    <message>
+        <source>No idle builders</source>
+        <translation>No idle builders</translation>
     </message>
 </context>
 <context>
@@ -5694,6 +5748,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>the whole field</source>
         <translation>the whole field</translation>
     </message>
+    <message>
+        <source>Kills %1  Losses %2 (%3 wild)</source>
+        <translation>Kills %1  Losses %2 (%3 wild)</translation>
+    </message>
 </context>
 <context>
     <name>HUDTop</name>
@@ -6461,6 +6519,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
         <translation>Your allied commanders send men to hold this building if they are willing and have men to spare.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it, three times its defenders, for %1 s.</source>
+        <translation>Can be captured: keep your troops beside it, three times its defenders, for %1 s.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it for %1 s.</source>
+        <translation>Can be captured: keep your troops beside it for %1 s.</translation>
     </message>
 </context>
 <context>
@@ -7311,14 +7377,6 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Quit</source>
         <translation>Quit</translation>
     </message>
-    <message>
-        <source>Graphics lowered to %1 to keep the battle smooth</source>
-        <translation>Graphics lowered to %1 to keep the battle smooth</translation>
-    </message>
-    <message>
-        <source>Pick a preset in Settings to keep your own choice.</source>
-        <translation>Pick a preset in Settings to keep your own choice.</translation>
-    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7413,10 +7471,6 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>SECOND PUNIC WAR</source>
         <translation>SECOND PUNIC WAR</translation>
-    </message>
-    <message>
-        <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>Legions, fleets, elephants, and contested supply lines</translation>
     </message>
     <message>
         <source>SPQR</source>
@@ -7553,6 +7607,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Abandon</source>
         <translation>Abandon</translation>
+    </message>
+    <message>
+        <source>Legions, war elephants, walled towns, and contested supply lines</source>
+        <translation>Legions, war elephants, walled towns, and contested supply lines</translation>
     </message>
 </context>
 <context>
@@ -8641,10 +8699,6 @@ to see preview</translation>
     <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
         <translation>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</translation>
-    </message>
-    <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
@@ -9927,10 +9981,6 @@ to see preview</translation>
         <translation>Winter 218 BC: after the victory on the Trebia, Hannibal attacked the depot near Placentia and then stormed Victumulae, a fortified market of the Insubrian plain where the people of the district had gathered for safety. Livy records that it fell to assault and was sacked. This altered history gives the town a Roman praefect, a citadel garrison and a relief force on the Placentia road.</translation>
     </message>
     <message>
-        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
-        <translation>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</translation>
-    </message>
-    <message>
         <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
         <translation>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</translation>
     </message>
@@ -10374,6 +10424,18 @@ to see preview</translation>
         <source>The third rising</source>
         <translation>The third rising</translation>
     </message>
+    <message>
+        <source>Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river.</translation>
+    </message>
+    <message>
+        <source>So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.</translation>
+    </message>
+    <message>
+        <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
+        <translation>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10516,6 +10578,25 @@ to see preview</translation>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>NationEconomy</name>
+    <message>
+        <source>The mercenaries were not paid. They fight without heart until the treasury can pay them.</source>
+        <translation>The mercenaries were not paid. They fight without heart until the treasury can pay them.</translation>
+    </message>
+    <message>
+        <source>Levy day: %1 citizens answer the call to arms.</source>
+        <translation>Levy day: %1 citizens answer the call to arms.</translation>
+    </message>
+    <message>
+        <source>A cohort of hastati has come through two battles. They fight as principes now.</source>
+        <translation>A cohort of hastati has come through two battles. They fight as principes now.</translation>
+    </message>
+    <message>
+        <source>A cohort of principes has seen enough battles to stand with the veterans.</source>
+        <translation>A cohort of principes has seen enough battles to stand with the veterans.</translation>
     </message>
 </context>
 <context>
@@ -11226,6 +11307,102 @@ Build time: %3s</translation>
         <source>Market</source>
         <translation>Market</translation>
     </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Mercenary Camp</translation>
+    </message>
+    <message>
+        <source>Mercenaries</source>
+        <translation>Mercenaries</translation>
+    </message>
+    <message>
+        <source>Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold
+Every band is paid each minute; also takes in gathered goods</source>
+        <translation>Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold
+Every band is paid each minute; also takes in gathered goods</translation>
+    </message>
+    <message>
+        <source>Build Mercenary Camp
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Mercenary Camp
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Elephant Stables</translation>
+    </message>
+    <message>
+        <source>Stables</source>
+        <translation>Stables</translation>
+    </message>
+    <message>
+        <source>The only place war elephants come from
+Each costs gold and food, at most eight alive</source>
+        <translation>The only place war elephants come from
+Each costs gold and food, at most eight alive</translation>
+    </message>
+    <message>
+        <source>Build Elephant Stables
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Elephant Stables
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Fabrica</translation>
+    </message>
+    <message>
+        <source>The legion&apos;s armoury
+Infantry cost a third less iron; triarii need one</source>
+        <translation>The legion&apos;s armoury
+Infantry cost a third less iron; triarii need one</translation>
+    </message>
+    <message>
+        <source>Build Fabrica
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Fabrica
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Castra</translation>
+    </message>
+    <message>
+        <source>A marching camp
+Takes in gathered goods and heals troops resting inside</source>
+        <translation>A marching camp
+Takes in gathered goods and heals troops resting inside</translation>
+    </message>
+    <message>
+        <source>Build Castra
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Castra
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Building: %1 (+%2 queued)</source>
+        <translation>Building: %1 (+%2 queued)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.</source>
+        <translation>The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionConstructionCard</name>
@@ -11289,6 +11466,41 @@ Build time: %3s</translation>
     </message>
 </context>
 <context>
+    <name>ProductionHiringSection</name>
+    <message>
+        <source>MERCENARY CAMP</source>
+        <translation>MERCENARY CAMP</translation>
+    </message>
+    <message>
+        <source>ELEPHANT STABLES</source>
+        <translation>ELEPHANT STABLES</translation>
+    </message>
+    <message>
+        <source>Hire a whole band for gold. No reserve, no iron - but every band is paid every minute.</source>
+        <translation>Hire a whole band for gold. No reserve, no iron - but every band is paid every minute.</translation>
+    </message>
+    <message>
+        <source>Elephants for gold and food. No reserve; at most eight alive.</source>
+        <translation>Elephants for gold and food. No reserve; at most eight alive.</translation>
+    </message>
+    <message>
+        <source>Upkeep %1 gold a minute - trade brings %2</source>
+        <translation>Upkeep %1 gold a minute - trade brings %2</translation>
+    </message>
+    <message>
+        <source>Contract signed - %1s</source>
+        <translation>Contract signed - %1s</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold, %3 food</source>
+        <translation>%1 men - %2 gold, %3 food</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold - upkeep %3 a minute</source>
+        <translation>%1 men - %2 gold - upkeep %3 a minute</translation>
+    </message>
+</context>
+<context>
     <name>ProductionHomeSection</name>
     <message>
         <source>HOME RECRUITMENT</source>
@@ -11299,22 +11511,38 @@ Build time: %3s</translation>
         <translation>Available civilians: %1 / %2</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</translation>
-    </message>
-    <message>
         <source>families</source>
         <translation>families</translation>
     </message>
     <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>This home already committed its 3 civilians</translation>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Civilians walk to a barracks with room and add to its reserve.</source>
+        <translation>Recruit %1
+Cost: %2
+Build time: %3s
+Civilians walk to a barracks with room and add to its reserve.</translation>
+    </message>
+    <message>
+        <source>This home has raised all %1 of its civilians</source>
+        <translation>This home has raised all %1 of its civilians</translation>
+    </message>
+    <message>
+        <source>Raise and send civilians</source>
+        <translation>Raise and send civilians</translation>
+    </message>
+    <message>
+        <source>This home raises its civilians while food allows, and they walk to a barracks with room on their own</source>
+        <translation>This home raises its civilians while food allows, and they walk to a barracks with room on their own</translation>
+    </message>
+    <message>
+        <source>On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.</source>
+        <translation>On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.</translation>
+    </message>
+    <message>
+        <source>Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.</source>
+        <translation>Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.</translation>
     </message>
 </context>
 <context>
@@ -11506,10 +11734,6 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</transla
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>Queue is full (5/5)</source>
-        <translation>Queue is full (5/5)</translation>
-    </message>
-    <message>
         <source>Cannot recruit</source>
         <translation>Cannot recruit</translation>
     </message>
@@ -11604,18 +11828,6 @@ Opens for your troops and allies</translation>
         <translation>Not enough reserve</translation>
     </message>
     <message>
-        <source>Already building...</source>
-        <translation>Already building...</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>Recruit %1
-Cost: %2
-Build time: %3s</translation>
-    </message>
-    <message>
         <source>reserve</source>
         <translation>reserve</translation>
     </message>
@@ -11682,6 +11894,32 @@ Infantry beside it climb up and cross</translation>
 Another way up onto the wall walk</source>
         <translation>Leans on the town side of your wall
 Another way up onto the wall walk</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Shift-click queues five, Ctrl-click keeps recruiting</source>
+        <translation>Recruit %1
+Cost: %2
+Build time: %3s
+Shift-click queues five, Ctrl-click keeps recruiting</translation>
+    </message>
+    <message>
+        <source>Your marketplace sells iron for gold.</source>
+        <translation>Your marketplace sells iron for gold.</translation>
+    </message>
+    <message>
+        <source>Build a marketplace to buy iron with gold.</source>
+        <translation>Build a marketplace to buy iron with gold.</translation>
+    </message>
+    <message>
+        <source>Queue is full (%1/%1)</source>
+        <translation>Queue is full (%1/%1)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. Walls can be planned once they finish, or with another builder squad.</source>
+        <translation>The builders are busy. Walls can be planned once they finish, or with another builder squad.</translation>
     </message>
 </context>
 <context>
@@ -12189,6 +12427,14 @@ Right-click to cancel.</translation>
         <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
         <translation>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</translation>
     </message>
+    <message>
+        <source>Select idle builders</source>
+        <translation>Select idle builders</translation>
+    </message>
+    <message>
+        <source>Selects every builder squad that has no job and centres the view on them.</source>
+        <translation>Selects every builder squad that has no job and centres the view on them.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12199,6 +12445,10 @@ Right-click to cancel.</translation>
     <message>
         <source>Show unit details</source>
         <translation>Show unit details</translation>
+    </message>
+    <message>
+        <source>Recruiting on repeat. Ctrl-click to stop.</source>
+        <translation>Recruiting on repeat. Ctrl-click to stop.</translation>
     </message>
 </context>
 <context>
@@ -12241,6 +12491,45 @@ Right-click to cancel.</translation>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Enemies are climbing below your stones. Roll them!</translation>
+    </message>
+</context>
+<context>
+    <name>RosterCommands</name>
+    <message>
+        <source>Triarii are armed at a Fabrica. Build one first.</source>
+        <translation>Triarii are armed at a Fabrica. Build one first.</translation>
+    </message>
+    <message>
+        <source>This troop needs another building first.</source>
+        <translation>This troop needs another building first.</translation>
+    </message>
+    <message>
+        <source>You already field the most of these: %1 squads.</source>
+        <translation>You already field the most of these: %1 squads.</translation>
+    </message>
+    <message>
+        <source>the reserve ran out</source>
+        <translation>the reserve ran out</translation>
+    </message>
+    <message>
+        <source>the stores ran short</source>
+        <translation>the stores ran short</translation>
+    </message>
+    <message>
+        <source>the army is at its cap</source>
+        <translation>the army is at its cap</translation>
+    </message>
+    <message>
+        <source>the building is full</source>
+        <translation>the building is full</translation>
+    </message>
+    <message>
+        <source>the queue is full</source>
+        <translation>the queue is full</translation>
+    </message>
+    <message>
+        <source>Queued %1 of %2 recruits: %3.</source>
+        <translation>Queued %1 of %2 recruits: %3.</translation>
     </message>
 </context>
 <context>
@@ -13919,10 +14208,6 @@ Right-click to cancel.</translation>
         <translation>African War Elephant</translation>
     </message>
     <message>
-        <source>Auxiliary Archer</source>
-        <translation>Auxiliary Archer</translation>
-    </message>
-    <message>
         <source>Carthaginian Ballista</source>
         <translation>Carthaginian Ballista</translation>
     </message>
@@ -13941,10 +14226,6 @@ Right-click to cancel.</translation>
     <message>
         <source>Faber</source>
         <translation>Faber</translation>
-    </message>
-    <message>
-        <source>Legionary</source>
-        <translation>Legionary</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
@@ -14485,6 +14766,18 @@ Right-click to cancel.</translation>
     <message>
         <source>Vulnerable to cavalry and sustained melee.</source>
         <translation>Vulnerable to cavalry and sustained melee.</translation>
+    </message>
+    <message>
+        <source>Cretan Archers</source>
+        <translation>Cretan Archers</translation>
+    </message>
+    <message>
+        <source>Hastati</source>
+        <translation>Hastati</translation>
+    </message>
+    <message>
+        <source>Numidian Javelin Riders</source>
+        <translation>Numidian Javelin Riders</translation>
     </message>
 </context>
 <context>

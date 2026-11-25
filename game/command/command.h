@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -78,6 +79,11 @@ struct SetGateMode {
       Engine::Core::GateComponent::ManualMode::Automatic};
 };
 
+struct SetHomeReporting {
+  std::vector<Engine::Core::EntityID> units;
+  bool active = true;
+};
+
 struct SetAutoGather {
   std::vector<Engine::Core::EntityID> units;
   bool active = true;
@@ -88,6 +94,14 @@ struct SetAutoGather {
 struct Produce {
   Engine::Core::EntityID building = Engine::Core::NULL_ENTITY;
   Game::Units::TroopType product = Game::Units::TroopType::Archer;
+
+  int count = 1;
+
+  bool toggle_repeat = false;
+
+  // The nation of a mercenary band hired at a Mercenary Camp
+  // (NATION_ASYMMETRY.md 4.2); empty for the owner's own troops.
+  std::optional<Game::Systems::NationID> band_nation;
 };
 
 enum class TradeDirection : std::uint8_t {
@@ -161,6 +175,8 @@ struct StartConstruction {
   std::string construction_type;
   QVector3D site;
   float rotation_y = 0.0F;
+
+  bool queue = false;
 };
 
 struct PlaceWallPlan {
@@ -241,7 +257,8 @@ using Payload = std::variant<Move,
                              AllyCall,
                              AllyAppealAnswer,
                              RollStones,
-                             CrossByRaft>;
+                             CrossByRaft,
+                             SetHomeReporting>;
 
 struct Command {
   Source source = Source::LocalPlayer;

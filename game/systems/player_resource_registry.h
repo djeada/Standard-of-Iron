@@ -22,7 +22,13 @@ public:
   void clear() {
     m_resources_by_owner.clear();
     m_harvested_by_owner.clear();
+    m_idle_builders_gather = false;
   }
+
+  // Match rule: idle builder crews start gathering on their own. Lives with the
+  // economy so the production system can read it without depending on the session.
+  void set_idle_builders_gather(bool enabled) { m_idle_builders_gather = enabled; }
+  [[nodiscard]] auto idle_builders_gather() const -> bool { return m_idle_builders_gather; }
 
   void ensure_owner(int owner_id) {
     if (owner_id <= 0) {
@@ -109,6 +115,7 @@ public:
 
 private:
   using OwnerAmounts = std::unordered_map<int, ResourceAmounts>;
+  bool m_idle_builders_gather = false;
 
   [[nodiscard]] static auto
   build_snapshot(const OwnerAmounts& source) -> std::vector<OwnerResourceState> {

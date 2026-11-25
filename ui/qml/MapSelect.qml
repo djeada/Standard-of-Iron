@@ -770,14 +770,13 @@ Item {
         players_model.setProperty(index, "nationId", nextNation.id);
         players_model.setProperty(index, "nationName", nextNation.name);
         apply_commander(index, nextCommander);
-        if (!p.colorPicked) {
-            let usedColors = [];
-            for (let i = 0; i < players_model.count; i++) {
-                if (i !== index)
-                    usedColors.push(players_model.get(i).colorIndex);
-            }
-            set_player_color(index, preferred_color_index(nextNation.id, usedColors));
+        let usedColors = [];
+        for (let i = 0; i < players_model.count; i++) {
+            if (i !== index)
+                usedColors.push(players_model.get(i).colorIndex);
         }
+        if (usedColors.indexOf(p.colorIndex) !== -1)
+            set_player_color(index, preferred_color_index(nextNation.id, usedColors));
         refresh_map_preview();
     }
 
@@ -1154,6 +1153,13 @@ Item {
                                 Layout.fillWidth: true
                             }
 
+                            Text {
+                                text: qsTr("Loading maps...")
+                                visible: maps_loading && list.count > 0
+                                color: Theme.textSubLite
+                                font.pixelSize: Design.Typography.caption
+                            }
+
                             Design.IronBadge {
                                 text: Design.Numerals.grouped(list.count)
                                 visible: list.count > 0
@@ -1181,7 +1187,7 @@ Item {
                                 currentIndex: (count > 0 ? 0 : -1)
                                 keyNavigationWraps: false
                                 boundsBehavior: Flickable.StopAtBounds
-                                visible: !maps_loading && count > 0
+                                visible: count > 0
                                 onCurrentIndexChanged: select_map(currentIndex)
 
                                 ScrollBar.vertical: ScrollBar {
@@ -1348,7 +1354,7 @@ Item {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: Theme.spacingSmall
-                                visible: maps_loading
+                                visible: maps_loading && list.count === 0
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -1617,7 +1623,7 @@ Item {
 
                                     objectName: "rosterSeatCard"
                                     width: players_list.width - (players_list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
-                                    height: 68
+                                    height: 84
                                     radius: Theme.radiusSmall
                                     color: player_card.focused ? "#493126" : (model.isHuman ? "#30231a" : "#251d17")
                                     border.color: player_card.focused ? Theme.accentBright : (model.isEnabled ? "#61482e" : "#463522")
@@ -1729,7 +1735,7 @@ Item {
                                         SkirmishChip {
                                             Layout.fillWidth: true
                                             Layout.preferredWidth: 170
-                                            Layout.minimumWidth: 80
+                                            Layout.minimumWidth: 100
                                             caption: qsTr("Nation")
                                             value: model.nationName || qsTr("Nation")
                                             emblem_source: root.nation_emblem_for(model.nationId)
@@ -1741,7 +1747,7 @@ Item {
                                         SkirmishChip {
                                             Layout.fillWidth: true
                                             Layout.preferredWidth: 170
-                                            Layout.minimumWidth: 80
+                                            Layout.minimumWidth: 100
                                             caption: qsTr("Commander")
                                             value: model.commanderName || qsTr("Commander")
                                             interactive: true

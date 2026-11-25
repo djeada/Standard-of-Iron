@@ -14,7 +14,7 @@ Rectangle {
     property var player_state: null
     readonly property var hs: StyleGuide.historical
     readonly property bool has_barracks_selection: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks"))
-    readonly property bool has_content: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks") || productionPanel.has_selected_type("builder") || productionPanel.has_selected_type("home") || productionPanel.has_selected_type("marketplace") || productionPanel.has_selected_type("temple") || productionPanel.has_selected_type("farm"))
+    readonly property bool has_content: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks") || productionPanel.has_selected_type("builder") || productionPanel.has_selected_type("home") || productionPanel.has_selected_type("marketplace") || productionPanel.has_selected_type("temple") || productionPanel.has_selected_type("farm") || productionPanel.has_selected_type("mercenary_camp") || productionPanel.has_selected_type("elephant_stables"))
     readonly property var barracks_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
     readonly property var barracks_ally_call: (productionPanel.selection_tick, (productionPanel.has_barracks_selection && productionPanel.production && productionPanel.production.ally_call_state) ? productionPanel.production.ally_call_state(productionPanel.production.selected_building_id()) : ({}))
 
@@ -76,7 +76,7 @@ Rectangle {
         var time = ((unitInfo && unitInfo.build_time) || fallbackTime).toFixed(0);
         if (carthageOnly)
             return qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nCarthage exclusive").arg(name).arg(cost).arg(time);
-        return qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(name).arg(cost).arg(time);
+        return qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nShift-click queues five, Ctrl-click keeps recruiting").arg(name).arg(cost).arg(time);
     }
     readonly property var marketplace_trade_specs: [{
             "key": "food",
@@ -245,7 +245,17 @@ Rectangle {
     }
 
     function missing_resource_reason(costs) {
-        return qsTr("Need %1").arg(EconomyGuide.missing_summary(missing_resource_amounts(costs)));
+        var missing = missing_resource_amounts(costs);
+        var reason = qsTr("Need %1").arg(EconomyGuide.missing_summary(missing));
+        if (missing.iron && resource_amount(current_resources(), "gold") > 0)
+            reason += "\n" + (owned_marketplaces() > 0 ? qsTr("Your marketplace sells iron for gold.") : qsTr("Build a marketplace to buy iron with gold."));
+        return reason;
+    }
+
+    function owned_marketplaces() {
+        if (typeof game === 'undefined' || !game.economy || !game.economy.help)
+            return 0;
+        return game.economy.help.marketplace_count || 0;
     }
 
     function cost_entries(reserveCost, resourceCosts, includeReserve) {
@@ -312,10 +322,11 @@ Rectangle {
                 "enabled": false,
                 "reason": qsTr("Cannot recruit")
             };
-        if (queueTotal >= 5)
+        var queueLimit = prod.has_barracks ? 10 : 5;
+        if (queueTotal >= queueLimit)
             return {
                 "enabled": false,
-                "reason": qsTr("Queue is full (5/5)")
+                "reason": qsTr("Queue is full (%1/%1)").arg(queueLimit)
             };
         if ((prod.manpower_available || 0) < reserveCost)
             return {
@@ -333,11 +344,12 @@ Rectangle {
         };
     }
 
-    function construction_card_state(builderProd, constructionInfo) {
-        if (builderProd.in_progress && !builderProd.gathering)
+    function construction_card_state(builderProd, constructionInfo, itemType) {
+        var wallItem = itemType === "wall_segment" || itemType === "wall_gate" || itemType === "wall_ladder";
+        if (builderProd.in_progress && !builderProd.gathering && wallItem)
             return {
                 "enabled": false,
-                "reason": qsTr("Already building...")
+                "reason": qsTr("The builders are busy. Walls can be planned once they finish, or with another builder squad.")
             };
         if (!can_afford_resource_costs(constructionInfo.resource_costs || {}))
             return {
@@ -467,6 +479,10 @@ Rectangle {
             }
 
             ProductionTempleSection {
+                panel: productionPanel
+            }
+
+            ProductionHiringSection {
                 panel: productionPanel
             }
 

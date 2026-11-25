@@ -1,6 +1,7 @@
 #include "production_system.h"
 
 #include "core/world.h"
+#include "production_service.h"
 #include "production_system_builder.h"
 #include "production_system_site_ghosts.h"
 #include "production_system_training.h"
@@ -13,6 +14,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   ProductionTasks::tick_completion_effects(*world, delta_time);
+  ProductionService::top_up_repeats(*world);
   ProductionTasks::advance_unit_training(*world, delta_time);
   ProductionTasks::advance_builders(*world, delta_time);
   ProductionTasks::sync_site_ghosts(*world);

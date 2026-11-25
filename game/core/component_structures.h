@@ -66,6 +66,15 @@ public:
   bool reserve_short{false};
   std::vector<Game::Units::TroopType> production_queue;
 
+  bool repeat_active{false};
+  Game::Units::TroopType repeat_product{Game::Units::TroopType::Archer};
+
+  // The nation of the squad in training when it is not the owner's own: a
+  // mercenary band (NATION_ASYMMETRY.md 4.2). A hiring building holds one
+  // contract at a time, so this covers the job in progress only.
+  bool has_product_nation{false};
+  Game::Systems::NationID product_nation{Game::Systems::NationID::RomanRepublic};
+
   bool assembly_cached{false};
   float assembly_x{0.0F};
   float assembly_z{0.0F};

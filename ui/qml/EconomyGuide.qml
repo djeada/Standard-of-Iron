@@ -221,12 +221,14 @@ QtObject {
         switch (step) {
         case "gather":
             if (!state || (state.builder_count || 0) <= 0)
-                return qsTr("Recruit a builder at a barracks, then send it to collect wood, stone or iron.");
+                return qsTr("Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.");
+            if ((state.builder_count || 0) < 4)
+                return qsTr("Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.");
             return qsTr("Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.");
         case "build":
             return qsTr("With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.");
         case "recruit":
-            return qsTr("Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.");
+            return qsTr("Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.");
         case "army":
             return qsTr("Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.");
         }
