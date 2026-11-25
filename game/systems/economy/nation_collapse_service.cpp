@@ -41,8 +41,8 @@ void tear_down_structure(Engine::Core::World& world, Engine::Core::Entity& entit
 void disband_troop(Engine::Core::Entity& entity, Engine::Core::UnitComponent& unit) {
   unit.health = 0;
   Engine::Core::begin_death_sequence(entity, 0U);
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitDiedEvent(entity.get_id(), unit.owner_id, unit.spawn_type));
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
+      entity.get_id(), unit.owner_id, unit.spawn_type, 0U, 0, true));
 }
 
 } // namespace

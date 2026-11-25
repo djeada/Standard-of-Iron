@@ -182,6 +182,20 @@ TestCase {
         verify(without.indexOf("builder") >= 0);
     }
 
+    function test_the_opening_line_teaches_three_builders_then_homes() {
+        var opening = EconomyGuide.coach_body("gather", {
+                "builder_count": 1
+            });
+        verify(opening.indexOf("three builders") >= 0 && opening.indexOf("Homes") >= 0 && opening.indexOf("Civilians become soldiers") >= 0, opening);
+        var crewed = EconomyGuide.coach_body("gather", {
+                "builder_count": 4
+            });
+        verify(crewed.indexOf("three builders") < 0, "a player with a crew of builders no longer needs the opening: " + crewed);
+        verify(EconomyGuide.coach_body("recruit", {
+                    "builder_count": 4
+                }).indexOf("Shift-click") >= 0, "the recruit step must teach the batch click");
+    }
+
     function test_the_coach_panel_shows_the_current_step() {
         var coach = coachComponent.createObject(testCase, {
                 "economy": testCase.mockEconomy

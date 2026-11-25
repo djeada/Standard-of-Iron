@@ -178,8 +178,49 @@ TestCase {
                 "gathering": false
             }, {
                 "resource_costs": {}
-            });
-        verify(!building.enabled);
+            }, "home");
+        verify(building.enabled, "a busy crew queues the next structure instead of refusing it");
+        var wall = panel.construction_card_state({
+                "in_progress": true,
+                "gathering": false
+            }, {
+                "resource_costs": {}
+            }, "wall_segment");
+        verify(!wall.enabled, "walls are planned, not queued; they wait for a free crew");
+        verify(wall.reason.indexOf("busy") !== -1, wall.reason);
+        panel.destroy();
+    }
+
+    QtObject {
+        id: constructingProduction
+
+        function has_selected_type(type) {
+            return type === "builder";
+        }
+
+        function selected_builder_state() {
+            return {
+                "in_progress": true,
+                "gathering": false,
+                "build_time": 10,
+                "time_remaining": 6,
+                "product_type": "home"
+            };
+        }
+    }
+
+    function test_busy_builders_say_what_happens_to_a_new_site() {
+        var idle = testCase.makePanel(builderProduction, null, fundedPlayer);
+        var gatheringNotes = testCase.collect(idle, "builderBusyNote");
+        compare(gatheringNotes.length, 1);
+        verify(!gatheringNotes[0].visible, "a worker at an ore seam is not building; no hold notice");
+        idle.destroy();
+        var panel = testCase.makePanel(constructingProduction, null, fundedPlayer);
+        var notes = testCase.collect(panel, "builderBusyNote");
+        compare(notes.length, 1);
+        verify(notes[0].visible, "a builder squad raising a Home greyed the grid out without a word");
+        verify(notes[0].text.indexOf("busy") !== -1, "the notice must name the reason: " + notes[0].text);
+        verify(notes[0].text.indexOf("queue") !== -1, "the notice must say what happens to a new site: " + notes[0].text);
         panel.destroy();
     }
 

@@ -451,6 +451,7 @@ void VictoryService::finalize_game(const QString& state) {
   if (stats != nullptr) {
     qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
             << "Enemies Killed:" << stats->enemies_killed << "Losses:" << stats->losses
+            << "(to wild:" << stats->losses_to_wild << ")"
             << "Barracks Owned:" << stats->barracks_owned
             << "Play Time:" << stats->play_time_sec << "seconds";
   }

@@ -63,10 +63,10 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanArcherLoadoutResolvesFootEquipment) {
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.bow, "bow_roman");
   EXPECT_EQ(loadout.ids.quiver, "quiver_roman");
-  EXPECT_EQ(loadout.ids.helmet, "roman_montefortino");
+  EXPECT_EQ(loadout.ids.helmet, "roman_light");
   EXPECT_EQ(loadout.ids.greaves, "roman_greaves");
   EXPECT_EQ(loadout.ids.armor, "roman_light_armor");
-  EXPECT_EQ(loadout.ids.cloak, "cloak_roman");
+  EXPECT_EQ(loadout.ids.cloak, "cloak_roman_auxiliary");
   EXPECT_NE(loadout.bow_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.quiver_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
@@ -157,7 +157,7 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanBuilderLoadoutResolvesSupportGear) {
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/builder");
 
   ASSERT_TRUE(loadout.found);
-  EXPECT_EQ(loadout.ids.helmet, "roman_light");
+  EXPECT_EQ(loadout.ids.helmet, "straw_hat");
   EXPECT_EQ(loadout.ids.tool_belt, "tool_belt_roman");
   EXPECT_EQ(loadout.ids.work_apron, "work_apron_roman");
   EXPECT_EQ(loadout.ids.arm_guards, "arm_guards_roman");
@@ -172,9 +172,11 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageBuilderLoadoutResolvesSupportGear) {
       Render::GL::Nation::resolve_equipment_loadout("troops/carthage/builder");
 
   ASSERT_TRUE(loadout.found);
+  EXPECT_EQ(loadout.ids.helmet, "craftsman_cap");
   EXPECT_EQ(loadout.ids.tool_belt, "tool_belt_carthage");
   EXPECT_EQ(loadout.ids.work_apron, "work_apron_carthage");
   EXPECT_EQ(loadout.ids.arm_guards, "arm_guards_carthage");
+  EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.tool_belt_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.work_apron_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.arm_guards_handle, k_invalid_equipment_handle);

@@ -26,6 +26,7 @@ Rectangle {
             "enabled": false,
             "reason": ""
         })
+    readonly property bool repeating: card.unit_type !== "" && card.prod.repeat_product === card.unit_type
     readonly property bool is_enabled: card.card_state.enabled
     readonly property bool is_hovered: recruitMouseArea.containsMouse
     readonly property bool is_active: card.is_hovered && card.is_enabled
@@ -90,6 +91,31 @@ Rectangle {
             color: card.is_enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
             font.pixelSize: Design.Typography.glyphSmall
             opacity: card.is_enabled ? 0.9 : 0.4
+        }
+    }
+
+    Rectangle {
+        id: repeatBadge
+
+        objectName: "recruitRepeatBadge"
+        z: 2
+        visible: card.repeating
+        anchors.left: portraitFrame.left
+        anchors.bottom: portraitFrame.bottom
+        width: repeatGlyph.implicitWidth + Design.Metrics.space4
+        height: repeatGlyph.implicitHeight + Design.Metrics.space2
+        radius: Design.Metrics.radiusSmall
+        color: Design.Theme.accent
+
+        Text {
+            id: repeatGlyph
+
+            anchors.centerIn: parent
+            text: Design.Icons.autoGather
+            color: Design.Theme.backgroundDeep
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            font.bold: true
         }
     }
 
@@ -237,7 +263,7 @@ Rectangle {
                 card.details_requested(card.unit_type, card.prod.nation_id || "");
                 return;
             }
-            if (card.is_enabled) {
+            if (card.is_enabled || card.repeating) {
                 card.recruit_requested(card.unit_type);
             } else {
                 Design.UiSound.warning();
@@ -245,7 +271,7 @@ Rectangle {
         }
         cursorShape: card.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
         ToolTip.visible: containsMouse
-        ToolTip.text: card.is_enabled ? card.tooltip_text : card.card_state.reason
+        ToolTip.text: (card.repeating ? qsTr("Recruiting on repeat. Ctrl-click to stop.") + "\n" : "") + (card.is_enabled ? card.tooltip_text : card.card_state.reason)
         ToolTip.delay: Design.Metrics.tooltipDelay
     }
 

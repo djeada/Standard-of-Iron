@@ -253,8 +253,9 @@ auto CommandController::merge_selected_squads() -> CommandResult {
 }
 
 void CommandController::recruit_near_selected(const QString& unit_type,
-                                              int local_owner_id) {
-  m_roster.recruit_near_selected(unit_type, local_owner_id);
+                                              int local_owner_id,
+                                              RecruitClick click) {
+  m_roster.recruit_near_selected(unit_type, local_owner_id, click);
 }
 
 auto CommandController::on_patrol_click(qreal sx,

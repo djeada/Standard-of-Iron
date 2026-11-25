@@ -29,6 +29,8 @@ using FinishedSites =
 auto refund_abandoned_site(Engine::Core::World& world,
                            Engine::Core::EntityID crew) -> bool;
 
+void refund_queued_sites(Engine::Core::World& world, Engine::Core::EntityID crew);
+
 void abandon_paid_site(Engine::Core::World& world,
                        Engine::Core::EntityID crew,
                        int owner_id,

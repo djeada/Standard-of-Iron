@@ -137,6 +137,7 @@ void OrderService::clear_builder_gather_order(Engine::Core::Entity* entity) {
           entity->get_component<Engine::Core::BuilderProductionComponent>()) {
     builder->clear_gather_order();
     builder->clear_auto_gather();
+    builder->clear_resume();
   }
 }
 
@@ -182,6 +183,7 @@ void OrderService::clear_builder_task(Engine::Core::World& world,
   builder->construction_site_entity_id = 0;
   builder->structure_task_entity_id = 0;
   builder->queued_construction_site_ids.clear();
+  builder->queued_structure_sites.clear();
   builder->site_approach_seconds = 0.0F;
   builder->site_closest_approach = 0.0F;
   builder->site_settle_seconds = 0.0F;

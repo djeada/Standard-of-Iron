@@ -947,6 +947,41 @@ TEST_F(ProductionManagerTest, ABallistaPlacedFromTheBuilderPanelSendsTheBuilder)
   EXPECT_EQ(builder_prod->product_type, "ballista");
 }
 
+TEST_F(ProductionManagerTest, ABusyCrewQueuesTheNextSiteInsteadOfDroppingTheFirst) {
+  auto* builder = add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+  const auto* builder_prod =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder_prod, nullptr);
+
+  manager.start_builder_construction(QStringLiteral("catapult"));
+  ASSERT_TRUE(manager.is_placing_construction());
+  const QPointF first = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(first.x(), first.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_valid())
+      << manager.construction_preview_reason().toStdString();
+  manager.on_construction_confirm();
+  ASSERT_TRUE(builder_prod->has_construction_site);
+  const float first_x = builder_prod->construction_site_x;
+  const float first_z = builder_prod->construction_site_z;
+
+  manager.start_builder_construction(QStringLiteral("ballista"));
+  ASSERT_TRUE(manager.is_placing_construction())
+      << "a crew raising one site must still be able to place the next";
+  const QPointF second = world_to_screen(QVector3D(-8.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(second.x(), second.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_valid())
+      << manager.construction_preview_reason().toStdString();
+  manager.on_construction_confirm();
+
+  EXPECT_EQ(builder_prod->product_type, "catapult")
+      << "placing a second site must not drop the one being raised";
+  EXPECT_FLOAT_EQ(builder_prod->construction_site_x, first_x);
+  EXPECT_FLOAT_EQ(builder_prod->construction_site_z, first_z);
+  ASSERT_EQ(builder_prod->queued_structure_sites.size(), 1U);
+  EXPECT_EQ(builder_prod->queued_structure_sites.front().construction_type, "ballista");
+}
+
 TEST_F(ProductionManagerTest, BuildingStillWaitsForAFreeBuilder) {
   auto* builder = add_selected_builder();
   auto* builder_prod =

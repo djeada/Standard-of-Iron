@@ -36,6 +36,7 @@
 #include "render/entity/nations/carthage/builder_renderer.h"
 #include "render/entity/nations/carthage/builder_style.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/entity/nations/worker_tools.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
@@ -511,6 +512,7 @@ auto carthage_tool_make_static_attachment(const RenderArchetype& archetype,
       .bind_bone_transform = bind_bone,
       .bind_socket_transform = bind_socket,
       .mesh_from_socket = QMatrix4x4{},
+      .uniform_scale = WorkerTools::k_hand_tool_scale,
   });
   for (std::size_t i = 0; i < slot_indices.size(); ++i) {
     spec.palette_role_remap[slot_indices[i]] = static_cast<std::uint8_t>(base_role + i);

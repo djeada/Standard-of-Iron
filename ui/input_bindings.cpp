@@ -245,8 +245,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Raises the camera towards an overhead view. Hold Shift "
                               "to tilt further."),
                   QStringLiteral("Ctrl+Up"),
-                  false,
-                  QStringLiteral("R")});
+                  false});
   catalog.append({QStringLiteral("rts.camera_tilt_down"),
                   rts,
                   camera,
@@ -254,8 +253,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Lowers the camera towards the horizon. Hold Shift to "
                               "tilt further."),
                   QStringLiteral("Ctrl+Down"),
-                  false,
-                  QStringLiteral("F")});
+                  false});
   catalog.append(
       {QStringLiteral("rts.camera_zoom_in"),
        rts,
@@ -300,6 +298,14 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Jumps the view to the selected troops. Double-click a "
                               "portrait in the selection panel to jump to that unit."),
                   QStringLiteral("Tab"),
+                  false});
+  catalog.append({QStringLiteral("rts.select_idle_builders"),
+                  rts,
+                  selection,
+                  QObject::tr("Select idle builders"),
+                  QObject::tr("Selects every builder squad that has no job and centres "
+                              "the view on them."),
+                  QStringLiteral("."),
                   false});
   for (int group = 1; group <= InputBindings::kControlGroupCount; ++group) {
     catalog.append({QStringLiteral("%1%2")
@@ -688,10 +694,6 @@ auto InputBindings::conflicts_for(const QString& action_id,
       continue;
     }
     if (!contexts_overlap(subject->context, other.context)) {
-      continue;
-    }
-
-    if (subject->contextual || other.contextual) {
       continue;
     }
     for (int other_slot = 0; other_slot < kSlotCount; ++other_slot) {

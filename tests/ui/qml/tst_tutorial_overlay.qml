@@ -29,11 +29,13 @@ TestCase {
         property bool step_complete: false
         property bool has_focus_point: false
         property var focus_points: []
+        property int skips: 0
 
         function set_visible(v) {
             visible = v;
         }
         function skip_step() {
+            skips += 1;
         }
         function replay_step() {
         }
@@ -58,6 +60,35 @@ TestCase {
     function init() {
         fakeTutorial.hint = "";
         fakeTutorial.has_focus_point = false;
+        fakeTutorial.step_complete = false;
+        fakeTutorial.skips = 0;
+    }
+
+    function test_a_click_meant_for_continue_does_not_skip_the_next_step() {
+        wait(1400);
+        var skip = findChild(overlay, "tutorialSkipButton");
+        verify(skip !== null);
+        var skip_at = skip.mapToItem(overlay, 0, 0);
+        fakeTutorial.step_complete = true;
+        wait(50);
+        verify(!skip.visible, "Continue replaces Skip while the step shows its tick");
+        var next = findChild(overlay, "tutorialContinueButton");
+        verify(next !== null && next.visible);
+        var continue_at = next.mapToItem(overlay, 0, 0);
+        compare(continue_at.x, skip_at.x, "Continue and Skip share one spot on the card");
+        compare(continue_at.y, skip_at.y);
+        // The next step arrives (Continue, or the automatic advance) and Skip
+        // reappears under the cursor that was aiming at Continue.
+        fakeTutorial.step_index = fakeTutorial.step_index + 1;
+        fakeTutorial.step_complete = false;
+        wait(50);
+        verify(skip.visible);
+        mouseClick(skip);
+        compare(fakeTutorial.skips, 0, "a click on the fresh step's Skip threw the step away unread");
+        wait(1300);
+        mouseClick(skip);
+        compare(fakeTutorial.skips, 1, "Skip must work once the step has been on screen a moment");
+        fakeTutorial.step_index = 7;
     }
 
     function test_skip_and_end_stay_on_the_card_when_a_long_hint_appears() {

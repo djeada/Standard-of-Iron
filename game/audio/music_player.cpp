@@ -340,6 +340,12 @@ void MusicPlayer::set_master_volume(float v, int fade_ms) {
   setMasterVolume_gui(volume, fade_ms);
 }
 
+auto MusicPlayer::track_length_seconds(const std::string& track_id) const -> float {
+  return (m_backend != nullptr)
+             ? m_backend->track_length_seconds(QString::fromStdString(track_id))
+             : 0.0F;
+}
+
 auto MusicPlayer::is_playing() const -> bool {
   return (m_backend != nullptr) && m_backend->any_channel_playing();
 }

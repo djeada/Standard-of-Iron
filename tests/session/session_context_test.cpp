@@ -6,8 +6,10 @@
 #include <thread>
 #include <utility>
 
+#include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/core/component_core.h"
+#include "game/core/component_presentation.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/deterministic_rng.h"
@@ -425,3 +427,69 @@ TEST(SessionDigestTest, EveryBuiltInSnapshotContributorIsHashed) {
 }
 
 } // namespace
+
+TEST(SessionContextTest, AStoppedClockStillAppliesOrdersAndPublishesTheWorld) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  auto& world = session.world();
+  world.request_render_snapshots(true);
+  session.clock().set_paused(true);
+
+  auto* ghost = world.create_entity();
+  ghost->add_component<Engine::Core::TransformComponent>();
+  ghost->add_component<Engine::Core::RenderableComponent>()->renderer_id = "ghost";
+
+  int handled = 0;
+  session.commands().set_observer([&](const Game::Command::Command&) { ++handled; });
+  session.commands().set_rejection_observer(
+      [&](const Game::Command::Command&, Game::Command::Rejection) { ++handled; });
+  Game::Command::submit(
+      world, Game::Command::Source::LocalPlayer, 1, Game::Command::Stop{});
+  ASSERT_EQ(session.commands().pending(), 1U);
+  const auto before = world.acquire_render_snapshot();
+  ASSERT_TRUE(before == nullptr || before->get_entity(ghost->get_id()) == nullptr)
+      << "nothing has published the ghost yet: a paused world never ticks";
+
+  const auto tick_before = session.clock().tick();
+  session.service_stopped_clock();
+
+  EXPECT_EQ(session.commands().pending(), 0U)
+      << "an order given while paused must take effect now, not on resume";
+  EXPECT_EQ(handled, 1);
+  EXPECT_EQ(session.clock().tick(), tick_before)
+      << "servicing a stopped clock must not advance the match";
+  const auto published = world.acquire_render_snapshot();
+  ASSERT_NE(published, nullptr)
+      << "the renderer only draws published snapshots; a placement ghost made while "
+         "paused never appeared";
+  EXPECT_NE(published->get_entity(ghost->get_id()), nullptr);
+}
+
+TEST(SessionContextTest, AStoppedClockPublishesUnitsWithTheirPresentationAlready) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  auto& world = session.world();
+  world.request_render_snapshots(true);
+  session.clock().set_paused(true);
+
+  auto* soldier = world.create_entity();
+  soldier->add_component<Engine::Core::TransformComponent>();
+  soldier->add_component<Engine::Core::RenderableComponent>()->renderer_id = "archer";
+  soldier->add_component<Engine::Core::UnitComponent>();
+  ASSERT_EQ(soldier->get_component<Engine::Core::CreaturePresentationComponent>(),
+            nullptr);
+
+  session.service_stopped_clock();
+
+  const auto published = world.acquire_render_snapshot();
+  ASSERT_NE(published, nullptr);
+  const auto* copy = published->get_entity(soldier->get_id());
+  ASSERT_NE(copy, nullptr);
+  const auto* presentation =
+      copy->get_component<Engine::Core::CreaturePresentationComponent>();
+  ASSERT_NE(presentation, nullptr)
+      << "a unit published without its presentation is filled in by the render "
+         "workers under the registry lock the render thread holds: the menu "
+         "Tutorial froze behind its briefing";
+  EXPECT_TRUE(presentation->snapshot_valid);
+}

@@ -215,6 +215,8 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
     setup.posture = obj["posture"].toString();
   }
 
+  setup.economy = obj["economy"].toBool(true);
+
   if (obj.contains("personality")) {
     setup.personality = parse_ai_personality(obj["personality"].toObject());
   }

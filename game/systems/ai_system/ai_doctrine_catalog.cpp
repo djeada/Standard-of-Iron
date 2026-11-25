@@ -199,6 +199,12 @@ void parse_doctrine_body(const QJsonObject& object,
         read_float(recruitment_object, "siege_share", doctrine.recruitment.siege_share),
         0.0F,
         1.0F);
+    doctrine.recruitment.mercenary_share =
+        std::clamp(read_float(recruitment_object,
+                              "mercenary_share",
+                              doctrine.recruitment.mercenary_share),
+                   0.0F,
+                   1.0F);
 
     if (const auto preferred = recruitment_object.value(QLatin1String("preferred"));
         preferred.isArray()) {

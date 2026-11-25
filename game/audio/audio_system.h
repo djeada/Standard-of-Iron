@@ -112,6 +112,7 @@ public:
 
   [[nodiscard]] auto is_sound_playing(const std::string& sound_id) const -> bool;
   void stop_music();
+  [[nodiscard]] auto music_length_seconds(const std::string& music_id) const -> float;
   void set_listening_preset(int preset);
   auto get_listening_preset() const -> int { return listening_preset.load(); }
   void set_master_volume(float volume);

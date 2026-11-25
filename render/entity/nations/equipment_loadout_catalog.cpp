@@ -26,7 +26,7 @@ auto default_loadouts() -> LoadoutMap {
   roman_archer.helmet = "roman_light";
   roman_archer.greaves = "roman_greaves";
   roman_archer.armor = "roman_light_armor";
-  roman_archer.cloak = "cloak_roman";
+  roman_archer.cloak = "cloak_roman_auxiliary";
   map.emplace("troops/roman/archer", std::move(roman_archer));
 
   EquipmentLoadoutIds carthage_archer{};
@@ -136,13 +136,14 @@ auto default_loadouts() -> LoadoutMap {
   map.emplace("troops/iron_sepulcher/grave_priest", std::move(grave_priest));
 
   EquipmentLoadoutIds roman_builder{};
-  roman_builder.helmet = "roman_light";
+  roman_builder.helmet = "straw_hat";
   roman_builder.tool_belt = "tool_belt_roman";
   roman_builder.work_apron = "work_apron_roman";
   roman_builder.arm_guards = "arm_guards_roman";
   map.emplace("troops/roman/builder", std::move(roman_builder));
 
   EquipmentLoadoutIds carthage_builder{};
+  carthage_builder.helmet = "craftsman_cap";
   carthage_builder.tool_belt = "tool_belt_carthage";
   carthage_builder.work_apron = "work_apron_carthage";
   carthage_builder.arm_guards = "arm_guards_carthage";

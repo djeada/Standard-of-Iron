@@ -42,11 +42,15 @@ namespace {
   using Game::Map::Minimap::MarkerClass;
   switch (type) {
   case Game::Units::SpawnType::Barracks:
+  case Game::Units::SpawnType::MercenaryCamp:
+  case Game::Units::SpawnType::Castra:
     return MarkerClass::Stronghold;
   case Game::Units::SpawnType::DefenseTower:
     return MarkerClass::Tower;
   case Game::Units::SpawnType::Temple:
   case Game::Units::SpawnType::Marketplace:
+  case Game::Units::SpawnType::ElephantStables:
+  case Game::Units::SpawnType::Fabrica:
     return MarkerClass::Landmark;
   case Game::Units::SpawnType::Home:
   case Game::Units::SpawnType::Farm:

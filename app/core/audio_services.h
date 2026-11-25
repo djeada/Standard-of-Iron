@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QElapsedTimer>
 #include <QString>
 
 #include <memory>
@@ -7,6 +8,7 @@
 
 class AudioCoordinator;
 class QObject;
+class QTimer;
 
 namespace Engine::Core {
 class World;
@@ -50,10 +52,20 @@ public:
   void shutdown(const std::string& map_path);
 
 private:
+  void start_frontend_playlist(const QString& track_id, int playlist_size);
+  void check_frontend_playlist();
+
   std::unique_ptr<Game::Audio::AudioEventHandler> m_event_handler;
   std::unique_ptr<AudioCoordinator> m_coordinator;
   std::unique_ptr<App::Models::AudioSystemProxy> m_proxy;
   QString m_frontend_context;
+
+  // A menu or campaign screen can be left open for many minutes. Each of its
+  // tracks is a one-minute loop, so once the current one has played through the
+  // playlist moves on instead of repeating it.
+  std::unique_ptr<QTimer> m_playlist_timer;
+  QString m_playlist_track;
+  QElapsedTimer m_playlist_clock;
 };
 
 } // namespace App::Core

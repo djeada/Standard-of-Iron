@@ -90,4 +90,30 @@ auto turban_make_static_attachment(std::uint16_t socket_bone_index,
                                    const QMatrix4x4& bind_palette_socket_bone)
     -> Render::Creature::StaticAttachmentSpec;
 
+auto straw_hat_archetype() -> const RenderArchetype&;
+
+inline constexpr std::uint32_t k_straw_hat_role_count = 2;
+
+auto straw_hat_fill_role_colors(const HumanoidPalette& palette,
+                                QVector3D* out,
+                                std::size_t max) -> std::uint32_t;
+
+auto straw_hat_make_static_attachment(std::uint16_t socket_bone_index,
+                                      std::uint8_t base_role_byte,
+                                      const QMatrix4x4& bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec;
+
+auto craftsman_cap_archetype() -> const RenderArchetype&;
+
+inline constexpr std::uint32_t k_craftsman_cap_role_count = 2;
+
+auto craftsman_cap_fill_role_colors(const HumanoidPalette& palette,
+                                    QVector3D* out,
+                                    std::size_t max) -> std::uint32_t;
+
+auto craftsman_cap_make_static_attachment(std::uint16_t socket_bone_index,
+                                          std::uint8_t base_role_byte,
+                                          const QMatrix4x4& bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec;
+
 } // namespace Render::GL

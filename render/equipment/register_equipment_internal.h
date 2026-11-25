@@ -187,6 +187,10 @@ auto build_turban_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_pileus_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
+auto build_straw_hat_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_craftsman_cap_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
 auto build_palla_veil_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_headwrap_attachment(std::uint8_t base_role_byte)
@@ -288,6 +292,8 @@ auto build_sepulcher_cloak_attachment(std::uint8_t base_role_byte)
 auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_roman_mounted_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec>;
+auto build_roman_auxiliary_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
 auto build_fabius_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec>;
@@ -607,6 +613,10 @@ auto roman_cloak_role_colors(const void* variant_void,
                              QVector3D* out,
                              std::uint32_t base_count,
                              std::size_t max_count) -> std::uint32_t;
+auto roman_auxiliary_cloak_role_colors(const void* variant_void,
+                                       QVector3D* out,
+                                       std::uint32_t base_count,
+                                       std::size_t max_count) -> std::uint32_t;
 auto roman_tool_belt_role_colors(const void* variant_void,
                                  QVector3D* out,
                                  std::uint32_t base_count,

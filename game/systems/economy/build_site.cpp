@@ -185,9 +185,15 @@ reserved_footprint(const std::string& building_type,
   for (const auto id :
        world.entities_with<Engine::Core::BuilderProductionComponent>()) {
     const auto* builder = world.try_get<Engine::Core::BuilderProductionComponent>(id);
-    if (builder == nullptr || !builder->has_construction_site ||
-        builder->construction_site_entity_id != 0 || builder->product_type.empty() ||
-        !reserves_ground(builder->product_type) || is_crew(id)) {
+    if (builder == nullptr || is_crew(id)) {
+      continue;
+    }
+    for (const auto& queued : builder->queued_structure_sites) {
+      sites.push_back(reserved_footprint(
+          queued.construction_type, queued.x, queued.z, queued.rotation_y, id));
+    }
+    if (!builder->has_construction_site || builder->construction_site_entity_id != 0 ||
+        builder->product_type.empty() || !reserves_ground(builder->product_type)) {
       continue;
     }
     sites.push_back(reserved_footprint(builder->product_type,

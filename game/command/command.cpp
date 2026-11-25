@@ -42,6 +42,8 @@ auto payload_name(const Payload& payload) -> const char* {
           return "set-rally-point";
         } else if constexpr (std::is_same_v<T, SetGateMode>) {
           return "set-gate-mode";
+        } else if constexpr (std::is_same_v<T, SetHomeReporting>) {
+          return "set-home-reporting";
         } else if constexpr (std::is_same_v<T, SetAutoGather>) {
           return "set-auto-gather";
         } else if constexpr (std::is_same_v<T, Produce>) {

@@ -469,6 +469,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.on_wall_stair = walker != nullptr;
     data.has_delivery_order =
         world.has<Engine::Core::CivilianDeliveryComponent>(data.id);
+    if (const auto* contract =
+            world.try_get<Engine::Core::MercenaryContractComponent>(data.id)) {
+      data.upkeep_per_minute = contract->upkeep_per_minute;
+    }
     if (const auto* crop = world.try_get<Engine::Core::FarmComponent>(data.id);
         crop != nullptr) {
       data.crop_is_ripe =

@@ -20,6 +20,7 @@
 #include "horse_spearman.h"
 #include "horse_swordsman.h"
 #include "marketplace.h"
+#include "nation_building.h"
 #include "ram.h"
 #include "sheep.h"
 #include "siege_tower.h"
@@ -291,6 +292,16 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Temple::Create(world, params);
                        });
+
+  for (const auto type : {SpawnType::MercenaryCamp,
+                          SpawnType::ElephantStables,
+                          SpawnType::Fabrica,
+                          SpawnType::Castra}) {
+    reg.register_factory(type,
+                         [](Engine::Core::World& world, const SpawnParams& params) {
+                           return NationBuilding::Create(world, params);
+                         });
+  }
 
   reg.register_factory(SpawnType::Farm,
                        [](Engine::Core::World& world, const SpawnParams& params) {

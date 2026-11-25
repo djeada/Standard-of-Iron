@@ -76,6 +76,33 @@ The player's authored units, together with any other structures they own, are tr
 
 Translated spawns still pass through the transformer's existing “nudge off forbidden ground” logic. If moving a camp places a unit in a river or other invalid location, the unit is moved to the nearest valid tile before play begins.
 
+## Every seat starts with a camp
+
+A skirmish does not start from a bare barracks. Once the map's own units stand and
+the navigation grid exists, `Game::Map::apply_skirmish_camp_start`
+(`game/map/skirmish_camp_start.cpp`) raises a camp around the barracks of every
+player and computer seat (`SkirmishLoader::set_camp_start_enabled`, switched on by
+the level orchestrator for skirmishes and off for campaign missions):
+
+- two homes behind the barracks and a farm to one side, each placed with
+  `find_clear_site` (the same rule builders use), falling back to the nearest
+  clear spot on a 2 m lattice within 42 m of the barracks (the reach the
+  farmland test guarantees), kept off the gate's muster ground and the resource
+  yard, and turned to the nearest quarter turn;
+- builder crews up to three, counting the crew the map authors;
+- a line squad (swordsmen) and a missile squad of the seat's nation (velites for
+  Rome, slingers for Carthage, archers otherwise) at the gate;
+- a barracks reserve of at least 200 men.
+
+The camp follows the chosen base, so a reseated player still gets it. Anything
+that finds no clear ground is skipped and logged ("Camp start: no clear ground"),
+never stacked; a seat that already owns a farm (the city maps) may go without
+the extra one. Skirmish maps author the starting stock in `starting_resources`:
+500 gold, 300 food, 300 wood, 150 stone and 200 iron, or more where a map always
+gave more. The setup screen's Treasury chip replaces the gold only when the player
+picks a different amount. `tests/map/skirmish_camp_start_test.cpp` checks every
+seat of every shipped skirmish map.
+
 ## Population capacity follows the original start
 
 Neutral outposts are often authored with a much smaller `max_population` than a true starting base. Choosing one as the new start does **not** reduce the player's intended army capacity: the player carries the troop cap of the base they gave up.

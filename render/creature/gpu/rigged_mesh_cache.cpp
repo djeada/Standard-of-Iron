@@ -64,8 +64,21 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
     auto* floats = reinterpret_cast<float*>(destination.data());
     const std::size_t frames = std::min<std::size_t>(
         frame_total, destination.size() / BonePaletteArena::k_palette_bytes);
+    // Never read past the palettes the atlas actually holds: frames the blob
+    // does not cover are written as the bind pose.
+    const std::size_t covered =
+        bone_count == 0U ? 0U
+                         : std::min<std::size_t>(frames, palettes.size() / bone_count);
     QMatrix4x4 const ident;
-    for (std::size_t f = 0; f < frames; ++f) {
+    for (std::size_t f = covered; f < frames; ++f) {
+      float* frame_dst = floats + (f * BonePaletteArena::k_palette_floats);
+      for (std::size_t b = 0; b < BonePaletteArena::k_palette_width; ++b) {
+        std::memcpy(frame_dst + (b * BonePaletteArena::k_matrix_floats),
+                    ident.constData(),
+                    sizeof(float) * BonePaletteArena::k_matrix_floats);
+      }
+    }
+    for (std::size_t f = 0; f < covered; ++f) {
       const QMatrix4x4* frame_src = palettes.data() + (f * bone_count);
       float* frame_dst = floats + (f * BonePaletteArena::k_palette_floats);
       for (std::uint32_t b = 0; b < bone_count; ++b) {
@@ -325,6 +338,7 @@ void RiggedMeshCache::recount_residency() {
 
 void RiggedMeshCache::begin_frame() {
   ++m_frame_index;
+  release_retired_palette_blocks();
   if (m_residency.budget_bytes == 0U) {
     return;
   }
@@ -383,6 +397,21 @@ auto RiggedMeshCache::evict_unused_over_budget() -> std::uint64_t {
   const std::uint64_t freed = before - m_residency.total_bytes();
   m_frame_stats.evicted_bytes += freed;
   return freed;
+}
+
+void RiggedMeshCache::release_retired_palette_blocks() {
+  constexpr std::uint64_t k_retired_block_frames = 8U;
+  for (auto& [_, atlas] : m_skin_atlases) {
+    if (atlas == nullptr || atlas->retired_palette_blocks.empty()) {
+      continue;
+    }
+    if (atlas->retired_since_frame == 0U) {
+      atlas->retired_since_frame = m_frame_index;
+    } else if (m_frame_index - atlas->retired_since_frame >= k_retired_block_frames) {
+      atlas->retired_palette_blocks.clear();
+      atlas->retired_since_frame = 0U;
+    }
+  }
 }
 
 void RiggedMeshCache::release_skin_atlases() {
@@ -484,6 +513,8 @@ void rigged_entry_ensure_skin_atlas_from_blob(
     return;
   }
   if (atlas.palette_block != nullptr) {
+    atlas.retired_palette_blocks.push_back(std::move(atlas.palette_block));
+    atlas.retired_since_frame = 0;
     atlas.palette_block.reset();
     atlas.frame_stride_bytes = 0;
   }

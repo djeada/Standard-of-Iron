@@ -51,6 +51,7 @@ public:
   void stop_all(int fade_ms = AudioConstants::DEFAULT_FADE_OUT_MS);
   void set_master_volume(float volume, int fade_ms = AudioConstants::NO_FADE_MS);
 
+  [[nodiscard]] auto track_length_seconds(const std::string& track_id) const -> float;
   auto is_playing() const -> bool;
   auto is_playing(int channel) const -> bool;
 

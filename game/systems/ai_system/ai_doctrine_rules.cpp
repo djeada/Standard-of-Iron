@@ -21,7 +21,8 @@ auto can_initiate_attack(const AIStrategyConfig& strategy) -> bool {
 }
 
 auto is_no_economy_nation(const AIContext& ctx) -> bool {
-  return ctx.nation != nullptr && !ctx.nation->has_economy;
+  return (ctx.nation != nullptr && !ctx.nation->has_economy) ||
+         !ctx.strategy_config.runs_economy;
 }
 
 auto reactive_attack_size(const AIStrategyConfig& strategy) -> int {

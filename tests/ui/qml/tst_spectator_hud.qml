@@ -67,6 +67,23 @@ TestCase {
         host.destroy();
     }
 
+    function test_deaths_to_the_wild_are_told_apart_from_deaths_in_battle() {
+        var engine = engineComponent.createObject(testCase, {
+                "owner_info": testCase.fourArmyField()
+            });
+        var host = testCase.makeHud(engine);
+        var wild = 0;
+        for (var i = 0; i < host.hud.board.length; ++i) {
+            if (host.hud.board[i].ownerId === 2)
+                wild = host.hud.board[i].lossesToWild;
+            else
+                compare(host.hud.board[i].lossesToWild, 0);
+        }
+        compare(wild, 3, "an army's losses to neutral forces did not reach the board");
+        engine.destroy();
+        host.destroy();
+    }
+
     function test_the_board_reports_each_armys_manpower() {
         var engine = engineComponent.createObject(testCase, {
                 "owner_info": testCase.fourArmyField()
@@ -122,6 +139,34 @@ TestCase {
         host.destroy();
     }
 
+    function test_full_commander_names_fit_on_a_wide_screen() {
+        var owners = [testCase.owner(1, "Quintus Fabius Maximus", 1, "roman_republic", true), testCase.owner(2, "Hannibal Barca of Carthage", 2, "carthage", true), testCase.owner(3, "Publius Cornelius Scipio", 1, "roman_republic", true), testCase.owner(4, "Hasdrubal Barca", 2, "carthage", true)];
+        var engine = engineComponent.createObject(testCase, {
+                "owner_info": owners
+            });
+        var host = hostComponent.createObject(testCase, {
+                "width": 1920,
+                "height": 360
+            });
+        host.hud.engine = engine;
+        host.hud.refresh();
+        wait(50);
+        var board = findChild(host.hud, "spectatorBoard");
+        var seen = 0;
+        for (var i = 0; i < board.contentItem.children.length; ++i) {
+            var row = board.contentItem.children[i];
+            if (row.objectName !== "spectatorArmyRow")
+                continue;
+            var label = findChild(row, "spectatorArmyName");
+            verify(label !== null);
+            verify(!label.truncated, "'" + label.text + "' was elided with room to spare");
+            ++seen;
+        }
+        compare(seen, 4);
+        engine.destroy();
+        host.destroy();
+    }
+
     Component {
         id: engineComponent
 
@@ -136,6 +181,7 @@ TestCase {
                 return {
                     "enemiesKilled": ownerId,
                     "losses": ownerId * 2,
+                    "lossesToWild": ownerId === 2 ? 3 : 0,
                     "troopsRecruited": ownerId * 3,
                     "barracksOwned": ownerId,
                     "playTimeSec": 60,

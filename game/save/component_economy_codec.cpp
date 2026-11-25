@@ -46,6 +46,14 @@ void write_production(const Entity* entity, QJsonObject& entity_obj) {
           QString::fromStdString(Game::Units::troop_typeToString(queued)));
     }
     production_obj["queue"] = queue_array;
+    if (production->repeat_active) {
+      production_obj["repeat_product"] = QString::fromStdString(
+          Game::Units::troop_typeToString(production->repeat_product));
+    }
+    if (production->has_product_nation) {
+      production_obj["product_nation"] =
+          Game::Systems::nation_id_to_qstring(production->product_nation);
+    }
     entity_obj["production"] = production_obj;
   }
 }
@@ -77,6 +85,16 @@ void read_production(Entity* entity, const QJsonObject& json) {
     for (const auto value : queue_array) {
       production->production_queue.push_back(
           Game::Units::troop_typeFromString(value.toString().toStdString()));
+    }
+    if (production_obj.contains("repeat_product")) {
+      production->repeat_active = true;
+      production->repeat_product = Game::Units::troop_typeFromString(
+          production_obj["repeat_product"].toString().toStdString());
+    }
+    if (const auto band_nation = Game::Systems::nation_id_from_string(
+            production_obj["product_nation"].toString().toStdString())) {
+      production->has_product_nation = true;
+      production->product_nation = *band_nation;
     }
   }
 }
@@ -122,6 +140,30 @@ void write_builder_production(const Entity* entity, QJsonObject& entity_obj) {
     builder_obj["auto_gather"] = builder->auto_gather;
     builder_obj["auto_gather_priority"] =
         QString::fromStdString(builder->auto_gather_priority);
+    if (!builder->queued_structure_sites.empty()) {
+      QJsonArray queued;
+      for (const auto& site : builder->queued_structure_sites) {
+        QJsonObject site_obj;
+        site_obj["type"] = QString::fromStdString(site.construction_type);
+        site_obj["x"] = static_cast<double>(site.x);
+        site_obj["z"] = static_cast<double>(site.z);
+        site_obj["rotation_y"] = static_cast<double>(site.rotation_y);
+        queued.append(site_obj);
+      }
+      builder_obj["queued_structure_sites"] = queued;
+    }
+    if (builder->has_work_to_resume()) {
+      QJsonObject resume;
+      resume["gather_order"] = builder->resume_gather_order;
+      resume["gather_product_type"] =
+          QString::fromStdString(builder->resume_gather_product_type);
+      resume["gather_anchor_x"] = static_cast<double>(builder->resume_gather_anchor_x);
+      resume["gather_anchor_z"] = static_cast<double>(builder->resume_gather_anchor_z);
+      resume["auto_gather"] = builder->resume_auto_gather;
+      resume["auto_gather_priority"] =
+          QString::fromStdString(builder->resume_auto_gather_priority);
+      builder_obj["resume_work"] = resume;
+    }
     entity_obj["builder_production"] = builder_obj;
   }
 }
@@ -180,6 +222,27 @@ void read_builder_production(Entity* entity, const QJsonObject& json) {
     builder->auto_gather = builder_obj["auto_gather"].toBool(false);
     builder->auto_gather_priority =
         builder_obj["auto_gather_priority"].toString().toStdString();
+    for (const auto value : builder_obj["queued_structure_sites"].toArray()) {
+      const auto site_obj = value.toObject();
+      builder->queued_structure_sites.push_back(
+          {.construction_type = site_obj["type"].toString().toStdString(),
+           .x = static_cast<float>(site_obj["x"].toDouble(0.0)),
+           .z = static_cast<float>(site_obj["z"].toDouble(0.0)),
+           .rotation_y = static_cast<float>(site_obj["rotation_y"].toDouble(0.0))});
+    }
+    if (builder_obj.contains("resume_work")) {
+      const auto resume = builder_obj["resume_work"].toObject();
+      builder->resume_gather_order = resume["gather_order"].toBool(false);
+      builder->resume_gather_product_type =
+          resume["gather_product_type"].toString().toStdString();
+      builder->resume_gather_anchor_x =
+          static_cast<float>(resume["gather_anchor_x"].toDouble(0.0));
+      builder->resume_gather_anchor_z =
+          static_cast<float>(resume["gather_anchor_z"].toDouble(0.0));
+      builder->resume_auto_gather = resume["auto_gather"].toBool(false);
+      builder->resume_auto_gather_priority =
+          resume["auto_gather_priority"].toString().toStdString();
+    }
   }
 }
 
@@ -194,6 +257,7 @@ void write_home(const Entity* entity, QJsonObject& entity_obj) {
     home_obj["family_generation_interval"] =
         static_cast<double>(home->family_generation_interval);
     home_obj["family_manpower_value"] = home->family_manpower_value;
+    home_obj["reports_to_barracks"] = home->reports_to_barracks;
     entity_obj["home"] = home_obj;
   }
 }
@@ -212,6 +276,25 @@ void read_home(Entity* entity, const QJsonObject& json) {
     home->family_generation_interval =
         static_cast<float>(home_obj["family_generation_interval"].toDouble(12.0));
     home->family_manpower_value = home_obj["family_manpower_value"].toInt(8);
+    home->reports_to_barracks = home_obj["reports_to_barracks"].toBool(true);
+  }
+}
+
+void write_mercenary_contract(const Entity* entity, QJsonObject& entity_obj) {
+  if (const auto* contract = entity->get_component<MercenaryContractComponent>()) {
+    QJsonObject contract_obj;
+    contract_obj["upkeep_per_minute"] = contract->upkeep_per_minute;
+    contract_obj["unpaid"] = contract->unpaid;
+    entity_obj["mercenary_contract"] = contract_obj;
+  }
+}
+
+void read_mercenary_contract(Entity* entity, const QJsonObject& json) {
+  if (json.contains("mercenary_contract")) {
+    const auto contract_obj = json["mercenary_contract"].toObject();
+    auto* contract = entity->add_component<MercenaryContractComponent>();
+    contract->upkeep_per_minute = contract_obj["upkeep_per_minute"].toInt(0);
+    contract->unpaid = contract_obj["unpaid"].toBool(false);
   }
 }
 
@@ -351,6 +434,7 @@ void write_economy(const Entity* entity, QJsonObject& entity_obj) {
   write_production(entity, entity_obj);
   write_builder_production(entity, entity_obj);
   write_home(entity, entity_obj);
+  write_mercenary_contract(entity, entity_obj);
   write_farm(entity, entity_obj);
   write_civilian_delivery(entity, entity_obj);
   write_resource_carry(entity, entity_obj);
@@ -361,6 +445,7 @@ void read_economy(Entity* entity, const QJsonObject& json) {
   read_production(entity, json);
   read_builder_production(entity, json);
   read_home(entity, json);
+  read_mercenary_contract(entity, json);
   read_farm(entity, json);
   read_civilian_delivery(entity, json);
   read_resource_carry(entity, json);

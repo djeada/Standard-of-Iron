@@ -1289,7 +1289,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.leftMargin: 14
                         anchors.rightMargin: 14
-                        text: qsTr("Legions, fleets, elephants, and contested supply lines")
+                        text: qsTr("Legions, war elephants, walled towns, and contested supply lines")
                         color: Theme.textSubLite
                         style: Text.Raised
                         styleColor: root.ink

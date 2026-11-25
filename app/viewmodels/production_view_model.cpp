@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QCoreApplication>
+#include <QGuiApplication>
 #include <QStringView>
 
 #include <algorithm>
@@ -10,6 +11,7 @@
 #include <vector>
 
 #include "app/core/client_context.h"
+#include "app/economy/hiring_readout.h"
 #include "app/economy/production_manager.h"
 #include "app/economy/production_readouts.h"
 #include "app/orders/command_controller.h"
@@ -118,7 +120,16 @@ void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.commands != nullptr) {
-    m_context.commands->recruit_near_selected(unit_type, m_context.local_owner_id);
+    // The click that reached here carries its modifiers: Shift queues a batch
+    // of five, Ctrl toggles repeat. Reading them here keeps the QML signal
+    // chain (card -> panel -> HUD -> main) a plain unit type.
+    const auto modifiers = QGuiApplication::keyboardModifiers();
+    const auto click =
+        (modifiers & Qt::ControlModifier) != 0 ? App::Controllers::RecruitClick::Repeat
+        : (modifiers & Qt::ShiftModifier) != 0 ? App::Controllers::RecruitClick::Batch
+                                               : App::Controllers::RecruitClick::Single;
+    m_context.commands->recruit_near_selected(
+        unit_type, m_context.local_owner_id, click);
   }
 }
 
@@ -150,6 +161,11 @@ auto ProductionViewModel::selected_marketplace_state() const -> QVariantMap {
 auto ProductionViewModel::selected_farm_state() const -> QVariantMap {
   const auto readout = m_readout.read();
   return readout ? readout->farm : QVariantMap{};
+}
+
+auto ProductionViewModel::selected_hiring_state() const -> QVariantMap {
+  const auto frame_lock = m_host.lock_frame();
+  return App::Economy::selected_hiring_state(m_context.world, m_context.local_owner_id);
 }
 
 auto ProductionViewModel::unit_info(const QString& unit_type,
@@ -411,6 +427,33 @@ void ProductionViewModel::set_rally_at_screen(qreal sx, qreal sy) {
     m_context.production->set_rally_at_screen(
         sx, sy, m_context.local_owner_id, *m_context.viewport);
   }
+}
+
+void ProductionViewModel::set_home_reporting(bool active) {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (m_context.world == nullptr || m_context.selection == nullptr) {
+    return;
+  }
+  std::vector<Engine::Core::EntityID> selected;
+  m_context.selection->get_selected_unit_ids(selected);
+  std::vector<Engine::Core::EntityID> homes;
+  for (const auto id : selected) {
+    const auto* unit = m_context.world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit != nullptr && unit->owner_id == m_context.local_owner_id &&
+        unit->spawn_type == Game::Units::SpawnType::Home) {
+      homes.push_back(id);
+    }
+  }
+  if (homes.empty()) {
+    return;
+  }
+  Game::Command::submit(
+      *m_context.world,
+      Game::Command::Source::LocalPlayer,
+      m_context.local_owner_id,
+      Game::Command::SetHomeReporting{.units = std::move(homes), .active = active});
+  emit player_state_stale();
 }
 
 } // namespace App::ViewModels

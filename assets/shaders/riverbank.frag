@@ -2,6 +2,7 @@
 #include "biome_palette.glsl"
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "ground_shade.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
 #include "visibility_mask.glsl"
@@ -354,6 +355,7 @@ void main() {
       max(core_alpha, max(broken_transition, max(pebble_islands, grass_islands))));
 
   color = apply_directional_shadow(color, world_pos, v_normal);
+  color *= ground_daylight_gain(ground_open_light());
   color += color * local_lighting(world_pos, normalize(v_normal));
   frag_color = vec4(color, segment_visibility * edge_fade);
 }

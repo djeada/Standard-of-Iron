@@ -320,23 +320,6 @@ public:
     m_generation.fetch_add(1U, std::memory_order_release);
   }
 
-  // Step down to `lower` because the game measured that it cannot keep up.
-  // Does nothing once the player has picked a preset themselves, or when
-  // `lower` is not actually lower. Safe to call from the render thread; the
-  // GUI picks the change up through auto_lowered_count().
-  auto lower_quality_automatically(GraphicsQuality lower) noexcept -> bool {
-    if (quality_chosen_by_user() || lower >= quality()) {
-      return false;
-    }
-    set_quality(lower);
-    m_auto_lowered_count.fetch_add(1U, std::memory_order_release);
-    return true;
-  }
-
-  [[nodiscard]] auto auto_lowered_count() const noexcept -> std::uint32_t {
-    return m_auto_lowered_count.load(std::memory_order_acquire);
-  }
-
   [[nodiscard]] auto quality_chosen_by_user() const noexcept -> bool {
     return m_quality_chosen_by_user.load(std::memory_order_acquire);
   }
@@ -451,7 +434,6 @@ private:
   std::atomic<ShaderQuality> m_backend_kind{ShaderQuality::Full};
   std::atomic<std::uint32_t> m_generation{0U};
   std::atomic<bool> m_quality_chosen_by_user{false};
-  std::atomic<std::uint32_t> m_auto_lowered_count{0U};
 };
 
 } // namespace Render

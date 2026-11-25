@@ -6,6 +6,7 @@
 
 #include "../../nation_registry.h"
 #include "../ai_base_manager.h"
+#include "../ai_doctrine_rules.h"
 #include "../ai_settlement_frame.h"
 #include "builder_affordability.h"
 #include "builder_catalog.h"
@@ -226,7 +227,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                               AIContext& context,
                               float delta_time,
                               std::vector<AICommand>& out_commands) {
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return;
   }
 
@@ -251,7 +252,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
                                      const AIContext& context) const -> bool {
   (void)snapshot;
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return false;
   }
 

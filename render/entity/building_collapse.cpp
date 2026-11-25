@@ -89,6 +89,9 @@ auto building_collapse_footprint(Game::Units::SpawnType type) noexcept
   using Game::Units::SpawnType;
   switch (type) {
   case SpawnType::Barracks:
+  case SpawnType::MercenaryCamp:
+  case SpawnType::ElephantStables:
+  case SpawnType::Fabrica:
     return {.half_width = 2.6F,
             .half_depth = 2.6F,
             .height = 3.2F,
@@ -107,9 +110,9 @@ auto building_collapse_footprint(Game::Units::SpawnType type) noexcept
             .timber_share = 0.70F,
             .rubble_mass = 0.45F};
   case SpawnType::Temple:
-    return {.half_width = 6.2F,
-            .half_depth = 4.6F,
-            .height = 4.6F,
+    return {.half_width = 4.15F,
+            .half_depth = 3.1F,
+            .height = 3.3F,
             .timber_share = 0.14F,
             .rubble_mass = 0.85F};
   case SpawnType::Farm:
@@ -130,6 +133,12 @@ auto building_collapse_footprint(Game::Units::SpawnType type) noexcept
             .height = 2.4F,
             .timber_share = 0.92F,
             .rubble_mass = 0.70F};
+  case SpawnType::Castra:
+    return {.half_width = 2.4F,
+            .half_depth = 2.4F,
+            .height = 1.8F,
+            .timber_share = 0.95F,
+            .rubble_mass = 0.50F};
   case SpawnType::WallLadder:
     return {.half_width = 0.4F,
             .half_depth = 0.6F,

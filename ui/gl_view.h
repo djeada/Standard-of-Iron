@@ -22,7 +22,6 @@ class QOpenGLDebugLogger;
 #include "render/frame/frame_cadence.h"
 #include "render/profiling/frame_pacing.h"
 #include "render/profiling/frame_profile.h"
-#include "render/scene/adaptive_quality_governor.h"
 
 class GameEngine;
 
@@ -70,7 +69,6 @@ private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
     Render::FrameCadence m_cadence;
-    Render::AdaptiveQualityGovernor m_quality_governor;
     // Pixel size of the view item; the framebuffer may be smaller (render scale).
     QSize m_item_pixel_size;
     bool m_resize_requested = false;
@@ -146,7 +144,6 @@ private:
     int m_film_fps{0};
 
     void warm_commander_portraits();
-    void observe_frame_rate(double frame_interval_ms, bool cadence_exempt);
     [[nodiscard]] auto scaled_framebuffer_size(const QSize& item_pixels) const -> QSize;
     void observe_runtime_benchmark(std::chrono::steady_clock::time_point frame_start,
                                    double update_ms,

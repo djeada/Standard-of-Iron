@@ -111,7 +111,9 @@ add_executable(
     map/skirmish_base_choice_test.cpp
     map/skirmish_farmland_test.cpp
     map/skirmish_starting_strength_test.cpp
+    map/skirmish_camp_start_test.cpp
     systems/civilian_delivery_system_test.cpp
+    systems/civilian_reporting_system_test.cpp
     systems/building_obstruction_lifecycle_test.cpp
     systems/command_service_test.cpp
     test_main.cpp

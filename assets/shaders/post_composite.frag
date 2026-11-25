@@ -62,6 +62,7 @@ const vec3 k_ground_fog_lift = vec3(1.02, 1.03, 1.04);
 const float k_mist_water_ceiling = 1.7;
 const float k_mist_miasma_ceiling = 2.8;
 const float k_mist_miasma_gain = 0.72;
+const float k_mist_miasma_core = 0.70;
 const float k_mist_bank_reach = 3.6;
 const float k_mist_bank_ragged = 3.2;
 const float k_mist_view_reach = 9.0;
@@ -152,6 +153,54 @@ vec3 fog_color_toward(vec3 world) {
   return haze + sun * inscatter;
 }
 
+// Aerial perspective: air is thickest near the ground, so a ray that runs
+// low and far gathers haze while the steep look down at the battle stays
+// clear. The camera-range fog above never reaches the play camera - its start
+// scales with the far plane - so without this a long view ends in a hard,
+// fully saturated horizon line.
+const float k_aerial_clear_distance = 130.0;
+const float k_aerial_reach = 560.0;
+const float k_aerial_onset = 1.7;
+const float k_aerial_scale_height = 55.0;
+const float k_aerial_max = 0.93;
+const float k_aerial_horizon_match = 1.22;
+const float k_aerial_desaturation = 0.40;
+const float k_aerial_night_share = 0.45;
+const float k_aerial_haze_neutral = 0.50;
+const vec3 k_aerial_haze_warmth = vec3(1.05, 1.02, 0.95);
+const float k_aerial_haze_gain = 1.12;
+
+float aerial_haze_amount(vec3 world) {
+  vec3 ray = world - u_camera_position;
+  float view_distance = length(ray);
+  float through = max(view_distance - k_aerial_clear_distance, 0.0);
+  if (through <= 0.0) {
+    return 0.0;
+  }
+  float low = max(min(world.y, u_camera_position.y), 0.0) / k_aerial_scale_height;
+  float span = abs(ray.y) / k_aerial_scale_height;
+  float density = exp(-low) * ((span > 1e-3) ? (1.0 - exp(-span)) / span : 1.0);
+  float weather = 1.0 + clamp(environment_fog_density() * 20.0, 0.0, 0.4);
+  // A slow onset: the middle distance keeps its contrast and only the far
+  // country dissolves, so a long view has a crisp battlefield in front of it.
+  float amount =
+      1.0 - exp(-pow(through * density * weather / k_aerial_reach, k_aerial_onset));
+  amount *= mix(1.0, k_aerial_night_share, environment_night_amount());
+  return min(amount, k_aerial_max);
+}
+
+// Near haze is a neutral warm veil; at the limit of sight it has to become the
+// sky's own horizon colour or the land ends in a grey band under the sky.
+vec3 aerial_haze_color(vec3 world, float amount) {
+  vec3 haze = fog_color_toward(world) / k_fog_haze_tone;
+  float luma = dot(haze, vec3(0.2126, 0.7152, 0.0722));
+  vec3 veil = mix(haze, vec3(luma), k_aerial_haze_neutral) * k_aerial_haze_warmth *
+              k_aerial_haze_gain;
+  vec3 horizon = environment_horizon_haze() * k_aerial_horizon_match;
+  float far = smoothstep(0.45, 1.0, amount / k_aerial_max);
+  return mix(veil, horizon, far) * environment_exposure();
+}
+
 float valley_fog(vec3 world) {
   float strength = u_ground_fog.z;
   if (strength <= 0.0) {
@@ -208,9 +257,12 @@ vec2 ground_mist(vec3 world) {
     float t = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-4), 0.0, 1.0);
     float edge = length(pa - ba * t) - u_mist_info[i].x;
     float ragged_edge = edge + (drift - 0.5) * k_mist_bank_ragged;
-    float lateral = 1.0 - smoothstep(0.0, k_mist_bank_reach, ragged_edge);
-    lateral *= lateral;
     bool is_miasma = u_mist_info[i].z > 0.5;
+    // A river bank has an edge; a haunted hollow does not. Miasma thins from
+    // well inside its zone, or it draws as a pale disc with a rim.
+    float inner_reach = is_miasma ? -k_mist_miasma_core * u_mist_info[i].x : 0.0;
+    float lateral = 1.0 - smoothstep(inner_reach, k_mist_bank_reach, ragged_edge);
+    lateral *= lateral;
     float ceiling = u_mist_ceiling[i] > 0.0
                         ? u_mist_ceiling[i]
                         : (is_miasma ? k_mist_miasma_ceiling : k_mist_water_ceiling);
@@ -326,9 +378,18 @@ void main() {
                    environment_fog_color() * k_mist_miasma_tint + k_mist_miasma_floor,
                    mist.y);
 
+    float aerial = aerial_haze_amount(world);
+    float aerial_luma = dot(combined, vec3(0.2126, 0.7152, 0.0722));
+    combined = mix(combined, vec3(aerial_luma), aerial * k_aerial_desaturation);
+    combined = mix(combined, aerial_haze_color(world, aerial), aerial);
+
     float haze_luma = dot(combined, vec3(0.2126, 0.7152, 0.0722));
     combined = mix(combined, vec3(haze_luma), fog * k_fog_desaturation);
-    combined = mix(combined, fog_color_toward(world), fog);
+    vec3 fog_tone = mix(fog_color_toward(world),
+                        environment_horizon_haze() * k_aerial_horizon_match *
+                            environment_exposure(),
+                        smoothstep(0.55, 0.94, fog));
+    combined = mix(combined, fog_tone, fog);
   }
 
   float night = night_amount();

@@ -304,6 +304,10 @@
         <source>Ask allies to defend this barracks.</source>
         <translation>اطلب من الحلفاء الدفاع عن هذه الثكنة.</translation>
     </message>
+    <message>
+        <source>Levy in %1s</source>
+        <translation>التجنيد بعد %1 ث</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -367,6 +371,10 @@
         <source>Retry mission</source>
         <translation>إعادة المهمة</translation>
     </message>
+    <message>
+        <source>%1 fell to wild beasts and the restless dead, and are credited to no army.</source>
+        <translation>سقط %1 أمام الوحوش والموتى القلقين، ولا يُحسبون لأي جيش.</translation>
+    </message>
 </context>
 <context>
     <name>BattleSummary</name>
@@ -375,12 +383,12 @@
         <translation>إعادة المهمة</translation>
     </message>
     <message>
-        <source>Play again</source>
-        <translation>العب مجدداً</translation>
-    </message>
-    <message>
         <source>Held the field: %1</source>
         <translation>صمدوا في الميدان: %1</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>قاتل مرة أخرى</translation>
     </message>
 </context>
 <context>
@@ -3030,6 +3038,28 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>ControlGroupStrip</name>
+    <message>
+        <source>Control groups</source>
+        <translation>مجموعات التحكم</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2</source>
+        <translation>%1  ·  %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Control group %1 holds %n unit(s). Click, or press %1, to select it.</source>
+        <translation>
+            <numerusform>المجموعة %1 تضم %n وحدة. انقر أو اضغط %1 لتحديدها.</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة. انقر أو اضغط %1 لتحديدها.</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة. انقر أو اضغط %1 لتحديدها.</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة. انقر أو اضغط %1 لتحديدها.</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة. انقر أو اضغط %1 لتحديدها.</numerusform>
+            <numerusform>المجموعة %1 تضم %n وحدة. انقر أو اضغط %1 لتحديدها.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
@@ -3439,16 +3469,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>مستوطنتك تدير نفسها</translation>
     </message>
     <message>
-        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
-        <translation>جنّد بنّاءً في ثكنة ثم أرسله ليجمع الخشب أو الحجر أو الحديد.</translation>
-    </message>
-    <message>
         <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
         <translation>بعد اختيار بنّاء، اضغط «بناء» وضع منزلًا لرفع احتياطيك، أو ثكنة للتجنيد منها.</translation>
-    </message>
-    <message>
-        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
-        <translation>اختر ثكنة وجنّد القوات. كل وحدة تكلّف احتياطيًا وموارد، وكلاهما مبيّن على بطاقتها.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -3505,6 +3527,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
         <translation>يلتحم بسور العدو؛ فيتسلّق المشاة المجاورون له سلّمه ويعبرون إلى ممشى السور.</translation>
+    </message>
+    <message>
+        <source>Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.</source>
+        <translation>درّب ثلاثة بنّائين في الثكنة ثم ابنِ البيوت. يصبح المدنيون جنودًا. وفي الأثناء أرسل البنّائين لجمع الخشب أو الحجر أو الحديد.</translation>
+    </message>
+    <message>
+        <source>Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.</source>
+        <translation>درّب ثلاثة بنّائين ثم ابنِ البيوت. يصبح المدنيون جنودًا. وفي الأثناء حدّد بنّاءً واضغط «اجمع» وانقر على شجرة أو صخرة أو عرق خام.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.</source>
+        <translation>حدّد ثكنة وجنّد القوات. كل وحدة تكلف من الاحتياط والموارد، وكلاهما مبيّن على بطاقتها. النقر مع Shift على البطاقة يضع خمسًا في الطابور؛ والنقر مع Ctrl يواصل التجنيد حتى تنقر مرة أخرى.</translation>
     </message>
 </context>
 <context>
@@ -3708,6 +3742,26 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Ladder</source>
         <translation>سلّم</translation>
+    </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>معسكر المرتزقة</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>إسطبلات الفيلة</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>فابريكا</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>كاسترا</translation>
+    </message>
+    <message>
+        <source>Emporion</source>
+        <translation>إمبوريون</translation>
     </message>
 </context>
 <context>
@@ -4607,6 +4661,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Group %1 cleared</source>
         <translation>أُفرغت المجموعة %1</translation>
+    </message>
+    <message>
+        <source>No idle builders</source>
+        <translation>لا يوجد بنّاؤون عاطلون</translation>
     </message>
 </context>
 <context>
@@ -5702,6 +5760,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>the whole field</source>
         <translation>الميدان بأكمله</translation>
     </message>
+    <message>
+        <source>Kills %1  Losses %2 (%3 wild)</source>
+        <translation>القتلى %1  الخسائر %2 (%3 للبرية)</translation>
+    </message>
 </context>
 <context>
     <name>HUDTop</name>
@@ -6477,6 +6539,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
         <translation>يرسل قادتك الحلفاء رجالاً لحماية هذا المبنى إن كانوا راغبين ولديهم رجال يستغنون عنهم.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it, three times its defenders, for %1 s.</source>
+        <translation>يمكن الاستيلاء عليه: أبقِ قواتك بجانبه %1 ث، ثلاثة أضعاف مدافعيه.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it for %1 s.</source>
+        <translation>يمكن الاستيلاء عليه: أبقِ قواتك بجانبه %1 ث.</translation>
     </message>
 </context>
 <context>
@@ -7327,14 +7397,6 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Quit</source>
         <translation>خروج</translation>
     </message>
-    <message>
-        <source>Graphics lowered to %1 to keep the battle smooth</source>
-        <translation>خُفّضت الرسومات إلى %1 لتبقى المعركة سلسة</translation>
-    </message>
-    <message>
-        <source>Pick a preset in Settings to keep your own choice.</source>
-        <translation>اختر إعدادًا مسبقًا في الإعدادات للاحتفاظ باختيارك.</translation>
-    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7429,10 +7491,6 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>SECOND PUNIC WAR</source>
         <translation>الحرب البونيقية الثانية</translation>
-    </message>
-    <message>
-        <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>فيالق وأساطيل وفيلة وخطوط إمداد متنازع عليها</translation>
     </message>
     <message>
         <source>SPQR</source>
@@ -7569,6 +7627,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Abandon</source>
         <translation>تخلَّ</translation>
+    </message>
+    <message>
+        <source>Legions, war elephants, walled towns, and contested supply lines</source>
+        <translation>فيالق، وفيلة حرب، ومدن مسوّرة، وطرق إمداد متنازع عليها</translation>
     </message>
 </context>
 <context>
@@ -8657,10 +8719,6 @@ to see preview</source>
     <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
         <translation>فليحتفظ بهم الممرّ إذن. ونصيحةٌ لمن يقرأ هذا: لا تتبع الأضواء على حقل الثلج. فما يحمل قنديلًا على ذلك العلوّ قد كفّ عن كونه راعيًا منذ زمنٍ بعيد.</translation>
-    </message>
-    <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>فالطلائع لن تعود إذن. حسنٌ — كلٌّ يبدأ من مكانٍ ما، وقد بدأتَ بتحطيم مخفرٍ مليءٍ برجالٍ كانوا ينتظرون غداءهم. وستُرسل روما في المرة القادمة مَن له وزن.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
@@ -9943,10 +10001,6 @@ to see preview</source>
         <translation>شتاء 218 ق.م: بعد النصر على نهر تريبيا، هاجم حنبعل المستودع قرب بلاسنتيا ثم اقتحم فيكتومولاي، وهي سوق محصّنة في سهل الإنسوبريين احتمى بها أهل الناحية. ويروي ليفيوس أنها سقطت عنوةً ونُهبت. وهذا التاريخ المعدَّل يمنح البلدة والياً رومانياً وحامية في القلعة وقوة نجدة على طريق بلاسنتيا.</translation>
     </message>
     <message>
-        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
-        <translation>استولِ على المعسكر الثاني على طريق الإمداد الجنوبي. لا يصل أي جسر إلى ضفته من النهر.</translation>
-    </message>
-    <message>
         <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
         <translation>202 ق.م، قرب زاما في أفريقيا: صفّ بوبليوس كورنيليوس سكيبيو - ابن قنصل عام 218، الذي سيُلقَّب قريبًا بالأفريقي - مفارزه واحدة خلف أخرى بدلًا من الترتيب الشطرنجي المعتاد، تاركًا ممرات مستقيمة يمسكها الفيليتس يمكن أن تُساق عبرها فيلة حنبعل الثمانون أو يُترك لها المرور. وطردت خيالة ماسينيسا النوميدية على اليمين وخيالة لاليوس الإيطالية على اليسار فرسانَ حنبعل من الميدان. وقاتلت صفوف حنبعل الثلاثة - مرتزقة ليغوريون وغاليون وبلياريون ومور؛ ومجندون قرطاجيون وأفارقة؛ وقدامى محاربيه في إيطاليا محجوزون في الصف الثالث - الفيالقَ حتى توقف القتال بلا غالب، إلى أن عادت الخيالة الرومانية والنوميدية وضربت الصف الثالث من الخلف. أما تدخّل ضريح الحديد فهو خروج الحملة المتعمَّد عن التاريخ إلى الفانتازيا المظلمة.</translation>
     </message>
@@ -10390,6 +10444,18 @@ to see preview</source>
         <source>The third rising</source>
         <translation>النهضة الثالثة</translation>
     </message>
+    <message>
+        <source>Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>احتفظ بالمعسكرين: حصن التل، والآن مدينة النهر على طريق الإمداد الجنوبي. لا يصل أي جسر إلى ضفتها.</translation>
+    </message>
+    <message>
+        <source>So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>هكذا يسقط المخفر. الكل يبدأ من مكان ما، وأنت بدأت بتحطيم معسكر مليء برجال ينتظرون غداءهم. في المرة القادمة سترسل روما من يعرف العدّ.</translation>
+    </message>
+    <message>
+        <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
+        <translation>وجدت كشّافيّ. رجلان أُرسلا ليعدّا خيامك، فترد بالمعسكر كله. هيا إذن، لكنني سأريد أن أعرف من قتلهما.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10532,6 +10598,25 @@ to see preview</source>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>NationEconomy</name>
+    <message>
+        <source>The mercenaries were not paid. They fight without heart until the treasury can pay them.</source>
+        <translation>لم يُدفع للمرتزقة. يقاتلون بلا حماسة حتى تستطيع الخزينة الدفع لهم.</translation>
+    </message>
+    <message>
+        <source>Levy day: %1 citizens answer the call to arms.</source>
+        <translation>يوم التجنيد: %1 من المواطنين يلبّون نداء السلاح.</translation>
+    </message>
+    <message>
+        <source>A cohort of hastati has come through two battles. They fight as principes now.</source>
+        <translation>خاضت فرقة من الهاستاتي معركتين. وهي تقاتل الآن كبرينسيبس.</translation>
+    </message>
+    <message>
+        <source>A cohort of principes has seen enough battles to stand with the veterans.</source>
+        <translation>شهدت فرقة من البرينسيبس ما يكفي من المعارك لتقف مع المخضرمين.</translation>
     </message>
 </context>
 <context>
@@ -11242,6 +11327,102 @@ Build time: %3s</source>
         <source>Market</source>
         <translation>سوق</translation>
     </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>معسكر المرتزقة</translation>
+    </message>
+    <message>
+        <source>Mercenaries</source>
+        <translation>المرتزقة</translation>
+    </message>
+    <message>
+        <source>Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold
+Every band is paid each minute; also takes in gathered goods</source>
+        <translation>استأجر الغاليين والإيبيريين ومقاليع البليار وفرسان نوميديا بالذهب
+تُدفع لكل عصبة كل دقيقة؛ ويستقبل أيضًا البضائع المجموعة</translation>
+    </message>
+    <message>
+        <source>Build Mercenary Camp
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>ابنِ معسكر المرتزقة
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>إسطبلات الفيلة</translation>
+    </message>
+    <message>
+        <source>Stables</source>
+        <translation>الإسطبلات</translation>
+    </message>
+    <message>
+        <source>The only place war elephants come from
+Each costs gold and food, at most eight alive</source>
+        <translation>المكان الوحيد الذي تأتي منه فيلة الحرب
+كل فيل يكلف ذهبًا وطعامًا، ثمانية أحياء على الأكثر</translation>
+    </message>
+    <message>
+        <source>Build Elephant Stables
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>ابنِ إسطبلات الفيلة
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>فابريكا</translation>
+    </message>
+    <message>
+        <source>The legion&apos;s armoury
+Infantry cost a third less iron; triarii need one</source>
+        <translation>مستودع سلاح الفيلق
+المشاة تكلف ثلثًا أقل من الحديد؛ ويحتاج التريارِي إلى واحدة</translation>
+    </message>
+    <message>
+        <source>Build Fabrica
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>ابنِ فابريكا
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>كاسترا</translation>
+    </message>
+    <message>
+        <source>A marching camp
+Takes in gathered goods and heals troops resting inside</source>
+        <translation>معسكر زحف
+يستقبل البضائع المجموعة ويداوي القوات المستريحة بداخله</translation>
+    </message>
+    <message>
+        <source>Build Castra
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>ابنِ كاسترا
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Building: %1 (+%2 queued)</source>
+        <translation>قيد البناء: %1 (+%2 في الطابور)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.</source>
+        <translation>البنّاؤون مشغولون. المبنى الذي تضعه الآن ينضم إلى طابورهم ويُبنى بالترتيب؛ اضغط Shift باستمرار لوضع عدة مبانٍ. تنتظر الأسوار حتى ينتهوا.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionConstructionCard</name>
@@ -11305,6 +11486,41 @@ Build time: %3s</source>
     </message>
 </context>
 <context>
+    <name>ProductionHiringSection</name>
+    <message>
+        <source>MERCENARY CAMP</source>
+        <translation>معسكر المرتزقة</translation>
+    </message>
+    <message>
+        <source>ELEPHANT STABLES</source>
+        <translation>إسطبلات الفيلة</translation>
+    </message>
+    <message>
+        <source>Hire a whole band for gold. No reserve, no iron - but every band is paid every minute.</source>
+        <translation>استأجر عصبة كاملة بالذهب. لا احتياط ولا حديد، لكن تُدفع لكل عصبة كل دقيقة.</translation>
+    </message>
+    <message>
+        <source>Elephants for gold and food. No reserve; at most eight alive.</source>
+        <translation>فيلة مقابل الذهب والطعام. لا احتياط؛ ثمانية أحياء على الأكثر.</translation>
+    </message>
+    <message>
+        <source>Upkeep %1 gold a minute - trade brings %2</source>
+        <translation>النفقة %1 ذهب في الدقيقة، والتجارة تجلب %2</translation>
+    </message>
+    <message>
+        <source>Contract signed - %1s</source>
+        <translation>وُقّع العقد: %1 ث</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold, %3 food</source>
+        <translation>%1 رجل: %2 ذهب، %3 طعام</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold - upkeep %3 a minute</source>
+        <translation>%1 رجل: %2 ذهب، نفقة %3 في الدقيقة</translation>
+    </message>
+</context>
+<context>
     <name>ProductionHomeSection</name>
     <message>
         <source>HOME RECRUITMENT</source>
@@ -11315,22 +11531,38 @@ Build time: %3s</source>
         <translation>المدنيون المتاحون: %1 / %2</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>جنّد %1
-الكلفة: %2
-زمن الإنتاج: %3 ث
-استخدم وضع التوصيل ثم انقر على ثكنة صديقة لزيادة احتياطيها.</translation>
-    </message>
-    <message>
         <source>families</source>
         <translation>عائلات</translation>
     </message>
     <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>هذا المنزل قدّم مدنييه الثلاثة بالفعل</translation>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Civilians walk to a barracks with room and add to its reserve.</source>
+        <translation>جنّد %1
+التكلفة: %2
+مدة البناء: %3 ث
+يمشي المدنيون إلى ثكنة فيها متسع ويضافون إلى احتياطها.</translation>
+    </message>
+    <message>
+        <source>This home has raised all %1 of its civilians</source>
+        <translation>ربّى هذا البيت كل مدنييه الـ%1</translation>
+    </message>
+    <message>
+        <source>Raise and send civilians</source>
+        <translation>ربِّ المدنيين وأرسلهم</translation>
+    </message>
+    <message>
+        <source>This home raises its civilians while food allows, and they walk to a barracks with room on their own</source>
+        <translation>يربّي هذا البيت مدنييه ما دام الطعام يكفي، ويمشون وحدهم إلى ثكنة فيها متسع</translation>
+    </message>
+    <message>
+        <source>On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.</source>
+        <translation>تشغيل: يربّي هذا البيت مدنييه ما دام الطعام يكفي، ويمشون وحدهم إلى ثكنة فيها متسع. أزل العلامة لتجنّدهم وتوصلهم بنفسك.</translation>
+    </message>
+    <message>
+        <source>Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.</source>
+        <translation>إيقاف: ينتظرك هذا البيت. جنّد المدنيين هنا وأرسلهم إلى ثكنة بأمر «أوصل».</translation>
     </message>
 </context>
 <context>
@@ -11522,10 +11754,6 @@ Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>Queue is full (5/5)</source>
-        <translation>الطابور ممتلئ (5/5)</translation>
-    </message>
-    <message>
         <source>Cannot recruit</source>
         <translation>تعذّر التجنيد</translation>
     </message>
@@ -11620,18 +11848,6 @@ Opens for your troops and allies</source>
         <translation>الاحتياطي لا يكفي</translation>
     </message>
     <message>
-        <source>Already building...</source>
-        <translation>قيد البناء بالفعل...</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>جنّد %1
-الكلفة: %2
-زمن الإنتاج: %3 ث</translation>
-    </message>
-    <message>
         <source>reserve</source>
         <translation>الاحتياطي</translation>
     </message>
@@ -11698,6 +11914,32 @@ Infantry beside it climb up and cross</source>
 Another way up onto the wall walk</source>
         <translation>يُسند إلى الجهة الداخلية من سورك
 طريق آخر إلى ممشى السور</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Shift-click queues five, Ctrl-click keeps recruiting</source>
+        <translation>جنّد %1
+التكلفة: %2
+مدة البناء: %3 ث
+النقر مع Shift يضع خمسًا في الطابور، والنقر مع Ctrl يواصل التجنيد</translation>
+    </message>
+    <message>
+        <source>Your marketplace sells iron for gold.</source>
+        <translation>سوقك يبيع الحديد مقابل الذهب.</translation>
+    </message>
+    <message>
+        <source>Build a marketplace to buy iron with gold.</source>
+        <translation>ابنِ سوقًا لتشتري الحديد بالذهب.</translation>
+    </message>
+    <message>
+        <source>Queue is full (%1/%1)</source>
+        <translation>الطابور ممتلئ (%1/%1)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. Walls can be planned once they finish, or with another builder squad.</source>
+        <translation>البنّاؤون مشغولون. يمكن تخطيط الأسوار عندما ينتهون، أو بفرقة بنّائين أخرى.</translation>
     </message>
 </context>
 <context>
@@ -12205,6 +12447,14 @@ Right-click to cancel.</source>
         <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
         <translation>يقفل على العدو الأقرب إلى مركز الرؤية؛ اضغط مرة أخرى لتحريره. الالتفات يساراً ويميناً ينقل القفل إلى العدو المجاور.</translation>
     </message>
+    <message>
+        <source>Select idle builders</source>
+        <translation>حدّد البنّائين العاطلين</translation>
+    </message>
+    <message>
+        <source>Selects every builder squad that has no job and centres the view on them.</source>
+        <translation>يحدّد كل فرقة بنّائين بلا عمل ويوجّه العرض إليها.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12215,6 +12465,10 @@ Right-click to cancel.</source>
     <message>
         <source>Show unit details</source>
         <translation>عرض تفاصيل الوحدة</translation>
+    </message>
+    <message>
+        <source>Recruiting on repeat. Ctrl-click to stop.</source>
+        <translation>التجنيد متكرر. انقر مع Ctrl للإيقاف.</translation>
     </message>
 </context>
 <context>
@@ -12257,6 +12511,45 @@ Right-click to cancel.</source>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>الأعداء يصعدون أسفل حجارتك. دحرجها!</translation>
+    </message>
+</context>
+<context>
+    <name>RosterCommands</name>
+    <message>
+        <source>Triarii are armed at a Fabrica. Build one first.</source>
+        <translation>يتسلح التريارِي في الفابريكا. ابنِ واحدة أولًا.</translation>
+    </message>
+    <message>
+        <source>This troop needs another building first.</source>
+        <translation>هذه الوحدة تحتاج إلى مبنى آخر أولًا.</translation>
+    </message>
+    <message>
+        <source>You already field the most of these: %1 squads.</source>
+        <translation>لديك بالفعل أقصى عدد من هذه: %1 فرق.</translation>
+    </message>
+    <message>
+        <source>the reserve ran out</source>
+        <translation>نفد الاحتياط</translation>
+    </message>
+    <message>
+        <source>the stores ran short</source>
+        <translation>نقصت المؤن</translation>
+    </message>
+    <message>
+        <source>the army is at its cap</source>
+        <translation>بلغ الجيش حدّه</translation>
+    </message>
+    <message>
+        <source>the building is full</source>
+        <translation>المبنى ممتلئ</translation>
+    </message>
+    <message>
+        <source>the queue is full</source>
+        <translation>الطابور ممتلئ</translation>
+    </message>
+    <message>
+        <source>Queued %1 of %2 recruits: %3.</source>
+        <translation>وُضع %1 من %2 مجندين في الطابور: %3.</translation>
     </message>
 </context>
 <context>
@@ -13943,10 +14236,6 @@ Right-click to cancel.</source>
         <translation>فيل حرب أفريقي</translation>
     </message>
     <message>
-        <source>Auxiliary Archer</source>
-        <translation>رامٍ مساعد</translation>
-    </message>
-    <message>
         <source>Carthaginian Ballista</source>
         <translation>بالِستا قرطاجية</translation>
     </message>
@@ -13965,10 +14254,6 @@ Right-click to cancel.</source>
     <message>
         <source>Faber</source>
         <translation>الصانع الروماني</translation>
-    </message>
-    <message>
-        <source>Legionary</source>
-        <translation>جندي فيلق</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
@@ -14509,6 +14794,18 @@ Right-click to cancel.</source>
     <message>
         <source>Vulnerable to cavalry and sustained melee.</source>
         <translation>عرضة للفرسان وللالتحام الطويل.</translation>
+    </message>
+    <message>
+        <source>Cretan Archers</source>
+        <translation>رماة كريتيون</translation>
+    </message>
+    <message>
+        <source>Hastati</source>
+        <translation>هاستاتي</translation>
+    </message>
+    <message>
+        <source>Numidian Javelin Riders</source>
+        <translation>فرسان الرماح النوميديون</translation>
     </message>
 </context>
 <context>

@@ -8,22 +8,28 @@
 #include "core/component_presentation.h"
 #include "core/world.h"
 #include "game/command/command_dispatcher.h"
+#include "game/game_config.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/economy/construction_cost_catalog.h"
 #include "game/systems/economy/marketplace_system.h"
+#include "game/systems/economy/production_service.h"
 #include "game/systems/economy/production_system.h"
 #include "game/systems/economy/resource_delivery_system.h"
 #include "game/systems/harvest_yields.h"
 #include "game/systems/movement/movement_pipeline.h"
 #include "game/systems/movement/order_service.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/factory.h"
+#include "game/units/troop_catalog_loader.h"
 #include "tests/support/movement_test_access.h"
 
 namespace {
@@ -1058,3 +1064,226 @@ TEST_F(ProductionSystemTest, TheArrivalFlareReachesTheRenderSnapshot) {
   (void)Engine::Core::copy_render_components(*recruit, *copy);
   EXPECT_FALSE(copy->has_component<Engine::Core::ProductionCompletionComponent>());
 }
+
+namespace {
+
+class BarracksQueueTest : public ProductionSystemTest {
+protected:
+  void SetUp() override {
+    ProductionSystemTest::SetUp();
+    ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+    Game::Systems::TroopProfileService::instance().clear();
+    Game::GameConfig::instance().set_max_troops_per_player(100000);
+    barracks = world.create_entity();
+    auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
+    unit->spawn_type = Game::Units::SpawnType::Barracks;
+    unit->owner_id = 1;
+    unit->health = 100;
+    production = barracks->add_component<Engine::Core::ProductionComponent>();
+    production->max_units = 1000;
+    production->manpower_available = 1000;
+    stock(1000);
+  }
+
+  void stock(int each) {
+    auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+    for (const auto type : Game::Systems::k_all_resource_types) {
+      resources.set(1, type, each);
+    }
+  }
+
+  [[nodiscard]] auto in_line() const -> int {
+    return (production->in_progress ? 1 : 0) +
+           static_cast<int>(production->production_queue.size());
+  }
+
+  Engine::Core::World world;
+  Engine::Core::Entity* barracks = nullptr;
+  Engine::Core::ProductionComponent* production = nullptr;
+  static constexpr auto k_line = Game::Units::TroopType::Swordsman;
+};
+
+TEST_F(BarracksQueueTest, ABarracksQueueHoldsTenRecruits) {
+  using Game::Systems::ProductionService;
+  EXPECT_EQ(
+      ProductionService::start_production_batch(world, barracks->get_id(), k_line, 10),
+      10);
+  EXPECT_EQ(in_line(), 10);
+  EXPECT_EQ(ProductionService::start_production(world, barracks->get_id(), k_line),
+            Game::Systems::ProductionResult::QueueFull);
+}
+
+TEST_F(BarracksQueueTest, AShiftBatchStopsWhereTheReserveRunsOut) {
+  using Game::Systems::ProductionService;
+  const int cost = Game::Systems::TroopProfileService::instance()
+                       .get_profile(Game::Systems::NationID::RomanRepublic, k_line)
+                       .production.cost;
+  production->manpower_available = cost * 3 + cost / 2;
+
+  const auto plan = ProductionService::plan_batch(
+      world, barracks->get_id(), k_line, ProductionService::k_recruit_batch);
+  EXPECT_EQ(plan.count, 3);
+  EXPECT_EQ(plan.limit, Game::Systems::ProductionResult::InsufficientManpower);
+
+  EXPECT_EQ(ProductionService::start_production_batch(
+                world, barracks->get_id(), k_line, plan.count),
+            3);
+  EXPECT_EQ(in_line(), 3);
+}
+
+TEST_F(BarracksQueueTest, AShiftBatchNamesTheResourceThatRanOutNotTheReserve) {
+  using Game::Systems::ProductionService;
+  const auto& profile = Game::Systems::TroopProfileService::instance().get_profile(
+      Game::Systems::NationID::RomanRepublic, k_line);
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    resources.set(1, type, profile.production.resource_costs.get(type) * 2);
+  }
+  const auto plan = ProductionService::plan_batch(
+      world, barracks->get_id(), k_line, ProductionService::k_recruit_batch);
+  EXPECT_EQ(plan.count, 2);
+  EXPECT_EQ(plan.limit, Game::Systems::ProductionResult::InsufficientResources);
+}
+
+TEST_F(BarracksQueueTest, RepeatKeepsTheLineToppedUpUntilTheSecondClick) {
+  using Game::Systems::ProductionService;
+  EXPECT_TRUE(ProductionService::toggle_repeat(world, barracks->get_id(), k_line));
+  ProductionService::top_up_repeats(world);
+  EXPECT_EQ(in_line(), 1);
+  for (int tick = 0; tick < 10; ++tick) {
+    ProductionService::top_up_repeats(world);
+  }
+  EXPECT_EQ(in_line(), ProductionService::k_repeat_lookahead)
+      << "repeat must keep a short line, not drain the stores into ten recruits";
+
+  production->production_queue.clear();
+  production->in_progress = false;
+  ProductionService::top_up_repeats(world);
+  EXPECT_GT(in_line(), 0) << "a line that emptied is refilled while repeat is on";
+
+  EXPECT_FALSE(ProductionService::toggle_repeat(world, barracks->get_id(), k_line));
+  production->production_queue.clear();
+  production->in_progress = false;
+  ProductionService::top_up_repeats(world);
+  EXPECT_EQ(in_line(), 0) << "the second Ctrl-click stops the repeat";
+}
+
+TEST_F(BarracksQueueTest, RepeatWaitsForTheStoresInsteadOfGivingUp) {
+  using Game::Systems::ProductionService;
+  stock(0);
+  ASSERT_TRUE(ProductionService::toggle_repeat(world, barracks->get_id(), k_line));
+  ProductionService::top_up_repeats(world);
+  EXPECT_EQ(in_line(), 0);
+  EXPECT_TRUE(production->repeat_active);
+  stock(1000);
+  ProductionService::top_up_repeats(world);
+  EXPECT_EQ(in_line(), 1);
+}
+
+} // namespace
+
+namespace {
+
+class BuilderQueueTest : public ProductionSystemTest {
+protected:
+  auto add_builder(Game::Session::SessionContext& session) -> Engine::Core::Entity* {
+    auto& world = session.world();
+    auto* builder = world.create_entity();
+    builder->add_component<Engine::Core::TransformComponent>(2.0F, 0.0F, 2.0F);
+    builder->add_component<Engine::Core::MovementComponent>();
+    auto* unit =
+        builder->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
+    unit->owner_id = 1;
+    unit->spawn_type = Game::Units::SpawnType::Builder;
+    unit->health = 100;
+    builder->add_component<Engine::Core::BuilderProductionComponent>();
+    return builder;
+  }
+};
+
+TEST_F(BuilderQueueTest, ACrewBetweenJobsStartsItsNextQueuedSite) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  auto* builder = add_builder(session);
+  auto* work = builder->get_component<Engine::Core::BuilderProductionComponent>();
+  work->queued_structure_sites.push_back(
+      {.construction_type = "home", .x = 3.0F, .z = 3.0F, .rotation_y = 0.0F});
+  work->queued_structure_sites.push_back(
+      {.construction_type = "farm", .x = 5.0F, .z = 3.0F, .rotation_y = 0.0F});
+
+  Game::Systems::ProductionSystem system;
+  system.update(&session.world(), 0.016F);
+
+  EXPECT_TRUE(work->has_construction_site);
+  EXPECT_EQ(work->product_type, "home");
+  EXPECT_FLOAT_EQ(work->construction_site_x, 3.0F);
+  ASSERT_EQ(work->queued_structure_sites.size(), 1U);
+  EXPECT_EQ(work->queued_structure_sites.front().construction_type, "farm");
+
+  system.update(&session.world(), 0.016F);
+  EXPECT_EQ(work->product_type, "home")
+      << "the second site waits until the first one ends";
+}
+
+TEST_F(BuilderQueueTest, AFinishedCrewGoesBackToTheGatherJobItLeft) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  auto* builder = add_builder(session);
+  auto* work = builder->get_component<Engine::Core::BuilderProductionComponent>();
+  work->resume_auto_gather = true;
+  work->resume_auto_gather_priority = "cut_tree";
+  work->resume_gather_order = true;
+  work->resume_gather_product_type = "collect_stone";
+  work->resume_gather_anchor_x = 7.0F;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&session.world(), 0.016F);
+
+  EXPECT_TRUE(work->auto_gather);
+  EXPECT_EQ(work->auto_gather_priority, "cut_tree");
+  EXPECT_TRUE(work->has_gather_order);
+  EXPECT_EQ(work->gather_product_type, "collect_stone");
+  EXPECT_FLOAT_EQ(work->gather_anchor_x, 7.0F);
+  EXPECT_FALSE(work->has_work_to_resume());
+}
+
+TEST_F(BuilderQueueTest, AnIdleCrewStartsGatheringWhatItsOwnerHasLeastOf) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  session.set_idle_builders_gather(true);
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Wood, 50);
+  resources.set(1, Game::Systems::ResourceType::Stone, 5);
+  resources.set(1, Game::Systems::ResourceType::Iron, 20);
+  auto* builder = add_builder(session);
+  auto* work = builder->get_component<Engine::Core::BuilderProductionComponent>();
+
+  Game::Systems::ProductionSystem system;
+  for (int second = 0; second < 9; ++second) {
+    system.update(&session.world(), 1.0F);
+  }
+  EXPECT_FALSE(work->auto_gather)
+      << "a crew that has been idle for 9 s is still resting";
+
+  for (int second = 0; second < 2; ++second) {
+    system.update(&session.world(), 1.0F);
+  }
+  EXPECT_TRUE(work->auto_gather);
+  EXPECT_EQ(work->auto_gather_priority, "collect_stone");
+}
+
+TEST_F(BuilderQueueTest, IdleGatheringIsOffUnlessTheMatchAsksForIt) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  auto* builder = add_builder(session);
+  auto* work = builder->get_component<Engine::Core::BuilderProductionComponent>();
+
+  Game::Systems::ProductionSystem system;
+  for (int second = 0; second < 30; ++second) {
+    system.update(&session.world(), 1.0F);
+  }
+  EXPECT_FALSE(work->auto_gather)
+      << "missions and the tutorial keep their builders where the script put them";
+}
+
+} // namespace

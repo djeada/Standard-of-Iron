@@ -16,6 +16,7 @@ Item {
     property string missionName: ""
     property string durationText: ""
     property var armies: []
+    property int wildLosses: 0
     property bool prepared: false
     property bool preparing: false
     property bool returning_to_menu: false
@@ -34,6 +35,7 @@ Item {
         summaryOverlay.returning_to_menu = false;
         menuTransitionTimer.stop();
         summaryOverlay.armies = [];
+        summaryOverlay.wildLosses = 0;
         summaryOverlay.durationText = "";
         summaryOverlay.missionName = "";
     }
@@ -100,14 +102,40 @@ Item {
         return -1;
     }
 
-    function calculate_score(stats) {
-        return stats.enemiesKilled * 100 + stats.troopsRecruited * 10 + stats.barracksOwned * 500;
-    }
-
     function army_name(owner) {
         if (owner.is_contender === false && owner.nation)
             return Design.FactionTheme.nameFor(owner.nation);
         return owner.name;
+    }
+
+    // Two owners that carry the same display name on one side are one army to a
+    // reader (a mission fielding a garrison and a patrol of the same nation):
+    // the owner registry only suffixes the second with its id to tell them apart.
+    function army_key(entry) {
+        return entry.teamId + "|" + entry.name.replace(/ \(\d+\)$/, "");
+    }
+
+    function merge_duplicate_armies(roster) {
+        var merged = [];
+        var byKey = {};
+        for (var i = 0; i < roster.length; ++i) {
+            var entry = roster[i];
+            var key = summaryOverlay.army_key(entry);
+            var into = entry.isLocal ? undefined : byKey[key];
+            if (into === undefined) {
+                if (!entry.isLocal)
+                    byKey[key] = entry;
+                merged.push(entry);
+                continue;
+            }
+            into.name = into.name.replace(/ \(\d+\)$/, "");
+            into.kills += entry.kills;
+            into.losses += entry.losses;
+            into.trained += entry.trained;
+            into.barracks += entry.barracks;
+            into.score += entry.score;
+        }
+        return merged;
     }
 
     function build_army_list() {
@@ -128,20 +156,24 @@ Item {
         var winningTeam = winning_team_id(owners, localTeamId);
         var roster = [];
         var longestPlayTime = 0;
+        var wildLosses = 0;
         for (var j = 0; j < owners.length; ++j) {
             var owner = owners[j];
             if (owner.type !== "Player" && owner.type !== "AI")
                 continue;
-            if (owner.is_contender === false && owner.team_id === localTeamId)
+            // Only contenders are armies. The Iron Sepulcher and the like never
+            // play for the field; what they killed is counted as wild losses.
+            if (owner.is_contender === false)
                 continue;
             var stats = summaryOverlay.engine.get_player_stats(owner.id);
             longestPlayTime = Math.max(longestPlayTime, stats.playTimeSec);
+            wildLosses += stats.lossesToWild !== undefined ? stats.lossesToWild : 0;
             roster.push({
                     "ownerId": owner.id,
                     "teamId": owner.team_id,
                     "name": summaryOverlay.army_name(owner),
                     "accent": owner.color,
-                    "isContender": owner.is_contender !== false,
+                    "isContender": true,
                     "factionId": owner.nation ? owner.nation : "",
                     "factionName": owner.nation ? Design.FactionTheme.nameFor(owner.nation) : "",
                     "isLocal": !summaryOverlay.is_spectator && owner.id === localOwnerId,
@@ -150,9 +182,12 @@ Item {
                     "losses": stats.losses,
                     "trained": stats.troopsRecruited,
                     "barracks": stats.barracksOwned,
-                    "score": calculate_score(stats)
+                    "score": 0
                 });
         }
+        roster = summaryOverlay.merge_duplicate_armies(roster);
+        for (var m = 0; m < roster.length; ++m)
+            roster[m].score = roster[m].kills * 100 + roster[m].trained * 10 + roster[m].barracks * 500;
         var winnerNames = [];
         if (summaryOverlay.is_spectator) {
             var spectatorWinner = spectator_winning_team(roster);
@@ -167,6 +202,7 @@ Item {
                 return b.score - a.score;
             });
         summaryOverlay.armies = roster;
+        summaryOverlay.wildLosses = wildLosses;
         summaryOverlay.durationText = Design.Numerals.span(longestPlayTime);
         summaryOverlay.missionName = current_mission_name();
     }
@@ -207,8 +243,9 @@ Item {
         missionName: summaryOverlay.missionName
         durationText: summaryOverlay.durationText
         armies: summaryOverlay.armies
+        wildLosses: summaryOverlay.wildLosses
         retryAvailable: !summaryOverlay.is_spectator
-        retryAction: summaryOverlay.is_mission ? qsTr("Retry mission") : qsTr("Play again")
+        retryAction: summaryOverlay.is_mission ? qsTr("Retry mission") : qsTr("Fight it again")
         onDismissed: summaryOverlay.hide()
         onMenuRequested: summaryOverlay.return_to_main_menu()
         onRetryRequested: {

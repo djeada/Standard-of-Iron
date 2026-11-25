@@ -210,7 +210,7 @@ auto parse_command_line(QCoreApplication& app,
       qWarning() << "Unknown --graphics-preset value:" << preset;
     }
     // An explicit preset on the command line is a choice for this run: GPU
-    // detection and the battle-time step-down leave it alone. Not saved.
+    // detection leaves it alone and it is not saved.
     gfx.set_quality_chosen_by_user(true);
   }
 

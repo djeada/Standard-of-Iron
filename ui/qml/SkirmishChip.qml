@@ -25,7 +25,7 @@ Rectangle {
     signal activated
 
     implicitWidth: Design.Metrics.space24 * 4
-    implicitHeight: Design.Metrics.controlHeight + Design.Metrics.space8
+    implicitHeight: Math.max(Design.Metrics.controlHeight + Design.Metrics.space8, text_column.implicitHeight + Design.Metrics.space8)
     radius: Theme.radiusSmall
     color: engaged ? Qt.lighter(Theme.cardBaseB, 1.18) : Theme.cardBaseB
     border.color: engaged ? Theme.selectedBr : outline
@@ -82,6 +82,8 @@ Rectangle {
         }
 
         Column {
+            id: text_column
+
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width
             spacing: 1
@@ -89,7 +91,7 @@ Rectangle {
             Text {
                 width: parent.width
                 text: chip.caption
-                visible: chip.caption !== "" && chip.value_fits
+                visible: chip.caption !== ""
                 color: Theme.textSubLite
                 font.pixelSize: Design.Typography.caption
                 horizontalAlignment: Text.AlignHCenter

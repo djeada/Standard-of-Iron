@@ -3,6 +3,7 @@
 #include <QJsonArray>
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <ranges>
 #include <vector>
@@ -12,9 +13,26 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/util/checkpoint_values.h"
+#include "nation_recruitment.h"
+#include "systems/nation_registry.h"
 #include "systems/player_feedback.h"
 #include "systems/player_resource_registry.h"
 #include "units/spawn_type.h"
+
+namespace Game::Systems {
+
+auto sell_price_with_nation(const Engine::Core::World& world,
+                            int owner_id,
+                            int base_price) -> int {
+  const auto* nation = owner_nation(world, owner_id);
+  if (nation == nullptr || nation->economy.trade_sell_multiplier == 1.0F) {
+    return base_price;
+  }
+  return static_cast<int>(std::lround(static_cast<float>(base_price) *
+                                      nation->economy.trade_sell_multiplier));
+}
+
+} // namespace Game::Systems
 
 namespace Game::Systems {
 
@@ -145,6 +163,8 @@ auto MarketplaceSystem::sell_resource(const Engine::Core::World& world,
   default:
     return false;
   }
+  // Carthage's Emporion sells dearer (NATION_ASYMMETRY.md 4.1).
+  sell_price = sell_price_with_nation(world, owner_id, sell_price);
   trade_resources(owner_id,
                   find_marketplace(world, owner_id),
                   resource,

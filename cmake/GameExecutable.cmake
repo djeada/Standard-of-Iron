@@ -98,6 +98,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/FormationReadoutCell.qml
             ui/qml/FormationOptionRow.qml
             ui/qml/FormationStatusBadge.qml
+            ui/qml/ControlGroupStrip.qml
             ui/qml/HintCard.qml
             ui/qml/ProductionPanel.qml
             ui/qml/ProductionBarracksQueue.qml
@@ -108,6 +109,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/ProductionConstructionCard.qml
             ui/qml/ProductionMarketplaceSection.qml
             ui/qml/ProductionTempleSection.qml
+            ui/qml/ProductionHiringSection.qml
             ui/qml/ProductionFarmSection.qml
             ui/qml/ProductionEmptyHint.qml
             ui/qml/SaveGamePanel.qml

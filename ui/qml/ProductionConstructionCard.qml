@@ -18,7 +18,7 @@ Rectangle {
     readonly property var hs: StyleGuide.historical
 
     property var construction_info: panel ? panel.get_construction_info(item_type) : ({})
-    property var card_state: panel ? panel.construction_card_state(builder_prod, construction_info) : ({
+    property var card_state: panel ? panel.construction_card_state(builder_prod, construction_info, item_type) : ({
             "enabled": false,
             "reason": ""
         })

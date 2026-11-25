@@ -142,6 +142,7 @@ auto AIStrategyFactory::create_config(const AIPlayerProfile& profile)
     -> AIStrategyConfig {
   AIStrategyConfig config = create_config(profile.strategy);
   config.posture = profile.posture;
+  config.runs_economy = profile.runs_economy;
   config.doctrine = profile.doctrine;
   apply_personality(config,
                     profile.personality.aggression,

@@ -289,6 +289,9 @@
     "economy": {
       "targets": ["soi_economy"],
       "files": [
+        "game/systems/economy/nation_recruitment",
+        "game/systems/builder_idle",
+        "game/systems/economy/nation_economy_system",
         "game/systems/economy/production_service",
         "game/systems/economy/production_system",
         "game/systems/economy/production_system_approach",
@@ -306,6 +309,7 @@
         "game/systems/economy/construction_cost_catalog",
         "game/systems/economy/resource_delivery_system",
         "game/systems/economy/civilian_delivery_system",
+        "game/systems/economy/civilian_reporting_system",
         "game/systems/economy/gather_loop_system",
         "game/systems/economy/farm_system",
         "game/systems/economy/food_targets",
@@ -408,7 +412,7 @@
     "session": {
       "targets": ["game_sim"],
       "paths": ["game/session/", "game/command/", "game/commander/"],
-      "files": ["game/map/match_loader"],
+      "files": ["game/map/match_loader", "game/map/skirmish_camp_start"],
       "may_use": [
         "domain_types",
         "components",

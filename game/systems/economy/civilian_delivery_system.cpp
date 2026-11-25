@@ -6,6 +6,7 @@
 
 #include "core/component_economy.h"
 #include "core/world.h"
+#include "nation_recruitment.h"
 #include "recruitment_gate.h"
 #include "systems/building_collision_registry.h"
 #include "systems/player_feedback.h"
@@ -118,8 +119,10 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    if (barracks_prod->manpower_available + k_civilian_delivery_reserve_grant >
-        barracks_prod->manpower_limit()) {
+    // Carthage's citizens are few: a civilian is worth fewer men there
+    // (NATION_ASYMMETRY.md 4.1).
+    const int grant = civilian_reserve_grant(*world, barracks_unit->owner_id);
+    if (barracks_prod->manpower_available + grant > barracks_prod->manpower_limit()) {
       to_release.push_back(civilian_id);
       continue;
     }
@@ -127,7 +130,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
     grant_manpower(barracks_unit->owner_id,
                    barracks_id,
                    *barracks_prod,
-                   k_civilian_delivery_reserve_grant,
+                   grant,
                    barracks_prod->manpower_limit());
     to_remove.push_back(civilian_id);
   }

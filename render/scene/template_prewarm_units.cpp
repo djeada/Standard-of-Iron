@@ -430,6 +430,23 @@ void Renderer::prewarm_unit_templates(
         add_troop_profile(nation, type);
       }
     }
+
+    // A seat's mercenary bands field other nations' troops under its own colours
+    // (NATION_ASYMMETRY.md 4.2): bake the Gallic, Iberian and other band
+    // templates too, or the first hired band is drawn from a render-time bake.
+    for (const auto& nation : nations) {
+      if (active_nation_ids.find(nation.id) == active_nation_ids.end()) {
+        continue;
+      }
+      for (const auto& band : nation.mercenary_bands) {
+        const auto* band_nation = world_view().nations() != nullptr
+                                      ? world_view().nations()->get_nation(band.nation)
+                                      : nullptr;
+        if (band_nation != nullptr) {
+          add_troop_profile(*band_nation, band.unit_type);
+        }
+      }
+    }
   }
 
   for (auto const type : {Game::Units::TroopType::SkeletonSwordsman,

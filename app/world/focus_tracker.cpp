@@ -6,6 +6,7 @@
 #include "app/viewmodels/activity_view_model.h"
 #include "app/world/unit_queries.h"
 #include "app/world/visibility_coordinator.h"
+#include "game/core/component_core.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/session/selection_service.h"
@@ -13,6 +14,7 @@
 #include "game/systems/alliance_board.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/unit_activity.h"
+#include "game/units/spawn_type.h"
 
 namespace App::World {
 
@@ -62,6 +64,16 @@ auto FocusTracker::describe(const FocusInputs& inputs,
     if (Game::Systems::check_ally_call(*world, session->owners(), local, id, kind) ==
         Game::Systems::AllyCallProblem::None) {
       info.ally_call = QLatin1String(Game::Systems::ally_call_kind_key(kind));
+    }
+  }
+  if (unit->spawn_type == Game::Units::SpawnType::Barracks && !info.is_own &&
+      !info.is_ally) {
+    const auto* capture = world->try_get<Engine::Core::CaptureComponent>(id);
+    if (capture == nullptr) {
+      info.capture_seconds =
+          static_cast<double>(Engine::Core::Defaults::k_capture_required_time);
+    } else if (!capture->capture_blocked) {
+      info.capture_seconds = static_cast<double>(capture->required_time);
     }
   }
   info.health = described.health;

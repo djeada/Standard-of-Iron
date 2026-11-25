@@ -370,7 +370,7 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent* event) {
                                                      width(),
                                                      height(),
                                                      k_local_owner_id,
-                                                     true);
+                                                     false);
       select_entity(picked, additive);
     }
     m_selection_drag_active = false;

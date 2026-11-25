@@ -188,8 +188,10 @@ auto run_real_match_setup(Game::Session::SessionContext& session,
     const auto& definition = *context.definition();
     Game::Session::configure_map_systems(session.world(), definition, nullptr);
     Game::Systems::ResourceAmounts stock = definition.starting_resources;
-    stock.set(Game::Systems::ResourceType::Gold,
-              Game::GameConfig::instance().get_starting_gold());
+    if (Game::GameConfig::instance().has_chosen_starting_gold()) {
+      stock.set(Game::Systems::ResourceType::Gold,
+                Game::GameConfig::instance().get_starting_gold());
+    }
     for (const auto& owner : session.owners().get_all_owners()) {
       for (const auto type : Game::Systems::k_all_resource_types) {
         session.economy().set(owner.owner_id, type, stock.get(type));

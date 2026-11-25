@@ -370,6 +370,17 @@ auto SessionContext::advance(double real_dt,
   return steps;
 }
 
+void SessionContext::service_stopped_clock() {
+  auto& world = m_state->world;
+  const bool recorded = m_state->replay_recorder != nullptr ||
+                        replay_player() != nullptr || m_state->commands.replay_only();
+  world.service_stopped_frame([&] {
+    if (!recorded) {
+      m_state->commands.drain(world, m_state->clock.tick());
+    }
+  });
+}
+
 auto SessionContext::advance_from_log(int max_steps, const TickFn& per_tick) -> int {
   const auto& log = m_state->commands.log();
   if (!log.follower()) {
@@ -413,6 +424,15 @@ void SessionContext::reset() {
   m_state->army_formations.clear();
   m_state->clock.reset();
   m_state->rng.reseed(m_state->seed);
+  m_state->economy.set_idle_builders_gather(false);
+}
+
+auto SessionContext::set_idle_builders_gather(bool enabled) -> void {
+  m_state->economy.set_idle_builders_gather(enabled);
+}
+
+auto SessionContext::idle_builders_gather() const -> bool {
+  return m_state->economy.idle_builders_gather();
 }
 
 auto SessionContext::active() -> SessionContext& {

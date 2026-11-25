@@ -105,9 +105,14 @@ auto generate_trees(const ScatterRequest& request,
         continue;
       }
       const QVector3D surface = terrain_service.world_prop_world_position(prop);
-      const float scale =
-          prop.scale * Game::Map::world_prop_render_scale(profile.prop_type) *
+      // A pine wood grades down to saplings at its edge. A broadleaf at a
+      // third of its size is a bush, so those keep most of their stature.
+      const float stand =
           canopy_height_factor(request.ecology, surface.x(), surface.z());
+      const float stature =
+          species == Game::Map::TreeSpecies::Olive ? 0.78F + 0.22F * stand : stand;
+      const float scale =
+          prop.scale * Game::Map::world_prop_render_scale(profile.prop_type) * stature;
       const QVector3D pos(surface.x(),
                           bed_tree_base(terrain_service, species, surface, scale),
                           surface.z());

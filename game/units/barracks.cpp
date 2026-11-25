@@ -28,14 +28,13 @@ auto manpower_ceiling_for(Game::Systems::NationID nation_id, int authored) -> in
   }
   int dearest = 0;
   for (const auto& troop : nation->available_troops) {
-    if (is_commander_troop(troop.unit_type) ||
-        Game::Systems::recruiting_building_for(troop.unit_type) !=
-            SpawnType::Barracks) {
+    if (is_commander_troop(troop.unit_type) || !troop.recruitable ||
+        nation->recruiting_building(troop.unit_type) != SpawnType::Barracks) {
       continue;
     }
     dearest = std::max(dearest, troop.cost);
   }
-  return std::max(authored, dearest + Game::Systems::k_civilian_delivery_reserve_grant);
+  return std::max(authored, dearest + nation->economy.civilian_reserve_grant);
 }
 
 } // namespace
@@ -92,6 +91,10 @@ void Barracks::init(const SpawnParams& params) {
       prod->build_time = 10.0F;
       prod->max_units = params.max_population;
       prod->manpower_ceiling = manpower_ceiling_for(nation_id, params.max_population);
+      if (!params.is_initial_spawn) {
+        prod->manpower_ceiling = std::max(
+            prod->manpower_ceiling, Game::Systems::k_built_barracks_reserve_ceiling);
+      }
       prod->manpower_available = params.is_initial_spawn ? params.max_population : 0;
       prod->in_progress = false;
       prod->time_remaining = 0.0F;

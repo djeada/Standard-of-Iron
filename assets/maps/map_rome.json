@@ -23613,8 +23613,8 @@
     ],
     "starting_resources": {
         "food": 500,
-        "gold": 600,
-        "iron": 150,
+        "gold": 500,
+        "iron": 200,
         "stone": 300,
         "wood": 400
     },

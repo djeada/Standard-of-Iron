@@ -304,6 +304,10 @@
         <source>Ask allies to defend this barracks.</source>
         <translation>Peça aos aliados que defendam este quartel.</translation>
     </message>
+    <message>
+        <source>Levy in %1s</source>
+        <translation>Recrutamento em %1 s</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -367,6 +371,10 @@
         <source>Retry mission</source>
         <translation>Repetir missão</translation>
     </message>
+    <message>
+        <source>%1 fell to wild beasts and the restless dead, and are credited to no army.</source>
+        <translation>%1 caíram diante das feras e dos mortos inquietos, e não contam para nenhum exército.</translation>
+    </message>
 </context>
 <context>
     <name>BattleSummary</name>
@@ -375,12 +383,12 @@
         <translation>Repetir missão</translation>
     </message>
     <message>
-        <source>Play again</source>
-        <translation>Jogar novamente</translation>
-    </message>
-    <message>
         <source>Held the field: %1</source>
         <translation>Mantiveram o campo: %1</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Lutar de novo</translation>
     </message>
 </context>
 <context>
@@ -3030,6 +3038,24 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
 </context>
 <context>
+    <name>ControlGroupStrip</name>
+    <message>
+        <source>Control groups</source>
+        <translation>Grupos de controle</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2</source>
+        <translation>%1  ·  %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Control group %1 holds %n unit(s). Click, or press %1, to select it.</source>
+        <translation>
+            <numerusform>O grupo de controle %1 tem %n unidade. Clique ou pressione %1 para selecioná-lo.</numerusform>
+            <numerusform>O grupo de controle %1 tem %n unidades. Clique ou pressione %1 para selecioná-lo.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
@@ -3439,16 +3465,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Seu assentamento se sustenta sozinho</translation>
     </message>
     <message>
-        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
-        <translation>Recrute um construtor em um quartel e mande-o coletar madeira, pedra ou ferro.</translation>
-    </message>
-    <message>
         <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
         <translation>Com um construtor selecionado, pressione Construir e posicione uma Casa para aumentar sua reserva, ou um Quartel para recrutar.</translation>
-    </message>
-    <message>
-        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
-        <translation>Selecione um quartel e recrute tropas. Cada uma custa reserva e recursos, ambos mostrados no cartão dela.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -3505,6 +3523,18 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
         <translation>Encosta numa muralha inimiga; a infantaria ao lado sobe pela escada dela e passa para o adarve.</translation>
+    </message>
+    <message>
+        <source>Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.</source>
+        <translation>Treine três construtores num quartel e depois construa Casas. Civis viram soldados. Enquanto isso, mande os construtores coletar madeira, pedra ou ferro.</translation>
+    </message>
+    <message>
+        <source>Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.</source>
+        <translation>Treine três construtores e depois construa Casas. Civis viram soldados. Enquanto isso, selecione um construtor, aperte Coletar e clique numa árvore, rocha ou jazida de minério.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.</source>
+        <translation>Selecione um quartel e recrute tropas. Cada uma custa reserva e recursos, ambos mostrados no cartão. Shift-clique num cartão para enfileirar cinco; Ctrl-clique para continuar recrutando até clicar de novo.</translation>
     </message>
 </context>
 <context>
@@ -3708,6 +3738,26 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Ladder</source>
         <translation>Escada</translation>
+    </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Acampamento mercenário</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Estábulos de elefantes</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Fabrica</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Castra</translation>
+    </message>
+    <message>
+        <source>Emporion</source>
+        <translation>Empório</translation>
     </message>
 </context>
 <context>
@@ -4603,6 +4653,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Group %1 cleared</source>
         <translation>Grupo %1 esvaziado</translation>
+    </message>
+    <message>
+        <source>No idle builders</source>
+        <translation>Nenhum construtor ocioso</translation>
     </message>
 </context>
 <context>
@@ -5694,6 +5748,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>the whole field</source>
         <translation>todo o campo</translation>
     </message>
+    <message>
+        <source>Kills %1  Losses %2 (%3 wild)</source>
+        <translation>Abates %1  Perdas %2 (%3 para o selvagem)</translation>
+    </message>
 </context>
 <context>
     <name>HUDTop</name>
@@ -6461,6 +6519,14 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
         <translation>Seus comandantes aliados enviam homens para segurar este edifício se estiverem dispostos e tiverem homens de sobra.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it, three times its defenders, for %1 s.</source>
+        <translation>Pode ser capturado: mantenha suas tropas ao lado, o triplo dos defensores, por %1 s.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it for %1 s.</source>
+        <translation>Pode ser capturado: mantenha suas tropas ao lado por %1 s.</translation>
     </message>
 </context>
 <context>
@@ -7311,14 +7377,6 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
         <source>Quit</source>
         <translation>Sair</translation>
     </message>
-    <message>
-        <source>Graphics lowered to %1 to keep the battle smooth</source>
-        <translation>Gráficos reduzidos para %1 para manter a batalha fluida</translation>
-    </message>
-    <message>
-        <source>Pick a preset in Settings to keep your own choice.</source>
-        <translation>Escolha uma predefinição nas Configurações para manter sua própria escolha.</translation>
-    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7413,10 +7471,6 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>SECOND PUNIC WAR</source>
         <translation>SEGUNDA GUERRA PÚNICA</translation>
-    </message>
-    <message>
-        <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>Legiões, frotas, elefantes e linhas de suprimento disputadas</translation>
     </message>
     <message>
         <source>SPQR</source>
@@ -7553,6 +7607,10 @@ Cada recruta custa os homens do seu esquadrão; a reserva num quartel eleva o li
     <message>
         <source>Abandon</source>
         <translation>Abandonar</translation>
+    </message>
+    <message>
+        <source>Legions, war elephants, walled towns, and contested supply lines</source>
+        <translation>Legiões, elefantes de guerra, cidades muradas e linhas de suprimento disputadas</translation>
     </message>
 </context>
 <context>
@@ -8641,10 +8699,6 @@ para ver a prévia</translation>
     <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
         <translation>O desfiladeiro fica com eles, então. Um conselho a quem ler isto: não siga as luzes no campo de neve. O que carrega uma lanterna naquela altitude deixou de ser pastor há muito tempo.</translation>
-    </message>
-    <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Então os batedores não voltam. Pois bem: todo mundo começa por algum lugar, e você começou destroçando um posto cheio de homens que esperavam o almoço. Da próxima vez Roma mandará alguém que conte.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
@@ -9927,10 +9981,6 @@ para ver a prévia</translation>
         <translation>Inverno de 218 a.C.: depois da vitória no Trébia, Aníbal atacou o depósito perto de Placência e depois tomou de assalto Victumulae, um mercado fortificado da planície ínsubre onde o povo da região havia se reunido em busca de segurança. Tito Lívio registra que ela caiu por assalto e foi saqueada. Esta história alterada dá à vila um prefeito romano, uma guarnição na cidadela e uma força de socorro na estrada de Placência.</translation>
     </message>
     <message>
-        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
-        <translation>Tome o segundo acampamento na estrada de suprimentos do sul. Nenhuma ponte alcança a sua margem do rio.</translation>
-    </message>
-    <message>
         <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
         <translation>202 a.C., perto de Zama, na África: Públio Cornélio Cipião — filho do cônsul de 218, logo a ser chamado de Africano — dispôs seus manípulos uns atrás dos outros, em vez do habitual xadrez, deixando corredores retos guardados por vélites, pelos quais os oitenta elefantes de Aníbal podiam ser conduzidos ou deixados passar. A cavalaria númida de Masinissa, à direita, e a cavalaria itálica de Lélio, à esquerda, expulsaram do campo a cavalaria de Aníbal. As três linhas de Aníbal — mercenários lígures, gauleses, baleáricos e mouros; levas cartaginesas e africanas; seus veteranos da Itália guardados na terceira — combateram as legiões até um impasse, até que a cavalaria romana e a númida voltaram e golpearam a terceira linha pela retaguarda. A intervenção do Sepulcro de Ferro é a ruptura deliberada da campanha com a história, em chave de fantasia sombria.</translation>
     </message>
@@ -10374,6 +10424,18 @@ para ver a prévia</translation>
         <source>The third rising</source>
         <translation>A terceira leva</translation>
     </message>
+    <message>
+        <source>Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Segure os dois acampamentos: o forte da colina e agora a cidade do rio na estrada de suprimentos do sul. Nenhuma ponte chega à sua margem.</translation>
+    </message>
+    <message>
+        <source>So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Então o posto avançado cai. Todo mundo começa em algum lugar, e você começou quebrando um acampamento cheio de homens que esperavam o almoço. Da próxima vez Roma mandará alguém que saiba contar.</translation>
+    </message>
+    <message>
+        <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
+        <translation>Você encontrou meus batedores. Dois homens enviados para contar suas tendas, e você responde com o acampamento inteiro. Pois bem, mas vou querer saber quem os matou.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10516,6 +10578,25 @@ para ver a prévia</translation>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>NationEconomy</name>
+    <message>
+        <source>The mercenaries were not paid. They fight without heart until the treasury can pay them.</source>
+        <translation>Os mercenários não foram pagos. Lutam sem ânimo até que o tesouro possa pagá-los.</translation>
+    </message>
+    <message>
+        <source>Levy day: %1 citizens answer the call to arms.</source>
+        <translation>Dia de recrutamento: %1 cidadãos atendem ao chamado às armas.</translation>
+    </message>
+    <message>
+        <source>A cohort of hastati has come through two battles. They fight as principes now.</source>
+        <translation>Uma coorte de hastati sobreviveu a duas batalhas. Agora luta como principes.</translation>
+    </message>
+    <message>
+        <source>A cohort of principes has seen enough battles to stand with the veterans.</source>
+        <translation>Uma coorte de principes já viu batalhas suficientes para ficar com os veteranos.</translation>
     </message>
 </context>
 <context>
@@ -11226,6 +11307,102 @@ Tempo de construção: %3s</translation>
         <source>Market</source>
         <translation>Mercado</translation>
     </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Acampamento mercenário</translation>
+    </message>
+    <message>
+        <source>Mercenaries</source>
+        <translation>Mercenários</translation>
+    </message>
+    <message>
+        <source>Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold
+Every band is paid each minute; also takes in gathered goods</source>
+        <translation>Contrate gauleses, iberos, fundeiros baleares e cavaleiros númidas por ouro
+Cada bando é pago a cada minuto; também recebe bens coletados</translation>
+    </message>
+    <message>
+        <source>Build Mercenary Camp
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir acampamento mercenário
+%1
+Custo: %2
+Tempo de construção: %3 s</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Estábulos de elefantes</translation>
+    </message>
+    <message>
+        <source>Stables</source>
+        <translation>Estábulos</translation>
+    </message>
+    <message>
+        <source>The only place war elephants come from
+Each costs gold and food, at most eight alive</source>
+        <translation>O único lugar de onde vêm os elefantes de guerra
+Cada um custa ouro e comida, no máximo oito vivos</translation>
+    </message>
+    <message>
+        <source>Build Elephant Stables
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir estábulos de elefantes
+%1
+Custo: %2
+Tempo de construção: %3 s</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Fabrica</translation>
+    </message>
+    <message>
+        <source>The legion&apos;s armoury
+Infantry cost a third less iron; triarii need one</source>
+        <translation>O arsenal da legião
+A infantaria custa um terço a menos de ferro; os triários precisam de uma</translation>
+    </message>
+    <message>
+        <source>Build Fabrica
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir Fabrica
+%1
+Custo: %2
+Tempo de construção: %3 s</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Castra</translation>
+    </message>
+    <message>
+        <source>A marching camp
+Takes in gathered goods and heals troops resting inside</source>
+        <translation>Um acampamento de marcha
+Recebe bens coletados e cura as tropas que descansam dentro</translation>
+    </message>
+    <message>
+        <source>Build Castra
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir Castra
+%1
+Custo: %2
+Tempo de construção: %3 s</translation>
+    </message>
+    <message>
+        <source>Building: %1 (+%2 queued)</source>
+        <translation>Construindo: %1 (+%2 na fila)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.</source>
+        <translation>Os construtores estão ocupados. Uma estrutura posicionada agora entra na fila deles e é construída em ordem; segure Shift para posicionar várias. Muralhas esperam até eles terminarem.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionConstructionCard</name>
@@ -11289,6 +11466,41 @@ Tempo de construção: %3s</translation>
     </message>
 </context>
 <context>
+    <name>ProductionHiringSection</name>
+    <message>
+        <source>MERCENARY CAMP</source>
+        <translation>ACAMPAMENTO MERCENÁRIO</translation>
+    </message>
+    <message>
+        <source>ELEPHANT STABLES</source>
+        <translation>ESTÁBULOS DE ELEFANTES</translation>
+    </message>
+    <message>
+        <source>Hire a whole band for gold. No reserve, no iron - but every band is paid every minute.</source>
+        <translation>Contrate um bando inteiro por ouro. Sem reserva, sem ferro, mas cada bando é pago a cada minuto.</translation>
+    </message>
+    <message>
+        <source>Elephants for gold and food. No reserve; at most eight alive.</source>
+        <translation>Elefantes por ouro e comida. Sem reserva; no máximo oito vivos.</translation>
+    </message>
+    <message>
+        <source>Upkeep %1 gold a minute - trade brings %2</source>
+        <translation>Manutenção %1 de ouro por minuto; o comércio traz %2</translation>
+    </message>
+    <message>
+        <source>Contract signed - %1s</source>
+        <translation>Contrato assinado: %1 s</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold, %3 food</source>
+        <translation>%1 homens: %2 de ouro, %3 de comida</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold - upkeep %3 a minute</source>
+        <translation>%1 homens: %2 de ouro, manutenção %3 por minuto</translation>
+    </message>
+</context>
+<context>
     <name>ProductionHomeSection</name>
     <message>
         <source>HOME RECRUITMENT</source>
@@ -11299,22 +11511,38 @@ Tempo de construção: %3s</translation>
         <translation>Civis disponíveis: %1 / %2</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>Recrutar %1
-Custo: %2
-Tempo de treino: %3s
-Use o modo Entregar e clique em um quartel aliado para aumentar a reserva dele.</translation>
-    </message>
-    <message>
         <source>families</source>
         <translation>famílias</translation>
     </message>
     <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>Esta casa já destinou seus 3 civis</translation>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Civilians walk to a barracks with room and add to its reserve.</source>
+        <translation>Recrutar %1
+Custo: %2
+Tempo de construção: %3 s
+Civis vão a um quartel com espaço e somam à sua reserva.</translation>
+    </message>
+    <message>
+        <source>This home has raised all %1 of its civilians</source>
+        <translation>Esta casa já criou todos os seus %1 civis</translation>
+    </message>
+    <message>
+        <source>Raise and send civilians</source>
+        <translation>Criar e enviar civis</translation>
+    </message>
+    <message>
+        <source>This home raises its civilians while food allows, and they walk to a barracks with room on their own</source>
+        <translation>Esta casa cria seus civis enquanto houver comida, e eles vão sozinhos a um quartel com espaço</translation>
+    </message>
+    <message>
+        <source>On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.</source>
+        <translation>Ligado: esta casa cria seus civis enquanto houver comida, e eles vão sozinhos a um quartel com espaço. Desmarque para recrutá-los e entregá-los você mesmo.</translation>
+    </message>
+    <message>
+        <source>Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.</source>
+        <translation>Desligado: esta casa espera por você. Recrute civis aqui e mande-os a um quartel com Entregar.</translation>
     </message>
 </context>
 <context>
@@ -11506,10 +11734,6 @@ Use o modo Entregar e clique em um quartel aliado para aumentar a reserva dele.<
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>Queue is full (5/5)</source>
-        <translation>Fila cheia (5/5)</translation>
-    </message>
-    <message>
         <source>Cannot recruit</source>
         <translation>Não é possível recrutar</translation>
     </message>
@@ -11604,18 +11828,6 @@ Abre-se para suas tropas e aliados</translation>
         <translation>Reserva insuficiente</translation>
     </message>
     <message>
-        <source>Already building...</source>
-        <translation>Já construindo...</translation>
-    </message>
-    <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>Recrutar %1
-Custo: %2
-Tempo de treino: %3s</translation>
-    </message>
-    <message>
         <source>reserve</source>
         <translation>reserva</translation>
     </message>
@@ -11682,6 +11894,32 @@ A infantaria ao lado sobe e atravessa</translation>
 Another way up onto the wall walk</source>
         <translation>Apoia-se no lado interno da sua muralha
 Outro acesso ao adarve</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Shift-click queues five, Ctrl-click keeps recruiting</source>
+        <translation>Recrutar %1
+Custo: %2
+Tempo de construção: %3 s
+Shift-clique enfileira cinco, Ctrl-clique continua recrutando</translation>
+    </message>
+    <message>
+        <source>Your marketplace sells iron for gold.</source>
+        <translation>Seu mercado vende ferro por ouro.</translation>
+    </message>
+    <message>
+        <source>Build a marketplace to buy iron with gold.</source>
+        <translation>Construa um mercado para comprar ferro com ouro.</translation>
+    </message>
+    <message>
+        <source>Queue is full (%1/%1)</source>
+        <translation>A fila está cheia (%1/%1)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. Walls can be planned once they finish, or with another builder squad.</source>
+        <translation>Os construtores estão ocupados. Muralhas podem ser planejadas quando eles terminarem, ou com outra equipe de construtores.</translation>
     </message>
 </context>
 <context>
@@ -12189,6 +12427,14 @@ Clique com o botão direito para cancelar.</translation>
         <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
         <translation>Trava o inimigo mais próximo do centro da visão; pressione de novo para soltar. Virar à esquerda e à direita passa a trava para o inimigo ao lado.</translation>
     </message>
+    <message>
+        <source>Select idle builders</source>
+        <translation>Selecionar construtores ociosos</translation>
+    </message>
+    <message>
+        <source>Selects every builder squad that has no job and centres the view on them.</source>
+        <translation>Seleciona todas as equipes de construtores sem tarefa e centraliza a vista nelas.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12199,6 +12445,10 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Show unit details</source>
         <translation>Mostrar detalhes da unidade</translation>
+    </message>
+    <message>
+        <source>Recruiting on repeat. Ctrl-click to stop.</source>
+        <translation>Recrutando em repetição. Ctrl-clique para parar.</translation>
     </message>
 </context>
 <context>
@@ -12241,6 +12491,45 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Inimigos estão subindo abaixo das suas pedras. Role-as!</translation>
+    </message>
+</context>
+<context>
+    <name>RosterCommands</name>
+    <message>
+        <source>Triarii are armed at a Fabrica. Build one first.</source>
+        <translation>Os triários são armados numa Fabrica. Construa uma primeiro.</translation>
+    </message>
+    <message>
+        <source>This troop needs another building first.</source>
+        <translation>Esta tropa precisa de outro edifício antes.</translation>
+    </message>
+    <message>
+        <source>You already field the most of these: %1 squads.</source>
+        <translation>Você já tem o máximo destes: %1 esquadrões.</translation>
+    </message>
+    <message>
+        <source>the reserve ran out</source>
+        <translation>a reserva acabou</translation>
+    </message>
+    <message>
+        <source>the stores ran short</source>
+        <translation>os estoques faltaram</translation>
+    </message>
+    <message>
+        <source>the army is at its cap</source>
+        <translation>o exército está no limite</translation>
+    </message>
+    <message>
+        <source>the building is full</source>
+        <translation>o edifício está cheio</translation>
+    </message>
+    <message>
+        <source>the queue is full</source>
+        <translation>a fila está cheia</translation>
+    </message>
+    <message>
+        <source>Queued %1 of %2 recruits: %3.</source>
+        <translation>%1 de %2 recrutas na fila: %3.</translation>
     </message>
 </context>
 <context>
@@ -13919,10 +14208,6 @@ Clique com o botão direito para cancelar.</translation>
         <translation>Elefante de guerra africano</translation>
     </message>
     <message>
-        <source>Auxiliary Archer</source>
-        <translation>Arqueiro auxiliar</translation>
-    </message>
-    <message>
         <source>Carthaginian Ballista</source>
         <translation>Balista cartaginesa</translation>
     </message>
@@ -13941,10 +14226,6 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Faber</source>
         <translation>Faber</translation>
-    </message>
-    <message>
-        <source>Legionary</source>
-        <translation>Legionário</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
@@ -14485,6 +14766,18 @@ Clique com o botão direito para cancelar.</translation>
     <message>
         <source>Vulnerable to cavalry and sustained melee.</source>
         <translation>Vulnerável à cavalaria e ao combate corpo a corpo prolongado.</translation>
+    </message>
+    <message>
+        <source>Cretan Archers</source>
+        <translation>Arqueiros cretenses</translation>
+    </message>
+    <message>
+        <source>Hastati</source>
+        <translation>Hastati</translation>
+    </message>
+    <message>
+        <source>Numidian Javelin Riders</source>
+        <translation>Cavaleiros dardeiros númidas</translation>
     </message>
 </context>
 <context>

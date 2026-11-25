@@ -9,6 +9,7 @@
 #include "../../../units/spawn_type.h"
 #include "../../../units/troop_type.h"
 #include "../../nation_registry.h"
+#include "../ai_doctrine_rules.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
@@ -160,7 +161,7 @@ void GoldVeinBehavior::execute(const AISnapshot& snapshot,
 
 auto GoldVeinBehavior::should_execute(const AISnapshot& snapshot,
                                       const AIContext& context) const -> bool {
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return false;
   }
   return context.has_base_anchor && (!snapshot.gold_veins.empty() || !m_party.empty());

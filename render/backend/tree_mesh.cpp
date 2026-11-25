@@ -175,24 +175,28 @@ public:
 auto build_olive_tree_mesh() -> TreeMesh {
   TreeBuilder tree;
   const QVector3D root(-0.012F, -0.025F, 0.0F);
-  const QVector3D fork(0.032F, 0.31F, 0.026F);
-  tree.stem(root, QVector3D(-0.018F, 0.15F, 0.012F), 0.15F, 0.10F, 11U);
-  tree.stem(QVector3D(-0.018F, 0.15F, 0.012F), fork, 0.10F, 0.075F, 13U);
+  const QVector3D fork(0.032F, 0.42F, 0.026F);
+  tree.stem(root, QVector3D(-0.018F, 0.20F, 0.012F), 0.15F, 0.10F, 11U);
+  tree.stem(QVector3D(-0.018F, 0.20F, 0.012F), fork, 0.10F, 0.075F, 13U);
 
+  // One full dome carries the silhouette and the branch crowns swell out of
+  // it, so the tree reads as a rounded broadleaf mass at battle zoom; as six
+  // separate flat pads round a small core it read as a bush on a stick.
+  tree.crown(QVector3D(0.0F, 0.80F, 0.02F), QVector3D(0.42F, 0.36F, 0.40F), 0.3F, 101U);
   tree.crown(
-      QVector3D(0.0F, 0.70F, 0.025F), QVector3D(0.30F, 0.19F, 0.28F), 0.3F, 101U);
+      QVector3D(0.03F, 1.00F, -0.01F), QVector3D(0.28F, 0.19F, 0.27F), 1.1F, 131U);
   for (unsigned branch = 0; branch < 6; ++branch) {
     const unsigned seed = 211U + branch * 73U;
     const float angle = branch * k_tau / 6.0F + noise(seed) * 0.35F;
     const QVector3D dir(std::cos(angle), 0.0F, std::sin(angle));
     const QVector3D side(-dir.z(), 0.0F, dir.x());
     const float reach = 0.30F + noise(seed + 1U) * 0.12F;
-    const float y = 0.62F + noise(seed + 2U) * 0.17F;
+    const float y = 0.68F + noise(seed + 2U) * 0.14F;
     const QVector3D elbow = fork + dir * (reach * 0.52F) + QVector3D(0.0F, 0.13F, 0.0F);
     const QVector3D tip = dir * reach + QVector3D(0.0F, y, 0.0F);
     tree.stem(fork, elbow, 0.045F, 0.028F, seed);
     tree.stem(elbow, tip, 0.028F, 0.010F, seed + 3U);
-    tree.crown(tip, QVector3D(0.255F, 0.145F, 0.20F), angle, seed + 5U);
+    tree.crown(tip, QVector3D(0.27F, 0.22F, 0.24F), angle, seed + 5U);
     for (unsigned spray = 0; spray < 12; ++spray) {
       const float around = k_tau * static_cast<float>(spray) / 12.0F;
       const QVector3D radial = dir * std::cos(around) + side * std::sin(around);

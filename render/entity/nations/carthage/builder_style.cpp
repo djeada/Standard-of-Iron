@@ -7,9 +7,7 @@
 
 namespace {
 
-constexpr QVector3D k_carthage_tunic{0.68F, 0.54F, 0.38F};
-
-constexpr QVector3D k_carthage_skin{0.08F, 0.07F, 0.065F};
+constexpr QVector3D k_carthage_tunic{0.24F, 0.35F, 0.56F};
 
 constexpr QVector3D k_carthage_bronze{0.70F, 0.52F, 0.32F};
 
@@ -21,7 +19,6 @@ namespace Render::GL::Carthage {
 void register_carthage_builder_style() {
   BuilderStyleConfig style;
   style.cloth_color = k_carthage_tunic;
-  style.skin_color = k_carthage_skin;
   style.leather_color = Nation::k_carthage_materials.leather;
   style.leather_dark_color = Nation::k_carthage_materials.dark_leather;
   style.metal_color = k_carthage_bronze;

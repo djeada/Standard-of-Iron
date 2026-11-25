@@ -419,6 +419,24 @@ vec3 apply_hair_tone(vec3 base, int material_id, int color_role, vec2 tex) {
   return base;
 }
 
+const float k_skin_variant_value[7] =
+    float[7](0.0, -0.12, -0.07, -0.035, 0.035, 0.065, 0.095);
+const float k_skin_variant_warmth[7] =
+    float[7](0.0, 0.020, -0.018, 0.012, -0.012, 0.022, -0.020);
+
+vec3 soi_vary_skin(vec3 base, int material_id, int color_role, float pattern) {
+  if (material_id != 0 || color_role != k_humanoid_role_skin) {
+    return base;
+  }
+  int variant = clamp(int(floor(pattern)), 0, 6);
+  if (variant == 0) {
+    return base;
+  }
+  float warmth = k_skin_variant_warmth[variant];
+  vec3 tint = vec3(1.0 + warmth, 1.0, 1.0 - warmth * 1.6);
+  return clamp(base * (1.0 + k_skin_variant_value[variant]) * tint, 0.0, 1.0);
+}
+
 const float k_face_feature_uv = -3.0;
 const vec3 k_face_feature_tones[6] = vec3[6](vec3(0.93, 0.90, 0.84),
                                              vec3(0.27, 0.15, 0.065),

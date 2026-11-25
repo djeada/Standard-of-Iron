@@ -159,6 +159,8 @@ A Roman legionary of eighteen costs eighteen men of reserve; a Carthaginian one 
 
 A recruit that the reserve cannot pay for is an `OrderFailure::PopulationCap` refusal (`reserve_short_reason`), reported immediately with the numbers ("Not enough reserve: 7 / 18 men"). `InsufficientResources` is reserved for wood, stone, iron, food and gold.
 
+A recruit card short of iron, while the player holds gold, adds where the iron can come from: "Build a marketplace to buy iron with gold." or, once one stands, "Your marketplace sells iron for gold." (`missing_resource_reason` in `ProductionPanel.qml`, reading `marketplace_count` from the economy help).
+
 ### AI budget
 
 `AIContext::population_cap` is the map cap in men and `population_used` sums `TroopConfig::get_population_cost` (base squad men). A 250-man cap fields roughly fourteen infantry squads including builders (12 men each); maps that were tuned when a swordsman weighed 8 points field about half the squads they used to. Raise `max_troops_per_player` in the map file if a map needs the old army size.

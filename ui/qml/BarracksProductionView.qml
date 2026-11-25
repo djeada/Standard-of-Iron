@@ -11,7 +11,7 @@ Item {
     property var prod: ({})
     property var allyCall: ({})
 
-    readonly property int queueSlots: 5
+    readonly property int queueSlots: 10
     readonly property int queueTotal: (root.prod.in_progress ? 1 : 0) + (root.prod.queue_size || 0)
     readonly property int cardHeight: Math.max(Design.A11y.scaled(56), Design.Typography.caption * 4 + Design.Metrics.space8)
     readonly property int cardGap: Design.Metrics.space4
@@ -33,6 +33,11 @@ Item {
         for (var i = 0; i < root.panel.recruit_unit_cards.length; ++i) {
             var entry = root.panel.recruit_unit_cards[i];
             if (entry.carthage_only === true && root.prod.nation_id !== "carthage")
+                continue;
+            // A nation's roster decides what its barracks offers: Rome has no
+            // horse archers, Carthage hires its horse and elephants elsewhere.
+            var info = root.panel.get_unit_production_info(entry.unit_type, root.prod.nation_id);
+            if (info && (info.recruitable === false || (info.recruited_at && info.recruited_at !== "barracks")))
                 continue;
             out.push(entry);
         }
@@ -115,6 +120,17 @@ Item {
                         }
 
                         Text {
+                            objectName: "levyCountdown"
+                            width: parent.width
+                            visible: root.prod.has_barracks === true && (root.prod.levy_seconds || -1) >= 0
+                            text: qsTr("Levy in %1s").arg(Math.ceil(root.prod.levy_seconds || 0))
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
                             id: reserveReadout
 
                             width: parent.width
@@ -146,7 +162,7 @@ Item {
                     Column {
                         id: queueColumn
 
-                        readonly property int slotSize: Design.A11y.scaled(22)
+                        readonly property int slotSize: Design.A11y.scaled(18)
 
                         objectName: "barracksQueueColumn"
                         Layout.alignment: Qt.AlignVCenter
@@ -157,7 +173,7 @@ Item {
                             id: queueRow
 
                             objectName: "barracksQueueRow"
-                            spacing: Design.Metrics.space4
+                            spacing: Design.Metrics.space2
 
                             Repeater {
                                 model: root.queueSlots

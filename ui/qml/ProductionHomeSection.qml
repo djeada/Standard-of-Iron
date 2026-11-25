@@ -147,8 +147,28 @@ Rectangle {
                 }
                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                 ToolTip.visible: containsMouse
-                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nUse Deliver mode, then click a friendly barracks to add to its reserve.").arg(parent.unit_info.display_name || "Civilian").arg(panel.format_cost_summary(panel.reserve_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("families"))).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!civilianCard.has_capacity ? qsTr("This home already committed its 3 civilians") : civilianCard.recruit_state.reason)
+                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nCivilians walk to a barracks with room and add to its reserve.").arg(parent.unit_info.display_name || "Civilian").arg(panel.format_cost_summary(panel.reserve_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("families"))).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!civilianCard.has_capacity ? qsTr("This home has raised all %1 of its civilians").arg(homeProductionContent.prod.max_units || 0) : civilianCard.recruit_state.reason)
                 ToolTip.delay: 300
+            }
+        }
+
+        Design.IronCheckBox {
+            id: reportingToggle
+
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("Raise and send civilians")
+            checked: homeProductionContent.prod.reports_to_barracks !== false
+            accessibleName: text
+            description: qsTr("This home raises its civilians while food allows, and they walk to a barracks with room on their own")
+            ToolTip.visible: hovered
+            ToolTip.text: checked ? qsTr("On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.") : qsTr("Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.")
+            ToolTip.delay: 300
+            onToggled: {
+                if (panel.production && panel.production.set_home_reporting)
+                    panel.production.set_home_reporting(checked);
+                checked = Qt.binding(function () {
+                        return homeProductionContent.prod.reports_to_barracks !== false;
+                    });
             }
         }
     }

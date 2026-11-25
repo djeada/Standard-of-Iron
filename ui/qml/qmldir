@@ -14,6 +14,7 @@ ProductionBuilderSection 1.0 ProductionBuilderSection.qml
 ProductionConstructionCard 1.0 ProductionConstructionCard.qml
 ProductionMarketplaceSection 1.0 ProductionMarketplaceSection.qml
 ProductionTempleSection 1.0 ProductionTempleSection.qml
+ProductionHiringSection 1.0 ProductionHiringSection.qml
 ProductionFarmSection 1.0 ProductionFarmSection.qml
 ProductionEmptyHint 1.0 ProductionEmptyHint.qml
 SaveGamePanel 1.0 SaveGamePanel.qml
@@ -29,6 +30,7 @@ FormationShape 1.0 FormationShape.qml
 FormationReadoutCell 1.0 FormationReadoutCell.qml
 FormationOptionRow 1.0 FormationOptionRow.qml
 FormationStatusBadge 1.0 FormationStatusBadge.qml
+ControlGroupStrip 1.0 ControlGroupStrip.qml
 ObjectivesPanel 1.0 ObjectivesPanel.qml
 CommanderMessagePanel 1.0 CommanderMessagePanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml

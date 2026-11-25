@@ -30,6 +30,7 @@
 #include "app/core/match_presentation_sync.h"
 #include "app/core/order_feedback_presenter.h"
 #include "app/core/presentation_frame.h"
+#include "app/core/user_settings.h"
 #include "app/economy/economy_read_model.h"
 #include "app/economy/production_manager.h"
 #include "app/input/cursor_manager.h"
@@ -109,6 +110,7 @@
 #include "game/units/troop_type.h"
 #include "render/entity/building_archetype_library.h"
 #include "render/frame/camera_visibility.h"
+#include "render/frame/graphics_settings.h"
 #include "render/geom/shared_geometry_cache.h"
 #include "render/gl/mesh_prewarmer.h"
 #include "render/ground/ambient_fog_renderer.h"
@@ -396,8 +398,25 @@ void GameEngine::ensure_initialized() {
     return;
   }
   if (!was_initialized && !renderer_has_failed()) {
+    remember_first_launch_graphics_quality();
     emit renderer_initialized_changed();
   }
+}
+
+void GameEngine::remember_first_launch_graphics_quality() {
+  // The only automatic graphics decision the game makes: with no preset of
+  // the player's yet, the renderer has just picked one for this adapter. Keep
+  // it as the player's choice, so nothing changes it behind their back again;
+  // from here on only Settings changes the preset.
+  auto& graphics = Render::GraphicsSettings::instance();
+  if (graphics.quality_chosen_by_user()) {
+    return;
+  }
+  App::Core::UserSettings::save_graphics_quality_level(
+      static_cast<int>(graphics.quality()));
+  qInfo() << "GameEngine: first launch, keeping the"
+          << Render::graphics_quality_key(graphics.quality())
+          << "graphics preset as the player's choice";
 }
 
 auto GameEngine::enemy_troops_defeated() const -> int {
@@ -653,6 +672,13 @@ void GameEngine::simulate(float dt) {
         }
       });
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
+
+  if (m_runtime.paused && !overlay_up && m_world != nullptr) {
+    // A paused match is still a match the player plans in: orders given now
+    // take effect (a queued recruit, a placed site) and a placement ghost has
+    // to reach the renderer, which only draws published snapshots.
+    Game::Session::session_for(*m_world).service_stopped_clock();
+  }
   m_replay->finish_verification_if_done(m_session.get());
 }
 
@@ -675,6 +701,7 @@ void GameEngine::update_presentation(float dt) {
   {
     Render::Profiling::AccumulatorScope const sync_scope(
         &Render::Profiling::global_profile().view_model_sync_us);
+    drop_lost_selection();
     publish_frame_snapshots();
     m_minimap_events->publish_overlays(dt);
     m_mission->flush_announcements(dt);
@@ -836,7 +863,6 @@ void GameEngine::update(float dt) {
 }
 
 auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
-  m_last_render_was_gameplay = false;
   if (!m_renderer || !m_world || !renderer_initialized() || m_runtime.loading) {
     return 0;
   }
@@ -859,7 +885,6 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
 
   m_renderer->set_world_view(Render::WorldView::of(*m_session));
   m_renderer->set_loading_overlay_active(m_loading_overlay.active());
-  m_last_render_was_gameplay = !m_loading_overlay.active();
 
   if (m_loading_overlay.active()) {
     prewarm_overlay_gpu_resources();
@@ -1070,6 +1095,32 @@ auto GameEngine::screen_to_ground(const QPointF& screen_pt,
                                       m_viewport.height,
                                       screen_pt,
                                       out_world);
+}
+
+void GameEngine::drop_lost_selection() {
+  if (m_world == nullptr || m_level.is_spectator_mode || m_runtime.loading) {
+    return;
+  }
+  auto& selection = Game::Session::session_for(*m_world).selection();
+  const auto& selected = selection.get_selected_units();
+  const bool lost =
+      std::any_of(selected.begin(), selected.end(), [this](Engine::Core::EntityID id) {
+        const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(id);
+        return unit == nullptr || unit->health <= 0 ||
+               unit->owner_id != m_runtime.local_owner_id;
+      });
+  if (!lost) {
+    return;
+  }
+  Game::Selection::sanitize_selection(m_world, &selection, m_runtime.local_owner_id);
+  QMetaObject::invokeMethod(
+      this,
+      [this]() {
+        const auto frame_lock = lock_frame();
+        sync_selection_flags();
+        emit selected_units_changed();
+      },
+      Qt::QueuedConnection);
 }
 
 void GameEngine::sync_selection_flags() {

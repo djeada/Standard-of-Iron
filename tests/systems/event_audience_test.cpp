@@ -44,6 +44,21 @@ TEST(LocalAudienceTest, OneSidedEventsReachTheirOwnerAndTheUnowned) {
       << "neutral subjects belong to the world, not to a rival player";
 }
 
+TEST(LocalAudienceTest, AMessageSpokenToOnePlayerIsNotSpokenToASpectator) {
+  const Engine::Core::LocalAudience player(1);
+  EXPECT_TRUE(player.addresses(1));
+  EXPECT_FALSE(player.addresses(2));
+  EXPECT_TRUE(player.addresses(Engine::Core::k_owner_everyone));
+  EXPECT_TRUE(player.addresses(Game::Core::NEUTRAL_OWNER_ID));
+
+  const Engine::Core::LocalAudience spectator;
+  EXPECT_FALSE(spectator.addresses(1))
+      << "\"The cursed vein is yours\" must not be read out to an observer";
+  EXPECT_FALSE(spectator.addresses(2));
+  EXPECT_TRUE(spectator.addresses(Engine::Core::k_owner_everyone))
+      << "announcements for nobody in particular still reach everyone";
+}
+
 TEST(LocalAudienceTest, TwoSidedEventsNeedTheLocalPlayerOnOneEnd) {
   const Engine::Core::LocalAudience audience(1);
 

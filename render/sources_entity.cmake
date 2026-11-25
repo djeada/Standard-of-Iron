@@ -91,6 +91,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/tenement_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/equipment_loadout_catalog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/worker_tools.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/gauls/horse_swordsman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/gauls/swordsman_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/iberians/horse_swordsman_renderer.cpp
@@ -142,6 +143,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/structure_foundation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/swordsman_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nation_building_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/tenement_layout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/town_palette.cpp

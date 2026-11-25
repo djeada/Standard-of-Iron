@@ -445,6 +445,25 @@ void World::update(float delta_time) {
   }
 }
 
+void World::service_stopped_frame(const std::function<void()>& before_publish) {
+  const EntityLock lock(*this);
+  if (before_publish) {
+    before_publish();
+  }
+  m_deferred.apply(*this);
+  // A snapshot unit with no published presentation is filled in lazily by the
+  // render workers, which add a component under the registry lock the render
+  // thread already holds for the frame - a deadlock. Every tick publishes
+  // before it copies; a stopped tick has to as well.
+  if (m_presentation_enabled) {
+    publish_creature_presentation_frame(*this);
+  }
+  if (!m_is_render_snapshot &&
+      m_render_snapshots_requested.load(std::memory_order_acquire)) {
+    publish_render_snapshot();
+  }
+}
+
 auto World::acquire_render_snapshot() const -> std::shared_ptr<World> {
   return std::atomic_load_explicit(&m_render_snapshot, std::memory_order_acquire);
 }

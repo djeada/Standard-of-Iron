@@ -86,6 +86,12 @@ enum class HumanoidWorkJob : std::uint8_t {
 [[nodiscard]] auto humanoid_construction_variant_for_role(
     HumanoidConstructionRole role) noexcept -> std::uint8_t;
 
+inline constexpr std::uint8_t k_humanoid_felling_axe_variant = 5U;
+inline constexpr std::uint8_t k_humanoid_quarry_pick_variant = 6U;
+
+[[nodiscard]] auto humanoid_construction_tool_variant_for_job(
+    HumanoidWorkJob job, HumanoidConstructionRole role) noexcept -> std::uint8_t;
+
 struct HumanoidConstructionRoleInputs {
   std::uint32_t seed{0U};
   bool force_single_soldier{false};

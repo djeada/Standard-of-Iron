@@ -55,8 +55,12 @@ auto grass_patch_density(float gx, float gz, uint32_t seed) -> float {
   return k_grass_patch_floor + k_grass_patch_gain * t * t * (3.0F - 2.0F * t);
 }
 
-constexpr float k_grass_height_scale = 0.56F;
-constexpr float k_grass_width_scale = 1.90F;
+// A soldier is drawn about 0.9 m tall. At the old 0.56 / 1.90 a tall tuft stood
+// to his thigh and splayed nearly a metre across, so blades poked through
+// feet and selection rings and the sward read as reeds at the play camera.
+// These keep the tallest tuft below the knee and under half a metre wide.
+constexpr float k_grass_height_scale = 0.36F;
+constexpr float k_grass_width_scale = 1.10F;
 
 constexpr float k_grass_cover_scale = 4.0F;
 constexpr float k_grass_tall_tuft_share = 0.16F;

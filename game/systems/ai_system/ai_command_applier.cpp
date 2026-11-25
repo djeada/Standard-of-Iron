@@ -180,7 +180,7 @@ auto AICommandApplier::apply(Engine::Core::World& world,
         break;
       }
       if (const auto ruling = Game::Systems::ProductionService::can_start_production(
-              world, command.building_id, command.product_type);
+              world, command.building_id, command.product_type, command.band_nation);
           ruling != Game::Systems::ProductionResult::Success) {
         ++report.refused_production;
         break;
@@ -188,7 +188,8 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       submit(world,
              ai_owner_id,
              Game::Command::Produce{.building = command.building_id,
-                                    .product = command.product_type});
+                                    .product = command.product_type,
+                                    .band_nation = command.band_nation});
       break;
     }
 

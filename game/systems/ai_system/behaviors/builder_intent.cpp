@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "../../economy/construction_cost_catalog.h"
+#include "../../nation_registry.h"
 #include "../ai_base_manager.h"
 #include "../ai_doctrine_catalog.h"
 #include "builder_affordability.h"
@@ -179,6 +180,122 @@ void wish_for_basics(const AISnapshot& snapshot,
   }
 }
 
+// The buildings that make a nation play differently (NATION_ASYMMETRY.md
+// section 9): Carthage's Mercenary Camp and Elephant Stables, Rome's Fabrica
+// and a Castra toward the enemy. One of each, once the town can feed itself.
+auto nation_building_count(const AISnapshot& snapshot,
+                           Game::Units::SpawnType type) -> int {
+  int count = 0;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.is_building && entity.health > 0 && entity.spawn_type == type) {
+      ++count;
+    }
+    if (!entity.is_building && entity.builder_production.raising_a_building &&
+        entity.builder_production.building_under_way == type) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+auto nation_raises(const AIContext& context, std::string_view type) -> bool {
+  if (context.nation == nullptr) {
+    return false;
+  }
+  const auto& unique = context.nation->unique_buildings;
+  return std::find(unique.begin(), unique.end(), type) != unique.end();
+}
+
+auto doctrine_prefers(const AIContext& context, std::string_view troop) -> bool {
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr) {
+    return false;
+  }
+  const auto& preferred = doctrine->recruitment.preferred;
+  return std::find(preferred.begin(), preferred.end(), troop) != preferred.end();
+}
+
+// Where a marching camp goes: a third of the way to the enemy's buildings,
+// between 22 and 45 m out.
+auto castra_site(const AISnapshot& snapshot,
+                 const AIContext& context,
+                 ConstructionIntent& intent) -> bool {
+  float sum_x = 0.0F;
+  float sum_z = 0.0F;
+  int count = 0;
+  for (const auto& objective : snapshot.strategic_objectives) {
+    if (objective.health > 0 && objective.is_building) {
+      sum_x += objective.pos_x;
+      sum_z += objective.pos_z;
+      ++count;
+    }
+  }
+  if (count == 0 || !context.has_base_anchor) {
+    return false;
+  }
+  const float dx = sum_x / static_cast<float>(count) - context.base_pos_x;
+  const float dz = sum_z / static_cast<float>(count) - context.base_pos_z;
+  const float length = std::sqrt(dx * dx + dz * dz);
+  if (length < 30.0F) {
+    return false;
+  }
+  const float out = std::clamp(length / 3.0F, 22.0F, 45.0F);
+  intent.x = context.base_pos_x + dx / length * out;
+  intent.z = context.base_pos_z + dz / length * out;
+  intent.site_known = true;
+  return true;
+}
+
+// Carthage's camp is where its army comes from, so it goes up as soon as the
+// town has its first roofs; it ranks with the basics.
+void wish_for_a_camp(const AISnapshot& snapshot,
+                     const AIContext& context,
+                     const SettlementAssessment& town,
+                     std::vector<ConstructionIntent>& intents) {
+  const auto& standing = town.standing;
+  if (standing.barracks > 0 && standing.homes >= k_roofs_before_the_frame &&
+      nation_raises(context, "mercenary_camp") &&
+      nation_building_count(snapshot, Game::Units::SpawnType::MercenaryCamp) == 0) {
+    wish(intents, "mercenary_camp");
+  }
+}
+
+// The rest wait for a town that can feed itself, and rank after the authored
+// plan's next step so they never cost the town its homes.
+void wish_for_nation_buildings(const AISnapshot& snapshot,
+                               const AIContext& context,
+                               const SettlementAssessment& town,
+                               std::vector<ConstructionIntent>& intents) {
+  using Game::Units::SpawnType;
+  const auto& standing = town.standing;
+  if (standing.barracks == 0 || standing.homes < k_roofs_before_the_castle ||
+      standing.farms == 0) {
+    return;
+  }
+  const int gold =
+      snapshot.has_resource_snapshot ? snapshot.resources.get(ResourceType::Gold) : 0;
+  constexpr int k_treasury_worth_stables = 220;
+  if (nation_raises(context, "elephant_stables") &&
+      nation_building_count(snapshot, SpawnType::MercenaryCamp) > 0 &&
+      nation_building_count(snapshot, SpawnType::ElephantStables) == 0 &&
+      (doctrine_prefers(context, "elephant") || gold >= k_treasury_worth_stables)) {
+    wish(intents, "elephant_stables");
+  }
+  if (nation_raises(context, "fabrica") &&
+      nation_building_count(snapshot, SpawnType::Fabrica) == 0) {
+    wish(intents, "fabrica");
+  }
+  constexpr float k_camp_after_seconds = 240.0F;
+  if (nation_raises(context, "castra") && snapshot.game_time >= k_camp_after_seconds &&
+      nation_building_count(snapshot, SpawnType::Castra) == 0) {
+    ConstructionIntent camp;
+    camp.type = "castra";
+    if (castra_site(snapshot, context, camp)) {
+      intents.push_back(camp);
+    }
+  }
+}
+
 void add_plan_step_intent(const AIContext& context,
                           const PlanStepState& plan,
                           std::vector<ConstructionIntent>& intents) {
@@ -255,6 +372,7 @@ auto gather_construction_intents(const AISnapshot& snapshot,
   const bool field_before_plan =
       needs_a_field && (starving || standing.farms < k_fields_before_the_frame);
   wish_for_basics(snapshot, town, field_before_plan, intents);
+  wish_for_a_camp(snapshot, context, town, intents);
 
   plan.silhouette = plan.present && town.town_plan != nullptr &&
                     town.town_plan->is_silhouette_step(plan.choice.slot);
@@ -279,6 +397,7 @@ auto gather_construction_intents(const AISnapshot& snapshot,
     wish(intents, BUILDING_TYPE_RAM);
   }
 
+  wish_for_nation_buildings(snapshot, context, town, intents);
   add_plan_step_intent(context, plan, intents);
 
   if (context.barracks_under_threat && standing.towers < town.targets.towers &&

@@ -21,6 +21,7 @@
 #include "render/entity/farm_renderer.h"
 #include "render/entity/home_renderer.h"
 #include "render/entity/marketplace_renderer.h"
+#include "render/entity/nation_building_renderer.h"
 #include "render/entity/nations/carthage/archer_renderer.h"
 #include "render/entity/nations/carthage/ballista_renderer.h"
 #include "render/entity/nations/carthage/builder_renderer.h"
@@ -214,6 +215,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   register_marketplace_renderer(registry);
   register_temple_renderer(registry);
+  register_nation_building_renderers(registry);
   register_farm_renderer(registry);
 
   Wildlife::register_sheep_renderer(registry);

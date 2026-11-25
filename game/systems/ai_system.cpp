@@ -37,6 +37,7 @@
 #include "ai_system/behaviors/gold_vein_behavior.h"
 #include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/local_engagement_behavior.h"
+#include "ai_system/behaviors/mercenary_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/rampart_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
@@ -47,6 +48,7 @@
 #include "player_resource_registry.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/ai_system/ai_worker.h"
+#include "systems/economy/nation_economy_system.h"
 
 namespace Game::Systems {
 
@@ -106,6 +108,7 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::ProductionBehavior>());
   registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
   registry.register_behavior(std::make_unique<AI::EconomyBehavior>());
+  registry.register_behavior(std::make_unique<AI::MercenaryBehavior>());
   registry.register_behavior(std::make_unique<AI::SquadDisciplineBehavior>());
   registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
@@ -154,6 +157,10 @@ auto AISystem::submit_decision_job(AIInstance& ai,
   AI::AISnapshot snapshot = Game::Systems::AI::AISnapshotBuilder::build(
       world, ai.context.player_id, &ai.known_objectives);
   snapshot.game_time = m_total_game_time;
+  if (const auto* levy = world.get_system<NationEconomySystem>()) {
+    snapshot.seconds_to_next_levy =
+        levy->seconds_to_next_levy(world, ai.context.player_id);
+  }
   snapshot.pledges = ai.pledges;
   if (ai.context.strategy_config.posture == AI::AIPosture::Garrison) {
     submit_effect(
@@ -334,6 +341,9 @@ auto AISystem::serialize_state() const -> QJsonObject {
     QJsonObject profile;
     profile["strategy"] = AI::AIStrategyFactory::strategy_to_string(config.strategy);
     profile["posture"] = AI::AIStrategyFactory::posture_to_string(config.posture);
+    if (!config.runs_economy) {
+      profile["economy"] = false;
+    }
     profile["aggression"] = static_cast<double>(config.personality.aggression);
     profile["defense"] = static_cast<double>(config.personality.defense);
     profile["harassment"] = static_cast<double>(config.personality.harassment);
@@ -381,6 +391,7 @@ void AISystem::restore_state(const QJsonObject& state) {
             AI::AIStrategyFactory::parse_strategy(saved.value("strategy").toString());
         profile.posture = AI::AIStrategyFactory::parse_posture(
             saved.value("posture").toString(), AI::AIPosture::Field);
+        profile.runs_economy = saved.value("economy").toBool(true);
         profile.personality.aggression =
             static_cast<float>(saved.value("aggression").toDouble(0.5));
         profile.personality.defense =

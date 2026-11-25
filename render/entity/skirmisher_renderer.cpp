@@ -363,7 +363,7 @@ public:
     HumanoidRendererBase::get_variant(ctx, seed, v);
     float const variation = 0.92F + static_cast<float>(seed % 17U) * 0.008F;
     v.palette.cloth =
-        (m_velites ? QVector3D(0.83F, 0.78F, 0.65F) : QVector3D(0.72F, 0.60F, 0.40F)) *
+        (m_velites ? QVector3D(0.86F, 0.82F, 0.72F) : QVector3D(0.33F, 0.45F, 0.56F)) *
         variation;
     v.palette.leather = {0.30F, 0.18F, 0.09F};
     v.palette.leather_dark = {0.20F, 0.13F, 0.08F};

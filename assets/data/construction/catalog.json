@@ -131,6 +131,46 @@
         "refund": 0.5
       }
     },
+    "mercenary_camp": {
+      "costs": {
+        "wood": 100,
+        "stone": 40
+      },
+      "build_time": 12,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "elephant_stables": {
+      "costs": {
+        "wood": 120,
+        "stone": 80,
+        "gold": 30
+      },
+      "build_time": 16,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "fabrica": {
+      "costs": {
+        "wood": 80,
+        "stone": 60
+      },
+      "build_time": 12,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "castra": {
+      "costs": {
+        "wood": 120
+      },
+      "build_time": 14,
+      "dismantle": {
+        "refund": 0.6
+      }
+    },
     "cut_tree": {
       "build_time": 12
     },

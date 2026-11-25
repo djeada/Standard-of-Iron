@@ -121,6 +121,11 @@ public:
   int squad_strength{0};
   bool render_rider{true};
   std::uint8_t death_sequence_override{0xFF};
+
+  // Veterancy (NATION_ASYMMETRY.md 3.3): battles this squad has come through
+  // alive, and the rank they earned it (Roman hastati: 1 principes, 2 veterans).
+  std::uint8_t battles_survived{0};
+  std::uint8_t rank{0};
 };
 
 [[nodiscard]] inline auto resolve_surviving_individual_count(

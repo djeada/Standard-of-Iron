@@ -1,7 +1,7 @@
 # Commander feel playback routes
 
 `locomotion.action.json` is the first focused route for the RPG feel plan in
-`todo.md`. It uses the production duel mission and live combat; it is not the
+`todo.md` (now in git: `git show 9c835e51a:todo.md`). It uses the production duel mission and live combat; it is not the
 complete terrain/water/bridge acceptance course.
 
 From the repository root, after building `standard_of_iron`:
@@ -40,7 +40,7 @@ Jump is `V` and dodge is Space by default; both can be rebound in Settings.
 Preserve matching baseline/candidate captures and their worktree diffs. Film time
 is controlled and cannot measure real-time input latency or frame pacing. Do not
 run multiple renderers while measuring performance. Keep the broader outstanding
-checks in `todo.md` open.
+checks in that plan open.
 
 ## Resource continuity during mode changes
 

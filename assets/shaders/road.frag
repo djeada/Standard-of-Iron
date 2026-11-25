@@ -3,6 +3,7 @@
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "ground_readability.glsl"
+#include "ground_shade.glsl"
 #include "local_lighting.glsl"
 #include "visibility_mask.glsl"
 
@@ -300,6 +301,7 @@ void main() {
   lit_color = apply_visibility_world_shading(lit_color, v_world_pos.xz);
 
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
+  lit_color *= ground_daylight_gain(ground_open_light());
   lit_color += base_color * ao * local_lighting(v_world_pos, normalize(v_normal));
   frag_color = vec4(lit_color, u_alpha * edge_alpha);
 }

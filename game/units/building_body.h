@@ -31,14 +31,19 @@ struct BuildingSpawnScale {
   float vertical;
 };
 
-inline constexpr std::array<BuildingSpawnScale, 7> k_building_spawn_scales{{
+inline constexpr std::array<BuildingSpawnScale, 11> k_building_spawn_scales{{
     {"barracks", 1.8F, 1.2F},
     {"home", 1.8F, 1.5F},
-    {"temple", 1.95F, 1.725F},
+    {"temple", 1.30F, 1.25F},
     {"marketplace", 1.95F, 1.5F},
     {"farm", 7.14F, 5.1F},
     {"defense_tower", 1.25F, 2.0F},
     {"wall_gate", 1.5F, 1.5F},
+    // NATION_ASYMMETRY.md buildings, drawn from barracks and portico parts.
+    {"mercenary_camp", 1.45F, 1.0F},
+    {"elephant_stables", 1.35F, 1.2F},
+    {"fabrica", 1.2F, 1.1F},
+    {"castra", 1.7F, 0.75F},
 }};
 
 [[nodiscard]] constexpr auto

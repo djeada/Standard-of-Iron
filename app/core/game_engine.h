@@ -333,11 +333,6 @@ public:
   void capture_render_selection();
   void update(float dt);
   [[nodiscard]] auto render(int pixel_width, int pixel_height) -> quint64;
-  // True when the last render() drew the battlefield for play rather than
-  // nothing or a frame behind the loading screen. Render thread only.
-  [[nodiscard]] auto last_render_was_gameplay() const noexcept -> bool {
-    return m_last_render_was_gameplay;
-  }
   void notify_loading_frame_presented(quint64 rendered_load);
   void set_input_viewport_size(qreal width, qreal height);
 
@@ -384,6 +379,8 @@ public:
   [[nodiscard]] auto last_save_capture_us() const -> std::uint64_t;
 
 private:
+  void remember_first_launch_graphics_quality();
+
   struct RuntimeState {
     bool initialized = false;
     bool paused = false;
@@ -433,6 +430,7 @@ private:
 
   bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
   void sync_selection_flags();
+  void drop_lost_selection();
   void sync_target_presentation(float dt);
   [[nodiscard]] auto targeting_inputs() -> App::World::TargetingInputs;
   [[nodiscard]] auto focus_inputs() -> App::World::FocusInputs;
@@ -608,7 +606,6 @@ private:
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
-  bool m_last_render_was_gameplay = false;
   bool m_release_self_test_mode = false;
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel* m_selected_units_model = nullptr;

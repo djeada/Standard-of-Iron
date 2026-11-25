@@ -19,6 +19,8 @@ add_executable(
     headless/defender_engagement_test.cpp
     headless/ai_skirmish_opening_test.cpp
     headless/ai_duel_match_test.cpp
+    headless/nation_asymmetry_test.cpp
+    headless/player_proxy_growth_test.cpp
     headless/commander_voice_skirmish_test.cpp
     headless/ai_town_plan_test.cpp
     headless/ai_estate_economy_test.cpp

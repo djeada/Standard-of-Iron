@@ -161,6 +161,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   loader.set_boundary_fog_renderer(scene.boundary_fog);
   loader.set_ambient_fog_renderer(scene.ambient_fog);
 
+  loader.set_camp_start_enabled(allow_default_player_barracks);
   loader.set_on_owners_updated(std::move(owner_update));
   loader.set_on_visibility_initialized(
       [visibility_coordinator](
@@ -212,6 +213,11 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     }
     return result;
   }
+
+  // Campaign missions author their own economy; only skirmishes get the idle-crew
+  // gathering, the same split the camp start uses.
+  Game::Session::session_for(world).set_idle_builders_gather(
+      allow_default_player_barracks);
 
   if (progress_tracker != nullptr) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_AUDIO);

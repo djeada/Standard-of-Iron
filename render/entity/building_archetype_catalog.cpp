@@ -211,6 +211,43 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
                  &Carthage::build_barracks_firs_desc,
                  {kind_of("carthage", "barracks")}});
 
+  // The nation-only buildings (NATION_ASYMMETRY.md) borrow the barracks yard and
+  // the portico until they get their own authoring: a camp, a marching camp, a
+  // colonnaded stable and an armourers' portico, in each nation's look.
+  struct NationBuildingLook {
+    const char* nation;
+    BuildingArchetypeDesc (*grounds)(BuildingState);
+    const PorticoLook* portico;
+  };
+  for (const NationBuildingLook& look :
+       {NationBuildingLook{
+            "roman", &Roman::build_barracks_grounds_desc, &roman_portico_look()},
+        NationBuildingLook{"carthage",
+                           &Carthage::build_barracks_grounds_desc,
+                           &carthage_portico_look()}}) {
+    const std::string nation = look.nation;
+    const auto named = [](std::string name, auto build) {
+      return [name = std::move(name), build](BuildingState state) {
+        BuildingArchetypeDesc desc = build(state);
+        desc.set_name(name);
+        return desc;
+      };
+    };
+    const auto add = [&](const std::string& suffix, auto build) {
+      out.push_back({nation + suffix,
+                     named(nation + suffix, build),
+                     {kind_of(nation, suffix.substr(1))}});
+    };
+    add("_mercenary_camp", look.grounds);
+    add("_castra", look.grounds);
+    add("_elephant_stables", [portico = look.portico](BuildingState state) {
+      return build_portico_desc(*portico, state, 0);
+    });
+    add("_fabrica", [portico = look.portico](BuildingState state) {
+      return build_portico_desc(*portico, state, 1);
+    });
+  }
+
   add_nation_walls(out, "roman", Roman::wall_palette(), Roman::wall_geometry());
   add_nation_walls(
       out, "carthage", Carthage::wall_palette(), Carthage::wall_geometry());

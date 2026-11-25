@@ -11,11 +11,13 @@
 #include <utility>
 #include <vector>
 
+#include "../core/component_gameplay.h"
 #include "../core/component_structures.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../render_bridge/picking_service.h"
 #include "../session/selection_utils.h"
+#include "../systems/builder_idle.h"
 #include "../systems/movement/command_service.h"
 #include "../units/spawn_type.h"
 #include "scene/camera.h"
@@ -63,6 +65,10 @@ void SelectionController::on_click_select(qreal sx,
   }
 
   auto* cam = static_cast<Render::GL::Camera*>(camera);
+
+  // A unit under the cursor always wins over the building it stands in or beside:
+  // builders and garrison troops live in their barracks yard, and the building's
+  // pivot is often nearer the click than the builder's feet.
   Engine::Core::EntityID const picked =
       Game::Systems::PickingService::pick_single(float(sx),
                                                  float(sy),
@@ -71,7 +77,7 @@ void SelectionController::on_click_select(qreal sx,
                                                  viewport_width,
                                                  viewport_height,
                                                  local_owner_id,
-                                                 true);
+                                                 false);
 
   if (picked != 0U) {
 
@@ -86,8 +92,15 @@ void SelectionController::on_click_select(qreal sx,
   }
 
   if (!additive) {
-    Engine::Core::EntityID const foreign = Game::Systems::PickingService::pick_single(
-        float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height, 0, true);
+    Engine::Core::EntityID const foreign =
+        Game::Systems::PickingService::pick_single(float(sx),
+                                                   float(sy),
+                                                   *m_world,
+                                                   *cam,
+                                                   viewport_width,
+                                                   viewport_height,
+                                                   0,
+                                                   false);
     if (foreign != 0U && can_inspect(foreign, local_owner_id)) {
       const bool changed = m_selection_system->inspected_entity() != foreign ||
                            !m_selection_system->get_selected_units().empty();
@@ -241,6 +254,36 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
   emit selection_changed();
 }
 
+auto SelectionController::select_idle_builders(int local_owner_id) -> std::size_t {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return 0;
+  }
+
+  std::vector<Engine::Core::EntityID> idle;
+  for (auto [id, unit] : m_world->view<const Engine::Core::UnitComponent>()) {
+    if (unit.owner_id != local_owner_id || unit.health <= 0 ||
+        unit.spawn_type != Game::Units::SpawnType::Builder) {
+      continue;
+    }
+    if (Game::Systems::builder_is_idle(
+            m_world->try_get<Engine::Core::BuilderProductionComponent>(id))) {
+      idle.push_back(id);
+    }
+  }
+  if (idle.empty()) {
+    return 0;
+  }
+
+  m_selection_system->clear_selection();
+  for (const auto id : idle) {
+    m_selection_system->select_unit(id);
+  }
+  sync_selection_flags();
+  play_selection_cue(m_selection_system->get_selected_units().size());
+  emit selection_changed();
+  return idle.size();
+}
+
 void SelectionController::select_single_unit(Engine::Core::EntityID id,
                                              int local_owner_id) {
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
@@ -312,6 +355,22 @@ auto SelectionController::control_group_members(int group, int local_owner_id)
     }
   }
   m_selection_system->set_control_group(group, alive);
+  return alive;
+}
+
+auto SelectionController::control_group_size(int group,
+                                             int local_owner_id) const -> int {
+  if (m_selection_system == nullptr || m_world == nullptr ||
+      !Game::Session::SelectionService::is_control_group(group)) {
+    return 0;
+  }
+  int alive = 0;
+  for (const auto id : m_selection_system->control_group(group)) {
+    const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit != nullptr && unit->health > 0 && unit->owner_id == local_owner_id) {
+      ++alive;
+    }
+  }
   return alive;
 }
 

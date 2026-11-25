@@ -35,6 +35,7 @@
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/roman/builder_renderer.h"
 #include "render/entity/nations/roman/builder_style.h"
+#include "render/entity/nations/worker_tools.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
@@ -67,7 +68,7 @@ auto builder_work_tunic_fill_role_colors(const HumanoidPalette& palette,
     return 0U;
   }
   out[0] = palette.cloth;
-  out[1] = palette.cloth * 0.85F;
+  out[1] = palette.cloth * 0.62F;
   return k_builder_work_tunic_role_count;
 }
 
@@ -588,6 +589,7 @@ auto builder_tool_make_static_attachment(const RenderArchetype& archetype,
       .bind_bone_transform = bind_bone,
       .bind_socket_transform = bind_socket,
       .mesh_from_socket = QMatrix4x4{},
+      .uniform_scale = WorkerTools::k_hand_tool_scale,
   });
   for (std::size_t i = 0; i < slot_indices.size(); ++i) {
     spec.palette_role_remap[slot_indices[i]] =

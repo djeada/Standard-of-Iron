@@ -269,6 +269,7 @@
             "family_manpower_value": 8,
             "nearest_barracks_id": 0,
             "population_contribution": 18,
+            "reports_to_barracks": true,
             "update_cooldown": 0
         },
         "id": 1,
@@ -742,6 +743,7 @@
             "family_manpower_value": 2.5,
             "nearest_barracks_id": 3,
             "population_contribution": 1,
+            "reports_to_barracks": false,
             "update_cooldown": 1.5
         },
         "id": 1,
@@ -1214,6 +1216,7 @@
             "family_manpower_value": 8,
             "nearest_barracks_id": 3,
             "population_contribution": 1,
+            "reports_to_barracks": false,
             "update_cooldown": 1.5
         },
         "id": 1,

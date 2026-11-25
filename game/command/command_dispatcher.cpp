@@ -69,11 +69,21 @@ void dispatch(World& world, const Command& command) {
               world, payload.building, payload.position.x(), payload.position.z());
         } else if constexpr (std::is_same_v<T, SetGateMode>) {
           apply_gate_mode(world, payload);
+        } else if constexpr (std::is_same_v<T, SetHomeReporting>) {
+          apply_home_reporting(world, payload);
         } else if constexpr (std::is_same_v<T, SetAutoGather>) {
           apply_auto_gather(world, payload);
         } else if constexpr (std::is_same_v<T, Produce>) {
-          Game::Systems::ProductionService::start_production(
-              world, payload.building, payload.product);
+          if (payload.band_nation.has_value()) {
+            Game::Systems::ProductionService::start_production(
+                world, payload.building, payload.product, payload.band_nation);
+          } else if (payload.toggle_repeat) {
+            Game::Systems::ProductionService::toggle_repeat(
+                world, payload.building, payload.product);
+          } else {
+            Game::Systems::ProductionService::start_production_batch(
+                world, payload.building, payload.product, payload.count);
+          }
         } else if constexpr (std::is_same_v<T, Trade>) {
           apply_trade(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, AllyTribute>) {

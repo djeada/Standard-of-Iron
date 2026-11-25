@@ -1,6 +1,7 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -23,6 +24,7 @@
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
+#include "game/systems/economy/nation_economy_system.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/navigation/nav_grid.h"
@@ -148,6 +150,17 @@ struct SideHistory {
   int buildings_lost = 0;
 
   float eliminated_at = -1.0F;
+
+  // Men in the field (workers included) and gold, sampled at the end of every
+  // minute; index 0 is minute 1.
+  std::vector<int> men_by_minute;
+  std::vector<int> gold_by_minute;
+  int final_buildings = 0;
+
+  // NATION_ASYMMETRY.md: the nation buildings raised and the bands hired.
+  bool raised_camp = false;
+  bool raised_fabrica = false;
+  int most_bands = 0;
 };
 
 class AiDuelMatchTest : public ::testing::Test {
@@ -493,6 +506,37 @@ protected:
     if (!report.commander_alive && history.commander_lost_at < 0.0F) {
       history.commander_lost_at = minute;
     }
+    int bands = 0;
+    for (auto [id, unit] : session.world().view<UnitComponent>()) {
+      if (unit.owner_id != owner || unit.health <= 0) {
+        continue;
+      }
+      history.raised_camp = history.raised_camp ||
+                            unit.spawn_type == Game::Units::SpawnType::MercenaryCamp;
+      history.raised_fabrica =
+          history.raised_fabrica || unit.spawn_type == Game::Units::SpawnType::Fabrica;
+      bands += session.world().try_get<Engine::Core::MercenaryContractComponent>(id) !=
+                       nullptr
+                   ? 1
+                   : 0;
+    }
+    history.most_bands = std::max(history.most_bands, bands);
+    history.men_by_minute.push_back(men_in_the_field(session, owner));
+    history.gold_by_minute.push_back(
+        session.economy().get(owner, Game::Systems::ResourceType::Gold));
+    history.final_buildings = report.buildings;
+  }
+
+  static auto men_in_the_field(SessionContext& session, int owner) -> int {
+    int men = 0;
+    for (auto [id, unit] : session.world().view<UnitComponent>()) {
+      if (unit.owner_id != owner || unit.health <= 0 ||
+          Game::Units::is_building_spawn(unit.spawn_type)) {
+        continue;
+      }
+      men += Game::Systems::squad_men(unit);
+    }
+    return men;
   }
 
   static void narrate(SessionContext& session,
@@ -511,13 +555,18 @@ protected:
       const auto report = survey(session, side.first);
       const auto* plan = ai != nullptr ? ai->plan_for(side.first) : nullptr;
       if (qEnvironmentVariableIsSet("SOI_DUEL_WAVE") && plan != nullptr) {
-        std::printf("    %s wave committed %d target %llu at %.1f,%.1f members %zu\n",
+        std::printf("    %s wave committed %d target %llu at %.1f,%.1f members %zu "
+                    "declined %d strength %.1f defence %.1f withdrawing %zu\n",
                     side.second,
                     plan->wave.committed ? 1 : 0,
                     static_cast<unsigned long long>(plan->wave.target_id),
                     plan->wave.target_x,
                     plan->wave.target_z,
-                    plan->wave.members.size());
+                    plan->wave.members.size(),
+                    plan->wave.declined,
+                    static_cast<double>(plan->wave.last_strength),
+                    static_cast<double>(plan->wave.last_defence),
+                    plan->wave.withdrawing.size());
         for (auto [id, unit, transform, movement] :
              session.world()
                  .view<UnitComponent,
@@ -676,7 +725,8 @@ protected:
           "  %-10s bar %d home %d farm %d tow %d wall %d mkt %d | work %d/%d "
           "fight %d (foot %d bow %d horse %d engine %d) | "
           "food %d wood %d stone %d iron %d gold %d manpower %d | "
-          "left %d homesfirst %d | pop %d/%d | wave %s(%d) %s | across %d\n",
+          "left %d homesfirst %d | pop %d/%d | wave %s(%d) %s | across %d | "
+          "commander %s %.0fm from home\n",
           side.second,
           report.barracks,
           report.homes,
@@ -708,7 +758,55 @@ protected:
                     .toUtf8()
                     .constData()
               : "?",
-          fighters_across_the_river(session, side.first));
+          fighters_across_the_river(session, side.first),
+          report.commander_alive ? "alive" : "DEAD",
+          static_cast<double>(report.commander_alive
+                                  ? commander_distance_from_home(session, side.first)
+                                  : -1.0F));
+      // NATION_ASYMMETRY.md: what each nation's own economy is doing.
+      int camps = 0;
+      int stables = 0;
+      int fabricae = 0;
+      int castra = 0;
+      int bands = 0;
+      int elephants = 0;
+      int principes = 0;
+      for (auto [id, unit] : session.world().view<UnitComponent>()) {
+        if (unit.owner_id != side.first || unit.health <= 0) {
+          continue;
+        }
+        camps += unit.spawn_type == Game::Units::SpawnType::MercenaryCamp ? 1 : 0;
+        stables += unit.spawn_type == Game::Units::SpawnType::ElephantStables ? 1 : 0;
+        fabricae += unit.spawn_type == Game::Units::SpawnType::Fabrica ? 1 : 0;
+        castra += unit.spawn_type == Game::Units::SpawnType::Castra ? 1 : 0;
+        elephants += unit.spawn_type == Game::Units::SpawnType::Elephant ? 1 : 0;
+        principes += unit.rank > 0 ? 1 : 0;
+        bands += session.world().try_get<Engine::Core::MercenaryContractComponent>(
+                     id) != nullptr
+                     ? 1
+                     : 0;
+      }
+      auto* nation_economy =
+          session.world().get_system<Game::Systems::NationEconomySystem>();
+      std::printf("             nation: camp %d stables %d bands %d elephants %d "
+                  "upkeep %d/min trade %d/min | fabrica %d castra %d veterans %d "
+                  "levy in %.0fs | men %d\n",
+                  camps,
+                  stables,
+                  bands,
+                  elephants,
+                  Game::Systems::NationEconomySystem::upkeep_per_minute(session.world(),
+                                                                        side.first),
+                  Game::Systems::NationEconomySystem::trade_income_per_minute(
+                      session.world(), side.first),
+                  fabricae,
+                  castra,
+                  principes,
+                  nation_economy != nullptr
+                      ? static_cast<double>(nation_economy->seconds_to_next_levy(
+                            session.world(), side.first))
+                      : -1.0,
+                  men_in_the_field(session, side.first));
     }
   }
 
@@ -906,6 +1004,9 @@ TEST_F(AiDuelMatchTest, ScipioAndFabiusBothPlayTheirDoctrine) {
       outcome.north, "Scipio", SiegeTrain::Catapults);
   expect_the_siege_train_of_its_doctrine(
       outcome.south, "Fabius", SiegeTrain::Ballistas);
+  // Rome arms its legions at a Fabrica (NATION_ASYMMETRY.md section 9).
+  EXPECT_TRUE(outcome.north.raised_fabrica || outcome.south.raised_fabrica)
+      << "neither consul raised a Fabrica";
 }
 
 TEST_F(AiDuelMatchTest, MarcellusAndHannoBothPlayTheirDoctrine) {
@@ -942,6 +1043,12 @@ TEST_F(AiDuelMatchTest, HannibalAndHasdrubalBothPlayTheirDoctrine) {
   expect_the_siege_train_of_its_doctrine(
       outcome.north, "Hannibal", SiegeTrain::Catapults);
   expect_the_siege_train_of_its_doctrine(outcome.south, "Hasdrubal", SiegeTrain::None);
+
+  // Carthage turns gold into an army (NATION_ASYMMETRY.md section 9).
+  EXPECT_TRUE(outcome.north.raised_camp || outcome.south.raised_camp)
+      << "neither Carthaginian raised a Mercenary Camp";
+  EXPECT_GE(std::max(outcome.north.most_bands, outcome.south.most_bands), 2)
+      << "neither Carthaginian hired mercenary bands";
 }
 
 TEST_F(AiDuelMatchTest, HannibalMirrorGetsItsArmyAcrossTheRiver) {
@@ -994,4 +1101,150 @@ TEST_F(AiDuelMatchTest, HannibalMirrorGetsItsArmyAcrossTheRiver) {
                      outcome.south.most_across_the_river),
             3)
       << "no side ever had more than a straggler across the river";
+}
+
+// The nation balance matrix (NATION_ASYMMETRY.md section 9 and phase 5): every Rome x
+// Carthage commander pairing at Normal, played once from each corner. It takes several
+// minutes, so it only runs with SOI_NATION_MATRIX=1; SOI_NATION_MATRIX_MINUTES sets the
+// match length (default 25). A side wins outright by wiping the other out; a match
+// still standing at the end goes to the side with more men in the field plus ten per
+// standing building. The bar is 45-55% for either nation.
+TEST_F(AiDuelMatchTest, NationBalanceMatrix) {
+  if (!qEnvironmentVariableIsSet("SOI_NATION_MATRIX")) {
+    GTEST_SKIP() << "set SOI_NATION_MATRIX=1 to play the nation balance matrix";
+  }
+  const int minutes = qEnvironmentVariableIsSet("SOI_NATION_MATRIX_MINUTES")
+                          ? qEnvironmentVariableIntValue("SOI_NATION_MATRIX_MINUTES")
+                          : 25;
+  struct Seat {
+    Game::Units::SpawnType commander;
+    Game::Systems::NationID nation;
+    const char* name;
+  };
+  const std::array<Seat, 3> rome{{
+      {Game::Units::SpawnType::RomanLegionOrganizer,
+       Game::Systems::NationID::RomanRepublic,
+       "fabius"},
+      {Game::Units::SpawnType::RomanVeteranConsul,
+       Game::Systems::NationID::RomanRepublic,
+       "scipio"},
+      {Game::Units::SpawnType::RomanFieldCommander,
+       Game::Systems::NationID::RomanRepublic,
+       "marcellus"},
+  }};
+  const std::array<Seat, 3> carthage{{
+      {Game::Units::SpawnType::CarthageSpearCommander,
+       Game::Systems::NationID::Carthage,
+       "hanno"},
+      {Game::Units::SpawnType::CarthageBowCommander,
+       Game::Systems::NationID::Carthage,
+       "hasdrubal"},
+      {Game::Units::SpawnType::CarthageSwordCommander,
+       Game::Systems::NationID::Carthage,
+       "hannibal"},
+  }};
+  const auto sample = [](const std::vector<int>& series, int minute) {
+    if (series.empty()) {
+      return 0;
+    }
+    const auto index = static_cast<std::size_t>(std::max(1, minute) - 1);
+    return series[std::min(index, series.size() - 1)];
+  };
+  const auto score = [](const SideHistory& side) {
+    const int men = side.men_by_minute.empty() ? 0 : side.men_by_minute.back();
+    return men + 10 * side.final_buildings;
+  };
+
+  int rome_wins = 0;
+  int carthage_wins = 0;
+  int decisive = 0;
+  long men_sum[2][3] = {};
+  long gold_sum[2] = {};
+  int samples = 0;
+  // SOI_NATION_MATRIX_ROME=fabius,scipio and SOI_NATION_MATRIX_CARTHAGE=hanno play
+  // only those seats, so the matrix can be split or narrowed to one commander.
+  const QString only_rome = qEnvironmentVariable("SOI_NATION_MATRIX_ROME");
+  const QString only_carthage = qEnvironmentVariable("SOI_NATION_MATRIX_CARTHAGE");
+  for (const auto& roman : rome) {
+    if (!only_rome.isEmpty() &&
+        !only_rome.split(QLatin1Char(',')).contains(QLatin1String(roman.name))) {
+      continue;
+    }
+    for (const auto& punic : carthage) {
+      if (!only_carthage.isEmpty() &&
+          !only_carthage.split(QLatin1Char(',')).contains(QLatin1String(punic.name))) {
+        continue;
+      }
+      for (const bool rome_north : {true, false}) {
+        const Seat& north = rome_north ? roman : punic;
+        const Seat& south = rome_north ? punic : roman;
+        const auto outcome = play(north.commander,
+                                  north.nation,
+                                  north.name,
+                                  south.commander,
+                                  south.nation,
+                                  south.name,
+                                  minutes);
+        const SideHistory& r = rome_north ? outcome.north : outcome.south;
+        const SideHistory& c = rome_north ? outcome.south : outcome.north;
+        const bool r_out = r.eliminated_at >= 0.0F;
+        const bool c_out = c.eliminated_at >= 0.0F;
+        bool rome_won = false;
+        if (r_out != c_out) {
+          rome_won = c_out;
+          ++decisive;
+        } else {
+          rome_won = score(r) >= score(c);
+        }
+        rome_won ? ++rome_wins : ++carthage_wins;
+        const int at[3] = {3, 7, 15};
+        for (int i = 0; i < 3; ++i) {
+          men_sum[0][i] += sample(r.men_by_minute, at[i]);
+          men_sum[1][i] += sample(c.men_by_minute, at[i]);
+        }
+        gold_sum[0] += sample(r.gold_by_minute, 20);
+        gold_sum[1] += sample(c.gold_by_minute, 20);
+        ++samples;
+        std::printf("matrix %-9s vs %-9s rome-%s: %s (%s) men 3/7/15 rome %d/%d/%d "
+                    "carthage %d/%d/%d gold@20 rome %d carthage %d\n",
+                    roman.name,
+                    punic.name,
+                    rome_north ? "north" : "south",
+                    rome_won ? "ROME" : "CARTHAGE",
+                    r_out != c_out ? "wiped out" : "on points",
+                    sample(r.men_by_minute, 3),
+                    sample(r.men_by_minute, 7),
+                    sample(r.men_by_minute, 15),
+                    sample(c.men_by_minute, 3),
+                    sample(c.men_by_minute, 7),
+                    sample(c.men_by_minute, 15),
+                    sample(r.gold_by_minute, 20),
+                    sample(c.gold_by_minute, 20));
+        std::fflush(stdout);
+        TearDown();
+        SetUp();
+      }
+    }
+  }
+  const int total = rome_wins + carthage_wins;
+  std::printf("matrix summary: %d matches of %d min, Rome %d (%.0f%%), Carthage %d "
+              "(%.0f%%), %d decided by a wipe-out\n",
+              total,
+              minutes,
+              rome_wins,
+              100.0 * rome_wins / std::max(1, total),
+              carthage_wins,
+              100.0 * carthage_wins / std::max(1, total),
+              decisive);
+  std::printf("matrix mean men 3/7/15: rome %ld/%ld/%ld carthage %ld/%ld/%ld; "
+              "mean gold@20 rome %ld carthage %ld\n",
+              men_sum[0][0] / std::max(1, samples),
+              men_sum[0][1] / std::max(1, samples),
+              men_sum[0][2] / std::max(1, samples),
+              men_sum[1][0] / std::max(1, samples),
+              men_sum[1][1] / std::max(1, samples),
+              men_sum[1][2] / std::max(1, samples),
+              gold_sum[0] / std::max(1, samples),
+              gold_sum[1] / std::max(1, samples));
+  EXPECT_EQ(total % 2, 0);
 }

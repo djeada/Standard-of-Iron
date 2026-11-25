@@ -70,28 +70,62 @@ TestCase {
         return host;
     }
 
-    function test_the_sepulcher_is_listed_as_the_enemy_it_was() {
+    function test_the_sepulcher_is_not_an_army_but_its_dead_are_told() {
         var owners = [testCase.owner(1, "Scipio", 0, "Player", true, "roman_republic", "#c9a227"), testCase.owner(2, "Hasdrubal", 1, "AI", false, "carthage", "#9b59b6"), testCase.owner(99, "Iron Sepulcher tomb_1", 9, "AI", false, "iron_sepulcher", "#4b3f6b")];
         owners[2].is_contender = false;
         var byOwner = {
             "1": testCase.stats(148, 62, 96, 7, 1834),
             "2": testCase.stats(62, 148, 71, 2, 1834),
-            "99": testCase.stats(36, 90, 0, 0, 1834)
+            "99": testCase.stats(36, 90, 0, 4, 1834)
         };
+        byOwner["1"].lossesToWild = 20;
+        byOwner["2"].lossesToWild = 16;
         var engine = testCase.fakeEngine("victory", owners, byOwner, "");
         var host = testCase.makeSummary(engine);
-        compare(host.summary.armies.length, 3, "an enemy that fought is missing from the field");
-        var tomb = null;
+        compare(host.summary.armies.length, 2, "a neutral faction that never plays was listed as an army");
+        for (var i = 0; i < host.summary.armies.length; ++i)
+            verify(host.summary.armies[i].ownerId !== 99, "the tomb owner reached the roster");
+        compare(host.summary.wildLosses, 36, "the soldiers the wilds killed are missing from the report");
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_two_owners_of_one_name_on_a_side_are_one_row() {
+        var owners = [testCase.owner(1, "Hanno", 0, "Player", true, "carthage", "#6b4a2b"), testCase.owner(2, "Roman Republic", 1, "AI", false, "roman_republic", "#c0392b"), testCase.owner(3, "Roman Republic (3)", 1, "AI", false, "roman_republic", "#2980b9")];
+        var byOwner = {
+            "1": testCase.stats(10, 20, 30, 1, 600),
+            "2": testCase.stats(5, 6, 7, 1, 600),
+            "3": testCase.stats(1, 2, 3, 1, 600)
+        };
+        var engine = testCase.fakeEngine("defeat", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        compare(host.summary.armies.length, 2, "the same army was listed twice");
+        var rome = null;
         for (var i = 0; i < host.summary.armies.length; ++i) {
-            if (host.summary.armies[i].ownerId === 99)
-                tomb = host.summary.armies[i];
+            if (!host.summary.armies[i].isLocal)
+                rome = host.summary.armies[i];
         }
-        verify(tomb !== null, "the tomb owner never reached the roster");
-        compare(tomb.name, FactionTheme.nameFor("iron_sepulcher"), "the sepulcher is named as a faction, not a zone id");
-        compare(tomb.kills, 36);
-        compare(tomb.losses, 90);
-        compare(tomb.isContender, false);
-        compare(tomb.isWinner, false);
+        verify(rome !== null);
+        compare(rome.name, "Roman Republic");
+        compare(rome.kills, 6);
+        compare(rome.losses, 8);
+        compare(rome.trained, 10);
+        compare(rome.barracks, 2);
+        compare(rome.score, 6 * 100 + 10 * 10 + 2 * 500);
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_rivals_who_share_a_name_across_sides_stay_apart() {
+        var owners = [testCase.owner(1, "Scipio", 0, "Player", true, "roman_republic", "#c9a227"), testCase.owner(2, "Scipio (2)", 1, "AI", false, "roman_republic", "#c0392b"), testCase.owner(3, "Scipio (3)", 2, "AI", false, "roman_republic", "#2980b9")];
+        var byOwner = {
+            "1": testCase.stats(1, 1, 1, 1, 60),
+            "2": testCase.stats(1, 1, 1, 1, 60),
+            "3": testCase.stats(1, 1, 1, 1, 60)
+        };
+        var engine = testCase.fakeEngine("defeat", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        compare(host.summary.armies.length, 3, "rival armies were merged");
         engine.destroy();
         host.destroy();
     }

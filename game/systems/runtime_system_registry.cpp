@@ -38,8 +38,10 @@
 #include "stamina_system.h"
 #include "systems/economy/capture_system.h"
 #include "systems/economy/civilian_delivery_system.h"
+#include "systems/economy/civilian_reporting_system.h"
 #include "systems/economy/farm_system.h"
 #include "systems/economy/gather_loop_system.h"
+#include "systems/economy/nation_economy_system.h"
 #include "systems/economy/production_system.h"
 #include "systems/economy/resource_delivery_system.h"
 #include "systems/movement/body_contact_system.h"
@@ -49,6 +51,7 @@
 #include "systems/movement/route_follow_system.h"
 #include "systems/movement/unit_traversal_layout_system.h"
 #include "systems/navigation/terrain_alignment_system.h"
+#include "town_growth_system.h"
 #include "undead_awakening_system.h"
 
 namespace Game::Systems {
@@ -73,6 +76,32 @@ void register_runtime_systems(Engine::Core::World& world) {
                system->restore_state(value.toObject());
              }
            }});
+
+  Game::Session::SessionSnapshot::register_contributor(
+      {.key = "nation_economy",
+       .capture = [](const Game::Session::SnapshotScope& scope) -> QJsonValue {
+         auto* system = scope.world != nullptr
+                            ? scope.world->get_system<NationEconomySystem>()
+                            : nullptr;
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       },
+       .restore =
+           [](const Game::Session::SnapshotScope& scope, const QJsonValue& value) {
+             auto* system = scope.world != nullptr
+                                ? scope.world->get_system<NationEconomySystem>()
+                                : nullptr;
+             if (system != nullptr) {
+               system->restore_state(value.toObject());
+             }
+           },
+       .digest = [](const Game::Session::SnapshotScope& scope) -> QJsonValue {
+         auto* system = scope.world != nullptr
+                            ? scope.world->get_system<NationEconomySystem>()
+                            : nullptr;
+         return system != nullptr ? QJsonValue(system->serialize_state())
+                                  : QJsonValue();
+       }});
 
   world.add_system(std::make_unique<Game::Command::CommandSystem>(),
                    Engine::Core::SystemPhase::Input);
@@ -158,14 +187,20 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<DismantleSystem>(),
                    Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<HomeSystem>(), Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<CivilianReportingSystem>(),
+                   Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<FarmSystem>(), Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<CivilianDeliverySystem>(),
                    Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<ResourceDeliverySystem>(),
                    Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<NationEconomySystem>(),
+                   Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<GatherLoopSystem>(),
                    Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<SettlementLifeSystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<TownGrowthSystem>(),
                    Engine::Core::SystemPhase::Economy);
   world.add_system(std::make_unique<Game::Wildlife::WildlifeSystem>(),
                    Engine::Core::SystemPhase::Ambient);

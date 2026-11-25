@@ -11,6 +11,7 @@
 #include "game/systems/home_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/player_resource_registry.h"
+#include "game/systems/recruitment_rules.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/troop_profile_service.h"
@@ -280,9 +281,21 @@ TEST_F(HomeManpowerSystemTest, InitialBarracksSpawnStartsWithAuthoredManpowerRes
   ASSERT_NE(built_production, nullptr);
   EXPECT_EQ(built_production->max_units, 180);
   EXPECT_EQ(built_production->manpower_available, 0);
+
+  Game::Units::SpawnParams small_built_params = built_params;
+  small_built_params.max_population = 60;
+  auto small_barracks = Game::Units::Barracks::Create(world, small_built_params);
+  auto* small_production = world.get_entity(small_barracks->id())
+                               ->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(small_production, nullptr);
+  EXPECT_EQ(small_production->manpower_available, 0);
+  EXPECT_EQ(small_production->manpower_limit(),
+            Game::Systems::k_built_barracks_reserve_ceiling)
+      << "a barracks raised by builders holds 120 men of reserve "
+         "(docs/design/PLAY_BIG_SOON.md 6.7)";
 }
 
-TEST_F(HomeManpowerSystemTest, InitialHomeSpawnStartsWithThreeCivilianRecruitsReady) {
+TEST_F(HomeManpowerSystemTest, InitialHomeSpawnStartsWithItsLifetimeCiviliansReady) {
   Engine::Core::World world;
 
   Game::Units::SpawnParams params;
@@ -297,8 +310,11 @@ TEST_F(HomeManpowerSystemTest, InitialHomeSpawnStartsWithThreeCivilianRecruitsRe
   ASSERT_NE(production, nullptr);
 
   EXPECT_EQ(production->product_type, Game::Units::TroopType::Civilian);
-  EXPECT_EQ(production->max_units, 3);
-  EXPECT_EQ(production->manpower_available, production->villager_cost * 3);
+  EXPECT_EQ(Game::Systems::k_home_lifetime_civilians, 6)
+      << "docs/design/PLAY_BIG_SOON.md decision 4: a home raises six civilians";
+  EXPECT_EQ(production->max_units, Game::Systems::k_home_lifetime_civilians);
+  EXPECT_EQ(production->manpower_available,
+            production->villager_cost * Game::Systems::k_home_lifetime_civilians);
 }
 
 TEST_F(HomeManpowerSystemTest, HomeSpawnScalesTransformAndDefaultRallyPoint) {

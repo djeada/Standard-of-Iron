@@ -14,6 +14,7 @@
 
 #include "game/core/component_economy.h"
 #include "game/core/world.h"
+#include "game/systems/builder_idle.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/economy/civilian_delivery_system.h"
 #include "game/systems/economy/construction_cost_catalog.h"
@@ -152,7 +153,7 @@ auto scan_owner(Engine::Core::World* world, int owner_id) -> OwnerScan {
       ++scan.gathering_workers[Game::Systems::resource_type_index(*resource)];
     } else if (busy && !builder->product_type.empty()) {
       ++scan.constructing_builder_count;
-    } else if (!builder->has_gather_order && !builder->auto_gather) {
+    } else if (Game::Systems::builder_is_idle(builder)) {
       ++scan.idle_builder_count;
     } else if (const auto gathering = Game::Systems::resource_for_harvest_product(
                    builder->gather_product_type);

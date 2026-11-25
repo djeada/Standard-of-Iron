@@ -4,7 +4,9 @@
 #include <QVector3D>
 
 #include <atomic>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <set>
 
 #include "game/session/session_context.h"
 #include "render/creature/archetype_registry.h"
@@ -574,6 +576,36 @@ TEST(CreatureRenderBatch, HumanoidWearParamsPropagateToRequests) {
   EXPECT_FLOAT_EQ(req.wear_params.y(), variant.grime);
   EXPECT_FLOAT_EQ(req.wear_params.z(), variant.bloodiness);
   EXPECT_FLOAT_EQ(req.wear_params.w(), variant.pattern_seed);
+}
+
+TEST(CreatureRenderBatch, SquadMatesVarySkinToneButTheFirstSoldierKeepsThePalette) {
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant variant{};
+  variant.pattern_seed = 0.40F;
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  std::set<int> tones;
+  for (std::uint16_t index = 0; index < 24U; ++index) {
+    CreatureRenderBatch batch;
+    CreatureGraphOutput output;
+    output.culled = false;
+    output.seed = 0x51A7E5U + index * 977U;
+    output.instance_index = index;
+    add_humanoid(batch, output, pose, variant, anim);
+    ASSERT_EQ(batch.requests().size(), 1U);
+    float const w = batch.requests()[0].wear_params.w();
+    int const tone = static_cast<int>(std::floor(w));
+    EXPECT_NEAR(w - static_cast<float>(tone), variant.pattern_seed, 1.0e-4F)
+        << "the wear pattern seed stays in the fraction";
+    if (index == 0U) {
+      EXPECT_EQ(tone, 0) << "single figures and portraits keep the authored skin";
+    } else {
+      EXPECT_GE(tone, 1);
+      EXPECT_LE(tone, 6);
+    }
+    tones.insert(tone);
+  }
+  EXPECT_GE(tones.size(), 4U) << "a squad shows several skin tones";
 }
 
 TEST(CreatureRenderBatch, CulledCreatureNotAdded) {

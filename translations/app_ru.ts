@@ -304,6 +304,10 @@
         <source>Ask allies to defend this barracks.</source>
         <translation>Попросить союзников защитить эти казармы.</translation>
     </message>
+    <message>
+        <source>Levy in %1s</source>
+        <translation>Набор через %1 с</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -367,6 +371,10 @@
         <source>Retry mission</source>
         <translation>Повторить задание</translation>
     </message>
+    <message>
+        <source>%1 fell to wild beasts and the restless dead, and are credited to no army.</source>
+        <translation>%1 пали от диких зверей и беспокойных мертвецов и не засчитываются ни одной армии.</translation>
+    </message>
 </context>
 <context>
     <name>BattleSummary</name>
@@ -375,12 +383,12 @@
         <translation>Повторить задание</translation>
     </message>
     <message>
-        <source>Play again</source>
-        <translation>Сыграть снова</translation>
-    </message>
-    <message>
         <source>Held the field: %1</source>
         <translation>Удержали поле: %1</translation>
+    </message>
+    <message>
+        <source>Fight it again</source>
+        <translation>Сразиться снова</translation>
     </message>
 </context>
 <context>
@@ -3030,6 +3038,25 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>ControlGroupStrip</name>
+    <message>
+        <source>Control groups</source>
+        <translation>Группы управления</translation>
+    </message>
+    <message>
+        <source>%1  ·  %2</source>
+        <translation>%1  ·  %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Control group %1 holds %n unit(s). Click, or press %1, to select it.</source>
+        <translation>
+            <numerusform>В группе %1 %n отряд. Щёлкните или нажмите %1, чтобы выбрать её.</numerusform>
+            <numerusform>В группе %1 %n отряда. Щёлкните или нажмите %1, чтобы выбрать её.</numerusform>
+            <numerusform>В группе %1 %n отрядов. Щёлкните или нажмите %1, чтобы выбрать её.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
@@ -3459,20 +3486,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Ваше поселение живёт само</translation>
     </message>
     <message>
-        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
-        <translation>Наймите строителя в казармах, затем отправьте его за древесиной, камнем или железом.</translation>
-    </message>
-    <message>
         <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
         <translation>Выделите строителя, нажмите «Собрать» и щёлкните по дереву, валуну, залежи руды, созревшему полю или овце. Он свезёт груз во двор казарм и вернётся за следующим.</translation>
     </message>
     <message>
         <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
         <translation>С выделенным строителем нажмите «Строить» и поставьте Дом, чтобы поднять резерв, или Казармы, чтобы набирать из них.</translation>
-    </message>
-    <message>
-        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
-        <translation>Выделите казармы и нанимайте войска. Каждый отряд стоит резерва и ресурсов — и то и другое указано на его карточке.</translation>
     </message>
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
@@ -3505,6 +3524,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Docks against an enemy wall; the infantry beside it climb its ladder and cross onto the wall walk.</source>
         <translation>Подходит вплотную к вражеской стене; пехота рядом поднимается по её лестнице и переходит на боевой ход.</translation>
+    </message>
+    <message>
+        <source>Train three builders at a barracks, then build Homes. Civilians become soldiers. Send builders to collect wood, stone or iron meanwhile.</source>
+        <translation>Обучите в казарме трёх строителей, затем стройте Дома. Мирные жители становятся солдатами. А пока отправьте строителей собирать дерево, камень или железо.</translation>
+    </message>
+    <message>
+        <source>Train three builders, then build Homes. Civilians become soldiers. Meanwhile select a builder, press Collect and click a tree, boulder or ore deposit.</source>
+        <translation>Обучите трёх строителей, затем стройте Дома. Мирные жители становятся солдатами. А пока выберите строителя, нажмите «Собирать» и щёлкните по дереву, валуну или рудной жиле.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card. Shift-click a card to queue five; Ctrl-click to keep recruiting until you click again.</source>
+        <translation>Выберите казарму и набирайте войска. Каждый отряд стоит резерва и ресурсов, оба указаны на его карточке. Shift+щелчок по карточке ставит в очередь пять; Ctrl+щелчок продолжает набор, пока вы не щёлкнете снова.</translation>
     </message>
 </context>
 <context>
@@ -3708,6 +3739,26 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Ladder</source>
         <translation>Лестница</translation>
+    </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Лагерь наёмников</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Слоновьи конюшни</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Фабрика</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Каструм</translation>
+    </message>
+    <message>
+        <source>Emporion</source>
+        <translation>Эмпорий</translation>
     </message>
 </context>
 <context>
@@ -4604,6 +4655,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Group %1 cleared</source>
         <translation>Группа %1 очищена</translation>
+    </message>
+    <message>
+        <source>No idle builders</source>
+        <translation>Нет свободных строителей</translation>
     </message>
 </context>
 <context>
@@ -5696,6 +5751,10 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>the whole field</source>
         <translation>всё поле</translation>
     </message>
+    <message>
+        <source>Kills %1  Losses %2 (%3 wild)</source>
+        <translation>Убито %1  Потери %2 (%3 от дикой природы)</translation>
+    </message>
 </context>
 <context>
     <name>HUDTop</name>
@@ -6465,6 +6524,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Your allied commanders send men to hold this building if they are willing and have men to spare.</source>
         <translation>Ваши союзные командиры пришлют людей удержать эту постройку, если согласятся и у них найдутся лишние люди.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it, three times its defenders, for %1 s.</source>
+        <translation>Можно захватить: держите рядом войска втрое больше его защитников в течение %1 с.</translation>
+    </message>
+    <message>
+        <source>Can be captured: keep your troops beside it for %1 s.</source>
+        <translation>Можно захватить: держите рядом войска в течение %1 с.</translation>
     </message>
 </context>
 <context>
@@ -7315,14 +7382,6 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Quit</source>
         <translation>Выйти</translation>
     </message>
-    <message>
-        <source>Graphics lowered to %1 to keep the battle smooth</source>
-        <translation>Графика снижена до «%1», чтобы битва шла плавно</translation>
-    </message>
-    <message>
-        <source>Pick a preset in Settings to keep your own choice.</source>
-        <translation>Выберите пресет в настройках, чтобы сохранить свой выбор.</translation>
-    </message>
 </context>
 <context>
     <name>MainMenu</name>
@@ -7491,10 +7550,6 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <translation>ВТОРАЯ ПУНИЧЕСКАЯ ВОЙНА</translation>
     </message>
     <message>
-        <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>Легионы, флоты, слоны и оспариваемые пути снабжения</translation>
-    </message>
-    <message>
         <source>Hannibal Barca</source>
         <translation>Ганнибал Барка</translation>
     </message>
@@ -7557,6 +7612,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Abandon</source>
         <translation>Покинуть</translation>
+    </message>
+    <message>
+        <source>Legions, war elephants, walled towns, and contested supply lines</source>
+        <translation>Легионы, боевые слоны, обнесённые стенами города и спорные пути снабжения</translation>
     </message>
 </context>
 <context>
@@ -8935,10 +8994,6 @@ to see preview</source>
         <translation>Резерв кормит консульскую линию; перережьте его, и линия поредеет.</translation>
     </message>
     <message>
-        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Значит, разведчики не возвращаются. Что ж, все с чего-то начинают, а ты начал с того, что разгромил заставу, полную людей, ждавших обеда. В следующий раз Рим пришлёт того, кто умеет считать.</translation>
-    </message>
-    <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
         <translation>Святилища, мимо которых вы шли всю кампанию, никогда не были декорацией. Зама перечитывает каждую карту позади себя — а у Гробницы нет полководца, которого можно убить, так что единственное правило, служившее вам с Тразимена, здесь как раз и не сработает.</translation>
     </message>
@@ -9931,10 +9986,6 @@ to see preview</source>
         <translation>Зима 218 г. до н. э.: после победы на Требии Ганнибал напал на склад близ Плаценции, а затем взял штурмом Виктумулы, укреплённый торговый городок Инсубрской равнины, где укрылись жители округи. Ливий сообщает, что город пал при штурме и был разграблен. В этой изменённой истории у города есть римский префект, гарнизон в цитадели и войско подмоги на дороге из Плаценции.</translation>
     </message>
     <message>
-        <source>Take the second camp on the southern supply road. No bridge reaches its bank of the river.</source>
-        <translation>Захватите второй лагерь на южной дороге снабжения. Ни один мост не ведёт к его берегу реки.</translation>
-    </message>
-    <message>
         <source>202 BC, near Zama in Africa: Publius Cornelius Scipio - son of the consul of 218, soon to be called Africanus - drew up his maniples one behind another instead of in the usual chequer, leaving straight lanes held by velites through which Hannibal&apos;s eighty elephants could be driven or let pass. Masinissa&apos;s Numidian horse on the right and Laelius&apos;s Italian cavalry on the left drove Hannibal&apos;s cavalry off the field. Hannibal&apos;s three lines - Ligurian, Gallic, Balearic and Moorish mercenaries; Carthaginian and African levies; his veterans of Italy held back in the third - fought the legions to a standstill until the Roman and Numidian cavalry returned and struck the third line from behind. The Iron Sepulcher&apos;s intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
         <translation>202 г. до н. э., близ Замы в Африке: Публий Корнелий Сципион — сын консула 218 года, вскоре прозванный Африканским, — выстроил манипулы одну за другой, а не обычным шахматным порядком, оставив прямые проходы, занятые велитами, через которые восемьдесят слонов Ганнибала можно было прогнать или пропустить. Нумидийская конница Масиниссы на правом крыле и италийская конница Лелия на левом прогнали конницу Ганнибала с поля. Три линии Ганнибала — лигурийские, галльские, балеарские и мавританские наёмники; карфагенское и африканское ополчение; его италийские ветераны, придержанные в третьей, — бились с легионами на равных, пока римская и нумидийская конница не вернулась и не ударила третьей линии в тыл. Вмешательство Железной Гробницы — намеренный тёмно-фэнтезийный отход кампании от истории.</translation>
     </message>
@@ -10378,6 +10429,18 @@ to see preview</source>
         <source>The third rising</source>
         <translation>Третье восстание</translation>
     </message>
+    <message>
+        <source>Hold both camps: the hill fort, and now the river town on the southern supply road. No bridge reaches its bank of the river.</source>
+        <translation>Удержите оба лагеря: крепость на холме, а теперь и речной город на южной дороге снабжения. Ни один мост не доходит до его берега.</translation>
+    </message>
+    <message>
+        <source>So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Вот и пал аванпост. Все с чего-то начинают, а вы начали с разгрома лагеря, полного людей, ждавших обеда. В следующий раз Рим пришлёт того, кто умеет считать.</translation>
+    </message>
+    <message>
+        <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
+        <translation>Вы нашли моих разведчиков. Двоих послали пересчитать ваши шатры, а вы отвечаете всем лагерем. Что ж, но я захочу знать, кто их убил.</translation>
+    </message>
 </context>
 <context>
     <name>MissionsScreen</name>
@@ -10520,6 +10583,25 @@ to see preview</source>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>NationEconomy</name>
+    <message>
+        <source>The mercenaries were not paid. They fight without heart until the treasury can pay them.</source>
+        <translation>Наёмникам не заплатили. Они сражаются без души, пока казна не сможет им заплатить.</translation>
+    </message>
+    <message>
+        <source>Levy day: %1 citizens answer the call to arms.</source>
+        <translation>День набора: %1 граждан откликаются на призыв к оружию.</translation>
+    </message>
+    <message>
+        <source>A cohort of hastati has come through two battles. They fight as principes now.</source>
+        <translation>Когорта гастатов прошла через две битвы. Теперь она сражается как принципы.</translation>
+    </message>
+    <message>
+        <source>A cohort of principes has seen enough battles to stand with the veterans.</source>
+        <translation>Когорта принципов повидала достаточно битв, чтобы встать рядом с ветеранами.</translation>
     </message>
 </context>
 <context>
@@ -11230,6 +11312,102 @@ Build time: %3s</source>
         <source>Market</source>
         <translation>Рынок</translation>
     </message>
+    <message>
+        <source>Mercenary Camp</source>
+        <translation>Лагерь наёмников</translation>
+    </message>
+    <message>
+        <source>Mercenaries</source>
+        <translation>Наёмники</translation>
+    </message>
+    <message>
+        <source>Hire Gauls, Iberians, Balearic slingers and Numidian horse for gold
+Every band is paid each minute; also takes in gathered goods</source>
+        <translation>Нанимайте за золото галлов, иберов, балеарских пращников и нумидийскую конницу
+Каждой ватаге платят каждую минуту; также принимает собранные товары</translation>
+    </message>
+    <message>
+        <source>Build Mercenary Camp
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить лагерь наёмников
+%1
+Цена: %2
+Время постройки: %3 с</translation>
+    </message>
+    <message>
+        <source>Elephant Stables</source>
+        <translation>Слоновьи конюшни</translation>
+    </message>
+    <message>
+        <source>Stables</source>
+        <translation>Конюшни</translation>
+    </message>
+    <message>
+        <source>The only place war elephants come from
+Each costs gold and food, at most eight alive</source>
+        <translation>Единственное место, откуда берутся боевые слоны
+Каждый стоит золота и еды, не больше восьми живых</translation>
+    </message>
+    <message>
+        <source>Build Elephant Stables
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить слоновьи конюшни
+%1
+Цена: %2
+Время постройки: %3 с</translation>
+    </message>
+    <message>
+        <source>Fabrica</source>
+        <translation>Фабрика</translation>
+    </message>
+    <message>
+        <source>The legion&apos;s armoury
+Infantry cost a third less iron; triarii need one</source>
+        <translation>Оружейная легиона
+Пехота стоит на треть меньше железа; триариям она необходима</translation>
+    </message>
+    <message>
+        <source>Build Fabrica
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить фабрику
+%1
+Цена: %2
+Время постройки: %3 с</translation>
+    </message>
+    <message>
+        <source>Castra</source>
+        <translation>Каструм</translation>
+    </message>
+    <message>
+        <source>A marching camp
+Takes in gathered goods and heals troops resting inside</source>
+        <translation>Походный лагерь
+Принимает собранные товары и лечит отдыхающие в нём войска</translation>
+    </message>
+    <message>
+        <source>Build Castra
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Построить каструм
+%1
+Цена: %2
+Время постройки: %3 с</translation>
+    </message>
+    <message>
+        <source>Building: %1 (+%2 queued)</source>
+        <translation>Строится: %1 (+%2 в очереди)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. A structure you place now joins their queue and is built in order; hold Shift to place several. Walls wait until they finish.</source>
+        <translation>Строители заняты. Здание, которое вы поставите сейчас, встанет в их очередь и будет построено по порядку; удерживайте Shift, чтобы поставить несколько. Стены подождут, пока они не закончат.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionConstructionCard</name>
@@ -11293,6 +11471,41 @@ Build time: %3s</source>
     </message>
 </context>
 <context>
+    <name>ProductionHiringSection</name>
+    <message>
+        <source>MERCENARY CAMP</source>
+        <translation>ЛАГЕРЬ НАЁМНИКОВ</translation>
+    </message>
+    <message>
+        <source>ELEPHANT STABLES</source>
+        <translation>СЛОНОВЬИ КОНЮШНИ</translation>
+    </message>
+    <message>
+        <source>Hire a whole band for gold. No reserve, no iron - but every band is paid every minute.</source>
+        <translation>Наймите целую ватагу за золото. Без резерва и без железа, но каждой ватаге платят каждую минуту.</translation>
+    </message>
+    <message>
+        <source>Elephants for gold and food. No reserve; at most eight alive.</source>
+        <translation>Слоны за золото и еду. Без резерва; не больше восьми живых.</translation>
+    </message>
+    <message>
+        <source>Upkeep %1 gold a minute - trade brings %2</source>
+        <translation>Содержание %1 золота в минуту, торговля приносит %2</translation>
+    </message>
+    <message>
+        <source>Contract signed - %1s</source>
+        <translation>Договор подписан: %1 с</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold, %3 food</source>
+        <translation>%1 чел.: %2 золота, %3 еды</translation>
+    </message>
+    <message>
+        <source>%1 men - %2 gold - upkeep %3 a minute</source>
+        <translation>%1 чел.: %2 золота, содержание %3 в минуту</translation>
+    </message>
+</context>
+<context>
     <name>ProductionHomeSection</name>
     <message>
         <source>HOME RECRUITMENT</source>
@@ -11303,22 +11516,38 @@ Build time: %3s</source>
         <translation>Доступно гражданских: %1 / %2</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>Нанять: %1
-Цена: %2
-Время: %3 с
-Включите режим «Доставить», затем щёлкните свои казармы, чтобы пополнить их резерв.</translation>
-    </message>
-    <message>
         <source>families</source>
         <translation>семьи</translation>
     </message>
     <message>
-        <source>This home already committed its 3 civilians</source>
-        <translation>Этот дом уже отдал своих 3 гражданских</translation>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Civilians walk to a barracks with room and add to its reserve.</source>
+        <translation>Набрать: %1
+Цена: %2
+Время постройки: %3 с
+Мирные жители идут в казарму со свободным местом и пополняют её резерв.</translation>
+    </message>
+    <message>
+        <source>This home has raised all %1 of its civilians</source>
+        <translation>Этот дом вырастил всех своих %1 жителей</translation>
+    </message>
+    <message>
+        <source>Raise and send civilians</source>
+        <translation>Растить и отправлять жителей</translation>
+    </message>
+    <message>
+        <source>This home raises its civilians while food allows, and they walk to a barracks with room on their own</source>
+        <translation>Этот дом растит жителей, пока хватает еды, и они сами идут в казарму со свободным местом</translation>
+    </message>
+    <message>
+        <source>On: this home raises its civilians while food allows, and they walk to a barracks with room on their own. Untick to recruit and deliver them yourself.</source>
+        <translation>Вкл.: этот дом растит жителей, пока хватает еды, и они сами идут в казарму со свободным местом. Снимите отметку, чтобы набирать и доставлять их самому.</translation>
+    </message>
+    <message>
+        <source>Off: this home waits for you. Recruit civilians here and send them to a barracks with Deliver.</source>
+        <translation>Выкл.: этот дом ждёт вас. Набирайте здесь жителей и отправляйте их в казарму командой «Доставить».</translation>
     </message>
 </context>
 <context>
@@ -11540,14 +11769,6 @@ Carthage exclusive</source>
 Только для Карфагена</translation>
     </message>
     <message>
-        <source>Recruit %1
-Cost: %2
-Build time: %3s</source>
-        <translation>Нанять: %1
-Цена: %2
-Время: %3 с</translation>
-    </message>
-    <message>
         <source>Food</source>
         <translation>Еда</translation>
     </message>
@@ -11646,16 +11867,8 @@ Opens for your troops and allies</source>
         <translation>Нанять нельзя</translation>
     </message>
     <message>
-        <source>Queue is full (5/5)</source>
-        <translation>Очередь заполнена (5/5)</translation>
-    </message>
-    <message>
         <source>Not enough reserve</source>
         <translation>Не хватает резерва</translation>
-    </message>
-    <message>
-        <source>Already building...</source>
-        <translation>Уже строит...</translation>
     </message>
     <message>
         <source>Battering Ram</source>
@@ -11686,6 +11899,32 @@ Infantry beside it climb up and cross</source>
 Another way up onto the wall walk</source>
         <translation>Ставится с городской стороны стены
 Ещё один подъём на боевой ход</translation>
+    </message>
+    <message>
+        <source>Recruit %1
+Cost: %2
+Build time: %3s
+Shift-click queues five, Ctrl-click keeps recruiting</source>
+        <translation>Набрать: %1
+Цена: %2
+Время постройки: %3 с
+Shift+щелчок ставит в очередь пять, Ctrl+щелчок продолжает набор</translation>
+    </message>
+    <message>
+        <source>Your marketplace sells iron for gold.</source>
+        <translation>Ваш рынок продаёт железо за золото.</translation>
+    </message>
+    <message>
+        <source>Build a marketplace to buy iron with gold.</source>
+        <translation>Постройте рынок, чтобы покупать железо за золото.</translation>
+    </message>
+    <message>
+        <source>Queue is full (%1/%1)</source>
+        <translation>Очередь заполнена (%1/%1)</translation>
+    </message>
+    <message>
+        <source>The builders are busy. Walls can be planned once they finish, or with another builder squad.</source>
+        <translation>Строители заняты. Стены можно запланировать, когда они закончат, или другой бригадой строителей.</translation>
     </message>
 </context>
 <context>
@@ -12193,6 +12432,14 @@ Right-click to cancel.</source>
         <source>Locks the enemy nearest the centre of the view; press again to let go. Turn left and right step the lock to the next enemy over.</source>
         <translation>Захватывает врага, ближайшего к центру обзора; нажмите ещё раз, чтобы сбросить. Повороты влево и вправо переводят захват на соседнего врага.</translation>
     </message>
+    <message>
+        <source>Select idle builders</source>
+        <translation>Выбрать свободных строителей</translation>
+    </message>
+    <message>
+        <source>Selects every builder squad that has no job and centres the view on them.</source>
+        <translation>Выбирает все бригады строителей без дела и наводит на них камеру.</translation>
+    </message>
 </context>
 <context>
     <name>RecruitCard</name>
@@ -12203,6 +12450,10 @@ Right-click to cancel.</source>
     <message>
         <source>Show unit details</source>
         <translation>Показать подробности об отряде</translation>
+    </message>
+    <message>
+        <source>Recruiting on repeat. Ctrl-click to stop.</source>
+        <translation>Набор по кругу. Ctrl+щелчок, чтобы остановить.</translation>
     </message>
 </context>
 <context>
@@ -12245,6 +12496,45 @@ Right-click to cancel.</source>
     <message>
         <source>Enemies are climbing below your stones. Roll them!</source>
         <translation>Враги поднимаются под вашими камнями. Скатите их!</translation>
+    </message>
+</context>
+<context>
+    <name>RosterCommands</name>
+    <message>
+        <source>Triarii are armed at a Fabrica. Build one first.</source>
+        <translation>Триариев вооружают на фабрике. Сначала постройте её.</translation>
+    </message>
+    <message>
+        <source>This troop needs another building first.</source>
+        <translation>Этому отряду сначала нужно другое здание.</translation>
+    </message>
+    <message>
+        <source>You already field the most of these: %1 squads.</source>
+        <translation>У вас уже максимум таких отрядов: %1.</translation>
+    </message>
+    <message>
+        <source>the reserve ran out</source>
+        <translation>закончился резерв</translation>
+    </message>
+    <message>
+        <source>the stores ran short</source>
+        <translation>не хватило запасов</translation>
+    </message>
+    <message>
+        <source>the army is at its cap</source>
+        <translation>армия достигла предела</translation>
+    </message>
+    <message>
+        <source>the building is full</source>
+        <translation>здание заполнено</translation>
+    </message>
+    <message>
+        <source>the queue is full</source>
+        <translation>очередь заполнена</translation>
+    </message>
+    <message>
+        <source>Queued %1 of %2 recruits: %3.</source>
+        <translation>В очередь поставлено %1 из %2 рекрутов: %3.</translation>
     </message>
 </context>
 <context>
@@ -14013,10 +14303,6 @@ Right-click to cancel.</source>
         <translation>Хрупок, как любой лучник, и вянет, едва линия перед ним рухнет.</translation>
     </message>
     <message>
-        <source>Auxiliary Archer</source>
-        <translation>Вспомогательный лучник</translation>
-    </message>
-    <message>
         <source>Battle caster</source>
         <translation>Боевой заклинатель</translation>
     </message>
@@ -14171,10 +14457,6 @@ Right-click to cancel.</source>
     <message>
         <source>Lancer cavalry</source>
         <translation>Копейная конница</translation>
-    </message>
-    <message>
-        <source>Legionary</source>
-        <translation>Легионер</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
@@ -14491,6 +14773,18 @@ Right-click to cancel.</source>
     <message>
         <source>Vulnerable to cavalry and sustained melee.</source>
         <translation>Уязвимы для конницы и затяжного ближнего боя.</translation>
+    </message>
+    <message>
+        <source>Cretan Archers</source>
+        <translation>Критские лучники</translation>
+    </message>
+    <message>
+        <source>Hastati</source>
+        <translation>Гастаты</translation>
+    </message>
+    <message>
+        <source>Numidian Javelin Riders</source>
+        <translation>Нумидийские всадники с дротиками</translation>
     </message>
 </context>
 <context>

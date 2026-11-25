@@ -143,6 +143,25 @@ auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
   return offset;
 }
 
+namespace {
+
+void apply_nation_horse_coat(const DrawContext& ctx, HorseVariant& variant) {
+  if (ctx.entity == nullptr) {
+    return;
+  }
+  const auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || unit->nation_id != Game::Systems::NationID::Carthage) {
+    return;
+  }
+  variant.coat_kind = HorseCoatKind::DappleGrey;
+  variant.coat_color = QVector3D(0.70F, 0.66F, 0.58F);
+  variant.mane_color = QVector3D(0.20F, 0.18F, 0.16F);
+  variant.tail_color = variant.mane_color;
+  variant.muzzle_color = QVector3D(0.34F, 0.30F, 0.27F);
+}
+
+} // namespace
+
 void MountedHumanoidRendererBase::resolve_mount_render_state(
     const DrawContext& ctx,
     std::uint32_t seed,
@@ -173,6 +192,7 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
         make_horse_profile(horse_seed, variant.palette.leather, variant.palette.cloth);
     profile.dims = dims;
   }
+  apply_nation_horse_coat(ctx, profile.variant);
   dims = profile.dims;
   mount = compute_mount_frame(profile);
   motion = evaluate_horse_motion(

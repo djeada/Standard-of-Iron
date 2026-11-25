@@ -1,8 +1,10 @@
 #include "render/equipment/helmets/hair_bun.h"
 
+#include <algorithm>
 #include <array>
 #include <utility>
 
+#include "render/creature/humanoid/asset/humanoid_spec.h"
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/helmets/headwear_mesh.h"
@@ -282,6 +284,147 @@ auto turban_make_static_attachment(std::uint16_t socket_bone_index,
   spec.palette_role_remap[k_hair_slot] = base_role_byte;
   spec.palette_role_remap[k_tie_slot] = static_cast<std::uint8_t>(base_role_byte + 1U);
   return spec;
+}
+
+namespace {
+
+enum WorkerHeadwearSlot : std::uint8_t {
+  k_headwear_main_slot = 0U,
+  k_headwear_band_slot = 1U,
+  k_headwear_hair_slot = 2U,
+};
+
+auto worker_band_color(const HumanoidPalette& palette) -> QVector3D {
+  QVector3D const cloth = palette.cloth;
+  float const luma = 0.299F * cloth.x() + 0.587F * cloth.y() + 0.114F * cloth.z();
+  QVector3D const vivid(std::max(luma + (cloth.x() - luma) * 1.5F, 0.0F),
+                        std::max(luma + (cloth.y() - luma) * 1.5F, 0.0F),
+                        std::max(luma + (cloth.z() - luma) * 1.5F, 0.0F));
+  float const peak = std::max({vivid.x(), vivid.y(), vivid.z(), 1.0e-3F});
+  float const lift = std::clamp(0.74F / peak, 1.0F, 1.6F);
+  return {std::min(vivid.x() * lift, 1.0F),
+          std::min(vivid.y() * lift, 1.0F),
+          std::min(vivid.z() * lift, 1.0F)};
+}
+
+auto attach_worker_headwear(const RenderArchetype& archetype,
+                            std::uint16_t socket_bone_index,
+                            std::uint8_t base_role_byte,
+                            const QMatrix4x4& bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = attach(archetype, socket_bone_index, bind_palette_socket_bone);
+  spec.palette_role_remap[k_headwear_main_slot] = base_role_byte;
+  spec.palette_role_remap[k_headwear_band_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_headwear_hair_slot] =
+      Render::Humanoid::k_humanoid_hair_role;
+  return spec;
+}
+
+} // namespace
+
+auto straw_hat_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 7> const primitives{{
+        generated_ellipsoid(QVector3D(0.0F, 0.10F, -0.06F),
+                            QVector3D(2.36F, 0.15F, 2.36F),
+                            k_headwear_main_slot),
+        generated_ellipsoid(QVector3D(0.0F, 0.02F, -0.06F),
+                            QVector3D(2.50F, 0.10F, 2.50F),
+                            k_headwear_main_slot),
+        generated_ellipsoid(QVector3D(0.0F, 0.34F, -0.06F),
+                            QVector3D(1.38F, 1.16F, 1.46F),
+                            k_headwear_main_slot),
+        generated_ellipsoid(QVector3D(0.0F, 1.30F, -0.06F),
+                            QVector3D(0.88F, 0.30F, 0.94F),
+                            k_headwear_main_slot),
+        generated_cylinder(QVector3D(0.0F, 0.18F, -0.06F),
+                           QVector3D(0.0F, 0.46F, -0.06F),
+                           1.43F,
+                           k_headwear_band_slot),
+        generated_ellipsoid(QVector3D(-1.30F, 0.28F, -0.52F),
+                            QVector3D(0.22F, 0.20F, 0.30F),
+                            k_headwear_band_slot),
+        generated_ellipsoid(QVector3D(0.0F, -0.30F, -0.36F),
+                            QVector3D(1.33F, 0.82F, 1.22F),
+                            k_headwear_hair_slot),
+    }};
+    return build_generated_equipment_archetype("straw_hat", primitives);
+  }();
+  return archetype;
+}
+
+auto straw_hat_fill_role_colors(const HumanoidPalette& palette,
+                                QVector3D* out,
+                                std::size_t max) -> std::uint32_t {
+  if (max < k_straw_hat_role_count) {
+    return 0;
+  }
+  out[k_headwear_main_slot] = QVector3D(0.91F, 0.88F, 0.47F);
+  out[k_headwear_band_slot] = worker_band_color(palette);
+  return k_straw_hat_role_count;
+}
+
+auto straw_hat_make_static_attachment(std::uint16_t socket_bone_index,
+                                      std::uint8_t base_role_byte,
+                                      const QMatrix4x4& bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
+  return attach_worker_headwear(straw_hat_archetype(),
+                                socket_bone_index,
+                                base_role_byte,
+                                bind_palette_socket_bone);
+}
+
+auto craftsman_cap_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 7> const primitives{{
+        generated_ellipsoid(QVector3D(0.0F, 0.46F, -0.10F),
+                            QVector3D(1.36F, 1.12F, 1.50F),
+                            k_headwear_main_slot),
+        generated_ellipsoid(QVector3D(0.0F, 1.18F, -0.34F),
+                            QVector3D(0.80F, 0.46F, 0.92F),
+                            k_headwear_main_slot),
+        generated_ellipsoid(QVector3D(0.0F, 0.18F, -0.06F),
+                            QVector3D(1.50F, 0.36F, 1.62F),
+                            k_headwear_band_slot),
+        generated_ellipsoid(QVector3D(0.0F, 0.48F, -0.08F),
+                            QVector3D(1.42F, 0.22F, 1.55F),
+                            k_headwear_main_slot),
+        generated_ellipsoid(QVector3D(0.30F, 0.12F, -1.60F),
+                            QVector3D(0.42F, 0.34F, 0.30F),
+                            k_headwear_band_slot),
+        generated_cylinder(QVector3D(0.30F, 0.06F, -1.64F),
+                           QVector3D(0.44F, -1.10F, -1.48F),
+                           0.20F,
+                           k_headwear_band_slot),
+        generated_ellipsoid(QVector3D(0.0F, -0.34F, -0.40F),
+                            QVector3D(1.32F, 0.74F, 1.18F),
+                            k_headwear_hair_slot),
+    }};
+    return build_generated_equipment_archetype("craftsman_cap", primitives);
+  }();
+  return archetype;
+}
+
+auto craftsman_cap_fill_role_colors(const HumanoidPalette& palette,
+                                    QVector3D* out,
+                                    std::size_t max) -> std::uint32_t {
+  if (max < k_craftsman_cap_role_count) {
+    return 0;
+  }
+  out[k_headwear_main_slot] = QVector3D(0.88F, 0.84F, 0.73F);
+  out[k_headwear_band_slot] = worker_band_color(palette);
+  return k_craftsman_cap_role_count;
+}
+
+auto craftsman_cap_make_static_attachment(std::uint16_t socket_bone_index,
+                                          std::uint8_t base_role_byte,
+                                          const QMatrix4x4& bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
+  return attach_worker_headwear(craftsman_cap_archetype(),
+                                socket_bone_index,
+                                base_role_byte,
+                                bind_palette_socket_bone);
 }
 
 } // namespace Render::GL

@@ -52,6 +52,7 @@
 #include "game/systems/ai_system/behaviors/local_engagement_behavior.h"
 #include "game/systems/ai_system/behaviors/production_behavior.h"
 #include "game/systems/ai_system/behaviors/rampart_behavior.h"
+#include "game/systems/ai_system/behaviors/retreat_behavior.h"
 #include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/default_content.h"
@@ -5016,6 +5017,149 @@ TEST_F(AISystemTest, AWaveThatKnowsOfNoEnemyGoesLookingAcrossTheMap) {
   snapshot.game_time = 561.0F;
   Game::Systems::AI::update_attack_wave(snapshot, context);
   EXPECT_EQ(context.wave.target_id, 90U) << "what the search finds becomes the target";
+}
+
+namespace {
+
+auto ready_wave_context(Game::Systems::AI::AIDoctrine& doctrine)
+    -> Game::Systems::AI::AIContext {
+  doctrine.wave.size = 3;
+  doctrine.wave.target_priority = {Game::Systems::AI::DoctrineTarget::Any};
+  doctrine.garrison.minimum_units = 0;
+  doctrine.garrison.fraction = 0.0F;
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.has_base_anchor = true;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 50.0F;
+  context.station.x = 40.0F;
+  context.station.z = 50.0F;
+  context.macro_targets.assembly_radius = 8.0F;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.aggression_modifier = 1.0F;
+  return context;
+}
+
+} // namespace
+
+TEST_F(AISystemTest, AWaveDoesNotMarchIntoAGarrisonItCannotBeat) {
+  // The duel matrix: Scipio's and Marcellus' waves walked into Hanno's full
+  // garrison at minutes 3-6 and lost their whole army. Three squads must not
+  // march on a camp held by four squads under a tower.
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = ready_wave_context(doctrine);
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 50.0F),
+                             make_unit(2, 41.0F, 50.0F),
+                             make_unit(3, 42.0F, 50.0F)};
+  auto tower = make_enemy_building(91, 125.0F, 85.0F);
+  tower.spawn_type = Game::Units::SpawnType::DefenseTower;
+  snapshot.strategic_objectives = {make_enemy_building(90, 120.0F, 80.0F), tower};
+  snapshot.visible_enemies = {make_enemy(201, 118.0F, 78.0F),
+                              make_enemy(202, 122.0F, 78.0F),
+                              make_enemy(203, 118.0F, 84.0F),
+                              make_enemy(204, 122.0F, 84.0F)};
+
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 503.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_FALSE(context.wave.committed)
+      << "three squads marched on four squads and a tower";
+  EXPECT_EQ(context.wave.declined, 1);
+
+  // The garrison walks out of sight; it is still remembered at its post.
+  snapshot.visible_enemies.clear();
+  snapshot.game_time = 540.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 543.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_FALSE(context.wave.committed)
+      << "a garrison out of sight was forgotten after a minute";
+
+  // An undefended outlying building is a target the wave can take.
+  auto farm = make_enemy_building(95, 40.0F, 160.0F);
+  farm.spawn_type = Game::Units::SpawnType::Home;
+  snapshot.strategic_objectives.push_back(farm);
+  snapshot.game_time = 580.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 583.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed)
+      << "a weaker target was known and the army stayed home anyway";
+  EXPECT_EQ(context.wave.target_id, 95U);
+}
+
+TEST_F(AISystemTest, AWaveThatMeetsMoreThanItCanBeatComesHomeWhole) {
+  Game::Systems::AI::AIDoctrine doctrine;
+  auto context = ready_wave_context(doctrine);
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 500.0F;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 50.0F),
+                             make_unit(2, 41.0F, 50.0F),
+                             make_unit(3, 42.0F, 50.0F),
+                             make_unit(4, 43.0F, 50.0F)};
+  snapshot.strategic_objectives = {make_enemy_building(90, 120.0F, 80.0F)};
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  snapshot.game_time = 503.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  ASSERT_TRUE(context.wave.committed) << "nothing was known to defend the barracks";
+  ASSERT_EQ(context.wave.members.size(), 4U);
+
+  // At the gate the wave finds a garrison twice its size.
+  for (auto& unit : snapshot.friendly_units) {
+    unit.pos_x = 105.0F;
+    unit.pos_z = 75.0F;
+    unit.engaged = true;
+  }
+  for (Engine::Core::EntityID id = 201; id <= 208; ++id) {
+    snapshot.visible_enemies.push_back(
+        make_enemy(id, 112.0F + static_cast<float>(id - 201), 78.0F));
+  }
+  snapshot.game_time = 530.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, context);
+  EXPECT_FALSE(context.wave.committed)
+      << "the wave fed itself into a stronger garrison";
+  EXPECT_EQ(context.wave.withdrawing.size(), 4U);
+
+  Game::Systems::AI::RetreatBehavior retreat;
+  ASSERT_TRUE(retreat.should_execute(snapshot, context));
+  std::vector<Game::Systems::AI::AICommand> commands;
+  retreat.execute(snapshot, context, 1.1F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
+  EXPECT_EQ(commands.front().units.size(), 4U) << "the whole wave is ordered home";
+  for (const float x : commands.front().move_target_x) {
+    EXPECT_LT(x, 60.0F) << "the withdrawal heads for home, not the enemy";
+  }
+
+  // An even fight is not a reason to turn back.
+  Game::Systems::AI::AIContext even = ready_wave_context(doctrine);
+  for (auto& unit : snapshot.friendly_units) {
+    unit.pos_x = 40.0F;
+    unit.pos_z = 50.0F;
+    unit.engaged = false;
+  }
+  snapshot.visible_enemies.clear();
+  snapshot.game_time = 600.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, even);
+  snapshot.game_time = 603.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, even);
+  ASSERT_TRUE(even.wave.committed);
+  for (auto& unit : snapshot.friendly_units) {
+    unit.pos_x = 105.0F;
+    unit.pos_z = 75.0F;
+    unit.engaged = true;
+  }
+  for (Engine::Core::EntityID id = 301; id <= 304; ++id) {
+    snapshot.visible_enemies.push_back(
+        make_enemy(id, 112.0F + static_cast<float>(id - 301), 78.0F));
+  }
+  snapshot.game_time = 630.0F;
+  Game::Systems::AI::update_attack_wave(snapshot, even);
+  EXPECT_TRUE(even.wave.committed) << "a fresh wave gave up an even fight";
 }
 
 TEST_F(AISystemTest, AnArmyAdvancingOnASightedEnemyIsNotCalledBackToTheMuster) {

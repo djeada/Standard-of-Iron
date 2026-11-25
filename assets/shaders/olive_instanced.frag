@@ -75,11 +75,11 @@ void main() {
 
   float silhouette = 1.0 - abs(dot(geometric_normal, view_dir));
 
-  vec3 leaf_dark_green = vec3(0.092, 0.128, 0.082);
-  vec3 leaf_mid_green = vec3(0.205, 0.262, 0.158);
-  vec3 leaf_light_green = vec3(0.345, 0.405, 0.255);
+  vec3 leaf_dark_green = vec3(0.046, 0.088, 0.040);
+  vec3 leaf_mid_green = vec3(0.110, 0.195, 0.082);
+  vec3 leaf_light_green = vec3(0.225, 0.335, 0.145);
   vec3 leaf_silver = vec3(0.560, 0.610, 0.540);
-  vec3 leaf_sun = vec3(0.440, 0.500, 0.300);
+  vec3 leaf_sun = vec3(0.330, 0.470, 0.170);
 
   float color_choice =
       clamp(leaf_clump * 0.90 + (leaf_fine - 0.5) * 0.26 + 0.10, 0.0, 1.0);
@@ -125,10 +125,10 @@ void main() {
   silver_show = max(silver_show, turned_leaves);
   leaf_color = mix(leaf_color,
                    leaf_silver,
-                   clamp(silver_show, 0.0, 1.0) * mix(0.14, 0.30, canopy_height));
+                   clamp(silver_show, 0.0, 1.0) * mix(0.05, 0.12, canopy_height));
 
   float leaf_gap = 1.0 - smoothstep(0.26, 0.56, leaf_sprig);
-  leaf_color = mix(leaf_color, leaf_dark_green, leaf_gap * 0.55 * v_foliage_mask);
+  leaf_color = mix(leaf_color, leaf_dark_green, leaf_gap * 0.32 * v_foliage_mask);
 
   float sun_catch = smoothstep(0.43, 1.00, wrap) * mix(0.20, 0.62, leaf_clump);
   leaf_color = mix(leaf_color, leaf_sun, sun_catch * v_foliage_mask);
@@ -188,9 +188,12 @@ void main() {
   float leaf_spec =
       pow(max(dot(shading_normal, half_dir), 0.0), 16.0) * v_foliage_mask * 0.060;
   float rim = pow(1.0 - max(dot(geometric_normal, view_dir), 0.0), 4.0) *
-              mix(0.055, 0.110, v_foliage_mask);
+              mix(0.055, 0.045, v_foliage_mask);
   color += sun * leaf_spec;
-  color += sky * rim;
+  // A blue sky rim on a green crown drew every tree with a teal outline; the
+  // canopy's edge light is the leaf's own colour.
+  color +=
+      mix(sky, leaf_light_green * dot(sky, vec3(0.333)) * 2.0, v_foliage_mask) * rim;
 
   if (v_tex_coord.y < k_trunk_base_cut)
     discard;

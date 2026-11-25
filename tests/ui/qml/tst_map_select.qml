@@ -432,6 +432,40 @@ TestCase {
         screen.destroy();
     }
 
+    readonly property var two_nations: [{
+            "id": "carthage",
+            "name": "Carthaginian Empire"
+        }, {
+            "id": "roman_republic",
+            "name": "Roman Republic"
+        }]
+
+    function test_changing_nation_keeps_the_players_colour() {
+        var screen = make_screen(two_slot_map);
+        screen.available_nations = two_nations;
+        screen.roster.setProperty(0, "nationId", "carthage");
+        screen.set_player_color(0, 3);
+        screen.set_player_color(1, 4);
+        screen.cycle_player_nation(0);
+        compare(screen.roster.get(0).nationId, "roman_republic");
+        compare(screen.roster.get(0).colorIndex, 3, "a nation change must not recolour a player whose colour is free");
+        screen.cycle_player_nation(0);
+        compare(screen.roster.get(0).colorIndex, 3);
+        screen.destroy();
+    }
+
+    function test_changing_nation_moves_the_colour_only_off_a_collision() {
+        var screen = make_screen(two_slot_map);
+        screen.available_nations = two_nations;
+        screen.roster.setProperty(0, "nationId", "carthage");
+        screen.set_player_color(0, 1);
+        screen.set_player_color(1, 1);
+        screen.cycle_player_nation(0);
+        verify(screen.roster.get(0).colorIndex !== screen.roster.get(1).colorIndex, "two seats must not share a colour after the nation change");
+        compare(screen.roster.get(1).colorIndex, 1, "the other seat keeps its colour");
+        screen.destroy();
+    }
+
     Component {
         id: screenComponent
 

@@ -3,10 +3,10 @@
     "troops/roman/archer": {
       "bow": "bow_roman",
       "quiver": "quiver_roman",
-      "helmet": "roman_montefortino",
+      "helmet": "roman_light",
       "greaves": "roman_greaves",
       "armor": "roman_light_armor",
-      "cloak": "cloak_roman"
+      "cloak": "cloak_roman_auxiliary"
     },
     "troops/carthage/archer": {
       "bow": "bow_carthage",
@@ -67,12 +67,13 @@
       "cloak": "cloak_sepulcher"
     },
     "troops/roman/builder": {
-      "helmet": "roman_light",
+      "helmet": "straw_hat",
       "tool_belt": "tool_belt_roman",
       "work_apron": "work_apron_roman",
       "arm_guards": "arm_guards_roman"
     },
     "troops/carthage/builder": {
+      "helmet": "craftsman_cap",
       "tool_belt": "tool_belt_carthage",
       "work_apron": "work_apron_carthage",
       "arm_guards": "arm_guards_carthage"

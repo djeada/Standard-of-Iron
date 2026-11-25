@@ -258,10 +258,11 @@ AudioCoordinator::AudioCoordinator(Game::Audio::AudioEventHandler* event_handler
     , m_nations(nations) {
 }
 
-void AudioCoordinator::apply_frontend_music_context(const QString& context) {
+auto AudioCoordinator::apply_frontend_music_context(const QString& context)
+    -> FrontendMusic {
   if (context.isEmpty() || context == QStringLiteral("battle")) {
     AudioSystem::get_instance().stop_music();
-    return;
+    return {};
   }
 
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Screen);
@@ -271,12 +272,13 @@ void AudioCoordinator::apply_frontend_music_context(const QString& context) {
   const QString track_id =
       choose_round_robin_track(track_ids, QStringLiteral("frontend.") + context);
   if (track_id.isEmpty()) {
-    return;
+    return {};
   }
 
   AudioResourceLoader::ensure_audio_resource_loaded(track_id);
   AudioSystem::get_instance().play_music(
       track_id.toStdString(), 1.0F, Game::Audio::MusicTransition::Crossfade);
+  return {.track_id = track_id, .playlist_size = static_cast<int>(track_ids.size())};
 }
 
 void AudioCoordinator::configure_audio_manifest_mappings(int local_owner_id) {

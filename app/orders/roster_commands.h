@@ -18,13 +18,21 @@ class SelectionService;
 
 namespace App::Controllers {
 
+enum class RecruitClick : std::uint8_t {
+  Single,
+  Batch,
+  Repeat,
+};
+
 class RosterCommands {
 public:
   RosterCommands(Engine::Core::World* world,
                  Game::Session::SelectionService* selection,
                  App::Orders::OrderIssuer& orders);
 
-  void recruit_near_selected(const QString& unit_type, int local_owner_id);
+  void recruit_near_selected(const QString& unit_type,
+                             int local_owner_id,
+                             RecruitClick click = RecruitClick::Single);
   [[nodiscard]] auto divide_selected_squads() -> CommandResult;
   [[nodiscard]] auto merge_selected_squads() -> CommandResult;
 

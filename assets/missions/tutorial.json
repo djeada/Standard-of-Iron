@@ -31,6 +31,8 @@
       "team_id": 2,
       "difficulty": "easy",
       "strategy": "defensive",
+      "posture": "garrison",
+      "economy": false,
       "personality": {
         "aggression": 0.1,
         "defense": 0.9,
@@ -96,6 +98,21 @@
       "priority": 100
     },
     {
+      "id": "tutorial_marcellus_scouts",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "first_contact",
+        "owner_id": 2,
+        "by_owner_id": "player",
+        "delay": 1.0
+      },
+      "text": "You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 80
+    },
+    {
       "id": "tutorial_marcellus_victory",
       "speaker": "roman_field_commander",
       "pose": "cynical",
@@ -103,7 +120,7 @@
         "type": "mission_victory",
         "delay": 1.0
       },
-      "text": "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by breaking an outpost full of men who were expecting their lunch. Rome will send someone who counts next time.",
+      "text": "So the outpost falls. Everyone begins somewhere, and you have begun by breaking a camp full of men who were expecting their lunch. Rome will send someone who counts next time.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120

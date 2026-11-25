@@ -1,3 +1,5 @@
+#include <QLineF>
+
 #include <cmath>
 #include <gtest/gtest.h>
 #include <numbers>
@@ -19,6 +21,7 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/selection_service.h"
+#include "game/session/selection_utils.h"
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/navigation/nav_grid.h"
@@ -36,6 +39,7 @@ protected:
 
     selection_system = &Game::Session::SessionContext::active().selection();
     ASSERT_NE(selection_system, nullptr);
+    selection_system->clear_control_groups();
 
     selection_controller = std::make_unique<Game::Systems::SelectionController>(
         &world, selection_system, &picking_service);
@@ -1008,6 +1012,44 @@ TEST_F(InputCommandHandlerTest, ClickingAnEnemyInspectsItInsteadOfSelectingIt) {
   EXPECT_EQ(selection_system->inspected_entity(), enemy->get_id());
 }
 
+TEST_F(InputCommandHandlerTest, ABuilderInTheBarracksYardIsPickedBeforeTheBarracks) {
+  auto* barracks = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Barracks);
+  ASSERT_NE(barracks, nullptr);
+  barracks->add_component<Engine::Core::BuildingComponent>();
+  auto* builder = create_unit(0.8F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+
+  QPointF const barracks_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  QPointF const builder_screen = world_to_screen(QVector3D(0.8F, 0.0F, 0.0F));
+  // A click on the builder's body lands between its feet and the barracks pivot,
+  // nearer the pivot, which used to hand the click to the building.
+  QPointF const click = builder_screen + (barracks_screen - builder_screen) * 0.7;
+  ASSERT_LT(QLineF(click, builder_screen).length(), 30.0)
+      << "the click must still be inside the builder's pick radius";
+  ASSERT_LT(QLineF(click, barracks_screen).length(),
+            QLineF(click, builder_screen).length())
+      << "the barracks pivot must be the nearer of the two";
+
+  input_handler->on_click_select(click.x(), click.y(), false, 1, viewport);
+
+  ASSERT_EQ(selection_system->get_selected_units().size(), 1U);
+  EXPECT_EQ(selection_system->get_selected_units().front(), builder->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, ClickingTheBarracksAwayFromAnyUnitStillSelectsIt) {
+  auto* barracks = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Barracks);
+  ASSERT_NE(barracks, nullptr);
+  barracks->add_component<Engine::Core::BuildingComponent>();
+  auto* builder = create_unit(6.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+
+  QPointF const screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(screen.x(), screen.y(), false, 1, viewport);
+
+  ASSERT_EQ(selection_system->get_selected_units().size(), 1U);
+  EXPECT_EQ(selection_system->get_selected_units().front(), barracks->get_id());
+}
+
 TEST_F(InputCommandHandlerTest, ClickingAnEnemyBuildingInspectsIt) {
   auto* barracks = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Barracks);
   ASSERT_NE(barracks, nullptr);
@@ -1171,6 +1213,80 @@ TEST_F(InputCommandHandlerTest, SpectatorsHaveNoControlGroups) {
   EXPECT_EQ(input_handler->assign_control_group(1, 1), 0);
   EXPECT_FALSE(input_handler->recall_control_group(1, false, 1));
   input_handler->set_spectator_mode(false);
+}
+
+TEST_F(InputCommandHandlerTest, SelectIdleBuildersTakesOnlyBuildersWithNoJob) {
+  auto* idle = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* building = create_unit(2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* gathering = create_unit(4.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* enemy = create_unit(6.0F, 0.0F, 2, Game::Units::SpawnType::Builder);
+  auto* archer = create_unit(8.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  for (auto* entity : {idle, building, gathering, enemy, archer}) {
+    ASSERT_NE(entity, nullptr);
+    entity->get_component<Engine::Core::UnitComponent>()->health = 10;
+  }
+  idle->add_component<Engine::Core::BuilderProductionComponent>();
+  auto* site = building->add_component<Engine::Core::BuilderProductionComponent>();
+  site->has_construction_site = true;
+  site->product_type = "home";
+  auto* gather = gathering->add_component<Engine::Core::BuilderProductionComponent>();
+  gather->auto_gather = true;
+  enemy->add_component<Engine::Core::BuilderProductionComponent>();
+  selection_system->select_unit(archer->get_id());
+
+  EXPECT_EQ(input_handler->select_idle_builders(1), 1);
+  EXPECT_EQ(selection_system->get_selected_units(),
+            (std::vector<Engine::Core::EntityID>{idle->get_id()}))
+      << "a builder raising a Home or hauling wood is not idle, and neither is "
+         "the enemy's";
+
+  idle->get_component<Engine::Core::BuilderProductionComponent>()
+      ->has_construction_site = true;
+  idle->get_component<Engine::Core::BuilderProductionComponent>()->product_type =
+      "home";
+  EXPECT_EQ(input_handler->select_idle_builders(1), 0);
+  EXPECT_EQ(selection_system->get_selected_units().size(), 1U)
+      << "with nobody idle the selection must be left alone";
+}
+
+TEST_F(InputCommandHandlerTest, TheControlGroupStripCountsOnlyTheLivingAndOwned) {
+  auto* a = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* b = create_unit(1.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(a, nullptr);
+  ASSERT_NE(b, nullptr);
+  a->get_component<Engine::Core::UnitComponent>()->health = 10;
+  b->get_component<Engine::Core::UnitComponent>()->health = 10;
+  selection_system->select_unit(a->get_id());
+  selection_system->select_unit(b->get_id());
+  ASSERT_EQ(input_handler->assign_control_group(3, 1), 2);
+
+  EXPECT_EQ(selection_controller->control_group_size(3, 1), 2);
+  EXPECT_EQ(selection_controller->control_group_size(4, 1), 0);
+  EXPECT_EQ(selection_controller->control_group_size(3, 2), 0);
+
+  a->get_component<Engine::Core::UnitComponent>()->health = 0;
+  EXPECT_EQ(selection_controller->control_group_size(3, 1), 1)
+      << "a dead squad must drop out of the strip without a recall";
+  EXPECT_EQ(selection_system->control_group(3).size(), 2U)
+      << "reading the strip must not rewrite the group";
+}
+
+TEST_F(InputCommandHandlerTest, ACapturedBuildingLeavesTheSelection) {
+  auto* barracks = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Barracks);
+  auto* archer = create_unit(2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(barracks, nullptr);
+  ASSERT_NE(archer, nullptr);
+  barracks->get_component<Engine::Core::UnitComponent>()->health = 100;
+  archer->get_component<Engine::Core::UnitComponent>()->health = 10;
+  selection_system->select_unit(barracks->get_id());
+  selection_system->select_unit(archer->get_id());
+
+  barracks->get_component<Engine::Core::UnitComponent>()->owner_id = 2;
+  Game::Selection::sanitize_selection(&world, selection_system, 1);
+
+  EXPECT_EQ(selection_system->get_selected_units(),
+            (std::vector<Engine::Core::EntityID>{archer->get_id()}))
+      << "the recruit panel kept listing a barracks the player had lost";
 }
 
 } // namespace

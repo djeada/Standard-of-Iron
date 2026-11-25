@@ -14,6 +14,7 @@
 #include "../../nation_registry.h"
 #include "../ai_base_manager.h"
 #include "../ai_doctrine_catalog.h"
+#include "../ai_doctrine_rules.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/commander_catalog.h"
@@ -25,13 +26,55 @@ namespace Game::Systems::AI {
 namespace {
 constexpr float k_rally_tolerance_sq = 4.0F;
 
-[[nodiscard]] auto is_recruitable_from(const Game::Systems::TroopType& troop,
+[[nodiscard]] auto is_recruitable_from(const Game::Systems::Nation& nation,
+                                       const Game::Systems::TroopType& troop,
                                        Game::Units::SpawnType building) -> bool {
-  if (Game::Units::is_commander_troop(troop.unit_type)) {
+  if (Game::Units::is_commander_troop(troop.unit_type) || !troop.recruitable) {
     return false;
   }
 
-  return Game::Systems::recruiting_building_for(troop.unit_type) == building;
+  return nation.recruiting_building(troop.unit_type) == building;
+}
+
+// The roster's own limits (NATION_ASYMMETRY.md): a troop that needs a building
+// the town lacks (triarii without a Fabrica), or one at its squad cap (four
+// Roman equites), is not worth asking for; the order would only be refused.
+[[nodiscard]] auto roster_allows(const Game::Systems::TroopType& troop,
+                                 const AISnapshot& snapshot) -> bool {
+  if (troop.requires_building.has_value()) {
+    const bool standing =
+        std::any_of(snapshot.friendly_units.begin(),
+                    snapshot.friendly_units.end(),
+                    [&troop](const EntitySnapshot& entity) {
+                      return entity.is_building && entity.health > 0 &&
+                             entity.spawn_type == *troop.requires_building;
+                    });
+    if (!standing) {
+      return false;
+    }
+  }
+  if (troop.max_squads > 0) {
+    const auto spawn = Game::Units::spawn_typeFromTroopType(troop.unit_type);
+    int squads = 0;
+    for (const auto& entity : snapshot.friendly_units) {
+      if (!entity.is_building && entity.spawn_type == spawn) {
+        ++squads;
+      }
+      if (entity.is_building && entity.production.has_component) {
+        squads += (entity.production.in_progress &&
+                   entity.production.product_type == troop.unit_type)
+                      ? 1
+                      : 0;
+        squads += static_cast<int>(std::count(entity.production.queued.begin(),
+                                              entity.production.queued.end(),
+                                              troop.unit_type));
+      }
+    }
+    if (squads >= troop.max_squads) {
+      return false;
+    }
+  }
+  return true;
 }
 
 [[nodiscard]] auto
@@ -53,16 +96,19 @@ standing_in_the_order_of_battle(const std::vector<std::string>& preferred,
 [[nodiscard]] auto recruitable_candidates(const Game::Systems::Nation& nation,
                                           const Game::Systems::TroopType* preferred,
                                           const DoctrineRecruitment& recruitment,
-                                          Game::Units::SpawnType building)
+                                          Game::Units::SpawnType building,
+                                          const AISnapshot& snapshot)
     -> std::vector<const Game::Systems::TroopType*> {
   std::vector<const Game::Systems::TroopType*> candidates;
   candidates.reserve(nation.available_troops.size());
-  if (preferred != nullptr && is_recruitable_from(*preferred, building)) {
+  if (preferred != nullptr && is_recruitable_from(nation, *preferred, building) &&
+      roster_allows(*preferred, snapshot)) {
     candidates.push_back(preferred);
   }
 
   for (const auto& troop : nation.available_troops) {
-    if (!is_recruitable_from(troop, building) || &troop == preferred) {
+    if (!is_recruitable_from(nation, troop, building) || &troop == preferred ||
+        !roster_allows(troop, snapshot)) {
       continue;
     }
     candidates.push_back(&troop);
@@ -88,7 +134,7 @@ standing_in_the_order_of_battle(const std::vector<std::string>& preferred,
   int cheapest = std::numeric_limits<int>::max();
   for (const auto& troop : nation.available_troops) {
     if (!is_foot_line_recruit(troop.unit_type) ||
-        !is_recruitable_from(troop, Game::Units::SpawnType::Barracks)) {
+        !is_recruitable_from(nation, troop, Game::Units::SpawnType::Barracks)) {
       continue;
     }
     cheapest = std::min(cheapest, troop.cost);
@@ -315,6 +361,17 @@ struct ArmStrength {
   for (const auto type : Game::Systems::k_all_resource_types) {
     spendable.set(type, stock.get(type) - context.saving_for_a_roof.get(type));
   }
+  // Gold buys iron at the market as well as Rome's Cretan archers
+  // (NATION_ASYMMETRY.md 3.3): while iron is short, keep enough gold back for
+  // the market to buy it.
+  constexpr int k_iron_short = 40;
+  constexpr int k_gold_kept_for_iron = 100;
+  if (context.marketplace_count > 0 &&
+      stock.get(Game::Systems::ResourceType::Iron) < k_iron_short) {
+    spendable.set(Game::Systems::ResourceType::Gold,
+                  spendable.get(Game::Systems::ResourceType::Gold) -
+                      k_gold_kept_for_iron);
+  }
   return spendable;
 }
 
@@ -326,7 +383,8 @@ struct ArmStrength {
 [[nodiscard]] auto
 choose_recruit(const Game::Systems::Nation& nation,
                const AIContext& context,
-               const ArmStrength& strength) -> const Game::Systems::TroopType* {
+               const ArmStrength& strength,
+               const AISnapshot& snapshot) -> const Game::Systems::TroopType* {
   const DoctrineRecruitment recruitment = order_of_battle(context);
   DoctrineArm wanted = neediest_arm(recruitment, strength);
 
@@ -339,8 +397,8 @@ choose_recruit(const Game::Systems::Nation& nation,
   const Game::Systems::TroopType* best = nullptr;
   const Game::Systems::TroopType* fallback = nullptr;
   for (const auto& troop : nation.available_troops) {
-    if (!is_recruitable_from(troop, Game::Units::SpawnType::Barracks) ||
-        is_worker_recruit(troop.unit_type)) {
+    if (!is_recruitable_from(nation, troop, Game::Units::SpawnType::Barracks) ||
+        is_worker_recruit(troop.unit_type) || !roster_allows(troop, snapshot)) {
       continue;
     }
     if (fallback == nullptr || troop.priority > fallback->priority) {
@@ -380,7 +438,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   if (nation == nullptr) {
     return;
   }
-  if (!nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return;
   }
 
@@ -429,7 +487,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
                             context.cavalry_count,
                             context.siege_count};
   if (troop_type == nullptr) {
-    troop_type = choose_recruit(*nation, context, strength);
+    troop_type = choose_recruit(*nation, context, strength, snapshot);
   }
 
   constexpr int k_troop_cap_margin = 12;
@@ -512,7 +570,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   const DoctrineRecruitment recruitment = order_of_battle(context);
   const auto spendable = spendable_on_recruits(context, snapshot.resources);
   const auto candidates = recruitable_candidates(
-      *nation, troop_type, recruitment, Game::Units::SpawnType::Barracks);
+      *nation, troop_type, recruitment, Game::Units::SpawnType::Barracks, snapshot);
 
   for (const auto* entity : barracks) {
     const auto& prod = entity->production;
@@ -752,7 +810,7 @@ auto ProductionBehavior::should_execute(const AISnapshot& snapshot,
                                         const AIContext& context) const -> bool {
   (void)snapshot;
 
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return false;
   }
 

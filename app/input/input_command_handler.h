@@ -125,6 +125,7 @@ public:
                         int local_owner_id,
                         const ViewportState& viewport);
   void select_all_troops(int local_owner_id);
+  auto select_idle_builders(int local_owner_id) -> int;
   void select_all_units_of_type(const QString& unit_type, int local_owner_id);
   void select_unit_by_id(Engine::Core::EntityID unit_id, int local_owner_id);
   void select_selected_units_by_type(const QString& unit_type, int local_owner_id);

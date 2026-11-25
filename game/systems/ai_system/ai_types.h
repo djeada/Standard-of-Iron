@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -14,6 +15,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
 #include "../alliance_board.h"
+#include "../nation_id.h"
 #include "../resource_types.h"
 #include "../site_keep_out.h"
 
@@ -218,6 +220,10 @@ struct EntitySnapshot {
 
   bool crop_is_ripe = false;
 
+  // A hired band's upkeep a minute (NATION_ASYMMETRY.md 4.2); 0 for the
+  // owner's own troops.
+  int upkeep_per_minute = 0;
+
   MovementSnapshot movement;
   ProductionSnapshot production;
   BuilderProductionSnapshot builder_production;
@@ -340,6 +346,10 @@ struct AISnapshot {
   std::uint64_t navigation_revision = 0U;
 
   float game_time = 0.0F;
+
+  // Seconds until this owner's next levy (Rome's dilectus), or negative when
+  // its nation has none (NATION_ASYMMETRY.md 3.1).
+  float seconds_to_next_levy = -1.0F;
 };
 
 struct AIStrategyConfig {
@@ -360,6 +370,10 @@ struct AIStrategyConfig {
   AIPosture posture = AIPosture::Field;
   PersonalityInputs personality;
   DifficultyTuning difficulty;
+
+  // false for an authored outpost (mission ai_setups "economy": false): the side
+  // fights with what the map gave it and never builds, gathers, recruits or expands.
+  bool runs_economy = true;
 
   const AIDoctrine* doctrine = nullptr;
 
@@ -397,6 +411,7 @@ struct AIStrategyConfig {
 struct AIPlayerProfile {
   AIStrategy strategy = AIStrategy::Balanced;
   AIPosture posture = AIPosture::Field;
+  bool runs_economy = true;
   AIStrategyConfig::PersonalityInputs personality;
   QString difficulty;
   const AIDoctrine* doctrine = nullptr;
@@ -614,8 +629,28 @@ struct AIContext {
     float progress_at = -1000.0F;
     float ended_at = -1000.0F;
     float last_order_time = -1000.0F;
+
+    // A wave called off because the defence outweighs it walks home together
+    // instead of feeding itself into the fight one squad at a time.
+    std::vector<Engine::Core::EntityID> withdrawing;
+    float withdraw_until = -1000.0F;
+    // Why the last wave did not march (0 none, 1 every target too strong) and
+    // the strengths behind the call, for SOI_DUEL_WAVE narration.
+    int declined = 0;
+    float last_strength = 0.0F;
+    float last_defence = 0.0F;
   };
   AttackWave wave;
+
+  // Enemy fighting units this side has seen lately. A garrison standing out of
+  // sight is still counted when the AI weighs a target it watched earlier.
+  struct EnemySighting {
+    float x = 0.0F;
+    float z = 0.0F;
+    float weight = 1.0F;
+    float seen_at = 0.0F;
+  };
+  std::unordered_map<Engine::Core::EntityID, EnemySighting> enemy_sightings;
 
   Game::Systems::ResourceAmounts construction_need{};
   Game::Systems::ResourceAmounts saving_for_a_roof{};
@@ -650,6 +685,8 @@ struct AICommand {
   bool sally = false;
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
+  // A mercenary band's nation when hiring at a Mercenary Camp.
+  std::optional<Game::Systems::NationID> band_nation;
 
   const char* construction_type = nullptr;
   float construction_site_x = 0.0F;

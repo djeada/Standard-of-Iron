@@ -7,6 +7,7 @@
 #include "../../economy/marketplace_system.h"
 #include "../../economy/production_service.h"
 #include "../../nation_registry.h"
+#include "../ai_doctrine_rules.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/troop_type.h"
 
@@ -84,8 +85,8 @@ auto war_chest(const AIContext& context) -> ResourceAmounts {
   for (const auto& troop : context.nation->available_troops) {
     if (Game::Units::is_commander_troop(troop.unit_type) ||
         troop.unit_type == Game::Units::TroopType::Builder ||
-        troop.unit_type == Game::Units::TroopType::Civilian ||
-        Game::Systems::recruiting_building_for(troop.unit_type) !=
+        troop.unit_type == Game::Units::TroopType::Civilian || !troop.recruitable ||
+        context.nation->recruiting_building(troop.unit_type) !=
             Game::Units::SpawnType::Barracks) {
       continue;
     }
@@ -197,8 +198,17 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
                      };
                      return shortfall(lhs) > shortfall(rhs);
                    });
+  // A nation that hires with gold keeps a band's price back from the market
+  // (NATION_ASYMMETRY.md section 9: the treasury is Carthage's reserve).
+  int hiring_reserve = 0;
+  if (context.nation != nullptr) {
+    for (const auto& band : context.nation->mercenary_bands) {
+      hiring_reserve =
+          hiring_reserve == 0 ? band.gold : std::min(hiring_reserve, band.gold);
+    }
+  }
   for (const auto type : by_urgency) {
-    buy_toward(type, recruiting.get(type), k_gold_reserve);
+    buy_toward(type, recruiting.get(type), k_gold_reserve + hiring_reserve);
   }
 
   std::stable_sort(
@@ -210,7 +220,7 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
         return left < right;
       });
   for (const auto& want : wants) {
-    buy_toward(want.type, want.comfortable, k_gold_comfortable);
+    buy_toward(want.type, want.comfortable, k_gold_comfortable + 2 * hiring_reserve);
     if (lots >= k_lots_per_visit) {
       break;
     }
@@ -219,7 +229,7 @@ void EconomyBehavior::execute(const AISnapshot& snapshot,
 
 auto EconomyBehavior::should_execute(const AISnapshot& snapshot,
                                      const AIContext& context) const -> bool {
-  if (context.nation != nullptr && !context.nation->has_economy) {
+  if (is_no_economy_nation(context)) {
     return false;
   }
   return context.marketplace_count > 0 && snapshot.has_resource_snapshot;

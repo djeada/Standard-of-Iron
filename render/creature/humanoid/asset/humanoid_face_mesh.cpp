@@ -50,6 +50,14 @@ constexpr float k_brow_roll = 0.035F;
 constexpr float k_brow_rim_lift = 0.0012F;
 constexpr float k_brow_bulge = 0.0022F;
 
+constexpr float k_skin_shade_uv = -5.0F;
+constexpr QVector2D k_socket_extent{0.0390F, 0.0285F};
+constexpr float k_socket_shade = 0.80F;
+constexpr float k_socket_edge_shade = 0.93F;
+constexpr QVector2D k_under_lip_extent{0.0150F, 0.0034F};
+constexpr float k_under_lip_drop = 0.0098F;
+constexpr float k_under_lip_shade = 0.82F;
+
 constexpr float k_mouth_y = -k_head_radius * 1.23F;
 constexpr QVector2D k_mouth_extent{0.0185F, 0.0040F};
 constexpr float k_mouth_rim_lift = 0.0010F;
@@ -80,20 +88,22 @@ public:
                  float extra_lift,
                  std::uint8_t role,
                  FaceFeatureTone tone,
-                 unsigned int segments) {
+                 unsigned int segments,
+                 float inner_shade = 0.0F,
+                 float outer_shade = 0.0F) {
     auto const first = static_cast<unsigned int>(m_vertices.size());
     bool const fan = inner.x() <= 0.0F;
     if (fan) {
-      add(f, offset, extra_lift, role, tone);
+      add(f, offset, extra_lift, role, tone, inner_shade);
     }
     for (unsigned int i = 0; i < segments; ++i) {
       float const angle =
           k_two_pi * static_cast<float>(i) / static_cast<float>(segments);
       QVector2D const dir(std::cos(angle), std::sin(angle));
       if (!fan) {
-        add(f, offset + inner * dir, extra_lift, role, tone);
+        add(f, offset + inner * dir, extra_lift, role, tone, inner_shade);
       }
-      add(f, offset + outer * dir, extra_lift, role, tone);
+      add(f, offset + outer * dir, extra_lift, role, tone, outer_shade);
     }
     for (unsigned int i = 0; i < segments; ++i) {
       unsigned int const j = (i + 1) % segments;
@@ -110,6 +120,19 @@ public:
 
   void disc(const Feature& f, std::uint8_t role, FaceFeatureTone tone) {
     ring_band(f, {}, f.extent, {}, 0.0F, role, tone, k_stroke_segments);
+  }
+
+  void skin_shade(const Feature& f, QVector2D inner, float centre, float edge) {
+    ring_band(f,
+              inner,
+              f.extent,
+              {},
+              0.0F,
+              k_skin_role,
+              FaceFeatureTone::EyeWhite,
+              k_eye_segments,
+              centre,
+              edge);
   }
 
   auto take() -> std::unique_ptr<Render::GL::Mesh> {
@@ -146,7 +169,8 @@ private:
            QVector2D local,
            float extra_lift,
            std::uint8_t role,
-           FaceFeatureTone tone) {
+           FaceFeatureTone tone,
+           float shade = 0.0F) {
     float const c = std::cos(f.roll);
     float const s = std::sin(f.roll);
     QVector2D const xy = f.centre + QVector2D((c * local.x()) - (s * local.y()),
@@ -159,9 +183,10 @@ private:
     Vertex v{};
     v.position = {p.x(), p.y(), p.z()};
     v.normal = {normal.x(), normal.y(), normal.z()};
-    v.tex_coord = role == k_skin_role ? std::array<float, 2>{k_face_feature_uv,
-                                                             static_cast<float>(tone)}
-                                      : std::array<float, 2>{0.0F, 0.0F};
+    v.tex_coord = role != k_skin_role ? std::array<float, 2>{0.0F, 0.0F}
+                  : shade > 0.0F      ? std::array<float, 2>{k_skin_shade_uv, shade}
+                                      : std::array<float, 2>{k_face_feature_uv,
+                                                             static_cast<float>(tone)};
     v.color_role = role;
     v.bone_indices = {k_head_bone, 0U, 0U, 0U};
     v.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
@@ -223,6 +248,9 @@ auto build_humanoid_face_mesh(const QVector3D& cranium_centre,
                    k_skin_role,
                    FaceFeatureTone::EyeWhite,
                    k_eye_segments);
+    Feature const socket{
+        .centre = eye.centre, .extent = k_socket_extent, .rim_lift = k_eye_rim_lift};
+    face.skin_shade(socket, k_white_extent, k_socket_shade, k_socket_edge_shade);
     QVector2D const catchlight(k_catchlight_radius, k_catchlight_radius);
     face.ring_band(eye,
                    {},
@@ -252,6 +280,10 @@ auto build_humanoid_face_mesh(const QVector3D& cranium_centre,
                       .rim_lift = k_mouth_rim_lift,
                       .bulge = k_mouth_bulge};
   face.disc(mouth, k_skin_role, FaceFeatureTone::Mouth);
+  Feature const under_lip{.centre = {0.0F, k_mouth_y - k_under_lip_drop},
+                          .extent = k_under_lip_extent,
+                          .rim_lift = k_mouth_rim_lift};
+  face.skin_shade(under_lip, {}, k_under_lip_shade, k_socket_edge_shade);
   return face.take();
 }
 

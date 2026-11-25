@@ -73,7 +73,49 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierAcrossNations) {
   EXPECT_FLOAT_EQ(roman_archer.combat.ranged_range, 11.4F);
   EXPECT_FLOAT_EQ(roman_horse_archer.combat.ranged_range, 12.9F);
   EXPECT_FLOAT_EQ(carthage_archer.combat.ranged_range, 10.8F);
-  EXPECT_FLOAT_EQ(carthage_horse_archer.combat.ranged_range, 12.0F);
+  // Carthage's horse archers are Numidian javelin riders (NATION_ASYMMETRY.md
+  // decision 5): a javelin's cast, not a bow's.
+  EXPECT_FLOAT_EQ(carthage_horse_archer.combat.ranged_range, 6.9F);
+}
+
+// NATION_ASYMMETRY.md phase 1: the rosters the two nations recruit from.
+TEST(NationLoader, RomeAndCarthageRecruitFromTheirOwnRosters) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  const Game::Systems::Nation* rome = nullptr;
+  const Game::Systems::Nation* carthage = nullptr;
+  for (const auto& nation : nations) {
+    if (nation.id == Game::Systems::NationID::RomanRepublic) {
+      rome = &nation;
+    } else if (nation.id == Game::Systems::NationID::Carthage) {
+      carthage = &nation;
+    }
+  }
+  ASSERT_NE(rome, nullptr);
+  ASSERT_NE(carthage, nullptr);
+  using Game::Systems::ResourceType;
+  using Game::Units::TroopType;
+
+  const auto* horse_archer = rome->get_troop(TroopType::HorseArcher);
+  ASSERT_NE(horse_archer, nullptr) << "missions still field Roman horse archers";
+  EXPECT_FALSE(horse_archer->recruitable) << "Rome loses the horse archer";
+  const auto* equites = rome->get_troop(TroopType::MountedSwordsman);
+  ASSERT_NE(equites, nullptr);
+  EXPECT_TRUE(equites->recruitable);
+  EXPECT_EQ(equites->max_squads, 4) << "Rome's cavalry was weak: four squads";
+
+  const auto* hastati = rome->get_troop(TroopType::Swordsman);
+  ASSERT_NE(hastati, nullptr);
+  EXPECT_EQ(hastati->resource_costs.get(ResourceType::Iron), 20);
+  EXPECT_TRUE(hastati->fabrica_discount);
+  const auto* cretans = rome->get_troop(TroopType::Archer);
+  ASSERT_NE(cretans, nullptr);
+  EXPECT_EQ(cretans->resource_costs.get(ResourceType::Iron), 0);
+  EXPECT_EQ(cretans->resource_costs.get(ResourceType::Gold), 40)
+      << "Cretan archers are hired with gold, not iron";
+
+  EXPECT_EQ(rome->economy.civilian_reserve_grant, 18);
+  EXPECT_EQ(carthage->economy.civilian_reserve_grant, 12)
+      << "Carthage's citizens are few";
 }
 
 TEST(NationLoader, FrontlineProfilesKeepCatalogFormationSpacing) {

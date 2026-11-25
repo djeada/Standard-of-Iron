@@ -227,6 +227,16 @@ void AudioSystem::stop_all_sounds() {
   enqueue(AudioEvent(AudioEventType::STOP_ALL_SOUNDS));
 }
 
+auto AudioSystem::music_length_seconds(const std::string& music_id) const -> float {
+  std::string resolved_id;
+  {
+    std::lock_guard<std::mutex> const lock(resource_mutex);
+    resolved_id = resolve_resource_id_locked(music_id);
+  }
+  return m_music_player != nullptr ? m_music_player->track_length_seconds(resolved_id)
+                                   : 0.0F;
+}
+
 void AudioSystem::stop_music() {
   enqueue(AudioEvent(AudioEventType::STOP_MUSIC));
 }

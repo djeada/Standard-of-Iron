@@ -184,7 +184,23 @@ auto calculate_tactical_damage_multiplier(Engine::Core::Entity* attacker,
     multiplier *= Constants::k_afloat_exposure_multiplier;
   }
 
+  // Veterans strike harder: principes, then the veterans behind them
+  // (NATION_ASYMMETRY.md 3.3).
+  if (attacker_unit->rank > 0) {
+    multiplier *=
+        1.0F + Constants::k_rank_damage_bonus * static_cast<float>(attacker_unit->rank);
+  }
+
   auto const* attacker_registry = attacker->registry();
+  // An unpaid mercenary band fights without heart (NATION_ASYMMETRY.md 4.2).
+  if (attacker_registry != nullptr) {
+    if (auto const* contract =
+            attacker_registry->try_get<Engine::Core::MercenaryContractComponent>(
+                attacker->get_id());
+        contract != nullptr && contract->unpaid) {
+      multiplier *= Constants::k_unpaid_mercenary_damage_multiplier;
+    }
+  }
   auto const* attacker_wading =
       attacker_registry != nullptr
           ? attacker_registry->try_get<Engine::Core::WadingComponent>(

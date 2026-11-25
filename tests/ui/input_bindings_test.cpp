@@ -275,32 +275,56 @@ TEST_F(InputBindingsTest, AnExactModifierMatchBeatsTheUnmodifiedFallback) {
   EXPECT_EQ(resolved, QStringList{QStringLiteral("rts.order_hold")});
 }
 
-TEST_F(InputBindingsTest, RAndFTiltTheCameraAndTheRallyFlagLayersOverR) {
+TEST_F(InputBindingsTest, TheRallyFlagOwnsRAndTiltNoLongerSharesIt) {
   auto* bindings = InputBindings::instance();
   const QString rts = QString::fromLatin1(InputBindings::kContextRts);
 
-  const auto on_r = bindings->actions_for_key(Qt::Key_R, Qt::NoModifier, rts);
-  ASSERT_EQ(on_r.size(), 2);
-  EXPECT_EQ(on_r.at(0), QStringLiteral("rts.commander_rally"))
-      << "the rally flag claims R first while a rally can be placed";
-  EXPECT_EQ(on_r.at(1), QStringLiteral("rts.camera_tilt_up"));
-
-  EXPECT_EQ(bindings->actions_for_key(Qt::Key_F, Qt::NoModifier, rts),
-            QStringList{QStringLiteral("rts.camera_tilt_down")});
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_R, Qt::NoModifier, rts),
+            QStringList{QStringLiteral("rts.commander_rally")})
+      << "R must mean exactly one thing in the army view";
+  EXPECT_TRUE(bindings->actions_for_key(Qt::Key_F, Qt::NoModifier, rts).isEmpty());
+  EXPECT_TRUE(bindings
+                  ->default_shortcut_for(QStringLiteral("rts.camera_tilt_up"),
+                                         InputBindings::Alternate)
+                  .isEmpty());
   EXPECT_FALSE(bindings->has_conflicts());
 }
 
-TEST_F(InputBindingsTest, ContextualCommandsLayerOverTheGeneralOneTheyShareAKeyWith) {
+TEST_F(InputBindingsTest, ContextualCommandsConflictWithTheGeneralOneTheyShareAKey) {
   auto* bindings = InputBindings::instance();
+
+  const auto conflicts = bindings->conflicts_for(QStringLiteral("rts.camera_tilt_up"),
+                                                 QStringLiteral("R"),
+                                                 InputBindings::Primary);
+  EXPECT_EQ(conflicts, QStringList{QStringLiteral("rts.commander_rally")})
+      << "a clash with a contextual command must be flagged, not silently won";
+  EXPECT_FALSE(
+      bindings->assign(QStringLiteral("rts.camera_tilt_up"), QStringLiteral("R")));
+
   bindings->assign_overriding(QStringLiteral("rts.camera_tilt_up"),
                               QStringLiteral("R"));
+  EXPECT_FALSE(bindings->has_conflicts());
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_R,
+                                      Qt::NoModifier,
+                                      QString::fromLatin1(InputBindings::kContextRts)),
+            QStringList{QStringLiteral("rts.camera_tilt_up")});
+}
 
-  const auto resolved = bindings->actions_for_key(
-      Qt::Key_R, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
+TEST_F(InputBindingsTest, ASharedKeyIsFlaggedOnBothRowsOfTheControlsPage) {
+  UserSettings::save_input_binding(QStringLiteral("rts.camera_tilt_up"),
+                                   QStringLiteral("R"));
+  auto* bindings = InputBindings::instance();
+  bindings->reload_from_settings();
 
-  ASSERT_EQ(resolved.size(), 2);
-  EXPECT_EQ(resolved.at(0), QStringLiteral("rts.commander_rally"));
-  EXPECT_EQ(resolved.at(1), QStringLiteral("rts.camera_tilt_up"));
+  QSet<QString> flagged;
+  for (const QVariant& entry : bindings->actions()) {
+    const QVariantMap row = entry.toMap();
+    if (!row.value(QStringLiteral("conflicts")).toStringList().isEmpty()) {
+      flagged.insert(row.value(QStringLiteral("id")).toString());
+    }
+  }
+  EXPECT_TRUE(flagged.contains(QStringLiteral("rts.camera_tilt_up")));
+  EXPECT_TRUE(flagged.contains(QStringLiteral("rts.commander_rally")));
 }
 
 TEST_F(InputBindingsTest, MouseResolutionHonoursTheActiveContext) {

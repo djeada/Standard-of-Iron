@@ -50,6 +50,28 @@ auto collect_site_ghosts(Engine::Core::World& world) -> std::vector<SiteGhost> {
   std::vector<SiteGhost> sites;
   for (auto [entity_ref, builder] :
        world.entity_view<Engine::Core::BuilderProductionComponent>()) {
+    for (const auto& queued : builder.queued_structure_sites) {
+      const auto* queued_unit =
+          world.try_get<Engine::Core::UnitComponent>(entity_ref.get_id());
+      const int queued_owner = queued_unit != nullptr ? queued_unit->owner_id : 0;
+      const bool known =
+          std::any_of(sites.begin(), sites.end(), [&](const SiteGhost& candidate) {
+            return same_site(
+                candidate, queued_owner, queued.construction_type, queued.x, queued.z);
+          });
+      if (!known && construction_build_time(queued.construction_type) > 0.0F) {
+        sites.push_back(
+            SiteGhost{.owner_id = queued_owner,
+                      .nation_id = queued_unit != nullptr
+                                       ? queued_unit->nation_id
+                                       : Game::Systems::NationID::RomanRepublic,
+                      .product_type = queued.construction_type,
+                      .x = queued.x,
+                      .z = queued.z,
+                      .rotation_y = queued.rotation_y,
+                      .progress = 0.0F});
+      }
+    }
     if (!raises_shared_site(builder)) {
       continue;
     }

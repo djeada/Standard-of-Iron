@@ -411,6 +411,51 @@ void register_helmet_descriptors() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_pileus_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
+      "straw_hat",
+      {.build_attachments = &build_straw_hat_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::straw_hat_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_straw_hat_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "craftsman_cap",
+      {.build_attachments = &build_craftsman_cap_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::craftsman_cap_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count =
+           static_cast<std::uint8_t>(Render::GL::k_craftsman_cap_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
       "palla_veil",
       {.build_attachments = &build_palla_veil_attachment,
        .append_role_colors = [](const void* variant_void,
@@ -788,6 +833,12 @@ void register_cloak_descriptors() {
       "cloak_roman",
       {.build_attachments = &build_roman_cloak_attachment,
        .append_role_colors = &roman_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_roman_auxiliary",
+      {.build_attachments = &build_roman_auxiliary_cloak_attachment,
+       .append_role_colors = &roman_auxiliary_cloak_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,

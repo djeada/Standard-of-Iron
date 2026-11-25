@@ -38,6 +38,7 @@
 #include "game/map/json_keys.h"
 #include "game/map/map_context.h"
 #include "game/map/map_transformer.h"
+#include "game/map/skirmish_camp_start.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/session/deterministic_rng.h"
@@ -444,6 +445,9 @@ auto SkirmishLoader::start(const QString& map_path,
   const int map_height = level_result.ok ? level_result.grid_height : default_map_size;
   Game::Systems::NavGrid::initialize(map_width, map_height);
   Game::Systems::WallNetworkService::refresh_world(m_world);
+  if (m_camp_start && level_result.ok) {
+    m_camp_reports = Game::Map::apply_skirmish_camp_start(m_world);
+  }
 
   if (m_on_visibility_initialized) {
     m_on_visibility_initialized(m_world,
