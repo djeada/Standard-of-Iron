@@ -111,8 +111,10 @@ void main() {
   body = mix(body, mix(dye, natural, strip_parity), striped);
   body = mix(body, dye, trimmed * trim);
 
-  float weave = (0.5 + 0.5 * sin(uv.x * 310.0)) * (0.5 + 0.5 * sin(uv.y * 300.0));
-  weave = mix(0.5, weave, detail);
+  vec2 weave_phase = uv * vec2(310.0, 300.0);
+  vec2 thread_detail = (1.0 - smoothstep(vec2(1.0), vec2(3.14), fwidth(weave_phase))) * detail;
+  vec2 threads = 0.5 + 0.5 * sin(weave_phase) * thread_detail;
+  float weave = threads.x * threads.y;
   float mottle = soi_fbm_23e5ab(uv * 7.0 + v_anchor * 0.31);
   float stain = soi_fbm_23e5ab(uv * 2.6 + 9.0 + v_anchor * 0.13);
   vec3 canvas = body * mix(0.80, 1.14, mottle * 0.65 + weave * 0.35);
@@ -154,7 +156,9 @@ void main() {
       mix(wood, vec3(0.42, 0.40, 0.36), smoothstep(0.30, k_ridge_height, p.y) * 0.35);
   wood = mix(wood, k_mud, (1.0 - smoothstep(0.0, 0.08, p.y)) * 0.5);
 
-  float twist = 0.5 + 0.5 * sin((p.x + p.y + p.z) * 260.0);
+  float twist_phase = (p.x + p.y + p.z) * 260.0;
+  float twist_detail = 1.0 - smoothstep(1.0, 3.14, fwidth(twist_phase));
+  float twist = 0.5 + 0.5 * sin(twist_phase) * twist_detail;
   vec3 rope =
       mix(vec3(0.44, 0.36, 0.24), vec3(0.68, 0.58, 0.40), mix(0.5, twist, detail));
   rope = mix(rope, k_mud, (1.0 - smoothstep(0.0, 0.06, p.y)) * 0.4);

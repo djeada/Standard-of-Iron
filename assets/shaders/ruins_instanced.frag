@@ -46,10 +46,7 @@ vec3 ruin_material(vec3 N, vec3 L, out float fracture, out float rain_stain) {
 
   float fracture_field = abs(sin(v_local_pos.x * 15.0 - v_local_pos.z * 11.0 +
                                  v_local_pos.y * 8.0 + coarse * 3.0));
-  // Break up the seams and fade them when they become narrower than a pixel.
-  fracture = (1.0 - smoothstep(0.025, 0.11, fracture_field)) *
-             smoothstep(0.40, 0.70, coarse) *
-             (1.0 - smoothstep(0.06, 0.24, fwidth(fracture_field)));
+  fracture = 1.0 - smoothstep(0.025, 0.11, fracture_field);
   albedo *= mix(1.0, 0.58, fracture * 0.55);
 
   float base_stain = 1.0 - smoothstep(0.02, 0.38, v_local_pos.y);
