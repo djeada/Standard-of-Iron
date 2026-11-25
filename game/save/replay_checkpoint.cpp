@@ -22,6 +22,7 @@
 #include "../session/simulation_clock.h"
 #include "../session/world_digest.h"
 #include "../systems/alliance_board.h"
+#include "../systems/building_collision_registry.h"
 #include "../systems/combat_system.h"
 #include "../systems/economy/gather_loop_system.h"
 #include "../systems/economy/marketplace_system.h"
@@ -213,6 +214,7 @@ auto capture_replay_checkpoint(Game::Session::SessionContext& session) -> QByteA
       {"navigation",
        pathfinder != nullptr ? QJsonValue(pathfinder->capture_checkpoint())
                              : QJsonValue()},
+      {"building_collision", session.building_collision().capture_checkpoint()},
       {"combat",
        combat != nullptr ? QJsonValue(combat->capture_checkpoint()) : QJsonValue()},
       {"systems", Game::Session::SessionSnapshot::capture({.world = &world})},
@@ -331,7 +333,11 @@ auto restore_replay_checkpoint(Game::Session::SessionContext& session,
           *tick)) {
     return false;
   }
-  (void)Game::Persistence::rebuild_registries_after_load(&target, 0);
+  Game::Persistence::rebuild_world_counts(target);
+  if (!session.building_collision().restore_checkpoint(
+          state.value("building_collision").toObject())) {
+    return false;
+  }
   if (auto* pathfinder = session.navigation().pathfinder();
       pathfinder != nullptr &&
       !pathfinder->restore_checkpoint(state.value("navigation").toObject())) {

@@ -227,6 +227,13 @@ auto fields(Component& component) {
                     component.fault_display_remaining);
   } else if constexpr (std::is_same_v<Type, CaptureComponent>) {
     return std::tie(component.capture_blocked);
+  } else if constexpr (std::is_same_v<Type, WallSegmentComponent>) {
+    return std::tie(component.connection_mask,
+                    component.inner_x,
+                    component.inner_z,
+                    component.has_stair,
+                    component.ladder,
+                    component.ladder_id);
   } else if constexpr (std::is_same_v<Type, ConstructionPreviewComponent>) {
     return std::tie(component.owner_id,
                     component.nation_id,
@@ -869,6 +876,7 @@ void write_checkpoint_components(const Entity& entity, QJsonObject& out) {
   write_component<ForestCoverComponent>(entity, components, "forest_cover");
   write_component<BuilderProductionComponent>(entity, components, "builder_work");
   write_component<CaptureComponent>(entity, components, "capture_lock");
+  write_component<WallSegmentComponent>(entity, components, "wall_links");
   write_component<AssaultWaveComponent>(entity, components, "assault_wave");
   write_component<ThreatAlertComponent>(entity, components, "threat_alert");
   write_component<FormationHitPresentationComponent>(
@@ -917,6 +925,7 @@ auto read_checkpoint_components(Entity& entity, const QJsonObject& snapshot) -> 
          read_component<BuilderProductionComponent>(
              entity, components, "builder_work") &&
          read_component<CaptureComponent>(entity, components, "capture_lock") &&
+         read_component<WallSegmentComponent>(entity, components, "wall_links") &&
          read_component<AssaultWaveComponent>(entity, components, "assault_wave") &&
          read_component<ThreatAlertComponent>(entity, components, "threat_alert") &&
          read_component<FormationHitPresentationComponent>(

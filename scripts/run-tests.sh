@@ -191,6 +191,12 @@ if [ "${run_acceptance}" -eq 1 ]; then
       status=1
       failed+=("headless_replay_map_checkpoint")
     fi
+    echo "--- headless_replay_wall_checkpoint ---"
+    if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh \
+      assets/maps/map_sepulcher_bridge.json 20 7; then
+      status=1
+      failed+=("headless_replay_wall_checkpoint")
+    fi
   else
     echo "error: ${bin_dir}/soi_headless not built." >&2
     status=1

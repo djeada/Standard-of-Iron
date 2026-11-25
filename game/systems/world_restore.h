@@ -18,5 +18,6 @@ rebuild_registries_after_load(Engine::Core::World* world,
                               int local_owner_id) -> WorldRestoreResult;
 
 void rebuild_building_collisions(Engine::Core::World* world);
+void rebuild_world_counts(Engine::Core::World& world);
 
 } // namespace Game::Persistence

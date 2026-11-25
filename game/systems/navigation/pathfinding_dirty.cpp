@@ -208,7 +208,7 @@ auto Pathfinding::restore_checkpoint(const QJsonObject& state) -> bool {
   const auto area = static_cast<qsizetype>(m_width) * m_height;
   if (!cells || cells.decoded.size() != area || !clearance ||
       (!clearance.decoded.isEmpty() && clearance.decoded.size() != area) ||
-      std::ranges::any_of(cells.decoded, [](unsigned char cell) {
+      std::any_of(cells.decoded.cbegin(), cells.decoded.cend(), [](unsigned char cell) {
         return cell > static_cast<unsigned char>(CellValue::Forest);
       })) {
     return false;
