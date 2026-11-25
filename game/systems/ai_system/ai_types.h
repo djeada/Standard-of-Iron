@@ -629,8 +629,28 @@ struct AIContext {
     float progress_at = -1000.0F;
     float ended_at = -1000.0F;
     float last_order_time = -1000.0F;
+
+    // A wave called off because the defence outweighs it walks home together
+    // instead of feeding itself into the fight one squad at a time.
+    std::vector<Engine::Core::EntityID> withdrawing;
+    float withdraw_until = -1000.0F;
+    // Why the last wave did not march (0 none, 1 every target too strong) and
+    // the strengths behind the call, for SOI_DUEL_WAVE narration.
+    int declined = 0;
+    float last_strength = 0.0F;
+    float last_defence = 0.0F;
   };
   AttackWave wave;
+
+  // Enemy fighting units this side has seen lately. A garrison standing out of
+  // sight is still counted when the AI weighs a target it watched earlier.
+  struct EnemySighting {
+    float x = 0.0F;
+    float z = 0.0F;
+    float weight = 1.0F;
+    float seen_at = 0.0F;
+  };
+  std::unordered_map<Engine::Core::EntityID, EnemySighting> enemy_sightings;
 
   Game::Systems::ResourceAmounts construction_need{};
   Game::Systems::ResourceAmounts saving_for_a_roof{};

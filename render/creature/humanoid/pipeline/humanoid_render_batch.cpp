@@ -62,6 +62,24 @@ auto humanoid_role_color_cache() -> BatchSupport::RoleColorCache& {
 
 } // namespace
 
+namespace {
+
+constexpr std::uint32_t k_skin_variant_count = 6U;
+
+auto soldier_skin_variant(const CreatureGraphOutput& output) noexcept -> float {
+  if (output.instance_index == 0U) {
+    return 0.0F;
+  }
+  std::uint32_t h =
+      output.seed ^ (static_cast<std::uint32_t>(output.instance_index) * 0x9E3779B9U);
+  h ^= h >> 16U;
+  h *= 0x7FEB352DU;
+  h ^= h >> 15U;
+  return static_cast<float>(1U + h % k_skin_variant_count);
+}
+
+} // namespace
+
 void add_humanoid(CreatureRenderBatch& batch,
                   const CreatureGraphOutput& output,
                   const Render::GL::HumanoidPose& pose,
@@ -137,8 +155,10 @@ void add_humanoid(CreatureRenderBatch& batch,
     reuse.variant = &variant;
     reuse.role_colors = req.role_colors;
   }
-  req.wear_params = QVector4D(
-      variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
+  req.wear_params = QVector4D(variant.weathering,
+                              variant.grime,
+                              variant.bloodiness,
+                              variant.pattern_seed + soldier_skin_variant(output));
   req.team_emphasis =
       anim.inputs.is_in_melee_lock || anim.inputs.is_attacking ? 1.0F : 0.0F;
   req.full_body_blend.archetype = selection.full_body_blend.archetype;

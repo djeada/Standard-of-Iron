@@ -836,6 +836,12 @@ void register_cloak_descriptors() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
+      "cloak_roman_auxiliary",
+      {.build_attachments = &build_roman_auxiliary_cloak_attachment,
+       .append_role_colors = &roman_auxiliary_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
       "cloak_roman_mounted",
       {.build_attachments = &build_roman_mounted_cloak_attachment,
        .append_role_colors = &roman_cloak_role_colors,

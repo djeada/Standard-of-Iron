@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -18,6 +19,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/rain_manager.h"
+#include "game/visuals/farm_hedgerow.h"
 #include "render/entity/home_renderer_common.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
@@ -144,6 +146,33 @@ auto collect_building_trees(Game::Session::SessionContext& session)
   const auto& biome = session.terrain().biome_settings();
   const bool cold = biome.ground_type == Game::Map::GroundType::AlpineMix ||
                     biome.snow_coverage >= 0.30F;
+  for (auto [entity_id, farm, transform, unit] :
+       world.view<const Engine::Core::FarmComponent,
+                  const Engine::Core::TransformComponent,
+                  const Engine::Core::UnitComponent>()) {
+    if (!building_is_standing(unit)) {
+      continue;
+    }
+    const auto seed = static_cast<std::uint32_t>(entity_id) * 2654435761U;
+    const float yaw = transform.rotation.y * 0.01745329252F;
+    const float cos_yaw = std::cos(yaw);
+    const float sin_yaw = std::sin(yaw);
+    std::uint32_t salt = 0;
+    for (const auto& plant : Game::Visuals::farm_hedge_plants(farm.harvests, seed)) {
+      const QVector3D at(transform.position.x + plant.x * cos_yaw + plant.z * sin_yaw,
+                         transform.position.y,
+                         transform.position.z - plant.x * sin_yaw + plant.z * cos_yaw);
+      const std::uint32_t plant_seed = seed + (++salt) * 7919U;
+      trees.push_back(
+          Render::GL::AnchoredTree{.species = cold ? Game::Map::TreeSpecies::Pine
+                                                   : Game::Map::TreeSpecies::Olive,
+                                   .position = at,
+                                   .scale = plant.scale,
+                                   .rotation = static_cast<float>(plant_seed % 360U),
+                                   .seed = plant_seed,
+                                   .grounded = true});
+    }
+  }
   for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
     if (unit.nation_id != Game::Systems::NationID::Carthage ||
         !building_is_standing(unit)) {

@@ -538,7 +538,7 @@ world_prop_ground_half_extents(WorldProp::Type type,
   case WorldProp::Type::PineTree:
     return 1.42F;
   case WorldProp::Type::OliveTree:
-    return 0.98F;
+    return 1.25F;
   case WorldProp::Type::CypressTree:
     return 1.64F;
   case WorldProp::Type::PalmTree:

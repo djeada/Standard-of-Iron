@@ -26,7 +26,7 @@ auto default_loadouts() -> LoadoutMap {
   roman_archer.helmet = "roman_light";
   roman_archer.greaves = "roman_greaves";
   roman_archer.armor = "roman_light_armor";
-  roman_archer.cloak = "cloak_roman";
+  roman_archer.cloak = "cloak_roman_auxiliary";
   map.emplace("troops/roman/archer", std::move(roman_archer));
 
   EquipmentLoadoutIds carthage_archer{};

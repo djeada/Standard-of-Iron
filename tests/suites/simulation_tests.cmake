@@ -53,6 +53,7 @@ add_executable(
     systems/showcase_routine_system_test.cpp
     systems/home_manpower_system_test.cpp
     systems/town_growth_system_test.cpp
+    systems/farm_hedgerow_test.cpp
     systems/building_collision_test.cpp
     systems/pathfinding_test.cpp
     core/render_publication_test.cpp

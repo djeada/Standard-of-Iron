@@ -63,10 +63,10 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanArcherLoadoutResolvesFootEquipment) {
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.bow, "bow_roman");
   EXPECT_EQ(loadout.ids.quiver, "quiver_roman");
-  EXPECT_EQ(loadout.ids.helmet, "roman_montefortino");
+  EXPECT_EQ(loadout.ids.helmet, "roman_light");
   EXPECT_EQ(loadout.ids.greaves, "roman_greaves");
   EXPECT_EQ(loadout.ids.armor, "roman_light_armor");
-  EXPECT_EQ(loadout.ids.cloak, "cloak_roman");
+  EXPECT_EQ(loadout.ids.cloak, "cloak_roman_auxiliary");
   EXPECT_NE(loadout.bow_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.quiver_handle, k_invalid_equipment_handle);
   EXPECT_NE(loadout.helmet_handle, k_invalid_equipment_handle);

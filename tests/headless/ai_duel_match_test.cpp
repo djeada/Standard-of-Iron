@@ -555,13 +555,18 @@ protected:
       const auto report = survey(session, side.first);
       const auto* plan = ai != nullptr ? ai->plan_for(side.first) : nullptr;
       if (qEnvironmentVariableIsSet("SOI_DUEL_WAVE") && plan != nullptr) {
-        std::printf("    %s wave committed %d target %llu at %.1f,%.1f members %zu\n",
+        std::printf("    %s wave committed %d target %llu at %.1f,%.1f members %zu "
+                    "declined %d strength %.1f defence %.1f withdrawing %zu\n",
                     side.second,
                     plan->wave.committed ? 1 : 0,
                     static_cast<unsigned long long>(plan->wave.target_id),
                     plan->wave.target_x,
                     plan->wave.target_z,
-                    plan->wave.members.size());
+                    plan->wave.members.size(),
+                    plan->wave.declined,
+                    static_cast<double>(plan->wave.last_strength),
+                    static_cast<double>(plan->wave.last_defence),
+                    plan->wave.withdrawing.size());
         for (auto [id, unit, transform, movement] :
              session.world()
                  .view<UnitComponent,
@@ -720,7 +725,8 @@ protected:
           "  %-10s bar %d home %d farm %d tow %d wall %d mkt %d | work %d/%d "
           "fight %d (foot %d bow %d horse %d engine %d) | "
           "food %d wood %d stone %d iron %d gold %d manpower %d | "
-          "left %d homesfirst %d | pop %d/%d | wave %s(%d) %s | across %d\n",
+          "left %d homesfirst %d | pop %d/%d | wave %s(%d) %s | across %d | "
+          "commander %s %.0fm from home\n",
           side.second,
           report.barracks,
           report.homes,
@@ -752,7 +758,11 @@ protected:
                     .toUtf8()
                     .constData()
               : "?",
-          fighters_across_the_river(session, side.first));
+          fighters_across_the_river(session, side.first),
+          report.commander_alive ? "alive" : "DEAD",
+          static_cast<double>(report.commander_alive
+                                  ? commander_distance_from_home(session, side.first)
+                                  : -1.0F));
       // NATION_ASYMMETRY.md: what each nation's own economy is doing.
       int camps = 0;
       int stables = 0;

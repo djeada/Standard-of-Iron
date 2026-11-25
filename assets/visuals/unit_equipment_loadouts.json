@@ -3,10 +3,10 @@
     "troops/roman/archer": {
       "bow": "bow_roman",
       "quiver": "quiver_roman",
-      "helmet": "roman_montefortino",
+      "helmet": "roman_light",
       "greaves": "roman_greaves",
       "armor": "roman_light_armor",
-      "cloak": "cloak_roman"
+      "cloak": "cloak_roman_auxiliary"
     },
     "troops/carthage/archer": {
       "bow": "bow_carthage",

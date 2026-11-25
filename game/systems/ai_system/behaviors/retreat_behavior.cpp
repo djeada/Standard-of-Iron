@@ -35,9 +35,25 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
   const float critical_health = context.strategy_config.retreat_threshold;
   const float low_health =
       std::min(0.70F, context.strategy_config.retreat_threshold + 0.15F);
+  const std::unordered_set<Engine::Core::EntityID> withdrawing(
+      context.wave.withdrawing.begin(), context.wave.withdrawing.end());
 
   for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
+      continue;
+    }
+
+    // A wave called off by the attack planner walks home whole.
+    if (withdrawing.contains(entity.id)) {
+      constexpr float k_home_metres = 14.0F;
+      if (distance_squared(entity.pos_x,
+                           0.0F,
+                           entity.pos_z,
+                           context.base_pos_x,
+                           0.0F,
+                           context.base_pos_z) > k_home_metres * k_home_metres) {
+        retreating_units.push_back(&entity);
+      }
       continue;
     }
 
@@ -130,7 +146,9 @@ auto RetreatBehavior::should_execute(const AISnapshot& snapshot,
     return false;
   }
 
-  if (context.state == AIState::Retreating) {
+  if (context.state == AIState::Retreating ||
+      (!context.wave.withdrawing.empty() &&
+       snapshot.game_time <= context.wave.withdraw_until)) {
     return true;
   }
 

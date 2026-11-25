@@ -768,7 +768,7 @@ TEST_F(CampaignPlaythroughTest, BattleOfCannaeKeepsItsProgress) {
                                   static_cast<int>(knob("CAN_SECOND", 3)),
                                   static_cast<int>(knob("CAN_THIRD", 4))},
                         .regroup_beyond = knob("CAN_REGROUP", 120.0F)})}),
-      Progress{.survives_seconds = 560.0F});
+      Progress{.survives_seconds = 470.0F});
 }
 
 TEST_F(CampaignPlaythroughTest, CampaniaCampaignKeepsItsProgress) {

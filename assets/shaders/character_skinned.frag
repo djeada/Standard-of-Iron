@@ -36,6 +36,7 @@ void main() {
   if (u_use_texture) {
     base *= texture(u_texture, v_tex).rgb;
   }
+  base = soi_vary_skin(base, u_material_id, color_role, v_wear_params.w);
   base = apply_hair_tone(base, u_material_id, color_role, v_tex);
   base = apply_pelt_pattern(base, v_tex);
   base = apply_face_features(base, u_material_id, color_role, v_tex);

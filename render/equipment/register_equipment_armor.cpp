@@ -209,6 +209,16 @@ auto roman_cloak_config() -> const CloakConfig& {
   return config;
 }
 
+auto roman_auxiliary_cloak_config() -> const CloakConfig& {
+  static const CloakConfig config = []() {
+    CloakConfig cfg = roman_cloak_config();
+    cfg.primary_color = QVector3D(0.33F, 0.23F, 0.15F);
+    cfg.trim_color = QVector3D(0.58F, 0.47F, 0.32F);
+    return cfg;
+  }();
+  return config;
+}
+
 auto roman_mounted_cloak_config() -> const CloakConfig& {
   static const CloakConfig config = []() {
     CloakConfig cfg = roman_cloak_config();
@@ -427,6 +437,15 @@ auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
   return {Render::GL::cloak_make_static_attachment(
       roman_cloak_config(),
       Render::GL::shared_cloak_meshes(roman_cloak_config()),
+      humanoid_chest_bone(),
+      base_role_byte)};
+}
+
+auto build_roman_auxiliary_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::cloak_make_static_attachment(
+      roman_auxiliary_cloak_config(),
+      Render::GL::shared_cloak_meshes(roman_auxiliary_cloak_config()),
       humanoid_chest_bone(),
       base_role_byte)};
 }
@@ -734,6 +753,27 @@ auto roman_cloak_role_colors(const void* variant_void,
          std::size_t max) {
         return count + Render::GL::cloak_fill_role_colors_with_primary(
                            roman_cloak_config().primary_color,
+                           variant.palette,
+                           colors + count,
+                           max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto roman_auxiliary_cloak_role_colors(const void* variant_void,
+                                       QVector3D* out,
+                                       std::uint32_t base_count,
+                                       std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::cloak_fill_role_colors_with_primary(
+                           roman_auxiliary_cloak_config().primary_color,
                            variant.palette,
                            colors + count,
                            max - count);

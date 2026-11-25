@@ -97,6 +97,7 @@
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/hair_bun.h"
 #include "render/equipment/helmets/historical_helmets.h"
+#include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/equipment/helmets/roman_heavy_helmet.h"
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"
@@ -9999,7 +10000,7 @@ TEST(HumanoidPrepare, RomanArcherUsesRomanCloakRoleLayout) {
   auto const archetype_id = find_archetype_id("troops/roman/archer");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            Render::GL::k_historical_helmet_role_count +
+            Render::GL::k_roman_light_helmet_role_count +
                 Render::GL::k_roman_greaves_role_count +
                 Render::GL::k_quiver_role_count +
                 Render::GL::k_roman_light_armor_role_count +

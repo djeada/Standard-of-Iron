@@ -86,6 +86,7 @@ void register_equipment_ids(EquipmentRegistry& registry) {
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_carthage_mounted");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_sepulcher");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman_auxiliary");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman_mounted");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_fabius");
   registry.register_equipment_id(EquipmentCategory::Armor, "cloak_scipio");

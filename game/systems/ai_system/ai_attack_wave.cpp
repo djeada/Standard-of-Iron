@@ -231,6 +231,179 @@ auto committable_units(const AISnapshot& snapshot,
   return result;
 }
 
+// Weighing a target before marching on it (and a fight while in it). Units are
+// counted the way TacticalUtils::assess_engagement counts them: one per squad,
+// scaled by health; a tower or a commander is worth more than a squad.
+constexpr float k_sighting_memory_seconds = 120.0F;
+constexpr float k_sighting_cleared_metres = 10.0F;
+// Squads near a target defend it in full; those further out can still march
+// in before the fight is decided and count for half.
+constexpr float k_defence_reach = 40.0F;
+constexpr float k_reinforcement_reach = 80.0F;
+constexpr float k_reinforcement_weight = 0.5F;
+constexpr float k_tower_reach = 28.0F;
+constexpr float k_tower_weight = 1.5F;
+constexpr float k_commander_weight = 2.0F;
+constexpr float k_commit_ratio = 1.25F;
+constexpr float k_drought_commit_ratio = 1.0F;
+constexpr float k_battle_reach = 26.0F;
+constexpr float k_target_battle_metres = 40.0F;
+constexpr float k_withdraw_ratio = 0.6F;
+constexpr float k_bleeding_withdraw_ratio = 0.9F;
+constexpr float k_bleeding_losses = 0.25F;
+constexpr float k_withdraw_seconds = 30.0F;
+
+auto health_share(int health, int max_health) -> float {
+  if (max_health <= 0) {
+    return health > 0 ? 1.0F : 0.0F;
+  }
+  return std::clamp(
+      static_cast<float>(health) / static_cast<float>(max_health), 0.0F, 1.0F);
+}
+
+auto fights_in_the_field(const ContactSnapshot& contact) -> bool {
+  return !contact.is_building && contact.health > 0 && is_war_contact(contact) &&
+         Game::Units::combat_role(contact.spawn_type) !=
+             Game::Units::CombatRole::Noncombatant;
+}
+
+auto field_weight(const ContactSnapshot& contact) -> float {
+  return (is_commander_contact(contact) ? k_commander_weight : 1.0F) *
+         health_share(contact.health, contact.max_health);
+}
+
+void note_enemy_sightings(const AISnapshot& snapshot, AIContext& context) {
+  auto& sightings = context.enemy_sightings;
+  std::unordered_set<Engine::Core::EntityID> in_view;
+  for (const auto& contact : snapshot.visible_enemies) {
+    if (!fights_in_the_field(contact)) {
+      continue;
+    }
+    in_view.insert(contact.id);
+    sightings[contact.id] = {.x = contact.pos_x,
+                             .z = contact.pos_z,
+                             .weight = field_weight(contact),
+                             .seen_at = snapshot.game_time};
+  }
+  // A remembered squad is forgotten when it is too old, or when our own men
+  // stand where it was and do not see it: it fell or marched off.
+  for (auto it = sightings.begin(); it != sightings.end();) {
+    bool gone = snapshot.game_time - it->second.seen_at > k_sighting_memory_seconds;
+    if (!gone && !in_view.contains(it->first)) {
+      for (const auto& own : snapshot.friendly_units) {
+        if (!own.is_building && own.health > 0 &&
+            distance_squared(
+                own.pos_x, 0.0F, own.pos_z, it->second.x, 0.0F, it->second.z) <
+                k_sighting_cleared_metres * k_sighting_cleared_metres) {
+          gone = true;
+          break;
+        }
+      }
+    }
+    it = gone ? sightings.erase(it) : std::next(it);
+  }
+}
+
+auto towers_covering(const AISnapshot& snapshot, float x, float z) -> float {
+  float weight = 0.0F;
+  for (const auto& known : snapshot.strategic_objectives) {
+    if (known.health <= 0 || known.spawn_type != Game::Units::SpawnType::DefenseTower ||
+        !is_war_contact(known)) {
+      continue;
+    }
+    if (distance_squared(known.pos_x, 0.0F, known.pos_z, x, 0.0F, z) <=
+        k_tower_reach * k_tower_reach) {
+      weight += k_tower_weight * health_share(known.health, known.max_health);
+    }
+  }
+  return weight;
+}
+
+// What stands to defend a point, from what this side sees or saw lately: the
+// squads around it and the towers that reach it.
+auto defence_at(const AISnapshot& snapshot,
+                const AIContext& context,
+                float x,
+                float z) -> float {
+  float weight = towers_covering(snapshot, x, z);
+  for (const auto& [id, seen] : context.enemy_sightings) {
+    (void)id;
+    const float distance_sq = distance_squared(seen.x, 0.0F, seen.z, x, 0.0F, z);
+    if (distance_sq <= k_defence_reach * k_defence_reach) {
+      weight += seen.weight;
+    } else if (distance_sq <= k_reinforcement_reach * k_reinforcement_reach) {
+      weight += k_reinforcement_weight * seen.weight;
+    }
+  }
+  return weight;
+}
+
+auto strength_of(const std::vector<const EntitySnapshot*>& units) -> float {
+  float strength = 0.0F;
+  for (const auto* unit : units) {
+    strength += health_share(unit->health, unit->max_health);
+  }
+  return strength;
+}
+
+// The nearest target, in doctrine order, that this force clearly outweighs.
+// Returns nullptr when every known target is defended too well (or none is
+// known; `any_known` tells the two apart).
+auto select_beatable_target(const AISnapshot& snapshot,
+                            const AIContext& context,
+                            float from_x,
+                            float from_z,
+                            float strength,
+                            float ratio,
+                            bool& any_known,
+                            float& defence_seen) -> const ContactSnapshot* {
+  any_known = false;
+  defence_seen = 0.0F;
+  float weakest = std::numeric_limits<float>::infinity();
+  for (const auto target_kind : target_priority_for(context)) {
+    std::vector<std::pair<float, const ContactSnapshot*>> options;
+    for (const auto* pool :
+         {&snapshot.visible_enemies, &snapshot.strategic_objectives}) {
+      for (const auto& contact : *pool) {
+        if (contact.health <= 0 || !matches_target(contact, target_kind) ||
+            is_gold_vein_anchor(snapshot, contact.id) || !is_war_contact(contact)) {
+          continue;
+        }
+        options.emplace_back(
+            distance_squared(contact.pos_x, 0.0F, contact.pos_z, from_x, 0.0F, from_z),
+            &contact);
+      }
+    }
+    std::sort(options.begin(), options.end(), [](const auto& a, const auto& b) {
+      return a.first < b.first;
+    });
+    for (const auto& [distance_sq, contact] : options) {
+      (void)distance_sq;
+      any_known = true;
+      const float defence =
+          defence_at(snapshot, context, contact->pos_x, contact->pos_z);
+      weakest = std::min(weakest, defence);
+      if (strength >= ratio * defence) {
+        defence_seen = defence;
+        return contact;
+      }
+    }
+  }
+  defence_seen = std::isfinite(weakest) ? weakest : 0.0F;
+  return nullptr;
+}
+
+void withdraw_wave(AIContext& context, float game_time) {
+  auto& wave = context.wave;
+  wave.withdrawing = wave.members;
+  wave.withdraw_until = game_time + k_withdraw_seconds;
+  wave.committed = false;
+  wave.members.clear();
+  wave.target_id = 0;
+  wave.best_gap = -1.0F;
+  wave.ended_at = game_time;
+}
+
 } // namespace
 
 auto wave_size_for(const AIContext& context) -> int {
@@ -411,6 +584,23 @@ auto answer_an_ally_call(const AISnapshot& snapshot,
 
 void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   auto& wave = context.wave;
+  note_enemy_sightings(snapshot, context);
+  if (snapshot.game_time > wave.withdraw_until) {
+    wave.withdrawing.clear();
+  } else {
+    constexpr float k_home_metres = 14.0F;
+    std::erase_if(wave.withdrawing, [&](Engine::Core::EntityID id) {
+      const auto* entity = find_friendly(snapshot, id);
+      return entity == nullptr || entity->health <= 0 ||
+             (context.has_base_anchor &&
+              distance_squared(entity->pos_x,
+                               0.0F,
+                               entity->pos_z,
+                               context.base_pos_x,
+                               0.0F,
+                               context.base_pos_z) <= k_home_metres * k_home_metres);
+    });
+  }
   const auto candidates = committable_units(snapshot, context);
 
   const int required = required_wave_size(context, snapshot.game_time);
@@ -537,6 +727,55 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       return;
     }
 
+    // A wave that meets more than it can beat comes home in one piece instead
+    // of feeding the garrison squad by squad.
+    std::vector<const EntitySnapshot*> marching_now;
+    marching_now.reserve(wave.members.size());
+    for (const auto id : wave.members) {
+      if (const auto* entity = find_friendly(snapshot, id)) {
+        marching_now.push_back(entity);
+      }
+    }
+    const float ours = strength_of(marching_now);
+    {
+      float theirs = towers_covering(snapshot, centre_x, centre_z);
+      for (const auto& contact : snapshot.visible_enemies) {
+        if (fights_in_the_field(contact) &&
+            distance_squared(
+                contact.pos_x, 0.0F, contact.pos_z, centre_x, 0.0F, centre_z) <=
+                k_battle_reach * k_battle_reach) {
+          theirs += field_weight(contact);
+        }
+      }
+      theirs = std::max(theirs, defence_at(snapshot, context, centre_x, centre_z));
+      if (wave.target_id != 0 && gap <= k_target_battle_metres) {
+        theirs = std::max(theirs,
+                          defence_at(snapshot, context, wave.target_x, wave.target_z));
+      }
+      const float losses =
+          1.0F - static_cast<float>(remaining) /
+                     static_cast<float>(std::max(1, wave.initial_size));
+      wave.last_strength = ours;
+      wave.last_defence = theirs;
+      // Only a wave at the enemy's works turns back: there the garrison and
+      // towers stay put and the wave can walk away. In an open-field fight
+      // against a moving army, turning its back only gets the column cut down
+      // on the road (duel matrix: Scipio routed while Hanno lost nobody).
+      const bool at_their_works =
+          towers_covering(snapshot, centre_x, centre_z) > 0.0F ||
+          (wave.target_id != 0 && gap <= k_target_battle_metres && [&] {
+            const auto* objective = find_contact(snapshot, wave.target_id);
+            return objective != nullptr && objective->is_building;
+          }());
+      if (at_their_works && theirs > 0.0F &&
+          (ours < k_withdraw_ratio * theirs ||
+           (losses >= k_bleeding_losses &&
+            ours < k_bleeding_withdraw_ratio * theirs))) {
+        withdraw_wave(context, snapshot.game_time);
+        return;
+      }
+    }
+
     if (const auto* pledge = called_attack(snapshot);
         pledge != nullptr && pledge->target != wave.target_id &&
         find_contact(snapshot, pledge->target) != nullptr) {
@@ -565,6 +804,27 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
         wave.target_id = 0;
         wave.ended_at = snapshot.game_time;
         return;
+      }
+      // A scouting or re-targeting wave weighs what it has just found before
+      // walking into it: a target it cannot beat gives way to one it can, or
+      // the wave turns for home before the fight rather than after it.
+      if (ours < k_commit_ratio *
+                     defence_at(snapshot, context, target->pos_x, target->pos_z)) {
+        bool any_known = false;
+        float defence = 0.0F;
+        target = select_beatable_target(snapshot,
+                                        context,
+                                        centre_x,
+                                        centre_z,
+                                        ours,
+                                        k_commit_ratio,
+                                        any_known,
+                                        defence);
+        if (target == nullptr) {
+          wave.last_defence = defence;
+          withdraw_wave(context, snapshot.game_time);
+          return;
+        }
       }
       wave.target_id = target->id;
     }
@@ -663,8 +923,37 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   centre_x /= static_cast<float>(available.size());
   centre_z /= static_cast<float>(available.size());
 
-  const ContactSnapshot* target =
-      select_wave_target(snapshot, context, centre_x, centre_z);
+  // Weigh the targets before marching: commit only on one this force clearly
+  // outweighs (its garrison and the towers that reach it), the nearest such
+  // in doctrine order. If every known target is too strong, stay home and
+  // keep growing; a long drought lowers the bar to an even fight.
+  const int column = std::min(static_cast<int>(available.size()),
+                              wave_capacity_for(context, required));
+  std::vector<const EntitySnapshot*> column_units(
+      available.begin(), available.begin() + std::max(0, column));
+  const float strength = strength_of(column_units);
+  const float commit_ratio =
+      without_a_wave > k_drought_seconds ? k_drought_commit_ratio : k_commit_ratio;
+  bool any_known = false;
+  float defence = 0.0F;
+  const ContactSnapshot* target = select_beatable_target(snapshot,
+                                                         context,
+                                                         centre_x,
+                                                         centre_z,
+                                                         strength,
+                                                         commit_ratio,
+                                                         any_known,
+                                                         defence);
+  wave.last_strength = strength;
+  wave.last_defence = defence;
+  if (target == nullptr && any_known) {
+    wave.declined = 1;
+    wave.assembling_since = snapshot.game_time;
+    wave.ready_since = -1000.0F;
+    wave.departed_under_strength = false;
+    return;
+  }
+  wave.declined = 0;
   float scout_x = 0.0F;
   float scout_z = 0.0F;
   if (target == nullptr &&

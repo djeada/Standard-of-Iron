@@ -35,6 +35,7 @@ void main() {
                       u_role_color_base + v_instance_id * 32 + color_role - 1)
                .rgb;
   }
+  base = soi_vary_skin(base, v_material_id, color_role, v_wear_params.w);
   base = apply_hair_tone(base, v_material_id, color_role, v_tex);
   base = apply_pelt_pattern(base, v_tex);
   base = apply_face_features(base, v_material_id, color_role, v_tex);
