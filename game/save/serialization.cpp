@@ -35,11 +35,17 @@
 namespace Engine::Core {
 
 auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
+  return serialize_entity(entity, WorldCapture::Save);
+}
+
+auto Serialization::serialize_entity(const Entity* entity,
+                                     WorldCapture capture) -> QJsonObject {
   QJsonObject entity_obj;
   entity_obj["id"] = static_cast<qint64>(entity->get_id());
 
-  EntityCodec::write_core(entity, entity_obj);
-  write_movement(entity, entity_obj);
+  const bool replay_checkpoint = capture == WorldCapture::ReplayCheckpoint;
+  EntityCodec::write_core(entity, entity_obj, replay_checkpoint);
+  write_movement(entity, entity_obj, replay_checkpoint);
   EntityCodec::write_combat(entity, entity_obj);
   EntityCodec::write_ability(entity, entity_obj);
   EntityCodec::write_commander(entity, entity_obj);
@@ -170,7 +176,7 @@ auto Serialization::serialize_world(const World* world,
          is_collapsing_structure(entity))) {
       return;
     }
-    auto snapshot = serialize_entity(&entity);
+    auto snapshot = serialize_entity(&entity, capture);
     if (capture == WorldCapture::ReplayCheckpoint) {
       EntityCodec::write_checkpoint_components(entity, snapshot);
       if (entity.registry()->has<PendingRemovalComponent>(entity.get_id())) {

@@ -64,7 +64,11 @@ public:
   static auto load_from_file(const QString& filename) -> QJsonDocument;
 
 private:
-  static void write_movement(const class Entity* entity, QJsonObject& entity_obj);
+  static auto serialize_entity(const class Entity* entity,
+                               WorldCapture capture) -> QJsonObject;
+  static void write_movement(const class Entity* entity,
+                             QJsonObject& entity_obj,
+                             bool replay_checkpoint);
   static void read_movement(class Entity* entity, const QJsonObject& json);
 };
 

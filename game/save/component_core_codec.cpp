@@ -214,8 +214,14 @@ void read_patrol(Entity* entity, const QJsonObject& json) {
   }
 }
 
-void write_ai_controlled(const Entity* entity, QJsonObject& entity_obj) {
+void write_ai_controlled(const Entity* entity,
+                         QJsonObject& entity_obj,
+                         bool replay_checkpoint) {
   if (const auto* ai = entity->get_component<AIControlledComponent>()) {
+    if (!replay_checkpoint) {
+      entity_obj["aiControlled"] = true;
+      return;
+    }
     entity_obj["aiControlled"] = QJsonObject{{"leash_x", ai->leash_x},
                                              {"leash_z", ai->leash_z},
                                              {"leash_half_x", ai->leash_half_x},
@@ -492,20 +498,22 @@ void read_movement_progress(Entity* entity, const QJsonObject& json) {
 
 } // namespace
 
-void write_core(const Entity* entity, QJsonObject& entity_obj) {
+void write_core(const Entity* entity, QJsonObject& entity_obj, bool replay_checkpoint) {
   write_transform(entity, entity_obj);
   write_renderable(entity, entity_obj);
   write_unit(entity, entity_obj);
   write_player_order_intent(entity, entity_obj);
   write_patrol(entity, entity_obj);
-  write_ai_controlled(entity, entity_obj);
+  write_ai_controlled(entity, entity_obj, replay_checkpoint);
   write_formation_mode(entity, entity_obj);
   write_army_formation_membership(entity, entity_obj);
   write_unit_layout_state(entity, entity_obj);
   write_stamina(entity, entity_obj);
   write_wading(entity, entity_obj);
   write_terrain_context(entity, entity_obj);
-  write_movement_progress(entity, entity_obj);
+  if (replay_checkpoint) {
+    write_movement_progress(entity, entity_obj);
+  }
 }
 
 void read_core(Entity* entity, const QJsonObject& json) {
@@ -528,7 +536,9 @@ void read_core(Entity* entity, const QJsonObject& json) {
 
 namespace Engine::Core {
 
-void Serialization::write_movement(const Entity* entity, QJsonObject& entity_obj) {
+void Serialization::write_movement(const Entity* entity,
+                                   QJsonObject& entity_obj,
+                                   bool replay_checkpoint) {
   if (const auto* movement = entity->get_component<MovementComponent>()) {
     QJsonObject movement_obj;
     movement_obj["has_target"] = movement->has_target;
@@ -541,32 +551,34 @@ void Serialization::write_movement(const Entity* entity, QJsonObject& entity_obj
     movement_obj["path_index"] = static_cast<int>(movement->path_index);
     movement_obj["precise_arrival"] = movement->precise_arrival;
     movement_obj["navigation_clearance"] = movement->navigation_clearance;
-    movement_obj["travelled"] = movement->travelled;
-    movement_obj["escape_active"] = movement->escape_active;
-    movement_obj["escape_x"] = movement->escape_x;
-    movement_obj["escape_z"] = movement->escape_z;
-    movement_obj["has_requested_goal"] = movement->has_requested_goal;
-    movement_obj["requested_goal_x"] = movement->requested_goal_x;
-    movement_obj["requested_goal_z"] = movement->requested_goal_z;
-    movement_obj["issuer_retargets"] = movement->issuer_retargets;
-    movement_obj["structure_approach_target_id"] =
-        Game::Command::u64_to_json(movement->structure_approach_target_id);
-    movement_obj["can_enter_forest"] = movement->can_enter_forest;
-    movement_obj["order_sequence"] =
-        Game::Command::u64_to_json(movement->order_sequence);
-    movement_obj["route_revision"] =
-        Game::Command::u64_to_json(movement->route_revision);
-    movement_obj["topology_revision"] =
-        Game::Command::u64_to_json(movement->topology_revision);
-    movement_obj["route_id"] = Game::Command::u64_to_json(movement->route_id);
-    movement_obj["route_lane_offset"] = movement->route_lane_offset;
-    movement_obj["route_lane_min_scale"] = movement->route_lane_min_scale;
-    movement_obj["route_opening_waypoint_index"] =
-        Game::Command::u64_to_json(movement->route_opening_waypoint_index);
-    movement_obj["route_reform_waypoint_index"] =
-        Game::Command::u64_to_json(movement->route_reform_waypoint_index);
-    movement_obj["declared_group_pace"] = movement->declared_group_pace;
-    movement_obj["following_formation_slot"] = movement->following_formation_slot;
+    if (replay_checkpoint) {
+      movement_obj["travelled"] = movement->travelled;
+      movement_obj["escape_active"] = movement->escape_active;
+      movement_obj["escape_x"] = movement->escape_x;
+      movement_obj["escape_z"] = movement->escape_z;
+      movement_obj["has_requested_goal"] = movement->has_requested_goal;
+      movement_obj["requested_goal_x"] = movement->requested_goal_x;
+      movement_obj["requested_goal_z"] = movement->requested_goal_z;
+      movement_obj["issuer_retargets"] = movement->issuer_retargets;
+      movement_obj["structure_approach_target_id"] =
+          Game::Command::u64_to_json(movement->structure_approach_target_id);
+      movement_obj["can_enter_forest"] = movement->can_enter_forest;
+      movement_obj["order_sequence"] =
+          Game::Command::u64_to_json(movement->order_sequence);
+      movement_obj["route_revision"] =
+          Game::Command::u64_to_json(movement->route_revision);
+      movement_obj["topology_revision"] =
+          Game::Command::u64_to_json(movement->topology_revision);
+      movement_obj["route_id"] = Game::Command::u64_to_json(movement->route_id);
+      movement_obj["route_lane_offset"] = movement->route_lane_offset;
+      movement_obj["route_lane_min_scale"] = movement->route_lane_min_scale;
+      movement_obj["route_opening_waypoint_index"] =
+          Game::Command::u64_to_json(movement->route_opening_waypoint_index);
+      movement_obj["route_reform_waypoint_index"] =
+          Game::Command::u64_to_json(movement->route_reform_waypoint_index);
+      movement_obj["declared_group_pace"] = movement->declared_group_pace;
+      movement_obj["following_formation_slot"] = movement->following_formation_slot;
+    }
 
     QJsonArray path_array;
     for (const auto& waypoint : movement->path) {

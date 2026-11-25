@@ -8,7 +8,9 @@ class Entity;
 
 namespace Engine::Core::EntityCodec {
 
-void write_core(const Entity* entity, QJsonObject& entity_obj);
+void write_core(const Entity* entity,
+                QJsonObject& entity_obj,
+                bool replay_checkpoint = false);
 void read_core(Entity* entity, const QJsonObject& json);
 
 void write_combat(const Entity* entity, QJsonObject& entity_obj);
