@@ -20,9 +20,13 @@ permissions:
   contents: read
 
 # A push cancels only the obsolete run for this PR; unrelated PRs keep running.
+# Runs on main are never cancelled: the main run is what saves the ccache that
+# every PR restores, and a cancelled run saves nothing, so a burst of merges
+# used to leave main without a cache for the next one (2.9% hits, 25 Nov 2026).
+# GitHub keeps one pending run per group, so a burst still collapses.
 concurrency:
   group: pr-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   QT_VERSION: "6.8.2"
@@ -38,6 +42,12 @@ jobs:
 
   test:
     name: Fast build and test (ubuntu-24.04)
+    # The cheap blocking gates (formatting, policy, portability) finish in about
+    # three minutes. A formatting failure used to be reported only after the
+    # 25-45 minute build beside it had run to the end for nothing, so the build
+    # waits for them. Direct pushes to main skip the quality lane and still run.
+    needs: [quality]
+    if: ${{ !cancelled() && contains(fromJSON('["success","skipped"]'), needs.quality.result) }}
     runs-on: ubuntu-24.04
     # This lane also runs on main so a cache saved on the default branch is
     # available to new PR branches. Previously only PR branches saved caches,
@@ -83,8 +93,11 @@ jobs:
           # ~1.3 GB compressed, and at 1G ccache evicted the build's own objects
           # while compiling (1256 cleanups, 1 hit in 1479 on 27 Sep 2026), so
           # the saved cache never held what the next run asked for. -g1 cut the
-          # raw objects from 5.0 to 1.3 GB; 2G keeps room for churn.
-          max-size: 2G
+          # raw objects from 5.0 to 1.3 GB. One whole build is now ~2 GB of
+          # cache (2,124 objects filled a 2G cache to 99.7% with 251 cleanups
+          # on 25 Nov 2026), so 2G evicted the build's own objects again; 3G
+          # leaves room for churn while staying well inside the 10 GB quota.
+          max-size: 3G
           # Only main writes it. The repository has 10 GB of Actions cache and
           # GitHub evicts the least recently used entry past that: a 1-2 GB
           # save per pull request or release tag, none of which any other ref

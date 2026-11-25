@@ -94,7 +94,7 @@ jobs:
           # days, so a weekly save is gone before the next week and only
           # evicts main's in the meantime.
           key: pr-fast-ubuntu-24.04-Debug
-          max-size: 2G
+          max-size: 3G
           save: false
 
       - name: Configure
