@@ -80,7 +80,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 ffmpeg mold
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg mold \
+            xvfb libgl1-mesa-dri
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
@@ -183,10 +184,17 @@ jobs:
       # SOI_TEST_PROFILE=pr subtracts tests/extended_tests.txt; every binary in
       # the suite list still runs. SOI_TEST_REPORT_DIR collects the GoogleTest
       # JSON the speed gate below reads, which costs the run nothing.
+      #
+      # The suites are independent processes with their own reports, so they run
+      # three at a time on the runner's four cores (combat_balance_tests alone
+      # is ~200 s of the ~430 s the nine took one after another). The
+      # acceptance and short replay task runs beside them, once. A speed
+      # regression from contention shows up in the per-test budget below.
       - name: Fast PR tests
         env:
           QT_QPA_PLATFORM: offscreen
           SOI_TEST_REPORT_DIR: artifacts/test-reports
+          SOI_TEST_JOBS: "3"
         run: bash scripts/run-tests.sh build --gtest_brief=1
 
       # The fast lane has no display, so every test that needs a GL context
@@ -198,7 +206,6 @@ jobs:
           SOI_REQUIRE_GL: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
-          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri
           xvfb-run -a -s "-screen 0 640x480x24" \
             build/bin/render_tests --gtest_brief=1 \
             --gtest_filter='GlOwnership*:GlContextLifetime*:GlDeferredDelete*'
@@ -215,20 +222,17 @@ jobs:
             --build-dir build \
             --report-dir artifacts/test-reports
 
-      - name: Translation coverage
-        run: make translations-check
-
-      - name: Audio wiring
-        run: make audio-check
-
-      - name: Content validation
-        run: ./build/bin/content_validator assets
-
-      - name: Validator integration tests
-        run: bash tests/validator_integration_test.sh
-
-      - name: Promo first-frame tests
-        run: bash tests/promo_first_frame_test.sh
+      # None of these reads what another writes, and each was 100+ seconds of
+      # a single core (the validator integration test also validates the whole
+      # asset tree, which is why there is no separate content_validator step),
+      # so they run together; a failure of one does not hide the others.
+      - name: Translations, audio, content and promo checks
+        run: |
+          bash scripts/run-parallel.sh --jobs 4 --title "Content checks" \
+            "Translation coverage::make translations-check" \
+            "Audio wiring::make audio-check" \
+            "Content validator integration (validates assets/)::bash tests/validator_integration_test.sh" \
+            "Promo first-frame tests::bash tests/promo_first_frame_test.sh"
 
   readiness:
     name: PR diagnostics complete

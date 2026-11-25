@@ -157,3 +157,5 @@ fast one, which is how `FormationCombatGeometry` was found leaning on
 coverage lanes run the full profile, and the three platform build workflows run
 the same script after their build. A suite missing from the build directory is
 an error there, not a skip.
+`SOI_TEST_JOBS=N` runs the suites N at a time (pull requests use 3); see
+`docs/CI_POLICY.md`.
