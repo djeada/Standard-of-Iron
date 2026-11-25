@@ -7,6 +7,7 @@ in float intensity_val;
 in float flame_phase;
 in float flame_height;
 flat in int v_part;
+flat in vec3 v_ground_normal;
 
 uniform sampler2D fire_texture;
 uniform float u_time;
@@ -33,10 +34,9 @@ vec4 shade_hearth() {
   float edge_noise = fbm(uv * 2.6 + vec2(flame_phase * 1.7, 3.1));
   float ash_mask = 1.0 - smoothstep(0.70, 1.0, r + (edge_noise - 0.5) * 0.34);
 
-  vec3 up = vec3(0.0, 1.0, 0.0);
-  vec3 lit = environment_lighting(up, 0.2);
+  vec3 lit = environment_lighting(v_ground_normal, 0.2);
   vec3 ash_albedo =
-      mix(vec3(0.11, 0.10, 0.092), vec3(0.04, 0.034, 0.03), smoothstep(0.95, 0.35, r));
+      mix(vec3(0.04, 0.034, 0.03), vec3(0.11, 0.10, 0.092), smoothstep(0.35, 0.95, r));
   ash_albedo *= mix(0.8, 1.15, fbm(uv * 7.0 + flame_phase));
   vec3 colour = ash_albedo * lit;
 
@@ -51,7 +51,27 @@ vec4 shade_hearth() {
   colour = mix(colour, charcoal, bed);
   colour += ember * heat * clamp(intensity_val, 0.7, 1.4);
 
-  return vec4(colour, ash_mask * 0.94);
+  if (r < 0.56 || r > 0.98) {
+    return vec4(colour, ash_mask * 0.94);
+  }
+
+  // An uneven ring of fieldstones contains the coal bed.
+  float angle = atan(uv.y, uv.x) + flame_phase;
+  float stone_angle = angle * (9.0 / 6.2831853);
+  float across = (fract(stone_angle) - 0.5) * 2.0;
+  float ring_radius = 0.77 + (edge_noise - 0.5) * 0.12;
+  float outward = (r - ring_radius) / 0.14;
+  vec2 stone_uv = vec2(across * 1.08, outward);
+  float stone_dist = dot(stone_uv, stone_uv);
+  float stone_mask = 1.0 - smoothstep(0.68, 1.0, stone_dist);
+  vec3 stone = mix(vec3(0.19, 0.17, 0.15), vec3(0.38, 0.34, 0.28), edge_noise);
+  vec3 radial_dir = vec3(uv.x, 0.0, uv.y) / max(r, 0.001);
+  vec3 tangent_dir = vec3(-radial_dir.z, 0.0, radial_dir.x);
+  vec3 stone_normal = normalize(v_ground_normal + radial_dir * clamp(outward, -1.0, 1.0) +
+                                tangent_dir * across);
+  colour = mix(colour, stone * environment_lighting(stone_normal, 0.2), stone_mask);
+
+  return vec4(colour, max(ash_mask * 0.94, stone_mask));
 }
 
 vec4 shade_smoke() {

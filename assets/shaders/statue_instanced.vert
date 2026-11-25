@@ -11,6 +11,7 @@ out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
+flat out vec2 v_quarry_offset;
 
 void main() {
   float scale = a_pos_scale.w;
@@ -32,6 +33,7 @@ void main() {
 
   v_color = a_color_rot.rgb;
   v_local_pos = a_pos;
+  v_quarry_offset = fract(world_pos.xz * vec2(0.137, 0.193)) * 19.0;
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

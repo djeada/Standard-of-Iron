@@ -61,7 +61,8 @@ void main() {
   vec3 needle_seed_offset =
       vec3(v_needle_seed * 41.0, v_needle_seed * 17.0, v_needle_seed * 63.0);
 
-  float footprint = max(fwidth(v_local_pos.x), fwidth(v_local_pos.z));
+  vec3 pixel_span = fwidth(v_local_pos);
+  float footprint = max(max(pixel_span.x, pixel_span.z), pixel_span.y);
   float fine_detail = 1.0 - smoothstep(0.006, 0.026, footprint);
   float mid_detail = 1.0 - smoothstep(0.016, 0.055, footprint);
 

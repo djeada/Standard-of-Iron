@@ -203,7 +203,7 @@ void main() {
       smoothstep(0.38, 0.60, fbm(p * 1.9 + vec3(v_seed * 5.0, 2.0, 0.0)));
 
   float spoke_angle = atan(lp.z, lp.x) * 1.1140846;
-  float spoke_wobble = fbm(vec3(radial * 3.0, 0.0, spoke_angle) + vec3(v_seed));
+  float spoke_wobble = fbm(vec3(lp.xz * 3.0, radial) + vec3(v_seed));
   float spoke = abs(fract(spoke_angle + spoke_wobble * 0.55) - 0.5) * radial * 0.8976;
   float spokes = glow_line(spoke, 0.022) * top_face * platform *
                  smoothstep(0.30, 0.36, radial) *
@@ -223,7 +223,7 @@ void main() {
 
   float needle_fire = needle * (1.0 - smoothstep(0.90, 1.30, lp.y));
   float lick =
-      fbm(vec3(atan(lp.z, lp.x) * 1.4, lp.y * 7.0 - u_time * 2.6, v_seed * 4.0));
+      fbm(vec3(lp.xz * 8.0, lp.y * 7.0 - u_time * 2.6) + v_seed * 4.0);
   float flame_reach = 0.95 + lick * 0.42;
   float flames = needle * (1.0 - smoothstep(flame_reach - 0.10, flame_reach, lp.y)) *
                  step(0.9, lp.y);

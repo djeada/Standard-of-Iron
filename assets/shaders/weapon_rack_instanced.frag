@@ -238,9 +238,10 @@ RackSurface yew(vec2 uv, float seed) {
 }
 
 RackSurface linen(vec2 uv, float seed) {
-  float lay = 0.5 + 0.5 * sin(uv.y * 420.0 + uv.x * k_tau * 3.0 + seed * 9.0);
+  float phase = uv.y * 420.0 + uv.x * k_tau * 3.0 + seed * 9.0;
+  float lay = 0.5 + 0.5 * sin(phase) * (1.0 - smoothstep(1.0, 3.14, fwidth(phase)));
   vec3 c = vec3(0.80, 0.75, 0.62) * mix(0.76, 1.06, lay);
-  c *= mix(0.9, 1.0, soi_noise2(uv * vec2(8.0, 60.0) + seed));
+  c *= mix(0.9, 1.0, filtered_noise(uv * vec2(8.0, 60.0) + seed));
 
   RackSurface s;
   s.albedo = c;

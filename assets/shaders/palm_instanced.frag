@@ -42,7 +42,8 @@ void main() {
   float across = clamp((v_tex_coord.z - 1.0 - live) * 2.0, 0.0, 1.0) * frond;
   float along = v_frond_reach;
 
-  float footprint = max(fwidth(v_local_pos.x), fwidth(v_local_pos.z));
+  vec3 pixel_span = fwidth(v_local_pos);
+  float footprint = max(max(pixel_span.x, pixel_span.z), pixel_span.y);
   float fine_detail = 1.0 - smoothstep(0.006, 0.026, footprint);
   float mid_detail = 1.0 - smoothstep(0.016, 0.055, footprint);
 

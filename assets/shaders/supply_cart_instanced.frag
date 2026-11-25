@@ -62,6 +62,9 @@ void main() {
                               cargo_mask(v_local_pos, vec2(0.30, -0.36), 0.150, 0.34)));
   float cargo_core = max(barrel_mask, canvas_mask);
   vec2 grain_uv = abs(v_local_normal.z) > 0.65 ? v_local_pos.xy : v_local_pos.zy;
+  if (abs(v_local_normal.y) > 0.70) {
+    grain_uv = v_local_pos.xz;
+  }
   float warp = soi_noise2(grain_uv * vec2(2.0, 7.0));
   float phase = grain_uv.y * 45.0 + warp * 2.5;
   float longitudinal_grain =

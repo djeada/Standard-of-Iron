@@ -19,6 +19,7 @@ out float intensity_val;
 out float flame_phase;
 out float flame_height;
 flat out int v_part;
+flat out vec3 v_ground_normal;
 
 const int k_part_flame = 0;
 const int k_part_hearth = 1;
@@ -29,6 +30,7 @@ void main() {
   float intensity = clamp(i_pos_intensity.w, 0.6, 1.6);
   float phase = i_radius_phase.y;
   vec2 ground_slope = i_ground.xy;
+  v_ground_normal = normalize(vec3(-ground_slope.x, 1.0, -ground_slope.y));
   float hearth_radius = max(i_ground.z, 0.2);
 
   vec3 right_flat = vec3(u_camera_right.x, 0.0, u_camera_right.z);
