@@ -1,6 +1,7 @@
 #include "world_digest.h"
 
 #include <QByteArray>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 
@@ -9,11 +10,15 @@
 #include <cstdio>
 #include <vector>
 
+#include "../command/command_system.h"
 #include "../core/component_commander.h"
 #include "../core/component_economy.h"
 #include "../core/component_gameplay.h"
 #include "../core/component_structures.h"
 #include "../core/world.h"
+#include "../map/visibility_service.h"
+#include "../systems/alliance_board.h"
+#include "../systems/economy/marketplace_system.h"
 #include "../systems/owner_registry.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/resource_types.h"
@@ -38,8 +43,14 @@ void mix(std::uint64_t& digest, std::uint64_t value) {
 
 auto systems_digest(SessionContext& session) -> std::uint64_t {
   std::uint64_t digest = k_offset;
-  const QJsonObject view =
-      SessionSnapshot::digest_view(SnapshotScope{.world = &session.world()});
+  mix(digest, session.simulation_visibility().generation());
+  auto view = SessionSnapshot::digest_view(SnapshotScope{.world = &session.world()});
+  if (const auto* commands =
+          session.world().get_system<Game::Command::CommandSystem>()) {
+    view["commander_control"] = commands->capture_checkpoint();
+  }
+  view["alliance"] = session.alliance().capture_checkpoint();
+  view["tribute"] = session.marketplace().capture_checkpoint();
   const QByteArray bytes = QJsonDocument(view).toJson(QJsonDocument::Compact);
   for (const char byte : bytes) {
     digest ^= static_cast<std::uint8_t>(byte);
@@ -86,6 +97,9 @@ struct EntityLine {
   std::int64_t poise = -1;
   std::int64_t morale = -1;
   int routing = -1;
+  bool in_forest = false;
+  bool concealed = false;
+  std::uint64_t seen_by = 0;
 
   std::int64_t production_remaining = -1;
   int production_queue = -1;
@@ -169,6 +183,12 @@ auto collect(const Engine::Core::World& world) -> std::vector<EntityLine> {
       line.morale = quantise(morale->morale);
       line.routing = static_cast<int>(morale->routing);
     }
+    if (const auto* cover =
+            world.try_get<Engine::Core::ForestCoverComponent>(line.id)) {
+      line.in_forest = cover->in_forest;
+      line.concealed = cover->concealed;
+      line.seen_by = cover->seen_by;
+    }
     if (const auto* production =
             world.try_get<Engine::Core::ProductionComponent>(line.id)) {
       line.production_remaining = quantise(production->time_remaining);
@@ -246,6 +266,9 @@ void mix_status(std::uint64_t& digest, const EntityLine& line) {
   mix(digest, line.id);
   mix(digest, static_cast<std::uint64_t>(line.morale));
   mix(digest, static_cast<std::uint64_t>(line.routing));
+  mix(digest, line.in_forest);
+  mix(digest, line.concealed);
+  mix(digest, line.seen_by);
   mix(digest, static_cast<std::uint64_t>(line.capturing_player));
   mix(digest, static_cast<std::uint64_t>(line.capture_progress));
 }

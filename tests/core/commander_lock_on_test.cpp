@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_heading.h"
+#include "game/commander/commander_heading.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -353,7 +353,7 @@ TEST_F(CommanderLockOnTest, TheViewStaysFreeWhileTheCommanderWalksToARally) {
     ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
   }
   float const looked = controller.view_yaw();
-  EXPECT_GT(App::Core::signed_angle_delta(looked, 10.0F), 90.0F)
+  EXPECT_GT(Game::Commander::signed_angle_delta(looked, 10.0F), 90.0F)
       << "the mouse still turns the view during a rally";
 
   for (int tick = 0; tick < 30; ++tick) {
@@ -365,7 +365,8 @@ TEST_F(CommanderLockOnTest, TheViewStaysFreeWhileTheCommanderWalksToARally) {
   for (int tick = 0; tick < 240; ++tick) {
     ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
   }
-  EXPECT_LT(std::abs(App::Core::signed_angle_delta(controller.view_yaw(), 10.0F)), 5.0F)
+  EXPECT_LT(std::abs(Game::Commander::signed_angle_delta(controller.view_yaw(), 10.0F)),
+            5.0F)
       << "left alone, the view eases round behind the walking commander";
 }
 

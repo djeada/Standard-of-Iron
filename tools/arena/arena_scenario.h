@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "app/commander/commander_presentation_trace.h"
+#include "game/commander/commander_presentation_trace.h"
 #include "game/formation/army_formation_types.h"
 #include "game/map/bridge_geometry.h"
 #include "game/map/map_definition.h"
@@ -880,8 +880,8 @@ public:
   void update(float simulation_dt);
   void observe_rendered_frame(double frame_time_ms);
   void observe_rendered_frame(const ArenaRenderedFrameTimings& timings);
-  void
-  observe_commander_presentation(const App::Core::CommanderPresentationTrace& trace);
+  void observe_commander_presentation(
+      const Game::Commander::CommanderPresentationTrace& trace);
   void set_animation_time(float seconds);
   void report_external_issue(QString code, QString message);
   void set_duration_limit(float duration_seconds);

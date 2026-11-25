@@ -4,15 +4,16 @@
 #include <QVector3D>
 
 #include "app/commander/commander_frame_intent.h"
-#include "app/commander/commander_input_port.h"
-#include "app/commander/commander_latency_probe.h"
 #include "app/commander/commander_pointer_capture.h"
+#include "game/commander/commander_input_port.h"
+#include "game/commander/commander_latency_probe.h"
 
 class QQuickWindow;
 
 namespace App::Core {
 
-inline constexpr float k_commander_view_pitch_limit_degrees = 70.0F;
+using Game::Commander::CommanderHeldInput;
+using Game::Commander::CommanderLatencyProbe;
 
 class CommanderLook {
 public:

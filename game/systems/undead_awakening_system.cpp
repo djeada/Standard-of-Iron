@@ -19,6 +19,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/spawn_flare.h"
 #include "game/systems/undead_zone_persistence.h"
+#include "game/util/checkpoint_values.h"
 #include "units/factory.h"
 #include "units/unit.h"
 
@@ -220,6 +221,48 @@ auto UndeadAwakeningSystem::serialize_state() const -> QJsonArray {
     array.append(serialize_undead_zone(zone));
   }
   return array;
+}
+
+auto UndeadAwakeningSystem::capture_checkpoint() const -> QJsonObject {
+  QJsonObject zones;
+  for (const auto& zone : m_zones) {
+    zones[zone.definition.id] =
+        Game::CheckpointValues::write(zone.post_ring_phase_degrees,
+                                      zone.awakened_by_owner_id,
+                                      zone.anchor_pending,
+                                      zone.announced_awakening,
+                                      zone.announced_defeat);
+  }
+  return {{"timing",
+           Game::CheckpointValues::write(m_guardians.m_leash_poll,
+                                         m_allow_mission_start_trigger,
+                                         m_wave_multiplier)},
+          {"zones", zones}};
+}
+
+auto UndeadAwakeningSystem::restore_checkpoint(const QJsonObject& state) -> bool {
+  float multiplier = 0.0F;
+  if (!Game::CheckpointValues::read(state.value("timing"),
+                                    m_guardians.m_leash_poll,
+                                    m_allow_mission_start_trigger,
+                                    multiplier) ||
+      multiplier < k_min_wave_multiplier || multiplier > k_max_wave_multiplier ||
+      !state.value("zones").isObject()) {
+    return false;
+  }
+  const auto zones = state.value("zones").toObject();
+  for (auto& zone : m_zones) {
+    if (!Game::CheckpointValues::read(zones.value(zone.definition.id),
+                                      zone.post_ring_phase_degrees,
+                                      zone.awakened_by_owner_id,
+                                      zone.anchor_pending,
+                                      zone.announced_awakening,
+                                      zone.announced_defeat)) {
+      return false;
+    }
+  }
+  set_wave_multiplier(multiplier);
+  return true;
 }
 
 void UndeadAwakeningSystem::refresh_active_spawns(Engine::Core::World& world,

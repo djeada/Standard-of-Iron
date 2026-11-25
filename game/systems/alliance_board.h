@@ -1,10 +1,14 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
+#include <utility>
 #include <vector>
 
 #include "../core/entity_id.h"
 #include "resource_types.h"
+
+class QJsonObject;
 
 namespace Engine::Core {
 class World;
@@ -102,22 +106,36 @@ public:
   auto next_call_id() -> std::uint32_t { return ++m_last_call_id; }
 
   void queue_call(const AllyCallRequest& request);
+  [[nodiscard]] auto calls_for(int ally) const -> std::vector<AllyCallRequest>;
   [[nodiscard]] auto take_calls_for(int ally) -> std::vector<AllyCallRequest>;
+  auto remove_call(std::uint32_t call_id, int ally) -> bool;
 
   void record_call_answer(const AllyCallAnswer& answer);
   [[nodiscard]] auto take_call_answers() -> std::vector<AllyCallAnswer>;
 
   auto next_appeal_id() -> std::uint32_t { return ++m_last_appeal_id; }
+  [[nodiscard]] auto last_appeal_id() const -> std::uint32_t {
+    return m_last_appeal_id;
+  }
   void record_appeal(const AllyAppeal& appeal);
   [[nodiscard]] auto take_new_appeals() -> std::vector<AllyAppeal>;
   [[nodiscard]] auto open_appeal(std::uint32_t appeal_id) const -> const AllyAppeal*;
   void close_appeal(std::uint32_t appeal_id);
 
   void record_appeal_answer(const AllyAppealAnswer& answer);
+  [[nodiscard]] auto
+  appeal_answers_for(int ally) const -> std::vector<AllyAppealAnswer>;
   [[nodiscard]] auto take_appeal_answers_for(int ally) -> std::vector<AllyAppealAnswer>;
+  auto remove_appeal_answer(std::uint32_t appeal_id, int ally) -> bool;
 
   void record_appeal_reply(const AllyAppealReply& reply);
   [[nodiscard]] auto take_appeal_replies() -> std::vector<AllyAppealReply>;
+
+  [[nodiscard]] auto goodwill(int ally, int owner) const -> float;
+  void change_goodwill(int ally, int owner, float delta);
+
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   void clear();
   [[nodiscard]] auto epoch() const -> std::uint32_t { return m_epoch; }
@@ -132,6 +150,7 @@ private:
   std::vector<AllyAppeal> m_open_appeals;
   std::vector<AllyAppealAnswer> m_appeal_answers;
   std::vector<AllyAppealReply> m_appeal_replies;
+  std::map<std::pair<int, int>, float> m_goodwill;
 };
 
 [[nodiscard]] auto ally_call_kind_key(AllyCallKind kind) -> const char*;

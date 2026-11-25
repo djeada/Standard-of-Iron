@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QJsonObject>
+
 #include <cstdint>
 #include <vector>
 
@@ -50,6 +52,8 @@ struct QuarryRef {
 class WildlifeCensus {
 public:
   void reset();
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   void rebuild_threats(Engine::Core::World& world);
   void collect_animals(Engine::Core::World& world,

@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_motor.h"
+#include "game/commander/commander_motor.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -108,7 +108,7 @@ TEST_F(CommanderSharedTraversalTest, TheCommanderMotorAsksTheSharedWalkabilityLa
       bool const shared =
           Game::Systems::Walkability::can_stand(QVector3D(x, 0.0F, z), profile);
       bool const direct_control =
-          App::Core::CommanderMotor::is_walkable_at(*commander, x, z);
+          Game::Commander::CommanderMotor::is_walkable_at(*commander, x, z);
       ASSERT_EQ(shared, direct_control)
           << "direct control disagreed with the shared walkability layer at (" << x
           << ", " << z << ")";
@@ -159,9 +159,11 @@ TEST_F(CommanderSharedTraversalTest, SwitchingControlModeDoesNotChangeTraversal)
   for (float x = -6.0F; x <= 6.0F; x += 0.5F) {
     for (float z = -6.0F; z <= 6.0F; z += 0.5F) {
       commander_data->fpv_controlled = false;
-      bool const as_rts = App::Core::CommanderMotor::is_walkable_at(*commander, x, z);
+      bool const as_rts =
+          Game::Commander::CommanderMotor::is_walkable_at(*commander, x, z);
       commander_data->fpv_controlled = true;
-      bool const as_rpg = App::Core::CommanderMotor::is_walkable_at(*commander, x, z);
+      bool const as_rpg =
+          Game::Commander::CommanderMotor::is_walkable_at(*commander, x, z);
       ASSERT_EQ(as_rts, as_rpg)
           << "control mode changed traversability at (" << x << ", " << z << ")";
     }
@@ -236,7 +238,7 @@ TEST_F(CommanderSharedTraversalTest, DynamicBodiesAreNotWrittenIntoTheNavigation
         QVector3D(transform->position.x, 0.0F, transform->position.z), profile))
         << "a dynamic body at (" << transform->position.x << ", "
         << transform->position.z << ") turned its own cell into a blocker";
-    EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+    EXPECT_TRUE(Game::Commander::CommanderMotor::is_walkable_at(
         *commander, transform->position.x, transform->position.z));
   }
 }
@@ -332,10 +334,10 @@ TEST_F(CommanderSharedTraversalTest, AStaticBlockerIsRespectedIdenticallyInBothM
     Outcome outcome;
     outcome.z = transform->position.z;
     commander_data->fpv_controlled = false;
-    outcome.legal_as_rts = App::Core::CommanderMotor::is_walkable_at(
+    outcome.legal_as_rts = Game::Commander::CommanderMotor::is_walkable_at(
         *commander, transform->position.x, transform->position.z);
     commander_data->fpv_controlled = true;
-    outcome.legal_as_rpg = App::Core::CommanderMotor::is_walkable_at(
+    outcome.legal_as_rpg = Game::Commander::CommanderMotor::is_walkable_at(
         *commander, transform->position.x, transform->position.z);
     registry.clear();
     return outcome;
@@ -392,7 +394,7 @@ TEST_F(CommanderSharedTraversalTest, ModeSwitchingMidApproachChangesNothing) {
       << "re-entering direct control moved the body by itself";
 
   tick(300);
-  EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+  EXPECT_TRUE(Game::Commander::CommanderMotor::is_walkable_at(
       *commander, transform->position.x, transform->position.z));
   EXPECT_LT(transform->position.z, 0.0F) << "the commander walked into the house";
 

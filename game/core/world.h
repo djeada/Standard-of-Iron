@@ -110,6 +110,7 @@ public:
   plan_phase_schedule(SystemPhase phase) const -> std::vector<std::vector<std::size_t>>;
 
   [[nodiscard]] auto tick_id() const noexcept -> std::uint64_t { return m_tick_id; }
+  void restore_tick_id(std::uint64_t tick) noexcept { m_tick_id = tick; }
 
   [[nodiscard]] auto instance_id() const noexcept -> std::uint64_t {
     return m_instance_id;
@@ -140,6 +141,8 @@ public:
   }
 
   void ensure_render_snapshot();
+
+  [[nodiscard]] static auto make_render_world() -> std::shared_ptr<World>;
 
   [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
 

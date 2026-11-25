@@ -11,6 +11,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/economy/gather_loop_system.h"
@@ -37,7 +38,7 @@ protected:
 
   static void reset_shared_state() {
     Game::Map::TerrainService::instance().clear();
-    Game::Map::VisibilityService::instance().reset();
+    Game::Session::SessionContext::active().simulation_visibility().clear();
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
@@ -70,9 +71,14 @@ protected:
           {.type = node.type, .x = node.x + origin, .z = node.z + origin});
     }
     Game::Map::TerrainService::instance().initialize(map_def);
-    Game::Map::VisibilityService::instance().initialize(
-        map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
-    Game::Map::VisibilityService::instance().reveal_all();
+    Game::Session::SessionContext::active()
+        .simulation_visibility()
+        .grid_for(1)
+        .initialize(map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
+    Game::Session::SessionContext::active()
+        .simulation_visibility()
+        .grid_for(1)
+        .reveal_all();
     Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
     if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
       pathfinder->update_navigation_grid();
@@ -457,8 +463,10 @@ TEST_F(AutoGatherTest, ANewPriorityCallsOffTheWalkWithTheNode) {
 TEST_F(AutoGatherTest, ResourcesUnderFogAreLeftAlone) {
   lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F}});
   Game::Systems::OwnerRegistry::instance().set_local_player_id(1);
-  Game::Map::VisibilityService::instance().initialize(
-      k_grid_extent, k_grid_extent, 1.0F);
+  Game::Session::SessionContext::active()
+      .simulation_visibility()
+      .grid_for(1)
+      .initialize(k_grid_extent, k_grid_extent, 1.0F);
 
   Engine::Core::World world;
   auto* worker = add_builder(world, 0.0F, 0.0F);
@@ -468,7 +476,10 @@ TEST_F(AutoGatherTest, ResourcesUnderFogAreLeftAlone) {
 
   EXPECT_FALSE(builder_of(worker)->has_task_target);
 
-  Game::Map::VisibilityService::instance().reveal_all();
+  Game::Session::SessionContext::active()
+      .simulation_visibility()
+      .grid_for(1)
+      .reveal_all();
   think(world);
 
   EXPECT_TRUE(builder_of(worker)->has_task_target);
@@ -506,8 +517,10 @@ TEST_F(AutoGatherTest, APreferredNodeStillBeatsACloserSheep) {
 TEST_F(AutoGatherTest, ASheepUnderFogIsLeftAlone) {
   lay_out({});
   Game::Systems::OwnerRegistry::instance().set_local_player_id(1);
-  Game::Map::VisibilityService::instance().initialize(
-      k_grid_extent, k_grid_extent, 1.0F);
+  Game::Session::SessionContext::active()
+      .simulation_visibility()
+      .grid_for(1)
+      .initialize(k_grid_extent, k_grid_extent, 1.0F);
 
   Engine::Core::World world;
   auto* worker = add_builder(world, 0.0F, 0.0F);
@@ -518,7 +531,10 @@ TEST_F(AutoGatherTest, ASheepUnderFogIsLeftAlone) {
 
   EXPECT_EQ(builder_of(worker)->structure_task_entity_id, 0U);
 
-  Game::Map::VisibilityService::instance().reveal_all();
+  Game::Session::SessionContext::active()
+      .simulation_visibility()
+      .grid_for(1)
+      .reveal_all();
   think(world);
 
   EXPECT_NE(builder_of(worker)->structure_task_entity_id, 0U);

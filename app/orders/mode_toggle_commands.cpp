@@ -16,7 +16,6 @@
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/selection_service.h"
-#include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
 #include "scene/camera.h"
 
@@ -96,57 +95,6 @@ auto next_gate_mode(Engine::Core::World& world, Engine::Core::EntityID first_gat
     return Mode::Automatic;
   }
   return Mode::ForcedOpen;
-}
-
-struct RunCandidate {
-  Engine::Core::Entity* entity;
-  Engine::Core::StaminaComponent* stamina;
-  Game::Systems::NationID nation_id;
-  Game::Units::SpawnType spawn_type;
-};
-
-auto run_candidates(Engine::Core::World& world,
-                    const std::vector<Engine::Core::EntityID>& selected)
-    -> std::vector<RunCandidate> {
-  std::vector<RunCandidate> candidates;
-  candidates.reserve(selected.size());
-  for (const auto id : selected) {
-    auto* entity = world.get_entity(id);
-    const auto* unit = entity != nullptr
-                           ? entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
-    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
-      continue;
-    }
-    candidates.push_back({entity,
-                          entity->get_component<Engine::Core::StaminaComponent>(),
-                          unit->nation_id,
-                          unit->spawn_type});
-  }
-  return candidates;
-}
-
-void set_run_requested(RunCandidate& candidate, bool enable) {
-  if (!enable) {
-    if (candidate.stamina != nullptr) {
-      candidate.stamina->run_requested = false;
-      candidate.stamina->is_running = false;
-    }
-    return;
-  }
-  if (candidate.stamina == nullptr) {
-    candidate.stamina =
-        candidate.entity->add_component<Engine::Core::StaminaComponent>();
-    const auto troop_type = Game::Units::spawn_typeToTroopType(candidate.spawn_type);
-    if (troop_type.has_value()) {
-      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-          candidate.nation_id, *troop_type);
-      candidate.stamina->initialize_from_stats(profile.combat.max_stamina,
-                                               profile.combat.stamina_regen_rate,
-                                               profile.combat.stamina_depletion_rate);
-    }
-  }
-  candidate.stamina->run_requested = true;
 }
 
 auto finished(CommandResult result) -> CommandResult {
@@ -396,20 +344,27 @@ auto ModeToggleCommands::on_run_command() -> CommandResult {
     return result;
   }
 
-  auto candidates = run_candidates(*m_world, selected);
+  ModeTally tally;
+  std::vector<Engine::Core::EntityID> candidates;
+  for (const auto id : selected) {
+    const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
+      continue;
+    }
+    candidates.push_back(id);
+    ++tally.eligible;
+    const auto* stamina = m_world->try_get<Engine::Core::StaminaComponent>(id);
+    if (stamina != nullptr && stamina->run_requested) {
+      ++tally.active;
+    }
+  }
   if (candidates.empty()) {
     return result;
   }
-
-  const auto already_running = std::count_if(
-      candidates.begin(), candidates.end(), [](const RunCandidate& candidate) {
-        return candidate.stamina != nullptr && candidate.stamina->run_requested;
-      });
-  const bool enable = already_running < static_cast<std::ptrdiff_t>(candidates.size());
-
-  for (auto& candidate : candidates) {
-    set_run_requested(candidate, enable);
-  }
+  const bool enable = tally.should_enable();
+  App::Orders::submit_local_command(
+      m_world,
+      Game::Command::SetRunMode{.units = std::move(candidates), .active = enable});
 
   if (enable) {
     Game::Audio::play_cue(

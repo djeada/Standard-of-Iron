@@ -12,15 +12,14 @@ placement services' mutating entry points, and not by writing the fields of
 That is what lets the same client drive a local match, a remote one and a
 replay: the payload is the only thing that crosses.
 
-Two things are checked in app/ and ui/:
+The gate checks these rules in app/ and ui/:
 
   * no call to a service entry point that applies an order (the list below is
     the set the dispatcher calls; keep it in step with command_dispatcher.cpp);
   * no assignment to the task fields of BuilderProductionComponent.
-
-The commander's first-person control mode is a local input mode, not an
-order; the files that implement it may reset the controlled commander's own
-movement.
+  * no direct construction/removal of gameplay components or writes to the
+    run and production rally fields. Exceptions identify the component and
+    the file that currently owns the mutation.
 
   usage: check-command-boundary.py [repo-root]
 """
@@ -34,15 +33,10 @@ from pathlib import Path
 CLIENT_LAYERS = ("app", "ui")
 
 
-FPV_FILES = {
-    "app/commander/commander_mode_coordinator.cpp",
-    "app/commander/commander_control_controller.cpp",
-}
-
 ORDER_ENTRY_POINTS = re.compile(
     r"""
     \b(?:
-        OrderService::(?!reset_movement\b)\w+
+        OrderService::\w+
       | CommandService::(?:move_units|move_unit|issue_ground_move|attack_target)
       | ProductionService::(?:start_production|set_rally_point)
       | MarketplaceSystem::instance\(\)\.(?:buy|sell)_resource
@@ -57,8 +51,6 @@ ORDER_ENTRY_POINTS = re.compile(
     """,
     re.VERBOSE,
 )
-
-FPV_ALLOWED = re.compile(r"\bOrderService::reset_movement\b")
 
 BUILDER_TASK_WRITE = re.compile(
     r"""
@@ -77,6 +69,26 @@ BUILDER_TASK_WRITE = re.compile(
 
 SOURCE_SUFFIXES = (".h", ".cpp")
 
+COMPONENT_MUTATION = re.compile(
+    r"\b(?:add_component|remove_component|get_or_add_component|remove)\s*<\s*"
+    r"(?:Engine::Core::)?(?P<component>\w+Component)\b"
+)
+COMPONENT_MUTATION_ALLOWED = {
+    # The construction preview uses a separate render world.
+    "app/economy/construction_preview.cpp": {
+        "ConstructionPreviewComponent",
+        "RenderableComponent",
+        "TransformComponent",
+    },
+    "ui/commander_portrait_scenes.cpp": {"ShowcaseRoutineComponent"},
+    "app/commander/commander_presentation.cpp": {
+        "CommanderPresentationSampleComponent"
+    },
+}
+ORDER_FIELD_WRITE = re.compile(
+    r"->\s*(?:fpv_controlled|run_requested|is_running|rally_x|rally_z|rally_set|rally_default)\s*=(?!=)"
+)
+
 
 def sources(root: Path) -> list[Path]:
     found: list[Path] = []
@@ -91,9 +103,13 @@ def violations(root: Path) -> list[str]:
     found: list[str] = []
     for source in sources(root):
         relative = source.relative_to(root).as_posix()
-        for number, line in enumerate(
-            source.read_text(errors="ignore").splitlines(), 1
-        ):
+        contents = source.read_text(errors="ignore")
+        for match in COMPONENT_MUTATION.finditer(contents):
+            component = match.group("component")
+            if component not in COMPONENT_MUTATION_ALLOWED.get(relative, ()):
+                number = contents.count("\n", 0, match.start()) + 1
+                found.append(f"{relative}:{number}: mutates component {component}")
+        for number, line in enumerate(contents.splitlines(), 1):
             stripped = line.lstrip()
             if stripped.startswith("//") or stripped.startswith("*"):
                 continue
@@ -102,14 +118,15 @@ def violations(root: Path) -> list[str]:
                 found.append(
                     f"{relative}:{number}: applies an order itself: {match.group(0).strip()}"
                 )
-            if relative not in FPV_FILES and FPV_ALLOWED.search(line):
-                found.append(
-                    f"{relative}:{number}: OrderService::reset_movement outside the FPV files"
-                )
             match = BUILDER_TASK_WRITE.search(line)
             if match:
                 found.append(
                     f"{relative}:{number}: writes a builder task field: {match.group(0).strip()}"
+                )
+            match = ORDER_FIELD_WRITE.search(line)
+            if match:
+                found.append(
+                    f"{relative}:{number}: writes an order field: {match.group(0).strip()}"
                 )
     return found
 

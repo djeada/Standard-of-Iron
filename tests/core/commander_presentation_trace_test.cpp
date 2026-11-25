@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_presentation_trace.h"
+#include "game/commander/commander_presentation_trace.h"
 #include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
@@ -86,7 +86,7 @@ TEST_F(CommanderPresentationTraceTest, WalkingRecordsMotorPoseVelocityAndSource)
   ASSERT_TRUE(trace.valid);
   EXPECT_EQ(trace.sequence, 30U);
   EXPECT_EQ(trace.motor.displacement_source,
-            App::Core::CommanderDisplacementSource::Walk);
+            Game::Commander::CommanderDisplacementSource::Walk);
   EXPECT_GT(trace.motor.requested_speed, 0.0F);
   EXPECT_GT(trace.motor.actual_velocity.length(), 0.0F);
   EXPECT_NEAR(trace.motor.dt, k_dt, 1.0e-6F);
@@ -301,16 +301,15 @@ TEST_F(CommanderPresentationTraceTest, AJumpPressedJustBeforeLandingIsHeldThenTa
   CommanderControlController controller;
   Render::GL::Camera camera;
   constexpr float k_dt = 1.0F / 60.0F;
-  auto const& edges = controller.input_edges();
 
   controller.request_jump();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
   ASSERT_TRUE(data->jump_active);
-  ASSERT_EQ(edges.jump_consumed_sequence, 1U);
+  ASSERT_EQ(controller.input_edges().jump_consumed_sequence, 1U);
 
   controller.request_jump();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
-  EXPECT_EQ(edges.jump_refused_sequence, 1U)
+  EXPECT_EQ(controller.input_edges().jump_refused_sequence, 1U)
       << "a press early in the jump is outside the buffer and is refused at once";
 
   for (int tick = 0; tick < 200 && data->jump_active && data->jump_phase < 0.9F;
@@ -321,19 +320,20 @@ TEST_F(CommanderPresentationTraceTest, AJumpPressedJustBeforeLandingIsHeldThenTa
 
   controller.request_jump();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
-  EXPECT_EQ(edges.jump_consumed_sequence, 1U);
-  EXPECT_EQ(edges.jump_refused_sequence, 1U)
+  EXPECT_EQ(controller.input_edges().jump_consumed_sequence, 1U);
+  EXPECT_EQ(controller.input_edges().jump_refused_sequence, 1U)
       << "a press just before landing is held, neither consumed nor refused yet";
 
   bool landed = false;
-  for (int tick = 0; tick < 30 && edges.jump_consumed_sequence < 2U; ++tick) {
+  for (int tick = 0; tick < 30 && controller.input_edges().jump_consumed_sequence < 2U;
+       ++tick) {
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
     landed = landed || !data->jump_active;
   }
   EXPECT_TRUE(landed) << "the held press must not restart the jump in the air";
-  EXPECT_EQ(edges.jump_consumed_sequence, 2U);
-  EXPECT_EQ(edges.jump_refused_sequence, 1U);
-  EXPECT_EQ(edges.jump_request_sequence, 3U);
+  EXPECT_EQ(controller.input_edges().jump_consumed_sequence, 2U);
+  EXPECT_EQ(controller.input_edges().jump_refused_sequence, 1U);
+  EXPECT_EQ(controller.input_edges().jump_request_sequence, 3U);
   EXPECT_TRUE(data->jump_active);
 }
 
@@ -346,15 +346,14 @@ TEST_F(CommanderPresentationTraceTest, ADodgePressedDuringRecoveryChainsOneRoll)
   CommanderControlController controller;
   Render::GL::Camera camera;
   constexpr float k_dt = 1.0F / 60.0F;
-  auto const& edges = controller.input_edges();
 
   controller.request_dodge();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
-  ASSERT_EQ(edges.dodge_consumed_sequence, 1U);
+  ASSERT_EQ(controller.input_edges().dodge_consumed_sequence, 1U);
 
   controller.request_dodge();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
-  EXPECT_EQ(edges.dodge_refused_sequence, 1U)
+  EXPECT_EQ(controller.input_edges().dodge_refused_sequence, 1U)
       << "a press at the start of the roll is outside the buffer";
 
   for (int tick = 0; tick < 24; ++tick) {
@@ -362,27 +361,30 @@ TEST_F(CommanderPresentationTraceTest, ADodgePressedDuringRecoveryChainsOneRoll)
   }
   controller.request_dodge();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
-  EXPECT_EQ(edges.dodge_consumed_sequence, 1U) << "the press is held, not taken early";
-  EXPECT_EQ(edges.dodge_refused_sequence, 1U);
+  EXPECT_EQ(controller.input_edges().dodge_consumed_sequence, 1U)
+      << "the press is held, not taken early";
+  EXPECT_EQ(controller.input_edges().dodge_refused_sequence, 1U);
 
   controller.request_dodge();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
-  EXPECT_EQ(edges.dodge_refused_sequence, 2U)
+  EXPECT_EQ(controller.input_edges().dodge_refused_sequence, 2U)
       << "a second press landing on the held one merges and is refused";
 
   for (int tick = 0; tick < 30; ++tick) {
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
   }
-  EXPECT_EQ(edges.dodge_consumed_sequence, 2U)
+  EXPECT_EQ(controller.input_edges().dodge_consumed_sequence, 2U)
       << "a held press starts exactly one roll";
-  EXPECT_EQ(edges.dodge_request_sequence,
-            edges.dodge_consumed_sequence + edges.dodge_refused_sequence);
+  EXPECT_EQ(controller.input_edges().dodge_request_sequence,
+            controller.input_edges().dodge_consumed_sequence +
+                controller.input_edges().dodge_refused_sequence);
 
   controller.request_dodge();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
   controller.release_all_input();
-  EXPECT_EQ(edges.dodge_request_sequence,
-            edges.dodge_consumed_sequence + edges.dodge_refused_sequence)
+  EXPECT_EQ(controller.input_edges().dodge_request_sequence,
+            controller.input_edges().dodge_consumed_sequence +
+                controller.input_edges().dodge_refused_sequence)
       << "a held press abandoned by releasing control is refused, not lost";
 }
 
@@ -410,7 +412,7 @@ TEST_F(CommanderPresentationTraceTest, ATickConsumesEachEdgeAtMostOnce) {
 }
 
 TEST(CommanderDisplacementSourceTest, EverySourceHasAStableName) {
-  using App::Core::CommanderDisplacementSource;
+  using Game::Commander::CommanderDisplacementSource;
   EXPECT_STREQ(displacement_source_name(CommanderDisplacementSource::None), "none");
   EXPECT_STREQ(displacement_source_name(CommanderDisplacementSource::Walk), "walk");
   EXPECT_STREQ(displacement_source_name(CommanderDisplacementSource::DodgeRoll),

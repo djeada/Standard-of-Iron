@@ -49,18 +49,16 @@ void spawn_fallback_archer(Engine::Core::World& world, MatchLoadResult& result) 
   }
 }
 
-[[nodiscard]] auto local_player_has_barracks(Engine::Core::World& world) -> bool {
-  auto& owners = Game::Session::session_for(world).owners();
+[[nodiscard]] auto owner_has_barracks(Engine::Core::World& world, int owner) -> bool {
   for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
-    if (unit.spawn_type == Game::Units::SpawnType::Barracks &&
-        owners.is_player(unit.owner_id)) {
+    if (unit.spawn_type == Game::Units::SpawnType::Barracks && unit.owner_id == owner) {
       return true;
     }
   }
   return false;
 }
 
-void spawn_default_barracks(Engine::Core::World& world) {
+void spawn_default_barracks(Engine::Core::World& world, int owner) {
   auto& session = Game::Session::session_for(world);
   auto& nations = session.nations();
   auto registry = MapTransformer::get_factory_registry();
@@ -70,7 +68,7 @@ void spawn_default_barracks(Engine::Core::World& world) {
 
   Game::Units::SpawnParams params;
   params.position = QVector3D(-4.0F, 0.0F, -3.0F);
-  params.player_id = session.owners().get_local_player_id();
+  params.player_id = owner;
   params.spawn_type = Game::Units::SpawnType::Barracks;
   params.ai_controlled = !session.owners().is_player(params.player_id);
   if (const auto* nation = nations.get_nation_for_player(params.player_id)) {
@@ -142,8 +140,12 @@ auto load_match(const QString& map_path,
     spawn_fallback_archer(world, result);
   }
 
-  if (allow_default_player_barracks && !local_player_has_barracks(world)) {
-    spawn_default_barracks(world);
+  if (allow_default_player_barracks) {
+    for (const int owner : session.human_owners()) {
+      if (!owner_has_barracks(world, owner)) {
+        spawn_default_barracks(world, owner);
+      }
+    }
   }
 
   result.map_context = context;

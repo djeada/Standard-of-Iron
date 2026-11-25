@@ -72,15 +72,7 @@ void register_runtime_systems(Engine::Core::World& world) {
              if (system != nullptr) {
                system->restore_state(value.toObject());
              }
-           },
-       .digest = [](const Game::Session::SnapshotScope& scope) -> QJsonValue {
-         auto* system =
-             scope.world != nullptr ? scope.world->get_system<AISystem>() : nullptr;
-         if (system == nullptr) {
-           return {};
-         }
-         return system->serialize_state();
-       }});
+           }});
 
   world.add_system(std::make_unique<Game::Command::CommandSystem>(),
                    Engine::Core::SystemPhase::Input);
@@ -144,8 +136,10 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<RockfallSystem>(RockfallSystem::Services{
                        .terrain = session.terrain(), .owners = session.owners()}),
                    Engine::Core::SystemPhase::Combat);
-  world.add_system(std::make_unique<AISystem>(AISystem::Services{
-                       .owners = session.owners(), .nations = session.nations()}),
+  world.add_system(std::make_unique<AISystem>(
+                       AISystem::Services{.owners = session.owners(),
+                                          .nations = session.nations(),
+                                          .authority = !session.log_follower()}),
                    Engine::Core::SystemPhase::Strategy);
   world.add_system(std::make_unique<UndeadAwakeningSystem>(
                        UndeadAwakeningSystem::Services{.terrain = session.terrain(),

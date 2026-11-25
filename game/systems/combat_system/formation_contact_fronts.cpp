@@ -12,6 +12,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../formation_combat_geometry.h"
+#include "../formation_geometry_internal.h"
 #include "combat_utils.h"
 #include "structure_combat.h"
 
@@ -37,48 +38,29 @@ void signature_combine(std::uint64_t& seed, std::uint64_t value) {
 
 auto pair_signature(const Engine::Core::Entity& attacker,
                     const Engine::Core::Entity& target) -> std::uint64_t {
-  std::uint64_t signature = 0xcbf29ce484222325ULL;
+  std::uint64_t signature = FormationCombat::formation_cache_generation();
   for (auto const* entity : {&attacker, &target}) {
-    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform != nullptr) {
+    const auto key = FormationCombat::Detail::cache_key(*entity);
+    signature_combine(signature, key.registry);
+    signature_combine(signature, key.entity);
+    signature_combine(signature, FormationCombat::Detail::layout_signature(*entity));
+    const auto revisions = FormationCombat::Detail::layout_revisions_of(*entity);
+    signature_combine(signature, revisions.has_traversal);
+    signature_combine(signature, revisions.traversal);
+    signature_combine(signature, revisions.has_presentation);
+    signature_combine(signature, revisions.presentation);
+    if (const auto* transform =
+            entity->get_component<Engine::Core::TransformComponent>()) {
       signature_combine(signature, std::bit_cast<std::uint32_t>(transform->position.x));
       signature_combine(signature, std::bit_cast<std::uint32_t>(transform->position.z));
       signature_combine(signature, std::bit_cast<std::uint32_t>(transform->rotation.y));
-      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->scale.x));
-      signature_combine(signature, std::bit_cast<std::uint32_t>(transform->scale.z));
     }
-    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr) {
-      signature_combine(signature, static_cast<std::uint64_t>(unit->health));
-      signature_combine(signature, static_cast<std::uint64_t>(unit->max_health));
-      signature_combine(signature, static_cast<std::uint64_t>(unit->spawn_type));
-      signature_combine(signature, static_cast<std::uint64_t>(unit->nation_id));
-      signature_combine(
-          signature,
-          static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
-      signature_combine(signature, static_cast<std::uint64_t>(unit->squad_strength));
-    }
-    auto const* contact =
+    const auto* contact =
         entity->get_component<Engine::Core::FormationContactComponent>();
-    signature_combine(signature, contact != nullptr && contact->in_contact ? 1U : 0U);
-    auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
-    signature_combine(signature, attack != nullptr && attack->in_melee_lock ? 1U : 0U);
-    if (auto const* roster =
-            entity
-                ->get_component<Engine::Core::FormationRosterPresentationComponent>()) {
-      signature_combine(signature, roster->revision);
-      for (std::uint8_t const alive : roster->alive) {
-        signature_combine(signature, alive);
-      }
-    }
-    if (auto const* casualties =
-            entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>()) {
-      for (auto const& casualty : casualties->entries) {
-        signature_combine(signature, casualty.slot_index);
-        signature_combine(signature, casualty.has_local_anchor ? 1U : 0U);
-        signature_combine(signature, std::bit_cast<std::uint32_t>(casualty.local_x));
-        signature_combine(signature, std::bit_cast<std::uint32_t>(casualty.local_z));
-      }
+    signature_combine(signature, contact != nullptr && contact->in_contact);
+    if (const auto* attack = entity->get_component<Engine::Core::AttackComponent>()) {
+      signature_combine(signature, attack->in_melee_lock);
+      signature_combine(signature, std::bit_cast<std::uint32_t>(attack->melee_range));
     }
   }
   return signature;

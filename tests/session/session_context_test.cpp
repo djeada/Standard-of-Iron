@@ -6,6 +6,7 @@
 #include <thread>
 #include <utility>
 
+#include "game/command/command_queue.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -25,6 +26,26 @@ namespace {
 using Game::Session::ScopedSession;
 using Game::Session::ScopedThreadSession;
 using Game::Session::SessionContext;
+
+TEST(SessionContextTest, ALogFollowerWaitsUntilTheAuthorityCompletesATick) {
+  using namespace Game::Command;
+  SessionContext follower;
+  auto& queue = follower.commands();
+  queue.set_replay_only(true);
+  EXPECT_EQ(follower.advance_from_log(100), 0);
+  ASSERT_TRUE(queue.log().append_replicated({1, 1, 0, Source::Script, TickComplete{}}));
+  ASSERT_TRUE(queue.log().append_replicated(
+      {2, 2, 0, Source::LocalPlayer, ClockChange{.speed = 2.0}}));
+  EXPECT_EQ(follower.advance_from_log(100), 1);
+  EXPECT_EQ(follower.clock().tick(), 1U);
+  ASSERT_TRUE(queue.log().append_replicated({2, 3, 0, Source::Script, TickComplete{}}));
+  EXPECT_FALSE(
+      queue.log().append_replicated({2, 4, 1, Source::LocalPlayer, Payload{Stop{}}}));
+  EXPECT_EQ(follower.advance_from_log(100), 1);
+  EXPECT_EQ(follower.clock().tick(), 2U);
+  EXPECT_DOUBLE_EQ(follower.clock().time_scale(), 2.0);
+  EXPECT_EQ(follower.clock().dropped_ticks(), 0U);
+}
 
 TEST(SessionContextTest, TwoMatchesCoexistWithoutSharingState) {
   SessionContext first;

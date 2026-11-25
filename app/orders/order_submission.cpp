@@ -90,6 +90,8 @@ auto submit_player_order(Engine::Core::World& world,
   auto validation = Game::Command::validate(world, command);
   outcome.rejection = validation.rejection;
   outcome.unit_count = payload_unit_count(validation.command.payload);
+  const bool queued =
+      Game::Command::submit(world, command.source, command.owner_id, command.payload);
   if (!validation.accepted()) {
     outcome.status = OrderStatus::Rejected;
     outcome.failure = failure_for(validation.rejection);
@@ -97,11 +99,7 @@ auto submit_player_order(Engine::Core::World& world,
     return outcome;
   }
 
-  Game::Command::submit(world,
-                        Game::Command::Source::LocalPlayer,
-                        owner_id,
-                        std::move(validation.command.payload));
-  outcome.status = OrderStatus::Accepted;
+  outcome.status = queued ? OrderStatus::Accepted : OrderStatus::NotIssued;
   return outcome;
 }
 

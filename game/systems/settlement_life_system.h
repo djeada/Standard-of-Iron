@@ -2,6 +2,8 @@
 
 #include "../core/system.h"
 
+class QJsonArray;
+
 namespace Game::Systems {
 
 class SettlementLifeSystem : public Engine::Core::System {
@@ -24,6 +26,8 @@ public:
   ~SettlementLifeSystem() override = default;
 
   void update(Engine::Core::World* world, float delta_time) override;
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonArray;
+  [[nodiscard]] auto restore_checkpoint(const QJsonArray& state) -> bool;
 
 private:
   float m_adoption_cooldown{k_adoption_interval};

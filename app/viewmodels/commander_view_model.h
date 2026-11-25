@@ -133,17 +133,19 @@ public:
   should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
 
   void update_control_mode(float dt);
+  void publish_commander_tick(float dt);
   void sample_frame_intent();
   void update_camera_presentation(float dt);
   [[nodiscard]] auto frame_intent() const -> const CommanderFrameIntent& {
     return m_control.frame_intent();
   }
-  [[nodiscard]] auto input_edges() const -> const App::Core::CommanderInputTrace& {
+  [[nodiscard]] auto input_edges() const -> Game::Commander::CommanderInputTrace {
     return m_control.input_edges();
   }
 
   void restore_direct_control_if_ready();
-  void apply_replayed_actions();
+  void apply_logged_actions();
+  void leave_commander_mode();
   [[nodiscard]] auto follows_replay() const -> bool;
   void render_effects();
   [[nodiscard]] auto time_effect_scale(float scaled_dt, bool paused) -> float;
@@ -207,8 +209,8 @@ private:
   void cancel_active_placement();
   void seed_flag_rally_preview_from_view_center();
   [[nodiscard]] auto ignores_player_input() const -> bool;
-  void record_action(Game::Command::CommanderAction action);
-  void apply_replayed_action(const Game::Command::CommanderActionRecord& record);
+  auto queue_action(Game::Command::CommanderAction action) -> bool;
+  void apply_logged_action(const Game::Command::CommanderActionRecord& record);
   void release_for_rally();
 
   const App::Core::ClientContext& m_context;
@@ -231,7 +233,7 @@ private:
   App::Core::Published<QVariantMap> m_status;
 
   bool m_status_published_empty = false;
-  bool m_applying_replay = false;
+  bool m_applying_logged_action = false;
 
   App::Core::CommanderFinale m_finale;
   std::atomic<int> m_finale_kind{0};

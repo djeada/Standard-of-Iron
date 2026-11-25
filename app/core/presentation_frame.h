@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -12,10 +13,15 @@
 #include "game/systems/target_focus.h"
 #include "scene/camera.h"
 
+namespace Engine::Core {
+class World;
+}
+
 namespace App::Core {
 
 struct PresentationFrame {
   Render::GL::Camera camera;
+  std::shared_ptr<Engine::Core::World> construction_previews;
   std::vector<Engine::Core::EntityID> selected_ids;
   Game::Systems::AttackTargetingHighlights attack_targeting;
   Game::Systems::InteractionTargetingHighlights interaction_targeting;

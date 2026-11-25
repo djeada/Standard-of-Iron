@@ -21,7 +21,8 @@
 #include "game/audio/audio_system.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
-#include "game/command/replay.h"
+#include "game/command/command_system.h"
+#include "game/commander/commander_handoff.h"
 #include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -126,22 +127,7 @@ auto CommanderViewModel::find_local_commander() const -> Engine::Core::Entity* {
   if (world == nullptr) {
     return nullptr;
   }
-  const int owner = m_context.local_owner_id;
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr) {
-      continue;
-    }
-    if (unit->owner_id == owner && unit->health > 0) {
-      return entity;
-    }
-  }
-  return nullptr;
+  return Game::Commander::find_commander(*world, m_context.local_owner_id);
 }
 
 auto CommanderViewModel::controlled_commander_entity() const -> Engine::Core::Entity* {
@@ -157,16 +143,23 @@ void CommanderViewModel::toggle_mode() {
     return;
   }
   const auto frame_lock = m_host.lock_frame();
-  if (active()) {
-    exit_mode();
+  if (queue_action(Game::Command::CommanderAction::ToggleControl)) {
     return;
   }
-  enter_mode();
+  if (active()) {
+    leave_commander_mode();
+  } else {
+    enter_mode();
+  }
 }
 
 void CommanderViewModel::enter_mode() {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
+  if (ignores_player_input() ||
+      queue_action(Game::Command::CommanderAction::EnterControl)) {
+    return;
+  }
   auto* commander = find_local_commander();
   auto* commander_camera = m_context.commander_camera;
   if ((m_context.level != nullptr && m_context.level->is_spectator_mode) ||
@@ -207,6 +200,9 @@ void CommanderViewModel::enter_mode() {
   m_camera.set_following_selection(false);
 
   m_controlled_commander_id = effects.controlled_commander_id;
+  if (auto* system = m_context.world->get_system<Game::Command::CommandSystem>()) {
+    m_control.bind_runtime(system->commander_runtime(m_context.local_owner_id));
+  }
   if (effects.commander_view_yaw.has_value()) {
     m_control.set_view_yaw(*effects.commander_view_yaw);
   }
@@ -217,11 +213,8 @@ void CommanderViewModel::enter_mode() {
   enter_commander_runtime_mode();
 
   if (auto* world = m_context.world; world != nullptr) {
-    (void)m_control.update(*world,
-                           m_controlled_commander_id,
-                           m_context.local_owner_id,
-                           *commander_camera,
-                           0.0F);
+    m_control.update_camera_presentation(
+        *world, m_controlled_commander_id, *commander_camera, 0.0F);
   }
   if (m_context.rts_camera != nullptr && m_rts_camera_bookmark.valid &&
       !Game::Accessibility::MotionSettings::reduced_motion()) {
@@ -233,7 +226,6 @@ void CommanderViewModel::enter_mode() {
   }
   select_controlled_commander();
   m_mode->complete_transition();
-  record_action(Game::Command::CommanderAction::EnterControl);
   if (m_context.feedback != nullptr) {
     App::Core::PlayerFeedbackEvent event;
     event.type = App::Core::PlayerFeedbackType::CommanderModeEntered;
@@ -244,6 +236,17 @@ void CommanderViewModel::enter_mode() {
 }
 
 void CommanderViewModel::exit_mode() {
+  const auto frame_lock = m_host.lock_frame();
+  if (!m_applying_logged_action && follows_replay()) {
+    return;
+  }
+  if (!finale_active() && queue_action(Game::Command::CommanderAction::ExitControl)) {
+    return;
+  }
+  leave_commander_mode();
+}
+
+void CommanderViewModel::leave_commander_mode() {
   const auto frame_lock = m_host.lock_frame();
   const bool was_active = active();
   clear_finale();
@@ -264,6 +267,7 @@ void CommanderViewModel::exit_mode() {
            m_rts_follow_selection_snapshot.value_or(false)});
   enter_rts_runtime_mode();
   m_controlled_commander_id = effects.controlled_commander_id;
+  m_control.bind_runtime(nullptr);
 
   restore_rts_camera();
   emit active_camera_requested(m_context.rts_camera);
@@ -275,7 +279,7 @@ void CommanderViewModel::exit_mode() {
   m_mode->force_inactive();
 
   if (was_active) {
-    record_action(Game::Command::CommanderAction::ExitControl);
+    (void)queue_action(Game::Command::CommanderAction::ExitControl);
     if (m_context.feedback != nullptr) {
       App::Core::PlayerFeedbackEvent event;
       event.type = App::Core::PlayerFeedbackType::CommanderModeExited;
@@ -365,6 +369,7 @@ void CommanderViewModel::release_input() {
     return;
   }
   const auto frame_lock = m_host.lock_frame();
+  (void)queue_action(Game::Command::CommanderAction::ReleaseInput);
   m_control.release_all_input();
 }
 
@@ -589,7 +594,7 @@ void CommanderViewModel::trigger_rally() {
     m_control.note_refusal("commander.rally");
     return;
   }
-  record_action(Game::Command::CommanderAction::ReleaseForRally);
+  (void)queue_action(Game::Command::CommanderAction::ReleaseForRally);
   release_input_for_rally();
   m_rally_preview.reset();
 }
@@ -623,7 +628,9 @@ void CommanderViewModel::cycle_lock_on() {
   if (!active() || world == nullptr) {
     return;
   }
-  record_action(Game::Command::CommanderAction::CycleLockOn);
+  if (queue_action(Game::Command::CommanderAction::CycleLockOn)) {
+    return;
+  }
   m_control.cycle_lock_on_target(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
@@ -637,7 +644,9 @@ void CommanderViewModel::toggle_lock_on() {
   if (!active() || world == nullptr) {
     return;
   }
-  record_action(Game::Command::CommanderAction::ToggleLockOn);
+  if (queue_action(Game::Command::CommanderAction::ToggleLockOn)) {
+    return;
+  }
   m_control.toggle_lock_on_target(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
@@ -651,8 +660,10 @@ void CommanderViewModel::switch_lock_target(int direction) {
   if (!active() || world == nullptr) {
     return;
   }
-  record_action(direction < 0 ? Game::Command::CommanderAction::SwitchLockLeft
-                              : Game::Command::CommanderAction::SwitchLockRight);
+  if (queue_action(direction < 0 ? Game::Command::CommanderAction::SwitchLockLeft
+                                 : Game::Command::CommanderAction::SwitchLockRight)) {
+    return;
+  }
   m_control.switch_lock_on_target(
       *world, m_controlled_commander_id, m_context.local_owner_id, direction);
 }
@@ -701,7 +712,9 @@ void CommanderViewModel::toggle_camera_mode() {
   if (!active() || world == nullptr) {
     return;
   }
-  record_action(Game::Command::CommanderAction::ToggleCameraMode);
+  if (queue_action(Game::Command::CommanderAction::ToggleCameraMode)) {
+    return;
+  }
   m_control.toggle_close_camera_mode(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
@@ -715,7 +728,9 @@ void CommanderViewModel::toggle_weapon_stance() {
   if (!active() || world == nullptr) {
     return;
   }
-  record_action(Game::Command::CommanderAction::ToggleWeaponStance);
+  if (queue_action(Game::Command::CommanderAction::ToggleWeaponStance)) {
+    return;
+  }
   m_control.toggle_weapon_stance(
       *world, m_controlled_commander_id, m_context.local_owner_id);
 }
@@ -782,7 +797,7 @@ void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
        .cursor_mode = (m_context.cursor != nullptr ? m_context.cursor->mode()
                                                    : CursorMode::Normal)});
   if (effects.reset_commander_input) {
-    record_action(Game::Command::CommanderAction::ReleaseForRally);
+    (void)queue_action(Game::Command::CommanderAction::ReleaseForRally);
     release_input_for_rally();
   }
   if (effects.clear_rally_preview) {
@@ -926,7 +941,7 @@ void CommanderViewModel::update_control_mode(float dt) {
       m_finale_body_live = false;
       return;
     }
-    exit_mode();
+    leave_commander_mode();
     return;
   }
 }
@@ -936,6 +951,12 @@ void CommanderViewModel::sample_frame_intent() {
     return;
   }
   m_control.sample_frame_intent(m_context.window);
+}
+
+void CommanderViewModel::publish_commander_tick(float dt) {
+  if (active() && m_context.world != nullptr) {
+    m_control.publish_runtime_tick(*m_context.world, m_controlled_commander_id, dt);
+  }
 }
 
 void CommanderViewModel::update_camera_presentation(float dt) {
@@ -995,11 +1016,11 @@ auto CommanderViewModel::follows_replay() const -> bool {
     return false;
   }
   auto* session = Game::Session::SessionContext::for_world(*world);
-  return session != nullptr && session->replay_player() != nullptr;
+  return session != nullptr && session->log_follower();
 }
 
 auto CommanderViewModel::ignores_player_input() const -> bool {
-  return finale_active() || (!m_applying_replay && follows_replay());
+  return !m_applying_logged_action && (finale_active() || follows_replay());
 }
 
 auto CommanderViewModel::finale() const -> QString {
@@ -1043,6 +1064,7 @@ auto CommanderViewModel::begin_finale(App::Core::CommanderFinale::Kind kind) -> 
                            transform->position.x, transform->position.z),
                        transform->position.z);
   }
+  (void)queue_action(Game::Command::CommanderAction::ReleaseInput);
   m_control.release_all_input();
   m_finale.begin(kind, ground, camera->get_position(), camera->get_target());
   m_finale_body_live = kind != App::Core::CommanderFinale::Kind::Fallen;
@@ -1082,7 +1104,7 @@ void CommanderViewModel::conclude_for_outcome(const QString& victory_state) {
     kind = unit != nullptr && unit->health > 0 ? Kind::Defeat : Kind::Fallen;
   }
   if (!begin_finale(kind)) {
-    exit_mode();
+    leave_commander_mode();
   }
 }
 
@@ -1092,7 +1114,7 @@ void CommanderViewModel::controlled_commander_fell() {
     return;
   }
   if (follows_replay() || !begin_finale(App::Core::CommanderFinale::Kind::Fallen)) {
-    exit_mode();
+    leave_commander_mode();
   }
 }
 
@@ -1102,50 +1124,51 @@ void CommanderViewModel::finish_finale() {
     return;
   }
   if (active()) {
-    exit_mode();
+    leave_commander_mode();
   } else {
     clear_finale();
   }
 }
 
-void CommanderViewModel::record_action(Game::Command::CommanderAction action) {
+auto CommanderViewModel::queue_action(Game::Command::CommanderAction action) -> bool {
   auto* world = m_context.world;
-  if (m_applying_replay || world == nullptr) {
-    return;
+  if (m_applying_logged_action || world == nullptr ||
+      world->get_system<Game::Command::CommandSystem>() == nullptr) {
+    return false;
   }
   auto* session = Game::Session::SessionContext::for_world(*world);
-  auto* recorder = session != nullptr ? session->replay_recorder() : nullptr;
-  if (recorder == nullptr) {
-    return;
-  }
-  recorder->record_commander_action(session->clock().tick(),
-                                    {.action = action,
-                                     .view_yaw = m_control.view_yaw(),
-                                     .view_pitch = m_control.view_pitch()});
+  return session != nullptr &&
+         session->commands().log().submit(Game::Command::Source::LocalPlayer,
+                                          m_context.local_owner_id,
+                                          Game::Command::CommanderActionRecord{
+                                              .action = action,
+                                              .view_yaw = m_control.view_yaw(),
+                                              .view_pitch = m_control.view_pitch()});
 }
 
-void CommanderViewModel::apply_replayed_actions() {
+void CommanderViewModel::apply_logged_actions() {
   auto* world = m_context.world;
   if (world == nullptr) {
     return;
   }
   auto* session = Game::Session::SessionContext::for_world(*world);
-  auto* player = session != nullptr ? session->replay_player() : nullptr;
-  if (player == nullptr) {
+  if (session == nullptr) {
     return;
   }
-  const auto due = player->take_commander_actions(session->clock().tick());
-  if (due.empty()) {
-    return;
-  }
-  m_applying_replay = true;
-  const ScopeExit restore([this]() { m_applying_replay = false; });
-  for (const auto& record : due) {
-    apply_replayed_action(record);
+  const auto due = session->commands().log().entries_at(session->clock().tick());
+  m_applying_logged_action = true;
+  const ScopeExit restore([this]() { m_applying_logged_action = false; });
+  for (const auto& entry : due) {
+    if (entry->owner == m_context.local_owner_id) {
+      if (const auto* record =
+              std::get_if<Game::Command::CommanderActionRecord>(&entry->payload)) {
+        apply_logged_action(*record);
+      }
+    }
   }
 }
 
-void CommanderViewModel::apply_replayed_action(
+void CommanderViewModel::apply_logged_action(
     const Game::Command::CommanderActionRecord& record) {
   using Game::Command::CommanderAction;
   switch (record.action) {
@@ -1159,30 +1182,13 @@ void CommanderViewModel::apply_replayed_action(
       exit_mode();
     }
     break;
-  case CommanderAction::CycleLockOn:
-    m_control.set_view_yaw(record.view_yaw);
-    m_control.set_view_pitch(record.view_pitch);
-    cycle_lock_on();
-    break;
-  case CommanderAction::ToggleLockOn:
-    m_control.set_view_yaw(record.view_yaw);
-    m_control.set_view_pitch(record.view_pitch);
-    toggle_lock_on();
-    break;
-  case CommanderAction::SwitchLockLeft:
-    switch_lock_target(-1);
-    break;
-  case CommanderAction::SwitchLockRight:
-    switch_lock_target(1);
-    break;
-  case CommanderAction::ToggleCameraMode:
-    toggle_camera_mode();
-    break;
-  case CommanderAction::ToggleWeaponStance:
-    toggle_weapon_stance();
+  case CommanderAction::ToggleControl:
+    toggle_mode();
     break;
   case CommanderAction::ReleaseForRally:
     release_for_rally();
+    break;
+  default:
     break;
   }
 }
@@ -1191,12 +1197,6 @@ void CommanderViewModel::release_for_rally() {
   const auto frame_lock = m_host.lock_frame();
   if (!active()) {
     return;
-  }
-  if (auto* world = m_context.world; world != nullptr) {
-    if (auto* data = world->try_get<Engine::Core::CommanderComponent>(
-            m_controlled_commander_id)) {
-      data->fpv_controlled = false;
-    }
   }
   release_input_for_rally();
   m_rally_preview.reset();

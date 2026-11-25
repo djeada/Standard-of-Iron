@@ -7,6 +7,7 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../map/map_definition.h"
+#include "../util/checkpoint_values.h"
 #include "bird_flock.h"
 #include "wildlife_nature_actions.h"
 #include "wildlife_persistence.h"
@@ -275,6 +276,19 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
 
   m_restored = true;
   m_spawn_pending = false;
+}
+
+auto WildlifeSystem::capture_checkpoint() const -> QJsonObject {
+  return {
+      {"timing",
+       Game::CheckpointValues::write(m_threat_refresh, m_spawn_pending, m_restored)},
+      {"census", m_census.capture_checkpoint()}};
+}
+
+auto WildlifeSystem::restore_checkpoint(const QJsonObject& state) -> bool {
+  return Game::CheckpointValues::read(
+             state.value("timing"), m_threat_refresh, m_spawn_pending, m_restored) &&
+         m_census.restore_checkpoint(state.value("census").toObject());
 }
 
 } // namespace Game::Wildlife

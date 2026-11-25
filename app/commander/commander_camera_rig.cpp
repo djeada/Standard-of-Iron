@@ -15,6 +15,8 @@
 
 namespace App::Core {
 
+using Game::Commander::CommanderFramingState;
+
 namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;

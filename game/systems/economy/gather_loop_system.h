@@ -19,6 +19,11 @@ public:
 
   [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
 
+  [[nodiscard]] auto think_cooldown() const noexcept -> float {
+    return m_think_cooldown;
+  }
+  void restore_think_cooldown(float seconds) noexcept { m_think_cooldown = seconds; }
+
 private:
   float m_think_cooldown{0.0F};
 };

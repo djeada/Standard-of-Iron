@@ -68,6 +68,9 @@ auto serialized_components() -> std::set<std::string> {
   for (const auto& entry :
        std::filesystem::directory_iterator(find_repo_root() / "game" / "save")) {
     const auto name = entry.path().filename().string();
+    if (name == "component_checkpoint_codec.cpp") {
+      continue;
+    }
     if (name == "serialization.cpp" ||
         (name.starts_with("component_") && name.ends_with("_codec.cpp"))) {
       source += read_text(entry.path());

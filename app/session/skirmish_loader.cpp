@@ -32,6 +32,7 @@
 
 #include "app/session/level_loader.h"
 #include "game/command/command_queue.h"
+#include "game/command/replay.h"
 #include "game/core/component_core.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
@@ -107,7 +108,6 @@ void SkirmishLoader::reset_game_state() {
   m_world.clear();
 
   m_world.shutdown_systems();
-  Game::Systems::register_runtime_systems(m_world);
 
   m_renderer.clear_entity_render_caches();
 
@@ -126,7 +126,10 @@ void SkirmishLoader::reset_game_state() {
 
   session.nations().clear_player_assignments();
 
+  session.set_replay_recorder(nullptr);
+  session.set_replay_player(nullptr);
   session.commands().clear();
+  Game::Systems::register_runtime_systems(m_world);
 
   session.clock().reset();
 
@@ -198,6 +201,7 @@ auto SkirmishLoader::start(const QString& map_path,
   std::unordered_map<int, QString> base_assignments;
   QVariantList saved_player_configs;
   std::set<int> processed_player_ids;
+  std::vector<int> human_owners;
   bool is_spectator_mode = false;
   bool has_human_player = false;
 
@@ -215,7 +219,7 @@ auto SkirmishLoader::start(const QString& map_path,
 
       if (is_human) {
         has_human_player = true;
-        if (player_id != player_owner_id) {
+        if (!map_player_ids.contains(player_id) && human_owners.empty()) {
           player_id = player_owner_id;
         }
       }
@@ -226,6 +230,9 @@ auto SkirmishLoader::start(const QString& map_path,
 
       if (player_id >= 0) {
         processed_player_ids.insert(player_id);
+        if (is_human) {
+          human_owners.push_back(player_id);
+        }
         team_overrides[player_id] = team_id;
 
         Game::Systems::NationID chosen_nation;
@@ -268,11 +275,13 @@ auto SkirmishLoader::start(const QString& map_path,
 
   result.resolved_player_configs = saved_player_configs;
 
-  Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
+  if (saved_player_configs.isEmpty()) {
+    human_owners.push_back(player_owner_id);
+  }
   const Game::Map::MapTransformOptions transform_options{
       .player_team_overrides = team_overrides,
       .base_assignments = base_assignments,
-      .spectator_mode = is_spectator_mode};
+      .human_owners = std::move(human_owners)};
 
   auto& nation_registry = session.nations();
 

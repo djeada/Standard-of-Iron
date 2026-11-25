@@ -3,40 +3,41 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "app/commander/commander_body_facing.h"
-#include "app/commander/commander_input_port.h"
 #include "app/commander/commander_look.h"
+#include "game/commander/commander_body_facing.h"
+#include "game/commander/commander_heading.h"
+#include "game/commander/commander_input_port.h"
 
 namespace {
 
-using App::Core::BodyFacingInput;
-using App::Core::CommanderBodyFacing;
-using App::Core::CommanderInputPort;
 using App::Core::CommanderLook;
-using App::Core::EdgeOutcome;
+using Game::Commander::BodyFacingInput;
+using Game::Commander::CommanderBodyFacing;
+using Game::Commander::CommanderInputPort;
+using Game::Commander::EdgeOutcome;
 
 TEST(CommanderInputPortTest, AnUnconsumedPressIsCarriedWhileHeldThenDropped) {
   CommanderInputPort port;
   port.primary_action_down();
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
   EXPECT_TRUE(port.tick().primary_pressed);
   EXPECT_TRUE(port.tick().primary_held);
 
   port.settle_primary_press();
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
   EXPECT_TRUE(port.tick().primary_pressed)
       << "an unconsumed press is carried to the next tick while held";
 
   port.settle_primary_press();
   port.primary_action_up();
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
   ASSERT_TRUE(port.tick().primary_pressed);
   ASSERT_FALSE(port.tick().primary_held);
 
   port.settle_primary_press();
   EXPECT_EQ(port.edges().primary_dropped_sequence, 1U)
       << "the press dies with the button, and is counted";
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
   EXPECT_FALSE(port.tick().primary_pressed);
 }
 
@@ -44,7 +45,7 @@ TEST(CommanderInputPortTest, AReleasedPressIsCountedAsDropped) {
   CommanderInputPort port;
   port.primary_action_down();
   port.primary_action_up();
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
   ASSERT_TRUE(port.tick().primary_pressed);
   ASSERT_FALSE(port.tick().primary_held);
 
@@ -58,7 +59,7 @@ TEST(CommanderInputPortTest, ConsumingAPressCountsItOnceAndClearsTheEdges) {
   CommanderInputPort port;
   port.primary_action_down();
   port.request_heavy_action();
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
 
   port.consume_press_edges(port.tick().primary_pressed);
   EXPECT_FALSE(port.tick().primary_pressed);
@@ -85,7 +86,7 @@ TEST(CommanderInputPortTest, ReleaseAllDiscardsEveryPendingEdge) {
   EXPECT_EQ(port.edges().primary_release_sequence, 1U);
   EXPECT_EQ(port.edges().guard_release_sequence, 1U);
 
-  port.capture_tick();
+  port.apply_snapshot(port.take_snapshot());
   EXPECT_FALSE(port.tick().has_pending_edge());
   EXPECT_FALSE(port.tick().forward);
 }
@@ -211,15 +212,16 @@ TEST(CommanderLookTest, MouseDeltasWrapYawAndClampPitch) {
   look.apply_mouse_delta(1000.0, 100000.0, 1.0F);
   EXPECT_GE(look.yaw(), 0.0F);
   EXPECT_LT(look.yaw(), 360.0F);
-  EXPECT_LE(std::abs(look.pitch()), App::Core::k_commander_view_pitch_limit_degrees);
+  EXPECT_LE(std::abs(look.pitch()),
+            Game::Commander::k_commander_view_pitch_limit_degrees);
 
   look.set_pitch(500.0F);
-  EXPECT_FLOAT_EQ(look.pitch(), App::Core::k_commander_view_pitch_limit_degrees);
+  EXPECT_FLOAT_EQ(look.pitch(), Game::Commander::k_commander_view_pitch_limit_degrees);
 }
 
 TEST(CommanderLookTest, FrameIntentReportsLookDeltaSinceTheLastSample) {
   CommanderLook look;
-  App::Core::CommanderHeldInput held;
+  Game::Commander::CommanderHeldInput held;
   held.forward = true;
   held.right = true;
 

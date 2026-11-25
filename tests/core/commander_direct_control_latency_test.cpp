@@ -4,7 +4,7 @@
 #include <string>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_latency_probe.h"
+#include "game/commander/commander_latency_probe.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -64,14 +64,14 @@ protected:
   using Injection = std::function<void(CommanderControlController&)>;
 
   static auto measure(const Injection& inject, double settle_seconds = 0.5)
-      -> App::Core::CommanderLatencySample {
+      -> Game::Commander::CommanderLatencySample {
     return measure_at(k_render_frame_seconds, inject, settle_seconds);
   }
 
   static auto
   measure_at(double frame_seconds,
              const Injection& inject,
-             double settle_seconds = 0.5) -> App::Core::CommanderLatencySample {
+             double settle_seconds = 0.5) -> Game::Commander::CommanderLatencySample {
     Engine::Core::World world;
     auto* commander = create_commander(world);
     EXPECT_NE(commander, nullptr);
@@ -79,7 +79,7 @@ protected:
       return {};
     }
 
-    App::Core::CommanderLatencyProbe probe;
+    Game::Commander::CommanderLatencyProbe probe;
     CommanderControlController controller;
     controller.set_latency_probe(&probe);
     Render::GL::Camera camera;
@@ -122,8 +122,8 @@ protected:
     return probe.sample();
   }
 
-  static auto budget() -> App::Core::CommanderLatencyBudget {
-    App::Core::CommanderLatencyBudget limits;
+  static auto budget() -> Game::Commander::CommanderLatencyBudget {
+    Game::Commander::CommanderLatencyBudget limits;
     limits.frame_seconds = k_render_frame_seconds;
     limits.tick_seconds = k_simulation_tick_seconds;
     limits.camera_frames = 1.0;
@@ -135,13 +135,14 @@ protected:
     return limits;
   }
 
-  static void expect_within_budget(const App::Core::CommanderLatencySample& sample) {
-    const auto verdict = App::Core::evaluate(sample, budget());
+  static void
+  expect_within_budget(const Game::Commander::CommanderLatencySample& sample) {
+    const auto verdict = Game::Commander::evaluate(sample, budget());
     std::string report;
     for (const auto& failure : verdict.failures) {
       report += "\n  " + failure;
     }
-    EXPECT_TRUE(verdict.passed) << App::Core::describe(sample) << report;
+    EXPECT_TRUE(verdict.passed) << Game::Commander::describe(sample) << report;
   }
 };
 
@@ -158,7 +159,7 @@ TEST_F(CommanderDirectControlLatencyTest,
     ASSERT_GE(sample.camera_seconds, 0.0) << presentation_hz << " Hz";
     EXPECT_LE(sample.camera_seconds - sample.input_seconds, frame_seconds + 1.0e-6)
         << presentation_hz
-        << " Hz over a 60 Hz simulation: " << App::Core::describe(sample);
+        << " Hz over a 60 Hz simulation: " << Game::Commander::describe(sample);
   }
 }
 
@@ -171,7 +172,7 @@ TEST_F(CommanderDirectControlLatencyTest,
   ASSERT_GE(sample.simulation_seconds, 0.0);
   EXPECT_LE(sample.simulation_seconds - sample.input_seconds,
             k_simulation_tick_seconds + 1.0e-6)
-      << App::Core::describe(sample);
+      << Game::Commander::describe(sample);
   expect_within_budget(sample);
 }
 
@@ -182,7 +183,7 @@ TEST_F(CommanderDirectControlLatencyTest,
   });
 
   ASSERT_TRUE(sample.has_input());
-  EXPECT_GE(sample.guard_start_seconds, 0.0) << App::Core::describe(sample);
+  EXPECT_GE(sample.guard_start_seconds, 0.0) << Game::Commander::describe(sample);
   expect_within_budget(sample);
 }
 
@@ -191,7 +192,7 @@ TEST_F(CommanderDirectControlLatencyTest, AttackStartsWithinTheDirectControlBudg
       [](CommanderControlController& controller) { controller.primary_action_down(); });
 
   ASSERT_TRUE(sample.has_input());
-  EXPECT_GE(sample.attack_start_seconds, 0.0) << App::Core::describe(sample);
+  EXPECT_GE(sample.attack_start_seconds, 0.0) << Game::Commander::describe(sample);
   expect_within_budget(sample);
 }
 
@@ -200,7 +201,7 @@ TEST_F(CommanderDirectControlLatencyTest, DodgeStartsWithinTheDirectControlBudge
       [](CommanderControlController& controller) { controller.request_dodge(); });
 
   ASSERT_TRUE(sample.has_input());
-  EXPECT_GE(sample.dodge_start_seconds, 0.0) << App::Core::describe(sample);
+  EXPECT_GE(sample.dodge_start_seconds, 0.0) << Game::Commander::describe(sample);
   expect_within_budget(sample);
 }
 
@@ -218,12 +219,12 @@ TEST_F(CommanderDirectControlLatencyTest,
 }
 
 TEST_F(CommanderDirectControlLatencyTest, MissingResponsesFailTheContract) {
-  App::Core::CommanderLatencySample sample;
+  Game::Commander::CommanderLatencySample sample;
   sample.input_seconds = 0.0;
   sample.camera_seconds = 0.5;
   sample.simulation_seconds = 0.5;
 
-  const auto verdict = App::Core::evaluate(sample, budget());
+  const auto verdict = Game::Commander::evaluate(sample, budget());
   EXPECT_FALSE(verdict.passed);
   EXPECT_EQ(verdict.failures.size(), 2U);
 }

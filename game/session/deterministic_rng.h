@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace Game::Session {
@@ -14,6 +15,12 @@ constexpr auto splitmix64(std::uint64_t& state) -> std::uint64_t {
 
 class DeterministicRng {
 public:
+  struct State {
+    std::uint64_t seed = 0;
+    std::uint64_t draws = 0;
+    std::array<std::uint64_t, 4> words{};
+  };
+
   explicit DeterministicRng(std::uint64_t seed = 0x5EED5EED5EED5EEDULL) {
     reseed(seed);
   }
@@ -30,6 +37,13 @@ public:
   [[nodiscard]] auto seed() const -> std::uint64_t { return m_seed; }
 
   [[nodiscard]] auto draw_count() const -> std::uint64_t { return m_draws; }
+  [[nodiscard]] auto state() const -> State { return {m_seed, m_draws, m_state}; }
+
+  void restore(const State& state) {
+    m_seed = state.seed;
+    m_draws = state.draws;
+    m_state = state.words;
+  }
 
   auto next_u64() -> std::uint64_t {
     const std::uint64_t result = rotl(m_state[1] * 5ULL, 7U) * 9ULL;
@@ -77,7 +91,7 @@ private:
   }
 
   std::uint64_t m_seed = 0;
-  std::uint64_t m_state[4]{};
+  std::array<std::uint64_t, 4> m_state{};
   std::uint64_t m_draws = 0;
 };
 

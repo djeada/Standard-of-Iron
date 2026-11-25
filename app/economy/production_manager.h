@@ -61,6 +61,10 @@ public:
   }
 
   [[nodiscard]] bool is_placing_construction() const { return m_session.active(); }
+  [[nodiscard]] auto
+  construction_preview_world() const -> std::shared_ptr<Engine::Core::World> {
+    return m_preview.render_world();
+  }
   [[nodiscard]] bool construction_preview_valid() const { return m_preview.valid(); }
   [[nodiscard]] QString construction_preview_reason() const {
     return m_preview.reason();
@@ -112,11 +116,6 @@ signals:
   void order_feedback(const App::Core::OrderOutcome& outcome);
 
 private:
-  enum class Handoff : std::uint8_t {
-    Discard,
-    BecomeSiteGhost
-  };
-
   [[nodiscard]] auto ready_for_pointer() const -> bool;
   [[nodiscard]] auto refusal_context() const -> App::Economy::RefusalContext;
   [[nodiscard]] auto ground_refusal(const QVector3D& site) const -> QString;
@@ -144,7 +143,7 @@ private:
   void reject(const QString& reason);
   void reject_and_invalidate(const QString& reason);
   void submit_order(int owner_id, App::Core::OrderRequest request);
-  void end_placement(Handoff handoff = Handoff::Discard);
+  void end_placement();
 
   [[nodiscard]] auto
   collect_available_builders(bool include_busy) -> std::vector<Engine::Core::EntityID>;

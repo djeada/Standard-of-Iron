@@ -56,23 +56,24 @@ void RuntimeFrameOrchestrator::advance_simulation(
       scene.session != nullptr ? *scene.session
                                : Game::Session::session_for(*scene.world);
 
-  session.clock().set_time_scale(time_scale);
   {
     Render::Profiling::AccumulatorScope const world_scope(
         &Render::Profiling::global_profile().world_update_us);
-    session.advance(static_cast<double>(frame_seconds),
-                    simulation_step_budget(time_scale),
-                    Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
-                    [&](float step) {
-                      if (simulation_step) {
-                        simulation_step(step);
-                      }
-                      if (scene.victory_service != nullptr) {
-                        Render::Profiling::AccumulatorScope const victory_scope(
-                            &Render::Profiling::global_profile().victory_update_us);
-                        scene.victory_service->update(*scene.world, step);
-                      }
-                    });
+    session.advance(
+        static_cast<double>(frame_seconds),
+        simulation_step_budget(time_scale * session.clock().time_scale()),
+        Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
+        [&](float step) {
+          if (simulation_step) {
+            simulation_step(step);
+          }
+          if (scene.victory_service != nullptr) {
+            Render::Profiling::AccumulatorScope const victory_scope(
+                &Render::Profiling::global_profile().victory_update_us);
+            scene.victory_service->update(*scene.world, step);
+          }
+        },
+        time_scale);
   }
 
   state.dropped_simulation_ticks = session.clock().consume_dropped_ticks();

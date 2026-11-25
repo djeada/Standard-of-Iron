@@ -1,8 +1,11 @@
 #include "building_collision_registry.h"
 
+#include <QJsonObject>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <string>
 #include <string_view>
@@ -14,6 +17,7 @@
 #include "../core/world.h"
 #include "../units/building_body.h"
 #include "../units/spawn_type.h"
+#include "../util/checkpoint_values.h"
 #include "../util/planar_math.h"
 
 namespace Game::Systems {
@@ -777,6 +781,109 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
 auto BuildingCollisionRegistry::footprint_snapshot() const
     -> BuildingFootprintSnapshot {
   return BuildingFootprintSnapshot{m_buildings, m_authored_obstacles};
+}
+
+namespace {
+
+template <typename Footprint>
+auto footprint_fields(Footprint& footprint) {
+  return std::tie(footprint.center_x,
+                  footprint.center_z,
+                  footprint.width,
+                  footprint.depth,
+                  footprint.owner_id,
+                  footprint.entity_id,
+                  footprint.grid_padding,
+                  footprint.blocks_navigation,
+                  footprint.wall_link,
+                  footprint.wall_gate,
+                  footprint.wall_tower,
+                  footprint.body_center_x,
+                  footprint.body_center_z,
+                  footprint.body_width,
+                  footprint.body_depth);
+}
+
+auto write_footprints(const std::vector<BuildingFootprint>& footprints) -> QJsonArray {
+  QJsonArray rows;
+  for (const auto& footprint : footprints) {
+    rows.append(Game::CheckpointValues::write_tuple(footprint_fields(footprint)));
+  }
+  return rows;
+}
+
+auto read_footprints(const QJsonValue& value,
+                     std::vector<BuildingFootprint>& footprints) -> bool {
+  if (!value.isArray()) {
+    return false;
+  }
+  constexpr float max_coordinate = std::numeric_limits<int>::max() / 4;
+  for (const auto row : value.toArray()) {
+    auto& footprint = footprints.emplace_back(0.0F, 0.0F, 0.0F, 0.0F, 0, 0);
+    if (!Game::CheckpointValues::read_tuple(row, footprint_fields(footprint)) ||
+        std::abs(footprint.center_x) > max_coordinate ||
+        std::abs(footprint.center_z) > max_coordinate) {
+      return false;
+    }
+  }
+  return true;
+}
+
+} // namespace
+
+auto BuildingCollisionRegistry::capture_checkpoint() const -> QJsonObject {
+  QJsonArray passages;
+  for (const auto& passage : m_navigation_passages) {
+    passages.append(Game::CheckpointValues::write(passage.center_x,
+                                                  passage.center_z,
+                                                  passage.width,
+                                                  passage.depth,
+                                                  passage.source_entity_id));
+  }
+  return {{"buildings", write_footprints(m_buildings)},
+          {"obstacles", write_footprints(m_authored_obstacles)},
+          {"passages", passages}};
+}
+
+auto BuildingCollisionRegistry::restore_checkpoint(const QJsonObject& state) -> bool {
+  std::vector<BuildingFootprint> buildings;
+  std::vector<BuildingFootprint> obstacles;
+  const auto passages_state = state.value("passages");
+  if (!read_footprints(state.value("buildings"), buildings) ||
+      !read_footprints(state.value("obstacles"), obstacles) ||
+      !passages_state.isArray()) {
+    return false;
+  }
+  std::vector<NavigationPassage> passages;
+  for (const auto row : passages_state.toArray()) {
+    auto& passage = passages.emplace_back();
+    if (!Game::CheckpointValues::read(row,
+                                      passage.center_x,
+                                      passage.center_z,
+                                      passage.width,
+                                      passage.depth,
+                                      passage.source_entity_id)) {
+      return false;
+    }
+  }
+  std::map<Engine::Core::EntityID, std::size_t> indices;
+  for (std::size_t index = 0; index < buildings.size(); ++index) {
+    const auto id = buildings[index].entity_id;
+    if (id == 0 || !indices.emplace(id, index).second) {
+      return false;
+    }
+  }
+  m_buildings = std::move(buildings);
+  m_authored_obstacles = std::move(obstacles);
+  m_navigation_passages = std::move(passages);
+  m_entity_to_index = std::move(indices);
+  m_spatial_buckets.clear();
+  m_max_half_extent = 0.0F;
+  for (const auto& footprint : m_buildings) {
+    add_to_spatial_index(footprint);
+  }
+  invalidate_blockers();
+  return true;
 }
 
 auto BuildingFootprintSnapshot::is_point_in_building(float x, float z) const -> bool {

@@ -4,7 +4,7 @@
 #include <QString>
 #include <QVector3D>
 
-#include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "game/systems/nation_id.h"
@@ -12,7 +12,6 @@
 
 namespace Engine::Core {
 class World;
-using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
 namespace App::Economy {
@@ -29,7 +28,6 @@ public:
   explicit ConstructionPreview(Engine::Core::World* world, QObject* parent = nullptr);
 
   void clear_entities();
-  void hand_to_construction_site(const QString& item_type);
   void show_structure(const QString& item_type,
                       const QVector3D& world_position,
                       float rotation_y,
@@ -53,7 +51,9 @@ public:
     return m_valid_segment_count;
   }
   [[nodiscard]] auto total_cost() const -> int { return m_total_cost; }
-  [[nodiscard]] auto entity_count() const -> std::size_t { return m_entity_ids.size(); }
+  [[nodiscard]] auto render_world() const -> std::shared_ptr<Engine::Core::World> {
+    return m_render_world;
+  }
 
 signals:
   void active_changed();
@@ -65,7 +65,7 @@ private:
   void set_reason(const QString& reason);
 
   Engine::Core::World* m_world;
-  std::vector<Engine::Core::EntityID> m_entity_ids;
+  std::shared_ptr<Engine::Core::World> m_render_world;
   bool m_active = false;
   bool m_valid = false;
   QString m_reason;

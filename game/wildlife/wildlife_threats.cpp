@@ -55,14 +55,13 @@ void ThreatField::finalize() {
 
   m_min_x = min_x;
   m_min_z = min_z;
-  m_width = static_cast<int>(std::floor((max_x - min_x) / k_cell_size)) + 1;
-  m_height = static_cast<int>(std::floor((max_z - min_z) / k_cell_size)) + 1;
-  if (m_width <= 0 || m_height <= 0 || m_width > k_max_grid_side ||
-      m_height > k_max_grid_side) {
-    m_width = 0;
-    m_height = 0;
+  const float width = std::floor((max_x - min_x) / k_cell_size) + 1.0F;
+  const float height = std::floor((max_z - min_z) / k_cell_size) + 1.0F;
+  if (width > k_max_grid_side || height > k_max_grid_side) {
     return;
   }
+  m_width = static_cast<int>(width);
+  m_height = static_cast<int>(height);
 
   m_cells.assign(static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height),
                  Cell{});

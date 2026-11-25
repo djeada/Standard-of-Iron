@@ -1,11 +1,63 @@
 #include "movement_route.h"
 
+#include <QJsonObject>
+
 #include <algorithm>
 #include <cmath>
 
+#include "game/util/checkpoint_values.h"
 #include "util/planar_math.h"
 
 namespace Game::Systems {
+
+auto MovementRoute::capture_checkpoint() const -> QJsonObject {
+  using Game::CheckpointValues::write;
+  QJsonArray points;
+  for (const auto& point : m_points) {
+    points.append(write(point.x, point.z, point.cumulative));
+  }
+  QJsonArray spans;
+  for (const auto& span : m_spans) {
+    spans.append(write(span.begin_s, span.end_s, span.half_width, span.portal_id));
+  }
+  return {{"cursor",
+           write(m_route_revision,
+                 m_topology_revision,
+                 m_first_waypoint,
+                 m_length,
+                 m_travelled)},
+          {"points", points},
+          {"spans", spans}};
+}
+
+auto MovementRoute::restore_checkpoint(const QJsonObject& state) -> bool {
+  using Game::CheckpointValues::read;
+  MovementRoute route;
+  if (!read(state.value("cursor"),
+            route.m_route_revision,
+            route.m_topology_revision,
+            route.m_first_waypoint,
+            route.m_length,
+            route.m_travelled) ||
+      !state.value("points").isArray() || !state.value("spans").isArray() ||
+      route.m_travelled < 0.0F || route.m_travelled > route.m_length) {
+    return false;
+  }
+  for (const auto value : state.value("points").toArray()) {
+    auto& point = route.m_points.emplace_back();
+    if (!read(value, point.x, point.z, point.cumulative)) {
+      return false;
+    }
+  }
+  for (const auto value : state.value("spans").toArray()) {
+    auto& span = route.m_spans.emplace_back();
+    if (!read(value, span.begin_s, span.end_s, span.half_width, span.portal_id)) {
+      return false;
+    }
+  }
+  *this = std::move(route);
+  return true;
+}
 
 namespace {
 

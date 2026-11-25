@@ -274,21 +274,21 @@ void collapse_nation_if_leaderless(Engine::Core::World& world, int owner_id) {
   }
 
   const auto& services = Game::Session::services_for(world);
-  const auto& owners = *services.owners;
   const QString name = fallen_host_name(services, owner_id);
-  Engine::Core::EventManager::instance().publish(Engine::Core::MissionAnnouncementEvent(
-      owner_id == owners.get_local_player_id()
-          ? QCoreApplication::translate(
-                "CommanderSystem",
-                "Your commander has fallen. The host breaks and its camps stand empty.")
-      : name.isEmpty()
+  Engine::Core::MissionAnnouncementEvent announcement(
+      name.isEmpty()
           ? QCoreApplication::translate(
                 "CommanderSystem",
                 "Their commander is dead. The host breaks and its camps stand empty.")
           : QCoreApplication::translate(
                 "CommanderSystem",
                 "%1 has lost its commander. The host breaks and its camps stand empty.")
-                .arg(name)));
+                .arg(name));
+  announcement.personal_owner_id = owner_id;
+  announcement.personal_text = QCoreApplication::translate(
+      "CommanderSystem",
+      "Your commander has fallen. The host breaks and its camps stand empty.");
+  services.events->publish(announcement);
 }
 
 void apply_commander_death_shock(Engine::Core::World* world,

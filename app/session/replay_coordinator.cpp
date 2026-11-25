@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "game/mission/difficulty_profile.h"
+#include "game/save/replay_checkpoint.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
@@ -45,14 +46,17 @@ auto ReplayCoordinator::begin_playback(
 }
 
 void ReplayCoordinator::arm_for_started_match(Game::Session::SessionContext* session) {
-  if (session == nullptr) {
+  if (session == nullptr || session->replay_player() != nullptr) {
     return;
   }
   if (m_pending.has_value()) {
     auto file = std::move(*m_pending);
     m_pending.reset();
     qInfo() << "Replay: driving" << m_launch.kind << m_launch.reference << "from"
-            << file.commands.size() << "commands, last tick" << file.last_tick();
+            << file.command_count() << "commands, last tick" << file.last_tick();
+    if (file.recovered_tail) {
+      qInfo() << "Replay: recovered through tick" << file.last_tick();
+    }
     session->set_replay_player(
         std::make_unique<Game::Command::ReplayPlayer>(std::move(file)));
     if (m_view.load(ReplayViewTrack::sidecar_path(m_playback_path))) {
@@ -74,7 +78,9 @@ void ReplayCoordinator::arm_for_started_match(Game::Session::SessionContext* ses
   header.tick_seconds = session->clock().tick_seconds();
   header.rng_seed = session->rng_seed();
   auto recorder = std::make_unique<Game::Command::ReplayRecorder>();
-  if (!recorder->begin(m_record_path, header, session->commands())) {
+  if (!recorder->begin(m_record_path, header, session->commands(), [session]() {
+        return Game::Save::capture_replay_checkpoint(*session);
+      })) {
     qWarning() << "Replay: cannot write" << m_record_path;
     return;
   }
@@ -112,15 +118,16 @@ void ReplayCoordinator::finish_verification_if_done(
     return;
   }
   const auto& file = player->file();
-  const std::uint64_t last_recorded_tick = std::max<std::uint64_t>(
-      file.last_tick(), file.digests.empty() ? 0U : file.digests.back().tick);
-  if (!player->finished() || session->clock().tick() <= last_recorded_tick) {
+  if (!player->finished() || session->clock().tick() < file.last_tick()) {
     return;
   }
   if (const auto& divergence = player->divergence(); divergence.has_value()) {
     qCritical() << "SOI_REPLAY_VERIFY: FAIL - diverged at tick" << divergence->tick
                 << "(recorded" << divergence->recorded << ", observed"
                 << divergence->observed << ")";
+    QCoreApplication::exit(12);
+  } else if (player->checked_count() != file.digest_count()) {
+    qCritical() << "SOI_REPLAY_VERIFY: FAIL - missed recorded digests";
     QCoreApplication::exit(12);
   } else {
     qInfo() << "SOI_REPLAY_VERIFY: PASS -" << player->fed_count() << "commands,"

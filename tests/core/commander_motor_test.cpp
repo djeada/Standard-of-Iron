@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "app/commander/commander_control_controller.h"
+#include "game/commander/commander_locomotion.h"
+#include "game/commander/commander_motor.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
@@ -557,7 +559,8 @@ TEST_F(CommanderMotorTest, CrowdSeparationIsBoundedAndRepeatable) {
       << (k_max_push_per_second * k_dt) << " m budget";
 }
 
-auto locomotion_handles(Engine::Core::Entity& entity) -> App::Core::CommanderHandles {
+auto locomotion_handles(Engine::Core::Entity& entity)
+    -> Game::Commander::CommanderHandles {
   return {entity,
           *entity.get_component<Engine::Core::TransformComponent>(),
           *entity.get_component<Engine::Core::UnitComponent>(),
@@ -568,14 +571,14 @@ auto locomotion_handles(Engine::Core::Entity& entity) -> App::Core::CommanderHan
 TEST_F(CommanderMotorTest, LockingOnPreservesLeftAndRightAtEveryHeading) {
   Engine::Core::TransformComponent transform;
   for (float yaw : {0.0F, 45.0F, 90.0F, 180.0F, 270.0F, 359.0F}) {
-    auto const front =
-        App::Core::CommanderLocomotion::move_basis(yaw, 1, 0, transform, std::nullopt)
-            .forward;
+    auto const front = Game::Commander::CommanderLocomotion::move_basis(
+                           yaw, 1, 0, transform, std::nullopt)
+                           .forward;
     for (int forward : {-1, 0, 1}) {
       for (int right : {-1, 0, 1}) {
-        auto const free = App::Core::CommanderLocomotion::move_basis(
+        auto const free = Game::Commander::CommanderLocomotion::move_basis(
             yaw, forward, right, transform, std::nullopt);
-        auto const locked = App::Core::CommanderLocomotion::move_basis(
+        auto const locked = Game::Commander::CommanderLocomotion::move_basis(
             yaw, forward, right, transform, front * 4.0F);
         EXPECT_LT((free.move - locked.move).length(), 1.0e-5F)
             << "yaw=" << yaw << " forward=" << forward << " right=" << right;
@@ -592,7 +595,7 @@ TEST_F(CommanderMotorTest, JumpRequiresItsFullStaminaCostAndConsumesOnlyOnce) {
   auto* stamina = entity->add_component<Engine::Core::StaminaComponent>();
   constexpr float cost = Engine::Core::CombatStateComponent::k_stamina_cost_jump;
   for (float available : {0.0F, cost - 0.01F, cost, cost + 1.0F}) {
-    App::Core::CommanderLocomotion locomotion;
+    Game::Commander::CommanderLocomotion locomotion;
     stamina->stamina = available;
     stamina->regen_delay_remaining = 0.0F;
     auto const result =
@@ -600,8 +603,8 @@ TEST_F(CommanderMotorTest, JumpRequiresItsFullStaminaCostAndConsumesOnlyOnce) {
     bool const accepted = available >= cost;
     EXPECT_EQ(result.active, accepted);
     EXPECT_EQ(result.edge,
-              accepted ? App::Core::EdgeOutcome::Consumed
-                       : App::Core::EdgeOutcome::Refused);
+              accepted ? Game::Commander::EdgeOutcome::Consumed
+                       : Game::Commander::EdgeOutcome::Refused);
     EXPECT_FLOAT_EQ(stamina->stamina, accepted ? available - cost : available);
     if (!accepted) {
       EXPECT_FLOAT_EQ(stamina->regen_delay_remaining, 0.0F);
@@ -609,7 +612,7 @@ TEST_F(CommanderMotorTest, JumpRequiresItsFullStaminaCostAndConsumesOnlyOnce) {
     } else {
       auto const again =
           locomotion.advance_jump(body, {.jump_pressed = true, .dt = 1.0F / 60.0F});
-      EXPECT_EQ(again.edge, App::Core::EdgeOutcome::Refused);
+      EXPECT_EQ(again.edge, Game::Commander::EdgeOutcome::Refused);
       EXPECT_FLOAT_EQ(stamina->stamina, available - cost);
     }
     body.commander_data->jump_active = false;
@@ -626,7 +629,7 @@ TEST_F(CommanderMotorTest, ExhaustedDodgeCannotGrantInvulnerabilityOrCancelAnAct
   auto* action = entity->add_component<Engine::Core::RpgCommanderActionComponent>();
   constexpr float cost = Engine::Core::CombatStateComponent::k_stamina_cost_dodge;
   for (float available : {0.0F, cost - 0.01F, cost, cost + 1.0F}) {
-    App::Core::CommanderLocomotion locomotion;
+    Game::Commander::CommanderLocomotion locomotion;
     stamina->stamina = available;
     stamina->regen_delay_remaining = 0.0F;
     health->dodge_grace_remaining = 0.0F;
@@ -634,8 +637,8 @@ TEST_F(CommanderMotorTest, ExhaustedDodgeCannotGrantInvulnerabilityOrCancelAnAct
     auto const edge = locomotion.try_start_dodge(body, {.pressed = true}, nullptr);
     bool const accepted = available >= cost;
     EXPECT_EQ(edge,
-              accepted ? App::Core::EdgeOutcome::Consumed
-                       : App::Core::EdgeOutcome::Refused);
+              accepted ? Game::Commander::EdgeOutcome::Consumed
+                       : Game::Commander::EdgeOutcome::Refused);
     EXPECT_FLOAT_EQ(stamina->stamina, accepted ? available - cost : available);
     if (!accepted) {
       EXPECT_EQ(locomotion.dodge_state(), DodgeState::None);
@@ -645,7 +648,7 @@ TEST_F(CommanderMotorTest, ExhaustedDodgeCannotGrantInvulnerabilityOrCancelAnAct
     } else {
       EXPECT_GT(health->dodge_grace_remaining, 0.0F);
       EXPECT_EQ(locomotion.try_start_dodge(body, {.pressed = true}, nullptr),
-                App::Core::EdgeOutcome::Refused);
+                Game::Commander::EdgeOutcome::Refused);
       EXPECT_FLOAT_EQ(stamina->stamina, available - cost);
     }
   }
@@ -660,17 +663,17 @@ TEST_F(CommanderMotorTest, AStaggeredBodyCannotRollOrJumpOutOfTheHit) {
   auto* health = entity->add_component<Engine::Core::RpgHealthComponent>();
   float const before = stamina->stamina;
 
-  App::Core::CommanderLocomotion locomotion;
+  Game::Commander::CommanderLocomotion locomotion;
   EXPECT_EQ(
       locomotion.try_start_dodge(body, {.pressed = true, .staggered = true}, nullptr),
-      App::Core::EdgeOutcome::Refused);
+      Game::Commander::EdgeOutcome::Refused);
   EXPECT_EQ(locomotion.dodge_state(), DodgeState::None);
   EXPECT_FLOAT_EQ(health->dodge_grace_remaining, 0.0F)
       << "a stagger must not be escaped into invulnerability";
 
   auto const jump = locomotion.advance_jump(
       body, {.jump_pressed = true, .staggered = true, .dt = 1.0F / 60.0F});
-  EXPECT_EQ(jump.edge, App::Core::EdgeOutcome::Refused);
+  EXPECT_EQ(jump.edge, Game::Commander::EdgeOutcome::Refused);
   EXPECT_FALSE(jump.active);
   EXPECT_FLOAT_EQ(stamina->stamina, before) << "a refused action costs nothing";
 }
@@ -687,11 +690,11 @@ TEST_F(CommanderMotorTest, DodgePublishesAcceptedVelocityWhenItHitsAWall) {
         Game::Systems::NavGrid::world_to_grid(static_cast<float>(offset), 1.0F);
     pathfinder->set_obstacle(cell.x, cell.y, true);
   }
-  App::Core::CommanderLocomotion locomotion;
-  App::Core::CommanderMotor motor;
+  Game::Commander::CommanderLocomotion locomotion;
+  Game::Commander::CommanderMotor motor;
   motor.bind_world(&world);
   ASSERT_EQ(locomotion.try_start_dodge(body, {.pressed = true}, nullptr),
-            App::Core::EdgeOutcome::Consumed);
+            Game::Commander::EdgeOutcome::Consumed);
   bool hit_wall = false;
   constexpr float dt = 1.0F / 60.0F;
   for (int tick = 0; tick < 20; ++tick) {
@@ -745,13 +748,13 @@ TEST_F(CommanderMotorTest, AJumpIntoAWallStaysOutsideItAndNeverSnapsBack) {
     QVector3D const after(transform->position.x, 0.0F, transform->position.z);
     airborne_ticks += data->jump_active ? 1 : 0;
     auto const& motor = controller.presentation_trace().motor;
-    EXPECT_TRUE(
-        App::Core::CommanderMotor::is_walkable_at(*commander, after.x(), after.z()))
+    EXPECT_TRUE(Game::Commander::CommanderMotor::is_walkable_at(
+        *commander, after.x(), after.z()))
         << "tick " << tick << " left the body inside the wall at z = " << after.z();
     EXPECT_LT(after.z(), 2.0F) << "tick " << tick;
     EXPECT_FLOAT_EQ(motor.snap_back_distance, 0.0F) << "tick " << tick;
     EXPECT_NE(motor.displacement_source,
-              App::Core::CommanderDisplacementSource::JumpRecovery)
+              Game::Commander::CommanderDisplacementSource::JumpRecovery)
         << "tick " << tick;
     EXPECT_LE((after - before).length(), 7.0F * dt)
         << "tick " << tick << " displaced the body discontinuously";

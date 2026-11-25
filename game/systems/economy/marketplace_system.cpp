@@ -1,12 +1,17 @@
 #include "marketplace_system.h"
 
+#include <QJsonArray>
+
 #include <algorithm>
+#include <iterator>
+#include <ranges>
 #include <vector>
 
 #include "core/ambient_session.h"
 #include "core/component_gameplay.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/util/checkpoint_values.h"
 #include "systems/player_feedback.h"
 #include "systems/player_resource_registry.h"
 #include "units/spawn_type.h"
@@ -177,6 +182,27 @@ void MarketplaceSystem::queue_ally_request(const AllyTributeRequest& request) {
   }
 }
 
+auto MarketplaceSystem::ally_requests_for(int giver) const
+    -> std::vector<AllyTributeRequest> {
+  std::vector<AllyTributeRequest> requests;
+  std::ranges::copy_if(m_ally_requests,
+                       std::back_inserter(requests),
+                       [giver](const auto& request) { return request.giver == giver; });
+  return requests;
+}
+
+auto MarketplaceSystem::remove_ally_request(const AllyTributeAnswer& answer) -> bool {
+  const auto request = std::ranges::find_if(m_ally_requests, [&](const auto& pending) {
+    return pending.giver == answer.giver && pending.requester == answer.requester &&
+           pending.resource == answer.resource && pending.amount == answer.requested;
+  });
+  if (request == m_ally_requests.end()) {
+    return false;
+  }
+  m_ally_requests.erase(request);
+  return true;
+}
+
 auto MarketplaceSystem::take_ally_requests_for(int giver)
     -> std::vector<AllyTributeRequest> {
   std::vector<AllyTributeRequest> taken;
@@ -201,6 +227,31 @@ auto MarketplaceSystem::take_ally_answers() -> std::vector<AllyTributeAnswer> {
   std::vector<AllyTributeAnswer> taken;
   taken.swap(m_ally_answers);
   return taken;
+}
+
+auto MarketplaceSystem::capture_checkpoint() const -> QJsonArray {
+  using Game::CheckpointValues::write;
+  QJsonArray requests;
+  for (const auto& request : m_ally_requests) {
+    requests.append(
+        write(request.requester, request.giver, request.resource, request.amount));
+  }
+  return requests;
+}
+
+auto MarketplaceSystem::restore_checkpoint(const QJsonArray& state) -> bool {
+  using Game::CheckpointValues::read;
+  std::vector<AllyTributeRequest> requests;
+  for (const auto& row : state) {
+    auto& request = requests.emplace_back();
+    if (!read(
+            row, request.requester, request.giver, request.resource, request.amount)) {
+      return false;
+    }
+  }
+  m_ally_requests.swap(requests);
+  m_ally_answers.clear();
+  return true;
 }
 
 void MarketplaceSystem::clear_ally_exchange() {

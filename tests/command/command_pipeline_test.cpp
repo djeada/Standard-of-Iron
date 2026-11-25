@@ -12,6 +12,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/economy/civilian_delivery_system.h"
@@ -335,7 +336,7 @@ TEST(CommandQueueTest, PreservesSubmissionOrderAcrossSources) {
   queue.submit(Source::LocalPlayer, 1, Game::Command::Stop{.units = {mine}});
   queue.submit(Source::AI, 1, Game::Command::Stop{.units = {mine}});
   queue.submit(Source::Replay, 1, Game::Command::Stop{.units = {mine}});
-  queue.drain(match.session.world(), 7);
+  queue.drain(match.session.world(), 1);
 
   ASSERT_EQ(executed.size(), 3U);
   EXPECT_EQ(executed[0], Source::LocalPlayer);
@@ -356,10 +357,10 @@ TEST(CommandQueueTest, ObserverSeesEveryAcceptedCommandForReplay) {
   queue.submit(Source::LocalPlayer, 1, Game::Command::Stop{.units = {mine}});
 
   queue.submit(Source::LocalPlayer, 1, Game::Command::Stop{.units = {theirs}});
-  queue.drain(match.session.world(), 42);
+  queue.drain(match.session.world(), 1);
 
   ASSERT_EQ(recorded.size(), 1U);
-  EXPECT_EQ(recorded.front().submitted_tick, 42U);
+  EXPECT_EQ(recorded.front().submitted_tick, 1U);
   EXPECT_EQ(queue.accepted_count(), 1U);
   EXPECT_EQ(queue.rejected_count(), 1U);
 }
@@ -401,6 +402,20 @@ TEST(CommandQueueTest, SubmittingDuringADrainDefersToTheNextTick) {
 
   EXPECT_EQ(queue.pending(), 1U);
   EXPECT_EQ(queue.drain(match.session.world(), 2), 1U);
+}
+
+TEST(CommandQueueTest, DelayedCommandsApplyOnlyAtTheirAssignedTick) {
+  Match match;
+  const EntityID mine = match.spawn(1, 0.0F, 0.0F);
+  auto& queue = match.session.commands();
+  queue.log().set_input_delay(2);
+  ASSERT_TRUE(
+      queue.submit(Source::LocalPlayer, 1, Game::Command::SetHold{.units = {mine}}));
+  EXPECT_TRUE(queue.log().entries_at(1).empty());
+  EXPECT_EQ(queue.drain(match.session.world(), 1), 0U);
+  EXPECT_EQ(queue.drain(match.session.world(), 2), 0U);
+  EXPECT_EQ(queue.drain(match.session.world(), 3), 1U);
+  EXPECT_EQ(queue.pending(), 0U);
 }
 
 TEST(CommandSubmitTest, RoutesThroughTheSessionQueueWhenThereIsOne) {
@@ -467,7 +482,10 @@ TEST(CommandSubmitTest, SkippingTheQueueHasToBeAskedForByName) {
 }
 
 auto drain(Match& match) -> std::size_t {
-  return match.session.commands().drain(match.session.world(), 1);
+  auto& clock = match.session.clock();
+  clock.advance(clock.tick_seconds());
+  EXPECT_TRUE(clock.consume_tick());
+  return match.session.commands().drain(match.session.world(), clock.tick());
 }
 
 TEST(CommandPipelineTest, TradeBuysThroughTheOwnersMarketplace) {

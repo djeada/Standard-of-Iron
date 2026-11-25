@@ -11,6 +11,7 @@ class World;
 namespace Game::Map {
 class TerrainService;
 class VisibilityService;
+class SimulationVisibility;
 } // namespace Game::Map
 
 namespace Game::Systems {
@@ -52,6 +53,7 @@ struct AmbientServices {
   Engine::Core::EventManager* events = nullptr;
   Game::Map::TerrainService* terrain = nullptr;
   Game::Map::VisibilityService* visibility = nullptr;
+  Game::Map::SimulationVisibility* simulation_visibility = nullptr;
   Game::Systems::OwnerRegistry* owners = nullptr;
   Game::Systems::PlayerResourceRegistry* economy = nullptr;
   Game::Systems::NationRegistry* nations = nullptr;

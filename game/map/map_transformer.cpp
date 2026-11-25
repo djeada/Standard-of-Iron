@@ -375,16 +375,6 @@ auto MapTransformer::get_factory_registry()
   return active_registry();
 }
 
-void MapTransformer::set_local_owner_id(int owner_id) {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
-  owners.set_local_player_id(owner_id);
-}
-
-auto MapTransformer::local_owner_id() -> int {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
-  return owners.get_local_player_id();
-}
-
 auto MapTransformer::apply_to_world(const MapDefinition& def,
                                     Engine::Core::World& world,
                                     const MapTransformOptions& options) -> MapRuntime {
@@ -434,16 +424,15 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
 
     if (owner_registry.get_owner_type(player_id) == Game::Systems::OwnerType::Neutral) {
 
-      bool const is_local_player = !options.spectator_mode &&
-                                   (player_id == owner_registry.get_local_player_id());
-      Game::Systems::OwnerType const owner_type = is_local_player
-                                                      ? Game::Systems::OwnerType::Player
-                                                      : Game::Systems::OwnerType::AI;
+      const bool is_human = std::find(options.human_owners.begin(),
+                                      options.human_owners.end(),
+                                      player_id) != options.human_owners.end();
+      Game::Systems::OwnerType const owner_type =
+          is_human ? Game::Systems::OwnerType::Player : Game::Systems::OwnerType::AI;
 
       std::string const owner_name =
-          (is_local_player
-               ? QCoreApplication::translate("MapTransformer", "Player %1")
-               : QCoreApplication::translate("MapTransformer", "AI Player %1"))
+          (is_human ? QCoreApplication::translate("MapTransformer", "Player %1")
+                    : QCoreApplication::translate("MapTransformer", "AI Player %1"))
               .arg(player_id)
               .toStdString();
 

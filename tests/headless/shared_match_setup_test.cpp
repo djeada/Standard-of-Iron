@@ -38,10 +38,10 @@ auto set_up_match(std::uint64_t seed, int local_owner) -> SetupOutcome {
   session.nations().clear_player_assignments();
   session.owners().set_local_player_id(local_owner);
 
-  Game::Map::MapTransformer::set_local_owner_id(local_owner);
-
-  const auto loaded =
-      Game::Map::load_match(QString::fromLatin1(k_map), session.world());
+  const auto loaded = Game::Map::load_match(QString::fromLatin1(k_map),
+                                            session.world(),
+                                            true,
+                                            {.human_owners = {local_owner}});
 
   SetupOutcome outcome;
   outcome.ok = loaded.ok;

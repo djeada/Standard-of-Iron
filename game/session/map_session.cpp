@@ -2,18 +2,23 @@
 
 #include "../core/world.h"
 #include "../map/map_definition.h"
+#include "../map/visibility_service.h"
 #include "../systems/cursed_gold_vein_system.h"
 #include "../systems/raft_system.h"
 #include "../systems/rockfall_system.h"
 #include "../systems/undead_awakening_system.h"
 #include "../systems/victory_service.h"
 #include "../wildlife/wildlife_system.h"
+#include "session_context.h"
 
 namespace Game::Session {
 
 void configure_map_systems(Engine::Core::World& world,
                            const Game::Map::MapDefinition& map_definition,
                            Game::Systems::VictoryService* victory_service) {
+  if (auto* session = SessionContext::for_world(world)) {
+    session->simulation_visibility().set_scouted_areas(map_definition.scouted_areas);
+  }
   if (auto* undead_system = world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
     undead_system->configure(map_definition);
     if (victory_service != nullptr) {

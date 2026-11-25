@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <vector>
 
 namespace Engine::Core {
 class EventManager;
@@ -12,6 +14,7 @@ class World;
 namespace Game::Map {
 class TerrainService;
 class VisibilityService;
+class SimulationVisibility;
 } // namespace Game::Map
 
 namespace Game::Systems {
@@ -42,6 +45,7 @@ namespace Game::Command {
 class CommandQueue;
 class ReplayPlayer;
 class ReplayRecorder;
+struct ClockChange;
 } // namespace Game::Command
 
 namespace Game::Session {
@@ -77,9 +81,12 @@ public:
 
   [[nodiscard]] auto visibility() -> Game::Map::VisibilityService&;
   [[nodiscard]] auto visibility() const -> const Game::Map::VisibilityService&;
+  [[nodiscard]] auto simulation_visibility() -> Game::Map::SimulationVisibility&;
 
   [[nodiscard]] auto owners() -> Game::Systems::OwnerRegistry&;
   [[nodiscard]] auto owners() const -> const Game::Systems::OwnerRegistry&;
+  [[nodiscard]] auto human_owners() const -> std::vector<int>;
+  [[nodiscard]] auto local_owner() const -> std::optional<int>;
 
   [[nodiscard]] auto economy() -> Game::Systems::PlayerResourceRegistry&;
   [[nodiscard]] auto economy() const -> const Game::Systems::PlayerResourceRegistry&;
@@ -124,6 +131,9 @@ public:
   void set_replay_recorder(std::unique_ptr<Game::Command::ReplayRecorder> recorder);
   [[nodiscard]] auto replay_recorder() -> Game::Command::ReplayRecorder*;
 
+  void submit_clock_change(Game::Command::ClockChange change);
+  [[nodiscard]] auto log_follower() const -> bool;
+
   [[nodiscard]] auto rng_seed() const -> std::uint64_t;
 
   enum class OverloadPolicy : std::uint8_t {
@@ -137,7 +147,9 @@ public:
   auto advance(double real_dt,
                int max_steps,
                OverloadPolicy overload,
-               const TickFn& per_tick = {}) -> int;
+               const TickFn& per_tick = {},
+               double pacing = 1.0) -> int;
+  auto advance_from_log(int max_steps, const TickFn& per_tick = {}) -> int;
 
   void step();
 
@@ -153,6 +165,9 @@ public:
   static auto set_thread_active(SessionContext* session) -> SessionContext*;
 
 private:
+  void prepare_tick();
+  void run_tick(const TickFn& per_tick);
+
   struct State;
   std::unique_ptr<State> m_state;
 };
