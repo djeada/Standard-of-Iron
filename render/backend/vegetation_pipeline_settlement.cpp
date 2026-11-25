@@ -299,19 +299,11 @@ void VegetationPipeline::initialize_abandoned_home_pipeline() {
   using namespace Render::GL::BackendPipelines::AbandonedHomeParts;
 
   append_parts(verts, idx, std::span{k_abandoned_home_boxes});
+  auto const timber_start = verts.size();
   append_parts(verts, idx, std::span{k_abandoned_home_oriented_boxes});
-
-  for (int course = 0; course < 5; ++course) {
-    float const y = 0.24F + 0.20F * static_cast<float>(course);
-    append_box(verts, idx, {-0.885F, y, 0.58F}, {0.80F, y + 0.022F, 0.585F});
-    append_box(verts, idx, {-0.895F, y, -0.70F}, {-0.885F, y + 0.022F, 0.70F});
-  }
-
-  for (int course = 0; course < 5; ++course) {
-    float const step = static_cast<float>(course);
-    float const z0 = -0.76F + 0.148F * step;
-    float const y0 = 1.06F + 0.092F * step;
-    append_box(verts, idx, {-0.58F, y0, z0}, {0.88F, y0 + 0.092F, z0 + 0.148F});
+  // As with tent materials, normal length tags the surface before normalization.
+  for (auto i = timber_start; i < verts.size(); ++i) {
+    verts[i].second *= 0.5F;
   }
 
   upload_prop_mesh_impl(verts, idx, m_abandoned_home_mesh);
