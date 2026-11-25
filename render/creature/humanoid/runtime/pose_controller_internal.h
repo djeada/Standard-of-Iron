@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the pose_controller*.cpp translation units; not a public header.
-
 #include <QVector3D>
 
 #include <algorithm>

@@ -1021,8 +1021,7 @@ TEST_F(InputCommandHandlerTest, ABuilderInTheBarracksYardIsPickedBeforeTheBarrac
 
   QPointF const barracks_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   QPointF const builder_screen = world_to_screen(QVector3D(0.8F, 0.0F, 0.0F));
-  // A click on the builder's body lands between its feet and the barracks pivot,
-  // nearer the pivot, which used to hand the click to the building.
+
   QPointF const click = builder_screen + (barracks_screen - builder_screen) * 0.7;
   ASSERT_LT(QLineF(click, builder_screen).length(), 30.0)
       << "the click must still be inside the builder's pick radius";

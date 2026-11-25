@@ -26,8 +26,6 @@ Item {
         var points = root.tutorial.focus_points;
         if (!points || points.length === 0)
             return;
-        // The first point is what the step is about; frame it with the points
-        // near it, never the empty middle between two far-apart groups.
         var lead_x = points[0].world_x || 0;
         var lead_z = points[0].world_z || 0;
         var sum_x = 0;
@@ -45,10 +43,6 @@ Item {
         game.camera.look_at_world(sum_x / count, sum_z / count);
     }
 
-    // Skip step sits where Continue was. When a step completes and the next one
-    // takes its place (Continue, or the automatic advance a few seconds later), a
-    // click meant for Continue lands on Skip and throws the fresh step away
-    // unread. Skip only listens once the step has been on screen this long.
     readonly property real focus_cluster_radius: 30
     readonly property int skip_arm_delay_ms: 1200
     property double skip_armed_at: 0

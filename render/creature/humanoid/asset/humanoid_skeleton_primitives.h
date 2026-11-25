@@ -1,8 +1,5 @@
 #pragma once
 
-// The constexpr primitives of the skeleton humanoid LODs, shared by the
-// humanoid spec translation unit. Not a public header.
-
 #include "render/creature/humanoid/asset/humanoid_body_primitives.h"
 
 namespace Render::Humanoid::humanoid_spec_detail {

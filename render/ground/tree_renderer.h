@@ -40,10 +40,6 @@ public:
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
 
-  // Plans rebuilding the layer against `world`, a snapshot of the live map.
-  // Null `world_props` or `anchored` keep the layer's own; `anchored` lists
-  // every species' anchored trees. The job runs on a worker and reads only
-  // what it captured; its adoption runs on the render thread.
   [[nodiscard]] auto plan_rebuild(const std::vector<Game::Map::WorldProp>* world_props,
                                   const std::vector<AnchoredTree>* anchored,
                                   std::shared_ptr<const Game::Map::ScatterWorld> world)

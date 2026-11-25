@@ -2062,7 +2062,7 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.setPen(QPen(QColor(35, 80, 105), 2.0));
     painter.setBrush(QColor(55, 135, 165, 205));
     if (elem.shape == QLatin1String("basin")) {
-      // A harbour basin: straight quays, eased corners.
+
       const double corner = std::min(rx, ry) * 0.25;
       painter.drawRoundedRect(QRectF(-rx, -ry, rx * 2.0, ry * 2.0), corner, corner);
       painter.setPen(QPen(QColor(145, 205, 215, 175), 1.0));

@@ -87,9 +87,7 @@ void Backend::sync_frame_resources(const DrawQueue& queue) {
         (void)textures.resolve(height.field_texture);
         (void)textures.resolve(height.cover_texture);
       };
-  // The prepared batches hold exactly the commands that will be drawn, in
-  // sorted order, so draws of one mesh or block sit together and the tables'
-  // last-hit caches answer most of these lookups.
+
   for (const PreparedBatch& batch : queue.prepared_batches()) {
     for (std::size_t i = batch.start; i < batch.end(); ++i) {
       const DrawCmd& cmd = queue.get_sorted(i);
@@ -141,7 +139,6 @@ void Backend::sync_frame_resources(const DrawQueue& queue) {
     }
   }
 
-  // Uploads bind buffers and texture unit 0 behind the state cache's back.
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glBindVertexArray(0);

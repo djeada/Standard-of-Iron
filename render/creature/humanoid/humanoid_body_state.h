@@ -8,7 +8,6 @@
 
 namespace Render::Creature::Pipeline {
 
-// A prepared humanoid body, ready for CreatureRenderBatch::add_humanoid.
 struct PreparedHumanoidBodyState {
   CreatureGraphOutput graph{};
   Render::GL::HumanoidPose pose{};

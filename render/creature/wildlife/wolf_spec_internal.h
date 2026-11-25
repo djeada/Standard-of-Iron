@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the wolf_spec*.cpp translation units; not a public header.
-
 #include <algorithm>
 #include <cmath>
 #include <utility>

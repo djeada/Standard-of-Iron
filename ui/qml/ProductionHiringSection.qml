@@ -3,9 +3,6 @@ import QtQuick.Controls 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 
-// The selected Mercenary Camp or Elephant Stables (NATION_ASYMMETRY.md 4.2, 4.3):
-// bands and elephants hired for gold, one contract at a time, with the upkeep
-// the treasury pays every minute.
 Rectangle {
     id: hiringSection
 

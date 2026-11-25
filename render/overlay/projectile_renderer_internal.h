@@ -1,8 +1,5 @@
 #pragma once
 
-// Internal to the projectile renderer: the night-glint helpers that both
-// projectile_renderer.cpp and projectile_stone.cpp draw with.
-
 #include <QVector3D>
 
 #include "game/systems/render_effects_frame.h"

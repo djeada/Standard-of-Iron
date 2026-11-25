@@ -166,8 +166,8 @@ CANOPY_CLEARANCE = 1.0
 GROUND_RELIEF = 0.30
 EDGE_MARGIN = 5.0
 NUDGE_SLACK = 4.5
-# The skirmish farmland rule gives a seat its fields within 42 m of the barracks;
-# a piece that asks to stay clear keeps a farm plot's width beyond that.
+
+
 BASE_FARMLAND_REACH = 50.0
 
 

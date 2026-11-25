@@ -31,10 +31,7 @@ constexpr int k_curtain_rings = 2;
 constexpr std::array<float, k_curtain_rings> k_ring_offset_scale = {0.78F, 1.36F};
 constexpr std::array<float, k_curtain_rings> k_ring_height_scale = {1.70F, 2.30F};
 constexpr std::array<float, k_curtain_rings> k_ring_alpha = {0.30F, 0.20F};
-// Neighbouring cards overlap by a fifth of their width, and boundary_gas.frag
-// cross-fades across exactly that fifth (k_card_overlap there). With unequal
-// scales and a narrower fade the overlap drew twice, as a faint vertical seam
-// against the sky at every card joint.
+
 constexpr std::array<float, k_curtain_rings> k_ring_width_scale = {1.25F, 1.25F};
 
 constexpr float k_fog_r = 0.55F;
@@ -214,10 +211,7 @@ auto sample_boundary_mountain(float world_x,
 
   const float seam = smoothstep(0.0F, tile * 0.9F, distance);
   const float foothill_t = smoothstep(0.0F, config.foothill, distance);
-  // The surround plane lies at ground level under this apron. A swell that
-  // dipped below it let the plane show through as flat lens-shaped patches of
-  // another colour (black under an evening sun), so the apron only ever
-  // rises from the map edge and keeps a hand's breadth clear of the plane.
+
   const float swell = std::max((roll - 0.5F) * 2.0F, 0.0F);
   height += swell * tile * (0.30F + 1.10F * foothill_t) * seam * (1.0F - 0.6F * rise);
   height += k_apron_clearance_tiles * tile * seam;

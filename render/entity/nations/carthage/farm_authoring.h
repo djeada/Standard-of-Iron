@@ -14,12 +14,9 @@
 #include "render/entity/nations/carthage/building_palette.h"
 #include "render/frame/render_archetype.h"
 
-// The farm geometry, authored as BuildingArchetypeDescs and baked by
-// the building archetype catalog. Nothing here draws or reads frame state.
 namespace Render::GL::Carthage {
 
-// Palette and layout shared by the authoring and the farm renderer.
-namespace farm_detail {} // namespace farm_detail
+namespace farm_detail {}
 
 auto build_farm_desc(BuildingState state, int stage) -> BuildingArchetypeDesc;
 

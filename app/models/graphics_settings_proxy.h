@@ -38,9 +38,6 @@ signals:
 private:
   void poll_render_settings();
 
-  // The preset can change outside this proxy: on the very first launch the
-  // renderer picks a preset for the adapter on the render thread, so the proxy
-  // notices it here, on the GUI thread.
   QTimer m_poll;
   std::uint32_t m_seen_generation = 0;
 };

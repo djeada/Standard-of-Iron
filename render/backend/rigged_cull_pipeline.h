@@ -43,7 +43,7 @@ public:
   auto operator=(const RiggedCullPipeline&) -> RiggedCullPipeline& = delete;
 
   void set_shader_cache(ShaderCache* cache) { m_shader_cache = cache; }
-  // The backend's GPU copies of skinned meshes and palette atlases.
+
   void set_gpu_tables(RiggedMeshGpuTable* meshes,
                       InstanceBufferTable* blocks) noexcept {
     m_meshes = meshes;

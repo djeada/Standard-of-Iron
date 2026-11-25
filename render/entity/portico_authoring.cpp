@@ -24,7 +24,7 @@ constexpr float k_column_z = 1.14F;
 constexpr float k_column_height = 0.88F;
 constexpr float k_entablature = 0.16F;
 constexpr float k_gallery_height = 0.62F;
-// How far a basilica's hall rises over its aisle roof, for the clerestory.
+
 constexpr float k_clerestory = 0.62F;
 constexpr float k_aisle_roof_rise = 0.20F;
 constexpr float k_wall = 0.08F;
@@ -56,8 +56,7 @@ public:
     const float first_top = k_floor + k_column_height + k_entablature;
     const float gallery_top = first_top + k_gallery_height + 0.10F;
     if (m_basilica) {
-      // The hall keeps its own roof; the walk in front of it is an aisle
-      // roofed lower, so the hall's upper windows clear it.
+
       add_gallery(first_top);
       add_clerestory(gallery_top);
       add_roof(gallery_top, k_shop_front, k_column_z + 0.16F, true);
@@ -79,7 +78,6 @@ private:
     return decay_hash((m_variant * 613) + (salt * 97) + 7);
   }
 
-  // Fire takes the right-hand bay first.
   [[nodiscard]] auto standing(float x) const -> bool { return intact() || x < 0.3F; }
 
   void add_platform() {
@@ -98,7 +96,7 @@ private:
   void add_column(float x, float base, float height, int salt) {
     const float top = base + height;
     if (!standing(x)) {
-      // A broken drum left on its base.
+
       m_parts.box(x - 0.075F,
                   x + 0.075F,
                   base,
@@ -169,7 +167,7 @@ private:
     }
     const float top = base + height;
     const float right = intact() ? k_half : 0.3F;
-    // Architrave, a painted frieze, and the cornice over it.
+
     m_parts.box(-k_half,
                 right,
                 top,
@@ -205,14 +203,13 @@ private:
     }
   }
 
-  // The shops behind the walk: a plastered range with two doors to a lot.
   void add_shops() {
     BuildingPartLabel const label(m_desc, "shops");
     const float top = k_floor + k_column_height + k_entablature +
                       (m_two_storey ? k_gallery_height + 0.10F : 0.0F) +
                       (m_basilica ? k_clerestory : 0.0F);
     const float inner = k_half - k_wall;
-    // The range stands on the platform: sharing its outer faces would tie.
+
     m_parts.box(
         -inner, inner, k_floor, top, -k_half + k_wall, k_shop_front - k_wall, k_void);
     m_parts.slot(
@@ -226,8 +223,7 @@ private:
                    k_shop_front,
                    k_lot_wall_slot);
     }
-    // The back of the range faces a street too: pilasters, a painted dado
-    // and a string course, not sixty paces of bare plaster.
+
     {
       const float back = -k_half;
       m_parts.slot(-k_half,
@@ -244,7 +240,7 @@ private:
                   back - 0.022F,
                   back,
                   m_look.stone);
-      // Between the hall's windows, never across them.
+
       for (const float x : {-1.345F, -0.70F, 0.0F, 0.70F, 1.345F}) {
         m_parts.box(x - 0.06F,
                     x + 0.06F,
@@ -257,7 +253,7 @@ private:
       m_parts.box(
           -k_half, k_half, top - 0.05F, top, back - 0.035F, back, m_look.stone_shade);
     }
-    // The shop front: piers, lintels, and a dado in the house colour.
+
     const float door_top = k_floor + 0.72F;
     const float dado = k_floor + 0.34F;
     constexpr float k_doors[2][2] = {{-0.92F, -0.42F}, {0.42F, 0.92F}};
@@ -291,7 +287,7 @@ private:
                     k_shop_front - 0.02F,
                     k_shop_front + 0.018F,
                     m_look.timber_dark);
-        // One leaf stands open.
+
         m_parts.box(door[0],
                     door[0] + 0.02F,
                     k_floor,
@@ -311,7 +307,7 @@ private:
     }
     pier(cursor, inner);
     if (m_two_storey) {
-      // The upper range looks onto the gallery through a row of windows.
+
       const float sill = k_floor + k_column_height + k_entablature + 0.24F;
       for (const float x : {-0.94F, -0.31F, 0.31F, 0.94F}) {
         m_parts.box(x - 0.10F,
@@ -331,7 +327,7 @@ private:
       }
     }
     if (intact()) {
-      // Wares put out under the walk.
+
       m_desc.add_cylinder(QVector3D(-0.20F, k_floor, k_shop_front + 0.12F),
                           QVector3D(-0.20F, k_floor + 0.20F, k_shop_front + 0.12F),
                           0.06F,
@@ -368,7 +364,7 @@ private:
                              QVector3D(0.12F, 0.045F, 0.008F),
                              k_lot_team_slot);
       if (m_variant == 2) {
-        // Cloth hung between the columns against the afternoon sun.
+
         BuildingPartMaterial const cloth(m_desc, k_building_material_cloth);
         m_parts.slot(-0.88F,
                      -0.06F,
@@ -382,7 +378,6 @@ private:
     }
   }
 
-  // The upper walk of a two-storey stoa: shorter columns behind a balustrade.
   void add_gallery(float base) {
     BuildingPartLabel const label(m_desc, "gallery");
     const float right = intact() ? k_half : 0.3F;
@@ -421,7 +416,7 @@ private:
                     m_look.stone);
       }
     }
-    // Balustrade between the upper columns.
+
     m_parts.box(-k_half,
                 right,
                 base + 0.21F,
@@ -468,7 +463,7 @@ private:
     if (intact() || lean_to) {
       return;
     }
-    // What the fire left of the right-hand bay: charred rafters.
+
     BuildingPartMaterial const timber(m_desc, k_building_material_wood);
     const float ridge_z = (front + rear) * 0.5F;
     const float half_depth = (front - rear) * 0.5F;
@@ -488,8 +483,6 @@ private:
     }
   }
 
-  // A flat roof from rear to front with a parapet and stepped merlons along
-  // its front edge; `aisle` leaves off the rear parapet and the roof clutter.
   void add_flat_roof(float eave, float rear, float front, bool aisle) {
     const float right = intact() ? k_half : 0.3F;
     m_parts.box(-k_half, right, eave, eave + 0.03F, rear, front, m_look.deck);
@@ -545,8 +538,6 @@ private:
     }
   }
 
-  // The hall's upper windows, over the aisle roof in front and high in the
-  // back wall, and the band of paint under them.
   void add_clerestory(float base) {
     BuildingPartLabel const label(m_desc, "clerestory");
     const float right = intact() ? k_half : 0.3F;
@@ -682,14 +673,13 @@ auto build_portico_desc(const PorticoLook& look,
   PorticoBuilder(desc, look, state, variant).build();
   const Motif::Setter set(desc, state);
   if (look.tiled_roof) {
-    // Rome: palmettes along the ridge, two to a lot.
+
     const QVector3D ridge = set.highest(-0.05F, 0.05F, -k_half, k_shop_front);
     for (const float x : {-0.70F, 0.70F}) {
       Motif::add_roman_acroterion(desc, set.at(x, ridge.z()), 1.7F, true);
     }
   } else {
-    // Carthage: horns over the walk, and on a basilica the disc and crescent
-    // standing on the hall's roof.
+
     Motif::add_punic_horns(desc, set.highest(-0.03F, 0.03F, 0.95F, 1.26F), 1.4F);
     if (variant == k_portico_basilica_variant) {
       Motif::add_punic_standard(desc, set.at(0.0F, -0.55F), 1.0F);

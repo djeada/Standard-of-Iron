@@ -86,7 +86,6 @@ ArchetypeRegistry::ArchetypeRegistry() {
 
 void ArchetypeRegistry::seed_baseline() {
 
-  // A baseline archetype has the species' body roles plus one.
   auto const base_roles = [](Render::Creature::Pipeline::CreatureKind kind) {
     const auto* contract = Render::Creature::Pipeline::species_contract(kind);
     return static_cast<std::uint8_t>((contract != nullptr ? contract->role_count : 0U) +

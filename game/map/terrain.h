@@ -104,9 +104,6 @@ public:
   }
   [[nodiscard]] auto get_lakes() const -> const std::vector<Lake>& { return m_lakes; }
 
-  // The lowest bed of any lake on the map, or nothing when it has none. Water
-  // may be authored below the ground it lies in; whatever is drawn under the
-  // terrain has to stay below this.
   [[nodiscard]] auto lowest_lake_bed() const -> std::optional<float>;
 
   void add_bridges(const std::vector<Bridge>& bridges);

@@ -674,8 +674,7 @@ TEST(ShaderSource, MainWorldReceiversUseDirectionalAndLocalLighting) {
         << name;
     EXPECT_NE(source.find("#include \"directional_shadows.glsl\""), std::string::npos)
         << name;
-    // Buildings take the shadow amount on its own: they add the street's
-    // bounce light to whatever the shadow leaves unlit.
+
     EXPECT_TRUE(source.find("apply_directional_shadow(") != std::string::npos ||
                 source.find("directional_shadow_amount(") != std::string::npos)
         << name;
@@ -1684,9 +1683,7 @@ TEST(ShaderSource, MergedBuildingsReadFourPaletteSlots) {
   const auto root = find_repo_root();
   const auto vert = read_text(root / "assets" / "shaders" / "building_merged.vert");
   ASSERT_FALSE(vert.empty());
-  // The instance record is model (3), palette 0-1, state, palette 2-3; the
-  // per-part attributes follow it. MeshInstancingPipeline derives the same
-  // locations from sizeof(BuildingInstanceGpu).
+
   EXPECT_NE(vert.find("layout(location = 8) in vec4 a_instance_state;"),
             std::string::npos);
   EXPECT_NE(vert.find("layout(location = 9) in vec4 a_instance_palette2;"),

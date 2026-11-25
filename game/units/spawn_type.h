@@ -50,7 +50,7 @@ enum class SpawnType : std::uint8_t {
   WallLadder,
   Slinger,
   Velites,
-  // NATION_ASYMMETRY.md: Carthage's gold army and Rome's levy army.
+
   MercenaryCamp,
   ElephantStables,
   Fabrica,
@@ -545,14 +545,11 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
          type == SpawnType::Ram || type == SpawnType::SiegeTower;
 }
 
-// The buildings only one nation raises (NATION_ASYMMETRY.md): Carthage's
-// Mercenary Camp and Elephant Stables, Rome's Fabrica and Castra.
 [[nodiscard]] constexpr auto is_nation_building_spawn(SpawnType type) noexcept -> bool {
   return type == SpawnType::MercenaryCamp || type == SpawnType::ElephantStables ||
          type == SpawnType::Fabrica || type == SpawnType::Castra;
 }
 
-// Buildings that hire troops for gold or food alone, with no reserve of men.
 [[nodiscard]] constexpr auto is_hiring_building(SpawnType type) noexcept -> bool {
   return type == SpawnType::MercenaryCamp || type == SpawnType::ElephantStables;
 }

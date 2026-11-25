@@ -8,7 +8,6 @@
 
 namespace Render::Creature::Pipeline {
 
-// A prepared horse body, ready for CreatureRenderBatch::add_quadruped.
 struct PreparedHorseBodyState {
   CreatureGraphOutput graph{};
   Render::GL::HorseVariant variant{};

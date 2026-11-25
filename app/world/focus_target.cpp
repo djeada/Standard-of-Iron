@@ -184,7 +184,7 @@ auto building_display_name(const Engine::Core::UnitComponent& unit) -> QString {
   if (is_sepulcher_shrine(unit)) {
     return QCoreApplication::translate("FocusTarget", "Sepulcher Shrine");
   }
-  // Carthage's trade house is the Emporion (NATION_ASYMMETRY.md section 4.1).
+
   if (unit.spawn_type == Game::Units::SpawnType::Marketplace &&
       unit.nation_id == Game::Systems::NationID::Carthage) {
     return QCoreApplication::translate("FocusTarget", "Emporion");

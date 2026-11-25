@@ -11,14 +11,10 @@
 #include "render/entity/nations/roman/building_palette.h"
 #include "render/entity/nations/roman/tenement_builder.h"
 
-// The insula's roof: pantiled gable or walled terrace, and what a fire leaves
-// of it.
 namespace Render::GL::Roman::TenementDetail {
 
 using namespace TenementLot;
 
-// The party wall carried up into the gable: coarse courses fill the
-// triangle, and a raking slab under each roof slope hides their steps.
 void TenementBuilder::add_gable_end(float sign, float rise) {
   constexpr int k_courses = 5;
   const float x0 = sign > 0.0F ? k_inner_half : -k_half_width;
@@ -76,8 +72,6 @@ void TenementBuilder::add_chimney(const QVector3D& vent) {
                       BuildingPalette::k_terracotta);
 }
 
-// Tegulae laid in overlapping courses with a cover tile over every joint and
-// an antefix closing each cover tile at the eave.
 void TenementBuilder::add_pantiles(float x0, float x1, float rise) {
   BuildingPartMaterial const tiles(m_desc, k_building_material_ceramic);
   const float half_depth = k_half_depth + k_eave_overhang;
@@ -159,8 +153,6 @@ void TenementBuilder::add_gable_roof() {
     return;
   }
 
-  // Damaged: the roof survives over the left bays; charred rafters span the
-  // rest.
   const float kept_end = k_break_x - 0.04F;
   {
     BuildingPartLabel const label(m_desc, "tiled_roof");
@@ -217,7 +209,6 @@ void TenementBuilder::add_terrace_roof() {
     wall_run(k_half_width - 0.07F, k_half_width, k_rear + 0.07F, k_front - 0.07F);
   }
 
-  // The stair head, with its own little pent roof.
   const float hut_top = deck + 0.46F;
   slot_box(-1.02F,
            -0.42F,
@@ -253,7 +244,6 @@ void TenementBuilder::add_terrace_roof() {
     return;
   }
 
-  // A vine pergola over the street side.
   {
     BuildingPartMaterial const timber(m_desc, k_building_material_wood);
     const float beam_y = deck + 0.44F;

@@ -21,7 +21,7 @@ SIZE = 801
 p = Plan("roman_republic")
 t = Town(p, seed=753)
 rng = random.Random(753)
-ROMAN = (("tenement", 6), ("", 1))  # mostly insulae, some plain houses (domus fronts)
+ROMAN = (("tenement", 6), ("", 1))
 
 p.map(
     name="Rome",
@@ -69,10 +69,8 @@ p.map(
     max_troops_per_player=8100,
 )
 
-# ================================================================== water
-p.lake(
-    -40, 880, 2200, 1080, height=SEA_LEVEL, shape="round"
-)  # the Tyrrhenian, along the south
+
+p.lake(-40, 880, 2200, 1080, height=SEA_LEVEL, shape="round")
 TIBER = [
     [-20, -420],
     [-50, -340],
@@ -96,7 +94,7 @@ p.river(TIBER_PTS, 24, SEA_LEVEL)
 ARM = spline([[-158, -4], [-138, 8], [-130, 30], [-136, 54], [-158, 66]], 6)
 p.river(ARM, 10, SEA_LEVEL)
 
-# ================================================================== hills
+
 HILLS = {
     "capitoline": (-100, -44, 58, 42, 3.4, 30),
     "palatine": (-36, 58, 96, 66, 2.8, -12),
@@ -111,7 +109,7 @@ HILLS = {
 for x, z, w, d, h, r in HILLS.values():
     p.rise(x, z, w, d, h, 0.55, r)
 
-# ================================================================== the Servian wall
+
 WALL = [
     (-112, 206),
     (-112, -66),
@@ -145,7 +143,7 @@ GATES = {
 for name, (gx, gz) in GATES.items():
     t.gate(name, gx, gz)
 
-# ================================================================== the Forum and the Capitol
+
 FORUM = (-50, 2)
 FR = 33
 fw = t.plaza(
@@ -157,7 +155,7 @@ for u, tag, rot in [(-50, "temple_of_saturn", 90), (50, "temple_of_divus_julius"
 for k in range(7):
     x, z = fw(-36 + k * 12, (-1) ** k * 5)
     p.prop("statue", x, z, 1.1)
-# Statue groups at the Forum's corners and either side of each temple's steps.
+
 for u, v in [(-40, -10), (-40, 10), (40, -10), (40, 10)]:
     for du, dv in [(0, 0), (2.2, 0.0), (1.1, 1.9)]:
         x, z = fw(u + (du if u < 0 else -du), v + (dv if v < 0 else -dv))
@@ -168,7 +166,7 @@ for u, sgn in [(-42.5, 1), (42.5, -1)]:
         p.prop("statue", x, z, 1.25)
 x0, z0 = fw(-34, 0)
 x1, z1 = fw(34, 0)
-t.street([(x0, z0), (x1, z1)], 3.0, "stone", curve=False, mark=False)  # the paving band
+t.street([(x0, z0), (x1, z1)], 3.0, "stone", curve=False, mark=False)
 p.crowd(
     "forum_crowd",
     FORUM[0] - 26,
@@ -190,7 +188,7 @@ t.scatter(
     seed=4,
 )
 
-# Imperial fora on their own axes.
+
 fc = t.plaza("forum_caesaris", -46, -54, 44, 18, rotation=FR, sides="ns")
 x, z = fc(-28, 0)
 t.building("temple_of_venus_genetrix", "temple", x, z, (90 - FR) % 360)
@@ -202,13 +200,11 @@ ft = t.plaza(
 )
 t.arc("mercati", -18, -112, 26, 20, 200, 340, rotation=30, outward=False)
 
-# ================================================================== the Colosseum
-# A stone oval: an elliptical masonry wall with arched gatehouses on its four
-# axes, and two tiers of arcades inside facing the arena.
+
 CX, CZ = 46, 30
 CRX, CRZ = 32, 26
-# The oval runs round in 10-degree steps; near each axis it gives way to a
-# straight 8-unit leg that carries the gatehouse, with no stubs beside the lane.
+
+
 pts = []
 for k in range(36):
     deg = k * 10 + 5
@@ -233,7 +229,7 @@ for gx, gz, name in (
     (CX, CZ + CRZ, "colosseum_south"),
 ):
     t.gate(name, gx, gz)
-# Outside the stone oval, a ring of arched arcades facing the street: the facade.
+
 t.arc(
     "colosseum_arcade",
     CX,
@@ -294,9 +290,9 @@ p.crowd(
 )
 p.crowd("arena_crowd", CX - 4, CZ - 10, CX + 16, CZ + 10, 24, seed=13, radius=8)
 p.crowd("sacra_crowd", -34, 22, -4, 42, 30, seed=14, radius=10)
-p.prop("statue", CX - CRX - 10, CZ - 9, 1.8)  # the colossus
+p.prop("statue", CX - CRX - 10, CZ - 9, 1.8)
 
-# ================================================================== the Circus Maximus
+
 CIRC_C, CIRC_R = (-48, 122), 28
 cr = math.radians(CIRC_R)
 cc, cs = math.cos(cr), math.sin(cr)
@@ -325,7 +321,7 @@ p.crowd(
     radius=16,
 )
 
-# ================================================================== the Palatine
+
 t.building("temple_of_apollo", "temple", -60, 52, 200)
 pal = t.plaza(
     "area_palatina", -26, 66, 30, 18, rotation=-12, sides="we", style="flagstone"
@@ -344,7 +340,7 @@ for k, (bx, bz, rot) in enumerate([(-4, 42, -12), (-58, 82, -12)]):
     )
 t.pool_garden("palatine_gardens", -14, 92, r=13, seed=7)
 
-# Baths of Trajan on the Oppian: a great hall round a garden court with its pool.
+
 BT = (112, 46)
 bw = t.plaza(
     "thermae_traiani",
@@ -362,7 +358,7 @@ for u, v in [(-14, -9), (14, -9), (-14, 9), (14, 9)]:
     x, z = bw(u, v)
     t.tree("cypress_tree", x, z, 1.0)
 
-# Gardens of Maecenas on the Esquiline, against the wall, round a pool.
+
 MAEC = blob(160, -70, 34, 44, seed=21, rotation=10).intersection(inside)
 t.pool_garden("maecenas_pool", 160, -76, r=15, seed=21)
 t.park("horti_maecenatis", MAEC, seed=21, statues=5, cross=0)
@@ -373,7 +369,7 @@ t.building("temple_of_tellus", "temple", 108, -52, 180)
 t.building("castra_urbana", "barracks", 166, 100, 300, max_population=120)
 t.building("castra_peregrina", "barracks", 120, 160, 330, max_population=120)
 
-# ================================================================== the river port and the cattle market
+
 EZ0, EZ1 = 104, 140
 bank = p.shore([-114, (EZ0 + EZ1) / 2], [-1, 0])[0]
 t.run(
@@ -388,17 +384,16 @@ t.street([(bank + 9.5, EZ0 - 6), (bank + 9.5, EZ1 + 6)], 4.4, "flagstone", curve
 for qz in (EZ0 - 3.5, EZ1 + 3.5):
     t.street(
         [(bank + 9.5, qz), (bank - 2.5, qz)], 3.0, "flagstone", curve=False, mark=False
-    )  # quay steps
+    )
 for k in range(6):
     p.prop("supply_cart", round(bank + 6, 1), round(EZ0 + 4 + k * 6.5, 1), 1.0, 90)
 p.crowd("wharf_crowd", bank + 5, EZ0 + 6, bank + 12, EZ1, 32, seed=7, radius=10)
 t.building("temple_of_portunus", "temple", -128, 78, 270)
-# The Forum Boarium: the cattle market inside the river gate, a sheep pen among its stalls.
+
 BOARIUM = (-90, 84)
 p.crowd("boarium_crowd", -96, 60, -72, 86, 50, seed=17, radius=9)
 
 
-# ================================================================== bridges and great streets
 def span(pts, width, near, deck=10.0):
     ea, eb = t.river_bridge(pts, width, near, deck=deck)
     east, west = (ea, eb) if ea[0] > eb[0] else (eb, ea)
@@ -409,7 +404,7 @@ BR = {}
 BR["aemilius"] = span(TIBER_PTS, 24, (-160, 96))
 BR["sublicius"] = span(TIBER_PTS, 24, (-172, 172))
 BR["aelius"] = span(TIBER_PTS, 24, (-246, -150))
-# Cross the side channel just south of its bend so the deck stays square to one reach.
+
 BR["fabricius"] = span(ARM, 10, (-130, 33), deck=8.0)
 BR["cestius"] = span(TIBER_PTS, 24, (-156, 30), deck=8.0)
 
@@ -428,7 +423,7 @@ for name in ("aemilius", "sublicius", "fabricius"):
     approach(name, "e", (BR[name][0][0] + 8, BR[name][0][1]))
 approach("aelius", "e", (BR["aelius"][0][0] + 10, BR["aelius"][0][1]))
 t.building("temple_of_aesculapius", "temple", -147, 14, 0)
-# From the island bridge along the foot of the wall to the Flumentana gate.
+
 t.street(
     [
         (BR["fabricius"][0][0] + 8, BR["fabricius"][0][1]),
@@ -449,7 +444,7 @@ VZ = vw[1]
 
 MAIN = 5.4
 streets = []
-# Via Sacra: from the Forum to the Colosseum's west gate, then on to the Esquiline gate.
+
 streets.append(t.street([fw(43, 10), fw(60, 10), (CX - CRX - 14, CZ)], MAIN, "stone"))
 streets.append(
     t.street(
@@ -482,7 +477,7 @@ streets.append(
     t.street([(CX + CRX + 14, CZ), (130, 40), (170, 26), (206, 20)], 4.8, "stone")
 )
 streets.append(t.street([fw(-30, 16), (-98, 28), (-112, 0)], MAIN, "stone"))
-# The market street: from the river gate up through the Forum Boarium to the Forum.
+
 market_street = t.street(
     [
         (BR["aemilius"][0][0] + 8, BR["aemilius"][0][1]),
@@ -516,7 +511,7 @@ for line in streets:
             styles=(("tenement", 5), ("", 1)),
             alley=(6, 12),
         )
-# Stalls along the market street, shops under porticoes along the Via Sacra.
+
 if market_street is not None:
     t.later(
         t.frontage,
@@ -542,7 +537,7 @@ if streets[0] is not None:
         alley=(3, 5),
     )
 
-# ================================================================== the quarters
+
 QUARTERS = [
     (
         "subura",
@@ -644,7 +639,7 @@ for k, piece in enumerate(getattr(rest, "geoms", [rest])):
     t.later(t.build_along, f"rest{k}", lanes, region=piece, styles=ROMAN)
     t.later(t.courts, piece, density=0.010, seed=40 + k)
 
-# ================================================================== the Campus Martius
+
 CAMPUS = Polygon(
     [
         (-112, -70),
@@ -734,7 +729,7 @@ t.later(t.courts, campus_rest, density=0.012, seed=12)
 if flam is not None:
     t.later(t.avenue, flam, spacing=10, offset=6.5, kind="pine_tree", scale=1.05)
 
-# ================================================================== gardens outside the wall
+
 SALL = blob(120, -300, 70, 48, seed=31, rotation=-10)
 t.pool_garden("sallust_pool", 120, -296, r=18, seed=31)
 t.building("temple_of_venus_erycina", "temple", 120, -328, 0)
@@ -762,7 +757,7 @@ t.park(
     density=0.010,
 )
 
-# ================================================================== Trastevere
+
 TRANS = Polygon(
     [
         (-186, -60),
@@ -801,11 +796,9 @@ for line in (tv, tv2, tv3):
 lanes = t.lanes(TRANS, angle=58, major=24, minor=(28, 50), warp=(8, 120), seed=13)
 t.later(t.build_along, "trastevere", lanes, region=TRANS, styles=ROMAN, alley=(4, 9))
 t.later(t.courts, TRANS, density=0.011, seed=14)
-t.street(
-    [(vw[0] - 10, VZ), (-300, -150), (-340, -170), (-400, -176)], 5.0, "stone"
-)  # Via Cornelia
+t.street([(vw[0] - 10, VZ), (-300, -150), (-340, -170), (-400, -176)], 5.0, "stone")
 
-# ================================================================== the consular roads, suburbs, tombs
+
 ROADS = {
     "appia": [(80, 226), (100, 262), (170, 300), (260, 330), (400, 360)],
     "latina": [(100, 262), (150, 250), (240, 220), (330, 236), (400, 262)],
@@ -874,7 +867,7 @@ t.park(
     density=0.010,
 )
 
-# ================================================================== Ostia and the harbour
+
 COAST = p.shore([-80, 260], [0, 1])[1]
 HCX = -90
 HB_W, HB_D = 88, 46
@@ -947,7 +940,7 @@ lanes = t.lanes(OST, angle=6, major=24, minor=(26, 44), warp=(4, 100), seed=15)
 t.later(t.build_along, "ostia", lanes, region=OST, styles=ROMAN, alley=(4, 8))
 t.later(t.courts, OST, density=0.009, seed=16)
 
-# ================================================================== the countryside: villas, farms, the legion
+
 VILLAS = [
     (300, -250, 10),
     (330, -150, -20),
@@ -974,7 +967,7 @@ t.scatter(
     spacing=7,
     seed=50,
 )
-# A legion drawn up on the field outside the Esquiline gate, and the guard at the camps.
+
 t.troops("legio_hastati", "swordsman", 262, -16, count=8, facing=270, cols=4)
 t.troops("legio_principes", "spearman", 278, -16, count=8, facing=270, cols=4)
 t.troops("legio_sagittarii", "archer", 292, -16, count=4, facing=270, cols=4)
@@ -982,7 +975,7 @@ t.troops(
     "legio_equites", "horse_swordsman", 270, 22, count=4, facing=270, cols=4, spacing=9
 )
 t.troops("praetorians", "swordsman", 150, 98, count=3, facing=120, cols=3)
-# Soldiers where the walk goes: the quay, the market, the Forum, the Colosseum, the Palatine.
+
 t.troops(
     "quay_guard", "spearman", bank + 9.5, 112, count=2, facing=0, cols=2, spacing=6
 )
@@ -1022,7 +1015,7 @@ t.troops(
 t.troops(
     "gladiatores", "swordsman", CX + 14, CZ - 3, count=2, facing=270, cols=1, spacing=8
 )
-# A legion drilling on the sand of the Circus Maximus.
+
 for k in range(4):
     x, z = circ(-36 + k * 18, -3)
     t.troops(
@@ -1050,8 +1043,7 @@ for k in range(2):
 t.troops("peregrini", "spearman", 104, 158, count=3, facing=150, cols=3)
 t.troops("vigiles", "spearman", -30, 40, count=2, facing=300, cols=2)
 
-# ================================================================== flocks and birds
-# Sheep loose in the streets and squares the walk passes, and in the fields.
+
 for x, z, r in (
     (bank + 10, 132, 3.0),
     (-88, 76, 3.0),
@@ -1066,7 +1058,7 @@ for x, z, r in (
 for x, z in ((-50, 2), (46, 30), (-140, 120), (120, -296)):
     p.add("wildlife", species="birds", x=x, z=z, radius=30)
 
-# ================================================================== the match
+
 p.root(
     "starting_resources",
     {"food": 500, "gold": 600, "iron": 150, "stone": 300, "wood": 400},
@@ -1130,17 +1122,16 @@ print(
 )
 print("streets into buildings:", t.check_streets())
 
-# Keep room for fields by Castra Peregrina after filling the Caelian district.
-# Clear the lots after placing frontage so the other streets keep their layouts.
+
 castra_fields = ((108, 150), (124, 192), (150, 162))
 
 
 def occupies_castra_field(op):
     lot = op.get("json", {})
     if op.get("kind") == "structure" and lot.get("type") == "home":
-        half_extent = 10.5  # Field half-width plus room for a turned house.
+        half_extent = 10.5
     elif op.get("kind") == "prop":
-        half_extent = 8.5  # Includes clearance for foliage at the edge.
+        half_extent = 8.5
     else:
         return False
     return any(
@@ -1151,8 +1142,7 @@ def occupies_castra_field(op):
 
 p.ops = [op for op in p.ops if not occupies_castra_field(op)]
 
-# The consul's walk: from the quay, through the river gate and the cattle market, across the
-# Forum, down the Via Sacra and in at the Colosseum's west gate.
+
 walk = []
 for a, b in (
     ((bank + 9.5, 124), (-112, 96)),
@@ -1161,8 +1151,8 @@ for a, b in (
 ):
     pts, length = t.route(a, b)
     walk += pts if not walk else pts[1:]
-# Into the Colosseum down the middle of the west gate: one long leg aimed at a point just
-# past the gate centre, so the consul walks the axis and the gate opens ahead of him.
+
+
 for pt in ([CX - CRX - 14, CZ], [CX - CRX - 9, CZ], [CX - CRX + 2, CZ], [CX - 8, CZ]):
     if math.dist(walk[-1], pt) > 1.0:
         walk.append(pt)

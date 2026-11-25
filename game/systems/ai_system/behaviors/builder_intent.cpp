@@ -180,9 +180,6 @@ void wish_for_basics(const AISnapshot& snapshot,
   }
 }
 
-// The buildings that make a nation play differently (NATION_ASYMMETRY.md
-// section 9): Carthage's Mercenary Camp and Elephant Stables, Rome's Fabrica
-// and a Castra toward the enemy. One of each, once the town can feed itself.
 auto nation_building_count(const AISnapshot& snapshot,
                            Game::Units::SpawnType type) -> int {
   int count = 0;
@@ -215,8 +212,6 @@ auto doctrine_prefers(const AIContext& context, std::string_view troop) -> bool 
   return std::find(preferred.begin(), preferred.end(), troop) != preferred.end();
 }
 
-// Where a marching camp goes: a third of the way to the enemy's buildings,
-// between 22 and 45 m out.
 auto castra_site(const AISnapshot& snapshot,
                  const AIContext& context,
                  ConstructionIntent& intent) -> bool {
@@ -246,8 +241,6 @@ auto castra_site(const AISnapshot& snapshot,
   return true;
 }
 
-// Carthage's camp is where its army comes from, so it goes up as soon as the
-// town has its first roofs; it ranks with the basics.
 void wish_for_a_camp(const AISnapshot& snapshot,
                      const AIContext& context,
                      const SettlementAssessment& town,
@@ -260,8 +253,6 @@ void wish_for_a_camp(const AISnapshot& snapshot,
   }
 }
 
-// The rest wait for a town that can feed itself, and rank after the authored
-// plan's next step so they never cost the town its homes.
 void wish_for_nation_buildings(const AISnapshot& snapshot,
                                const AIContext& context,
                                const SettlementAssessment& town,

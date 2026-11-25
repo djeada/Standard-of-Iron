@@ -18,8 +18,7 @@ AudioServices::~AudioServices() = default;
 
 namespace {
 constexpr int k_playlist_poll_ms = 500;
-// Start the next track this long before the current one ends, so the short
-// crossfade lands on the sealed tail of the loop.
+
 constexpr float k_playlist_lead_seconds = 0.25F;
 } // namespace
 

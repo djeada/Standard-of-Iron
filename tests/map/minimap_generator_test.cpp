@@ -381,8 +381,6 @@ TEST_F(MinimapGeneratorTest, RoadIntersectionsDoNotDarkenAgainstSingleSegment) {
   EXPECT_LT(color_distance(crossing_pixel, single_pixel), 24);
 }
 
-// Rome and Carthage carry hundreds of short road pieces. Uniting every stroked
-// outline into one path made their skirmish previews take 40+ seconds.
 TEST_F(MinimapGeneratorTest, ACityWorthOfRoadsRendersQuickly) {
   test_map.grid.width = 800;
   test_map.grid.height = 800;

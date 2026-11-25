@@ -56,9 +56,7 @@ auto slerp_in_hemisphere(const QQuaternion& from,
                          const QQuaternion& to,
                          float weight,
                          bool flip) noexcept -> QQuaternion {
-  // Plain float arithmetic: QQuaternion::length()/normalized() go through
-  // double precision and fuzzy compares, which made this the hottest call in
-  // creature preparation.
+
   float const sign = flip ? -1.0F : 1.0F;
   float const tw = to.scalar() * sign;
   float const tx = to.x() * sign;

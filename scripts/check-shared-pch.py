@@ -27,7 +27,9 @@ DROPPED_WITH_VALUE = {"-MT", "-MF", "-o"}
 
 
 def target_of(entry):
-    match = re.search(r"CMakeFiles/([^/]+)\.dir/", entry.get("output", entry["command"]))
+    match = re.search(
+        r"CMakeFiles/([^/]+)\.dir/", entry.get("output", entry["command"])
+    )
     return match.group(1) if match else None
 
 

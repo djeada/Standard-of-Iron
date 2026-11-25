@@ -8,7 +8,6 @@
 
 namespace Render::Creature::Pipeline {
 
-// A prepared elephant body, ready for CreatureRenderBatch::add_quadruped.
 struct PreparedElephantBodyState {
   CreatureGraphOutput graph{};
   Render::GL::ElephantVariant variant{};

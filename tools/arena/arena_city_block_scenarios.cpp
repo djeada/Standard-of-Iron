@@ -17,7 +17,6 @@ using Nation = Game::Systems::NationID;
 using Spawn = Game::Units::SpawnType;
 using Troop = Game::Units::TroopType;
 
-// The strip of pavement a tenement lays in front of its own lot.
 constexpr float k_pavement = 0.5F;
 
 struct Lot {
@@ -145,8 +144,7 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
   s.select_spawned_units = false;
   s.suppress_spawn_anchor = true;
   s.suppress_ui_overlays = true;
-  // An open horizon: the review is of the town, not of the arena's ring of
-  // crags.
+
   s.suppress_boundary_mountains = true;
   s.environment.start_time = light.hour;
   s.environment.time_mode = Game::Map::TimeMode::Locked;
@@ -164,7 +162,6 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
     return row < 0 ? north_z : (row > 0 ? south_z : mid_z);
   };
 
-  // Streets, laid before anything stands on them.
   const float west_edge = column_x(-1) - k_pavement;
   const float east_edge = column_x(1) + block.width + k_pavement;
   const float north_edge = north_z - k_pavement;
@@ -231,7 +228,6 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
     }
   }
 
-  // West: the older quarter of single-storey garden houses.
   {
     const float x0 = column_x(-1);
     for (int line = 0; line < 2; ++line) {
@@ -261,12 +257,11 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
         "plant", 6, garden + QVector3D(-12.0F, 0.0F, 1.8F), {4.8F, 0.0F, 0.0F}, 0.9F));
   }
 
-  // East: a small forum, the temple closing its north end.
   {
     const float x0 = column_x(1);
     const QVector3D forum(
         x0 + (block.width * 0.5F), 0.0F, mid_z + (block.depth * 0.5F));
-    // The whole square is paved, in strips a road can carry.
+
     constexpr int k_paving_strips = 4;
     const float strip = (block.depth + 1.0F) / static_cast<float>(k_paving_strips);
     for (int index = 0; index < k_paving_strips; ++index) {
@@ -304,7 +299,6 @@ auto roman_block(const BlockLight& light) -> ArenaScenarioDefinition {
                                        1.0F));
   }
 
-  // The street has people in it.
   s.groups.push_back(residents(QStringLiteral("main_street_folk"),
                                Nation::RomanRepublic,
                                1,

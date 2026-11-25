@@ -30,7 +30,6 @@ public:
 
   void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  // Every water, road, shoreline and bridge mesh, for prewarming.
   void for_each_mesh(const MeshVisitor& visit) const;
 
   [[nodiscard]] auto water() const -> WaterRenderer*;

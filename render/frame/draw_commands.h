@@ -86,7 +86,7 @@ struct FogMaskResources {
 
 struct FogBatchCmd {
   const FogInstanceData* instances = nullptr;
-  // Instead of `instances`: fog kept in a block the backend uploads once.
+
   const InstanceBlock* instance_block = nullptr;
   std::size_t count = 0;
   FogMaskResources mask{};
@@ -118,7 +118,7 @@ struct TerrainScatterCmd {
 
   Species species = Species::Grass;
   const Material* material = nullptr;
-  // The chunk's instances; the backend keeps its own buffer for the block.
+
   const InstanceBlock* instances = nullptr;
   std::size_t instance_count = 0;
   QVector3D bounds_center;
@@ -139,9 +139,6 @@ struct RainBatchCmd {
   CommandPriority priority{CommandPriority::Low};
 };
 
-// What a backend bakes the terrain noise atlas and microdetail from. The
-// backend owns the baked textures and bakes the atlas once per `revision`,
-// which moves whenever the terrain is configured again.
 struct TerrainNoiseRequest {
   int width = 0;
   int height = 0;
@@ -214,7 +211,7 @@ struct TerrainFeatureCmd {
   int water_neighbor_count = 0;
   LinearFeatureKind kind = LinearFeatureKind::Water;
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;
-  // 0 open water, 1 sheltered (harbour, canal, pool): slower, smaller ripples.
+
   float water_calm = 0.0F;
   RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;
   TerrainSurfaceCmd::VisibilityResources visibility{};
@@ -321,8 +318,6 @@ struct RiggedCreatureCmd {
   const QMatrix4x4* bone_palette_next = nullptr;
   std::shared_ptr<std::array<QMatrix4x4, k_max_owned_bones>> owned_bone_palette{};
 
-  // The baked palette atlas the offsets index; the backend keeps the uniform
-  // buffer for it. Null when the palette is uploaded per draw.
   const InstanceBlock* palette_block = nullptr;
   std::uint32_t palette_offset = 0;
   std::uint32_t palette_next_offset = 0;

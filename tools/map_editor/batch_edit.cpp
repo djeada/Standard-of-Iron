@@ -409,8 +409,7 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
     }
 
     if (verb == QLatin1String("gate")) {
-      // The editor's own gate gesture: find the run under the point, cut the
-      // six-cell gap out of it and set the gate on the run's axis.
+
       QPointF at;
       if (!point_of(op.value(QStringLiteral("at")), at)) {
         fail(QStringLiteral("needs 'at': [x, z]"));
@@ -434,7 +433,7 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
       gate.player_id = run.player_id;
       gate.nation = run.nation;
       gate.max_population = 100;
-      // A gate in a stone wall is a stone gate.
+
       const QJsonValue wall_style = run.extra_fields.value(QStringLiteral("style"));
       if (wall_style.isString() && !wall_style.toString().isEmpty()) {
         gate.extra_fields[QStringLiteral("style")] = wall_style;

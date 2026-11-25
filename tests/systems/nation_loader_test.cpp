@@ -73,12 +73,10 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierAcrossNations) {
   EXPECT_FLOAT_EQ(roman_archer.combat.ranged_range, 11.4F);
   EXPECT_FLOAT_EQ(roman_horse_archer.combat.ranged_range, 12.9F);
   EXPECT_FLOAT_EQ(carthage_archer.combat.ranged_range, 10.8F);
-  // Carthage's horse archers are Numidian javelin riders (NATION_ASYMMETRY.md
-  // decision 5): a javelin's cast, not a bow's.
+
   EXPECT_FLOAT_EQ(carthage_horse_archer.combat.ranged_range, 6.9F);
 }
 
-// NATION_ASYMMETRY.md phase 1: the rosters the two nations recruit from.
 TEST(NationLoader, RomeAndCarthageRecruitFromTheirOwnRosters) {
   auto const nations = Game::Systems::NationLoader::load_default_nations();
   const Game::Systems::Nation* rome = nullptr;

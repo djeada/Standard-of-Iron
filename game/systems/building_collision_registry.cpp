@@ -705,7 +705,6 @@ namespace {
   return (dx * dx) + (dz * dz) <= radius * radius;
 }
 
-// The registry and its snapshots answer these with the same code.
 [[nodiscard]] auto
 point_in_footprints(const std::vector<BuildingFootprint>& buildings,
                     const std::vector<BuildingFootprint>& obstacles,

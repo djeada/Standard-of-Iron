@@ -10,8 +10,6 @@
 
 namespace Game::Selection {
 
-// Drops what can no longer be commanded: the dead, and - when `owner` is given -
-// anything that now belongs to somebody else (a barracks the enemy captured).
 inline void sanitize_selection(Engine::Core::World* world,
                                Game::Session::SelectionService* selection_system,
                                std::optional<int> owner = std::nullopt) {

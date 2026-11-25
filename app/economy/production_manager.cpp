@@ -603,9 +603,6 @@ void ProductionManager::confirm_builder_structure() {
     return;
   }
 
-  // A crew already raising something would drop it for a new site, so a site
-  // placed for busy builders always joins their queue; Shift asks for the same
-  // from an idle crew and keeps the placement open for the next site.
   const bool chain = (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
   const auto& crew = m_session.builders();
   const bool crew_busy = std::any_of(crew.begin(), crew.end(), [&](auto id) {

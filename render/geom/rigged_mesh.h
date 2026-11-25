@@ -19,10 +19,6 @@ struct RiggedVertex {
   std::array<std::uint8_t, 3> padding{};
 };
 
-// A skinned mesh: bone-local vertices, indices with the rigidly skinned
-// triangles first, and a process-unique id. It holds no GL object; each backend
-// uploads its own copy through its RiggedMeshGpuTable, keyed by id(), and drops
-// it once the mesh is destroyed.
 class RiggedMesh {
 public:
   RiggedMesh(std::vector<RiggedVertex> vertices, std::vector<std::uint32_t> indices);

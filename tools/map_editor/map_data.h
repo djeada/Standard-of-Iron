@@ -36,8 +36,7 @@ struct TerrainElement {
   float taper = 0.0F;
   bool has_arc = false;
   bool has_arc_start = false;
-  // Lakes only: `height` is a water level somebody set. Unset, the water lies
-  // level with the ground at the lake's centre and no height is written.
+
   bool level_authored = false;
   QJsonArray points;
   QJsonArray cells;

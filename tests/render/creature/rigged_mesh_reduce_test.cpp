@@ -22,7 +22,7 @@ auto rigid_vertex(float x,
                   std::uint8_t bone,
                   std::uint8_t role) -> RiggedVertex {
   RiggedVertex vertex;
-  // A gently curved sheet, so simplification has something to keep.
+
   vertex.position_bone_local = {x, y, 0.05F * std::sin(x * 3.0F)};
   vertex.normal_bone_local = {0.0F, 0.0F, 1.0F};
   vertex.tex_coord = {x, y};
@@ -32,8 +32,6 @@ auto rigid_vertex(float x,
   return vertex;
 }
 
-// A k_grid x k_grid sheet: the left half on bone 1 with colour role 1, the right
-// half on bone 2 with colour role 2, sharing the vertices of the middle column.
 auto two_part_sheet() -> std::shared_ptr<RiggedMesh> {
   std::vector<RiggedVertex> vertices;
   for (int y = 0; y <= k_grid; ++y) {
@@ -67,8 +65,7 @@ TEST(RiggedMeshReduce, KeepsTheVerticesAndDropsTriangles) {
   ASSERT_NE(reduced, nullptr);
   EXPECT_LT(reduced->index_count(), full->index_count() / 2U);
   EXPECT_EQ(reduced->index_count() % 3U, 0U);
-  // The copy shares the full mesh's vertices, so skinning and colours are the
-  // full mesh's own.
+
   ASSERT_EQ(reduced->vertex_count(), full->vertex_count());
   for (const auto index : reduced->get_indices()) {
     EXPECT_LT(index, full->vertex_count());
@@ -82,8 +79,7 @@ TEST(RiggedMeshReduce, NeverMergesAcrossBonesOrColourRoles) {
   ASSERT_NE(reduced, nullptr);
   const auto& vertices = reduced->get_vertices();
   const auto& indices = reduced->get_indices();
-  // Every triangle that mixes the two halves was already in the full mesh:
-  // the seam between bones and roles is never simplified.
+
   std::set<std::vector<std::uint32_t>> full_triangles;
   const auto& full_indices = full->get_indices();
   for (std::size_t i = 0; i < full_indices.size(); i += 3U) {
@@ -123,8 +119,7 @@ TEST(ReducedGeometryRule, SwitchesAtTheOnScreenHeight) {
   using Render::Creature::Pipeline::ReducedGeometryRule;
   constexpr float k_focal_px = 1000.0F;
   const ReducedGeometryRule rule(QVector3D(0.0F, 0.0F, 0.0F), k_focal_px);
-  // A 2-unit mesh drawn at half scale is 1 world unit tall: it reaches the
-  // threshold height at focal / threshold world units away.
+
   QMatrix4x4 world;
   world.scale(0.5F);
   const float switch_distance = k_focal_px / k_reduced_geometry_max_height_px;

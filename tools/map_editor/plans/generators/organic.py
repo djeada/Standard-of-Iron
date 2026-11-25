@@ -13,8 +13,8 @@ from planlib import spline
 from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import unary_union
 
-HOUSE_W, HOUSE_D = 4.3, 4.4  # home lot: along the street, street to court
-SHOP_W, SHOP_D = 5.5, 5.5  # marketplace lot (portico, basilica, dock)
+HOUSE_W, HOUSE_D = 4.3, 4.4
+SHOP_W, SHOP_D = 5.5, 5.5
 TEMPLE_W, TEMPLE_D = 12.4, 9.2
 
 
@@ -99,17 +99,14 @@ class Town:
     def __init__(self, plan, seed=1):
         self.p = plan
         self.rng = random.Random(seed)
-        self.solid = Index()  # houses, buildings, squares, monuments
-        self.roads = Index()  # road surfaces
-        self.green = Index()  # trees already set
-        self.kept = (
-            Index()
-        )  # squares and courts kept clear of houses (streets may join them)
+        self.solid = Index()
+        self.roads = Index()
+        self.green = Index()
+        self.kept = Index()
         self.n_house = 0
         self.n_prop = 0
         self.road_lines = []
 
-    # ------------------------------------------------------------ bookkeeping
     def wet(self, g, pad=1.0):
         x0, z0, x1, z1 = g.bounds
         pts = (
@@ -140,7 +137,6 @@ class Town:
         x0, z0, x1, z1 = g.bounds
         self.p.reserve(x0, z0, x1, z1)
 
-    # ------------------------------------------------------------ streets
     def street(self, points, width=4.0, style="stone", curve=True, step=7.0, mark=True):
         pts = (
             smooth(points, step)
@@ -178,7 +174,6 @@ class Town:
         self.p.bridge(list(a), list(b), width)
         self.roads.add(LineString([a, b]).buffer(width / 2, cap_style=2))
 
-    # ------------------------------------------------------------ buildings
     def house(self, ident, x, z, facing, style="tenement", kind="home", **extra):
         j = {
             "type": kind,
@@ -293,7 +288,7 @@ class Town:
                         continue
                     self.claim(g)
                     style = self.rng.choices(names, weights)[0]
-                    # The back row turns its fronts to the court behind.
+
                     front = facing_of(-nx, -nz) if row == 0 else facing_of(nx, nz)
                     self.house(
                         f"{ident}_{side > 0 and 'l' or 'r'}{row}_{made}",
@@ -339,7 +334,6 @@ class Town:
             x, z = rx * math.cos(t), rz * math.sin(t)
             return cx + c * x - s * z, cz + s * x + c * z
 
-        # Walk the arc in lot-long steps.
         t, t1 = math.radians(a0), math.radians(a1)
         made = 0
         while t < t1:
@@ -429,7 +423,6 @@ class Town:
             made += 1
         return made
 
-    # ------------------------------------------------------------ squares
     def plaza(
         self,
         ident,
@@ -513,7 +506,6 @@ class Town:
             self.p.prop("statue", x, z, 1.1)
         return W
 
-    # ------------------------------------------------------------ greenery
     def tree(self, kind, x, z, scale=1.0, spacing=0.0):
         if spacing > 0:
             g = Point(x, z).buffer(spacing / 2)
@@ -708,7 +700,7 @@ class Town:
                     sides=(1,),
                     region=region,
                 )
-        # Statues where the walks meet the centre and round the loop.
+
         placed = 0
         for k in range(statues):
             ang = 2 * math.pi * k / max(statues, 1) + rng.uniform(-0.3, 0.3)
@@ -729,7 +721,7 @@ class Town:
             if pines
             else (("olive_tree", 3), ("cypress_tree", 2), ("plant", 2))
         )
-        # Groves: clusters rather than an even sprinkle.
+
         count = int(region.area * density)
         groves = max(2, count // 14)
         made = 0
@@ -751,13 +743,12 @@ class Town:
                 clear=1.6,
                 seed=rng.random(),
             )
-        # A light sprinkle on the lawns.
+
         made += self.scatter(
             region, count // 5, kinds, spacing=7.0, clear=1.8, seed=rng.random()
         )
         return made
 
-    # ------------------------------------------------------------ street networks
     def lanes(
         self,
         region,
@@ -786,7 +777,6 @@ class Town:
         def W(u, v):
             return (ox + c * u - s * v, oz + s * u + c * v)
 
-        # Region extent in the local frame.
         us, vs = [], []
         for x, z in region.exterior.coords:
             dx, dz = x - ox, z - oz
@@ -825,7 +815,7 @@ class Town:
                     )
                     if ln is not None:
                         made.append(ln)
-        # Cross lanes between neighbouring rows, staggered.
+
         for k in range(len(rows) - 1):
             la, lb = LineString(rows[k][1]), LineString(rows[k + 1][1])
             u = u0 + rng.uniform(0, minor[1])
@@ -840,7 +830,7 @@ class Town:
                     mx, mz = (pa.x + pb.x) / 2 + rng.uniform(-2, 2), (
                         pa.y + pb.y
                     ) / 2 + rng.uniform(-2, 2)
-                    # Run a little past both lanes so the lane joins them.
+
                     ext = self._extend([(pa.x, pa.y), (mx, mz), (pb.x, pb.y)], 1.5)
                     for piece in self._clip(LineString(ext), allowed):
                         if piece.length > 8:
@@ -930,7 +920,7 @@ class Town:
         for g in geoms:
             if g.geom_type != "LineString" or g.length < 1:
                 continue
-            # Break where the line runs through kept ground or water.
+
             cur = []
             L = g.length
             k = 0.0
@@ -1053,7 +1043,7 @@ def _network_extras(Town):
             for part in sorted(parts[1:], key=lambda g: g.distance(main)):
                 if part.distance(main) > reach:
                     continue
-                # Try the closest few point pairs along the piece's edge, nearest first.
+
                 edge = part.exterior
                 cands = []
                 k = 0.0
@@ -1177,7 +1167,7 @@ def _audit_connect(Town):
             main_lines = [lines[i] for i in range(len(lines)) if comp[i] == main]
             main_tree = STRtree(main_lines)
             joined = False
-            # Smallest gap first, over every detached piece.
+
             cands = {}
             for i, line in enumerate(lines):
                 if comp[i] == main:
@@ -1190,7 +1180,7 @@ def _audit_connect(Town):
                     d = q.distance(b)
                     if d <= reach:
                         cands.setdefault(comp[i], []).append((d, q, b))
-                    # Rays, for pieces whose nearest neighbour is behind a building.
+
                     for r in range(16):
                         ang = 2 * math.pi * r / 16
                         ray = LineString(
@@ -1427,9 +1417,9 @@ def _city_life(Town):
             changed = False
             for line, width in list(self.road_lines):
                 if id(line) not in self.road_ops or not self.road_ops[id(line)][1]:
-                    continue  # paving strips, bridges, links
+                    continue
                 if line.coords[0] == line.coords[-1]:
-                    continue  # a closed walk has no ends
+                    continue
                 others = [road for road, _ in self.road_lines if road is not line]
                 if not others:
                     continue
@@ -1442,7 +1432,7 @@ def _city_life(Town):
                     if any(p.distance(Point(k)) < 8 for k in keep_near):
                         continue
                     if self.p.wet(p.x, p.y, 3.0):
-                        continue  # a quay end at the water
+                        continue
                     q = Point(pts[end - 1 if end == -1 else 1])
                     dx, dz = p.x - q.x, p.y - q.y
                     n = math.hypot(dx, dz) or 1
@@ -1477,7 +1467,7 @@ def _city_life(Town):
                             extended += 1
                             changed = True
                             continue
-                    # Cut back to the last place it meets another street.
+
                     cut = None
                     L = line.length
                     k = 0.0
@@ -1492,7 +1482,7 @@ def _city_life(Town):
                         or (end == -1 and cut < 3)
                         or (end == 0 and L - cut < 3)
                     ):
-                        # A lane that meets the rest only at its other end is a blind alley: drop it.
+
                         if width <= 4.0 and not any(
                             line.distance(Point(b.coords[0])) < 2
                             or line.distance(Point(b.coords[-1])) < 2
@@ -1549,7 +1539,7 @@ def _city_life(Town):
                 graph.setdefault(key(u), []).append((key(v), d))
                 graph.setdefault(key(v), []).append((key(u), d))
         nodes = list(graph)
-        # Streets the game joins by near-touch (ends within 1.75) are joined here too.
+
         for u in [n for n in nodes if len(graph[n]) == 1]:
             best = None
             for v in nodes:
@@ -1708,7 +1698,7 @@ def _city_life(Town):
                 rng.uniform(0.85, 1.1),
                 4.0,
             )
-        # The drive from its gate down to the nearest road.
+
         gate = (x + s_ * 11.5, z - c * 11.5)
         end = (x + s_ * 20, z - c * 20)
         roads = [road for road, w in self.road_lines if w >= 4.0]
@@ -1727,11 +1717,9 @@ def _city_life(Town):
         """A walled yard with one gate (axis-aligned sides)."""
         pts = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
         self.wall(ident, pts, closed=True, tower_spacing=0, style=style, clear=1.5)
-        self.keep_out(
-            box(x0 + 0.5, z0 + 0.5, x1 - 0.5, z1 - 0.5)
-        )  # the yard stays open ground
+        self.keep_out(box(x0 + 0.5, z0 + 0.5, x1 - 0.5, z1 - 0.5))
         if gate_side is None:
-            return None  # a fold: no way in for anything but sheep
+            return None
         gx, gz = {
             "s": ((x0 + x1) / 2, z1),
             "n": ((x0 + x1) / 2, z0),

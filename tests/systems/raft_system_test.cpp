@@ -461,7 +461,7 @@ auto grid_layout(int files,
       Game::Systems::FormationCombat::SoldierSlot slot;
       slot.index = index++;
       slot.local_x = (static_cast<float>(file) - (files - 1) * 0.5F) * file_gap;
-      // Ranks stand behind the front, as a real layout puts them.
+
       slot.local_z = -static_cast<float>(rank) * rank_gap;
       layout.live_slots.push_back(slot);
     }
@@ -472,8 +472,6 @@ auto grid_layout(int files,
 
 } // namespace
 
-// A 24-man company narrowed to six files still stood twice as deep and wide as the
-// deck, so its outer men floated over the water at deck height.
 TEST(RaftDeckFitTest, EveryPassengerStandsOnThePlanks) {
   auto const layout = grid_layout(6, 4, 1.4F, 1.6F);
   auto const fit = Game::Systems::raft_deck_fit(layout);

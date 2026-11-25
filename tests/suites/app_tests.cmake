@@ -9,6 +9,7 @@ add_executable(
     app/match_stats_reporter_test.cpp
     app/session_timeline_test.cpp
     app/version_info_test.cpp
+    app/startup_supervisor_test.cpp
     app/language_override_test.cpp
     core/audio_system_test.cpp
     world/ambient_state_hysteresis_test.cpp

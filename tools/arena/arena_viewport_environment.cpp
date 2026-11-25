@@ -731,8 +731,7 @@ void ArenaViewport::apply_map_terrain() {
   m_terrain_grid_extent = map.grid.width;
 
   m_session.terrain().initialize(map);
-  // The arena spawns the map's real buildings itself, with their turned
-  // bodies; the terrain's load-time reservations would only shut gate lanes.
+
   m_session.building_collision().clear_authored_obstacles();
   m_session.visibility().initialize(
       map.grid.width, map.grid.height, map.grid.tile_size);
@@ -877,8 +876,7 @@ void ArenaViewport::spawn_terrain_review_structures() {
                             structure.style);
     }
   }
-  // The map's buildings now stand with their real, turned bodies; drop the
-  // ground the terrain reserved for them at load, as MapTransformer does.
+
   m_session.building_collision().clear_authored_obstacles();
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
     pathfinder->mark_navigation_grid_dirty();

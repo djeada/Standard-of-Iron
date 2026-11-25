@@ -176,8 +176,6 @@ auto context_mentions_any(const QString& text,
   return false;
 }
 
-// A map built as a city, hundreds of houses on its streets, sounds like one
-// whatever it is called: market voices, not wind over an empty field.
 constexpr std::size_t k_city_house_count = 300;
 
 auto map_is_a_city(const Game::Map::MapDefinition* map_def) -> bool {

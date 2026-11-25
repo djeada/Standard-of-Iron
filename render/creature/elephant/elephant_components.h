@@ -8,7 +8,6 @@
 
 namespace Render::Creature {
 
-// Per-entity elephant state: gait and clip memory and the baked anatomy.
 struct ElephantAnimationStateComponent {
   Render::GL::ElephantGaitState gait_state{};
   float locomotion_phase{0.0F};

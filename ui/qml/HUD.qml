@@ -484,8 +484,6 @@ Item {
         anchors.bottom: bottomPanel.top
         anchors.bottomMargin: Design.Metrics.space12
 
-        // A decided match shows its report; a hint that wakes then (the tutorial's
-        // card closes on victory) would only pop up behind the dialog.
         gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active && !commanderMessage.showing && !(typeof game !== 'undefined' && game.victory_state !== "")
         onOpen_settings_requested: {
             cameraLegend.dismiss();

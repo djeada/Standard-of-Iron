@@ -15,12 +15,9 @@
 #include "render/entity/temple_layout.h"
 #include "render/frame/render_archetype.h"
 
-// The temple geometry, authored as BuildingArchetypeDescs and baked by
-// the building archetype catalog. Nothing here draws or reads frame state.
 namespace Render::GL::Roman {
 
-// Palette and layout shared by the authoring and the temple renderer.
-namespace temple_detail {} // namespace temple_detail
+namespace temple_detail {}
 
 auto build_temple_desc(BuildingState state) -> BuildingArchetypeDesc;
 

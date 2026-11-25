@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the compiled_source_assets*.cpp translation units; not a public header.
-
 #include <QByteArray>
 #include <QCoreApplication>
 #include <QCryptographicHash>

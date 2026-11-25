@@ -87,7 +87,6 @@ public:
       return;
     }
 
-    // Unmapping needs the context; deleting does not (the handles defer it).
     if (m_mapped_ptr != nullptr && gl_objects_can_be_released(m_buffer.share_group())) {
       initializeOpenGLFunctions();
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer.id());

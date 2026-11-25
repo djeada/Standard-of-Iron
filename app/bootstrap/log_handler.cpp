@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "app/bootstrap/startup_supervisor.h"
+
 namespace App::Bootstrap {
 
 namespace {
@@ -14,6 +16,8 @@ namespace {
 void log_message_handler(QtMsgType type,
                          const QMessageLogContext& context,
                          const QString& msg) {
+
+  App::Bootstrap::tee_startup_log(msg);
   QByteArray const local_msg = msg.toLocal8Bit();
   const char* file = (context.file != nullptr) ? context.file : "";
   const char* function = (context.function != nullptr) ? context.function : "";

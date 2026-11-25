@@ -6,8 +6,12 @@
 #pragma comment(lib, "opengl32.lib")
 
 #include <QByteArray>
+#include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
+#include <QStandardPaths>
 #include <QString>
+#include <QStringList>
 
 #include <array>
 #include <cstdio>
@@ -15,6 +19,8 @@
 #include <gl/gl.h>
 #include <string_view>
 
+#include "app/bootstrap/startup_supervisor.h"
+#include "app/core/app_identity.h"
 #include "render/gl/context_requirements.h"
 
 #ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
@@ -288,6 +294,56 @@ void install_opengl_crash_handler() {
 
 auto opengl_crash_detected() -> bool {
   return g_opengl_crashed;
+}
+
+auto run_default_startup_supervisor(int& argc, char* argv[]) -> std::optional<int> {
+  if (supervised_child() || software_requested_from_argv(argc, argv) ||
+      !qEnvironmentVariable("QT_OPENGL").trimmed().isEmpty() ||
+      qEnvironmentVariableIntValue(k_env_no_supervisor) != 0) {
+    return std::nullopt;
+  }
+
+  QCoreApplication supervisor_app(argc, argv);
+  App::Core::apply_application_identity();
+
+  const QString app_dir = QCoreApplication::applicationDirPath();
+  SupervisorConfig config;
+  config.program = QCoreApplication::applicationFilePath();
+  config.arguments = QCoreApplication::arguments().mid(1);
+
+  config.attempts.push_back(AttemptPlan{.backend = QStringLiteral("native"),
+                                        .set_env = {},
+                                        .unset_env = {QStringLiteral("QT_OPENGL")},
+                                        .required_file = {}});
+  AttemptPlan mesa{
+      .backend = QStringLiteral("mesa"),
+      .set_env = {{QStringLiteral("QT_OPENGL"), QStringLiteral("software")}},
+      .unset_env = {},
+      .required_file = QDir(app_dir).filePath(QStringLiteral("opengl32sw.dll"))};
+  if (!qEnvironmentVariableIsSet("GALLIUM_DRIVER")) {
+    mesa.set_env.emplace_back(QStringLiteral("GALLIUM_DRIVER"),
+                              QStringLiteral("llvmpipe"));
+  }
+  config.attempts.push_back(std::move(mesa));
+
+  const QString log_override = qEnvironmentVariable(k_env_startup_log_path);
+  const QString data_dir =
+      QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  config.log_path = !log_override.isEmpty()
+                        ? log_override
+                        : QDir(data_dir).filePath(QStringLiteral("startup.log"));
+  config.scratch_dir =
+      QDir(QDir::tempPath()).filePath(QStringLiteral("standard_of_iron_startup"));
+
+  config.show_failure = [](const QString& text) {
+    fprintf(stderr, "%s\n", text.toLocal8Bit().constData());
+    MessageBoxW(nullptr,
+                reinterpret_cast<LPCWSTR>(text.utf16()),
+                L"Standard of Iron",
+                MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+  };
+
+  return run_supervised_startup(config);
 }
 
 } // namespace App::Bootstrap

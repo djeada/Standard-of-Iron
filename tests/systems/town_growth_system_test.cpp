@@ -52,7 +52,6 @@ auto tall_count(const std::vector<HomeHandles>& homes) -> int {
   return count;
 }
 
-// One pass rebuilds at most one house per owner.
 void run_passes(TownGrowthSystem& system, Engine::Core::World& world, int passes) {
   for (int i = 0; i < passes; ++i) {
     system.update(&world, 60.0F);
@@ -96,8 +95,6 @@ TEST(TownGrowthSystemTest, ATownRebuildsItsHeartOneHouseAtATime) {
   run_passes(system, world, 12);
   EXPECT_EQ(tall_count(homes), 3);
 
-  // The row runs 0..54 m; its middle is 27 m, so the tall houses are the
-  // three nearest it and the ends stay as they were built.
   EXPECT_EQ(homes[4].building->visual_style, "tenement");
   EXPECT_EQ(homes[5].building->visual_style, "tenement");
   EXPECT_TRUE(homes[0].building->visual_style.empty());
@@ -134,7 +131,7 @@ TEST(TownGrowthSystemTest, OwnersGrowApartAndRuinsDoNotCount) {
   for (int i = 0; i < 6; ++i) {
     village.push_back(add_home(world, 2, static_cast<float>(i) * 6.0F, 80.0F));
   }
-  // A burnt-out house is not part of the town any more.
+
   town[9].unit->health = 0;
 
   TownGrowthSystem system;
@@ -150,7 +147,7 @@ TEST(TownGrowthSystemTest, AuthoredStylesAreLeftAlone) {
   for (int i = 0; i < 10; ++i) {
     homes.push_back(add_home(world, 1, static_cast<float>(i) * 6.0F, 0.0F));
   }
-  // The map author already drew the middle of this street as insulae.
+
   for (int i = 3; i <= 6; ++i) {
     homes[static_cast<std::size_t>(i)].building->visual_style = "tenement";
   }

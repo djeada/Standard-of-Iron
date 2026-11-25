@@ -645,8 +645,7 @@ auto main(int argc, char** argv) -> int {
     }
     if (parser.isSet(terrain_map_option)) {
       const QString map_path = parser.value(terrain_map_option).trimmed();
-      // Looking at a map by hand should show the map as the game plays it:
-      // rivers flowing, trees swaying, buildings working, fog drifting.
+
       window.viewport()->set_terrain_review_live(!parser.isSet(terrain_only_option));
       QTimer::singleShot(
           0,

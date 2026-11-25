@@ -76,8 +76,6 @@ void TownGrowthSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    // The heart of the town rebuilds first: the plain house nearest the middle
-    // of all the owner's homes, ties going to the older building.
     const float centre_x = town.sum_x / static_cast<float>(home_count);
     const float centre_z = town.sum_z / static_cast<float>(home_count);
     const TownHome* chosen = nullptr;

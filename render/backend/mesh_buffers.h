@@ -16,7 +16,6 @@ struct StaticMeshBuffers {
 
   [[nodiscard]] auto drawable() const -> bool { return vao.valid() && index_count > 0; }
 
-  // Releases every buffer (deferred when the owning context is not current).
   void reset() { *this = StaticMeshBuffers{}; }
 };
 

@@ -81,8 +81,6 @@ TerrainScatterManager::TerrainScatterManager()
   }
 }
 
-// A running job owns only its captured inputs and its RefreshRun, so it may
-// finish after the manager is gone; nothing adopts it then.
 TerrainScatterManager::~TerrainScatterManager() = default;
 
 void TerrainScatterManager::configure(
@@ -134,7 +132,7 @@ void TerrainScatterManager::apply_instance_budgets() {
 void TerrainScatterManager::refresh_runtime_world_props(
     const std::vector<Game::Map::WorldProp>& runtime_world_props) {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  // A synchronous refresh supersedes whatever was scheduled.
+
   forget_scheduled_locked();
 
   if (m_height_map == nullptr) {
@@ -183,8 +181,6 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
                                    const DrawResources* resources) {
   std::lock_guard<std::mutex> const lock(m_mutex);
 
-  // The one swap: finished regenerations replace the layers' instances here,
-  // before anything below syncs or submits them.
   adopt_finished_locked();
 
   const std::uint32_t generation = GraphicsSettings::instance().generation();
@@ -193,8 +189,7 @@ void TerrainScatterManager::submit(FrameSubmitter& renderer,
     if (m_biome != nullptr && !m_biome->grass_matches_graphics_profile()) {
       apply_instance_budgets();
       if (m_snapshots_provided) {
-        // Generating grass reads the live map, which this thread must not;
-        // ask the map's owner for a snapshot and regenerate on a worker.
+
         m_pending.grass_density = GraphicsSettings::instance().profile().grass_density;
         m_wants_world_snapshot = true;
       } else {
@@ -312,13 +307,10 @@ void TerrainScatterManager::launch_pending_locked() {
     return;
   }
   if (m_running != nullptr) {
-    // One job at a time: these wait for the running one and then take the
-    // newest snapshot.
+
     return;
   }
 
-  // Plan on this thread, which holds m_mutex, so every plan copies a
-  // consistent view of its layer; the jobs touch nothing but those copies.
   std::vector<Render::Ground::Scatter::ScatterJob> jobs;
   const auto& world = m_pending_world;
   if (m_pending.world_props.has_value() || m_pending.anchored_trees.has_value()) {
@@ -354,8 +346,7 @@ void TerrainScatterManager::launch_pending_locked() {
   auto run = std::make_shared<RefreshRun>();
   run->epoch = m_epoch;
   m_running = run;
-  // The jobs share one snapshot, whose terrain copy keeps a private lookup
-  // cache, so they run one after another in a single task.
+
   QThreadPool::globalInstance()->start([run, jobs = std::move(jobs)]() mutable {
     std::vector<Render::Ground::Scatter::ScatterAdoption> adoptions;
     adoptions.reserve(jobs.size());
@@ -395,8 +386,7 @@ void TerrainScatterManager::forget_scheduled_locked() {
   m_pending = {};
   m_pending_world.reset();
   m_wants_world_snapshot = false;
-  // A job still running finishes on its own; its epoch no longer matches, so
-  // nothing adopts it.
+
   m_running.reset();
 }
 

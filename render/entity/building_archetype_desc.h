@@ -114,8 +114,7 @@ public:
   void scale_uniformly(float factor);
 
   [[nodiscard]] auto name() const -> const std::string& { return m_name; }
-  // Borrowed descriptions are renamed to the catalog entry that uses them: the
-  // baked mesh pack and the renderer key meshes by this name.
+
   void set_name(std::string name) { m_name = std::move(name); }
   [[nodiscard]] auto parts() const -> const std::vector<BuildingPartDesc>& {
     return m_parts;

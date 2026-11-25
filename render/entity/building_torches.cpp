@@ -37,13 +37,10 @@ const QVector3D k_flame_outer{1.00F, 0.46F, 0.12F};
 const QVector3D k_flame_inner{1.00F, 0.86F, 0.42F};
 const QVector3D k_firelight{1.00F, 0.58F, 0.26F};
 
-// The sea-green fire Carthage burns in its incense stands, its lamps and its
-// torches.
 const QVector3D k_ghost_outer{0.18F, 0.86F, 0.70F};
 const QVector3D k_ghost_inner{0.78F, 1.00F, 0.94F};
 const QVector3D k_ghost_light{0.34F, 1.00F, 0.82F};
-// A green flame reads dimmer than firelight at the same energy: Punic fixtures
-// throw a little further and brighter so doorways and quays stay legible at night.
+
 constexpr float k_ghost_reach = 6.2F;
 constexpr float k_ghost_intensity = 1.25F;
 
@@ -145,7 +142,7 @@ void submit_archetype_fires(const DrawContext& ctx,
   const float time = ctx.animation_time;
   const auto owner =
       ctx.entity != nullptr ? static_cast<std::uint32_t>(ctx.entity->get_id()) : 0U;
-  // A fire is as big as the bowl the building gives it, in world metres.
+
   const float world = ctx.model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
   Mesh* const unit_cone = get_unit_cone();
   const QVector3D up(0.0F, 1.0F, 0.0F);

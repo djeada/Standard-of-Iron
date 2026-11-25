@@ -38,8 +38,7 @@ void GraphicsSettingsProxy::set_quality_level(int level) {
   }
 
   auto newQuality = static_cast<Render::GraphicsQuality>(level);
-  // Picking the preset the game chose automatically still counts as the
-  // player's choice: it stops the game from changing it again.
+
   if (newQuality != Render::GraphicsSettings::instance().quality() ||
       !Render::GraphicsSettings::instance().quality_chosen_by_user()) {
     Render::GraphicsSettings::instance().set_quality(newQuality);

@@ -10,9 +10,6 @@
 
 namespace Render::GL {
 
-// A low tiled gable with its ridge along x: flat tiles laid in overlapping
-// courses, a cover tile over every joint, an antefix closing each cover tile
-// at the eave, and a ridge.
 struct PantileRoof {
   float x0{-1.0F};
   float x1{1.0F};
@@ -24,8 +21,7 @@ struct PantileRoof {
   QVector3D tile_light{0.81F, 0.43F, 0.26F};
   QVector3D tile_dark{0.43F, 0.27F, 0.21F};
   float cover_pitch{0.21F};
-  // A single slope falling from rear_z to front_z, as over an aisle built
-  // against a taller wall.
+
   bool lean_to{false};
 };
 

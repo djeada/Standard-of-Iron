@@ -577,8 +577,6 @@ TEST(LinearFeatureGeometryTest, BuildsLakeSurfaceAndShorelineMeshes) {
   EXPECT_FALSE(shore.visibility_samples.empty());
 }
 
-// Share of a lake surface's vertices the water shader treats as open water
-// (v at its deepest), as opposed to shallows near a shore.
 auto deep_share(const Render::GL::Mesh& water) -> float {
   std::size_t deep = 0;
   for (const auto& vertex : water.get_vertices()) {
@@ -588,14 +586,13 @@ auto deep_share(const Render::GL::Mesh& water) -> float {
 }
 
 TEST(LinearFeatureGeometryTest, ASeaKeepsItsShallowsToAStripAlongTheShore) {
-  // On a pond the shallows are in proportion to the pond...
+
   const Game::Map::Lake pond{{0.0F, 0.0F, 0.0F}, 40.0F, 30.0F, 0.0F};
   EXPECT_FLOAT_EQ(Game::Map::lake_shallows_reach(pond), 0.0F);
   auto pond_water = Render::Ground::build_lake_surface_mesh(pond, 1.0F);
   ASSERT_NE(pond_water, nullptr);
   EXPECT_LT(deep_share(*pond_water), 0.05F);
 
-  // ...on a sea that would lay mud flats a bowshot wide: they stay a strip.
   const Game::Map::Lake sea{{0.0F, 0.0F, 400.0F}, 1400.0F, 700.0F, 0.0F};
   const float reach = Game::Map::lake_shallows_reach(sea);
   ASSERT_GT(reach, 0.0F);

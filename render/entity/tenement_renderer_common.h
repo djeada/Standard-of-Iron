@@ -15,18 +15,15 @@ namespace Render::GL {
 
 class EntityRendererRegistry;
 
-// What a nation supplies to have its tenements drawn: the catalog names of its
-// baked variants, the colours an instance takes, and where its hearth vents.
 struct TenementRendererConfig {
   std::string_view nation_slug;
-  // "<prefix><variant>" names the baked archetype set of a variant.
+
   std::string_view archetype_prefix;
   TownPaletteResolver palette{nullptr};
   QVector3D (*vent)(int variant);
   bool carthage{false};
 };
 
-// Registers the renderer for a nation's home in the tenement style.
 void register_tenement_renderer_variant(EntityRendererRegistry& registry,
                                         const TenementRendererConfig& config);
 

@@ -339,7 +339,6 @@ Item {
                         delegate: Column {
                             required property var modelData
 
-                            // Keep a line to about 90 characters; wider is tiring to read.
                             width: Math.min(scroller.availableWidth, Design.Metrics.space24 * 40)
                             spacing: Design.Metrics.space4
 

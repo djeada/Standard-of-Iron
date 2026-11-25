@@ -28,10 +28,6 @@ struct RoadStroke {
   float width = 0.0F;
 };
 
-// One road layer is drawn as opaque strokes into a scratch image and laid onto
-// the map with the layer's opacity, so crossings do not darken (the same look a
-// single filled path gave). Uniting hundreds of stroked outlines into one
-// QPainterPath instead made a Rome or Carthage preview take 40+ seconds.
 void paint_road_layer(QImage& image,
                       QImage& scratch,
                       const std::vector<RoadStroke>& strokes,

@@ -120,9 +120,7 @@ void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.commands != nullptr) {
-    // The click that reached here carries its modifiers: Shift queues a batch
-    // of five, Ctrl toggles repeat. Reading them here keeps the QML signal
-    // chain (card -> panel -> HUD -> main) a plain unit type.
+
     const auto modifiers = QGuiApplication::keyboardModifiers();
     const auto click =
         (modifiers & Qt::ControlModifier) != 0 ? App::Controllers::RecruitClick::Repeat

@@ -267,7 +267,7 @@ void AllianceBoard::clear() {
   m_appeal_answers.clear();
   m_appeal_replies.clear();
   m_goodwill.clear();
-  // Call IDs are per match. Appeal IDs must outlive a board reset for the UI.
+
   m_last_call_id = 0;
 }
 

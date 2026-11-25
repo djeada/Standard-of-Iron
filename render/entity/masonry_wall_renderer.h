@@ -8,14 +8,11 @@ namespace Render::GL {
 
 class EntityRendererRegistry;
 
-// The masonry wall style: a curtain of dressed stone with a crenellated walk,
-// for the walls of a capital. One look per nation, baked and registered under
-// "<nation>_masonry" so the wall network can swap a palisade for it by key.
 struct MasonryWallLook {
   std::string_view slug;
   const WallPalette* palette;
   const WallGeometry* geometry;
-  // The gate's leaves are timber whatever the wall is built of.
+
   const WallPalette* timber;
 };
 

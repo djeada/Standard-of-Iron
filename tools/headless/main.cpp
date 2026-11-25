@@ -148,7 +148,7 @@ void submit_scripted_orders(Game::Command::CommandQueue& queue,
                             std::uint64_t tick,
                             Engine::Core::EntityID archer) {
   using namespace Game::Command;
-  // Include a rejected order so the verifier exercises validation on playback.
+
   if (tick == 0) {
     queue.submit(Source::LocalPlayer, k_scripted_owner, Stop{.units = {0}});
     queue.submit(Source::LocalPlayer,

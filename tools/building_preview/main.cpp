@@ -253,8 +253,7 @@ auto render_building(EntityRendererRegistry& registry,
   ctx.resources = resources;
   ctx.model = QMatrix4x4{};
   if (type == "tenement" || type == "portico" || type == "basilica" || type == "dock") {
-    // A lot-filling style picks its variant from where it stands, and stands
-    // at the scale its building is spawned with.
+
     const bool home = type == "tenement";
     const auto variant_at = [&](float x, float z) {
       if (home) {
@@ -373,8 +372,7 @@ auto main(int argc, char** argv) -> int {
     }
   }
   if (audit) {
-    // Tied and buried surfaces in every catalog building whose name contains
-    // the --only filter, in all three damage states. No image is written.
+
     std::size_t ties = 0;
     for (const auto& entry : Render::GL::building_archetype_catalog()) {
       if (!filter.empty() && entry.name.find(filter) == std::string::npos) {

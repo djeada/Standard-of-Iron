@@ -12,9 +12,6 @@ struct HumanoidAnimationContext;
 struct HumanoidPose;
 } // namespace Render::GL
 
-// Which clip, phase and variant a humanoid plays for its animation context,
-// and where its feet meet the ground in that frame.
-
 namespace Render::Creature::Pipeline {
 
 [[nodiscard]] auto

@@ -17,8 +17,6 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs;
 
 namespace Render::Creature::Pipeline {
 
-// The entity's animation inputs, sampled once for the prepare pass. Elephants
-// share the humanoid sampler.
 [[nodiscard]] auto resolve_humanoid_animation_state(const Render::GL::DrawContext& ctx)
     -> PreparedAnimationState;
 

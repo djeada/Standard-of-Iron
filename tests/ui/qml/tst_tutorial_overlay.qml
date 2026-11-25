@@ -77,8 +77,6 @@ TestCase {
         var continue_at = next.mapToItem(overlay, 0, 0);
         compare(continue_at.x, skip_at.x, "Continue and Skip share one spot on the card");
         compare(continue_at.y, skip_at.y);
-        // The next step arrives (Continue, or the automatic advance) and Skip
-        // reappears under the cursor that was aiming at Continue.
         fakeTutorial.step_index = fakeTutorial.step_index + 1;
         fakeTutorial.step_complete = false;
         wait(50);

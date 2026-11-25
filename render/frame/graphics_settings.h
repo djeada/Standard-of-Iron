@@ -95,14 +95,10 @@ struct WeatherBudget {
   float particle_scale = 1.0F;
 };
 
-// The 3D view can be drawn into a smaller framebuffer than the window and
-// stretched to fit; the HUD stays at full resolution. This is the cheapest
-// large saving on fill-rate-bound integrated GPUs, and it also stops a HiDPI
-// laptop panel from making a weak GPU shade every pixel of a 4K screen.
 struct RenderScaleSettings {
-  // Fraction of the window's pixel size per axis.
+
   float scale = 1.0F;
-  // Upper bound on drawn pixels (width * height); 0 means no bound.
+
   int max_pixels = 0;
 };
 
@@ -127,8 +123,6 @@ struct GraphicsProfile {
   float grass_density = 1.0F;
 };
 
-// Pixel size the 3D view should be drawn at for a window of `window_px`
-// pixels. Never smaller than 1x1, never larger than the window.
 [[nodiscard]] inline auto
 scaled_render_extent(const RenderScaleSettings& settings,
                      int window_width,

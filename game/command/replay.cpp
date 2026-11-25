@@ -323,8 +323,6 @@ auto ReplayFile::load(const QString& path,
     replay.records.push_back(std::make_shared<const LogEntry>(std::move(*entry)));
   }
 
-  // A crash can leave complete frames for an unfinished tick, as can input delay
-  // when a match ends. Only a completed tick is safe to replay.
   std::erase_if(replay.records, [&replay](const auto& entry) {
     return entry->tick > replay.completed_tick;
   });

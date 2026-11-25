@@ -33,10 +33,6 @@ inline constexpr std::size_t k_gl_object_kind_count =
 
 [[nodiscard]] auto gl_object_kind_name(DeferredGlObject kind) noexcept -> const char*;
 
-// Every GL name the renderer generates is counted here when it is created and again
-// when it is deleted, destroyed with its share group, or dropped with a dead
-// context. `live()` is how many are still owned: the leak test asserts it returns
-// to where it started once a renderer is torn down.
 struct GlObjectCensus {
   std::uint64_t created = 0;
   std::uint64_t deleted = 0;
@@ -59,7 +55,6 @@ void release_gl_object(DeferredGlObject kind,
                        unsigned int name,
                        GlShareGroup group) noexcept;
 
-// Sync objects are pointers, not names; they go through the same queue.
 void release_gl_sync(void* sync, GlShareGroup group) noexcept;
 
 void forget_gl_share_group(GlShareGroup group) noexcept;

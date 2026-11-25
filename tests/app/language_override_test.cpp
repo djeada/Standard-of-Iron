@@ -14,7 +14,7 @@ namespace {
 QStringList g_warnings;
 
 void capture_warnings(QtMsgType type,
-                      const QMessageLogContext& /*context*/,
+                      const QMessageLogContext&,
                       const QString& message) {
   if (type == QtWarningMsg) {
     g_warnings << message;

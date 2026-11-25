@@ -77,8 +77,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     return;
   }
   QMatrix4x4 const& draw_world = world_from_unit;
-  // Small on screen: draw the simplified copies, and keep the full meshes for
-  // the shadow so the cast shadow is unchanged.
+
   const bool small_on_screen =
       submission != nullptr &&
       submission->reduced_geometry().small_on_screen(draw_world, entry->height);

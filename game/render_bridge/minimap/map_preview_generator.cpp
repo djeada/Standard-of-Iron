@@ -99,11 +99,6 @@ auto preview_config() -> MinimapGenerator::Config {
   return config;
 }
 
-// The skirmish screen asks for a preview every time a seat, colour or base
-// changes, and the battlefield list asks for one per row. Parsing the map and
-// painting its terrain is the expensive part and does not depend on the
-// players, so keep both per map (until the file changes) and only paint the
-// player bases per request.
 struct CachedMap {
   QString path;
   qint64 size = -1;
@@ -124,10 +119,6 @@ auto cached_maps() -> std::vector<CachedMap>& {
   return maps;
 }
 
-// Preview painting borrows the global minimap orientation, which the live
-// minimap layers read. Put it back afterwards: the skirmish screen can be
-// opened from a running battle, and its previews used to leave the in-game
-// minimap rotated to whichever map was browsed last.
 class ScopedMinimapYaw {
 public:
   explicit ScopedMinimapYaw(float yaw_deg)
@@ -207,7 +198,6 @@ auto MapPreviewGenerator::generate_preview(
   const MapDefinition& map_def = *cached.definition;
   const ScopedMinimapYaw yaw(map_def.camera.yaw_deg);
 
-  // Painting the bases detaches this copy; the cached terrain stays clean.
   QImage preview = cached.terrain;
 
   std::vector<PlayerConfig> parsed_configs = parse_player_configs(player_configs);

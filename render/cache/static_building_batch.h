@@ -52,8 +52,7 @@ struct BuildingInstanceGpu {
   float palette0[4]{0, 0, 0, -1};
   float palette1[4]{0, 0, 0, -1};
   float state[4]{0, 0, 0, 0};
-  // Slots two and three sit after `state` so the first six attributes keep the
-  // locations every merged-building shader was written against.
+
   float palette2[4]{0, 0, 0, -1};
   float palette3[4]{0, 0, 0, -1};
 };

@@ -1,6 +1,4 @@
-// NATION_ASYMMETRY.md: Rome turns men into an army, Carthage turns gold into one.
-// These tests pin the rules each phase adds, on a real session with the shipped
-// nation data.
+
 
 #include <QJsonObject>
 #include <QVector3D>
@@ -153,8 +151,6 @@ protected:
   std::unique_ptr<Game::Session::ScopedSession> m_scope;
 };
 
-// Phase 0 spike: a Carthaginian player's Gallic band keeps its owner but draws,
-// fights and saves as a Gaul.
 TEST_F(NationAsymmetryTest, AGallicBandOwnedByCarthageFightsAndSavesAsGauls) {
   const EntityID band =
       spawn(SpawnType::Swordsman, k_carthage, 40, 40, NationID::Gauls);
@@ -186,8 +182,6 @@ TEST_F(NationAsymmetryTest, AGallicBandOwnedByCarthageFightsAndSavesAsGauls) {
   EXPECT_EQ(restored_unit->nation_id, NationID::Gauls);
 }
 
-// Phase 1: Rome hires its archers from Crete with gold and arms its hastati with
-// less iron than the old legionary.
 TEST_F(NationAsymmetryTest, RomanPricesFollowTheRepublicsRoster) {
   const auto cretans = Game::Systems::quote_recruit(world(), k_rome, TroopType::Archer);
   EXPECT_TRUE(cretans.offered);
@@ -201,8 +195,6 @@ TEST_F(NationAsymmetryTest, RomanPricesFollowTheRepublicsRoster) {
   EXPECT_EQ(hastati.building, SpawnType::Barracks);
 }
 
-// Phase 1, decision 5: Rome no longer recruits horse archers, though authored
-// spawns still field them; its equites are capped at four squads.
 TEST_F(NationAsymmetryTest, RomeRecruitsNoHorseArchersAndFourEquitesAtMost) {
   const EntityID barracks = spawn(SpawnType::Barracks, k_rome, 30, 30);
   ASSERT_NE(barracks, 0U);
@@ -223,14 +215,11 @@ TEST_F(NationAsymmetryTest, RomeRecruitsNoHorseArchersAndFourEquitesAtMost) {
             ProductionResult::TypeLimitReached);
 }
 
-// Phase 1: Carthage's citizens are few; each delivered civilian is worth 12 men.
 TEST_F(NationAsymmetryTest, ACarthaginianCivilianIsWorthFewerMen) {
   EXPECT_EQ(Game::Systems::civilian_reserve_grant(world(), k_rome), 18);
   EXPECT_EQ(Game::Systems::civilian_reserve_grant(world(), k_carthage), 12);
 }
 
-// Phase 2: Carthage hires a whole band for gold alone at its Mercenary Camp; the
-// band arrives as Gauls, keeps a contract, and the camp holds one at a time.
 TEST_F(NationAsymmetryTest, CarthageHiresAGallicWarbandForGoldAtTheCamp) {
   EXPECT_TRUE(Game::Systems::nation_may_build(world(), k_carthage, "mercenary_camp"));
   EXPECT_FALSE(Game::Systems::nation_may_build(world(), k_rome, "mercenary_camp"));
@@ -274,7 +263,6 @@ TEST_F(NationAsymmetryTest, CarthageHiresAGallicWarbandForGoldAtTheCamp) {
             7);
 }
 
-// Phase 2: elephants come only from the stables, for gold and food, no reserve.
 TEST_F(NationAsymmetryTest, ElephantsComeFromTheStablesForGoldAndFood) {
   const EntityID barracks = spawn(SpawnType::Barracks, k_carthage, 20, 20);
   EXPECT_EQ(Game::Systems::ProductionService::can_start_production(
@@ -291,8 +279,6 @@ TEST_F(NationAsymmetryTest, ElephantsComeFromTheStablesForGoldAndFood) {
   EXPECT_EQ(m_session->economy().get(k_carthage, ResourceType::Food), food_before - 90);
 }
 
-// Phase 2: bands are paid every minute; an unpaid band loses heart and strikes
-// softer until it is paid again. Nobody deserts (decision 2).
 TEST_F(NationAsymmetryTest, UnpaidBandsFightWorseUntilPaid) {
   const EntityID band =
       spawn(SpawnType::Swordsman, k_carthage, 40, 40, NationID::Gauls);
@@ -325,8 +311,6 @@ TEST_F(NationAsymmetryTest, UnpaidBandsFightWorseUntilPaid) {
   EXPECT_FLOAT_EQ(multiplier(), paid_blow);
 }
 
-// Phase 2: Carthage's Emporion earns gold every minute, more for the farms
-// around it; Rome's marketplace earns nothing by itself.
 TEST_F(NationAsymmetryTest, TheEmporionEarnsGoldForTheFarmsAroundIt) {
   spawn(SpawnType::Marketplace, k_carthage, 40, 40);
   spawn(SpawnType::Farm, k_carthage, 52, 40);
@@ -343,8 +327,6 @@ TEST_F(NationAsymmetryTest, TheEmporionEarnsGoldForTheFarmsAroundIt) {
   EXPECT_EQ(gold(k_carthage), before + 40);
 }
 
-// Phase 3: a Fabrica arms Rome's infantry with a third less iron, and triarii
-// are only armed where one stands.
 TEST_F(NationAsymmetryTest, TheFabricaCutsIronAndArmsTheTriarii) {
   const EntityID barracks = spawn(SpawnType::Barracks, k_rome, 20, 20);
   EXPECT_EQ(Game::Systems::ProductionService::can_start_production(
@@ -363,8 +345,6 @@ TEST_F(NationAsymmetryTest, TheFabricaCutsIronAndArmsTheTriarii) {
   EXPECT_FALSE(Game::Systems::nation_may_build(world(), k_carthage, "fabrica"));
 }
 
-// Phase 3: the dilectus. Every levy each Roman barracks gains five men for every
-// standing home near it; Carthage has no levy.
 TEST_F(NationAsymmetryTest, TheLevyCallsUpMenForEveryHomeNearABarracks) {
   const EntityID barracks = spawn(SpawnType::Barracks, k_rome, 30, 30);
   spawn(SpawnType::Home, k_rome, 38, 30);
@@ -390,9 +370,6 @@ TEST_F(NationAsymmetryTest, TheLevyCallsUpMenForEveryHomeNearABarracks) {
   EXPECT_GE(production->manpower_available, 10) << "the levy comes by itself";
 }
 
-// Phase 3: "the Senate will find more". A Roman squad destroyed in the field
-// sends a quarter of its men back to the nearest barracks; one lost at home
-// does not.
 TEST_F(NationAsymmetryTest, ASquadLostInTheFieldIsPartlyReplaced) {
   const EntityID barracks = spawn(SpawnType::Barracks, k_rome, 10, 10);
   auto* production = world().try_get<Engine::Core::ProductionComponent>(barracks);
@@ -411,14 +388,12 @@ TEST_F(NationAsymmetryTest, ASquadLostInTheFieldIsPartlyReplaced) {
   EXPECT_EQ(production->manpower_available, 5) << "no replacement for a loss at home";
 }
 
-// Phase 3: hastati that come through two battles become principes: tougher
-// and harder-hitting.
 TEST_F(NationAsymmetryTest, HastatiThatSurviveTwoBattlesBecomePrincipes) {
   const EntityID hastati = spawn(SpawnType::Swordsman, k_rome, 40, 40);
   auto* unit = unit_of(hastati);
   ASSERT_NE(unit, nullptr);
   const int base_health = unit->max_health;
-  run_for(1.2); // the veterans' roll is called once a second
+  run_for(1.2);
   for (int battle = 0; battle < 2; ++battle) {
     unit->health -= 10;
     run_for(1.2);

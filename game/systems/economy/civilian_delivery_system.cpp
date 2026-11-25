@@ -119,8 +119,6 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    // Carthage's citizens are few: a civilian is worth fewer men there
-    // (NATION_ASYMMETRY.md 4.1).
     const int grant = civilian_reserve_grant(*world, barracks_unit->owner_id);
     if (barracks_prod->manpower_available + grant > barracks_prod->manpower_limit()) {
       to_release.push_back(civilian_id);

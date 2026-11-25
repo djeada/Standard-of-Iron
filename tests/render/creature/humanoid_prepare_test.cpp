@@ -1311,8 +1311,6 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
     return prep.bodies.requests().front();
   };
 
-  // The legs follow the ground the body is drawn to cover, so the unit has to
-  // actually travel at its declared 1 m/s between the two sampled frames.
   constexpr float k_step = 1.0F / 60.0F;
   Render::Creature::CreatureRenderRequest first{};
   Render::Creature::CreatureRenderRequest second{};
@@ -1442,8 +1440,7 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   stand();
   std::vector<float> stand_weights;
   std::vector<float> phases;
-  // The legs wind down with the measured ground speed, so the stand takes about
-  // 0.7 s to take over completely; watch a whole second of it.
+
   for (int frame = 0; frame < 60; ++frame) {
     time += k_step;
     auto const request = request_for_time(time);
@@ -6467,10 +6464,7 @@ struct MotionMeasurements {
 
 auto measure_motion(const std::vector<QMatrix4x4>& track,
                     float dt) -> MotionMeasurements {
-  // A turn under 0.01 (about half a degree) a frame is not counted toward a
-  // reversal: the palette cache rounds clip blends to 1/31 of a frame and layer
-  // weights to 1/255, and at 120 fps that rounding alone wobbles a hand by that
-  // much where its swing turns round. A visible shake is several times larger.
+
   constexpr float k_turn_floor = 0.01F;
   MotionMeasurements result;
   std::vector<int> reversals;
@@ -6631,8 +6625,6 @@ TEST(HumanoidMotionQuality, MeleeHitsRecoveryAndRetargetingStayVisuallyContinuou
           auto const motion = measure_motion(tracks[b], dt);
           bool const hand = observed[b] == Bone::HandL || observed[b] == Bone::HandR;
 
-          // A soldier retargeted 90 degrees now steps round through the pivot; the
-          // swinging foot peaks near 4 m/s. A snap is several times that.
           EXPECT_LT(motion.max_speed, hand ? 15.0F : 4.5F);
           EXPECT_LT(motion.max_angular_speed, hand ? 1440.0F : 360.0F);
           EXPECT_LT(motion.rapid_reversals, 3);

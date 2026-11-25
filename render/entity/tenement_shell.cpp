@@ -52,7 +52,6 @@ auto TenementShell::roll(int salt) const -> float {
   return decay_hash((m_variant * 977) + (salt * 131) + 19);
 }
 
-// How high the wall still stands at a lateral position.
 auto TenementShell::cap(float x) const -> float {
   const int bucket = static_cast<int>(std::floor((x + 2.0F) / 0.30F));
   switch (m_state) {
@@ -91,8 +90,7 @@ void TenementShell::slot_box(
   if (x1 - x0 < 1.0e-4F || y1 - y0 < 1.0e-4F || z1 - z0 < 1.0e-4F) {
     return;
   }
-  // Limewash is mineral whatever its colour; left unclassified, a palette
-  // colour is sorted into cloth, leather or metal by its brightness.
+
   const bool plaster = slot == m_wall_slot || slot == m_dado_slot;
   BuildingPartMaterial const material(
       m_desc, plaster ? k_building_material_stone : m_desc.material());
@@ -110,7 +108,6 @@ auto TenementShell::outward(TenementSide side) -> float {
   return side == TenementSide::Front ? 1.0F : -1.0F;
 }
 
-// A box standing proud of a facade by `proud`, `depth` thick.
 void TenementShell::trim(TenementSide side,
                          float x0,
                          float x1,
@@ -124,8 +121,6 @@ void TenementShell::trim(TenementSide side,
   box(x0, x1, y0, y1, std::min(outer, inner), std::max(outer, inner), color);
 }
 
-// One piece of the facade slab, cut down to what damage leaves standing and
-// split at the painted dado on the street storey.
 void TenementShell::wall_piece(
     TenementSide side, float x0, float x1, float y0, float y1, bool dado) {
   const float z_outer = face(side);

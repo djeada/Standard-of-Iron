@@ -29,8 +29,7 @@ auto lot_run_seed(float world_x,
   if (!std::isfinite(world_x) || !std::isfinite(world_z) || !(length > 1.0e-4F)) {
     return 0U;
   }
-  // How far along its facing the run's line lies, and which way that is. The
-  // odd quantum keeps lot-pitch fractions off a rounding edge.
+
   constexpr float k_line_quantum = 0.83F;
   constexpr float k_degrees = 57.2957795F;
   const float across = ((world_x * front_x) + (world_z * front_z)) / length;
@@ -56,8 +55,7 @@ auto dock_visual_variant(float world_x, float world_z) -> int {
   constexpr float k_lot = 5.5F;
   const auto lot_x = static_cast<std::int32_t>(std::lround(world_x / k_lot));
   const auto lot_z = static_cast<std::int32_t>(std::lround(world_z / k_lot));
-  // Every other lot along a quay moors the ship; the rest take a boat or
-  // stand empty for the next arrival.
+
   if (((lot_x + lot_z) & 1) == 0) {
     return 0;
   }

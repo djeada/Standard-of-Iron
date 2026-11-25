@@ -96,7 +96,6 @@ private:
     return dirty;
   }
 
-  // The mask texels; backends upload the changed region.
   std::unique_ptr<GL::TextureImage> m_image;
   std::vector<std::uint8_t> m_previous_cells;
   std::vector<unsigned char> m_texels;

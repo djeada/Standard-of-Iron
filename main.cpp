@@ -52,6 +52,7 @@
 #include "app/bootstrap/screenshot_capture.h"
 #include "app/bootstrap/self_test_driver.h"
 #include "app/bootstrap/startup_self_test.h"
+#include "app/bootstrap/startup_supervisor.h"
 #include "app/bootstrap/version_info.h"
 #include "app/bootstrap/windows_gl_probe.h"
 #include "app/core/app_identity.h"
@@ -129,9 +130,18 @@ auto main(int argc, char* argv[]) -> int {
 #endif
   }
 
+  const bool supervised_attempt = App::Bootstrap::supervised_child();
 #ifdef Q_OS_WIN
+  std::optional<App::Bootstrap::NativeOpenGLProbeResult> native_probe;
 
   App::Bootstrap::install_opengl_crash_handler();
+
+  if (const auto supervised_exit =
+          App::Bootstrap::run_default_startup_supervisor(argc, argv);
+      supervised_exit.has_value()) {
+    return *supervised_exit;
+  }
+  App::Bootstrap::report_startup_stage(QStringLiteral("process_start"));
 
   if (App::Bootstrap::software_requested_from_argv(argc, argv)) {
     fprintf(stderr, "[Pre-Init] Command line requested software OpenGL fallback\n");
@@ -144,9 +154,22 @@ auto main(int argc, char* argv[]) -> int {
 
   if (!explicit_qt_opengl) {
     fprintf(stderr, "[Pre-Init] Testing native OpenGL availability...\n");
+    App::Bootstrap::report_startup_stage(QStringLiteral("native_probe"));
     const auto probe = App::Bootstrap::test_native_opengl();
+    native_probe = probe;
     if (!probe.supported) {
       fprintf(stderr, "[Pre-Init] WARNING: hardware OpenGL probe failed\n");
+      if (supervised_attempt) {
+        App::Bootstrap::report_startup_failure(
+            QStringLiteral("native_probe"),
+            QStringLiteral("rejected: vendor %1, renderer %2, version %3, %4 profile")
+                .arg(probe.vendor,
+                     probe.renderer,
+                     probe.version,
+                     probe.used_core_context ? QStringLiteral("core")
+                                             : QStringLiteral("no core")));
+        return App::Bootstrap::k_exit_probe_rejected;
+      }
       fprintf(stderr,
               "[Pre-Init] Falling back to Qt software OpenGL (opengl32sw.dll)\n");
       qputenv("QT_OPENGL", "software");
@@ -175,6 +198,18 @@ auto main(int argc, char* argv[]) -> int {
 
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
+  if (supervised_attempt) {
+    qInfo() << "Startup attempt backend:" << App::Bootstrap::supervised_attempt_name();
+  }
+#ifdef Q_OS_WIN
+  if (native_probe.has_value()) {
+    qInfo() << "Native OpenGL probe:"
+            << (native_probe->supported ? "passed" : "rejected") << "vendor"
+            << native_probe->vendor << "renderer" << native_probe->renderer << "version"
+            << native_probe->version << "profile"
+            << (native_probe->used_core_context ? "core" : "none");
+  }
+#endif
 
   if (!qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_READ")) {
     qputenv("QML_XHR_ALLOW_FILE_READ", "1");
@@ -231,6 +266,7 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Creating QGuiApplication...";
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
+  App::Bootstrap::report_startup_stage(QStringLiteral("qt_application"));
 
   App::Core::apply_application_identity();
   app.setApplicationVersion(QStringLiteral(SOI_VERSION));
@@ -374,11 +410,14 @@ auto main(int argc, char* argv[]) -> int {
           ? QUrl(QStringLiteral("qrc:/StandardOfIron/Design/GalleryWindow.qml"))
           : QUrl(QStringLiteral("qrc:/StandardOfIron/ui/qml/Main.qml"));
   qInfo() << "Loading" << root_qml;
+  App::Bootstrap::report_startup_stage(QStringLiteral("qml_load"));
   engine->load(root_qml);
 
   qInfo() << "Checking if QML loaded...";
   if (engine->rootObjects().isEmpty()) {
     qWarning() << "Failed to load QML file";
+    App::Bootstrap::report_startup_failure(
+        QStringLiteral("qml_load"), QStringLiteral("the QML scene did not load"));
     return -1;
   }
   qInfo() << "QML loaded successfully, root objects count:"
@@ -405,9 +444,42 @@ auto main(int argc, char* argv[]) -> int {
   }
   if (window == nullptr) {
     qWarning() << "No QQuickWindow found for OpenGL initialization.";
+    App::Bootstrap::report_startup_failure(QStringLiteral("qml_load"),
+                                           QStringLiteral("no window was created"));
     return -2;
   }
   qInfo() << "QQuickWindow found";
+  App::Bootstrap::report_startup_stage(QStringLiteral("scene_graph"));
+  if (supervised_attempt) {
+    QTimer::singleShot(0, &app, [root_obj, game_engine_ptr = game_engine.get()] {
+      App::Bootstrap::report_startup_stage(QStringLiteral("gameplay_renderer"));
+
+      QObject::connect(game_engine_ptr,
+                       &GameEngine::renderer_failed,
+                       game_engine_ptr,
+                       [](const QString& error) {
+                         if (App::Bootstrap::startup_ready_reported()) {
+                           return;
+                         }
+                         App::Bootstrap::report_startup_failure(
+                             QStringLiteral("gameplay_renderer"), error);
+                         QCoreApplication::exit(App::Bootstrap::k_exit_renderer_failed);
+                       });
+      auto* gl_view = root_obj->findChild<GLView*>();
+      if (gl_view == nullptr) {
+        qWarning() << "Startup supervision found no gameplay GLView";
+        return;
+      }
+      if (gl_view->is_renderer_ready()) {
+        App::Bootstrap::report_startup_ready();
+      } else {
+        QObject::connect(gl_view,
+                         &GLView::renderer_ready,
+                         gl_view,
+                         &App::Bootstrap::report_startup_ready);
+      }
+    });
+  }
   if (qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_SECONDS").toDouble() > 0.0) {
     QObject::connect(
         window,
@@ -469,9 +541,7 @@ auto main(int argc, char* argv[]) -> int {
             QCoreApplication::exit(10);
             return;
           }
-          // A direct launch can fail while resolving the mission as well as
-          // while loading its battlefield. Stop treating UI errors as launch
-          // failures when the first playable frames arrive.
+
           const auto startup_error =
               QObject::connect(game_engine_ptr,
                                &GameEngine::last_error_changed,
@@ -607,6 +677,7 @@ auto main(int argc, char* argv[]) -> int {
       &app,
       [](QQuickWindow::SceneGraphError, const QString& msg) {
         qCritical() << "Failed to initialize OpenGL scene graph:" << msg;
+        App::Bootstrap::report_startup_failure(QStringLiteral("scene_graph"), msg);
         QGuiApplication::exit(3);
       },
       Qt::QueuedConnection);

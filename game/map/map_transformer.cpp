@@ -579,9 +579,6 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     const QVector3D line_start = line->start + structure_offset;
     const QVector3D line_end = line->end + structure_offset;
 
-    // A run that leaves the lattice at an angle is laid as it was drawn: free
-    // pieces end to end along the true line, the way the AI's angled town
-    // walls stand. Axis runs keep the grid chain below.
     if (const auto pieces = Game::Systems::WallNetworkService::freeform_run(
             line_start.x(), line_start.z(), line_end.x(), line_end.z());
         !pieces.empty()) {

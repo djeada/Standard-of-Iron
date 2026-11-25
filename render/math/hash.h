@@ -4,7 +4,6 @@
 
 namespace Render::GL {
 
-// Xorshift hash of `x` mapped to [0, 1), 24 bits of resolution.
 inline auto hash_01(std::uint32_t x) -> float {
   constexpr int k_shift_13 = 13;
   constexpr int k_shift_17 = 17;

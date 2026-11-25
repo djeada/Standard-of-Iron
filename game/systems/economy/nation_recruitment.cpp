@@ -110,7 +110,7 @@ auto quote_recruit(const Engine::Core::World& world,
   RecruitQuote quote;
   const Nation* nation = owner_nation(world, owner_id);
   if (nation == nullptr) {
-    // No nation catalog loaded: the troop catalog's own numbers, as before.
+
     const auto& profile = TroopProfileService::instance().get_profile_ref(
         NationID::RomanRepublic, unit_type);
     quote.offered = true;

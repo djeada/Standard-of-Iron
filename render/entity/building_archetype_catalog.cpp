@@ -69,15 +69,12 @@ void add_nation_buildings(std::vector<BuildingArchetypeCatalogEntry>& out,
   }
 }
 
-// The Roman barracks with what a legion leaves at its gate.
 auto roman_barracks_desc(BuildingState state) -> BuildingArchetypeDesc {
   BuildingArchetypeDesc desc = Roman::build_barracks_desc(state);
   Motif::dress_roman_barracks(desc, state);
   return desc;
 }
 
-// `leaf_palette` colours the gate's leaves when they are not built of what the
-// wall is: timber doors in a stone curtain.
 void add_nation_walls(std::vector<BuildingArchetypeCatalogEntry>& out,
                       const std::string& nation,
                       const WallPalette& palette,
@@ -85,7 +82,7 @@ void add_nation_walls(std::vector<BuildingArchetypeCatalogEntry>& out,
                       const WallPalette* leaf_palette = nullptr) {
   const WallPalette& leaf = leaf_palette != nullptr ? *leaf_palette : palette;
   const std::string prefix = nation + "_wall_variant";
-  // Every segment kind draws from the whole variant and walk set.
+
   std::vector<std::string> segment_kinds;
   for (const auto& [name, variant] : wall_renderer_variants()) {
     (void)variant;
@@ -166,7 +163,6 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
                             Game::Visuals::styled_building_type("home", "tenement"))}});
   }
 
-  // The marketplace styles that fill their lot: porticoes and docks.
   struct MarketLook {
     const char* nation;
     const PorticoLook* portico;
@@ -211,9 +207,6 @@ auto build_catalog() -> std::vector<BuildingArchetypeCatalogEntry> {
                  &Carthage::build_barracks_firs_desc,
                  {kind_of("carthage", "barracks")}});
 
-  // The nation-only buildings (NATION_ASYMMETRY.md) borrow the barracks yard and
-  // the portico until they get their own authoring: a camp, a marching camp, a
-  // colonnaded stable and an armourers' portico, in each nation's look.
   struct NationBuildingLook {
     const char* nation;
     BuildingArchetypeDesc (*grounds)(BuildingState);

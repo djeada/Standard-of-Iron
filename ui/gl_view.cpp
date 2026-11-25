@@ -85,8 +85,7 @@ auto distribution_json(const std::vector<double>& samples) -> QJsonObject {
 
 GLView::GLView() {
   setMirrorVertically(true);
-  // The renderer sizes the framebuffer itself (it may be smaller than the item
-  // on the Low preset) and asks for a new one when the item or preset changes.
+
   setTextureFollowsItemSize(false);
 }
 
@@ -98,8 +97,7 @@ auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNod
   if (!m_engine || m_engine->renderer_has_failed()) {
     return node;
   }
-  // Qt consumes the renderer and framebuffer factory results immediately.
-  // Check the context before letting Qt create either object.
+
   const auto* context = QOpenGLContext::currentContext();
   if (context == nullptr || !context->isValid()) {
     m_engine->report_renderer_failure(
@@ -119,7 +117,7 @@ auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNod
 void GLView::itemChange(ItemChange change, const ItemChangeData& value) {
   QQuickFramebufferObject::itemChange(change, value);
   if (change == ItemVisibleHasChanged && value.boolValue) {
-    // The renderer stops requesting frames while hidden; wake it up.
+
     update();
   }
 }
@@ -269,11 +267,6 @@ void GLView::GLRenderer::render() {
       }
     }
 
-    // Behind the front-end screens the battlefield item is hidden, but Qt
-    // still calls render(); each frame then asked for the next one and the
-    // empty world was drawn at full resolution under the main menu forever.
-    // Once the renderer exists, a hidden view draws nothing and stops asking;
-    // GLView::itemChange() restarts it when the view is shown.
     if (!m_item_visible && m_engine->renderer_initialized()) {
       return;
     }
@@ -296,7 +289,7 @@ void GLView::GLRenderer::render() {
       m_engine->start_simulation_thread();
     }
     if (!m_item_visible) {
-      // Initialised behind the menu: report readiness, draw nothing.
+
       if (!m_ready_reported && m_view != nullptr) {
         m_ready_reported = true;
         QMetaObject::invokeMethod(
@@ -359,8 +352,7 @@ void GLView::GLRenderer::render() {
     m_engine->notify_loading_frame_presented(rendered_load);
     if (m_item_pixel_size.isValid() && !m_resize_requested &&
         scaled_framebuffer_size(m_item_pixel_size) != m_size && m_view != nullptr) {
-      // The preset's render scale changed. synchronize() only runs when the
-      // item is dirty, so mark it from the GUI thread.
+
       m_resize_requested = true;
       QMetaObject::invokeMethod(m_view, "update", Qt::QueuedConnection);
     }
@@ -954,7 +946,7 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
 
 auto GLView::GLRenderer::scaled_framebuffer_size(const QSize& item_pixels) const
     -> QSize {
-  // Captures (film, benchmarks) always get the full picture.
+
   if (m_benchmark_seconds > 0.0 || m_film_fps > 0) {
     return item_pixels;
   }
@@ -967,9 +959,7 @@ auto GLView::GLRenderer::scaled_framebuffer_size(const QSize& item_pixels) const
 
 auto GLView::GLRenderer::createFramebufferObject(const QSize& requested)
     -> QOpenGLFramebufferObject* {
-  // `requested` is the item's pixel size; Qt stretches whatever we return
-  // over the item, so a smaller framebuffer is a cheaper 3D view under a
-  // full-resolution HUD.
+
   m_item_pixel_size = requested;
   m_resize_requested = false;
   const QSize size = scaled_framebuffer_size(requested);
@@ -990,7 +980,7 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& requested)
     m_engine->report_renderer_failure(
         GLView::tr("The OpenGL battlefield framebuffer could not be created."));
   }
-  // Qt still needs a framebuffer texture for this scene graph node.
+
   framebuffer.reset();
   return new QOpenGLFramebufferObject(QSize(1, 1));
 }
@@ -1007,8 +997,7 @@ void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   }
 
   if (view->window() != nullptr && m_item_pixel_size.isValid()) {
-    // Same arithmetic Qt uses for the size it passes to
-    // createFramebufferObject(), so an unchanged item never looks resized.
+
     const QSize item_pixels = QSize(qMax(1, static_cast<int>(view->width())),
                                     qMax(1, static_cast<int>(view->height()))) *
                               view->window()->effectiveDevicePixelRatio();
@@ -1016,7 +1005,7 @@ void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
         std::abs(item_pixels.width() - m_item_pixel_size.width()) > 1 ||
         std::abs(item_pixels.height() - m_item_pixel_size.height()) > 1;
     if (resized || scaled_framebuffer_size(m_item_pixel_size) != m_size) {
-      // The item was resized or the preset's render scale changed.
+
       invalidateFramebufferObject();
     }
   }

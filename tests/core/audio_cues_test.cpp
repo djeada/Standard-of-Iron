@@ -408,9 +408,6 @@ TEST_F(ShippedAudioTest, ABurstOfImpactsKeepsSoundingInsteadOfGoingQuiet) {
   EXPECT_GE(record.accepted, 4U);
 }
 
-// A promo capture renders a few frames a second; with cooldowns on the wall clock
-// every one had lapsed between two frames and a fight played the same clash on a
-// half-second metronome. Offline, cooldowns run on the time the audio has reached.
 TEST_F(ShippedAudioTest, OfflineCooldownsRunOnRenderedTimeNotTheWallClock) {
   Game::Audio::CueBinding binding;
   binding.resource_ids = sword_pool();

@@ -25,8 +25,6 @@ public:
     m_idle_builders_gather = false;
   }
 
-  // Match rule: idle builder crews start gathering on their own. Lives with the
-  // economy so the production system can read it without depending on the session.
   void set_idle_builders_gather(bool enabled) { m_idle_builders_gather = enabled; }
   [[nodiscard]] auto idle_builders_gather() const -> bool {
     return m_idle_builders_gather;

@@ -136,9 +136,6 @@ auto make_state() -> State {
   return state;
 }
 
-// The backend keeps the GPU copy of each chunk's instance block in an
-// InstanceBufferTable; these helpers read and drive it the way the resources
-// stage does every frame.
 auto retained_buffer_bytes(const State& state,
                            Render::GL::InstanceBufferTable& table) -> std::size_t {
   std::size_t bytes = 0;

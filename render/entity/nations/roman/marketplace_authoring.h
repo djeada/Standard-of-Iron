@@ -23,12 +23,9 @@
 #include "render/geom/primitives.h"
 #include "render/geom/transforms.h"
 
-// The marketplace geometry, authored as BuildingArchetypeDescs and baked by
-// the building archetype catalog. Nothing here draws or reads frame state.
 namespace Render::GL::Roman {
 
-// Palette and layout shared by the authoring and the marketplace renderer.
-namespace marketplace_detail {} // namespace marketplace_detail
+namespace marketplace_detail {}
 
 auto build_marketplace_desc(BuildingState state) -> BuildingArchetypeDesc;
 

@@ -6,8 +6,6 @@
 
 #include "render/entity/building_archetype_desc.h"
 
-// Marketplace geometry shared by the nations: paving, goods and stalls,
-// authored into a BuildingArchetypeDesc. Nothing here draws.
 namespace Render::GL {
 
 struct MarketPaving {

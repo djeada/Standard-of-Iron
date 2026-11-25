@@ -110,7 +110,6 @@ protected:
     return units;
   }
 
-  // Men standing, counted the way the battle report counts them.
   auto men_of(int owner) -> int {
     int men = 0;
     for (auto* entity : living_units_of(owner)) {
@@ -127,9 +126,6 @@ protected:
     return men;
   }
 
-  // What GameEngine does after the mission setup: stock both sides as the map
-  // and mission say, and let the AI make its first decisions. Without it the
-  // outpost has nothing to build or recruit with and nothing can go wrong.
   void start_the_match() {
     const auto map = Game::Map::MapContextStore::acquire(m_level.map_path);
     ASSERT_TRUE(map.valid());
@@ -146,8 +142,7 @@ protected:
   void run_seconds(float seconds) {
     const int ticks = static_cast<int>(seconds / k_tick);
     for (int tick = 0; tick < ticks; ++tick) {
-      // Through the session clock, as the other tests here: orders given to
-      // the world wait in the command log for a tick to seal them.
+
       m_session->advance(
           k_tick, 1, Game::Session::SessionContext::OverloadPolicy::KeepBacklog);
     }
@@ -334,9 +329,7 @@ TEST_F(TutorialMissionTest, TheFallenRomanCommanderIsAnnouncedByNationName) {
 }
 
 TEST_F(TutorialMissionTest, TheOutpostHoldsItsCampThroughTheEconomySteps) {
-  // The economy steps (wood, stone and iron, a Home, recruits) take a new player
-  // many minutes. The outpost must still be the camp the map drew: no builders,
-  // no town, no recruits, nobody marching out to meet the player on the road.
+
   std::map<EntityID, QVector3D> start;
   for (auto* entity : living_units_of(2)) {
     start.emplace(entity->get_id(), position(entity));
@@ -403,7 +396,6 @@ TEST_F(TutorialMissionTest, TheScoutFightIsTheTwoScoutsAlone) {
   ASSERT_EQ(static_cast<int>(scouts.size()), Game::Mission::k_tutorial_scout_count);
   ASSERT_FALSE(army.empty());
 
-  // The player spends a minute on the select and move steps, then attacks.
   start_the_match();
   run_seconds(60.0F);
   const int men_before = men_of(k_local_owner);

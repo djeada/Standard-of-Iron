@@ -11,15 +11,13 @@
 #include "render/entity/tenement_layout.h"
 #include "render/entity/tenement_shell.h"
 
-// The builder behind build_tenement_desc, shared by the files that author the
-// insula's shell, its street and court dressing, and its roof.
 namespace Render::GL::Roman::TenementDetail {
 
 using namespace TenementShellDims;
 
 inline constexpr float k_pi = 3.14159265F;
 inline constexpr float k_eave_overhang = 0.07F;
-// Deep enough that the shop reads as a room behind the counter, not a niche.
+
 inline constexpr float k_shop_depth = 0.80F;
 
 inline constexpr QVector3D k_void{0.115F, 0.095F, 0.080F};
@@ -48,8 +46,7 @@ private:
   void add_pavement();
   void add_core();
   void add_shell();
-  // The carriage passage: a round-headed opening, cut as stepped strips that
-  // the voussoirs then cover.
+
   void add_passage_front();
   void add_jar(const QVector3D& foot, float scale, const QVector3D& clay);
   void add_pot(const QVector3D& foot, int salt);
@@ -60,18 +57,15 @@ private:
   void add_passage_dressing();
   void add_ground_storey_dressing();
   void add_balcony(int storey);
-  // The cheap way to add a storey: a timber frame with plastered panels
-  // (opus craticium) on top of the masonry house.
+
   [[nodiscard]] auto timber_framed(int storey) const -> bool;
   void add_timber_frame(int storey);
   void add_upper_storey_dressing();
   void add_rear_dressing();
-  // The party wall carried up into the gable: coarse courses fill the
-  // triangle, and a raking slab under each roof slope hides their steps.
+
   void add_gable_end(float sign, float rise);
   void add_chimney(const QVector3D& vent);
-  // Tegulae laid in overlapping courses with a cover tile over every joint and
-  // an antefix closing each cover tile at the eave.
+
   void add_pantiles(float x0, float x1, float rise);
   void add_gable_roof();
   void add_terrace_roof();

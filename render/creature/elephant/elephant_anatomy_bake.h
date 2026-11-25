@@ -9,8 +9,6 @@
 
 namespace Render::Creature {
 
-// The entity's elephant anatomy, baked on first use and again whenever the
-// seed changes. A null entity bakes into a thread-local scratch.
 auto get_or_bake_elephant_anatomy(Engine::Core::Entity* entity,
                                   std::uint32_t seed,
                                   const QVector3D& fabric_base,

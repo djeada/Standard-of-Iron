@@ -1,9 +1,5 @@
 #pragma once
 
-// Internal to weapon_rack_mesh.cpp: the profile helpers and the RackBuilder
-// that build_weapon_rack_mesh() drives. Split out to keep that file within the
-// render file-size limit; nothing else includes it.
-
 #include <QVector3D>
 
 #include <algorithm>

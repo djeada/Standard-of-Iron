@@ -34,11 +34,10 @@ def spline(points, step=14.0):
     return out
 
 
-SEA_LEVEL = -0.6  # lake "height" that gives quays a bank to stand on
-DOCK_SETBACK = 2.25  # dock centre this far inland of the water's edge
-# River width that draws one metre of open water at a quay: the drawn edge reaches
-# 0.81 x the width (bridge_geometry.h), less the sand margin along it. Measured on
-# the cothon: at 1.15 the water meets the dock quays and the hulls float.
+SEA_LEVEL = -0.6
+DOCK_SETBACK = 2.25
+
+
 RIVER_DRAWN_WIDTH = 1.15
 
 
@@ -93,7 +92,7 @@ class Plan:
         self.waters = []
         self.rivers = []
         self.reserved = []
-        self.solids = []  # footprints a connecting street may not cross
+        self.solids = []
 
     def wet(self, x, z, pad=0.0):
         if any(w.wet(x, z, pad) for w in self.waters):
@@ -134,7 +133,6 @@ class Plan:
                 lo = mid
         return [round(origin[0] + ux * hi, 2), round(origin[1] + uz * hi, 2)]
 
-    # --- raw
     def add(self, kind, **fields):
         self.ops.append({"op": "add", "kind": kind, "json": fields})
 
@@ -144,7 +142,6 @@ class Plan:
     def root(self, key, value):
         self.ops.append({"op": "root", "key": key, "value": value})
 
-    # --- terrain
     def lake(self, x, z, width, depth, rotation=0, height=None, shape=None, calm=False):
         j = dict(type="lake", x=x, z=z, width=width, depth=depth, rotation=rotation)
         if calm:
@@ -206,7 +203,6 @@ class Plan:
     def forest(self, ident, x, z, radius):
         self.add("forest", id=ident, x=x, z=z, radius=radius)
 
-    # --- linear
     def river(self, points, width, height=None, calm=False):
         j = {"type": "river", "start": points[0], "end": points[-1], "width": width}
         if calm:
@@ -221,8 +217,6 @@ class Plan:
     def ring_river(self, x, z, radius, width, segments=20, height=None, calm=False):
         import math
 
-        # Half a segment of phase: a bridge along x or z then crosses a straight
-        # reach square on, as the shipped-bridge checks require.
         pts = [
             [
                 round(x + radius * math.cos(2 * math.pi * (i + 0.5) / segments), 2),
@@ -243,7 +237,7 @@ class Plan:
             )
         j = {"type": "road", "start": a, "end": b, "width": width, "style": style}
         if waypoints:
-            # The editor's waypoint list includes both endpoints.
+
             j["waypoints"] = [a, *waypoints, b]
         self.add("linear", **j)
 
@@ -255,7 +249,6 @@ class Plan:
             {"op": "paving", "rect": [x0, z0, x1, z1], "style": style, "strip": strip}
         )
 
-    # --- town
     def owner(self):
         return {"player_id": self.player, "nation": self.nation}
 
@@ -354,7 +347,6 @@ class Plan:
                 **self.owner(),
             )
 
-    # --- composites
     def reserve(self, x0, z0, x1, z1):
         """Keep district blocks off this rectangle."""
         self.reserved.append((min(x0, x1), min(z0, z1), max(x0, x1), max(z0, z1)))
@@ -459,7 +451,7 @@ class Plan:
                             at[1],
                             round(rng.uniform(0.85, 1.05), 2),
                         )
-        # Streets: each grid line runs past the blocks that stand on it.
+
         for i in range(nx + 1):
             rows = [j for j in range(nz) if (i, j) in built or (i - 1, j) in built]
             if not rows:
@@ -517,7 +509,7 @@ class Plan:
             u, v = x - cx, z - cz
             return [round(cx + c * u + sn * v, 2), round(cz - sn * u + c * v, 2)]
 
-        placed = []  # local rects of this district
+        placed = []
         props = [
             "olive_tree",
             "cypress_tree",
@@ -718,8 +710,6 @@ class Plan:
         except across `gap_deg` (degrees, 0 = +x, 90 = +z) where its channel leaves."""
         import math
 
-        # Authored at the width that draws `width` of open water (RIVER_DRAWN_WIDTH):
-        # a ring authored at `width` floods its own quays and drowns the docks' hulls.
         self.ring_river(
             cx,
             cz,
@@ -765,7 +755,6 @@ class Plan:
         ]
         self.folk(ident, kind, pts, radius)
 
-    # --- one road network
     def _road_segments(self):
         """Every road segment the ops will lay, as the topology audit sees them."""
         import math
@@ -927,9 +916,7 @@ class Plan:
                         print("  detached:", size, "segment(s) at", segs[k])
                 break
             _, p, q = best
-            if (
-                math.hypot(p[0] - q[0], p[1] - q[1]) < 3.0
-            ):  # the editor lays no road shorter
+            if math.hypot(p[0] - q[0], p[1] - q[1]) < 3.0:
                 ux, uz = q[0] - p[0], q[1] - p[1]
                 n = math.hypot(ux, uz) or 1.0
                 p = (p[0] - ux / n * 1.6, p[1] - uz / n * 1.6)

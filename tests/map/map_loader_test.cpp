@@ -460,7 +460,7 @@ TEST(MapLoaderTest, ReadsALakesShapeAndItsWaterLevel) {
   EXPECT_EQ(basin.shape, Game::Map::LakeShape::Basin);
   EXPECT_EQ(basin.elevation_mode, Game::Map::WaterElevationMode::Authored);
   EXPECT_FLOAT_EQ(basin.center.y(), -0.6F);
-  // A basin fills its rectangle: the corner an ellipse would cut off is water.
+
   EXPECT_TRUE(Game::Map::point_in_lake(basin, 17.0F, 20.0F + 10.0F));
   EXPECT_FALSE(Game::Map::point_in_lake(basin, 21.0F, 20.0F));
   EXPECT_FALSE(Game::Map::point_in_lake(basin, 0.0F, 20.0F + 13.0F));
@@ -1260,7 +1260,6 @@ TEST(MapLoaderTest, AnUnknownStructureStyleIsAnAuthoringError) {
                                error));
   EXPECT_TRUE(error.contains(QStringLiteral("skyscraper"))) << error.toStdString();
 
-  // A style belongs to one building type: a tenement is a home, not a temple.
   error.clear();
   EXPECT_FALSE(load_structures(QJsonArray{QJsonObject{{"type", "temple"},
                                                       {"x", 4.0},

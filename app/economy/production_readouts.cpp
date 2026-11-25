@@ -55,7 +55,7 @@ auto selected_barracks_state(Engine::Core::World* world,
 
   m["has_barracks"] = st.has_barracks;
   m["in_progress"] = st.in_progress;
-  // Rome's levy countdown (NATION_ASYMMETRY.md 3.1); negative for no levy.
+
   m["levy_seconds"] = -1.0;
   if (auto* levy = world->get_system<Game::Systems::NationEconomySystem>()) {
     m["levy_seconds"] =
@@ -123,7 +123,7 @@ auto selected_builder_state(Engine::Core::World* world) -> QVariantMap {
       m["build_time"] = builder_prod->build_time;
       m["product_type"] = QString::fromStdString(builder_prod->product_type);
       m["queued_sites"] = static_cast<int>(builder_prod->queued_structure_sites.size());
-      // The nation-only buildings this crew's nation raises (NATION_ASYMMETRY.md).
+
       QStringList nation_buildings;
       if (const auto* unit = world->try_get<Engine::Core::UnitComponent>(id)) {
         if (const auto* nation =

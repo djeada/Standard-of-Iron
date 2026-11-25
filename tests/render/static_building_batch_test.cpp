@@ -335,8 +335,7 @@ TEST(StaticBuildingBatch, InstanceCarriesFourPaletteSlots) {
     EXPECT_GE(entries[slot][3], 0.0F) << "slot " << slot << " must read as set";
   }
   EXPECT_EQ(Render::GL::k_merged_building_palette_capacity, entries.size());
-  // The first six instance attributes keep their offsets; shaders written
-  // against them still bind.
+
   EXPECT_EQ(offsetof(BuildingInstanceGpu, state), 5U * 4U * sizeof(float));
   EXPECT_EQ(offsetof(BuildingInstanceGpu, palette2), 6U * 4U * sizeof(float));
 }

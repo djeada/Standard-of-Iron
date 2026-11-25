@@ -70,9 +70,7 @@ struct SpawnTerrainCache {
 class SpawnValidator {
 public:
   SpawnValidator(const SpawnTerrainCache& cache, const SpawnValidationConfig& config);
-  // Reads buildings, roads, bridges, water and the world-prop clearance index
-  // from `world` instead of the live services, so it can run on any thread.
-  // A null `world` reads the live services.
+
   SpawnValidator(const SpawnTerrainCache& cache,
                  const SpawnValidationConfig& config,
                  const Game::Map::ScatterWorld* world);

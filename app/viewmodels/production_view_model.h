@@ -34,7 +34,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_builder_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_marketplace_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_farm_state() const;
-  // A selected Mercenary Camp or Elephant Stables and what it offers.
+
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_hiring_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap unit_info(const QString& unit_type,
                                                   const QString& nation_id) const;
@@ -55,8 +55,6 @@ public:
 
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
 
-  // Switches the selected homes between raising civilians that report to the
-  // barracks by themselves and waiting for the player's orders.
   Q_INVOKABLE void set_home_reporting(bool active);
 
 signals:

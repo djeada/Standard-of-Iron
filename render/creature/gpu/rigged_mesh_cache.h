@@ -30,15 +30,10 @@ struct RiggedSkinAtlas {
   std::span<const QMatrix4x4> palettes;
   std::uint32_t frame_total{0};
   std::uint32_t bone_count{0};
-  // Every frame's palette, padded to the palette width, as uniform data the
-  // backend uploads once. Built lazily from palette_storage; null until a GL
-  // backend is attached (see RiggedMeshCache::set_palette_blocks_enabled).
+
   std::shared_ptr<InstanceBlock> palette_block;
   std::size_t frame_stride_bytes{0};
-  // Blocks replaced when the atlas was refilled from another animation blob.
-  // Draw commands queued earlier in the frame still point at them (shadow
-  // passes run after submission), so they are released a few frames later by
-  // RiggedMeshCache::begin_frame, never on the spot.
+
   std::vector<std::shared_ptr<InstanceBlock>> retired_palette_blocks;
   std::uint64_t retired_since_frame{0};
 };
@@ -47,12 +42,9 @@ struct RiggedMeshEntry {
   std::shared_ptr<RiggedMesh> mesh;
   std::vector<std::shared_ptr<RiggedMesh>> attachment_meshes;
 
-  // Full-detail entries only: the copies drawn while the creature is small on
-  // screen (see rigged_mesh_reduce.h). reduced_attachment_meshes runs parallel
-  // to attachment_meshes; a null copy means the full mesh is drawn.
   std::shared_ptr<RiggedMesh> reduced_mesh;
   std::vector<std::shared_ptr<RiggedMesh>> reduced_attachment_meshes;
-  // Height of the full mesh in mesh units, for the on-screen size test.
+
   float height{0.0F};
 
   std::shared_ptr<RiggedSkinAtlas> skin_atlas;
@@ -136,16 +128,11 @@ public:
 
   void upload_pending_skin_ubos();
 
-  // Builds the palette blocks of every cached entry ahead of the first frame.
-  // False while palette blocks are disabled or a block could not be built.
   [[nodiscard]] auto prepare_gpu_data() -> bool;
-  // Every cached skinned mesh and palette block, for prewarming a backend.
+
   void for_each_mesh(const std::function<void(const RiggedMesh&)>& visit) const;
   void for_each_palette_block(const InstanceBlockVisitor& visit) const;
 
-  // Whether baked palettes become uniform blocks. The scene renderer turns it
-  // on when it has a GL backend; without one, creatures upload their palette
-  // per draw, as before.
   void set_palette_blocks_enabled(bool enabled) noexcept {
     m_palette_blocks_enabled = enabled;
   }
@@ -295,8 +282,7 @@ private:
   void release_skin_atlases();
   void release_retired_palette_blocks();
   void recount_residency();
-  // The small-on-screen copy of `mesh`, simplified once and shared by every
-  // entry drawing it.
+
   auto
   reduced_copy(const std::shared_ptr<RiggedMesh>& mesh) -> std::shared_ptr<RiggedMesh>;
 
@@ -310,8 +296,6 @@ private:
                      AttachmentMeshKeyHash>
       m_attachment_meshes;
 
-  // Small-on-screen copies keyed by the full mesh's id; null when simplifying
-  // that mesh saved too little.
   std::unordered_map<std::uint64_t, std::shared_ptr<RiggedMesh>> m_reduced_meshes;
 
   std::map<std::string, AttachmentMeshKey, std::less<>> m_attachment_pack_keys;

@@ -146,11 +146,9 @@ Item {
                 readonly property int columns: spectatorRoot.board.length > 2 ? 2 : 1
                 readonly property bool compact: board_view.columns > 1
                 readonly property real name_min_width: Design.A11y.scaled(board_view.compact ? 130 : 150)
-                // Everything on a row that is not the name: the accent bar, the fixed
-                // stat columns, a floor for the kills text, the gaps and the margins.
+
                 readonly property real row_reserved: Design.Metrics.space8 + Design.A11y.scaled(board_view.compact ? 120 + 100 + 150 : 130 + 120 + 100 + 110 + 150) + (board_view.compact ? 5 : 7) * (board_view.compact ? Design.Metrics.space8 : Design.Metrics.space12) + Design.Metrics.space8 * 2 + Design.Metrics.space4
-                // The widest army name, measured once for the board: a hidden Text holding
-                // every name on its own line is exactly as wide as the longest of them.
+
                 readonly property real widest_name: name_probe.implicitWidth
                 readonly property real name_width: Math.max(board_view.name_min_width, Math.min(board_view.widest_name + Design.Metrics.space4, board_view.cellWidth - board_view.row_reserved))
 

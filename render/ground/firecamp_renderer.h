@@ -28,9 +28,6 @@ public:
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
 
-  // Plans regenerating the layer for new world props against `world`, a
-  // snapshot of the live map. The job runs on a worker and reads only what it
-  // captured; its adoption runs on the render thread.
   [[nodiscard]] auto
   plan_world_props_refresh(std::vector<Game::Map::WorldProp> world_props,
                            std::shared_ptr<const Game::Map::ScatterWorld> world)

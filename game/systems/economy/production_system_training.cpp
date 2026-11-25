@@ -127,8 +127,6 @@ auto spawn_recruit(Engine::Core::World& world,
   return unit->id();
 }
 
-// A band hired at a Mercenary Camp keeps a contract that the nation economy
-// charges upkeep for (NATION_ASYMMETRY.md 4.2).
 void sign_contract(Engine::Core::World& world,
                    Engine::Core::EntityID recruit,
                    const Engine::Core::UnitComponent& camp,

@@ -229,14 +229,10 @@ void EnvironmentRuntime::sync_scatter_world_props(
     return;
   }
 
-  // This runs under the GameEngine frame lock, so the simulation is not
-  // writing the live services here. Scatter regenerates on a worker against a
-  // snapshot taken now, at most one per call.
   std::shared_ptr<const Game::Map::ScatterWorld> snapshot;
   const auto world_snapshot = [&]() -> std::shared_ptr<const Game::Map::ScatterWorld> {
     if (snapshot == nullptr) {
-      // The clearance index is built from the session's own terrain, with the
-      // same builder as the shared one.
+
       snapshot = Game::Map::ScatterWorld::capture(terrain_service,
                                                   session.building_collision());
     }

@@ -864,8 +864,7 @@ auto build_temple_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   desc.scale_uniformly(k_temple_mesh_scale);
 
   {
-    // The tophet comes up to the temple steps: a row of stelae across the
-    // front, and the tall stands burning either side.
+
     const Motif::Setter set(desc, state);
     int salt = 0;
     for (const float across : {-1.45F, -0.85F, 0.85F, 1.45F}) {

@@ -441,7 +441,6 @@ TEST(RiggedMeshCache, AllowScopeOnAnotherThreadLeavesTheBarrierAlone) {
 
 namespace {
 
-// Gives an entry's species atlas `frames` frames of palettes, as a blob would.
 auto give_atlas_frames(const Render::GL::RiggedMeshEntry& entry,
                        std::uint32_t frames,
                        std::uint32_t bones)
@@ -460,10 +459,6 @@ auto give_atlas_frames(const Render::GL::RiggedMeshEntry& entry,
 
 } // namespace
 
-// The Amber Delta crash (2026-11-25): an atlas refilled from another animation
-// blob freed its palette block while draw commands queued earlier in the frame
-// still pointed at it, and the shadow pass read the freed block. The old block
-// must outlive the frame.
 TEST(RiggedMeshCache, ARefilledAtlasKeepsItsOldPaletteBlockForTheQueuedFrame) {
   RuntimeBakeGuardReset const reset;
   RiggedMeshCache cache;
@@ -500,7 +495,6 @@ TEST(RiggedMeshCache, ARefilledAtlasKeepsItsOldPaletteBlockForTheQueuedFrame) {
   EXPECT_TRUE(queued.expired()) << "the retired block is released a few frames later";
 }
 
-// The palette writer never reads past the palettes its atlas holds.
 TEST(RiggedMeshCache, APaletteBlockWritesTheBindPoseForFramesItsAtlasLacks) {
   RuntimeBakeGuardReset const reset;
   RiggedMeshCache cache;

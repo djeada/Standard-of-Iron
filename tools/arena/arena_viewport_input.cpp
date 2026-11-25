@@ -142,9 +142,7 @@ void ArenaViewport::keyPressEvent(QKeyEvent* event) {
     }
     event->accept();
     return;
-  // Yaw and tilt are held keys applied per frame (see
-  // apply_keyboard_camera_controls): one eased orbit per key repeat restarted
-  // its blend every ~30 ms and turned a held key into a stutter.
+
   case Qt::Key_Q:
     m_yaw_left_pressed = true;
     event->accept();
@@ -313,8 +311,7 @@ void ArenaViewport::mouseMoveEvent(QMouseEvent* event) {
     if ((event->modifiers() & Qt::ShiftModifier) != 0) {
       drag_pan_ground(event->pos() - delta, event->pos());
     } else {
-      // Orbit follows the pointer 1:1. The eased orbit restarted its 120 ms
-      // blend on every mouse event, which made a drag trail the cursor.
+
       m_camera->rotate_immediate(-static_cast<float>(delta.x()) * 0.4F,
                                  -static_cast<float>(delta.y()) * 0.22F);
     }
@@ -377,9 +374,7 @@ void ArenaViewport::drag_pan_ground(const QPoint& from, const QPoint& to) {
   if (m_camera == nullptr || width() <= 0 || height() <= 0) {
     return;
   }
-  // Keep the ground point that was under the cursor under it, whatever the
-  // zoom: a fixed world step per pixel crawled when zoomed out and raced when
-  // zoomed in.
+
   QVector3D before;
   QVector3D after;
   if (!m_camera->screen_to_ground(from.x(), from.y(), width(), height(), before) ||
@@ -396,14 +391,12 @@ void ArenaViewport::wheelEvent(QWheelEvent* event) {
     return;
   }
   if (m_camera != nullptr && width() > 0 && height() > 0) {
-    // One wheel notch is 120 units; high-resolution wheels and touchpads send
-    // fractions of that, so the step stays proportional to what was scrolled.
+
     float const notches = static_cast<float>(event->angleDelta().y()) / 120.0F;
     if (notches != 0.0F) {
       bool const fast = (event->modifiers() & Qt::ShiftModifier) != 0;
       QPointF const cursor = event->position();
-      // The game's feel: about 12% of the distance per notch, eased over
-      // ~0.12 s and anchored on the ground under the cursor.
+
       if (m_terrain_review_mode) {
         m_camera->zoom_distance_eased(notches * (fast ? 1.1F : 0.45F),
                                       1.0F,
@@ -567,8 +560,6 @@ void ArenaViewport::apply_keyboard_camera_controls(float real_dt) {
 
   const bool fast = (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
 
-  // Rotation is a rate in degrees per second, so it turns at the same speed at
-  // 30 fps and at 240 fps.
   float const yaw_input =
       (m_yaw_right_pressed ? 1.0F : 0.0F) - (m_yaw_left_pressed ? 1.0F : 0.0F);
   float const tilt_input =
@@ -691,9 +682,7 @@ void ArenaViewport::update_selected_entities() {
 }
 
 void ArenaViewport::sync_selection_summary() {
-  // The summary walks every selected entity and formats a dozen strings. It
-  // ran every frame; the panel only needs it when the selection changes or a
-  // few times a second for health and position.
+
   constexpr qint64 k_summary_refresh_ms = 250;
   auto* selection = selection_system();
   if (selection == nullptr) {

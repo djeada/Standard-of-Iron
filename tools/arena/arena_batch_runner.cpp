@@ -72,10 +72,6 @@ namespace {
   return hardware;
 }
 
-// SOI_REVIEW_TIMING_FRAMES=N draws the gameplay view N more times and writes
-// frame_timing.json: wall time per drawn and read-back frame, so two maps (or
-// two builds) can be compared on one machine. The read-back waits for the GPU,
-// so each sample is the whole frame, CPU and GPU.
 void write_terrain_review_frame_timing(ArenaViewport& viewport,
                                        const QString& directory) {
   bool ok = false;

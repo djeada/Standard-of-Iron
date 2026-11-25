@@ -58,10 +58,7 @@ public:
 
   [[nodiscard]] auto entries_at(std::uint64_t tick) const -> Entries;
   auto seal_inputs(std::uint64_t tick) -> Entries;
-  // Removes and returns the orders submitted but not yet sealed into a tick,
-  // without consuming a tick number. A stopped clock runs orders now; taking
-  // them through seal_inputs would burn one tick number per paused frame and
-  // push every later order that far into the future.
+
   auto take_unsealed_inputs() -> Entries;
   void complete_tick(std::uint64_t tick);
   void finish_match();

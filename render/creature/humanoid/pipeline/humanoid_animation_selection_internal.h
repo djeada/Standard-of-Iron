@@ -1,8 +1,5 @@
 #pragma once
 
-// Shared by the humanoid_animation_selection*.cpp translation units; not a public
-// header.
-
 #include <QMatrix4x4>
 
 #include <algorithm>

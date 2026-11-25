@@ -77,9 +77,6 @@ auto recruiting_building(Engine::Core::World& world,
   }
 }
 
-// A recruit card names a mercenary band as "<nation>/<troop>", for example
-// "gauls/swordsman" (NATION_ASYMMETRY.md 4.2); a plain troop name is the
-// owner's own.
 auto parse_recruit_key(const QString& key)
     -> std::pair<Game::Units::TroopType, std::optional<Game::Systems::NationID>> {
   const auto slash = key.indexOf(QLatin1Char('/'));
@@ -226,7 +223,7 @@ void RosterCommands::recruit_near_selected(const QString& unit_type,
   }
 
   if (band.has_value()) {
-    // A band is one contract at a time: no batches, no repeat.
+
     const auto ruling = Game::Systems::ProductionService::can_start_production(
         *m_world, building, product, band);
     if (ruling != Game::Systems::ProductionResult::Success) {

@@ -39,7 +39,7 @@ inline constexpr std::array<BuildingSpawnScale, 11> k_building_spawn_scales{{
     {"farm", 7.14F, 5.1F},
     {"defense_tower", 1.25F, 2.0F},
     {"wall_gate", 1.5F, 1.5F},
-    // NATION_ASYMMETRY.md buildings, drawn from barracks and portico parts.
+
     {"mercenary_camp", 1.45F, 1.0F},
     {"elephant_stables", 1.35F, 1.2F},
     {"fabrica", 1.2F, 1.1F},

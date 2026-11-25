@@ -1,7 +1,5 @@
 #pragma once
 
-// Shared by the instance_prepare*.cpp translation units; not a public header.
-
 #include <algorithm>
 #include <cmath>
 #include <cstddef>

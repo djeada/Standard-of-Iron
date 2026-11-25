@@ -1,4 +1,4 @@
-// The CreatureRenderBatch sheep and wolf entry point, with the outgoing clip blend.
+
 
 #include "render/creature/wildlife/wildlife_render_batch.h"
 

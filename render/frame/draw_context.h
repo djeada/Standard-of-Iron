@@ -61,7 +61,7 @@ struct DrawContext {
   float distance_sq = 0.0F;
   std::string renderer_id;
   RendererHandle renderer_handle = k_invalid_renderer_handle;
-  // The backend's sun and sky, for contact shadows; null without a GL backend.
+
   const Render::EnvironmentLightingState* environment_lighting = nullptr;
   const Camera* camera = nullptr;
 

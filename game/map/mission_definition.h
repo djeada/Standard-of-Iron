@@ -116,7 +116,7 @@ struct AISetup {
   std::optional<int> team_id;
   std::optional<QString> strategy;
   std::optional<QString> posture;
-  // false: an outpost that keeps only what the map and its waves give it.
+
   bool economy = true;
   AIPersonality personality;
   float wave_escalation = 0.0F;

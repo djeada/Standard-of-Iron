@@ -106,8 +106,7 @@ void main() {
   dryness += raised_shelf * 0.16;
   dryness += (1.0 - moisture) * 0.18;
   dryness -= lowland * (0.16 + 0.26 * moisture);
-  // The playable terrain is mostly living sward with stands of straw; a
-  // surround cured edge to edge drew the map border as a colour line.
+
   dryness = clamp(dryness * k_surround_dryness_share, 0.0, 1.0);
   vec3 grass_col = mix(lush_grass, u_grass_dry, dryness);
   grass_col = mix(grass_col, u_grass_secondary, lowland * 0.16);
@@ -135,9 +134,6 @@ void main() {
                      dryness * (0.22 + biome_dry * 0.18));
   soil_mix = max(soil_mix, exposed_mosaic * biome_soil_bias);
 
-  // The surround is the same country as the map it frames. Left to its mud
-  // and lowland terms it turned into one dark flat beyond a green meadow, and
-  // under distance haze a dark flat reads as a grey sea.
   soil_mix *= k_surround_soil_share;
   vec3 soil_col = mix(u_soil_color * 0.96, u_soil_color * 1.05, moisture_var * 0.55);
   vec3 base_col = mix(grass_col, soil_col, soil_mix);
@@ -283,8 +279,7 @@ void main() {
                vec3(spec_contrib);
   vec3 lit = col * light * (u_ambient_boost + height_tint) * environment_exposure();
   lit = apply_directional_shadow(lit, v_world_pos, n_micro);
-  // The surround has to match the playable terrain it borders: the same shade
-  // grade and the same daylight gain, or the map edge shows as a line.
+
   vec3 open_ground_light = ground_open_light();
   lit = ground_shade_grade(
       lit, col * open_ground_light * u_ambient_boost * environment_exposure());

@@ -13,8 +13,6 @@ namespace MapEditor {
 
 [[nodiscard]] auto structure_sprite_radius_cells(const QString& type) -> float;
 
-// The sprite a structure draws with once its presentation style is taken into
-// account: a home in the tenement style is a town house, not a cottage.
 [[nodiscard]] auto styled_structure_sprite(const QString& type,
                                            const QString& style) -> QString;
 void paint_structure_sprite(QPainter& painter,

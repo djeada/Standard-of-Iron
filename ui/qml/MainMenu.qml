@@ -23,9 +23,7 @@ Item {
     property bool tutorial_started: false
     property bool can_restart: false
     readonly property bool tutorial_pending: !Core.UiPreferences.tutorialCompleted && !root.tutorial_started && !root.game_started
-    // Ornamental loops (backdrop drift, crest glow and bob) redraw the whole
-    // screen every frame. Run them only while someone can see them, and never
-    // on the Low preset or with reduced motion.
+
     readonly property bool ambient_motion: root.visible && Design.Motion.allowAmbientLoops && Qt.application.state === Qt.ApplicationActive
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze

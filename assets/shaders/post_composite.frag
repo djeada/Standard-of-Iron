@@ -153,11 +153,6 @@ vec3 fog_color_toward(vec3 world) {
   return haze + sun * inscatter;
 }
 
-// Aerial perspective: air is thickest near the ground, so a ray that runs
-// low and far gathers haze while the steep look down at the battle stays
-// clear. The camera-range fog above never reaches the play camera - its start
-// scales with the far plane - so without this a long view ends in a hard,
-// fully saturated horizon line.
 const float k_aerial_clear_distance = 130.0;
 const float k_aerial_reach = 560.0;
 const float k_aerial_onset = 1.7;
@@ -181,16 +176,13 @@ float aerial_haze_amount(vec3 world) {
   float span = abs(ray.y) / k_aerial_scale_height;
   float density = exp(-low) * ((span > 1e-3) ? (1.0 - exp(-span)) / span : 1.0);
   float weather = 1.0 + clamp(environment_fog_density() * 20.0, 0.0, 0.4);
-  // A slow onset: the middle distance keeps its contrast and only the far
-  // country dissolves, so a long view has a crisp battlefield in front of it.
+
   float amount =
       1.0 - exp(-pow(through * density * weather / k_aerial_reach, k_aerial_onset));
   amount *= mix(1.0, k_aerial_night_share, environment_night_amount());
   return min(amount, k_aerial_max);
 }
 
-// Near haze is a neutral warm veil; at the limit of sight it has to become the
-// sky's own horizon colour or the land ends in a grey band under the sky.
 vec3 aerial_haze_color(vec3 world, float amount) {
   vec3 haze = fog_color_toward(world) / k_fog_haze_tone;
   float luma = dot(haze, vec3(0.2126, 0.7152, 0.0722));
@@ -258,8 +250,7 @@ vec2 ground_mist(vec3 world) {
     float edge = length(pa - ba * t) - u_mist_info[i].x;
     float ragged_edge = edge + (drift - 0.5) * k_mist_bank_ragged;
     bool is_miasma = u_mist_info[i].z > 0.5;
-    // A river bank has an edge; a haunted hollow does not. Miasma thins from
-    // well inside its zone, or it draws as a pale disc with a rim.
+
     float inner_reach = is_miasma ? -k_mist_miasma_core * u_mist_info[i].x : 0.0;
     float lateral = 1.0 - smoothstep(inner_reach, k_mist_bank_reach, ragged_edge);
     lateral *= lateral;
@@ -322,8 +313,6 @@ const vec2 k_far_blur_offsets[8] = vec2[8](vec2(1.0, 0.0),
                                            vec2(0.0, -1.0),
                                            vec2(0.7071, -0.7071));
 
-// A NaN or infinite sample from any pass must not reach the screen: it shows as
-// a black pixel, and through the blurred passes as a black square.
 vec3 finite_or_black(vec3 c) {
   return (any(isnan(c)) || any(isinf(c))) ? vec3(0.0) : c;
 }

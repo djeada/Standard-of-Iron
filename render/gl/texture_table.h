@@ -12,11 +12,6 @@ namespace Render::GL {
 
 class TextureImage;
 
-// The textures one backend keeps for the TextureImages it samples. An image
-// holds texels only; the first time a table resolves it, the table makes a
-// texture on its own context, and it uploads again whenever the image's
-// version moves: only the changed region when it saw the version before, the
-// whole image otherwise. Textures of destroyed images go at collect_retired().
 class TextureTable {
 public:
   TextureTable();
@@ -27,12 +22,8 @@ public:
   TextureTable(TextureTable&&) = delete;
   auto operator=(TextureTable&&) -> TextureTable& = delete;
 
-  // The texture holding the image's current texels, uploaded first if the
-  // image changed. Null for a null or empty image, or if the texture could
-  // not be created. Uploading binds texture unit 0.
   auto resolve(const TextureImage* image) -> Texture*;
 
-  // Releases the textures of images that no longer exist.
   void collect_retired();
 
   [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
@@ -48,9 +39,7 @@ private:
   void upload(const TextureImage& image, Entry& entry);
 
   std::unordered_map<std::uint64_t, Entry> m_entries;
-  // The last entry looked up. Draws of one mesh or block sit together in the
-  // sorted queue, so most lookups hit it instead of hashing. Entry addresses
-  // are stable in the map; anything that erases clears it.
+
   std::uint64_t m_last_id = 0;
   Entry* m_last = nullptr;
   std::vector<std::byte> m_region_scratch;

@@ -314,7 +314,7 @@ Rectangle {
                     panel: builderSection.panel
                     builder_prod: builderProductionContent.builder_prod
                     spec: modelData
-                    // Nation-only buildings show for the nation that raises them.
+
                     visible: modelData.nation_building !== true || (builderProductionContent.builder_prod.nation_buildings || []).indexOf(modelData.item_type) >= 0
                     cardWidth: builderCardGrid.cardWidth
                     cardHeight: builderCardGrid.cardHeight

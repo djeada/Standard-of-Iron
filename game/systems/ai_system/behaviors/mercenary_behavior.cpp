@@ -17,9 +17,9 @@ namespace Game::Systems::AI {
 namespace {
 
 constexpr float k_decision_interval = 2.0F;
-// Gold the treasury never spends on hiring: next minute's upkeep on top.
+
 constexpr int k_gold_floor = 60;
-// The treasury model's horizon: no band whose upkeep would empty it sooner.
+
 constexpr float k_solvency_minutes = 2.0F;
 constexpr int k_troop_cap_margin = 12;
 
@@ -34,8 +34,6 @@ auto planar(float ax, float az, float bx, float bz) -> float {
   return std::hypot(ax - bx, az - bz);
 }
 
-// What the owner's trade houses earn a minute, read from the snapshot with the
-// nation's own numbers (the same rule NationEconomySystem pays out).
 auto trade_income(const AISnapshot& snapshot, const Nation& nation) -> int {
   const auto& traits = nation.economy;
   if (traits.trade_income_per_minute <= 0) {
@@ -85,8 +83,6 @@ auto read_treasury(const AISnapshot& snapshot, const Nation& nation) -> Treasury
   return treasury;
 }
 
-// Would hiring a band at `cost` with `upkeep` a minute leave enough gold to pay
-// every band for the next two minutes?
 auto stays_solvent(const Treasury& treasury, int cost, int upkeep) -> bool {
   const float after =
       static_cast<float>(treasury.gold - cost) +
@@ -138,8 +134,6 @@ auto squads_of(const AISnapshot& snapshot, Game::Units::SpawnType type) -> int {
   return count;
 }
 
-// The band to hire next: the doctrine's preferred troops first, in turn, then
-// every band in turn.
 auto choose_band(const Nation& nation,
                  const DoctrineRecruitment* recruitment,
                  int turn) -> const MercenaryBand* {
@@ -158,8 +152,7 @@ auto choose_band(const Nation& nation,
       }
     }
   }
-  // Every other band takes a turn too, so a preferred list never makes a
-  // one-troop army.
+
   for (const auto& band : nation.mercenary_bands) {
     if (std::find(order.begin(), order.end(), &band) == order.end()) {
       order.push_back(&band);
@@ -224,8 +217,6 @@ void MercenaryBehavior::execute(const AISnapshot& snapshot,
   const DoctrineRecruitment* recruitment =
       doctrine != nullptr ? &doctrine->recruitment : nullptr;
 
-  // Elephants from the stables, for a commander who wants them or a treasury
-  // that cannot spend its gold otherwise.
   if (const auto* stables =
           idle_building(snapshot, Game::Units::SpawnType::ElephantStables)) {
     set_rally(*stables, context, out_commands);
@@ -265,9 +256,7 @@ void MercenaryBehavior::execute(const AISnapshot& snapshot,
   const bool under_share =
       squads < k_too_small_to_shape ||
       static_cast<float>(hired) < share * static_cast<float>(squads + 1);
-  // Below the doctrine's share the camp hires whenever the treasury allows.
-  // Above it, gold is banked and spent in a burst: while a wave gathers, when
-  // the town is threatened, or when the treasury holds three bands' worth.
+
   const MercenaryBand* band = choose_band(*nation, recruitment, m_hires);
   if (band == nullptr) {
     return;

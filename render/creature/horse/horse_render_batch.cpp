@@ -1,4 +1,4 @@
-// The CreatureRenderBatch horse entry points.
+
 
 #include "render/creature/horse/horse_render_batch.h"
 

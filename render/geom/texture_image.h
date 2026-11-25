@@ -7,18 +7,12 @@
 
 namespace Render::GL {
 
-// A 2D image a draw command samples: terrain heights and fields, the ground
-// cover mask, the visibility and fog masks. It holds texels only, no GL
-// object. A domain renderer owns and fills it; each backend keeps its own
-// texture for it in a TextureTable, keyed by id(), uploads again whenever
-// version() moves (only the changed region when it can), and drops the
-// texture once the image is destroyed.
 class TextureImage {
 public:
   enum class Format : std::uint8_t {
-    Rgba8,  // 4 x uint8 per texel
-    R32F,   // 1 x float per texel
-    Rgba16F // 4 x float per texel, stored at half precision on the GPU
+    Rgba8,
+    R32F,
+    Rgba16F
   };
   enum class Filter : std::uint8_t {
     Nearest,
@@ -47,17 +41,14 @@ public:
   TextureImage(TextureImage&&) = delete;
   auto operator=(TextureImage&&) -> TextureImage& = delete;
 
-  // Sets the size and format and zeroes the texels. Backends make new storage.
   void reset(int width,
              int height,
              Format format,
              Filter filter = Filter::Linear,
              Wrap wrap = Wrap::ClampToEdge);
 
-  // Replaces every texel; `texels` holds width x height texels of the format.
   void assign(const void* texels);
-  // Replaces the texels of `region`; `texels` holds region.width x
-  // region.height texels, packed row by row.
+
   void update_region(const Region& region, const void* texels);
 
   [[nodiscard]] auto width() const noexcept -> int { return m_width; }
@@ -74,14 +65,13 @@ public:
   [[nodiscard]] static auto bytes_per_texel(Format format) noexcept -> std::size_t;
 
   [[nodiscard]] auto id() const noexcept -> std::uint64_t { return m_id; }
-  // Moves on every change of texels or storage.
+
   [[nodiscard]] auto version() const noexcept -> std::uint64_t { return m_version; }
-  // Moves when the size, format, filter or wrap change.
+
   [[nodiscard]] auto storage_version() const noexcept -> std::uint64_t {
     return m_storage_version;
   }
-  // What the latest version() changed; the whole image after reset() or
-  // assign().
+
   [[nodiscard]] auto last_change() const noexcept -> const Region& {
     return m_last_change;
   }

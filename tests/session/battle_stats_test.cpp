@@ -118,8 +118,6 @@ TEST_F(BattleStatsTest, TrainedCountsOnlySoldiersABarracksRecruited) {
   EXPECT_EQ(stats(k_rome).troops_recruited, full)
       << "builder crews and civilians are not soldiers trained";
 
-  // A squad split, scripted reinforcement or awakened undead spawns a unit
-  // with is_initial_spawn = false but is not a recruit.
   session.stats().on_unit_spawned(Engine::Core::UnitSpawnedEvent(
       squad(k_rome), k_rome, SpawnType::Swordsman, false));
   session.stats().on_unit_spawned(Engine::Core::UnitSpawnedEvent(

@@ -36,9 +36,6 @@ constexpr float k_rally_tolerance_sq = 4.0F;
   return nation.recruiting_building(troop.unit_type) == building;
 }
 
-// The roster's own limits (NATION_ASYMMETRY.md): a troop that needs a building
-// the town lacks (triarii without a Fabrica), or one at its squad cap (four
-// Roman equites), is not worth asking for; the order would only be refused.
 [[nodiscard]] auto roster_allows(const Game::Systems::TroopType& troop,
                                  const AISnapshot& snapshot) -> bool {
   if (troop.requires_building.has_value()) {
@@ -361,9 +358,7 @@ struct ArmStrength {
   for (const auto type : Game::Systems::k_all_resource_types) {
     spendable.set(type, stock.get(type) - context.saving_for_a_roof.get(type));
   }
-  // Gold buys iron at the market as well as Rome's Cretan archers
-  // (NATION_ASYMMETRY.md 3.3): while iron is short, keep enough gold back for
-  // the market to buy it.
+
   constexpr int k_iron_short = 40;
   constexpr int k_gold_kept_for_iron = 100;
   if (context.marketplace_count > 0 &&

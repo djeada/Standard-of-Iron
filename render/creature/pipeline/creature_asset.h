@@ -195,7 +195,6 @@ public:
 private:
   CreatureAssetRegistry();
 
-  // Indexed by CreatureAssetId; filled by each species' contract.
   std::array<CreatureAsset, k_creature_asset_count> m_assets{};
 };
 

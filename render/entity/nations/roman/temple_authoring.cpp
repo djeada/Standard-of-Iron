@@ -962,7 +962,7 @@ auto build_temple_desc_impl(BuildingState state) -> BuildingArchetypeDesc {
   desc.scale_uniformly(k_temple_mesh_scale);
 
   {
-    // Two great fires on the steps, and the augurs' birds along the ridge.
+
     const Motif::Setter set(desc, state);
     for (const float side : {-1.0F, 1.0F}) {
       Motif::add_roman_tripod_fire(desc, set.at(-3.0F, side * 1.25F, 1.2F), 1.7F);

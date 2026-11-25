@@ -78,8 +78,6 @@ auto is_free_to_report(const Engine::Core::World& world,
   return true;
 }
 
-// Queues one civilian at a home without the recruit fanfare a player's click
-// gets: the same rules, costs and floating numbers, no audio cue per family.
 auto queue_civilian(Engine::Core::World& world,
                     EntityID home_id,
                     int owner_id) -> bool {

@@ -22,7 +22,7 @@ SIZE = 801
 p = Plan("carthage")
 t = Town(p, seed=814)
 rng = random.Random(814)
-PUNIC = (("tenement", 5), ("", 2))  # tall white houses, some low courtyard houses
+PUNIC = (("tenement", 5), ("", 2))
 
 p.map(
     name="Carthage",
@@ -69,21 +69,21 @@ p.map(
     max_troops_per_player=8100,
 )
 
-# ================================================================== water
-p.lake(700, -20, 1000, 2400, height=SEA_LEVEL)  # the gulf
-p.lake(-140, 610, 1300, 660, height=SEA_LEVEL)  # the Lake of Tunis
-p.lake(-440, -410, 560, 400, height=SEA_LEVEL)  # the salt marsh (sebkha)
-HZ = 196  # the harbours' axis
+
+p.lake(700, -20, 1000, 2400, height=SEA_LEVEL)
+p.lake(-140, 610, 1300, 660, height=SEA_LEVEL)
+p.lake(-440, -410, 560, 400, height=SEA_LEVEL)
+HZ = 196
 X = p.shore([0, HZ], [1, 0])[0]
 LAG = p.shore([60, HZ], [0, 1])[1]
 print("coast x", X, "lagoon z", LAG)
 
-# ================================================================== the harbours
+
 BW, BD = 74, 44
 BCX = X - 24
 p.harbour("merchant", BCX, HZ, BW, BD, sides="")
 BWEST = BCX - BW / 2
-# Merchant quays: groups of docks with carts and stores between them.
+
 for side, z, face in (
     ("n", HZ - BD / 2 - DOCK_SETBACK, 0),
     ("s", HZ + BD / 2 + DOCK_SETBACK, 180),
@@ -116,7 +116,7 @@ for side, z, face in (
         "flagstone",
         curve=False,
     )
-# The war harbour: a ring of water round the admiral's island, its channel to the merchant basin.
+
 RING_R, RING_W = 26, 15
 CCX = BWEST - 12 - (RING_R + RING_W / 2)
 p.cothon("cothon", CCX, HZ, RING_R, RING_W, docks=26, gap_deg=0, gap_width=40)
@@ -129,7 +129,7 @@ ring = [
     for a in range(26, 335, 7)
 ]
 t.street(ring, 5.0, "flagstone", curve=False)
-# Stone quay edge and loading ramps: a paved apron round the island and slipways down to the water.
+
 t.loop(
     [
         (CCX - 13, HZ - 13),
@@ -138,7 +138,7 @@ t.loop(
         (CCX - 13, HZ + 13),
     ],
     5.0,
-)  # the apron
+)
 for k in range(8):
     a = math.radians(22.5 + 45 * k)
     r0, r1 = RING_R - RING_W / 2 - 4.5, RING_R - RING_W / 2 + 0.8
@@ -178,7 +178,7 @@ p.crowd(
     radius=12,
 )
 
-# ================================================================== the Byrsa, in steps
+
 BX, BZ = -70, 30
 p.rise(BX, BZ, 160, 128, 3.0, 0.32)
 p.rise(BX, BZ, 104, 84, 4.6, 0.22)
@@ -196,12 +196,12 @@ for tx, tz in [
     t.tree("palm_tree", tx, tz, 1.15)
 for k in range(5):
     p.prop("statue", BX + 2 + k * 3.6, BZ + (1 if k % 2 else -1) * 4.5, 0.9)
-# The approach from below: a broad stair-street from the agora up the east face, its landings
-# where it meets the terrace streets.
+
+
 APPROACH = [(BX + 22, BZ), (BX + 60, BZ + 6), (BX + 100, BZ + 22), (BX + 140, BZ + 46)]
 stair = t.street(APPROACH, 7.0, "flagstone", curve=True)
 t.later(t.avenue, stair, spacing=8, offset=5.2, kind="cypress_tree")
-# Terrace streets round the slopes.
+
 terraces = []
 for rx, rz, seed in ((38, 30, 1), (56, 46, 2), (78, 64, 3)):
     terraces += t.ring(
@@ -218,7 +218,7 @@ for rx, rz, seed in ((38, 30, 1), (56, 46, 2), (78, 64, 3)):
         wobble=0.03,
     )
 
-# ================================================================== the agora, behind the war harbour
+
 AG = (CCX + 4, HZ - 74)
 ag = t.plaza(
     "agora", AG[0], AG[1], 70, 30, rotation=14, sides="nswe", grand="n", statues=4
@@ -228,12 +228,12 @@ p.crowd(
 )
 t.building("temple_of_baal_hammon", "temple", *ag(-46, 0), (90 - 14) % 360)
 t.building("temple_of_reshef", "temple", *ag(46, 0), (270 - 14) % 360)
-# The elephant yard: a walled compound beside the agora, its gate on the square.
+
 EY = t.compound("elephant_yard", 92, 64, 124, 90, gate_side="s")
 t.troops("war_elephants", "elephant", 108, 76, count=3, facing=180, cols=3, spacing=9)
 t.building("barracks_of_the_wall", "barracks", -234, 20, 90, max_population=120)
 
-# ================================================================== the tophet, by the lagoon
+
 TX, TZ = CCX - 60, LAG - 36
 t.building("tophet_shrine", "temple", TX, TZ - 10, 180)
 TOPH = blob(TX, TZ + 8, 26, 14, seed=5)
@@ -254,10 +254,10 @@ for k in range(10):
     )
 p.prop("magic_shrine", TX + 24, TZ - 6, 1.0)
 
-# ================================================================== walls
+
 W = -250
-WALL_S = p.shore([W, 100], [0, 1])[1] + 1  # into the lagoon: no way round the end
-WALL_N = p.shore([W, -150], [0, -1])[1] - 1  # into the salt marsh
+WALL_S = p.shore([W, 100], [0, 1])[1] + 1
+WALL_N = p.shore([W, -150], [0, -1])[1] - 1
 land = t.wall("isthmus", [(W, WALL_S), (W, WALL_N)], closed=False, tower_spacing=36)
 t.wall(
     "outwork",
@@ -279,14 +279,14 @@ GATES = {
     "ditch_south": (W - 38, 120),
     "ditch_north": (W - 38, -100),
 }
-# The city wall between the town and Megara, along the foot of the necropolis hills.
+
 NW = -112
 CITY_N = [(W, NW), (-120, NW), (-60, NW - 22), (40, NW - 22), (100, NW - 6)]
 coast_n = p.shore([100, NW - 6], [1, 0])
 CITY_N.append((coast_n[0] + 1, NW - 6))
 t.wall("city_north", CITY_N, closed=False, tower_spacing=44)
 GATES.update({"gate_of_megara": (-160, NW), "gate_of_the_gardens": (0, NW - 22)})
-# The sea wall: angled runs along the coast from the harbour mouth to the Megara gate.
+
 SEA = []
 for z in range(int(HZ - BD / 2 - 28), int(NW - 6) - 1, -38):
     q = p.shore([X - 120, z], [1, 0])
@@ -302,8 +302,7 @@ CITY = Polygon(
 )
 CITY = CITY.buffer(0)
 
-# ================================================================== great streets
-# From the Tunis gate to the agora; from the Utica gate along the hills to the sea; up the Byrsa.
+
 GS = []
 GS.append(
     t.street(
@@ -343,11 +342,9 @@ GS.append(
     t.street([(0, NW - 22), (6, -60), (-20, -10), (BX + 30, BZ - 18)], 5.0, "stone")
 )
 GS.append(t.street([ag(-20, -15), (84, 80), (60, 40), (40, -40)], 5.0, "stone"))
-GS.append(
-    t.street([EY, ag(-4, -15)], 4.4, "flagstone", curve=False)
-)  # the yard gate onto the agora
-# The harbour street up from the merchant quay to the agora, and the bazaar: the
-# processional way from the agora down to the foot of the Byrsa stair.
+GS.append(t.street([EY, ag(-4, -15)], 4.4, "flagstone", curve=False))
+
+
 harbour_street = t.street(
     [(BWEST - 2, HZ - BD / 2 - DOCK_SETBACK - 6.5), (BWEST - 6, HZ - 44), ag(30, 3.3)],
     5.0,
@@ -368,7 +365,7 @@ p.crowd(
 GS.append(t.street([(BX - 10, BZ + 40), (-60, 130), (TX - 10, TZ - 22)], 4.8, "stone"))
 t.street([(W - 60, 126), (-400, 140)], 5.6, "stone", curve=False)
 t.street([(W - 60, -104), (-400, -110)], 5.4, "stone", curve=False)
-# A promenade along the lagoon shore: the streets running down to the water end on it.
+
 prom = []
 for x in range(int(W + 14), int(BWEST - 30), 12):
     q = p.shore([x, LAG - 60], [0, 1])
@@ -376,7 +373,7 @@ for x in range(int(W + 14), int(BWEST - 30), 12):
         prom.append((x, q[1] - 14))
 if len(prom) > 2:
     GS.append(t.street(prom, 5.0, "flagstone"))
-# The fan: streets running out from the Byrsa to the sea.
+
 fan = t.radial(
     CITY,
     BX,
@@ -405,7 +402,7 @@ for r, seed in ((122, 5), (164, 6), (210, 7), (260, 8)):
         wobble=0.05,
     )
 
-# Narrow lanes from the agora down to the round harbour, between offset terraces.
+
 NARROW = Polygon(
     [ag(-40, 20), ag(40, 20), (CCX + QUAY_R + 4, HZ - 20), (CCX - QUAY_R - 4, HZ - 20)]
 ).buffer(0)
@@ -421,13 +418,13 @@ narrow = t.lanes(
     seed=21,
 )
 
-# ================================================================== Megara: gardens, orchards and villas
+
 MEG = Polygon(
     [(W + 6, NW - 8), (W + 6, WALL_N + 10), (-180, -300), (-100, -390), (120, -396)]
     + [(p.shore([0, z], [1, 0])[0] - 10, z) for z in range(-390, int(NW) - 8, 30)]
     + [(100, NW - 14), (40, NW - 30), (-60, NW - 30), (-120, NW - 8)]
 ).buffer(0)
-# The Megara wall along its outer edge.
+
 MEG_WALL = [(W, WALL_N), (-196, -296), (-110, -380), (-92, -398)]
 t.wall("megara_wall", MEG_WALL, closed=False, tower_spacing=56)
 meg_lanes = []
@@ -451,8 +448,8 @@ meg_lanes += [
 meg_lanes += [
     t.street([(-150, -260), (-60, -290), (30, -260), (120, -250)], 4.0, "stone")
 ]
-# Irrigation channels through the orchards.
-# Each channel runs between two garden pools that sit beside the lanes.
+
+
 for pts in (
     [(-166, -186), (-120, -228), (-60, -270), (-14, -300)],
     [(-6, -176), (40, -214), (76, -252), (110, -258)],
@@ -465,9 +462,9 @@ for pts in (
                 for a in [2 * math.pi * k / 16 for k in range(16)]
             ],
             2.2,
-        )  # the walk round the pool
+        )
     p.river(spline(pts, 8), 3.0, -0.25, calm=True)
-# Villas: courtyard houses round peristyle gardens, each in its orchard.
+
 VILLAS = [
     (-200, -200, 20),
     (-120, -250, -10),
@@ -490,7 +487,7 @@ for k, (vx, vz, rot) in enumerate(VILLAS):
             seed=200 + k,
             grove=(("palm_tree", 3), ("olive_tree", 3), ("plant", 1)),
         )
-# The oasis: a pool among palms at the heart of the gardens, and a garden of delight by the lanes.
+
 t.pool_garden(
     "oasis",
     70,
@@ -520,14 +517,14 @@ for k, (fx, fz, r) in enumerate(
         (-120, -300, 90),
     ]
 ):
-    # A farm sits beside the lanes, never across one: try a few steps aside.
+
     for ox, oz in ((0, 0), (18, 0), (-18, 0), (0, 18), (0, -18), (22, 22), (-22, -22)):
         g = rect(fx + ox, fz + oz, 17.6, 17.6, 1, 0)
         if MEG.contains(g) and not t.roads.hits(g) and not t.solid.hits(g):
             t.building(f"megara_farm_{k}", "farm", fx + ox, fz + oz, r, pad=2)
             break
 
-# ================================================================== the necropolis on the hills
+
 for k, (hx, hz, w, d, h) in enumerate(
     [(-20, -76, 70, 34, 2.4), (90, -70, 60, 30, 2.0)]
 ):
@@ -546,7 +543,7 @@ for k, (hx, hz, w, d, h) in enumerate(
                 round(rng.uniform(0.6, 0.9), 2),
             )
 
-# Lanes in the ground between the fan streets and the rings.
+
 rest_lanes = t.lanes(
     CITY.difference(blob(BX, BZ, 90, 74, wobble=0)),
     angle=40,
@@ -558,7 +555,7 @@ rest_lanes = t.lanes(
     clear_of_roads=9.0,
 )
 
-# ================================================================== links, then houses, then gardens
+
 t.connect()
 t.tidy_dead_ends(keep_near=[g for g in GATES.values()] + [EY])
 t.connect()
@@ -570,7 +567,7 @@ made = 0
 for line in GS:
     if line is not None:
         made += t.frontage("great", line, 5.4, region=CITY, styles=PUNIC, alley=(5, 9))
-# Stalls along the bazaar and the harbour street.
+
 for name, line, wd in (
     ("bazaar_stalls", bazaar, 6.0),
     ("harbour_stalls", harbour_street, 5.0),
@@ -586,7 +583,7 @@ for name, line, wd in (
             alley=(2, 3),
             start=4.0,
         )
-# Shops along the stair-street and the agora approach.
+
 if stair is not None:
     made += t.frontage(
         "stair",
@@ -621,14 +618,14 @@ made += t.build_along(
 made += t.build_along(
     "rest", rest_lanes, region=CITY, styles=PUNIC, alley=(4, 8), stagger=0.8
 )
-# Court gardens: palms, olives and pomegranate bushes behind the white houses.
+
 t.courts(
     CITY,
     density=0.010,
     kinds=(("palm_tree", 3), ("olive_tree", 3), ("plant", 4), ("cypress_tree", 1)),
     seed=2,
 )
-# Megara: groves round its lanes, palm-lined lanes, orchards.
+
 for line in meg_lanes:
     if line is not None:
         t.avenue(line, spacing=11, offset=4.2, kind="palm_tree", region=MEG)
@@ -639,7 +636,7 @@ t.scatter(
     spacing=5.0,
     seed=60,
 )
-# Palms along the great streets outside the walls.
+
 t.avenue(
     LineString([(W - 60, 126), (-400, 140)]), spacing=12, offset=6, kind="palm_tree"
 )
@@ -654,7 +651,7 @@ p.forest("isthmus_wood", -350, 260, 24)
 t.connect(reach=80)
 print("openings cut where streets meet porticoes:", len(t.clear_streets()))
 
-# ================================================================== the match
+
 p.root(
     "starting_resources",
     {"food": 500, "gold": 600, "iron": 150, "stone": 300, "wood": 400},
@@ -684,9 +681,9 @@ p.add(
     team_id=1,
     nation="carthage",
 )
-# The Sacred Band on the agora, cavalry and spearmen behind the isthmus wall, archers at the harbour.
+
 t.troops("sacred_band", "swordsman", AG[0] + 6, AG[1] - 9, count=4, facing=194, cols=4)
-# Elephants by the stalls, spearmen on the agora, guards on the bazaar and the stair, priests above.
+
 for k, (u, v) in enumerate(((-18, 9), (-6, 11))):
     x, z = ag(u, v)
     t.troops(f"agora_elephant_{k}", "elephant", x, z, count=1, facing=104)

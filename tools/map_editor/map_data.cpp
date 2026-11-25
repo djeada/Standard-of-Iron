@@ -296,7 +296,6 @@ auto unique_element_id(const Elements& elements,
   }
 }
 
-// A lake whose outline is something other than the wandering natural shore.
 auto is_shaped_lake(const TerrainElement& elem) -> bool {
   return !elem.shape.isEmpty() && elem.shape != QStringLiteral("natural");
 }

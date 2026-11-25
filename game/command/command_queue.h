@@ -34,8 +34,6 @@ public:
              std::uint64_t tick,
              const RecordHandler& handle_record = {}) -> std::size_t;
 
-  // Runs every order submitted but not yet sealed, without advancing the log's
-  // tick. For a paused match, whose orders take effect now.
   auto drain_stopped(Engine::Core::World& world) -> std::size_t;
 
   [[nodiscard]] auto pending() const -> std::size_t;

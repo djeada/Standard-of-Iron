@@ -37,10 +37,7 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
   }
 
   auto& graphics = Render::GraphicsSettings::instance();
-  // First launch only: with no preset of the player's yet, cap the preset for
-  // this adapter. The engine then saves the result as the player's choice, so
-  // this never runs again. SOI_IGNORE_ADAPTER_CLASS=1 skips the cap, so a
-  // developer can try presets above Low on a software or integrated GPU.
+
   if (!graphics.quality_chosen_by_user() &&
       qEnvironmentVariableIntValue("SOI_IGNORE_ADAPTER_CLASS") == 0) {
     const auto& adapter = RenderBootstrap::adapter();

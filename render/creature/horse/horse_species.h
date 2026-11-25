@@ -12,8 +12,6 @@ horse_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
 
 namespace Render::Horse {
 
-// The horse's contract with the creature pipeline: asset, visual definition,
-// feet, whole-mesh skinning bones and LOD geometry.
 [[nodiscard]] auto
 horse_species_contract() noexcept -> const Render::Creature::Pipeline::SpeciesContract&;
 

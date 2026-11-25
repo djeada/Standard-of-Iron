@@ -63,8 +63,7 @@ auto matches_cached_frame(const QString& path,
   if (!sidecar.open(QIODevice::ReadOnly)) {
     return false;
   }
-  // The second line is the frame's SHA-256, so a partial write or an old
-  // sidecar restored alongside a different frame cannot produce a hit.
+
   if (sidecar.readLine(key.size() + 1) != key) {
     return false;
   }

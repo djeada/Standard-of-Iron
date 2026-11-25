@@ -77,7 +77,7 @@ public:
   auto is_sound_active(const QString& id) const -> bool;
 
   auto is_track_ready(const QString& id) const -> bool;
-  // Length of a decoded track in seconds; 0 while it is still decoding.
+
   [[nodiscard]] auto track_length_seconds(const QString& id) const -> float;
 
   [[nodiscard]] auto resident_pcm_bytes() const -> std::uint64_t {

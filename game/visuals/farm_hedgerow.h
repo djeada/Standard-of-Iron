@@ -8,15 +8,11 @@
 
 namespace Game::Visuals {
 
-// A farm that has brought in harvests shows it (PLAY_BIG_SOON 6.10): a
-// hedgerow of small broadleaf trees starts at the back corner of its field and
-// lengthens along the back and one side with every harvest. Presentation
-// only - the plants are drawn by the map's tree renderer and block nothing.
 struct HedgePlant {
-  // Metres from the farm's centre, in the farm's own unrotated frame.
+
   float x{0.0F};
   float z{0.0F};
-  // Size as a share of a full-grown map tree of the same species.
+
   float scale{0.0F};
 
   auto operator==(const HedgePlant&) const -> bool = default;
@@ -33,9 +29,9 @@ inline constexpr int k_hedge_harvests_to_full = 7;
 
 [[nodiscard]] inline auto
 farm_hedge_plants(int harvests, std::uint32_t seed) -> std::vector<HedgePlant> {
-  // The hedge stands just outside the 13.6 m plot, on its boundary bank.
+
   constexpr float k_edge = 7.0F;
-  // Slots in the order the hedge grows: out from the back-left corner.
+
   constexpr std::array<std::array<float, 2>, k_hedge_max_plants> k_slots{{
       {-6.2F, -k_edge},
       {-k_edge, -4.6F},

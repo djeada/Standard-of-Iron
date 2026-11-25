@@ -92,7 +92,6 @@ private:
 
 class TerrainService;
 
-// The clearance index of `terrain`'s world props, built now.
 [[nodiscard]] auto build_world_prop_clearance_index(const TerrainService& terrain)
     -> std::shared_ptr<const WorldPropClearanceIndex>;
 

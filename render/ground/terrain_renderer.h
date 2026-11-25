@@ -49,7 +49,6 @@ public:
 
   void submit(FrameSubmitter& renderer, const DrawResources* resources) override;
 
-  // Every mesh this renderer draws, for prewarming a backend's MeshGpuTable.
   void for_each_mesh(const MeshVisitor& visit) const;
 
   void set_wireframe(bool enable) { m_wireframe = enable; }
@@ -70,7 +69,7 @@ private:
   void bake_terrain_fields();
   void bake_cover_mask();
   void stamp_building_ground();
-  // What the backend bakes the noise atlas and microdetail from.
+
   [[nodiscard]] auto noise_request() const -> TerrainNoiseRequest;
 
   struct ChunkMesh {
@@ -94,7 +93,7 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
   Render::GroundFogSettings m_ground_fog{};
-  // CPU images the backend uploads: heights, terrain fields, ground cover.
+
   TextureImage m_height_texture;
   bool m_height_texture_dirty = true;
   TextureImage m_terrain_field_texture;
@@ -106,8 +105,7 @@ private:
   std::vector<Render::Ground::BuildingGroundFootprint> m_building_footprints;
   std::uint64_t m_building_ground_revision = 0U;
   bool m_cover_dirty = true;
-  // Moves every time the terrain is configured; the backend bakes its noise
-  // atlas once per revision.
+
   std::uint64_t m_noise_revision = 0U;
   std::vector<ChunkMesh> m_chunks;
   std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;

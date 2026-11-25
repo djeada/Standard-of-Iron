@@ -69,12 +69,12 @@ private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
     Render::FrameCadence m_cadence;
-    // Pixel size of the view item; the framebuffer may be smaller (render scale).
+
     QSize m_item_pixel_size;
     bool m_resize_requested = false;
     QOpenGLTextureBlitter m_software_blitter;
     bool m_ready_reported = false;
-    // Effective visibility of the view, copied in synchronize().
+
     bool m_item_visible = true;
     QStringList m_pending_commander_speakers;
     QSize m_size;

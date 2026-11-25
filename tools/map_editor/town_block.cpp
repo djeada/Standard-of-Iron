@@ -135,7 +135,7 @@ auto block(const BlockSpec& spec) -> QVector<StructureElement> {
   const float turn = spec.rotation * k_deg_to_rad;
   const float cosine = std::cos(turn);
   const float sine = std::sin(turn);
-  // Block-local (u along the first terrace, v into the block) to the map.
+
   const auto place = [&](float u, float v) {
     return QPointF(spec.origin.x() + (cosine * u) + (sine * v),
                    spec.origin.y() - (sine * u) + (cosine * v));
@@ -217,8 +217,7 @@ auto paving(const PavingSpec& spec) -> QVector<LinearElement> {
     out.append(road);
   }
   if (strips > 1) {
-    // One strip across the others binds them: a square is one paved surface,
-    // and one road network, not a row of lanes that never meet.
+
     const float reach = (across - width) * 0.5F;
     LinearElement tie;
     tie.type = QStringLiteral("road");
@@ -300,8 +299,7 @@ auto wall(const WallSpec& spec, QString& error) -> WallPlan {
   for (int leg = 0; leg < legs; ++leg) {
     const QPointF from = corners[leg];
     const QPointF to = corners[(leg + 1) % corners.size()];
-    // Legs along x or z join the wall lattice; a leg at an angle is laid in
-    // free pieces along its true line (gates belong on the lattice legs).
+
     if (std::hypot(to.x() - from.x(), to.y() - from.y()) < WG::k_lattice) {
       error = QStringLiteral("leg %1 (%2,%3 to %4,%5) is shorter than a wall piece")
                   .arg(leg)
@@ -318,8 +316,7 @@ auto wall(const WallSpec& spec, QString& error) -> WallPlan {
       add_run(from, to);
       continue;
     }
-    // A tower at the leg's start; the next leg supplies the far corner, or
-    // this one does when the wall is open and ends here.
+
     add_tower(from);
     const int spans =
         std::max(1, static_cast<int>(std::ceil(length / spec.tower_spacing)));

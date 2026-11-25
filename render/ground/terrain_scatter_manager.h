@@ -50,31 +50,20 @@ public:
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& scatter_seed_world_props = {},
                  const std::vector<Game::Map::WorldProp>& runtime_world_props = {});
-  // Synchronous refreshes: generate on the calling thread against the live
-  // services. Only for a thread that owns the map (tools, tests, load).
+
   void refresh_runtime_world_props(
       const std::vector<Game::Map::WorldProp>& runtime_world_props);
   void set_anchored_trees(const std::vector<AnchoredTree>& trees);
 
-  // Asynchronous refreshes (the game). The caller captures `world` on the
-  // thread that owns the map; the layers regenerate on a worker against it,
-  // and the next submit after the worker finishes adopts the result in one
-  // swap. Until then every layer keeps drawing its previous instances. Newer
-  // requests made while a job runs are merged and run against the newest
-  // snapshot once it finishes.
   void schedule_runtime_world_props_refresh(
       std::vector<Game::Map::WorldProp> runtime_world_props,
       std::shared_ptr<const Game::Map::ScatterWorld> world);
   void schedule_anchored_trees(std::vector<AnchoredTree> trees,
                                std::shared_ptr<const Game::Map::ScatterWorld> world);
-  // A grass regeneration after a graphics-profile change is detected on the
-  // render thread, which must not read the live map; it asks the owner of the
-  // map for a snapshot instead. The owner checks this at its sync point and
-  // answers with provide_world_snapshot().
+
   [[nodiscard]] auto wants_world_snapshot() const -> bool;
   void provide_world_snapshot(std::shared_ptr<const Game::Map::ScatterWorld> world);
-  // Blocks until every scheduled refresh has run and adopts the results (tests,
-  // and a caller that must not draw the old instances again).
+
   void finish_scheduled_refreshes();
   [[nodiscard]] auto has_scheduled_refreshes() const -> bool;
 
@@ -86,9 +75,9 @@ public:
   void refresh_grass();
 
   [[nodiscard]] bool is_gpu_ready() const;
-  // Partitions every layer and reserves its instance blocks (load time).
+
   void prepare_instance_blocks();
-  // Every instance block of every layer, for prewarming a backend.
+
   void for_each_instance_block(const InstanceBlockVisitor& visit) const;
 
   [[nodiscard]] auto biome() const -> BiomeRenderer*;
@@ -120,15 +109,12 @@ public:
     }
   }
 
-  // What every scatter layer holds: placed instances and their CPU bytes, and
-  // the GPU bytes reserved for their instance blocks.
   struct LayerMemory {
     ScatterSpeciesId species{ScatterSpeciesId::Grass};
     std::size_t instances{0};
     std::size_t cpu_bytes{0};
     std::size_t gpu_reserved_bytes{0};
-    // The layer's instance budget, whether the generator reached it, and the
-    // bytes one instance takes (budget x stride bounds the layer's memory).
+
     std::size_t budget{0};
     bool budget_hit{false};
     std::size_t instance_stride{0};
@@ -136,10 +122,8 @@ public:
   [[nodiscard]] auto memory() const -> std::vector<LayerMemory>;
 
 private:
-  // Hands every layer its share of the map's instance budget (scatter_budget.h).
   void apply_instance_budgets();
 
-  // Requests merged until a worker can take them.
   struct PendingRefresh {
     std::optional<std::vector<Game::Map::WorldProp>> world_props;
     std::optional<std::vector<AnchoredTree>> anchored_trees;
@@ -149,7 +133,7 @@ private:
              !grass_density.has_value();
     }
   };
-  // One job running on a worker; `epoch` drops it if the map changed meanwhile.
+
   struct RefreshRun {
     std::mutex mutex;
     std::condition_variable finished;
@@ -158,7 +142,6 @@ private:
     std::vector<Render::Ground::Scatter::ScatterAdoption> adoptions;
   };
 
-  // All three expect m_mutex held.
   void launch_pending_locked();
   void adopt_finished_locked();
   void forget_scheduled_locked();
@@ -198,8 +181,7 @@ private:
   std::shared_ptr<RefreshRun> m_running;
   std::uint64_t m_epoch{0U};
   bool m_wants_world_snapshot{false};
-  // Set once a caller schedules or provides snapshots; until then a grass
-  // refresh after a profile change runs synchronously as before.
+
   bool m_snapshots_provided{false};
 };
 

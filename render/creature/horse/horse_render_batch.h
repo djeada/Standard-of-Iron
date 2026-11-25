@@ -12,8 +12,6 @@ namespace Render::Creature::Pipeline {
 
 struct PreparedHorseBodyState;
 
-// Adds a horse body to `batch`: its render request with role colours.
-// Nothing is added for a culled body or a species without an asset.
 void add_quadruped(CreatureRenderBatch& batch,
                    const CreatureGraphOutput& output,
                    const Render::GL::HorseVariant& variant,

@@ -485,8 +485,7 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                                  .seed = 137});
 
   {
-    // Carthage's marks on a house: black basalt under the whitewash, horns on
-    // the four corners of the roof, and an incense stand by the door.
+
     const Motif::Setter set(desc, state);
     Motif::add_plinth(
         desc, -1.04F, 1.04F, -1.04F, 1.04F, 0.10F, 0.13F, Motif::Carthage::k_basalt);

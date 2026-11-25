@@ -1,8 +1,5 @@
 #pragma once
 
-// The constexpr primitives of the humanoid body LODs, shared by the humanoid
-// spec translation unit. Not a public header.
-
 #include <QMatrix4x4>
 #include <QVector3D>
 

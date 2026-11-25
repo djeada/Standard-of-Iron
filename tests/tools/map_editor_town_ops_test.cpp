@@ -11,7 +11,6 @@
 
 namespace {
 
-// A blank world-space map, as `map_cli new` writes one.
 const QByteArray k_blank_map = R"({
   "name": "Town ops",
   "coord_system": "world",
@@ -154,7 +153,6 @@ TEST(MapEditorTownOps, ALakeAddedThroughTheEditorKeepsItsLevelAndShape) {
       << "a lake nobody gave a level lies with the ground: writing one would pin it";
   EXPECT_FALSE(pond.contains(QStringLiteral("shape")));
 
-  // And once more through a reload, as opening the saved map would.
   MapEditor::MapData reloaded;
   ASSERT_TRUE(reloaded.load_from_bytes(data.to_json_bytes()));
   EXPECT_TRUE(reloaded.to_json_bytes() == data.to_json_bytes());

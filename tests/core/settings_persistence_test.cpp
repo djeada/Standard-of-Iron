@@ -24,8 +24,6 @@
 
 namespace {
 
-// Builds that lowered the preset during battles saved the settled preset under
-// this key; current builds only read it once, on the first launch.
 void save_legacy_auto_graphics_quality(Render::GraphicsQuality quality) {
   auto settings = App::Core::UserSettings::open();
   settings.setValue(

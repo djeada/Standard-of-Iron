@@ -404,10 +404,7 @@ void GameEngine::ensure_initialized() {
 }
 
 void GameEngine::remember_first_launch_graphics_quality() {
-  // The only automatic graphics decision the game makes: with no preset of
-  // the player's yet, the renderer has just picked one for this adapter. Keep
-  // it as the player's choice, so nothing changes it behind their back again;
-  // from here on only Settings changes the preset.
+
   auto& graphics = Render::GraphicsSettings::instance();
   if (graphics.quality_chosen_by_user()) {
     return;
@@ -674,9 +671,7 @@ void GameEngine::simulate(float dt) {
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
 
   if (m_runtime.paused && !overlay_up && m_world != nullptr) {
-    // A paused match is still a match the player plans in: orders given now
-    // take effect (a queued recruit, a placed site) and a placement ghost has
-    // to reach the renderer, which only draws published snapshots.
+
     Game::Session::session_for(*m_world).service_stopped_clock();
   }
   m_replay->finish_verification_if_done(m_session.get());
@@ -1412,8 +1407,14 @@ void GameEngine::fail_loading(const QString& error) {
 
 void GameEngine::complete_match_load(const QString& map_path,
                                      const QVariantList& player_configs) {
-  if (!m_runtime.loading || renderer_has_failed()) {
-    m_runtime.loading = false;
+  if (renderer_has_failed()) {
+
+    if (m_runtime.loading || m_loading_overlay.active()) {
+      end_match_after_failed_load();
+    }
+    return;
+  }
+  if (!m_runtime.loading) {
     return;
   }
   if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {

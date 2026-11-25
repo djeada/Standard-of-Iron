@@ -98,7 +98,6 @@ TEST(AssetCompression, StaleCacheIsReplacedWhenInputOrFrameChanges) {
   ASSERT_TRUE(read_asset_file(path.string(), read, error)) << error;
   EXPECT_EQ(std::string(read.begin(), read.end()), changed);
 
-  // Simulate a restored sidecar paired with a damaged frame of the right size.
   std::ofstream(path, std::ios::binary) << std::string(size_on_disk(path), 'x');
   ASSERT_TRUE(write_cached_asset(path, sidecar, changed, error, 3)) << error;
   ASSERT_TRUE(read_asset_file(path.string(), read, error)) << error;

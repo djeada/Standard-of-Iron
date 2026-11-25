@@ -287,8 +287,6 @@ void ArenaViewport::apply_cinematic_view() {
   }
   m_camera->look_at(position, m_cinematic_target, up);
 
-  // The commander rig can set a 5 cm near plane every simulation tick. Use the
-  // map's near plane for scripted shots so distant surfaces keep depth precision.
   const float map_near = m_terrain_review_definition
                              ? m_terrain_review_definition->camera.near_plane
                              : Game::Map::CameraDefinition{}.near_plane;

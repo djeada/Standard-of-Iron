@@ -151,13 +151,10 @@ struct SideHistory {
 
   float eliminated_at = -1.0F;
 
-  // Men in the field (workers included) and gold, sampled at the end of every
-  // minute; index 0 is minute 1.
   std::vector<int> men_by_minute;
   std::vector<int> gold_by_minute;
   int final_buildings = 0;
 
-  // NATION_ASYMMETRY.md: the nation buildings raised and the bands hired.
   bool raised_camp = false;
   bool raised_fabrica = false;
   int most_bands = 0;
@@ -763,7 +760,7 @@ protected:
           static_cast<double>(report.commander_alive
                                   ? commander_distance_from_home(session, side.first)
                                   : -1.0F));
-      // NATION_ASYMMETRY.md: what each nation's own economy is doing.
+
       int camps = 0;
       int stables = 0;
       int fabricae = 0;
@@ -1004,7 +1001,7 @@ TEST_F(AiDuelMatchTest, ScipioAndFabiusBothPlayTheirDoctrine) {
       outcome.north, "Scipio", SiegeTrain::Catapults);
   expect_the_siege_train_of_its_doctrine(
       outcome.south, "Fabius", SiegeTrain::Ballistas);
-  // Rome arms its legions at a Fabrica (NATION_ASYMMETRY.md section 9).
+
   EXPECT_TRUE(outcome.north.raised_fabrica || outcome.south.raised_fabrica)
       << "neither consul raised a Fabrica";
 }
@@ -1044,7 +1041,6 @@ TEST_F(AiDuelMatchTest, HannibalAndHasdrubalBothPlayTheirDoctrine) {
       outcome.north, "Hannibal", SiegeTrain::Catapults);
   expect_the_siege_train_of_its_doctrine(outcome.south, "Hasdrubal", SiegeTrain::None);
 
-  // Carthage turns gold into an army (NATION_ASYMMETRY.md section 9).
   EXPECT_TRUE(outcome.north.raised_camp || outcome.south.raised_camp)
       << "neither Carthaginian raised a Mercenary Camp";
   EXPECT_GE(std::max(outcome.north.most_bands, outcome.south.most_bands), 2)
@@ -1103,12 +1099,6 @@ TEST_F(AiDuelMatchTest, HannibalMirrorGetsItsArmyAcrossTheRiver) {
       << "no side ever had more than a straggler across the river";
 }
 
-// The nation balance matrix (NATION_ASYMMETRY.md section 9 and phase 5): every Rome x
-// Carthage commander pairing at Normal, played once from each corner. It takes several
-// minutes, so it only runs with SOI_NATION_MATRIX=1; SOI_NATION_MATRIX_MINUTES sets the
-// match length (default 25). A side wins outright by wiping the other out; a match
-// still standing at the end goes to the side with more men in the field plus ten per
-// standing building. The bar is 45-55% for either nation.
 TEST_F(AiDuelMatchTest, NationBalanceMatrix) {
   if (!qEnvironmentVariableIsSet("SOI_NATION_MATRIX")) {
     GTEST_SKIP() << "set SOI_NATION_MATRIX=1 to play the nation balance matrix";
@@ -1161,8 +1151,7 @@ TEST_F(AiDuelMatchTest, NationBalanceMatrix) {
   long men_sum[2][3] = {};
   long gold_sum[2] = {};
   int samples = 0;
-  // SOI_NATION_MATRIX_ROME=fabius,scipio and SOI_NATION_MATRIX_CARTHAGE=hanno play
-  // only those seats, so the matrix can be split or narrowed to one commander.
+
   const QString only_rome = qEnvironmentVariable("SOI_NATION_MATRIX_ROME");
   const QString only_carthage = qEnvironmentVariable("SOI_NATION_MATRIX_CARTHAGE");
   for (const auto& roman : rome) {

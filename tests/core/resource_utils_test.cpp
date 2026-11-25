@@ -18,8 +18,6 @@ using Utils::Resources::resolve_resource_path;
 using Utils::Resources::resolve_resource_path_with_diagnostics;
 using Utils::Resources::ResourceResolution;
 
-// Only compiled into this binary, through tests/core/resource_utils_test.qrc,
-// under the :/qt/qml/StandardOfIron root. Nothing on disk has this name.
 const QString k_alias_request =
     QStringLiteral(":/soi_resource_utils_test/alias_only.txt");
 const QString k_missing_request =
@@ -27,14 +25,10 @@ const QString k_missing_request =
 
 QStringList g_messages;
 
-void capture_message(QtMsgType /*type*/,
-                     const QMessageLogContext& /*context*/,
-                     const QString& message) {
+void capture_message(QtMsgType, const QMessageLogContext&, const QString& message) {
   g_messages.append(message);
 }
 
-// Captures everything logged while alive and switches the opt-in diagnostics
-// to the requested state, restoring both afterwards.
 class LogProbe {
 public:
   explicit LogProbe(bool diagnostics)
@@ -57,7 +51,6 @@ private:
   bool m_previous_diagnostics;
 };
 
-// Restores the working directory a test changed.
 class ScopedCurrentDir {
 public:
   explicit ScopedCurrentDir(const QString& dir)
@@ -74,7 +67,6 @@ private:
   QString m_previous;
 };
 
-// The on-disk candidates the lookup walks for `relative` from `start_dir`.
 auto upward_candidates(const QString& start_dir,
                        const QString& relative) -> QStringList {
   QStringList out;
@@ -123,7 +115,7 @@ TEST(ResourceUtilsTest, ResourceAliasResolvesUnderAlternateRootWithoutLogging) {
       resolve_resource_path_with_diagnostics(k_alias_request);
   EXPECT_TRUE(resolution.found);
   EXPECT_EQ(resolution.path, expected);
-  // The first alternate root is tried before the one that holds the file.
+
   ASSERT_GE(resolution.checked.size(), 3);
   EXPECT_EQ(resolution.checked.last(), expected);
   EXPECT_EQ(resolution.checked.at(resolution.checked.size() - 2),
@@ -135,8 +127,7 @@ TEST(ResourceUtilsTest, ResourceAliasResolvesUnderAlternateRootWithoutLogging) {
 }
 
 TEST(ResourceUtilsTest, MissingResourceReportsEveryCandidateOnce) {
-  // Running from the application directory makes the current-directory walk
-  // repeat the application-directory walk exactly; the report lists it once.
+
   const QString app_dir = QCoreApplication::applicationDirPath();
   const ScopedCurrentDir in_app_dir(app_dir);
   ASSERT_EQ(QDir::currentPath(), app_dir);

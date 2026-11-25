@@ -40,8 +40,7 @@ auto is_live_depot(Engine::Core::Entity* entity, int owner_id) -> bool {
     return false;
   }
   const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  // Forward depots (PLAY_BIG_SOON 6.8, NATION_ASYMMETRY.md): Rome's castra and
-  // Carthage's mercenary camp take in gathered goods like a barracks yard.
+
   if (unit == nullptr || (unit->spawn_type != Game::Units::SpawnType::Barracks &&
                           unit->spawn_type != Game::Units::SpawnType::Castra &&
                           unit->spawn_type != Game::Units::SpawnType::MercenaryCamp)) {

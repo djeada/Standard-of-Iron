@@ -74,7 +74,6 @@ COMPONENT_MUTATION = re.compile(
     r"(?:Engine::Core::)?(?P<component>\w+Component)\b"
 )
 COMPONENT_MUTATION_ALLOWED = {
-    # The construction preview uses a separate render world.
     "app/economy/construction_preview.cpp": {
         "ConstructionPreviewComponent",
         "RenderableComponent",

@@ -6,6 +6,8 @@
 
 #include <QString>
 
+#include <optional>
+
 namespace App::Bootstrap {
 
 struct NativeOpenGLProbeResult {
@@ -24,6 +26,8 @@ struct NativeOpenGLProbeResult {
 auto test_native_opengl() -> NativeOpenGLProbeResult;
 auto software_requested_from_argv(int argc, char* argv[]) -> bool;
 void install_opengl_crash_handler();
+
+auto run_default_startup_supervisor(int& argc, char* argv[]) -> std::optional<int>;
 auto opengl_crash_detected() -> bool;
 
 } // namespace App::Bootstrap

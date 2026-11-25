@@ -22,9 +22,6 @@ struct NationBuildingLook {
   BuildingSelectionStyle selection;
 };
 
-// Each draws its own catalog entry (building_archetype_catalog.cpp):
-// "<nation>_<building>", built from the barracks yard or the portico until the
-// building art pass.
 constexpr std::array<NationBuildingLook, 4> k_looks{{
     {"mercenary_camp", BuildingSelectionStyle{2.0F, 1.8F}},
     {"elephant_stables", BuildingSelectionStyle{2.6F, 2.2F}},

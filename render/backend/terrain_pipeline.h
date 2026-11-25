@@ -169,8 +169,6 @@ public:
                      PipelineDrawContext& context,
                      const std::vector<Render::LocalLight>& local_lights);
 
-  // Resources stage: bakes the microdetail once, and the noise atlas once per
-  // terrain revision. Changes GL bindings.
   void sync_noise_atlas(const TerrainNoiseRequest& request);
 
 private:

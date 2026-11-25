@@ -108,9 +108,6 @@ Item {
         return owner.name;
     }
 
-    // Two owners that carry the same display name on one side are one army to a
-    // reader (a mission fielding a garrison and a patrol of the same nation):
-    // the owner registry only suffixes the second with its id to tell them apart.
     function army_key(entry) {
         return entry.teamId + "|" + entry.name.replace(/ \(\d+\)$/, "");
     }
@@ -161,8 +158,6 @@ Item {
             var owner = owners[j];
             if (owner.type !== "Player" && owner.type !== "AI")
                 continue;
-            // Only contenders are armies. The Iron Sepulcher and the like never
-            // play for the field; what they killed is counted as wild losses.
             if (owner.is_contender === false)
                 continue;
             var stats = summaryOverlay.engine.get_player_stats(owner.id);

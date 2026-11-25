@@ -464,12 +464,11 @@ auto build_home_desc_impl(BuildingState state, int variant) -> BuildingArchetype
                                  .seed = 101});
 
   {
-    // Rome's marks on a house: tufa at the foot of its walls, a fire by the
-    // door, palmettes on the eave corners, a raven on the ridge.
+
     const Motif::Setter set(desc, state);
     Motif::add_plinth(
         desc, -0.96F, 0.96F, -0.96F, 0.96F, 0.16F, 0.11F, Motif::Rome::k_tufa_dark);
-    // One fire by the door; the wall torches are the other light.
+
     Motif::add_roman_tripod_fire(
         desc, set.at((variant % 2 == 0 ? 0.64F : -0.64F), 1.06F, 0.4F), 1.0F);
     for (const float side : {-1.0F, 1.0F}) {

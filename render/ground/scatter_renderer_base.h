@@ -32,7 +32,6 @@ public:
     return m_state.is_gpu_ready();
   }
 
-  // The layer's placed instances, in generation order.
   [[nodiscard]] auto instances() const noexcept -> const std::vector<Instance>& {
     return m_state.instances;
   }
@@ -100,13 +99,10 @@ protected:
     m_state.reset_instances();
   }
 
-  // The terrain grid copied at configure, for a generator request.
   [[nodiscard]] auto scatter_grid() const -> Render::Ground::Scatter::ScatterGrid {
     return shared_grid()->view();
   }
 
-  // The same grid, shared, for a regeneration that runs on a worker. Never
-  // null: before configure it is an empty grid.
   [[nodiscard]] auto shared_grid() const
       -> std::shared_ptr<const Render::Ground::Scatter::ScatterGridData> {
     if (m_grid != nullptr) {
@@ -117,7 +113,6 @@ protected:
     return k_empty;
   }
 
-  // Takes a generator's output as the layer's instances, cut to the budget.
   void adopt_generated(std::vector<Instance> instances) {
     m_budget_hit =
         Render::Ground::Scatter::apply_instance_budget(instances, m_instance_budget);

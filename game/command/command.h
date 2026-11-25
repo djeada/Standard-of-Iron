@@ -102,8 +102,6 @@ struct Produce {
 
   bool toggle_repeat = false;
 
-  // The nation of a mercenary band hired at a Mercenary Camp
-  // (NATION_ASYMMETRY.md 4.2); empty for the owner's own troops.
   std::optional<Game::Systems::NationID> band_nation;
 };
 

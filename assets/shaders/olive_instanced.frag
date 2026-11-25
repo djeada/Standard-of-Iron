@@ -190,8 +190,7 @@ void main() {
   float rim = pow(1.0 - max(dot(geometric_normal, view_dir), 0.0), 4.0) *
               mix(0.055, 0.045, v_foliage_mask);
   color += sun * leaf_spec;
-  // A blue sky rim on a green crown drew every tree with a teal outline; the
-  // canopy's edge light is the leaf's own colour.
+
   color +=
       mix(sky, leaf_light_green * dot(sky, vec3(0.333)) * 2.0, v_foliage_mask) * rim;
 

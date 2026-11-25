@@ -66,9 +66,6 @@ void SelectionController::on_click_select(qreal sx,
 
   auto* cam = static_cast<Render::GL::Camera*>(camera);
 
-  // A unit under the cursor always wins over the building it stands in or beside:
-  // builders and garrison troops live in their barracks yard, and the building's
-  // pivot is often nearer the click than the builder's feet.
   Engine::Core::EntityID const picked =
       Game::Systems::PickingService::pick_single(float(sx),
                                                  float(sy),

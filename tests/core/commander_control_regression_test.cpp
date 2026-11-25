@@ -923,7 +923,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   const auto commander_mode_source =
       app_source(root, "commander_mode_coordinator.cpp") +
       read_text(root / "game" / "commander" / "commander_handoff.cpp");
-  // instance_prepare is split along its stages; read every piece.
+
   const auto runtime_dir = root / "render" / "creature" / "humanoid" / "runtime";
   const auto prepare_submission_source =
       read_text(runtime_dir / "instance_prepare.cpp") +

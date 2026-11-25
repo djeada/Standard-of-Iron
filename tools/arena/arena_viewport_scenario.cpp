@@ -484,8 +484,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   if (definition->gates_held_open && m_world != nullptr) {
     for (auto [gate_id, gate] : m_world->view<Engine::Core::GateComponent>()) {
       (void)gate_id;
-      // The gate system swings it open on the next tick, which also reopens
-      // the lane through it on the navigation grid.
+
       gate.manual_mode = Engine::Core::GateComponent::ManualMode::ForcedOpen;
     }
   }

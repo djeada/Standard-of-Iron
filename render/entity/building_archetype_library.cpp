@@ -51,8 +51,7 @@ auto build_set(const BuildingArchetypeCatalogEntry& entry) -> BuildingArchetypeS
       Render::Creature::report_missing_preloaded_asset(
           "baked building mesh " + building_mesh_key(entry.name, state));
     }
-    // The fires its motifs keep: the baked mesh has the bowls, and these say
-    // where to light them.
+
     const BuildingStateMask visible =
         state == BuildingState::Normal
             ? BuildingStateMask::Normal

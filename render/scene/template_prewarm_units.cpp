@@ -134,11 +134,6 @@ void Renderer::prewarm_unit_templates(
     return progress_callback(progress);
   };
 
-  // The bake below runs inline on the thread that called us (the GUI thread
-  // during a match load). Report progress at least every k_keep_alive_interval
-  // of work so the progress callback can pump the event loop: without this
-  // the loading screen froze for several seconds on slow machines and the
-  // window manager offered to kill the "unresponsive" game.
   constexpr auto k_keep_alive_interval = std::chrono::milliseconds(33);
   auto last_keep_alive = std::chrono::steady_clock::now();
   auto keep_alive = [&](TemplatePrewarmProgress::Phase phase,
@@ -431,9 +426,6 @@ void Renderer::prewarm_unit_templates(
       }
     }
 
-    // A seat's mercenary bands field other nations' troops under its own colours
-    // (NATION_ASYMMETRY.md 4.2): bake the Gallic, Iberian and other band
-    // templates too, or the first hired band is drawn from a render-time bake.
     for (const auto& nation : nations) {
       if (active_nation_ids.find(nation.id) == active_nation_ids.end()) {
         continue;
@@ -690,8 +682,7 @@ void Renderer::prewarm_unit_templates(
                                     item.anim_key);
       const std::size_t done =
           completed_count.fetch_add(1, std::memory_order_relaxed) + 1;
-      // Only the inline (single worker) bake runs on the caller's thread and
-      // may pump its event loop; worker threads must never do that.
+
       if (inline_worker &&
           !keep_alive(TemplatePrewarmProgress::Phase::BuildingCoreTemplates,
                       done,

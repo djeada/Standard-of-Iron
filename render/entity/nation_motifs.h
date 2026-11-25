@@ -14,19 +14,6 @@
 #include "render/entity/building_ornaments.h"
 #include "render/entity/building_state.h"
 
-// The things every building of a nation carries, so a Roman street and a Punic
-// one could not be mistaken for each other even with the houses taken away.
-//
-// Rome is tufa, oxblood and bronze gone green: a tripod fire at every door,
-// palmettes on every gable, trophies of taken arms outside anything military,
-// and ravens on the ridge, because Rome reads its luck from birds.
-//
-// Carthage is whitewash over black basalt, Egyptian blue and purple: horns on
-// every parapet, the disc and crescent of Baal on a pole, tall incense stands
-// that burn the wrong colour, stelae by the door and ivory over the gate.
-//
-// Everything here is authored into a building's baked description; none of it
-// is an entity and none of it stops a path.
 namespace Render::GL::Motif {
 
 namespace Rome {
@@ -57,17 +44,10 @@ inline constexpr QVector3D k_whitewash{0.93F, 0.90F, 0.82F};
 
 inline constexpr auto k_intact = k_building_state_mask_intact;
 
-// The part a motif fire burns in carries one of these names; the building
-// library reads them back and the renderer lights a live flame there. The
-// part's radius over `k_fire_radius` is the size of the fire.
 inline constexpr std::string_view k_fire_label = "motif_fire";
 inline constexpr std::string_view k_ghost_fire_label = "motif_fire_ghost";
 inline constexpr float k_fire_radius = 0.050F;
 
-// How high a building's own geometry reaches under a point, so an ornament can
-// be set down on whatever is there: a step, a parapet, a ridge. Only what
-// stands while the building is whole counts, and only what tops out at or
-// below `ceiling`, which lets a query look under an overhang.
 [[nodiscard]] inline auto
 surface_top(const BuildingArchetypeDesc& desc,
             float x,
@@ -147,7 +127,6 @@ surface_top(const BuildingArchetypeDesc& desc,
   return best;
 }
 
-// Sets ornaments down on a building as it stands in one state.
 class Setter {
 public:
   Setter(const BuildingArchetypeDesc& desc, BuildingState state)
@@ -158,8 +137,6 @@ public:
                              ? BuildingStateMask::Damaged
                              : BuildingStateMask::Destroyed)) {}
 
-  // The point of the building's surface at (x, z), looking no higher than
-  // `ceiling`.
   [[nodiscard]] auto
   at(float x,
      float z,
@@ -167,7 +144,6 @@ public:
     return {x, surface_top(*m_desc, x, z, ceiling, m_visible), z};
   }
 
-  // The highest point inside a rectangle, found on a grid.
   [[nodiscard]] auto
   highest(float x0, float x1, float z0, float z1, int steps = 12) const -> QVector3D {
     QVector3D best(0.5F * (x0 + x1), 0.0F, 0.5F * (z0 + z1));
@@ -189,8 +165,6 @@ private:
   BuildingStateMask m_visible;
 };
 
-// A course of dark stone round the foot of a building: `x0..x1`, `z0..z1` is
-// the wall line it stands proud of.
 inline void add_plinth(BuildingArchetypeDesc& desc,
                        float x0,
                        float x1,
@@ -218,9 +192,6 @@ inline void add_plinth(BuildingArchetypeDesc& desc,
   }
 }
 
-// ---------------------------------------------------------------- Rome
-
-// A bronze tripod with a bowl of coals: the fire Rome keeps at a door.
 inline void add_roman_tripod_fire(BuildingArchetypeDesc& desc,
                                   const QVector3D& base,
                                   float scale = 1.0F) {
@@ -256,7 +227,7 @@ inline void add_roman_tripod_fire(BuildingArchetypeDesc& desc,
                     0.074F * scale,
                     Rome::k_soot,
                     k_intact);
-  // Named so the renderer can find the bowl and light a live fire in it.
+
   BuildingPartLabel const fire(desc, std::string(k_fire_label));
   desc.add_cone(base + QVector3D(0.0F, bowl_y + (0.060F * scale), 0.0F),
                 base + QVector3D(0.0F, bowl_y + (0.200F * scale), 0.0F),
@@ -265,8 +236,6 @@ inline void add_roman_tripod_fire(BuildingArchetypeDesc& desc,
                 BuildingStateMask::Normal);
 }
 
-// A tropaeum: the arms of a beaten enemy hung on a trunk, his skull at its
-// foot. Stands outside anything a legion lives in.
 inline void add_roman_trophy(BuildingArchetypeDesc& desc,
                              const QVector3D& base,
                              float scale = 1.0F,
@@ -284,7 +253,7 @@ inline void add_roman_trophy(BuildingArchetypeDesc& desc,
                       0.020F * s,
                       Rome::k_tufa_dark * 1.2F,
                       k_intact);
-    // Spears crossed behind it.
+
     for (const float side : {-1.0F, 1.0F}) {
       desc.add_rotated_box(base + QVector3D(0.0F, 0.50F * s, -0.03F * s),
                            QVector3D(0.008F, 0.52F, 0.008F) * s,
@@ -295,7 +264,7 @@ inline void add_roman_trophy(BuildingArchetypeDesc& desc,
   }
   {
     BuildingPartMaterial const metal(desc, k_building_material_metal);
-    // Cuirass and helmet.
+
     desc.add_box(base + QVector3D(0.0F, 0.44F * s, 0.012F * s),
                  QVector3D(0.075F, 0.105F, 0.045F) * s,
                  Rome::k_bronze,
@@ -319,7 +288,7 @@ inline void add_roman_trophy(BuildingArchetypeDesc& desc,
                  Rome::k_oxblood,
                  k_intact);
   }
-  // The shields taken with them, one on each arm.
+
   for (const float side : {-1.0F, 1.0F}) {
     const QVector3D boss = base + QVector3D(side * 0.19F * s, 0.44F * s, 0.02F * s);
     desc.add_cylinder(boss,
@@ -333,7 +302,7 @@ inline void add_roman_trophy(BuildingArchetypeDesc& desc,
                       Rome::k_bronze,
                       k_intact);
   }
-  // And what is left of the man who carried them.
+
   const QVector3D skull =
       base +
       QVector3D((0.10F + (0.04F * decay_hash(salt + 5))) * s, 0.035F * s, 0.07F * s);
@@ -348,8 +317,6 @@ inline void add_roman_trophy(BuildingArchetypeDesc& desc,
                k_intact);
 }
 
-// A palmette set on a gable peak or an eave corner. `along_x` is the way the
-// ridge runs: the leaves fan across it.
 inline void add_roman_acroterion(BuildingArchetypeDesc& desc,
                                  const QVector3D& base,
                                  float scale = 1.0F,
@@ -383,7 +350,6 @@ inline void add_roman_acroterion(BuildingArchetypeDesc& desc,
                k_intact);
 }
 
-// A raven on the ridge. Rome takes its omens from them, and feeds them.
 inline void add_roman_raven(BuildingArchetypeDesc& desc,
                             const QVector3D& base,
                             float yaw_degrees = 0.0F,
@@ -412,7 +378,6 @@ inline void add_roman_raven(BuildingArchetypeDesc& desc,
                        k_intact);
 }
 
-// An ox skull hung with a garland on a wall that faces +z (`facing` 1) or -z.
 inline void add_roman_bucranium(BuildingArchetypeDesc& desc,
                                 const QVector3D& center,
                                 float scale = 1.0F,
@@ -437,7 +402,7 @@ inline void add_roman_bucranium(BuildingArchetypeDesc& desc,
                  QVector3D(0.008F, 0.010F, 0.003F) * s,
                  Rome::k_soot,
                  k_intact);
-    // The garland swagging away to either side.
+
     desc.add_rotated_box(center + QVector3D(side * 0.150F * s, -0.020F * s, out * 0.8F),
                          QVector3D(0.075F, 0.016F, 0.008F) * s,
                          QVector3D(0.0F, 0.0F, side * -20.0F),
@@ -446,9 +411,6 @@ inline void add_roman_bucranium(BuildingArchetypeDesc& desc,
   }
 }
 
-// What a legion leaves at the gate of its barracks: the arms it took, hung up
-// either side, the fires that are never let out, and the birds that follow it.
-// Kept here because the barracks' own file is as long as a render file may be.
 inline void dress_roman_barracks(BuildingArchetypeDesc& desc, BuildingState state) {
   const Setter set(desc, state);
   for (const float side : {-1.0F, 1.0F}) {
@@ -459,9 +421,6 @@ inline void dress_roman_barracks(BuildingArchetypeDesc& desc, BuildingState stat
   add_roman_raven(desc, set.highest(-1.6F, 1.6F, -1.6F, 1.4F), -30.0F, 1.5F);
 }
 
-// ---------------------------------------------------------------- Carthage
-
-// A pair of horns on a corner block: what stands on every Punic parapet.
 inline void add_punic_horns(BuildingArchetypeDesc& desc,
                             const QVector3D& base,
                             float scale = 1.0F,
@@ -487,7 +446,6 @@ inline void add_punic_horns(BuildingArchetypeDesc& desc,
                k_intact);
 }
 
-// The disc of Baal over the crescent, on a pole with a purple streamer.
 inline void add_punic_standard(BuildingArchetypeDesc& desc,
                                const QVector3D& base,
                                float scale = 1.0F) {
@@ -530,7 +488,6 @@ inline void add_punic_standard(BuildingArchetypeDesc& desc,
                BuildingStateMask::Normal);
 }
 
-// A tall incense stand. What burns in it burns pale and sea-green.
 inline void add_punic_incense_stand(BuildingArchetypeDesc& desc,
                                     const QVector3D& base,
                                     float scale = 1.0F) {
@@ -548,7 +505,7 @@ inline void add_punic_incense_stand(BuildingArchetypeDesc& desc,
                     0.016F * s,
                     Carthage::k_bronze,
                     k_intact);
-  // Two crowns of drooping petals, as on the stands from the tophet.
+
   for (const float y : {0.20F, 0.31F}) {
     desc.add_cone(base + QVector3D(0.0F, (y + 0.035F) * s, 0.0F),
                   base + QVector3D(0.0F, (y - 0.030F) * s, 0.0F),
@@ -574,8 +531,6 @@ inline void add_punic_incense_stand(BuildingArchetypeDesc& desc,
                 BuildingStateMask::Normal);
 }
 
-// A tophet stele: a slab with a pointed head and the sign of Tanit cut in it.
-// `facing` is +1 for a face turned to +z.
 inline void add_punic_stele(BuildingArchetypeDesc& desc,
                             const QVector3D& base,
                             float scale = 1.0F,
@@ -584,7 +539,7 @@ inline void add_punic_stele(BuildingArchetypeDesc& desc,
                             bool faces_x = false) {
   BuildingPartMaterial const stone(desc, k_building_material_stone);
   const float s = scale;
-  // Authored facing z; `faces_x` turns the whole slab a quarter turn.
+
   const auto turned = [&](const QVector3D& v) {
     return faces_x ? QVector3D(v.z(), v.y(), v.x()) : v;
   };
@@ -604,7 +559,7 @@ inline void add_punic_stele(BuildingArchetypeDesc& desc,
                        slab,
                        k_intact);
   const float out = facing * 0.028F * s;
-  // Tanit: a triangle body, a bar for arms, a disc for a head.
+
   desc.add_box(base + turned(QVector3D(0.0F, 0.085F * s, out)),
                turned(QVector3D(0.032F, 0.012F, 0.004F)) * s,
                Carthage::k_whitewash,
@@ -625,7 +580,6 @@ inline void add_punic_stele(BuildingArchetypeDesc& desc,
       k_intact);
 }
 
-// Two tusks crossed over a doorway `span` wide whose lintel is at `base`.
 inline void add_punic_tusks(BuildingArchetypeDesc& desc,
                             const QVector3D& base,
                             float span,
@@ -637,7 +591,6 @@ inline void add_punic_tusks(BuildingArchetypeDesc& desc,
       const float t0 = static_cast<float>(segment) / static_cast<float>(k_segments);
       const float t1 = static_cast<float>(segment + 1) / static_cast<float>(k_segments);
       const auto point = [&](float t) {
-        // Root at the jamb, tip curling over past the middle of the door.
         const float angle = t * 1.75F;
         return base +
                QVector3D(side * ((span * 0.5F) - (std::sin(angle) * span * 0.62F)),
@@ -653,8 +606,6 @@ inline void add_punic_tusks(BuildingArchetypeDesc& desc,
   }
 }
 
-// The ends of cedar beams let through a wall under its parapet, along x on a
-// face at `z` looking `facing` (+1 is +z).
 inline void add_punic_beam_ends(BuildingArchetypeDesc& desc,
                                 float x0,
                                 float x1,

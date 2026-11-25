@@ -179,9 +179,7 @@ public slots:
   [[nodiscard]] auto environment_snapshot() const -> Arena::ArenaEnvironmentSnapshot;
 
   void set_terrain_review_content_enabled(bool enabled);
-  // A map opened for interactive viewing plays like the game: authored
-  // content, fog, ambient wildlife and the overlays stay on. Batch reviews keep
-  // their terrain-only default.
+
   void set_terrain_review_live(bool live);
 
   void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
@@ -230,8 +228,7 @@ public slots:
   [[nodiscard]] auto fog_of_war_enabled() const -> bool { return m_fog_of_war_enabled; }
 
   void set_batch_fixed_step(float seconds);
-  // Holds every frame at one animation time (water, wind, clouds, sway), so two
-  // runs of a capture compare pixel for pixel.
+
   void set_frozen_animation_time(std::optional<float> seconds) {
     m_frozen_animation_time = seconds;
   }
@@ -332,7 +329,7 @@ public:
   }
 
   [[nodiscard]] auto active_scenario_finished() const -> bool;
-  // The shipped map the active scenario plays on; empty for a built arena.
+
   [[nodiscard]] auto scenario_map_path() const -> const QString& {
     return m_scenario_map_path;
   }

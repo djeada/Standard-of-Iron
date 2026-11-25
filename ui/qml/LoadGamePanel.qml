@@ -106,8 +106,6 @@ Item {
     Rectangle {
         id: container
 
-        // Wide enough for the rows at 1080p, and only as tall as the saves it
-        // holds (never shorter than room for the empty-state message).
         width: Math.min(parent.width * 0.72, Design.Metrics.space24 * 54)
         height: Math.min(parent.height * 0.86, Design.Metrics.space24 * 36, content_column.implicitHeight + Theme.spacingXLarge * 2)
         anchors.centerIn: parent
