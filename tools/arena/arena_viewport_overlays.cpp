@@ -1,5 +1,6 @@
 #include <QFont>
 #include <QFontMetrics>
+#include <QImage>
 #include <QPainter>
 #include <QPen>
 #include <QVector3D>
@@ -53,8 +54,9 @@ auto terrain_world_position(const Game::Map::TerrainField& field,
 } // namespace
 
 void ArenaViewport::draw_debug_overlay(QPainter& painter) {
-  if (!m_clean_capture && (m_scenario_runner == nullptr ||
-                           !m_scenario_runner->definition().suppress_spawn_anchor)) {
+  if (!m_clean_capture && !m_terrain_review_mode &&
+      (m_scenario_runner == nullptr ||
+       !m_scenario_runner->definition().suppress_spawn_anchor)) {
     draw_spawn_anchor_marker(painter);
   }
   draw_selection_marquee(painter);
@@ -349,75 +351,91 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
     return;
   }
 
-  int player_count = 0;
-  int enemy_count = 0;
-  if (m_world != nullptr) {
-    for (auto* entity : m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
-      auto* uc = entity != nullptr
-                     ? entity->get_component<Engine::Core::UnitComponent>()
-                     : nullptr;
-      if (uc == nullptr || uc->health <= 0) {
-        continue;
-      }
-      if (uc->owner_id == k_local_owner_id) {
-        ++player_count;
-      } else {
-        ++enemy_count;
+  // The readout is text from counts that move a few times a second at most.
+  // Laying it out and shaping it every frame cost about a fifth of a small
+  // scene's frame, so it is rendered into an image a few times a second and
+  // only blitted in between.
+  constexpr qint64 k_stats_refresh_ms = 250;
+  qreal const dpr = devicePixelRatioF();
+  bool const stale = m_stats_overlay_image.isNull() ||
+                     !m_stats_overlay_clock.isValid() ||
+                     m_stats_overlay_clock.elapsed() >= k_stats_refresh_ms ||
+                     m_stats_overlay_paused != m_paused ||
+                     !qFuzzyCompare(m_stats_overlay_image.devicePixelRatio(), dpr);
+  if (stale) {
+    m_stats_overlay_clock.restart();
+    m_stats_overlay_paused = m_paused;
+
+    int player_count = 0;
+    int enemy_count = 0;
+    if (m_world != nullptr) {
+      for (auto [entity_id, uc] : m_world->view<Engine::Core::UnitComponent>()) {
+        (void)entity_id;
+        if (uc.health <= 0) {
+          continue;
+        }
+        if (uc.owner_id == k_local_owner_id) {
+          ++player_count;
+        } else {
+          ++enemy_count;
+        }
       }
     }
-  }
 
-  QFont font = painter.font();
-  font.setPixelSize(13);
-  font.setBold(true);
-  painter.setFont(font);
+    QFont box_font = font();
+    box_font.setPixelSize(13);
+    box_font.setBold(true);
+    QFontMetrics const fm(box_font);
+    int const line_h = fm.height() + 2;
+    int const pad = 6;
 
-  QFontMetrics const fm(font);
-  int const line_h = fm.height() + 2;
-  int const pad = 6;
+    QStringList lines;
+    auto const& profile = Render::Profiling::global_profile();
+    lines << QStringLiteral("FPS: %1").arg(static_cast<int>(m_fps + 0.5F));
+    lines << QStringLiteral("Time: %1").arg(lighting_summary());
+    lines << QStringLiteral("Player: %1").arg(player_count);
+    lines << QStringLiteral("Enemy:  %1").arg(enemy_count);
+    lines << QStringLiteral("Avg/P95: %1 / %2 ms")
+                 .arg(profile.average_frame_ms, 0, 'f', 2)
+                 .arg(profile.p95_frame_ms, 0, 'f', 2);
+    lines << QStringLiteral("Visible Soldiers: %1").arg(profile.visible_soldiers);
+    lines << QStringLiteral("Cache Misses: %1").arg(profile.render_asset_cache_misses);
+    lines << QStringLiteral("Anim Prep: %1 ms")
+                 .arg(static_cast<double>(profile.humanoid_preparation_us) / 1000.0,
+                      0,
+                      'f',
+                      2);
+    if (m_combat_debug_overlay_enabled) {
+      lines << QStringLiteral("Churn Flags: %1")
+                   .arg(static_cast<int>(
+                       Render::Profiling::CombatAnimationDiagnostics::instance()
+                           .flagged_unit_count()));
+    }
+    if (m_paused) {
+      lines << QStringLiteral("PAUSED");
+    }
 
-  QStringList lines;
-  auto const& profile = Render::Profiling::global_profile();
-  lines << QStringLiteral("FPS: %1").arg(static_cast<int>(m_fps + 0.5F));
-  lines << QStringLiteral("Time: %1").arg(lighting_summary());
-  lines << QStringLiteral("Player: %1").arg(player_count);
-  lines << QStringLiteral("Enemy:  %1").arg(enemy_count);
-  lines << QStringLiteral("Avg/P95: %1 / %2 ms")
-               .arg(profile.average_frame_ms, 0, 'f', 2)
-               .arg(profile.p95_frame_ms, 0, 'f', 2);
-  lines << QStringLiteral("Visible Soldiers: %1").arg(profile.visible_soldiers);
-  lines << QStringLiteral("Cache Misses: %1").arg(profile.render_asset_cache_misses);
-  lines << QStringLiteral("Anim Prep: %1 ms")
-               .arg(static_cast<double>(profile.humanoid_preparation_us) / 1000.0,
-                    0,
-                    'f',
-                    2);
-  if (m_combat_debug_overlay_enabled) {
-    lines << QStringLiteral("Churn Flags: %1")
-                 .arg(static_cast<int>(
-                     Render::Profiling::CombatAnimationDiagnostics::instance()
-                         .flagged_unit_count()));
-  }
-  if (m_paused) {
-    lines << QStringLiteral("PAUSED");
-  }
-
-  int const box_w = [&]() {
     int max_w = 0;
     for (const auto& line : lines) {
       max_w = std::max(max_w, fm.horizontalAdvance(line));
     }
-    return max_w + pad * 2;
-  }();
-  int const box_h = lines.size() * line_h + pad * 2;
+    int const box_w = max_w + pad * 2;
+    int const box_h = static_cast<int>(lines.size()) * line_h + pad * 2;
 
-  QRect const box(pad, pad, box_w, box_h);
-  painter.fillRect(box, QColor(0, 0, 0, 140));
-
-  painter.setPen(QColor(220, 220, 220, 220));
-  for (int i = 0; i < lines.size(); ++i) {
-    painter.drawText(pad * 2, pad + (i + 1) * line_h - 2, lines[i]);
+    // The image spans from the widget corner so the original coordinates hold.
+    m_stats_overlay_image = QImage(QSize(box_w + pad, box_h + pad) * dpr,
+                                   QImage::Format_ARGB32_Premultiplied);
+    m_stats_overlay_image.setDevicePixelRatio(dpr);
+    m_stats_overlay_image.fill(Qt::transparent);
+    QPainter image_painter(&m_stats_overlay_image);
+    image_painter.setFont(box_font);
+    image_painter.fillRect(QRect(pad, pad, box_w, box_h), QColor(0, 0, 0, 140));
+    image_painter.setPen(QColor(220, 220, 220, 220));
+    for (int i = 0; i < lines.size(); ++i) {
+      image_painter.drawText(pad * 2, pad + (i + 1) * line_h - 2, lines[i]);
+    }
   }
+  painter.drawImage(QPoint(0, 0), m_stats_overlay_image);
 }
 
 void ArenaViewport::draw_rpg_hud(QPainter& painter) {
@@ -521,91 +539,18 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   }
 }
 
-void ArenaViewport::draw_controls_overlay(QPainter& painter) {
-  if (width() <= 0 || height() <= 0) {
-    return;
-  }
+namespace {
 
-  QFont title_font = painter.font();
+// The help box is static text. It is laid out once per variant and blitted.
+auto render_help_box(const QFont& base_font,
+                     const QString& title,
+                     const QStringList& lines,
+                     qreal dpr) -> QImage {
+  QFont title_font = base_font;
   title_font.setPixelSize(13);
   title_font.setBold(true);
   QFont body_font = title_font;
   body_font.setBold(false);
-
-  if (m_rpg_interactive) {
-    QString const rpg_title = QStringLiteral("RPG Commander Controls");
-    bool const bow = rpg_commander_status().value("weapon_stance").toString() ==
-                     QStringLiteral("bow");
-    QStringList const rpg_lines{
-        QStringLiteral("W A S D: move (relative to view)"),
-        QStringLiteral("Mouse: look"),
-        QStringLiteral("Shift: run"),
-        bow ? QStringLiteral("LMB: hold to draw, release to fire")
-            : QStringLiteral("LMB: attack (hold to chain)"),
-        QStringLiteral("MMB: heavy attack"),
-        QStringLiteral("RMB: guard"),
-        QStringLiteral("Space: dodge roll"),
-        QStringLiteral("Ctrl: jump"),
-        QStringLiteral("R: cycle lock-on"),
-        QStringLiteral("C: close camera"),
-        QStringLiteral("F: weapon special (guard + F: shield bash)"),
-        QStringLiteral("X: switch weapon stance"),
-        QStringLiteral("V: vanguard rush"),
-        QStringLiteral("G: second wind"),
-        QStringLiteral("Esc / Tab: leave RPG control"),
-        QStringLiteral("F1 or ?: toggle this help"),
-    };
-
-    QFontMetrics const rpg_title_metrics(title_font);
-    QFontMetrics const rpg_body_metrics(body_font);
-    int const rpg_pad = 8;
-    int const rpg_title_gap = 4;
-    int const rpg_line_h = rpg_body_metrics.height() + 2;
-
-    int rpg_box_w = rpg_title_metrics.horizontalAdvance(rpg_title);
-    for (const auto& line : rpg_lines) {
-      rpg_box_w = std::max(rpg_box_w, rpg_body_metrics.horizontalAdvance(line));
-    }
-    rpg_box_w += rpg_pad * 2;
-
-    int const rpg_box_h = rpg_pad * 2 + rpg_title_metrics.height() + rpg_title_gap +
-                          static_cast<int>(rpg_lines.size()) * rpg_line_h;
-    QRect const rpg_box(width() - rpg_box_w - rpg_pad, rpg_pad, rpg_box_w, rpg_box_h);
-    painter.fillRect(rpg_box, QColor(0, 0, 0, 150));
-    painter.setPen(QColor(235, 235, 235, 230));
-
-    int rpg_y = rpg_box.top() + rpg_pad + rpg_title_metrics.ascent();
-    painter.setFont(title_font);
-    painter.drawText(rpg_box.left() + rpg_pad, rpg_y, rpg_title);
-
-    painter.setFont(body_font);
-    rpg_y += rpg_title_gap + (rpg_title_metrics.descent() + rpg_line_h);
-    for (const auto& line : rpg_lines) {
-      painter.drawText(rpg_box.left() + rpg_pad, rpg_y, line);
-      rpg_y += rpg_line_h;
-    }
-    return;
-  }
-
-  QString const title = QStringLiteral("Arena Controls");
-  QStringList const lines{
-      QStringLiteral("Tab: take direct RPG control of a commander"),
-      QStringLiteral("LMB click: select + set spawn anchor"),
-      QStringLiteral("LMB drag: box select"),
-      QStringLiteral("Shift+LMB: add to selection"),
-      QStringLiteral("RMB: move / attack like the main game"),
-      QStringLiteral("Wheel: fast zoom (Shift: very fast)"),
-      QStringLiteral("Middle drag: orbit"),
-      QStringLiteral("Shift+Middle / Alt+RMB drag: fast pan"),
-      QStringLiteral("Arrow keys: pan camera"),
-      QStringLiteral("Shift+Arrows: faster pan"),
-      QStringLiteral("Q / E: yaw"),
-      QStringLiteral("R / F: tilt overhead / towards the horizon"),
-      QStringLiteral("Home: show whole terrain"),
-      QStringLiteral("X: select local army"),
-      QStringLiteral("Space: pause"),
-      QStringLiteral("F1 or ?: toggle this help"),
-  };
 
   QFontMetrics const title_metrics(title_font);
   QFontMetrics const body_metrics(body_font);
@@ -618,21 +563,97 @@ void ArenaViewport::draw_controls_overlay(QPainter& painter) {
     box_w = std::max(box_w, body_metrics.horizontalAdvance(line));
   }
   box_w += pad * 2;
-
   int const box_h = pad * 2 + title_metrics.height() + title_gap +
                     static_cast<int>(lines.size()) * line_h;
-  QRect const box(width() - box_w - pad, pad, box_w, box_h);
-  painter.fillRect(box, QColor(0, 0, 0, 150));
+
+  QImage image(QSize(box_w, box_h) * dpr, QImage::Format_ARGB32_Premultiplied);
+  image.setDevicePixelRatio(dpr);
+  image.fill(QColor(0, 0, 0, 150));
+  QPainter painter(&image);
   painter.setPen(QColor(235, 235, 235, 230));
-
-  int y = box.top() + pad + title_metrics.ascent();
+  int y = pad + title_metrics.ascent();
   painter.setFont(title_font);
-  painter.drawText(box.left() + pad, y, title);
-
+  painter.drawText(pad, y, title);
   painter.setFont(body_font);
   y += title_gap + (title_metrics.descent() + line_h);
   for (const auto& line : lines) {
-    painter.drawText(box.left() + pad, y, line);
+    painter.drawText(pad, y, line);
     y += line_h;
   }
+  return image;
+}
+
+} // namespace
+
+void ArenaViewport::draw_controls_overlay(QPainter& painter) {
+  if (width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  qreal const dpr = devicePixelRatioF();
+  QString key;
+  bool bow = false;
+  if (m_rpg_interactive) {
+    bow = rpg_commander_status().value("weapon_stance").toString() ==
+          QStringLiteral("bow");
+    key = bow ? QStringLiteral("rpg-bow") : QStringLiteral("rpg-melee");
+  } else {
+    key = QStringLiteral("arena");
+  }
+  if (m_controls_overlay_image.isNull() || m_controls_overlay_key != key ||
+      !qFuzzyCompare(m_controls_overlay_image.devicePixelRatio(), dpr)) {
+    m_controls_overlay_key = key;
+    if (m_rpg_interactive) {
+      m_controls_overlay_image = render_help_box(
+          font(),
+          QStringLiteral("RPG Commander Controls"),
+          QStringList{
+              QStringLiteral("W A S D: move (relative to view)"),
+              QStringLiteral("Mouse: look"),
+              QStringLiteral("Shift: run"),
+              bow ? QStringLiteral("LMB: hold to draw, release to fire")
+                  : QStringLiteral("LMB: attack (hold to chain)"),
+              QStringLiteral("MMB: heavy attack"),
+              QStringLiteral("RMB: guard"),
+              QStringLiteral("Space: dodge roll"),
+              QStringLiteral("Ctrl: jump"),
+              QStringLiteral("R: cycle lock-on"),
+              QStringLiteral("C: close camera"),
+              QStringLiteral("F: weapon special (guard + F: shield bash)"),
+              QStringLiteral("X: switch weapon stance"),
+              QStringLiteral("V: vanguard rush"),
+              QStringLiteral("G: second wind"),
+              QStringLiteral("Esc / Tab: leave RPG control"),
+              QStringLiteral("F1 or ?: toggle this help"),
+          },
+          dpr);
+    } else {
+      m_controls_overlay_image = render_help_box(
+          font(),
+          QStringLiteral("Arena Controls"),
+          QStringList{
+              QStringLiteral("Tab: take direct RPG control of a commander"),
+              QStringLiteral("LMB click: select + set spawn anchor"),
+              QStringLiteral("LMB drag: box select"),
+              QStringLiteral("Shift+LMB: add to selection"),
+              QStringLiteral("RMB: move / attack like the main game"),
+              QStringLiteral("Wheel: smooth zoom to the cursor (Shift: faster)"),
+              QStringLiteral("Middle drag: orbit"),
+              QStringLiteral("Shift+Middle / Alt+RMB drag: grab the ground and pan"),
+              QStringLiteral("Arrow keys: pan camera"),
+              QStringLiteral("Shift+Arrows: faster pan"),
+              QStringLiteral("Q / E: yaw"),
+              QStringLiteral("R / F: tilt overhead / towards the horizon"),
+              QStringLiteral("Home: show whole terrain"),
+              QStringLiteral("X: select local army"),
+              QStringLiteral("Space: pause"),
+              QStringLiteral("F1 or ?: toggle this help"),
+          },
+          dpr);
+    }
+  }
+  int const pad = 8;
+  int const image_w =
+      static_cast<int>(static_cast<qreal>(m_controls_overlay_image.width()) / dpr);
+  painter.drawImage(QPoint(width() - image_w - pad, pad), m_controls_overlay_image);
 }

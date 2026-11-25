@@ -13,6 +13,7 @@
 #include "arena_viewport.h"
 #include "arena_viewport_internal.h"
 #include "game/core/ownership_constants.h"
+#include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/biome_settings.h"
 #include "game/map/map_loader.h"
@@ -27,6 +28,7 @@
 #include "game/systems/navigation/wall_network_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/spawn_type.h"
+#include "game/wildlife/wildlife_system.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/map_boundary_fog_renderer.h"
 #include "render/ground/rain_renderer.h"
@@ -693,6 +695,11 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
   if (m_terrain_review_content_enabled) {
     spawn_terrain_review_structures();
   }
+  if (m_terrain_review_live && m_world != nullptr) {
+    if (auto* wildlife = m_world->get_system<Game::Wildlife::WildlifeSystem>()) {
+      wildlife->configure(*m_terrain_review_definition);
+    }
+  }
 
   if (m_gl_initialized) {
     configure_rendering_from_terrain();
@@ -739,6 +746,13 @@ void ArenaViewport::apply_map_terrain() {
 
 void ArenaViewport::set_terrain_review_content_enabled(bool enabled) {
   m_terrain_review_content_enabled = enabled;
+}
+
+void ArenaViewport::set_terrain_review_live(bool live) {
+  m_terrain_review_live = live;
+  if (live) {
+    m_terrain_review_content_enabled = true;
+  }
 }
 
 void ArenaViewport::spawn_terrain_review_structures() {
@@ -881,6 +895,7 @@ void ArenaViewport::set_terrain_review_overview_camera() {
   const float world_height =
       static_cast<float>(definition.grid.height) * definition.grid.tile_size;
   const float distance = std::max(world_width, world_height) * 1.28F;
+  m_camera->cancel_eased_motion();
   m_camera->set_rts_view({0.0F, 0.0F, 0.0F}, distance, 66.0F, 225.0F);
   const float aspect = height() > 0
                            ? static_cast<float>(width()) / static_cast<float>(height())
@@ -904,6 +919,7 @@ void ArenaViewport::set_terrain_review_gameplay_camera() {
         (center.z() - (static_cast<float>(definition.grid.height) * 0.5F - 0.5F)) *
         definition.grid.tile_size);
   }
+  m_camera->cancel_eased_motion();
   m_camera->set_rts_view(center,
                          definition.camera.distance,
                          definition.camera.tilt_deg,

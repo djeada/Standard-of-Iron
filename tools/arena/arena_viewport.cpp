@@ -39,6 +39,7 @@
 #include "game/units/factory.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "game/wildlife/wildlife_system.h"
 #include "render/creature/humanoid/runtime/runtime_stats.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/commander_aura_renderer.h"
@@ -294,6 +295,12 @@ void ArenaViewport::paintGL() {
   sanitize_selection();
   apply_keyboard_camera_controls(real_dt);
   m_camera->update(real_dt);
+  if (m_terrain_review_live && m_terrain_review_mode) {
+    if (auto* wildlife = m_world->get_system<Game::Wildlife::WildlifeSystem>()) {
+      QVector3D const focus = m_camera->get_target();
+      wildlife->set_cosmetic_focus(focus.x(), focus.z());
+    }
+  }
   if (m_capture_orbit_ready && m_capture_orbit_speed != 0.0F) {
     m_capture_orbit_yaw += m_capture_orbit_speed * real_dt;
     m_camera->set_rts_view(m_capture_orbit_center,
@@ -401,8 +408,9 @@ void ArenaViewport::paintGL() {
   bool const capture_keeps_overlays =
       m_scenario_runner != nullptr &&
       m_scenario_runner->definition().capture_ui_overlays;
-  bool const clean_view = m_clean_capture || m_terrain_review_mode || m_promo_mode ||
-                          (capture_frame && !capture_keeps_overlays);
+  bool const clean_view = m_clean_capture ||
+                          (m_terrain_review_mode && !m_terrain_review_live) ||
+                          m_promo_mode || (capture_frame && !capture_keeps_overlays);
   bool const show_debug_overlays =
       m_scenario_runner == nullptr ||
       !m_scenario_runner->definition().suppress_ui_overlays;
@@ -446,11 +454,13 @@ void ArenaViewport::submit_terrain_layers() {
         include_review_content &&
         (m_scenario_runner == nullptr ||
          !m_scenario_runner->definition().suppress_terrain_scatter);
+    // Rivers, lakes, shores, bridges and roads are terrain, not dressing: a
+    // terrain-only review keeps them (the README promises as much).
     terrain_options.include_features =
-        include_review_content &&
         (m_scenario_runner == nullptr ||
          !m_scenario_runner->definition().suppress_terrain_features);
-    terrain_options.include_environment = !m_terrain_review_mode;
+    terrain_options.include_environment =
+        !m_terrain_review_mode || m_terrain_review_live;
     m_terrain_scene->submit(*m_renderer, m_renderer->resources(), terrain_options);
   }
   if (m_fog_of_war_enabled && m_fog != nullptr) {
@@ -560,25 +570,25 @@ void ArenaViewport::paint_ui_overlays(bool show_debug_overlays) {
     gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   }
 
+  // One painter for the whole overlay pass: every QPainter begin/end on the GL
+  // widget re-binds the paint device, and this ran three times a frame.
+  QPainter painter(this);
   if (show_debug_overlays) {
-    QPainter painter(this);
+    painter.save();
     painter.setRenderHint(QPainter::Antialiasing, true);
     draw_debug_overlay(painter);
+    painter.restore();
   }
-
-  {
-    QPainter stats_painter(this);
-    stats_painter.setRenderHint(QPainter::Antialiasing, false);
-    if (show_debug_overlays) {
-      draw_stats_overlay(stats_painter);
-    }
-    if (!hide_gameplay_overlays()) {
-      draw_floating_numbers(stats_painter);
-    }
-    draw_rpg_hud(stats_painter);
-    if (m_controls_overlay_visible) {
-      draw_controls_overlay(stats_painter);
-    }
+  painter.setRenderHint(QPainter::Antialiasing, false);
+  if (show_debug_overlays) {
+    draw_stats_overlay(painter);
+  }
+  if (!hide_gameplay_overlays()) {
+    draw_floating_numbers(painter);
+  }
+  draw_rpg_hud(painter);
+  if (m_controls_overlay_visible) {
+    draw_controls_overlay(painter);
   }
 }
 
@@ -721,6 +731,7 @@ void ArenaViewport::reset_camera() {
   if (m_camera == nullptr) {
     return;
   }
+  m_camera->cancel_eased_motion();
   m_camera->set_rts_view({0.0F, 0.0F, 0.0F}, 42.0F, 45.0F, 225.0F);
   apply_scenario_camera_projection(42.0F);
   update();

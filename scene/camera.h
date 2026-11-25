@@ -118,8 +118,14 @@ public:
 
   void pan_eased(float right_dist, float forward_dist);
   void zoom_distance_eased(float delta);
+  // Eased zoom with explicit distance limits, for tools whose scene is larger
+  // (or closer) than the game's RTS band. Each call replaces the limits.
+  void zoom_distance_eased(float delta, float min_distance, float max_distance);
 
   void set_zoom_anchor(float nx, float ny);
+  // Drops queued pan and zoom easing so a jump (reset, scenario framing) is not
+  // dragged back by input that was still settling.
+  void cancel_eased_motion();
   [[nodiscard]] auto has_pending_motion() const -> bool {
     return m_orbit_pending || m_pan_request_pending ||
            m_pan_velocity.lengthSquared() > 0.0F || m_zoom_goal_pending;
@@ -250,6 +256,9 @@ private:
   QVector3D m_pan_velocity{0, 0, 0};
   bool m_zoom_goal_pending = false;
   float m_zoom_goal_distance = 0.0F;
+  bool m_zoom_limits_custom = false;
+  float m_zoom_limit_min = 0.0F;
+  float m_zoom_limit_max = 0.0F;
   bool m_zoom_anchor_valid = false;
   QVector3D m_zoom_anchor_world{0, 0, 0};
   float m_zoom_anchor_nx = 0.5F;

@@ -1382,9 +1382,17 @@ authored and procedural world props, every authored point building, and wall
 networks from the same `structures` collection. Weather, troop spawns, and the
 review overlays remain suppressed.
 
+Opened interactively, a map plays like the game: authored buildings and props,
+biome scatter, fog and ambient wildlife are on, the river and lake water flows,
+and the overlays and F1 help stay visible. Add `--terrain-only` for the bare
+terrain review that batch captures use by default.
+
 ```bash
-# Inspect one map interactively
+# Look around one map interactively (live map)
 build-debug/bin/arena_app --terrain-map assets/maps/map_crossing_alps.json
+
+# Interactive, but terrain only
+build-debug/bin/arena_app --terrain-map assets/maps/map_crossing_alps.json --terrain-only
 
 # Inspect terrain together with biome, props, and buildings
 build-debug/bin/arena_app \

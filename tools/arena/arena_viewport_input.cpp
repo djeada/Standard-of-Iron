@@ -142,38 +142,23 @@ void ArenaViewport::keyPressEvent(QKeyEvent* event) {
     }
     event->accept();
     return;
+  // Yaw and tilt are held keys applied per frame (see
+  // apply_keyboard_camera_controls): one eased orbit per key repeat restarted
+  // its blend every ~30 ms and turned a held key into a stutter.
   case Qt::Key_Q:
-    if (m_camera_service != nullptr && m_camera != nullptr) {
-      float const yaw_step =
-          (event->modifiers() & Qt::ShiftModifier) != 0 ? 8.0F : 4.0F;
-      m_camera_service->yaw(*m_camera, -yaw_step);
-      update();
-    }
+    m_yaw_left_pressed = true;
     event->accept();
     return;
   case Qt::Key_E:
-    if (m_camera_service != nullptr && m_camera != nullptr) {
-      float const yaw_step =
-          (event->modifiers() & Qt::ShiftModifier) != 0 ? 8.0F : 4.0F;
-      m_camera_service->yaw(*m_camera, yaw_step);
-      update();
-    }
+    m_yaw_right_pressed = true;
     event->accept();
     return;
   case Qt::Key_R:
-    if (m_camera_service != nullptr && m_camera != nullptr) {
-      m_camera_service->tilt(
-          *m_camera, 1, (event->modifiers() & Qt::ShiftModifier) != 0);
-      update();
-    }
+    m_tilt_up_pressed = true;
     event->accept();
     return;
   case Qt::Key_F:
-    if (m_camera_service != nullptr && m_camera != nullptr) {
-      m_camera_service->tilt(
-          *m_camera, -1, (event->modifiers() & Qt::ShiftModifier) != 0);
-      update();
-    }
+    m_tilt_down_pressed = true;
     event->accept();
     return;
   case Qt::Key_X:
@@ -228,6 +213,22 @@ void ArenaViewport::keyReleaseEvent(QKeyEvent* event) {
     return;
   case Qt::Key_Right:
     m_pan_right_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_Q:
+    m_yaw_left_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_E:
+    m_yaw_right_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_R:
+    m_tilt_up_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_F:
+    m_tilt_down_pressed = false;
     event->accept();
     return;
   default:
@@ -310,25 +311,17 @@ void ArenaViewport::mouseMoveEvent(QMouseEvent* event) {
 
   if (m_camera != nullptr && (event->buttons() & Qt::MiddleButton) != 0) {
     if ((event->modifiers() & Qt::ShiftModifier) != 0) {
-      const float pan_scale =
-          m_terrain_review_mode
-              ? std::clamp(m_camera->get_distance() * 0.004F, 0.10F, 1.4F)
-              : 0.05F;
-      m_camera->pan(-static_cast<float>(delta.x()) * pan_scale,
-                    static_cast<float>(delta.y()) * pan_scale);
+      drag_pan_ground(event->pos() - delta, event->pos());
     } else {
-      m_camera->orbit(-static_cast<float>(delta.x()) * 0.45F,
-                      -static_cast<float>(delta.y()) * 0.25F);
+      // Orbit follows the pointer 1:1. The eased orbit restarted its 120 ms
+      // blend on every mouse event, which made a drag trail the cursor.
+      m_camera->rotate_immediate(-static_cast<float>(delta.x()) * 0.4F,
+                                 -static_cast<float>(delta.y()) * 0.22F);
     }
     update();
   } else if (m_camera != nullptr && (event->buttons() & Qt::RightButton) != 0 &&
              (event->modifiers() & Qt::AltModifier) != 0) {
-    const float pan_scale =
-        m_terrain_review_mode
-            ? std::clamp(m_camera->get_distance() * 0.004F, 0.10F, 1.4F)
-            : 0.05F;
-    m_camera->pan(-static_cast<float>(delta.x()) * pan_scale,
-                  static_cast<float>(delta.y()) * pan_scale);
+    drag_pan_ground(event->pos() - delta, event->pos());
     update();
   } else if ((event->buttons() & Qt::LeftButton) != 0 && m_selection_drag_active) {
     m_selection_current = event->pos();
@@ -380,21 +373,46 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent* event) {
   QOpenGLWidget::mouseReleaseEvent(event);
 }
 
+void ArenaViewport::drag_pan_ground(const QPoint& from, const QPoint& to) {
+  if (m_camera == nullptr || width() <= 0 || height() <= 0) {
+    return;
+  }
+  // Keep the ground point that was under the cursor under it, whatever the
+  // zoom: a fixed world step per pixel crawled when zoomed out and raced when
+  // zoomed in.
+  QVector3D before;
+  QVector3D after;
+  if (!m_camera->screen_to_ground(from.x(), from.y(), width(), height(), before) ||
+      !m_camera->screen_to_ground(to.x(), to.y(), width(), height(), after)) {
+    return;
+  }
+  m_camera->cancel_eased_motion();
+  m_camera->translate(before - after);
+}
+
 void ArenaViewport::wheelEvent(QWheelEvent* event) {
   if (m_rpg_interactive) {
     event->accept();
     return;
   }
-  if (m_camera != nullptr) {
-    const float wheel_divisor =
-        m_terrain_review_mode
-            ? ((event->modifiers() & Qt::ShiftModifier) != 0 ? 180.0F : 420.0F)
-            : 1200.0F;
-    const float delta = static_cast<float>(event->angleDelta().y()) / wheel_divisor;
-    if (m_terrain_review_mode) {
-      m_camera->zoom_distance(delta, 1.0F, terrain_review_max_camera_distance());
-    } else {
-      m_camera->zoom_distance(delta);
+  if (m_camera != nullptr && width() > 0 && height() > 0) {
+    // One wheel notch is 120 units; high-resolution wheels and touchpads send
+    // fractions of that, so the step stays proportional to what was scrolled.
+    float const notches = static_cast<float>(event->angleDelta().y()) / 120.0F;
+    if (notches != 0.0F) {
+      bool const fast = (event->modifiers() & Qt::ShiftModifier) != 0;
+      QPointF const cursor = event->position();
+      // The game's feel: about 12% of the distance per notch, eased over
+      // ~0.12 s and anchored on the ground under the cursor.
+      if (m_terrain_review_mode) {
+        m_camera->zoom_distance_eased(notches * (fast ? 1.1F : 0.45F),
+                                      1.0F,
+                                      terrain_review_max_camera_distance());
+      } else {
+        m_camera->zoom_distance_eased(notches * (fast ? 1.6F : 0.8F));
+      }
+      m_camera->set_zoom_anchor(static_cast<float>(cursor.x() / width()),
+                                static_cast<float>(cursor.y() / height()));
     }
     update();
   }
@@ -547,6 +565,20 @@ void ArenaViewport::apply_keyboard_camera_controls(float real_dt) {
     return;
   }
 
+  const bool fast = (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
+
+  // Rotation is a rate in degrees per second, so it turns at the same speed at
+  // 30 fps and at 240 fps.
+  float const yaw_input =
+      (m_yaw_right_pressed ? 1.0F : 0.0F) - (m_yaw_left_pressed ? 1.0F : 0.0F);
+  float const tilt_input =
+      (m_tilt_down_pressed ? 1.0F : 0.0F) - (m_tilt_up_pressed ? 1.0F : 0.0F);
+  if (yaw_input != 0.0F || tilt_input != 0.0F) {
+    float const dt = std::clamp(real_dt, 0.0F, 0.1F);
+    m_camera->rotate_immediate(yaw_input * (fast ? 240.0F : 120.0F) * dt,
+                               tilt_input * (fast ? 120.0F : 60.0F) * dt);
+  }
+
   int dx = 0;
   int dz = 0;
   if (m_pan_up_pressed) {
@@ -565,7 +597,6 @@ void ArenaViewport::apply_keyboard_camera_controls(float real_dt) {
     return;
   }
 
-  const bool fast = (QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0;
   float const step =
       m_terrain_review_mode ? (fast ? 6.0F : 2.5F) : (fast ? 2.0F : 1.0F);
   float const frame_scale = std::clamp(real_dt * 60.0F, 0.5F, 2.0F);
@@ -579,6 +610,10 @@ void ArenaViewport::clear_camera_key_state() {
   m_pan_down_pressed = false;
   m_pan_left_pressed = false;
   m_pan_right_pressed = false;
+  m_yaw_left_pressed = false;
+  m_yaw_right_pressed = false;
+  m_tilt_up_pressed = false;
+  m_tilt_down_pressed = false;
 }
 
 auto ArenaViewport::owner_display_name(int owner_id) const -> QString {
@@ -656,6 +691,25 @@ void ArenaViewport::update_selected_entities() {
 }
 
 void ArenaViewport::sync_selection_summary() {
+  // The summary walks every selected entity and formats a dozen strings. It
+  // ran every frame; the panel only needs it when the selection changes or a
+  // few times a second for health and position.
+  constexpr qint64 k_summary_refresh_ms = 250;
+  auto* selection = selection_system();
+  if (selection == nullptr) {
+    return;
+  }
+  const auto& selected = selection->get_selected_units();
+  bool const same_selection =
+      selected.size() == m_last_selection_ids.size() &&
+      std::equal(selected.begin(), selected.end(), m_last_selection_ids.begin());
+  if (same_selection && m_selection_summary_clock.isValid() &&
+      m_selection_summary_clock.elapsed() < k_summary_refresh_ms) {
+    return;
+  }
+  m_last_selection_ids.assign(selected.begin(), selected.end());
+  m_selection_summary_clock.restart();
+
   QString const summary = build_selection_summary();
   if (summary == m_last_selection_summary) {
     return;

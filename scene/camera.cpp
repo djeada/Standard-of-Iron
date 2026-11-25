@@ -558,11 +558,35 @@ void Camera::zoom_distance_eased(float delta) {
   if (!finite(delta)) {
     return;
   }
+  m_zoom_limits_custom = false;
   float const current = m_zoom_goal_pending ? m_zoom_goal_distance : get_distance();
   float factor = 1.0F - delta * k_zoom_distance_delta;
   factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
   m_zoom_goal_distance = std::clamp(current * factor, k_min_dist, max_distance());
   m_zoom_goal_pending = true;
+}
+
+void Camera::zoom_distance_eased(float delta, float min_distance, float max_distance) {
+  if (!finite(delta) || !finite(min_distance) || !finite(max_distance)) {
+    return;
+  }
+  m_zoom_limit_min = std::max(min_distance, k_tiny);
+  m_zoom_limit_max = std::max(max_distance, m_zoom_limit_min);
+  m_zoom_limits_custom = true;
+  float const current = m_zoom_goal_pending ? m_zoom_goal_distance : get_distance();
+  float factor = 1.0F - delta * k_zoom_distance_delta;
+  factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
+  m_zoom_goal_distance =
+      std::clamp(current * factor, m_zoom_limit_min, m_zoom_limit_max);
+  m_zoom_goal_pending = true;
+}
+
+void Camera::cancel_eased_motion() {
+  m_zoom_goal_pending = false;
+  m_zoom_anchor_valid = false;
+  m_pan_request = QVector3D(0, 0, 0);
+  m_pan_request_pending = false;
+  m_pan_velocity = QVector3D(0, 0, 0);
 }
 
 void Camera::set_zoom_anchor(float nx, float ny) {
@@ -606,7 +630,10 @@ void Camera::integrate_zoom(float dt) {
   }
   QVector3D const offset = m_position - m_target;
   float const r = std::max(offset.length(), k_tiny);
-  float const goal = std::clamp(m_zoom_goal_distance, k_min_dist, max_distance());
+  float const goal =
+      m_zoom_limits_custom
+          ? std::clamp(m_zoom_goal_distance, m_zoom_limit_min, m_zoom_limit_max)
+          : std::clamp(m_zoom_goal_distance, k_min_dist, max_distance());
   float new_r = r + (goal - r) * ease_fraction(dt, k_zoom_ease_tau);
   if (std::abs(goal - new_r) < k_motion_epsilon) {
     new_r = goal;
