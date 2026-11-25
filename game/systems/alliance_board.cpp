@@ -11,8 +11,8 @@
 
 #include "../core/component_core.h"
 #include "../core/world.h"
-#include "../session/checkpoint_values.h"
 #include "../units/spawn_type.h"
+#include "../util/checkpoint_values.h"
 #include "owner_registry.h"
 
 namespace Game::Systems {
@@ -73,7 +73,7 @@ template <typename Row, typename Fields>
 auto write_queue(const std::vector<Row>& entries, Fields fields) -> QJsonArray {
   QJsonArray rows;
   for (const auto& entry : entries) {
-    rows.append(Game::Session::CheckpointValues::write_tuple(fields(entry)));
+    rows.append(Game::CheckpointValues::write_tuple(fields(entry)));
   }
   return rows;
 }
@@ -90,8 +90,7 @@ auto read_queue(const QJsonValue& value,
     return false;
   }
   for (const auto row : rows) {
-    if (!Game::Session::CheckpointValues::read_tuple(row,
-                                                     fields(entries.emplace_back()))) {
+    if (!Game::CheckpointValues::read_tuple(row, fields(entries.emplace_back()))) {
       return false;
     }
   }
@@ -216,7 +215,7 @@ void AllianceBoard::change_goodwill(int ally, int owner, float delta) {
 }
 
 auto AllianceBoard::capture_checkpoint() const -> QJsonObject {
-  using Game::Session::CheckpointValues::write;
+  using Game::CheckpointValues::write;
   QJsonArray goodwill;
   for (const auto& [owners, value] : m_goodwill) {
     goodwill.append(write(owners.first, owners.second, value));
@@ -230,7 +229,7 @@ auto AllianceBoard::capture_checkpoint() const -> QJsonObject {
 }
 
 auto AllianceBoard::restore_checkpoint(const QJsonObject& state) -> bool {
-  using Game::Session::CheckpointValues::read;
+  using Game::CheckpointValues::read;
   AllianceBoard restored;
   if (!read(state.value("sequences"),
             restored.m_last_call_id,

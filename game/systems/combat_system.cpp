@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "../core/world.h"
-#include "../session/checkpoint_values.h"
+#include "../util/checkpoint_values.h"
 #include "combat_system/attack_processor.h"
 #include "combat_system/combat_state_processor.h"
 #include "combat_system/combat_utils.h"
@@ -30,8 +30,8 @@ auto CombatSystem::restore_checkpoint(const QJsonObject& state) -> bool {
   for (auto it = state.begin(); it != state.end(); ++it) {
     Engine::Core::EntityID id = 0;
     float cooldown = 0.0F;
-    if (!Game::Session::CheckpointValues::decode(QJsonValue(it.key()), id) ||
-        !Game::Session::CheckpointValues::decode(it.value(), cooldown) || id == 0 ||
+    if (!Game::CheckpointValues::decode(QJsonValue(it.key()), id) ||
+        !Game::CheckpointValues::decode(it.value(), cooldown) || id == 0 ||
         cooldown <= 0.0F || !cooldowns.emplace(id, cooldown).second) {
       return false;
     }

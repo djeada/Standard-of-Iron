@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "game/session/checkpoint_values.h"
+#include "game/util/checkpoint_values.h"
 #include "movement_orders_assignment.h"
 #include "movement_system_collision.h"
 #include "movement_system_gates.h"
@@ -30,7 +30,7 @@ constexpr float k_escape_arrival_radius = 0.6F;
 }
 
 auto MovementSystem::capture_checkpoint() const -> QJsonObject {
-  using Game::Session::CheckpointValues::write;
+  using Game::CheckpointValues::write;
   QJsonArray requests;
   for (const auto& request : m_path_requests.m_requests) {
     const auto it = m_path_requests.m_generations.find(request.entity_id);
@@ -50,7 +50,7 @@ auto MovementSystem::capture_checkpoint() const -> QJsonObject {
 }
 
 auto MovementSystem::restore_checkpoint(const QJsonObject& state) -> bool {
-  using Game::Session::CheckpointValues::read;
+  using Game::CheckpointValues::read;
   if (!read(state.value("state"), m_obstruction_revision, m_duel_footwork.m_clock) ||
       !state.value("requests").isArray()) {
     return false;

@@ -10,12 +10,12 @@
 #include "game/commander/commander_tick_trace.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
-#include "game/session/checkpoint_values.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/melee_intent_solver.h"
 #include "game/systems/navigation/walkability.h"
 #include "game/systems/rpg_combat_system/rpg_bow_aim.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
+#include "game/util/checkpoint_values.h"
 
 namespace Game::Commander {
 namespace {
@@ -109,13 +109,12 @@ auto CommanderRuntime::checkpoint_fields(Runtime& runtime) {
 
 auto CommanderRuntime::capture_checkpoint() const -> QJsonObject {
   const auto vector = [](const QVector3D& value) {
-    return Game::Session::CheckpointValues::write(value.x(), value.y(), value.z());
+    return Game::CheckpointValues::write(value.x(), value.y(), value.z());
   };
-  return {
-      {"state", Game::Session::CheckpointValues::write_tuple(checkpoint_fields(*this))},
-      {"velocity", vector(m_locomotion.m_planar_velocity)},
-      {"dodge", vector(m_locomotion.m_dodge_direction)},
-      {"carried_dodge", vector(m_input_port.m_carried_dodge_direction)}};
+  return {{"state", Game::CheckpointValues::write_tuple(checkpoint_fields(*this))},
+          {"velocity", vector(m_locomotion.m_planar_velocity)},
+          {"dodge", vector(m_locomotion.m_dodge_direction)},
+          {"carried_dodge", vector(m_input_port.m_carried_dodge_direction)}};
 }
 
 auto CommanderRuntime::restore_checkpoint(const QJsonObject& state) -> bool {
@@ -123,14 +122,14 @@ auto CommanderRuntime::restore_checkpoint(const QJsonObject& state) -> bool {
     float x = 0.0F;
     float y = 0.0F;
     float z = 0.0F;
-    if (!Game::Session::CheckpointValues::read(value, x, y, z)) {
+    if (!Game::CheckpointValues::read(value, x, y, z)) {
       return false;
     }
     out = QVector3D(x, y, z);
     return true;
   };
-  return Game::Session::CheckpointValues::read_tuple(state.value("state"),
-                                                     checkpoint_fields(*this)) &&
+  return Game::CheckpointValues::read_tuple(state.value("state"),
+                                            checkpoint_fields(*this)) &&
          vector(state.value("velocity"), m_locomotion.m_planar_velocity) &&
          vector(state.value("dodge"), m_locomotion.m_dodge_direction) &&
          vector(state.value("carried_dodge"), m_input_port.m_carried_dodge_direction);

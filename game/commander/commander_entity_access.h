@@ -33,9 +33,13 @@ struct CommanderHandles {
     -> Game::Systems::CombatActions::MeleeInterruption;
 
 void cancel_current_attack(Engine::Core::Entity& commander);
-void publish_cue(int owner, const char* cue,
-                 const std::source_location& location = std::source_location::current());
-void publish_cue(const Engine::Core::Entity& commander, const char* cue,
-                 const std::source_location& location = std::source_location::current());
+void publish_cue(
+    int owner,
+    const char* cue,
+    const std::source_location& location = std::source_location::current());
+void publish_cue(
+    const Engine::Core::Entity& commander,
+    const char* cue,
+    const std::source_location& location = std::source_location::current());
 
 } // namespace Game::Commander

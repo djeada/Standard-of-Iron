@@ -7,7 +7,7 @@
 #include <cstdint>
 
 #include "core/entity.h"
-#include "game/session/checkpoint_values.h"
+#include "game/util/checkpoint_values.h"
 #include "movement_orders_assignment.h"
 #include "route_follow_system_arrival.h"
 #include "route_follow_system_progress.h"
@@ -294,13 +294,13 @@ auto RouteFollowSystem::capture_checkpoint() const -> QJsonObject {
     routes[QString::number(static_cast<qulonglong>(id))] = route.capture_checkpoint();
   }
   return {{"routes", routes},
-          {"prune_tick", Game::Session::CheckpointValues::encode(m_prune_tick)}};
+          {"prune_tick", Game::CheckpointValues::encode(m_prune_tick)}};
 }
 
 auto RouteFollowSystem::restore_checkpoint(const QJsonObject& state) -> bool {
   std::uint64_t prune_tick = 0;
   if (!state.value("routes").isObject() ||
-      !Game::Session::CheckpointValues::decode(state.value("prune_tick"), prune_tick)) {
+      !Game::CheckpointValues::decode(state.value("prune_tick"), prune_tick)) {
     return false;
   }
   decltype(m_routes) restored;

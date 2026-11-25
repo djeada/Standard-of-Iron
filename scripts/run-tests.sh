@@ -185,6 +185,12 @@ if [ "${run_acceptance}" -eq 1 ]; then
       status=1
       failed+=("headless_replay_round_trip")
     fi
+    echo "--- headless_replay_map_checkpoint ---"
+    if ! SOI_HEADLESS="${headless}" bash scripts/check-headless-replay.sh \
+      assets/maps/map_forest.json 24 7; then
+      status=1
+      failed+=("headless_replay_map_checkpoint")
+    fi
   else
     echo "error: ${bin_dir}/soi_headless not built." >&2
     status=1

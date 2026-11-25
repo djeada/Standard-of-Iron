@@ -100,7 +100,7 @@ void read_entities(World* world, const QJsonObject& world_obj) {
     if (entity != nullptr) {
       Serialization::deserialize_entity(entity, entity_obj);
       if (entity_obj.value("pending_removal").toBool()) {
-        entity->add_component<PendingRemovalComponent>();
+        world->emplace<PendingRemovalComponent>(entity->get_id());
       }
     }
   }
@@ -163,14 +163,14 @@ auto Serialization::serialize_world(const World* world,
 
   world->for_each_entity([&entities_array, capture](Entity& entity) {
     if (capture == WorldCapture::Save &&
-        (entity.get_component<ConstructionPreviewComponent>() != nullptr ||
+        (entity.registry()->has<ConstructionPreviewComponent>(entity.get_id()) ||
          is_collapsing_structure(entity))) {
       return;
     }
     auto snapshot = serialize_entity(&entity);
     if (capture == WorldCapture::ReplayCheckpoint) {
       EntityCodec::write_checkpoint_components(entity, snapshot);
-      if (entity.get_component<PendingRemovalComponent>() != nullptr) {
+      if (entity.registry()->has<PendingRemovalComponent>(entity.get_id())) {
         snapshot["pending_removal"] = true;
       }
     }

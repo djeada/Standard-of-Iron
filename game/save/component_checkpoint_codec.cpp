@@ -8,16 +8,16 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
-#include "../session/checkpoint_values.h"
+#include "../util/checkpoint_values.h"
 #include "entity_codec.h"
 
 namespace Engine::Core::EntityCodec {
 namespace {
 
-using Game::Session::CheckpointValues::read;
-using Game::Session::CheckpointValues::read_tuple;
-using Game::Session::CheckpointValues::write;
-using Game::Session::CheckpointValues::write_tuple;
+using Game::CheckpointValues::read;
+using Game::CheckpointValues::read_tuple;
+using Game::CheckpointValues::write;
+using Game::CheckpointValues::write_tuple;
 
 template <typename Component>
 auto fields(Component& component) {
@@ -203,6 +203,16 @@ auto fields(Component& component) {
                     component.telegraph_cue);
   } else if constexpr (std::is_same_v<Type, StaminaComponent>) {
     return std::tie(component.regen_delay_remaining);
+  } else if constexpr (std::is_same_v<Type, WildlifeComponent>) {
+    return std::tie(component.flinch_timer,
+                    component.held_timer,
+                    component.dazed_timer,
+                    component.watched_health,
+                    component.stall_timer,
+                    component.last_x,
+                    component.last_z,
+                    component.stalled,
+                    component.orbit);
   } else if constexpr (std::is_same_v<Type, ForestCoverComponent>) {
     return std::tie(component.in_forest, component.concealed, component.seen_by);
   } else if constexpr (std::is_same_v<Type, ConstructionPreviewComponent>) {
@@ -427,7 +437,7 @@ auto fields(Component& component) {
 
 template <typename T>
 void write_component(const Entity& entity, QJsonObject& out, const char* key) {
-  if (const auto* component = entity.get_component<T>()) {
+  if (const auto* component = entity.registry()->try_get<const T>(entity.get_id())) {
     out[QLatin1String(key)] = write_tuple(fields(*component));
   }
 }
@@ -489,7 +499,9 @@ auto action_fields(Action& action) {
 }
 
 void write_active_action(const Entity& entity, QJsonObject& out) {
-  if (const auto* action = entity.get_component<RpgCommanderActionComponent>()) {
+  if (const auto* action =
+          entity.registry()->try_get<const RpgCommanderActionComponent>(
+              entity.get_id())) {
     QJsonArray hits;
     for (std::size_t index = 0; index < action->hit_target_ids.size(); ++index) {
       hits.append(write(action->hit_target_ids[index],
@@ -535,7 +547,8 @@ auto queue_fields(Queue& queue) {
 }
 
 void write_intents(const Entity& entity, QJsonObject& out) {
-  if (const auto* queue = entity.get_component<CombatIntentQueueComponent>()) {
+  if (const auto* queue = entity.registry()->try_get<const CombatIntentQueueComponent>(
+          entity.get_id())) {
     QJsonArray entries;
     for (std::size_t index = 0; index < queue->count; ++index) {
       const auto& intent = queue->entries[index];
@@ -574,7 +587,8 @@ auto read_intents(Entity& entity, const QJsonObject& in) -> bool {
       return false;
     }
   }
-  entity.add_component<CombatIntentQueueComponent>(std::move(queue));
+  entity.registry()->emplace<CombatIntentQueueComponent>(entity.get_id(),
+                                                         std::move(queue));
   return true;
 }
 
@@ -624,7 +638,7 @@ auto read_contact(const QJsonObject& data, FormationContactComponent& contact) -
   }
   for (const auto row : data.value("indices").toArray()) {
     std::uint16_t index = 0;
-    if (!Game::Session::CheckpointValues::decode(row, index)) {
+    if (!Game::CheckpointValues::decode(row, index)) {
       return false;
     }
     contact.engaged_soldier_indices.push_back(index);
@@ -641,7 +655,9 @@ auto read_contact(const QJsonObject& data, FormationContactComponent& contact) -
 }
 
 void write_construction_ghost(const Entity& entity, QJsonObject& out) {
-  if (const auto* ghost = entity.get_component<ConstructionPreviewComponent>()) {
+  if (const auto* ghost =
+          entity.registry()->try_get<const ConstructionPreviewComponent>(
+              entity.get_id())) {
     out["construction_ghost"] =
         QJsonObject{{"state", write_tuple(fields(*ghost))},
                     {"product", QString::fromStdString(ghost->product_type)}};
@@ -659,13 +675,15 @@ auto read_construction_ghost(Entity& entity, const QJsonObject& in) -> bool {
     return false;
   }
   ghost.product_type = data.value("product").toString().toStdString();
-  entity.add_component<ConstructionPreviewComponent>(std::move(ghost));
+  entity.registry()->emplace<ConstructionPreviewComponent>(entity.get_id(),
+                                                           std::move(ghost));
   return true;
 }
 
 void write_traversal(const Entity& entity, QJsonObject& out) {
   if (const auto* traversal =
-          entity.get_component<UnitTraversalLayoutStateComponent>()) {
+          entity.registry()->try_get<const UnitTraversalLayoutStateComponent>(
+              entity.get_id())) {
     QJsonArray mapping;
     for (const auto index : traversal->stable_slot_mapping) {
       mapping.append(index);
@@ -689,26 +707,31 @@ auto read_traversal(Entity& entity, const QJsonObject& in) -> bool {
   }
   for (const auto row : data.value("mapping").toArray()) {
     std::uint16_t index = 0;
-    if (!Game::Session::CheckpointValues::decode(row, index)) {
+    if (!Game::CheckpointValues::decode(row, index)) {
       return false;
     }
     traversal.stable_slot_mapping.push_back(index);
   }
-  entity.add_component<UnitTraversalLayoutStateComponent>(std::move(traversal));
+  entity.registry()->emplace<UnitTraversalLayoutStateComponent>(entity.get_id(),
+                                                                std::move(traversal));
   return true;
 }
 
 void write_formation(const Entity& entity, QJsonObject& out) {
-  if (const auto* formation = entity.get_component<FormationPresentationComponent>()) {
+  if (const auto* formation =
+          entity.registry()->try_get<const FormationPresentationComponent>(
+              entity.get_id())) {
     out["formation_motion"] =
         QJsonObject{{"state", write_tuple(fields(*formation))},
                     {"soldiers", write_list(formation->soldiers)}};
   }
-  if (const auto* contact = entity.get_component<FormationContactComponent>()) {
+  if (const auto* contact = entity.registry()->try_get<const FormationContactComponent>(
+          entity.get_id())) {
     out["formation_contact"] = write_contact(*contact);
   }
   if (const auto* roster =
-          entity.get_component<FormationRosterPresentationComponent>()) {
+          entity.registry()->try_get<const FormationRosterPresentationComponent>(
+              entity.get_id())) {
     QJsonArray alive;
     for (const auto member : roster->alive) {
       alive.append(member);
@@ -717,10 +740,12 @@ void write_formation(const Entity& entity, QJsonObject& out) {
         QJsonObject{{"state", write_tuple(fields(*roster))}, {"alive", alive}};
   }
   if (const auto* casualties =
-          entity.get_component<SoldierCasualtyAnimationComponent>()) {
+          entity.registry()->try_get<const SoldierCasualtyAnimationComponent>(
+              entity.get_id())) {
     out["soldier_casualties"] = write_list(casualties->entries);
   }
-  if (const auto* reform = entity.get_component<SquadReformComponent>()) {
+  if (const auto* reform =
+          entity.registry()->try_get<const SquadReformComponent>(entity.get_id())) {
     out["squad_reform"] = QJsonObject{{"state", write_tuple(fields(*reform))},
                                       {"soldiers", write_list(reform->soldiers)}};
   }
@@ -734,14 +759,16 @@ auto read_formation(Entity& entity, const QJsonObject& in) -> bool {
         !read_list(data.value("soldiers"), formation.soldiers)) {
       return false;
     }
-    entity.add_component<FormationPresentationComponent>(std::move(formation));
+    entity.registry()->emplace<FormationPresentationComponent>(entity.get_id(),
+                                                               std::move(formation));
   }
   if (in.contains("formation_contact")) {
     FormationContactComponent contact;
     if (!read_contact(in.value("formation_contact").toObject(), contact)) {
       return false;
     }
-    entity.add_component<FormationContactComponent>(std::move(contact));
+    entity.registry()->emplace<FormationContactComponent>(entity.get_id(),
+                                                          std::move(contact));
   }
   if (in.contains("formation_roster")) {
     const auto data = in.value("formation_roster").toObject();
@@ -752,19 +779,21 @@ auto read_formation(Entity& entity, const QJsonObject& in) -> bool {
     }
     for (const auto row : data.value("alive").toArray()) {
       std::uint8_t alive = 0;
-      if (!Game::Session::CheckpointValues::decode(row, alive) || alive > 1) {
+      if (!Game::CheckpointValues::decode(row, alive) || alive > 1) {
         return false;
       }
       roster.alive.push_back(alive);
     }
-    entity.add_component<FormationRosterPresentationComponent>(std::move(roster));
+    entity.registry()->emplace<FormationRosterPresentationComponent>(entity.get_id(),
+                                                                     std::move(roster));
   }
   if (in.contains("soldier_casualties")) {
     SoldierCasualtyAnimationComponent casualties;
     if (!read_list(in.value("soldier_casualties"), casualties.entries)) {
       return false;
     }
-    entity.add_component<SoldierCasualtyAnimationComponent>(std::move(casualties));
+    entity.registry()->emplace<SoldierCasualtyAnimationComponent>(
+        entity.get_id(), std::move(casualties));
   }
   if (in.contains("squad_reform")) {
     const auto data = in.value("squad_reform").toObject();
@@ -773,13 +802,15 @@ auto read_formation(Entity& entity, const QJsonObject& in) -> bool {
         !read_list(data.value("soldiers"), reform.soldiers)) {
       return false;
     }
-    entity.add_component<SquadReformComponent>(std::move(reform));
+    entity.registry()->emplace<SquadReformComponent>(entity.get_id(),
+                                                     std::move(reform));
   }
   return true;
 }
 
 void write_engagement(const Entity& entity, QJsonObject& out) {
-  if (const auto* engagement = entity.get_component<RpgEngagementComponent>()) {
+  if (const auto* engagement =
+          entity.registry()->try_get<const RpgEngagementComponent>(entity.get_id())) {
     out["rpg_engagement"] =
         QJsonObject{{"state", write_tuple(fields(*engagement))},
                     {"slots", write_list(engagement->engagement_slots)},
@@ -798,7 +829,8 @@ auto read_engagement(Entity& entity, const QJsonObject& in) -> bool {
       !read_list(data.value("tenure"), engagement.press_tenure)) {
     return false;
   }
-  entity.add_component<RpgEngagementComponent>(std::move(engagement));
+  entity.registry()->emplace<RpgEngagementComponent>(entity.get_id(),
+                                                     std::move(engagement));
   return true;
 }
 
@@ -821,6 +853,7 @@ void write_checkpoint_components(const Entity& entity, QJsonObject& out) {
   write_component<AttackComponent>(entity, components, "attack_extras");
   write_component<CombatStateComponent>(entity, components, "combat_state_extras");
   write_component<StaminaComponent>(entity, components, "stamina_regen");
+  write_component<WildlifeComponent>(entity, components, "wildlife_timers");
   write_component<ForestCoverComponent>(entity, components, "forest_cover");
   write_component<AssaultWaveComponent>(entity, components, "assault_wave");
   write_component<ThreatAlertComponent>(entity, components, "threat_alert");
@@ -865,6 +898,7 @@ auto read_checkpoint_components(Entity& entity, const QJsonObject& snapshot) -> 
          read_component<CombatStateComponent>(
              entity, components, "combat_state_extras") &&
          read_component<StaminaComponent>(entity, components, "stamina_regen") &&
+         read_component<WildlifeComponent>(entity, components, "wildlife_timers") &&
          read_component<ForestCoverComponent>(entity, components, "forest_cover") &&
          read_component<AssaultWaveComponent>(entity, components, "assault_wave") &&
          read_component<ThreatAlertComponent>(entity, components, "threat_alert") &&

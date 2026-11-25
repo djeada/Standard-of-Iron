@@ -4,10 +4,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
+#include "game/audio/cue_ids.h"
 #include "game/commander/commander_entity_access.h"
 #include "game/commander/commander_motor.h"
-#include "game/audio/cue_ids.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
@@ -172,12 +173,17 @@ auto CommanderAbilities::try_shield_bash(const CommanderAbilityContext& context)
   auto& owners = Game::Session::session_for(world).owners();
   const QVector3D cmd_pos(
       transform->position.x, transform->position.y, transform->position.z);
-  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+  auto& spatial = world.spatial_index();
+  spatial.refresh(world);
+  std::vector<const Engine::Core::WorldSpatialIndex::Entry*> candidates;
+  spatial.query_radius(cmd_pos.x(), cmd_pos.z(), k_bash_range, candidates);
+  for (const auto* entry : candidates) {
+    auto* entity = world.get_entity(entry->id);
     if (entity == nullptr || entity->get_id() == context.commander_id) {
       continue;
     }
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* ent_tf = entity->get_component<Engine::Core::TransformComponent>();
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entry->id);
+    const auto* ent_tf = world.try_get<Engine::Core::TransformComponent>(entry->id);
     if (unit == nullptr || ent_tf == nullptr ||
         Game::Systems::Combat::evaluate_target(
             owners,

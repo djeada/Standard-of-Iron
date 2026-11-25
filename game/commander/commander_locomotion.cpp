@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
-#include "game/commander/commander_heading.h"
 #include "game/audio/cue_ids.h"
+#include "game/commander/commander_heading.h"
 #include "game/core/component.h"
 #include "game/core/ford_rules.h"
 #include "game/systems/combat_actions/combat_action_definition.h"

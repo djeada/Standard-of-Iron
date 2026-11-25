@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <cmath>
 
-#include "game/session/checkpoint_values.h"
+#include "game/util/checkpoint_values.h"
 #include "util/planar_math.h"
 
 namespace Game::Systems {
 
 auto MovementRoute::capture_checkpoint() const -> QJsonObject {
-  using Game::Session::CheckpointValues::write;
+  using Game::CheckpointValues::write;
   QJsonArray points;
   for (const auto& point : m_points) {
     points.append(write(point.x, point.z, point.cumulative));
@@ -31,7 +31,7 @@ auto MovementRoute::capture_checkpoint() const -> QJsonObject {
 }
 
 auto MovementRoute::restore_checkpoint(const QJsonObject& state) -> bool {
-  using Game::Session::CheckpointValues::read;
+  using Game::CheckpointValues::read;
   MovementRoute route;
   if (!read(state.value("cursor"),
             route.m_route_revision,

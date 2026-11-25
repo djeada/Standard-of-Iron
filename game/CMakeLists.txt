@@ -36,6 +36,7 @@ add_library(
     engine_core
     STATIC
     core/entity.cpp
+    core/player_feedback.cpp
     core/registry.cpp
     core/component.cpp
     core/system.cpp
@@ -499,7 +500,6 @@ target_link_libraries(soi_wildlife PUBLIC engine_core PRIVATE soi_combat)
 add_library(
     game_sim
     STATIC
-    core/player_feedback.cpp
     commander/commander_abilities.cpp
     commander/commander_body_facing.cpp
     commander/commander_defence.cpp

@@ -1,15 +1,15 @@
 #include <QJsonObject>
 
 #include "arrow_projectile.h"
-#include "game/session/checkpoint_values.h"
+#include "game/util/checkpoint_values.h"
 #include "projectile_system.h"
 #include "stone_projectile.h"
 
 namespace Game::Systems {
 namespace {
 
-using Game::Session::CheckpointValues::read;
-using Game::Session::CheckpointValues::write;
+using Game::CheckpointValues::read;
+using Game::CheckpointValues::write;
 
 auto encode_vector(const QVector3D& value) -> QJsonArray {
   return write(value.x(), value.y(), value.z());

@@ -8,7 +8,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace Game::Session::CheckpointValues {
+namespace Game::CheckpointValues {
 
 template <typename T>
 auto encode(T value) -> QJsonValue {
@@ -90,4 +90,4 @@ auto read_tuple(const QJsonValue& value, const std::tuple<T...>& fields) -> bool
   return std::apply([&](auto&... values) { return read(value, values...); }, fields);
 }
 
-} // namespace Game::Session::CheckpointValues
+} // namespace Game::CheckpointValues

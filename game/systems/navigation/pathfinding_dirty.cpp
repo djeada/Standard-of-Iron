@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "game/core/nav_profile.h"
-#include "game/session/checkpoint_values.h"
+#include "game/util/checkpoint_values.h"
 #include "gate_service.h"
 #include "map/forest_outline.h"
 #include "map/terrain.h"
@@ -125,7 +125,7 @@ auto Pathfinding::obstruction_revision() const -> std::uint64_t {
 }
 
 auto Pathfinding::capture_checkpoint() const -> QJsonArray {
-  using Game::Session::CheckpointValues::write;
+  using Game::CheckpointValues::write;
   const auto release = last_obstruction_release();
   return write(navigation_revision(),
                obstruction_revision(),
@@ -136,7 +136,7 @@ auto Pathfinding::capture_checkpoint() const -> QJsonArray {
 }
 
 auto Pathfinding::restore_checkpoint(const QJsonArray& state) -> bool {
-  using Game::Session::CheckpointValues::read;
+  using Game::CheckpointValues::read;
   std::uint64_t nav_revision = 0;
   std::uint64_t release_revision = 0;
   bool located = false;

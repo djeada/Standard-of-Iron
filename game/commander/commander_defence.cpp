@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <utility>
 
-#include "game/commander/commander_entity_access.h"
 #include "game/audio/cue_ids.h"
+#include "game/commander/commander_entity_access.h"
 #include "game/core/component.h"
 #include "game/systems/combat_actions/commander_defense_timeline.h"
 

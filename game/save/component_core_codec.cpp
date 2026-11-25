@@ -16,10 +16,10 @@
 #include "../core/component.h"
 #include "../core/death_sequence.h"
 #include "../core/entity.h"
-#include "../session/checkpoint_values.h"
 #include "../systems/nation_id.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
+#include "../util/checkpoint_values.h"
 #include "entity_codec.h"
 #include "serialization.h"
 
@@ -474,17 +474,19 @@ auto movement_progress_fields(Facts& facts) {
 }
 
 void write_movement_progress(const Entity* entity, QJsonObject& json) {
-  if (const auto* facts = entity->get_component<MovementFactsComponent>()) {
+  if (const auto* facts =
+          entity->registry()->try_get<const MovementFactsComponent>(entity->get_id())) {
     json["movement_progress"] =
-        Game::Session::CheckpointValues::write_tuple(movement_progress_fields(*facts));
+        Game::CheckpointValues::write_tuple(movement_progress_fields(*facts));
   }
 }
 
 void read_movement_progress(Entity* entity, const QJsonObject& json) {
   MovementFactsComponent facts;
-  if (Game::Session::CheckpointValues::read_tuple(json.value("movement_progress"),
-                                                  movement_progress_fields(facts))) {
-    entity->add_component<MovementFactsComponent>(std::move(facts));
+  if (Game::CheckpointValues::read_tuple(json.value("movement_progress"),
+                                         movement_progress_fields(facts))) {
+    entity->registry()->emplace<MovementFactsComponent>(entity->get_id(),
+                                                        std::move(facts));
   }
 }
 

@@ -319,6 +319,7 @@ TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
   EXPECT_EQ(manager.construction_preview_segment_count(), 0);
   EXPECT_FALSE(builder_prod->has_construction_site);
 
+  const auto next_entity = world.get_next_entity_id();
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
 
@@ -341,6 +342,7 @@ TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
       previews.front()->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(preview_transform, nullptr);
   EXPECT_FLOAT_EQ(preview_transform->rotation.y, 90.0F);
+  EXPECT_EQ(world.get_next_entity_id(), next_entity);
 }
 
 TEST_F(ProductionManagerTest, WallConstructionKeepsRotatedSingleSegmentOrientation) {
