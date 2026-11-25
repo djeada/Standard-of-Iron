@@ -137,6 +137,12 @@ jobs:
           cmake --build build --parallel \
             --target soi_test_binaries content_validator standard_of_iron
 
+      # The shared precompiled headers (cmake/PrecompiledHeaders.cmake) are
+      # reused silently: GCC ignores a .gch whose flags drifted, and the build
+      # only gets slower and the compiler cache fills up again.
+      - name: Shared PCH stays shared
+        run: python3 scripts/check-shared-pch.py --build-dir build --jobs 4
+
       - name: Save baked assets
         # Seed new PRs from main. Key by the outputs so unrelated commits
         # do not consume more of the cache quota.
