@@ -40,7 +40,9 @@ All nine test binaries are built and executed. The pull-request profile excludes
 - **Only a push to `main` saves `pr-fast-ubuntu-24.04-Debug`.** Pull requests restore it; a per-PR save is readable by no other ref.
 - **Nothing scheduled saves.** GitHub drops a cache nobody reads for seven days, so a Monday save is gone before the next Monday and only evicts `main`'s meanwhile. The Debug lanes that share the pull-request configuration (portability, the extended full-test and terrain jobs) restore its key instead, and must configure with exactly the same flags to hit it.
 - **Release tags do not save.** A tag's cache can only be read by that tag.
-- **`max-size` must hold a whole build.** At 1G ccache evicted the build's own objects mid-build (1256 cleanups), so the saved cache never matched what the next run compiled.
+- **`max-size` must hold a whole build.** At 1G ccache evicted the build's own objects mid-build (1256 cleanups), so the saved cache never matched what the next run compiled. At 2G it happened again once the tree grew: a whole cold build is ~2,100 objects and ~2 GB, so the cache sat at 99.7% with 251 cleanups. It is 3G now; re-measure before raising it further, because the same 10 GB quota holds Qt, FetchContent and baked-asset caches.
+- **Runs on `main` are never cancelled.** The main run saves the cache; a run cancelled by the next merge saves nothing. Pull-request runs still cancel when superseded.
+- **The build waits for the quality lane.** Formatting and policy finish in about three minutes, against a 25-45 minute build, so a formatting failure no longer pays for the build.
 
 CI configures Debug with `-DSOI_DEBUG_INFO=lines -DSOI_LINKER=mold` (`cmake/BuildSpeed.cmake`): line-table debug info keeps backtraces and sanitizer reports and makes the objects smaller to link and cache. When builds get slow, start from `gh api repos/{owner}/{repo}/actions/cache/usage`, `gh cache list`, and the ccache statistics block the job prints in its post-job cleanup.
 

@@ -77,9 +77,12 @@ AudioBattleLoadTest.*
 CampaignWaveAssaultTest.*
 # Plays every Barcid Road mission to its end, up to 25 game minutes each.
 CampaignPlaythroughTest.*
-# Runs the opening of both full-size cities with their garrisons and residents.
-ShippedSkirmishMaps/SkirmishStartingStrengthTest.EveryStartingSquadTakesTheFieldAtFullStrength/carthage
-ShippedSkirmishMaps/SkirmishStartingStrengthTest.EveryStartingSquadTakesTheFieldAtFullStrength/rome
+# Starts a full 2v2 skirmish on every shipped skirmish map and plays its first 20 s
+# with the AI running: 10-18 s per map on a pull-request runner in Debug
+# (copper_canyons 17.5 s, amber_delta 12.6 s, mountain 10.6 s), and the two
+# full-size cities cost more. SkirmishStartingStrengthCatalogTest keeps the
+# check that every offered map is covered on PRs.
+ShippedSkirmishMaps/SkirmishStartingStrengthTest.*
 # Runs the first minutes of every full-size city seat with its garrison, camp
 # workers and AI: 34 s and 29 s for Carthage and Rome on a pull-request runner
 # in Debug.

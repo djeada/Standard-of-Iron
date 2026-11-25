@@ -125,7 +125,7 @@ jobs:
           # Same compiler and flags as the pull-request lane, whose cache main
           # keeps warm. Restore it; never save (see the simulation job).
           key: pr-fast-ubuntu-24.04-Debug
-          max-size: 2G
+          max-size: 3G
           save: false
 
       - name: Cache CMake FetchContent dependencies
@@ -218,7 +218,7 @@ jobs:
           # Same compiler and flags as the pull-request lane, whose cache main
           # keeps warm. Restore it; never save (see the simulation job).
           key: pr-fast-ubuntu-24.04-Debug
-          max-size: 2G
+          max-size: 3G
           save: false
 
       - name: Cache CMake FetchContent dependencies
