@@ -141,4 +141,76 @@ void Registry::reserve_indices_below(std::uint32_t index) {
   }
 }
 
+auto Registry::capture_checkpoint() const -> RegistryCheckpoint {
+  const Lock lock(*this);
+  RegistryCheckpoint state;
+  state.generations.reserve(m_slots.size());
+  for (const auto& slot : m_slots) {
+    state.generations.push_back(slot.generation);
+  }
+  state.free_slots = m_free_slots;
+  for (const auto& store : m_storages) {
+    if (store != nullptr && !store->empty()) {
+      const auto ids = store->entities();
+      state.component_orders.push_back(
+          {store->type().name(), {ids.begin(), ids.end()}});
+    }
+  }
+  std::sort(state.component_orders.begin(),
+            state.component_orders.end(),
+            [](const auto& left, const auto& right) { return left.type < right.type; });
+  return state;
+}
+
+auto Registry::restore_checkpoint(const RegistryCheckpoint& state) -> bool {
+  const Lock lock(*this);
+  if (state.generations.size() != m_live_count + state.free_slots.size() + 1) {
+    return false;
+  }
+  std::vector<bool> free(state.generations.size(), false);
+  for (const auto index : state.free_slots) {
+    if (index == 0 || index >= free.size() || free[index] ||
+        entity_at_index(index) != NULL_ENTITY) {
+      return false;
+    }
+    free[index] = true;
+  }
+  for (std::size_t index = 1; index < state.generations.size(); ++index) {
+    if (!free[index] &&
+        entity_at_index(static_cast<std::uint32_t>(index)) !=
+            Handle::make(static_cast<std::uint32_t>(index), state.generations[index])) {
+      return false;
+    }
+  }
+  for (auto& store : m_storages) {
+    if (store == nullptr || store->empty()) {
+      continue;
+    }
+    const auto found = std::find_if(
+        state.component_orders.begin(),
+        state.component_orders.end(),
+        [&](const auto& order) { return order.type == store->type().name(); });
+    if (found == state.component_orders.end()) {
+      continue;
+    }
+    std::uint32_t next = 0;
+    for (const auto id : found->entities) {
+      const auto index = store->dense_index_of(id);
+      if (index == IComponentStorage::k_absent) {
+        continue;
+      }
+      if (index < next) {
+        return false;
+      }
+      store->swap_dense(next++, index);
+    }
+  }
+  m_slots.resize(state.generations.size());
+  for (std::size_t index = 0; index < m_slots.size(); ++index) {
+    m_slots[index].generation = state.generations[index];
+  }
+  m_free_slots = state.free_slots;
+  return true;
+}
+
 } // namespace Engine::Core

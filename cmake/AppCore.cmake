@@ -20,7 +20,6 @@ add_library(
     app/core/game_engine_wiring.cpp
     app/core/language_manager.cpp
     app/core/match_presentation_sync.cpp
-    app/core/player_feedback.cpp
     app/core/frame_snapshot.cpp
     app/core/runtime_frame_orchestrator.cpp
     app/core/simulation_lifecycle.cpp
@@ -53,29 +52,15 @@ add_library(
     app/session/skirmish_runtime_coordinator.cpp
     app/session/world_bootstrap.cpp
     # app/commander -- the first-person control mode and its camera.
-    app/commander/commander_abilities.cpp
-    app/commander/commander_body_facing.cpp
     app/commander/commander_camera_rig.cpp
     app/commander/commander_control_controller.cpp
-    app/commander/commander_defence.cpp
-    app/commander/commander_entity_access.cpp
-    app/commander/commander_input_port.cpp
-    app/commander/commander_locomotion.cpp
     app/commander/commander_look.cpp
-    app/commander/commander_lunge.cpp
-    app/commander/commander_motor.cpp
     app/commander/commander_pointer_capture.cpp
-    app/commander/commander_wall_deck.cpp
-    app/commander/commander_latency_probe.cpp
     app/commander/commander_mode_coordinator.cpp
     app/commander/commander_presentation.cpp
-    app/commander/commander_primary_scan.cpp
     app/commander/commander_bearings.cpp
     app/commander/commander_finale.cpp
     app/commander/commander_status_builder.cpp
-    app/commander/commander_strike.cpp
-    app/commander/commander_targeting.cpp
-    app/commander/commander_tick_trace.cpp
     app/commander/rts_camera_bookmark.cpp
     # app/input -- pointer and key gestures, before they become orders.
     app/input/cursor_manager.cpp

@@ -456,12 +456,15 @@ void GameEngine::wire_event_subscriptions() {
   m_mission_announcement_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>(
           [this](const Engine::Core::MissionAnnouncementEvent& e) {
-            if (e.text.isEmpty() ||
-                !Engine::Core::LocalAudience{m_runtime.local_owner_id}.includes(
-                    e.owner_id)) {
+            const Engine::Core::LocalAudience audience{m_runtime.local_owner_id};
+            const auto& text =
+                audience.is_local(e.personal_owner_id) && !e.personal_text.isEmpty()
+                    ? e.personal_text
+                    : e.text;
+            if (text.isEmpty() || !audience.includes(e.owner_id)) {
               return;
             }
-            m_mission->queue_announcement(e.text);
+            m_mission->queue_announcement(text);
           });
 
   m_combat_hit_subscription =

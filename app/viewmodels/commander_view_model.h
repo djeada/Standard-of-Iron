@@ -133,12 +133,13 @@ public:
   should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
 
   void update_control_mode(float dt);
+  void publish_commander_tick(float dt);
   void sample_frame_intent();
   void update_camera_presentation(float dt);
   [[nodiscard]] auto frame_intent() const -> const CommanderFrameIntent& {
     return m_control.frame_intent();
   }
-  [[nodiscard]] auto input_edges() const -> const App::Core::CommanderInputTrace& {
+  [[nodiscard]] auto input_edges() const -> Game::Commander::CommanderInputTrace {
     return m_control.input_edges();
   }
 

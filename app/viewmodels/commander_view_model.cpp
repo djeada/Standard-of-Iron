@@ -21,6 +21,8 @@
 #include "game/audio/audio_system.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
+#include "game/command/command_system.h"
+#include "game/commander/commander_handoff.h"
 #include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -125,22 +127,7 @@ auto CommanderViewModel::find_local_commander() const -> Engine::Core::Entity* {
   if (world == nullptr) {
     return nullptr;
   }
-  const int owner = m_context.local_owner_id;
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr) {
-      continue;
-    }
-    if (unit->owner_id == owner && unit->health > 0) {
-      return entity;
-    }
-  }
-  return nullptr;
+  return Game::Commander::find_commander(*world, m_context.local_owner_id);
 }
 
 auto CommanderViewModel::controlled_commander_entity() const -> Engine::Core::Entity* {
@@ -213,6 +200,9 @@ void CommanderViewModel::enter_mode() {
   m_camera.set_following_selection(false);
 
   m_controlled_commander_id = effects.controlled_commander_id;
+  if (auto* system = m_context.world->get_system<Game::Command::CommandSystem>()) {
+    m_control.bind_runtime(system->commander_runtime(m_context.local_owner_id));
+  }
   if (effects.commander_view_yaw.has_value()) {
     m_control.set_view_yaw(*effects.commander_view_yaw);
   }
@@ -223,11 +213,8 @@ void CommanderViewModel::enter_mode() {
   enter_commander_runtime_mode();
 
   if (auto* world = m_context.world; world != nullptr) {
-    (void)m_control.update(*world,
-                           m_controlled_commander_id,
-                           m_context.local_owner_id,
-                           *commander_camera,
-                           0.0F);
+    m_control.update_camera_presentation(
+        *world, m_controlled_commander_id, *commander_camera, 0.0F);
   }
   if (m_context.rts_camera != nullptr && m_rts_camera_bookmark.valid &&
       !Game::Accessibility::MotionSettings::reduced_motion()) {
@@ -280,6 +267,7 @@ void CommanderViewModel::leave_commander_mode() {
            m_rts_follow_selection_snapshot.value_or(false)});
   enter_rts_runtime_mode();
   m_controlled_commander_id = effects.controlled_commander_id;
+  m_control.bind_runtime(nullptr);
 
   restore_rts_camera();
   emit active_camera_requested(m_context.rts_camera);
@@ -381,6 +369,7 @@ void CommanderViewModel::release_input() {
     return;
   }
   const auto frame_lock = m_host.lock_frame();
+  (void)queue_action(Game::Command::CommanderAction::ReleaseInput);
   m_control.release_all_input();
 }
 
@@ -964,6 +953,12 @@ void CommanderViewModel::sample_frame_intent() {
   m_control.sample_frame_intent(m_context.window);
 }
 
+void CommanderViewModel::publish_commander_tick(float dt) {
+  if (active() && m_context.world != nullptr) {
+    m_control.publish_runtime_tick(*m_context.world, m_controlled_commander_id, dt);
+  }
+}
+
 void CommanderViewModel::update_camera_presentation(float dt) {
   if (!active() || m_context.world == nullptr ||
       m_context.commander_camera == nullptr) {
@@ -1069,6 +1064,7 @@ auto CommanderViewModel::begin_finale(App::Core::CommanderFinale::Kind kind) -> 
                            transform->position.x, transform->position.z),
                        transform->position.z);
   }
+  (void)queue_action(Game::Command::CommanderAction::ReleaseInput);
   m_control.release_all_input();
   m_finale.begin(kind, ground, camera->get_position(), camera->get_target());
   m_finale_body_live = kind != App::Core::CommanderFinale::Kind::Fallen;
@@ -1136,7 +1132,8 @@ void CommanderViewModel::finish_finale() {
 
 auto CommanderViewModel::queue_action(Game::Command::CommanderAction action) -> bool {
   auto* world = m_context.world;
-  if (m_applying_logged_action || world == nullptr) {
+  if (m_applying_logged_action || world == nullptr ||
+      world->get_system<Game::Command::CommandSystem>() == nullptr) {
     return false;
   }
   auto* session = Game::Session::SessionContext::for_world(*world);
@@ -1188,30 +1185,10 @@ void CommanderViewModel::apply_logged_action(
   case CommanderAction::ToggleControl:
     toggle_mode();
     break;
-  case CommanderAction::CycleLockOn:
-    m_control.set_view_yaw(record.view_yaw);
-    m_control.set_view_pitch(record.view_pitch);
-    cycle_lock_on();
-    break;
-  case CommanderAction::ToggleLockOn:
-    m_control.set_view_yaw(record.view_yaw);
-    m_control.set_view_pitch(record.view_pitch);
-    toggle_lock_on();
-    break;
-  case CommanderAction::SwitchLockLeft:
-    switch_lock_target(-1);
-    break;
-  case CommanderAction::SwitchLockRight:
-    switch_lock_target(1);
-    break;
-  case CommanderAction::ToggleCameraMode:
-    toggle_camera_mode();
-    break;
-  case CommanderAction::ToggleWeaponStance:
-    toggle_weapon_stance();
-    break;
   case CommanderAction::ReleaseForRally:
     release_for_rally();
+    break;
+  default:
     break;
   }
 }
@@ -1220,12 +1197,6 @@ void CommanderViewModel::release_for_rally() {
   const auto frame_lock = m_host.lock_frame();
   if (!active()) {
     return;
-  }
-  if (auto* world = m_context.world; world != nullptr) {
-    if (auto* data = world->try_get<Engine::Core::CommanderComponent>(
-            m_controlled_commander_id)) {
-      data->fpv_controlled = false;
-    }
   }
   release_input_for_rally();
   m_rally_preview.reset();

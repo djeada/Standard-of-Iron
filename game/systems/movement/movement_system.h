@@ -12,6 +12,8 @@
 #include "movement_system_duel_footwork.h"
 #include "movement_system_path_requests.h"
 
+class QJsonObject;
+
 namespace Engine::Core {
 class Entity;
 }
@@ -26,6 +28,9 @@ public:
   void update(Engine::Core::World* world, float delta_time) override;
 
   [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   class Assignment;
   class GroupIssue;

@@ -154,6 +154,39 @@ protected:
   std::unique_ptr<Game::Systems::VictoryService> m_service;
 };
 
+TEST_F(VictoryServiceTest, EliminationReportsTheTeamOutcomeForAllParticipants) {
+  using namespace Game::Systems;
+  auto& owners = OwnerRegistry::instance();
+  owners.register_owner_with_id(4, OwnerType::AI, "Independent");
+  owners.set_owner_team(2, 4);
+  owners.set_local_player_id(0);
+
+  Engine::Core::World world;
+  const auto type = Game::Units::SpawnType::Archer;
+  ASSERT_NE(create_unit(world, 3, type), nullptr);
+  auto* opponent = create_unit(world, 2, type);
+  auto* independent = create_unit(world, 4, type);
+  ASSERT_NE(opponent, nullptr);
+  ASSERT_NE(independent, nullptr);
+
+  auto outcomes = team_elimination_outcomes(world, owners);
+  ASSERT_EQ(outcomes.size(), 3U);
+  EXPECT_EQ(outcomes[0].team, (CompetingTeam{.unteamed_owner = 4}));
+  EXPECT_EQ(outcomes[1].team, (CompetingTeam{.team_id = 1}));
+  EXPECT_EQ(outcomes[2].team, (CompetingTeam{.team_id = 4}));
+  for (const auto& result : outcomes) {
+    EXPECT_EQ(result.outcome, EliminationOutcome::Playing);
+  }
+
+  independent->get_component<Engine::Core::UnitComponent>()->health = 0;
+  opponent->get_component<Engine::Core::UnitComponent>()->health = 0;
+  outcomes = team_elimination_outcomes(world, owners);
+  ASSERT_EQ(outcomes.size(), 3U);
+  EXPECT_EQ(outcomes[0].outcome, EliminationOutcome::Defeat);
+  EXPECT_EQ(outcomes[1].outcome, EliminationOutcome::Victory);
+  EXPECT_EQ(outcomes[2].outcome, EliminationOutcome::Defeat);
+}
+
 TEST_F(VictoryServiceTest, ASpectatedMatchIsNotLostByTheEmptySeatTheCameraSitsIn) {
   Engine::Core::World world;
   ASSERT_NE(create_unit(world, 2, Game::Units::SpawnType::Barracks), nullptr);

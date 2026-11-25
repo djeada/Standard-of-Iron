@@ -27,6 +27,8 @@ public:
 
   [[nodiscard]] auto
   route_for(Engine::Core::EntityID entity_id) const -> const MovementRoute*;
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   class Steering;
 

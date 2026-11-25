@@ -1,5 +1,7 @@
 #include "app/economy/construction_preview.h"
 
+#include <utility>
+
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -39,38 +41,7 @@ ConstructionPreview::ConstructionPreview(Engine::Core::World* world, QObject* pa
 }
 
 void ConstructionPreview::clear_entities() {
-  if (m_world == nullptr) {
-    m_entity_ids.clear();
-    return;
-  }
-
-  for (auto entity_id : m_entity_ids) {
-    if (m_world->get_entity(entity_id) != nullptr) {
-      m_world->destroy_entity(entity_id);
-    }
-  }
-  m_entity_ids.clear();
-}
-
-void ConstructionPreview::hand_to_construction_site(const QString& item_type) {
-  if (m_world == nullptr) {
-    clear_entities();
-    return;
-  }
-
-  for (auto entity_id : m_entity_ids) {
-    auto* preview =
-        m_world->try_get<Engine::Core::ConstructionPreviewComponent>(entity_id);
-    if (preview == nullptr) {
-      m_world->destroy_entity(entity_id);
-      continue;
-    }
-    preview->site_ghost = true;
-    preview->valid = true;
-    preview->progress = 0.0F;
-    preview->product_type = item_type.toStdString();
-  }
-  m_entity_ids.clear();
+  m_render_world.reset();
 }
 
 void ConstructionPreview::show_structure(const QString& item_type,
@@ -82,7 +53,8 @@ void ConstructionPreview::show_structure(const QString& item_type,
     return;
   }
 
-  auto* entity = m_world->create_entity();
+  auto preview_world = Engine::Core::World::make_render_world();
+  auto* entity = preview_world->create_entity();
   if (entity == nullptr) {
     return;
   }
@@ -90,7 +62,6 @@ void ConstructionPreview::show_structure(const QString& item_type,
   auto* transform = entity->add_component<Engine::Core::TransformComponent>();
   auto* preview = entity->add_component<Engine::Core::ConstructionPreviewComponent>();
   if (transform == nullptr || preview == nullptr) {
-    m_world->destroy_entity(entity->get_id());
     return;
   }
 
@@ -103,7 +74,6 @@ void ConstructionPreview::show_structure(const QString& item_type,
   auto* renderable =
       Game::Units::add_building_renderable(*entity, owner.nation_id, type);
   if (renderable == nullptr) {
-    m_world->destroy_entity(entity->get_id());
     return;
   }
   renderable->visible = false;
@@ -113,7 +83,7 @@ void ConstructionPreview::show_structure(const QString& item_type,
   preview->valid = m_valid;
   preview->product_type = type;
 
-  m_entity_ids.push_back(entity->get_id());
+  m_render_world = std::move(preview_world);
 }
 
 void ConstructionPreview::show_wall_plan(
@@ -132,8 +102,9 @@ void ConstructionPreview::show_wall_plan(
                                     : "wall_segment";
   const QVector3D scale = Game::Units::building_transform_scale(product_type);
 
+  auto preview_world = Engine::Core::World::make_render_world();
   for (const auto& segment : segments) {
-    auto* entity = m_world->create_entity();
+    auto* entity = preview_world->create_entity();
     if (entity == nullptr) {
       continue;
     }
@@ -142,7 +113,7 @@ void ConstructionPreview::show_wall_plan(
     auto* renderable = entity->add_component<Engine::Core::RenderableComponent>();
     auto* preview = entity->add_component<Engine::Core::ConstructionPreviewComponent>();
     if (transform == nullptr || renderable == nullptr || preview == nullptr) {
-      m_world->destroy_entity(entity->get_id());
+      preview_world->destroy_entity(entity->get_id());
       continue;
     }
 
@@ -167,9 +138,8 @@ void ConstructionPreview::show_wall_plan(
     preview->grid_z = segment.grid_z;
     preview->valid = segment.valid;
     preview->product_type = product_type;
-
-    m_entity_ids.push_back(entity->get_id());
   }
+  m_render_world = std::move(preview_world);
 }
 
 void ConstructionPreview::set_active(bool active) {

@@ -1,6 +1,7 @@
 #include "world_digest.h"
 
 #include <QByteArray>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 
@@ -9,12 +10,15 @@
 #include <cstdio>
 #include <vector>
 
+#include "../command/command_system.h"
 #include "../core/component_commander.h"
 #include "../core/component_economy.h"
 #include "../core/component_gameplay.h"
 #include "../core/component_structures.h"
 #include "../core/world.h"
 #include "../map/visibility_service.h"
+#include "../systems/alliance_board.h"
+#include "../systems/economy/marketplace_system.h"
 #include "../systems/owner_registry.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/resource_types.h"
@@ -40,8 +44,13 @@ void mix(std::uint64_t& digest, std::uint64_t value) {
 auto systems_digest(SessionContext& session) -> std::uint64_t {
   std::uint64_t digest = k_offset;
   mix(digest, session.simulation_visibility().generation());
-  const QJsonObject view =
-      SessionSnapshot::digest_view(SnapshotScope{.world = &session.world()});
+  auto view = SessionSnapshot::digest_view(SnapshotScope{.world = &session.world()});
+  if (const auto* commands =
+          session.world().get_system<Game::Command::CommandSystem>()) {
+    view["commander_control"] = commands->capture_checkpoint();
+  }
+  view["alliance"] = session.alliance().capture_checkpoint();
+  view["tribute"] = session.marketplace().capture_checkpoint();
   const QByteArray bytes = QJsonDocument(view).toJson(QJsonDocument::Compact);
   for (const char byte : bytes) {
     digest ^= static_cast<std::uint8_t>(byte);

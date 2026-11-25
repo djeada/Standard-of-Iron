@@ -32,6 +32,8 @@ public:
   void process(Engine::Core::World& world, ApplyRoute apply);
 
 private:
+  friend class MovementSystem;
+
   struct PendingPathRequest {
     Engine::Core::EntityID entity_id{0};
     QVector3D target;

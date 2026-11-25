@@ -84,20 +84,22 @@ auto app_source(const std::filesystem::path& root,
 auto commander_control_source(const std::filesystem::path& root) -> std::string {
   std::string combined;
   for (const std::string_view name : {"commander_control_controller.cpp",
+                                      "commander_look.cpp",
+                                      "commander_presentation.cpp"}) {
+    combined += app_source(root, name) + '\n';
+  }
+  for (const std::string_view name : {"commander_runtime.cpp",
                                       "commander_defence.cpp",
                                       "commander_entity_access.cpp",
                                       "commander_body_facing.cpp",
                                       "commander_input_port.cpp",
                                       "commander_locomotion.cpp",
-                                      "commander_look.cpp",
                                       "commander_lunge.cpp",
-                                      "commander_presentation.cpp",
                                       "commander_primary_scan.cpp",
                                       "commander_strike.cpp",
                                       "commander_targeting.cpp",
                                       "commander_tick_trace.cpp"}) {
-    combined += app_source(root, name);
-    combined += '\n';
+    combined += read_text(root / "game" / "commander" / name) + '\n';
   }
   return combined;
 }
@@ -753,7 +755,9 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "game" / "command" / "command_unit_orders.cpp");
   const auto game_engine = app_source(root, "game_engine.cpp");
   const auto controller = commander_control_source(root);
-  const auto commander_mode = app_source(root, "commander_mode_coordinator.cpp");
+  const auto commander_mode =
+      app_source(root, "commander_mode_coordinator.cpp") +
+      read_text(root / "game" / "commander" / "commander_handoff.cpp");
   ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
   ASSERT_FALSE(movement_system.empty());
@@ -916,7 +920,9 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
       read_text(root / "game" / "core" / "component_commander.h") +
       read_text(root / "game" / "core" / "component_presentation.h");
   const auto controller_source = commander_control_source(root);
-  const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
+  const auto commander_mode_source =
+      app_source(root, "commander_mode_coordinator.cpp") +
+      read_text(root / "game" / "commander" / "commander_handoff.cpp");
   // instance_prepare is split along its stages; read every piece.
   const auto runtime_dir = root / "render" / "creature" / "humanoid" / "runtime";
   const auto prepare_submission_source =
@@ -967,7 +973,8 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
 TEST(CommanderControlRegressionTest, OnlyTheMotorTranslatesTheCommander) {
   const auto root = find_repo_root();
   const auto controller_source = commander_control_source(root);
-  const auto motor_source = app_source(root, "commander_motor.cpp");
+  const auto motor_source =
+      read_text(root / "game" / "commander" / "commander_motor.cpp");
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(motor_source.empty());
 
@@ -1010,7 +1017,8 @@ TEST(CommanderControlRegressionTest, OnlyTheMotorTranslatesTheCommander) {
 
 TEST(CommanderControlRegressionTest, DirectControlOwnsSteeringIntentAndNothingElse) {
   const auto root = find_repo_root();
-  const auto motor_source = app_source(root, "commander_motor.cpp");
+  const auto motor_source =
+      read_text(root / "game" / "commander" / "commander_motor.cpp");
   const auto route_follow_source = read_text(root / "game" / "systems" / "movement" /
                                              "route_follow_system_gate.cpp") +
                                    read_text(root / "game" / "systems" / "movement" /

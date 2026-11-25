@@ -10,21 +10,21 @@ auto json_vector(const QVector3D& value) -> QJsonArray {
   return {value.x(), value.y(), value.z()};
 }
 
-auto framing_state_name(App::Core::CommanderFramingState state) -> QString {
+auto framing_state_name(Game::Commander::CommanderFramingState state) -> QString {
   switch (state) {
-  case App::Core::CommanderFramingState::Explore:
+  case Game::Commander::CommanderFramingState::Explore:
     return QStringLiteral("explore");
-  case App::Core::CommanderFramingState::Melee:
+  case Game::Commander::CommanderFramingState::Melee:
     return QStringLiteral("melee");
-  case App::Core::CommanderFramingState::DuelLock:
+  case Game::Commander::CommanderFramingState::DuelLock:
     return QStringLiteral("duel_lock");
-  case App::Core::CommanderFramingState::BowAim:
+  case Game::Commander::CommanderFramingState::BowAim:
     return QStringLiteral("bow_aim");
   }
   return QStringLiteral("unknown");
 }
 
-auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
+auto commander_trace_json(const Game::Commander::CommanderPresentationTrace& trace)
     -> QJsonObject {
   auto const& input = trace.input;
   auto const& motor = trace.motor;
@@ -93,7 +93,7 @@ auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
       {QStringLiteral("snap_back_distance"), motor.snap_back_distance},
       {QStringLiteral("displacement_source"),
        QString::fromLatin1(
-           App::Core::displacement_source_name(motor.displacement_source))},
+           Game::Commander::displacement_source_name(motor.displacement_source))},
       {QStringLiteral("dt"), motor.dt},
       {QStringLiteral("presented_position"), json_vector(motor.presented_position)},
       {QStringLiteral("presented_yaw"), motor.presented_yaw},
@@ -152,7 +152,7 @@ auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
       {QStringLiteral("stamina"), combat.stamina},
       {QStringLiteral("queue_outcome"),
        QString::fromLatin1(
-           App::Core::combat_intent_outcome_name(combat.queue_outcome))},
+           Game::Commander::combat_intent_outcome_name(combat.queue_outcome))},
       {QStringLiteral("queue_outcome_age"), combat.queue_outcome_age},
       {QStringLiteral("queue_accepted"), static_cast<qint64>(combat.queue_accepted)},
       {QStringLiteral("queue_buffered"), static_cast<qint64>(combat.queue_buffered)},

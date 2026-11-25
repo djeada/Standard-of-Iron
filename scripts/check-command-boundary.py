@@ -21,10 +21,6 @@ The gate checks these rules in app/ and ui/:
     run and production rally fields. Exceptions identify the component and
     the file that currently owns the mutation.
 
-The commander's first-person control mode is a local input mode, not an
-order; the files that implement it may reset the controlled commander's own
-movement.
-
   usage: check-command-boundary.py [repo-root]
 """
 
@@ -37,15 +33,10 @@ from pathlib import Path
 CLIENT_LAYERS = ("app", "ui")
 
 
-FPV_FILES = {
-    "app/commander/commander_mode_coordinator.cpp",
-    "app/commander/commander_control_controller.cpp",
-}
-
 ORDER_ENTRY_POINTS = re.compile(
     r"""
     \b(?:
-        OrderService::(?!reset_movement\b)\w+
+        OrderService::\w+
       | CommandService::(?:move_units|move_unit|issue_ground_move|attack_target)
       | ProductionService::(?:start_production|set_rally_point)
       | MarketplaceSystem::instance\(\)\.(?:buy|sell)_resource
@@ -60,8 +51,6 @@ ORDER_ENTRY_POINTS = re.compile(
     """,
     re.VERBOSE,
 )
-
-FPV_ALLOWED = re.compile(r"\bOrderService::reset_movement\b")
 
 BUILDER_TASK_WRITE = re.compile(
     r"""
@@ -85,42 +74,20 @@ COMPONENT_MUTATION = re.compile(
     r"(?:Engine::Core::)?(?P<component>\w+Component)\b"
 )
 COMPONENT_MUTATION_ALLOWED = {
-    # The construction preview owns its own ghost entities.
+    # The construction preview uses a separate render world.
     "app/economy/construction_preview.cpp": {
         "ConstructionPreviewComponent",
         "RenderableComponent",
         "TransformComponent",
     },
     "ui/commander_portrait_scenes.cpp": {"ShowcaseRoutineComponent"},
-    # First-person control consumes command-log input, but the controller
-    # still lives in the client and owns the world mutations below.
-    "app/commander/commander_abilities.cpp": {
-        "CommanderGuardComponent",
-        "StaggerComponent",
-    },
-    "app/commander/commander_control_controller.cpp": {
-        "CombatIntentQueueComponent",
-        "MovementComponent",
-    },
-    "app/commander/commander_defence.cpp": {"CommanderGuardComponent"},
-    "app/commander/commander_mode_coordinator.cpp": {
-        "CommanderPresentationSampleComponent",
-        "RpgCommanderActionComponent",
-        "RpgCommanderTargetComponent",
-        "RpgHealthComponent",
-        "StaminaComponent",
-    },
-    "app/commander/commander_motor.cpp": {"WallWalkerComponent"},
     "app/commander/commander_presentation.cpp": {
         "CommanderPresentationSampleComponent"
     },
-    "app/commander/commander_strike.cpp": {"CombatIntentQueueComponent"},
-    "app/commander/commander_targeting.cpp": {"RpgCommanderTargetComponent"},
 }
 ORDER_FIELD_WRITE = re.compile(
-    r"->\s*(?:run_requested|is_running|rally_x|rally_z|rally_set|rally_default)\s*=(?!=)"
+    r"->\s*(?:fpv_controlled|run_requested|is_running|rally_x|rally_z|rally_set|rally_default)\s*=(?!=)"
 )
-ORDER_FIELD_WRITE_ALLOWED = {"app/commander/commander_locomotion.cpp"}
 
 
 def sources(root: Path) -> list[Path]:
@@ -151,19 +118,16 @@ def violations(root: Path) -> list[str]:
                 found.append(
                     f"{relative}:{number}: applies an order itself: {match.group(0).strip()}"
                 )
-            if relative not in FPV_FILES and FPV_ALLOWED.search(line):
-                found.append(
-                    f"{relative}:{number}: OrderService::reset_movement outside the FPV files"
-                )
             match = BUILDER_TASK_WRITE.search(line)
             if match:
                 found.append(
                     f"{relative}:{number}: writes a builder task field: {match.group(0).strip()}"
                 )
-            if relative not in ORDER_FIELD_WRITE_ALLOWED and ORDER_FIELD_WRITE.search(
-                line
-            ):
-                found.append(f"{relative}:{number}: writes a run or rally order field")
+            match = ORDER_FIELD_WRITE.search(line)
+            if match:
+                found.append(
+                    f"{relative}:{number}: writes an order field: {match.group(0).strip()}"
+                )
     return found
 
 

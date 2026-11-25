@@ -5,6 +5,7 @@
 #include <QString>
 
 #include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -12,6 +13,7 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 
@@ -47,6 +49,7 @@ struct Options {
   std::uint64_t seed = 1;
   std::string record;
   std::string replay;
+  std::optional<std::uint64_t> seek_tick;
   bool verify = false;
   bool realtime = false;
   bool scripted_orders = false;
@@ -56,13 +59,14 @@ struct Options {
 };
 
 void usage() {
-  std::fputs("usage: soi_headless [--scenario id | --map path] [--seconds s]\n"
-             "                    [--seed n] [--local-owner id]\n"
-             "                    [--record file] [--replay file [--verify]]\n"
-             "                    [--realtime] [--digest-every ticks] "
-             "[--checkpoint-every ticks]\n"
-             "                    [--scripted-orders] [--until-victory]\n",
-             stderr);
+  std::fputs(
+      "usage: soi_headless [--scenario id | --map path] [--seconds s]\n"
+      "                    [--seed n] [--local-owner id]\n"
+      "                    [--record file] [--replay file [--seek tick] [--verify]]\n"
+      "                    [--realtime] [--digest-every ticks] "
+      "[--checkpoint-every ticks]\n"
+      "                    [--scripted-orders] [--until-victory]\n",
+      stderr);
 }
 
 auto parse(int argc, char** argv, Options& out) -> bool {
@@ -89,6 +93,16 @@ auto parse(int argc, char** argv, Options& out) -> bool {
       out.record = value("--record");
     } else if (arg == "--replay") {
       out.replay = value("--replay");
+    } else if (arg == "--seek") {
+      const auto input = value("--seek");
+      const auto* end = input.data() + input.size();
+      std::uint64_t tick = 0;
+      const auto parsed = std::from_chars(input.data(), end, tick);
+      if (parsed.ec != std::errc{} || parsed.ptr != end) {
+        std::fputs("soi_headless: invalid seek tick\n", stderr);
+        return false;
+      }
+      out.seek_tick = tick;
     } else if (arg == "--verify") {
       out.verify = true;
     } else if (arg == "--realtime") {
@@ -155,10 +169,10 @@ auto run_real_match_setup(Game::Session::SessionContext& session,
   session.nations().clear_player_assignments();
   session.owners().set_local_player_id(options.local_owner);
 
-  Game::Map::MapTransformer::set_local_owner_id(options.local_owner);
-
-  const auto loaded =
-      Game::Map::load_match(QString::fromStdString(options.map), session.world());
+  const auto loaded = Game::Map::load_match(QString::fromStdString(options.map),
+                                            session.world(),
+                                            true,
+                                            {.human_owners = {options.local_owner}});
   if (!loaded.ok) {
     std::fprintf(
         stderr, "soi_headless: %s\n", loaded.error_message.toStdString().c_str());
@@ -197,6 +211,10 @@ int main(int argc, char** argv) {
   QCoreApplication app(argc, argv);
   Options options;
   if (!parse(argc, argv, options)) {
+    return 2;
+  }
+  if (options.seek_tick && options.replay.empty()) {
+    std::fputs("soi_headless: --seek requires --replay\n", stderr);
     return 2;
   }
 
@@ -321,7 +339,27 @@ int main(int argc, char** argv) {
                                ? replay->file().last_tick()
                                : static_cast<std::uint64_t>(requested_ticks);
   const auto started = std::chrono::steady_clock::now();
-  std::uint64_t ticks = 0;
+  std::uint64_t checkpoint_tick = 0;
+  if (options.seek_tick) {
+    const auto checkpoint = Game::Save::seek_replay(session, *options.seek_tick);
+    if (!checkpoint) {
+      const auto& divergence = replay->divergence();
+      if (divergence) {
+        std::fprintf(stderr,
+                     "soi_headless: seek diverged at tick %llu in %s\n",
+                     static_cast<unsigned long long>(divergence->tick),
+                     divergence->subsystem);
+      } else {
+        std::fputs("soi_headless: could not seek to the requested tick\n", stderr);
+      }
+      return 12;
+    }
+    checkpoint_tick = *checkpoint;
+    std::printf("soi_headless: sought to tick %llu from checkpoint %llu\n",
+                static_cast<unsigned long long>(*options.seek_tick),
+                static_cast<unsigned long long>(checkpoint_tick));
+  }
+  std::uint64_t ticks = session.clock().tick();
   bool victory = false;
   while (ticks < total_ticks) {
 
@@ -387,8 +425,20 @@ int main(int argc, char** argv) {
       return options.verify ? 12 : 0;
     }
     const auto* ai = session.world().get_system<Game::Systems::AISystem>();
-    if (player->fed_count() != player->file().command_count() ||
-        player->checked_count() != player->file().digest_count() ||
+    const auto& entries = player->file().records;
+    const auto expected_commands = std::count_if(
+        entries.begin(), entries.end(), [checkpoint_tick](const auto& entry) {
+          return entry->tick > checkpoint_tick &&
+                 std::holds_alternative<Game::Command::Payload>(entry->payload);
+        });
+    const auto expected_digests = std::count_if(
+        entries.begin(), entries.end(), [checkpoint_tick](const auto& entry) {
+          return entry->tick >= checkpoint_tick &&
+                 std::holds_alternative<Game::Session::SubsystemDigests>(
+                     entry->payload);
+        });
+    if (player->fed_count() != static_cast<std::size_t>(expected_commands) ||
+        player->checked_count() != static_cast<std::size_t>(expected_digests) ||
         (ai != nullptr && ai->completed_decision_count() != 0)) {
       std::fputs(
           "SOI_HEADLESS_REPLAY: FAIL - playback did not consume the recorded stream\n",
@@ -398,6 +448,18 @@ int main(int argc, char** argv) {
     std::printf("SOI_HEADLESS_REPLAY: PASS - %zu commands fed, %zu digests matched\n",
                 player->fed_count(),
                 player->checked_count());
+  }
+  if (options.until_victory && victory) {
+    for (const auto& [team, outcome] :
+         Game::Systems::team_elimination_outcomes(session.world(), session.owners())) {
+      const char* label =
+          outcome == Game::Systems::EliminationOutcome::Victory ? "victory" : "defeat";
+      if (team.team_id != 0) {
+        std::printf("soi_headless: team %d: %s\n", team.team_id, label);
+      } else {
+        std::printf("soi_headless: owner %d: %s\n", team.unteamed_owner, label);
+      }
+    }
   }
   if (options.until_victory && !victory) {
     std::fputs("soi_headless: neither bot was eliminated before the time limit\n",

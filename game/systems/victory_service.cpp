@@ -83,7 +83,7 @@ void VictoryService::reset() {
   m_objective_complete.clear();
   m_optional_complete.clear();
   m_published_progress.clear();
-  m_local_owner_id = 1;
+  m_objective_owner = 1;
   m_victory_state.clear();
   m_defeat_description.clear();
   m_world_ptr = nullptr;
@@ -104,14 +104,16 @@ void VictoryService::set_spectator_mode(bool enabled) {
 }
 
 void VictoryService::configure(const Game::Map::VictoryConfig& config,
-                               int local_owner_id) {
-  configure(build_rule_set_from_config(config), local_owner_id);
+                               int objective_owner) {
+  configure(build_rule_set_from_config(config), objective_owner);
+  m_shared_team_objectives = true;
 }
 
-void VictoryService::configure(const VictoryRuleSet& rules, int local_owner_id) {
+void VictoryService::configure(const VictoryRuleSet& rules, int objective_owner) {
   reset();
 
-  m_local_owner_id = local_owner_id;
+  m_objective_owner = objective_owner;
+  m_shared_team_objectives = false;
   m_rule_set = rules;
   if (m_rule_set.victory_rules.empty()) {
     qWarning() << "Configured empty victory rule set - defaulting to elimination";
@@ -355,9 +357,18 @@ void VictoryService::evaluate_rules(const WorldSummary& summary) {
   }
 }
 
+namespace {
+
+auto team_for_owner(const OwnerRegistry& owners, int owner) -> CompetingTeam {
+  const int team = owners.get_owner_team(owner);
+  return {.team_id = team, .unteamed_owner = team == 0 ? owner : 0};
+}
+
+} // namespace
+
 auto living_competing_teams(const Engine::Core::World& world,
-                            const OwnerRegistry& owners) -> std::vector<int> {
-  std::set<int> live_teams;
+                            const OwnerRegistry& owners) -> std::vector<CompetingTeam> {
+  std::set<CompetingTeam> live_teams;
   for (auto [entity_id, unit_ref] : world.view<Engine::Core::UnitComponent>()) {
     const auto* unit = &unit_ref;
     if (unit->health <= 0 || Game::Core::is_neutral_owner(unit->owner_id)) {
@@ -370,9 +381,34 @@ auto living_competing_teams(const Engine::Core::World& world,
     if (unit->nation_id == Game::Systems::NationID::IronSepulcher) {
       continue;
     }
-    live_teams.insert(owners.get_owner_team(unit->owner_id));
+    live_teams.insert(team_for_owner(owners, unit->owner_id));
   }
   return {live_teams.begin(), live_teams.end()};
+}
+
+auto team_elimination_outcomes(const Engine::Core::World& world,
+                               const OwnerRegistry& owners)
+    -> std::vector<TeamOutcome> {
+  std::set<CompetingTeam> participants;
+  for (const auto& owner : owners.get_all_owners()) {
+    if (!Game::Core::is_neutral_owner(owner.owner_id) &&
+        (owner.type == OwnerType::Player || owner.type == OwnerType::AI)) {
+      participants.insert(team_for_owner(owners, owner.owner_id));
+    }
+  }
+  const auto alive = living_competing_teams(world, owners);
+  std::vector<TeamOutcome> outcomes;
+  outcomes.reserve(participants.size());
+  for (const auto& team : participants) {
+    auto outcome = EliminationOutcome::Playing;
+    if (!std::binary_search(alive.begin(), alive.end(), team)) {
+      outcome = EliminationOutcome::Defeat;
+    } else if (participants.size() > 1 && alive.size() == 1) {
+      outcome = EliminationOutcome::Victory;
+    }
+    outcomes.push_back({team, outcome});
+  }
+  return outcomes;
 }
 
 void VictoryService::evaluate_spectator_state() {
@@ -411,7 +447,7 @@ void VictoryService::finalize_game(const QString& state) {
     }
   }
 
-  const auto* stats = m_stats_registry.get_stats(m_local_owner_id);
+  const auto* stats = m_stats_registry.get_stats(m_objective_owner);
   if (stats != nullptr) {
     qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
             << "Enemies Killed:" << stats->enemies_killed << "Losses:" << stats->losses
@@ -435,7 +471,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
   bool const track_structures = track_enemy_structures || track_local_structures;
 
   auto& nation_registry = m_nations;
-  const auto* local_nation = nation_registry.get_nation_for_player(m_local_owner_id);
+  const auto* local_nation = nation_registry.get_nation_for_player(m_objective_owner);
   Game::Systems::NationID const local_nation_id =
       (local_nation != nullptr) ? local_nation->id
                                 : nation_registry.default_nation_id();
@@ -449,7 +485,10 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
     }
 
     const bool is_commander = world.has<Engine::Core::CommanderComponent>(entity_id);
-    bool const is_local_unit = (unit->owner_id == m_local_owner_id);
+    const bool is_local_unit =
+        unit->owner_id == m_objective_owner ||
+        (m_shared_team_objectives &&
+         m_owner_registry.are_allies(m_objective_owner, unit->owner_id));
     if (is_local_unit) {
       summary.local_has_units = true;
       if (is_commander) {
@@ -458,7 +497,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
         summary.local_non_commander_troop_count += 1;
       }
     } else if (is_commander &&
-               m_owner_registry.are_enemies(m_local_owner_id, unit->owner_id)) {
+               m_owner_registry.are_enemies(m_objective_owner, unit->owner_id)) {
       if (m_rule_set.include_ambient_undead ||
           unit->nation_id != Game::Systems::NationID::IronSepulcher) {
         summary.enemy_commander_count += 1;
@@ -498,7 +537,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
     }
 
     if (tracked_enemy &&
-        m_owner_registry.are_enemies(m_local_owner_id, unit->owner_id)) {
+        m_owner_registry.are_enemies(m_objective_owner, unit->owner_id)) {
       if (!m_rule_set.include_ambient_undead &&
           unit->nation_id == Game::Systems::NationID::IronSepulcher) {
         continue;
@@ -562,7 +601,7 @@ void VictoryService::append_progress_fingerprint(
   for (const auto& objective : rules) {
     if (const auto* resources =
             std::get_if<AccumulateResourcesVictoryRule>(&objective.rule)) {
-      const auto harvested = m_economy.get_harvested_all(m_local_owner_id);
+      const auto harvested = m_economy.get_harvested_all(m_objective_owner);
       for (const auto type : k_all_resource_types) {
         const int required = resources->required.get(type);
         if (required > 0) {
@@ -601,7 +640,7 @@ auto VictoryService::statuses_for(const std::vector<VictoryObjective>& rules,
 
     if (const auto* resources =
             std::get_if<AccumulateResourcesVictoryRule>(&objective.rule)) {
-      const auto tally = resource_tally(m_economy.get_harvested_all(m_local_owner_id),
+      const auto tally = resource_tally(m_economy.get_harvested_all(m_objective_owner),
                                         resources->required);
       status.detail = tally.text;
       status.compact_detail = tally.numbers;
@@ -669,7 +708,7 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
                        std::max(1, wave_rule.required_wave_count);
           },
           [this](const AccumulateResourcesVictoryRule& resource_rule) {
-            return m_economy.has_harvested_at_least(m_local_owner_id,
+            return m_economy.has_harvested_at_least(m_objective_owner,
                                                     resource_rule.required);
           },
           [this, &summary](const EliminateCommandersVictoryRule&) {

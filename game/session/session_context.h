@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <vector>
 
 namespace Engine::Core {
 class EventManager;
@@ -83,6 +85,8 @@ public:
 
   [[nodiscard]] auto owners() -> Game::Systems::OwnerRegistry&;
   [[nodiscard]] auto owners() const -> const Game::Systems::OwnerRegistry&;
+  [[nodiscard]] auto human_owners() const -> std::vector<int>;
+  [[nodiscard]] auto local_owner() const -> std::optional<int>;
 
   [[nodiscard]] auto economy() -> Game::Systems::PlayerResourceRegistry&;
   [[nodiscard]] auto economy() const -> const Game::Systems::PlayerResourceRegistry&;

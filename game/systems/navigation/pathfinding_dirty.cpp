@@ -1,3 +1,5 @@
+#include <QJsonArray>
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -12,6 +14,7 @@
 #include <vector>
 
 #include "game/core/nav_profile.h"
+#include "game/session/checkpoint_values.h"
 #include "gate_service.h"
 #include "map/forest_outline.h"
 #include "map/terrain.h"
@@ -119,6 +122,41 @@ auto Pathfinding::last_obstruction_release() const -> ObstructionRelease {
 
 auto Pathfinding::obstruction_revision() const -> std::uint64_t {
   return m_obstruction_revision.load(std::memory_order_acquire);
+}
+
+auto Pathfinding::capture_checkpoint() const -> QJsonArray {
+  using Game::Session::CheckpointValues::write;
+  const auto release = last_obstruction_release();
+  return write(navigation_revision(),
+               obstruction_revision(),
+               release.located,
+               release.center.x(),
+               release.center.z(),
+               m_navigation_grid_dirty.load(std::memory_order_acquire));
+}
+
+auto Pathfinding::restore_checkpoint(const QJsonArray& state) -> bool {
+  using Game::Session::CheckpointValues::read;
+  std::uint64_t nav_revision = 0;
+  std::uint64_t release_revision = 0;
+  bool located = false;
+  float x = 0.0F;
+  float z = 0.0F;
+  bool dirty = false;
+  if (!read(state, nav_revision, release_revision, located, x, z, dirty)) {
+    return false;
+  }
+  update_navigation_grid();
+  m_navigation_revision.store(nav_revision, std::memory_order_release);
+  m_obstruction_revision.store(release_revision, std::memory_order_release);
+  m_obstruction_center_located.store(located, std::memory_order_relaxed);
+  m_obstruction_center_x.store(x, std::memory_order_relaxed);
+  m_obstruction_center_z.store(z, std::memory_order_relaxed);
+  m_nav_changes.clear();
+  if (dirty) {
+    mark_navigation_grid_dirty();
+  }
+  return true;
 }
 
 auto Pathfinding::process_dirty_regions() -> DirtyRegion {

@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/commander/commander_presentation_trace.h"
+#include "game/commander/commander_presentation_trace.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/units/spawn_type.h"
@@ -77,7 +77,7 @@ auto commander_definition(std::vector<Arena::ArenaExpectation> expectations)
 
 auto run_with_trace(
     const std::vector<Arena::ArenaExpectation>& expectations,
-    const std::function<void(int, App::Core::CommanderPresentationTrace&)>& shape)
+    const std::function<void(int, Game::Commander::CommanderPresentationTrace&)>& shape)
     -> Arena::ArenaScenarioReport {
   Engine::Core::World world;
   auto scenario = commander_definition(expectations);
@@ -85,7 +85,7 @@ auto run_with_trace(
   EXPECT_TRUE(runner.start());
 
   constexpr float k_dt = 1.0F / 60.0F;
-  App::Core::CommanderPresentationTrace trace;
+  Game::Commander::CommanderPresentationTrace trace;
   trace.valid = true;
   trace.camera.valid = true;
   trace.camera.dt = k_dt;
@@ -127,7 +127,7 @@ auto metric(Expect kind,
 TEST(ArenaCommanderMetricsTest, SteadyBoomPassesTheContinuityContract) {
   auto const report =
       run_with_trace({metric(Expect::CommanderBoomIsContinuous, 0.35F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.boom_resolved =
                            3.4F + 0.001F * static_cast<float>(frame);
                      });
@@ -138,7 +138,7 @@ TEST(ArenaCommanderMetricsTest, SteadyBoomPassesTheContinuityContract) {
 TEST(ArenaCommanderMetricsTest, ImmediateRetractionIsAllowedButPoppingBackOutIsNot) {
   auto const retract =
       run_with_trace({metric(Expect::CommanderBoomIsContinuous, 0.35F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.boom_resolved = frame < 30 ? 3.4F : 0.7F;
                      });
   EXPECT_FALSE(has_code(retract, QStringLiteral("commander_boom_discontinuity")))
@@ -146,7 +146,7 @@ TEST(ArenaCommanderMetricsTest, ImmediateRetractionIsAllowedButPoppingBackOutIsN
 
   auto const extend =
       run_with_trace({metric(Expect::CommanderBoomIsContinuous, 0.35F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.boom_resolved = frame < 30 ? 0.7F : 3.4F;
                      });
   EXPECT_TRUE(has_code(extend, QStringLiteral("commander_boom_discontinuity")))
@@ -156,7 +156,7 @@ TEST(ArenaCommanderMetricsTest, ImmediateRetractionIsAllowedButPoppingBackOutIsN
 TEST(ArenaCommanderMetricsTest, AlternatingBoomUnderOneObstructionIsPumping) {
   auto const report =
       run_with_trace({metric(Expect::CommanderBoomIsContinuous, 0.35F, 2.0F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.boom_clear_fraction = 0.4F;
                        trace.camera.boom_resolved = (frame % 2 == 0) ? 2.0F : 2.2F;
                      });
@@ -166,7 +166,7 @@ TEST(ArenaCommanderMetricsTest, AlternatingBoomUnderOneObstructionIsPumping) {
 TEST(ArenaCommanderMetricsTest, ABriefObstructionIsAllowedButASustainedOneIsNot) {
   auto const glancing =
       run_with_trace({metric(Expect::CommanderCameraKeepsCommanderInSight, 0.35F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.sight_line_clear = frame < 10 || frame >= 20;
                      });
   EXPECT_FALSE(has_code(glancing, QStringLiteral("commander_camera_lost_sight")))
@@ -175,7 +175,7 @@ TEST(ArenaCommanderMetricsTest, ABriefObstructionIsAllowedButASustainedOneIsNot)
 
   auto const buried =
       run_with_trace({metric(Expect::CommanderCameraKeepsCommanderInSight, 0.35F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.sight_line_clear = frame < 10;
                      });
   EXPECT_TRUE(has_code(buried, QStringLiteral("commander_camera_lost_sight")));
@@ -184,7 +184,7 @@ TEST(ArenaCommanderMetricsTest, ABriefObstructionIsAllowedButASustainedOneIsNot)
 TEST(ArenaCommanderMetricsTest, ViewThatTurnsWithoutLookInputIsUncommanded) {
   auto const quiet =
       run_with_trace({metric(Expect::NoUncommandedViewRotation, 0.05F)},
-                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                     [](int, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.yaw_velocity = 0.0F;
                        trace.camera.pitch_velocity = 0.0F;
                      });
@@ -192,7 +192,7 @@ TEST(ArenaCommanderMetricsTest, ViewThatTurnsWithoutLookInputIsUncommanded) {
 
   auto const drifting =
       run_with_trace({metric(Expect::NoUncommandedViewRotation, 0.05F)},
-                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                     [](int, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.yaw_velocity = 12.0F;
                      });
   EXPECT_TRUE(has_code(drifting, QStringLiteral("commander_view_rotated_uncommanded")));
@@ -201,7 +201,7 @@ TEST(ArenaCommanderMetricsTest, ViewThatTurnsWithoutLookInputIsUncommanded) {
 TEST(ArenaCommanderMetricsTest, TurningUnderLookInputOrALockIsNotUncommanded) {
   auto const steered =
       run_with_trace({metric(Expect::NoUncommandedViewRotation, 0.05F)},
-                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                     [](int, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.yaw_velocity = 90.0F;
                        trace.input.look_delta_yaw = 1.5F;
                      });
@@ -209,7 +209,7 @@ TEST(ArenaCommanderMetricsTest, TurningUnderLookInputOrALockIsNotUncommanded) {
 
   auto const locked =
       run_with_trace({metric(Expect::NoUncommandedViewRotation, 0.05F)},
-                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                     [](int, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.camera.yaw_velocity = 90.0F;
                        trace.combat.locked_target_id = 7;
                      });
@@ -220,26 +220,26 @@ TEST(ArenaCommanderMetricsTest, TurningUnderLookInputOrALockIsNotUncommanded) {
 TEST(ArenaCommanderMetricsTest, MotorCorrectionAboveTheBudgetIsReported) {
   auto const gentle =
       run_with_trace({metric(Expect::CommanderMotorCorrectionWithin, 0.08F)},
-                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                     [](int, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.motor.separation_push = 0.02F;
                      });
   EXPECT_FALSE(has_code(gentle, QStringLiteral("commander_motor_correction")));
 
   auto const shoved =
       run_with_trace({metric(Expect::CommanderMotorCorrectionWithin, 0.08F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.motor.separation_push = frame == 20 ? 0.4F : 0.0F;
                        trace.motor.displacement_source =
-                           App::Core::CommanderDisplacementSource::BodySeparation;
+                           Game::Commander::CommanderDisplacementSource::BodySeparation;
                      });
   EXPECT_TRUE(has_code(shoved, QStringLiteral("commander_motor_correction")));
 
   auto const snapped =
       run_with_trace({metric(Expect::CommanderMotorCorrectionWithin, 0.08F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.motor.snap_back_distance = frame == 30 ? 1.2F : 0.0F;
                        trace.motor.displacement_source =
-                           App::Core::CommanderDisplacementSource::JumpRecovery;
+                           Game::Commander::CommanderDisplacementSource::JumpRecovery;
                      });
   EXPECT_TRUE(has_code(snapped, QStringLiteral("commander_motor_correction")))
       << "a landing that restores the last walkable position is a correction";
@@ -248,7 +248,7 @@ TEST(ArenaCommanderMetricsTest, MotorCorrectionAboveTheBudgetIsReported) {
 TEST(ArenaCommanderMetricsTest, SpeedDiscontinuityIsReportedInAccelerationTerms) {
   auto const smooth =
       run_with_trace({metric(Expect::CommanderSpeedIsContinuous, 4.0F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        float const speed =
                            std::min(2.5F, 0.05F * static_cast<float>(frame));
                        trace.motor.actual_velocity = QVector3D(speed, 0.0F, 0.0F);
@@ -257,7 +257,7 @@ TEST(ArenaCommanderMetricsTest, SpeedDiscontinuityIsReportedInAccelerationTerms)
 
   auto const jolted =
       run_with_trace({metric(Expect::CommanderSpeedIsContinuous, 4.0F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.motor.actual_velocity =
                            QVector3D(frame == 25 ? 6.5F : 0.0F, 0.0F, 0.0F);
                      });
@@ -267,7 +267,7 @@ TEST(ArenaCommanderMetricsTest, SpeedDiscontinuityIsReportedInAccelerationTerms)
 TEST(ArenaCommanderMetricsTest, EveryAttackEdgeMustBeConsumedOrDropped) {
   auto const accounted =
       run_with_trace({metric(Expect::CommanderInputEdgesAllConsumed)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        if (frame == 10) {
                          trace.input.primary_press_sequence = 1;
                          trace.input.primary_consumed_sequence = 1;
@@ -279,7 +279,7 @@ TEST(ArenaCommanderMetricsTest, EveryAttackEdgeMustBeConsumedOrDropped) {
 
   auto const vanished =
       run_with_trace({metric(Expect::CommanderInputEdgesAllConsumed)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        if (frame == 10) {
                          trace.input.primary_press_sequence = 3;
                          trace.input.primary_consumed_sequence = 1;
@@ -289,7 +289,7 @@ TEST(ArenaCommanderMetricsTest, EveryAttackEdgeMustBeConsumedOrDropped) {
 
   auto const dropped =
       run_with_trace({metric(Expect::CommanderInputEdgesAllConsumed)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        if (frame == 10) {
                          trace.input.primary_press_sequence = 2;
                          trace.input.primary_consumed_sequence = 1;
@@ -304,7 +304,7 @@ TEST(ArenaCommanderMetricsTest, EveryAttackEdgeMustBeConsumedOrDropped) {
 TEST(ArenaCommanderMetricsTest, DodgeRequestsMustResolveToConsumedOrRefused) {
   auto const report =
       run_with_trace({metric(Expect::CommanderInputEdgesAllConsumed)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        if (frame == 10) {
                          trace.input.dodge_request_sequence = 2;
                          trace.input.dodge_consumed_sequence = 1;
@@ -330,7 +330,7 @@ TEST(ArenaCommanderMetricsTest, MissingTraceIsReportedRatherThanPassingSilently)
 TEST(ArenaCommanderMetricsTest, OneActionMayLandOnlyItsAuthoredNumberOfContacts) {
   auto const single =
       run_with_trace({metric(Expect::CommanderContactCountAtMost, 1.0F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.combat.action_running = frame > 10 && frame < 40;
                        trace.combat.action_hit_count = frame > 20 && frame < 40 ? 1 : 0;
                      });
@@ -338,7 +338,7 @@ TEST(ArenaCommanderMetricsTest, OneActionMayLandOnlyItsAuthoredNumberOfContacts)
 
   auto const doubled =
       run_with_trace({metric(Expect::CommanderContactCountAtMost, 1.0F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.combat.action_running = frame > 10 && frame < 40;
                        trace.combat.action_hit_count = frame > 20 && frame < 40 ? 2 : 0;
                      });
@@ -352,14 +352,14 @@ TEST(ArenaCommanderMetricsTest, ExactCommanderActionMustRunInsideItsAuthoredWind
   expected.end_seconds = 0.60F;
 
   auto const observed = run_with_trace(
-      {expected}, [](int frame, App::Core::CommanderPresentationTrace& trace) {
+      {expected}, [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
         trace.combat.action_running = frame >= 20 && frame <= 24;
         trace.combat.action_id = frame >= 20 && frame <= 24 ? 8 : 0;
       });
   EXPECT_FALSE(has_code(observed, QStringLiteral("commander_action_not_observed")));
 
   auto const skipped = run_with_trace(
-      {expected}, [](int frame, App::Core::CommanderPresentationTrace& trace) {
+      {expected}, [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
         trace.combat.action_running = frame >= 20 && frame <= 24;
         trace.combat.action_id = frame >= 20 && frame <= 24 ? 7 : 0;
       });
@@ -368,7 +368,7 @@ TEST(ArenaCommanderMetricsTest, ExactCommanderActionMustRunInsideItsAuthoredWind
 }
 
 TEST(ArenaCommanderMetricsTest, AJumpMustLandOnGroundItCanStandOn) {
-  auto jump = [](int frame, App::Core::CommanderPresentationTrace& trace) {
+  auto jump = [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
     trace.motor.grounded = frame < 10 || frame >= 40;
     trace.motor.static_walkable = true;
   };
@@ -379,7 +379,7 @@ TEST(ArenaCommanderMetricsTest, AJumpMustLandOnGroundItCanStandOn) {
 
   auto const grounded =
       run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
-                     [](int, App::Core::CommanderPresentationTrace& trace) {
+                     [](int, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.motor.grounded = true;
                        trace.motor.static_walkable = true;
                      });
@@ -387,27 +387,27 @@ TEST(ArenaCommanderMetricsTest, AJumpMustLandOnGroundItCanStandOn) {
 
   auto const hop =
       run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
-                     [](int frame, App::Core::CommanderPresentationTrace& trace) {
+                     [](int frame, Game::Commander::CommanderPresentationTrace& trace) {
                        trace.motor.grounded = frame < 10 || frame >= 14;
                        trace.motor.static_walkable = true;
                      });
   EXPECT_TRUE(has_code(hop, QStringLiteral("commander_jump_not_observed")))
       << "four airborne frames are not a jump";
 
-  auto const tunnelled =
-      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
-                     [&jump](int frame, App::Core::CommanderPresentationTrace& trace) {
-                       jump(frame, trace);
-                       trace.motor.static_walkable = frame != 30;
-                     });
+  auto const tunnelled = run_with_trace(
+      {metric(Expect::CommanderJumpLandsClean, 1.0F)},
+      [&jump](int frame, Game::Commander::CommanderPresentationTrace& trace) {
+        jump(frame, trace);
+        trace.motor.static_walkable = frame != 30;
+      });
   EXPECT_TRUE(has_code(tunnelled, QStringLiteral("commander_jump_entered_obstacle")));
 
-  auto const walked_in =
-      run_with_trace({metric(Expect::CommanderJumpLandsClean, 1.0F)},
-                     [&jump](int frame, App::Core::CommanderPresentationTrace& trace) {
-                       jump(frame, trace);
-                       trace.motor.static_walkable = frame != 5;
-                     });
+  auto const walked_in = run_with_trace(
+      {metric(Expect::CommanderJumpLandsClean, 1.0F)},
+      [&jump](int frame, Game::Commander::CommanderPresentationTrace& trace) {
+        jump(frame, trace);
+        trace.motor.static_walkable = frame != 5;
+      });
   EXPECT_FALSE(has_code(walked_in, QStringLiteral("commander_jump_entered_obstacle")))
       << "grounded penetration is the ground motor's, not the jump's";
 }

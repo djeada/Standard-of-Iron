@@ -399,4 +399,13 @@ void ReplayPlayer::feed(std::uint64_t tick, CommandQueue& queue) {
   }
 }
 
+void ReplayPlayer::resume_after(std::uint64_t tick) {
+  const auto next = std::ranges::upper_bound(
+      m_file.records, tick, {}, [](const auto& entry) { return entry->tick; });
+  m_next = static_cast<std::size_t>(next - m_file.records.begin());
+  m_fed = 0;
+  m_checked = 0;
+  m_divergence.reset();
+}
+
 } // namespace Game::Command

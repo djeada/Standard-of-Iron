@@ -6,6 +6,7 @@
 #include <QString>
 
 #include <array>
+#include <compare>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -37,9 +38,30 @@ class NationRegistry;
 class OwnerRegistry;
 class PlayerResourceRegistry;
 
+struct CompetingTeam {
+  int team_id = 0;
+  int unteamed_owner = 0;
+
+  auto operator<=>(const CompetingTeam&) const = default;
+};
+
+enum class EliminationOutcome {
+  Playing,
+  Victory,
+  Defeat
+};
+
+struct TeamOutcome {
+  CompetingTeam team;
+  EliminationOutcome outcome = EliminationOutcome::Playing;
+};
+
 [[nodiscard]] auto
 living_competing_teams(const Engine::Core::World& world,
-                       const OwnerRegistry& owners) -> std::vector<int>;
+                       const OwnerRegistry& owners) -> std::vector<CompetingTeam>;
+[[nodiscard]] auto
+team_elimination_outcomes(const Engine::Core::World& world,
+                          const OwnerRegistry& owners) -> std::vector<TeamOutcome>;
 
 class VictoryService {
 public:
@@ -53,8 +75,8 @@ public:
   explicit VictoryService(Services services);
   ~VictoryService();
 
-  void configure(const Game::Map::VictoryConfig& config, int local_owner_id);
-  void configure(const VictoryRuleSet& rules, int local_owner_id);
+  void configure(const Game::Map::VictoryConfig& config, int objective_owner);
+  void configure(const VictoryRuleSet& rules, int objective_owner);
   void set_undead_zone_query(const UndeadZoneQuery* query) {
     m_undead_zone_query = query;
     mark_world_dirty();
@@ -154,10 +176,11 @@ private:
   bool m_eliminate_commanders_armed = false;
   bool m_world_state_dirty = false;
   bool m_spectator_mode = false;
+  bool m_shared_team_objectives = false;
   bool m_spectator_saw_rivals = false;
   float m_spectator_poll_timer = 0.0F;
 
-  int m_local_owner_id = 1;
+  int m_objective_owner = 1;
   QString m_victory_state;
   QString m_defeat_description;
 

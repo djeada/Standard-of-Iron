@@ -116,7 +116,7 @@ A replay stores commands before validation, commander input, clock changes, and 
 
 Replays require the build and content that recorded them. The header identifies the revision, platform, compiler, and floating-point mode so playback can reject an incompatible file. Keep that build if you want to replay a match after upgrading.
 
-`soi_headless` uses the same simulation without a window and supports record/replay/verify workflows. `battlefield_gameplay_verifier --determinism-runs N` runs deterministic scenario checks repeatedly and reports divergence details.
+`soi_headless` uses the same simulation without a window. Run `soi_headless --replay match.soireplay --seek 600 --verify` to start from the nearest checkpoint at or before tick 600 and verify playback through the end. `battlefield_gameplay_verifier --determinism-runs N` runs deterministic scenario checks repeatedly and reports divergence details.
 
 ## Download
 

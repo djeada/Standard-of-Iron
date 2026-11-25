@@ -1,13 +1,16 @@
 #include "movement_system.h"
 
+#include <QJsonObject>
 #include <QVector3D>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
+#include <utility>
 #include <vector>
 
+#include "game/session/checkpoint_values.h"
 #include "movement_orders_assignment.h"
 #include "movement_system_collision.h"
 #include "movement_system_gates.h"
@@ -24,6 +27,65 @@ namespace {
 
 constexpr float k_escape_arrival_radius = 0.6F;
 
+}
+
+auto MovementSystem::capture_checkpoint() const -> QJsonObject {
+  using Game::Session::CheckpointValues::write;
+  QJsonArray requests;
+  for (const auto& request : m_path_requests.m_requests) {
+    const auto it = m_path_requests.m_generations.find(request.entity_id);
+    requests.append(write(request.entity_id,
+                          request.target.x(),
+                          request.target.y(),
+                          request.target.z(),
+                          request.navigation_revision,
+                          request.order_sequence,
+                          request.generation,
+                          request.precise_arrival,
+                          it != m_path_requests.m_generations.end() &&
+                              it->second == request.generation));
+  }
+  return {{"state", write(m_obstruction_revision, m_duel_footwork.m_clock)},
+          {"requests", requests}};
+}
+
+auto MovementSystem::restore_checkpoint(const QJsonObject& state) -> bool {
+  using Game::Session::CheckpointValues::read;
+  if (!read(state.value("state"), m_obstruction_revision, m_duel_footwork.m_clock) ||
+      !state.value("requests").isArray()) {
+    return false;
+  }
+  const auto requests = state.value("requests").toArray();
+  if (requests.size() > static_cast<qsizetype>(PathRequestQueue::k_max_pending)) {
+    return false;
+  }
+  PathRequestQueue pending;
+  for (const auto value : requests) {
+    auto& request = pending.m_requests.emplace_back();
+    float x = 0.0F;
+    float y = 0.0F;
+    float z = 0.0F;
+    bool current = false;
+    if (!read(value,
+              request.entity_id,
+              x,
+              y,
+              z,
+              request.navigation_revision,
+              request.order_sequence,
+              request.generation,
+              request.precise_arrival,
+              current)) {
+      return false;
+    }
+    if (current &&
+        !pending.m_generations.emplace(request.entity_id, request.generation).second) {
+      return false;
+    }
+    request.target = QVector3D(x, y, z);
+  }
+  m_path_requests = std::move(pending);
+  return true;
 }
 
 void MovementSystem::update(Engine::Core::World* world, float delta_time) {

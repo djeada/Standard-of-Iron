@@ -453,6 +453,7 @@ add_library(
     systems/arrow_visual_profile.cpp
     systems/combat_status_effect_system.cpp
     systems/projectile_system.cpp
+    systems/projectile_checkpoint.cpp
     systems/arrow_projectile.cpp
     systems/stone_projectile.cpp
     systems/commander_system.cpp
@@ -498,6 +499,23 @@ target_link_libraries(soi_wildlife PUBLIC engine_core PRIVATE soi_combat)
 add_library(
     game_sim
     STATIC
+    core/player_feedback.cpp
+    commander/commander_abilities.cpp
+    commander/commander_body_facing.cpp
+    commander/commander_defence.cpp
+    commander/commander_entity_access.cpp
+    commander/commander_handoff.cpp
+    commander/commander_input_port.cpp
+    commander/commander_latency_probe.cpp
+    commander/commander_locomotion.cpp
+    commander/commander_lunge.cpp
+    commander/commander_motor.cpp
+    commander/commander_primary_scan.cpp
+    commander/commander_runtime.cpp
+    commander/commander_strike.cpp
+    commander/commander_targeting.cpp
+    commander/commander_tick_trace.cpp
+    commander/commander_wall_deck.cpp
     command/command.cpp
     command/command_codec.cpp
     command/command_log.cpp
@@ -717,6 +735,7 @@ add_library(
     # never the ECS's job: nothing in game/core/ calls it.
     save/serialization.cpp
     save/replay_checkpoint.cpp
+    save/component_checkpoint_codec.cpp
     save/component_core_codec.cpp
     save/component_combat_codec.cpp
     save/component_ability_codec.cpp

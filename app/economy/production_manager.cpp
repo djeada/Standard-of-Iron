@@ -172,12 +172,8 @@ void ProductionManager::submit_order(int owner_id, App::Core::OrderRequest reque
       App::Core::submit_player_order(*m_world, owner_id, std::move(request)));
 }
 
-void ProductionManager::end_placement(Handoff handoff) {
-  if (handoff == Handoff::BecomeSiteGhost) {
-    m_preview.hand_to_construction_site(m_session.construction_type());
-  } else {
-    m_preview.clear_entities();
-  }
+void ProductionManager::end_placement() {
+  m_preview.clear_entities();
   m_preview.clear_summary();
   m_wall.reset();
   m_session.end();
@@ -609,7 +605,7 @@ void ProductionManager::confirm_builder_structure() {
                                      m_session.construction_type(),
                                      m_session.position(),
                                      m_session.rotation_y()));
-  end_placement(Handoff::BecomeSiteGhost);
+  end_placement();
 }
 
 void ProductionManager::confirm_direct_building() {

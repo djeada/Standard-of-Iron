@@ -228,6 +228,18 @@ auto SessionContext::rng() -> DeterministicRng& {
   return m_state->rng;
 }
 
+auto SessionContext::human_owners() const -> std::vector<int> {
+  return m_state->owners.get_player_owner_ids();
+}
+
+auto SessionContext::local_owner() const -> std::optional<int> {
+  const int owner = m_state->owners.get_local_player_id();
+  if (log_follower() || !m_state->owners.is_player(owner)) {
+    return std::nullopt;
+  }
+  return owner;
+}
+
 auto SessionContext::commands() -> Game::Command::CommandQueue& {
   return m_state->commands;
 }

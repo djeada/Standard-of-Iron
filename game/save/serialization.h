@@ -29,12 +29,19 @@ struct CaptureStamp {
 
 class Serialization {
 public:
+  enum class WorldCapture {
+    Save,
+    ReplayCheckpoint
+  };
+
   static auto read_capture_stamp(const QJsonDocument& doc) -> CaptureStamp;
 
   static auto serialize_entity(const class Entity* entity) -> QJsonObject;
   static void deserialize_entity(class Entity* entity, const QJsonObject& json);
 
-  static auto serialize_world(const class World* world) -> QJsonDocument;
+  static auto
+  serialize_world(const class World* world,
+                  WorldCapture capture = WorldCapture::Save) -> QJsonDocument;
   static void deserialize_world(class World* world, const QJsonDocument& doc);
 
   static auto serialize_terrain(

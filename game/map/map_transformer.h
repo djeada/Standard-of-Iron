@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "map_definition.h"
 
@@ -26,7 +27,7 @@ struct MapRuntime {
 struct MapTransformOptions {
   std::unordered_map<int, int> player_team_overrides;
   std::unordered_map<int, QString> base_assignments;
-  bool spectator_mode = false;
+  std::vector<int> human_owners{1};
 };
 
 class MapTransformer {
@@ -38,9 +39,6 @@ public:
   static void setFactoryRegistry(std::shared_ptr<Game::Units::UnitFactoryRegistry> reg);
   static auto
   get_factory_registry() -> std::shared_ptr<Game::Units::UnitFactoryRegistry>;
-
-  static void set_local_owner_id(int owner_id);
-  static auto local_owner_id() -> int;
 };
 
 } // namespace Game::Map

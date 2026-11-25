@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <vector>
 
 #include "undead_zone_runtime.h"
@@ -21,14 +22,12 @@ public:
               float delta_time);
 
 private:
-  [[nodiscard]] auto local_player_inside(Engine::Core::World& world,
-                                         const UndeadRuntimeZone& zone) const -> bool;
-  [[nodiscard]] auto
-  inside_a_woken_zone(Engine::Core::World& world,
-                      const std::vector<UndeadRuntimeZone>& zones) const -> bool;
+  [[nodiscard]] auto owners_in_woken_zones(
+      Engine::Core::World& world,
+      const std::vector<UndeadRuntimeZone>& zones) const -> std::set<int>;
 
   const OwnerRegistry& m_owners;
-  bool m_playing = false;
+  std::set<int> m_playing;
   float m_poll = 0.0F;
 };
 

@@ -37,6 +37,7 @@ struct CommanderInputFrame {
   std::uint32_t buttons = 0;
   float view_yaw = 0.0F;
   float view_pitch = 0.0F;
+  float camera_fov = 68.0F;
   QVector3D dodge_direction;
   QVector3D aim_origin;
   QVector3D aim_forward;
@@ -70,7 +71,8 @@ enum class CommanderAction : std::uint8_t {
   ReleaseForRally,
   ToggleLockOn,
   SwitchLockLeft,
-  SwitchLockRight
+  SwitchLockRight,
+  ReleaseInput
 };
 
 struct CommanderActionRecord {

@@ -5,8 +5,8 @@
 #include <string>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_defence.h"
 #include "app/commander/commander_mode_coordinator.h"
+#include "game/commander/commander_defence.h"
 #include "game/core/component_commander.h"
 #include "game/core/world.h"
 #include "game/session/session_context.h"
@@ -283,7 +283,7 @@ TEST_F(CommanderModeResourcesTest, CombatTimersHaveOneSimulationOwnerInBothModes
     guard->active = false;
     if (controlled) {
 
-      App::Core::CommanderDefence::advance_upkeep(*commander, true, 0.25F);
+      Game::Commander::CommanderDefence::advance_upkeep(*commander, true, 0.25F);
       EXPECT_FLOAT_EQ(data->posture, 60.0F);
       EXPECT_FLOAT_EQ(data->punish_window_remaining, 0.75F);
     }
@@ -333,13 +333,13 @@ TEST_F(CommanderModeResourcesTest, ARiposteExpiresWithItsTarget) {
 
 TEST_F(CommanderModeResourcesTest, GuardBreakRecoveryHasOneSimulationOwnerInBothModes) {
   Game::Systems::CommanderSystem system;
-  App::Core::CommanderDefence defence;
+  Game::Commander::CommanderDefence defence;
   auto* data = commander->get_component<Engine::Core::CommanderComponent>();
   for (bool controlled : {false, true}) {
     data->fpv_controlled = controlled;
     guard->guard_break_remaining = 0.5F;
     if (controlled) {
-      App::Core::CommanderDefence::advance_upkeep(*commander, false, 0.1F);
+      Game::Commander::CommanderDefence::advance_upkeep(*commander, false, 0.1F);
     }
 
     EXPECT_FLOAT_EQ(guard->guard_break_remaining, 0.5F);

@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "../core/component_economy.h"
+#include "../core/component_gameplay.h"
 #include "../core/death_sequence.h"
 #include "../core/entity.h"
 #include "../core/world.h"
@@ -98,6 +99,9 @@ void read_entities(World* world, const QJsonObject& world_obj) {
                                             : world->create_entity_with_id(entity_id);
     if (entity != nullptr) {
       Serialization::deserialize_entity(entity, entity_obj);
+      if (entity_obj.value("pending_removal").toBool()) {
+        entity->add_component<PendingRemovalComponent>();
+      }
     }
   }
 
@@ -152,19 +156,25 @@ void read_terrain(Game::Session::SessionContext& session,
 
 } // namespace
 
-auto Serialization::serialize_world(const World* world) -> QJsonDocument {
+auto Serialization::serialize_world(const World* world,
+                                    WorldCapture capture) -> QJsonDocument {
   QJsonObject world_obj;
   QJsonArray entities_array;
 
-  world->for_each_entity([&entities_array](Entity& entity) {
-    if (entity.get_component<ConstructionPreviewComponent>() != nullptr) {
+  world->for_each_entity([&entities_array, capture](Entity& entity) {
+    if (capture == WorldCapture::Save &&
+        (entity.get_component<ConstructionPreviewComponent>() != nullptr ||
+         is_collapsing_structure(entity))) {
       return;
     }
-
-    if (is_collapsing_structure(entity)) {
-      return;
+    auto snapshot = serialize_entity(&entity);
+    if (capture == WorldCapture::ReplayCheckpoint) {
+      EntityCodec::write_checkpoint_components(entity, snapshot);
+      if (entity.get_component<PendingRemovalComponent>() != nullptr) {
+        snapshot["pending_removal"] = true;
+      }
     }
-    entities_array.append(serialize_entity(&entity));
+    entities_array.append(snapshot);
   });
 
   auto& session = Game::Session::session_for(*world);

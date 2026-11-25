@@ -5,6 +5,10 @@
 #include "../../core/entity.h"
 #include "combat_utils.h"
 
+namespace Game::Systems {
+class CombatSystem;
+}
+
 namespace Engine::Core {
 class World;
 }
@@ -18,6 +22,8 @@ public:
                float delta_time);
 
 private:
+  friend class Game::Systems::CombatSystem;
+
   std::unordered_map<Engine::Core::EntityID, float> m_scan_cooldowns;
 };
 

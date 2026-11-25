@@ -19,12 +19,16 @@ auto CommandQueue::submit(Source source, int owner_id, Payload payload) -> bool 
 }
 
 auto CommandQueue::drain(Engine::Core::World& world,
-                         std::uint64_t tick) -> std::size_t {
+                         std::uint64_t tick,
+                         const RecordHandler& handle_record) -> std::size_t {
 
   std::size_t executed = 0;
   for (const auto& entry : m_log.seal_inputs(tick)) {
     const auto* payload = std::get_if<Payload>(&entry->payload);
     if (payload == nullptr) {
+      if (handle_record) {
+        handle_record(*entry);
+      }
       continue;
     }
     const Command command{.source = entry->source,

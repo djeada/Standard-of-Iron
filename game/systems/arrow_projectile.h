@@ -63,6 +63,8 @@ public:
   }
 
 private:
+  friend class ProjectileSystem;
+
   QVector3D m_start;
   QVector3D m_end;
   QVector3D m_color;

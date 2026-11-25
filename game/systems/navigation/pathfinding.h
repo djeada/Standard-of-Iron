@@ -14,6 +14,8 @@
 
 #include "systems/nav_grid_types.h"
 
+class QJsonArray;
+
 namespace Game::Map {
 class TerrainService;
 class TerrainHeightMap;
@@ -164,6 +166,9 @@ public:
   [[nodiscard]] auto can_reach(const Point& start,
                                const Point& end,
                                Passability passability = Passability::Light) -> bool;
+
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonArray;
+  [[nodiscard]] auto restore_checkpoint(const QJsonArray& state) -> bool;
 
   [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
     return m_navigation_revision.load(std::memory_order_acquire);

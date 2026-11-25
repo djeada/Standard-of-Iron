@@ -8,6 +8,8 @@
 #include "../core/entity_id.h"
 #include "resource_types.h"
 
+class QJsonObject;
+
 namespace Engine::Core {
 class World;
 }
@@ -131,6 +133,9 @@ public:
 
   [[nodiscard]] auto goodwill(int ally, int owner) const -> float;
   void change_goodwill(int ally, int owner, float delta);
+
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  [[nodiscard]] auto restore_checkpoint(const QJsonObject& state) -> bool;
 
   void clear();
   [[nodiscard]] auto epoch() const -> std::uint32_t { return m_epoch; }

@@ -1,5 +1,9 @@
 #include "visibility_service.h"
 
+#include <QByteArray>
+#include <QJsonArray>
+#include <QJsonObject>
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -568,6 +572,111 @@ auto SimulationVisibility::generation() const -> std::uint64_t {
     }
   }
   return result;
+}
+
+auto SimulationVisibility::capture_state() const -> QJsonObject {
+  QJsonArray grids;
+  for (const auto& [owner, service] : m_grids) {
+    const auto grid = service.snapshot_ptr();
+    if (!grid || !grid->initialized) {
+      continue;
+    }
+    const QByteArray cells(reinterpret_cast<const char*>(grid->cells.data()),
+                           static_cast<qsizetype>(grid->cells.size()));
+    QJsonArray sources;
+    for (const auto& source : service.m_last_sources) {
+      sources.append(QJsonArray{source.center_z,
+                                source.center_x,
+                                source.cell_radius,
+                                source.expanded_radius_cells_sq});
+    }
+    QJsonObject row{{"owner", owner},
+                    {"version", QString::number(grid->version)},
+                    {"cells", QString::fromLatin1(cells.toBase64())},
+                    {"sources", sources}};
+    if (service.m_result_tick) {
+      row["result_tick"] = QString::number(*service.m_result_tick);
+    }
+    grids.append(row);
+  }
+  QJsonArray areas;
+  for (const auto& area : m_scouted_areas) {
+    areas.append(QJsonArray{area.x, area.z, area.radius});
+  }
+  return {{"grids", grids}, {"scouted_areas", areas}};
+}
+
+auto SimulationVisibility::restore_state(const QJsonObject& state,
+                                         const TerrainHeightMap* map,
+                                         std::uint64_t completed_tick) -> bool {
+  const auto grids = state.value("grids");
+  const auto areas = state.value("scouted_areas");
+  if (!grids.isArray() || !areas.isArray() ||
+      (map == nullptr && !grids.toArray().isEmpty())) {
+    return false;
+  }
+  SimulationVisibility restored;
+  for (const auto value : areas.toArray()) {
+    const auto area = value.toArray();
+    if (area.size() != 3) {
+      return false;
+    }
+    restored.m_scouted_areas.push_back({static_cast<float>(area[0].toDouble()),
+                                        static_cast<float>(area[1].toDouble()),
+                                        static_cast<float>(area[2].toDouble())});
+  }
+  for (const auto value : grids.toArray()) {
+    const auto row = value.toObject();
+    const int owner = row.value("owner").toInt();
+    bool version_valid = false;
+    const auto version = row.value("version").toString().toULongLong(&version_valid);
+    const auto cells =
+        QByteArray::fromBase64Encoding(row.value("cells").toString().toLatin1(),
+                                       QByteArray::AbortOnBase64DecodingErrors);
+    const auto size = static_cast<qsizetype>(map->get_width()) * map->get_height();
+    if (owner <= 0 || restored.m_grids.contains(owner) || !version_valid ||
+        version == 0 || !cells || cells.decoded.size() != size ||
+        std::any_of(cells.decoded.begin(), cells.decoded.end(), [](unsigned char cell) {
+          return cell > 2;
+        })) {
+      return false;
+    }
+    auto& service = restored.grid_for(owner);
+    service.initialize(map->get_width(), map->get_height(), map->get_tile_size());
+    auto snapshot = std::make_shared<VisibilityService::Snapshot>(service.snapshot());
+    snapshot->version = version;
+    snapshot->cells.assign(cells.decoded.begin(), cells.decoded.end());
+    service.m_published_snapshot = std::move(snapshot);
+    for (const auto source_value : row.value("sources").toArray()) {
+      const auto source = source_value.toArray();
+      if (source.size() != 4) {
+        return false;
+      }
+      constexpr int k_max_coordinate = 1 << 24;
+      const int z = source[0].toInt(k_max_coordinate);
+      const int x = source[1].toInt(k_max_coordinate);
+      const int radius = source[2].toInt(-1);
+      const auto radius_sq = static_cast<float>(source[3].toDouble(-1.0));
+      if (z <= -k_max_coordinate || z >= k_max_coordinate || x <= -k_max_coordinate ||
+          x >= k_max_coordinate || radius < 0 || radius >= k_max_coordinate ||
+          !std::isfinite(radius_sq) || radius_sq < 0.0F) {
+        return false;
+      }
+      service.m_last_sources.push_back({z, x, radius, radius_sq});
+    }
+    if (row.contains("result_tick")) {
+      bool tick_valid = false;
+      const auto tick = row.value("result_tick").toString().toULongLong(&tick_valid);
+      if (!tick_valid || tick <= completed_tick || tick - completed_tick != 1) {
+        return false;
+      }
+      service.m_result_tick = tick;
+      service.enqueue_job(service.compose_job_payload(service.m_last_sources));
+    }
+  }
+  m_grids.swap(restored.m_grids);
+  m_scouted_areas.swap(restored.m_scouted_areas);
+  return true;
 }
 
 void VisibilityService::publish_snapshot_locked(std::vector<std::uint8_t> cells) {

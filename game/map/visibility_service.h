@@ -15,6 +15,8 @@
 
 #include "map_definition.h"
 
+class QJsonObject;
+
 namespace Engine::Core {
 class World;
 }
@@ -100,6 +102,8 @@ public:
   ~VisibilityService();
 
 private:
+  friend class SimulationVisibility;
+
   auto in_bounds(int x, int z) const -> bool;
   auto world_to_grid(float world_coord, float half) const -> int;
 
@@ -174,6 +178,10 @@ public:
   void set_scouted_areas(const std::vector<ScoutedArea>& areas);
   void clear();
   [[nodiscard]] auto generation() const -> std::uint64_t;
+  [[nodiscard]] auto capture_state() const -> QJsonObject;
+  [[nodiscard]] auto restore_state(const QJsonObject& state,
+                                   const TerrainHeightMap* map,
+                                   std::uint64_t completed_tick) -> bool;
 
 private:
   std::map<int, VisibilityService> m_grids;

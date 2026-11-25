@@ -7,10 +7,14 @@
 #include <algorithm>
 #include <cmath>
 
-#include "app/commander/commander_heading.h"
 #include "game/accessibility/commander_input_settings.h"
+#include "game/commander/commander_heading.h"
 
 namespace App::Core {
+
+using Game::Commander::CommanderHeldInput;
+using Game::Commander::k_commander_view_pitch_limit_degrees;
+using Game::Commander::rightward_look_delta;
 
 void CommanderLook::set_pitch(float pitch) {
   m_view_pitch = std::clamp(pitch,

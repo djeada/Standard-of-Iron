@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_presentation_trace.h"
+#include "game/commander/commander_presentation_trace.h"
 #include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
@@ -86,7 +86,7 @@ TEST_F(CommanderPresentationTraceTest, WalkingRecordsMotorPoseVelocityAndSource)
   ASSERT_TRUE(trace.valid);
   EXPECT_EQ(trace.sequence, 30U);
   EXPECT_EQ(trace.motor.displacement_source,
-            App::Core::CommanderDisplacementSource::Walk);
+            Game::Commander::CommanderDisplacementSource::Walk);
   EXPECT_GT(trace.motor.requested_speed, 0.0F);
   EXPECT_GT(trace.motor.actual_velocity.length(), 0.0F);
   EXPECT_NEAR(trace.motor.dt, k_dt, 1.0e-6F);
@@ -410,7 +410,7 @@ TEST_F(CommanderPresentationTraceTest, ATickConsumesEachEdgeAtMostOnce) {
 }
 
 TEST(CommanderDisplacementSourceTest, EverySourceHasAStableName) {
-  using App::Core::CommanderDisplacementSource;
+  using Game::Commander::CommanderDisplacementSource;
   EXPECT_STREQ(displacement_source_name(CommanderDisplacementSource::None), "none");
   EXPECT_STREQ(displacement_source_name(CommanderDisplacementSource::Walk), "walk");
   EXPECT_STREQ(displacement_source_name(CommanderDisplacementSource::DodgeRoll),

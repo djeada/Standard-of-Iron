@@ -21,6 +21,7 @@
 #include "game/command/json_u64.h"
 #include "game/command/log_format.h"
 #include "game/command/replay.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/save/replay_checkpoint.h"
@@ -409,6 +410,7 @@ TEST(ReplayTest, ACheckpointRestoresAWorldAndContinuesWithTheLogTail) {
   const auto path = temp.filePath("checkpoint.soireplay");
   Match live;
   auto& session = live.session;
+  session.owners().set_owner_team(2, 1);
   const auto unit = live.spawn(1);
   session.world().add_system(std::make_unique<CommandSystem>());
   session.economy().set(1, Game::Systems::ResourceType::Gold, 123);
@@ -422,13 +424,25 @@ TEST(ReplayTest, ACheckpointRestoresAWorldAndContinuesWithTheLogTail) {
   }));
   session.set_replay_recorder(std::move(recorder));
   session.commands().submit(Source::LocalPlayer, 1, SetHold{.units = {unit}});
+  session.commands().submit(
+      Source::AI,
+      2,
+      Game::Systems::AllyAppeal{.appeal_id = 11,
+                                .from_ally = 2,
+                                .to_owner = 1,
+                                .resource = Game::Systems::ResourceType::Gold,
+                                .amount = 20});
   ASSERT_EQ(advance(live), 1);
   ASSERT_EQ(advance(live), 1);
   const auto before = Game::Session::subsystem_digests(session);
+  ASSERT_NE(session.alliance().open_appeal(11), nullptr);
+  session.commands().submit(
+      Source::LocalPlayer, 1, AllyAppealAnswer{.appeal_id = 11, .accept = true});
   session.commands().submit(
       Source::LocalPlayer, 1, SetHold{.units = {unit}, .active = false});
   ASSERT_EQ(advance(live), 1);
   ASSERT_EQ(advance(live), 1);
+  EXPECT_EQ(session.economy().get(1, Game::Systems::ResourceType::Gold), 103);
   const auto expected = Game::Session::subsystem_digests(session);
   session.replay_recorder()->finish();
 
@@ -441,11 +455,103 @@ TEST(ReplayTest, ACheckpointRestoresAWorldAndContinuesWithTheLogTail) {
   EXPECT_EQ(checkpoint->tick, 2U);
   Match restored;
   restored.session.world().add_system(std::make_unique<CommandSystem>());
-  ASSERT_TRUE(Game::Save::restore_replay_checkpoint(
-      restored.session, std::get<Checkpoint>(checkpoint->payload).snapshot));
-  EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, before.root);
   restored.session.set_replay_player(std::make_unique<ReplayPlayer>(std::move(*file)));
+  ASSERT_EQ(Game::Save::seek_replay(restored.session, 2), 2U);
+  EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, before.root);
   EXPECT_EQ(restored.session.advance_from_log(10), 2);
+  EXPECT_FALSE(restored.session.replay_player()->divergence());
+  EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, expected.root);
+}
+
+TEST(ReplayTest, SeeksWithTwoCommandersUnderIndependentDirectControl) {
+  using namespace Game::Command;
+  using namespace Engine::Core;
+  using Game::Session::SessionContext;
+  Match live;
+  auto& session = live.session;
+  session.owners().register_owner_with_id(3, Game::Systems::OwnerType::Player, "ally");
+  session.owners().set_local_player_id(1);
+  ASSERT_EQ(session.human_owners(), (std::vector<int>{1, 3}));
+  ASSERT_EQ(session.local_owner(), 1);
+  session.world().add_system(std::make_unique<CommandSystem>());
+  const auto first = live.spawn(1);
+  const auto second = live.spawn(3);
+  for (const auto id : {first, second}) {
+    auto* commander = session.world().get_entity(id);
+    commander->get_component<TransformComponent>()->position.x =
+        id == first ? -8.0F : 8.0F;
+    commander->get_component<UnitComponent>()->spawn_type =
+        Game::Units::SpawnType::Swordsman;
+    commander->add_component<CommanderComponent>();
+    commander->add_component<MovementComponent>();
+  }
+
+  QTemporaryDir temp;
+  ASSERT_TRUE(temp.isValid());
+  const auto path = temp.filePath("commander-checkpoint.soireplay");
+  ReplayHeader header;
+  header.checkpoint_interval = 2;
+  header.digest_interval = 1;
+  auto recorder = std::make_unique<ReplayRecorder>();
+  ASSERT_TRUE(recorder->begin(path, header, session.commands(), [&session]() {
+    return Game::Save::capture_replay_checkpoint(session);
+  }));
+  session.set_replay_recorder(std::move(recorder));
+  auto& log = session.commands().log();
+  const auto action = [&](std::uint64_t tick, int owner, CommanderAction value) {
+    log.append(
+        tick, Source::LocalPlayer, owner, CommanderActionRecord{.action = value});
+  };
+  const auto frame = [&](std::uint64_t tick, int owner, EntityID id, bool dodge) {
+    CommanderInputFrame input{.commander = id, .view_yaw = 30.0F, .sequence = tick};
+    input.set(CommanderInputFrame::Forward, true);
+    input.set(CommanderInputFrame::Run, true);
+    input.set(CommanderInputFrame::DodgePressed, dodge);
+    log.append(tick, Source::LocalPlayer, owner, input);
+  };
+  action(1, 1, CommanderAction::EnterControl);
+  action(1, 3, CommanderAction::EnterControl);
+  frame(1, 1, second, true);
+  frame(1, 1, first, false);
+  frame(1, 3, second, false);
+  frame(2, 1, first, true);
+  frame(2, 3, second, false);
+  frame(3, 1, first, false);
+  action(3, 3, CommanderAction::ExitControl);
+  frame(4, 1, first, false);
+  action(4, 3, CommanderAction::EnterControl);
+  frame(4, 3, second, false);
+  const auto advance = [&] {
+    return session.advance(
+        session.clock().tick_seconds(), 1, SessionContext::OverloadPolicy::KeepBacklog);
+  };
+  ASSERT_EQ(advance(), 1);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(first)->fpv_controlled);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  EXPECT_FALSE(session.world().try_get<CommanderComponent>(second)->dodge_active);
+  ASSERT_EQ(advance(), 1);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(first)->dodge_active);
+  ASSERT_EQ(advance(), 1);
+  EXPECT_FALSE(session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  ASSERT_EQ(advance(), 1);
+  EXPECT_TRUE(session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  const auto expected = Game::Session::subsystem_digests(session);
+  session.replay_recorder()->finish();
+
+  QString error;
+  auto file = ReplayFile::load(path, &error);
+  ASSERT_TRUE(file) << error.toStdString();
+  Match restored;
+  restored.session.world().add_system(std::make_unique<CommandSystem>());
+  restored.session.set_replay_player(std::make_unique<ReplayPlayer>(std::move(*file)));
+  ASSERT_EQ(Game::Save::seek_replay(restored.session, 3), 2U);
+  EXPECT_FALSE(restored.session.local_owner());
+  EXPECT_EQ(restored.session.human_owners(), (std::vector<int>{1, 3}));
+  EXPECT_FALSE(
+      restored.session.world().try_get<CommanderComponent>(second)->fpv_controlled);
+  ASSERT_EQ(restored.session.advance_from_log(10), 1);
+  EXPECT_TRUE(
+      restored.session.world().try_get<CommanderComponent>(second)->fpv_controlled);
   EXPECT_FALSE(restored.session.replay_player()->divergence());
   EXPECT_EQ(Game::Session::subsystem_digests(restored.session).root, expected.root);
 }

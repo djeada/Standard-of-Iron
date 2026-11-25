@@ -239,8 +239,8 @@ void ArenaScenarioRunner::Impl::check_commander_expectation(
                            "%3 (allowed %4 m)")
                 .arg(correction, 0, 'f', 3)
                 .arg(frame->time_seconds, 0, 'f', 2)
-                .arg(QString::fromLatin1(
-                    App::Core::displacement_source_name(motor.displacement_source)))
+                .arg(QString::fromLatin1(Game::Commander::displacement_source_name(
+                    motor.displacement_source)))
                 .arg(allowed, 0, 'f', 3));
         break;
       }
@@ -257,14 +257,15 @@ void ArenaScenarioRunner::Impl::check_commander_expectation(
       if (have_previous && motor.dt > 0.0F) {
         float const change = std::abs(speed - previous_speed) / motor.dt;
         if (change > allowed) {
-          add_issue(QStringLiteral("commander_speed_discontinuity"),
-                    QStringLiteral("planar speed changed %1 m/s^2 at %2 s via %3 "
-                                   "(allowed %4 m/s^2)")
-                        .arg(change, 0, 'f', 2)
-                        .arg(frame->time_seconds, 0, 'f', 2)
-                        .arg(QString::fromLatin1(App::Core::displacement_source_name(
-                            motor.displacement_source)))
-                        .arg(allowed, 0, 'f', 2));
+          add_issue(
+              QStringLiteral("commander_speed_discontinuity"),
+              QStringLiteral("planar speed changed %1 m/s^2 at %2 s via %3 "
+                             "(allowed %4 m/s^2)")
+                  .arg(change, 0, 'f', 2)
+                  .arg(frame->time_seconds, 0, 'f', 2)
+                  .arg(QString::fromLatin1(Game::Commander::displacement_source_name(
+                      motor.displacement_source)))
+                  .arg(allowed, 0, 'f', 2));
           break;
         }
       }
@@ -353,7 +354,8 @@ void ArenaScenarioRunner::Impl::check_commander_expectation(
       break;
     }
     auto const counter_of =
-        [&expectation](const App::Core::CommanderCombatTrace& combat) -> std::uint32_t {
+        [&expectation](
+            const Game::Commander::CommanderCombatTrace& combat) -> std::uint32_t {
       auto const& key = expectation.counter_key;
       if (key == QLatin1String("accepted")) {
         return combat.queue_accepted;

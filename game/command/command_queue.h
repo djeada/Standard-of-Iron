@@ -15,6 +15,7 @@ namespace Game::Command {
 class CommandQueue {
 public:
   using Observer = std::function<void(const Command&)>;
+  using RecordHandler = std::function<void(const LogEntry&)>;
 
   using RejectionObserver = std::function<void(const Command&, Rejection)>;
 
@@ -29,7 +30,9 @@ public:
 
   auto submit(Source source, int owner_id, Payload payload) -> bool;
 
-  auto drain(Engine::Core::World& world, std::uint64_t tick) -> std::size_t;
+  auto drain(Engine::Core::World& world,
+             std::uint64_t tick,
+             const RecordHandler& handle_record = {}) -> std::size_t;
 
   [[nodiscard]] auto pending() const -> std::size_t;
 

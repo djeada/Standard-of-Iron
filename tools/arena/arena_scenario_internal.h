@@ -259,7 +259,7 @@ struct ArenaScenarioRunner::Impl {
     std::vector<TraceUnit> units;
     std::vector<TraceSoldier> soldiers;
     std::vector<TraceAnimal> animals;
-    App::Core::CommanderPresentationTrace commander;
+    Game::Commander::CommanderPresentationTrace commander;
   };
   struct TravelObservation {
     bool has_start{false};
@@ -488,7 +488,7 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, std::vector<float>> initial_formation_projection;
   QSet<QString> issue_keys;
   std::vector<TraceFrame> trace;
-  App::Core::CommanderPresentationTrace commander_trace;
+  Game::Commander::CommanderPresentationTrace commander_trace;
   float animation_time{0.0F};
   ArenaScenarioReport report;
   ArenaEnvironmentSnapshot environment_snapshot;

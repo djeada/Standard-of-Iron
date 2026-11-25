@@ -18,7 +18,7 @@ struct CommanderActionName {
   const char* name;
 };
 
-constexpr std::array<CommanderActionName, 10> k_commander_action_names{{
+constexpr std::array<CommanderActionName, 11> k_commander_action_names{{
     {CommanderAction::EnterControl, "enter_control"},
     {CommanderAction::ExitControl, "exit_control"},
     {CommanderAction::ToggleControl, "toggle_control"},
@@ -29,6 +29,7 @@ constexpr std::array<CommanderActionName, 10> k_commander_action_names{{
     {CommanderAction::ToggleLockOn, "toggle_lock_on"},
     {CommanderAction::SwitchLockLeft, "switch_lock_left"},
     {CommanderAction::SwitchLockRight, "switch_lock_right"},
+    {CommanderAction::ReleaseInput, "release_input"},
 }};
 
 auto finite_float(const QJsonValue& value) -> std::optional<float> {
@@ -57,6 +58,7 @@ auto to_json(const CommanderInputFrame& frame) -> QJsonObject {
   object["buttons"] = u64_to_json(frame.buttons);
   object["view_yaw"] = static_cast<double>(frame.view_yaw);
   object["view_pitch"] = static_cast<double>(frame.view_pitch);
+  object["camera_fov"] = static_cast<double>(frame.camera_fov);
   object["sequence"] = u64_to_json(frame.sequence);
   if (frame.held(CommanderInputFrame::HasDodgeDirection)) {
     QJsonArray direction;
@@ -83,14 +85,19 @@ auto commander_input_from_json(const QJsonObject& object)
   const auto sequence = u64_from_json(object.value(QLatin1String("sequence")));
   const auto yaw = finite_float(object.value(QLatin1String("view_yaw")));
   const auto pitch = finite_float(object.value(QLatin1String("view_pitch")));
+  const auto fov_value = object.value(QLatin1String("camera_fov"));
+  const auto fov =
+      fov_value.isUndefined() ? std::optional<float>(68.0F) : finite_float(fov_value);
   constexpr std::uint64_t all_buttons = (CommanderInputFrame::HasAimRay << 1U) - 1U;
-  if (!commander || !buttons || *buttons > all_buttons || !sequence || !yaw || !pitch) {
+  if (!commander || !buttons || *buttons > all_buttons || !sequence || !yaw || !pitch ||
+      !fov || *fov <= 0.0F || *fov >= 180.0F) {
     return std::nullopt;
   }
   CommanderInputFrame frame{.commander = *commander,
                             .buttons = static_cast<std::uint32_t>(*buttons),
                             .view_yaw = *yaw,
                             .view_pitch = *pitch,
+                            .camera_fov = *fov,
                             .sequence = *sequence};
   if (frame.held(CommanderInputFrame::HasDodgeDirection)) {
     const auto values = object.value(QLatin1String("dodge")).toArray();

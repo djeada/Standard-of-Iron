@@ -21,8 +21,8 @@
 
 using App::Core::CommanderCameraInputs;
 using App::Core::CommanderCameraRig;
-using App::Core::CommanderFramingState;
 using Engine::Core::FightContext;
+using Game::Commander::CommanderFramingState;
 
 namespace {
 
@@ -302,7 +302,7 @@ TEST(CommanderCameraRig, ImpactKickIsOffWhenTheCameraImpulseIsDisabled) {
 
 namespace {
 
-[[nodiscard]] auto screen_fraction_y(const App::Core::CommanderCameraTrace& trace,
+[[nodiscard]] auto screen_fraction_y(const Game::Commander::CommanderCameraTrace& trace,
                                      const QVector3D& world,
                                      float aspect) -> float {
   QVector3D const forward = (trace.target_resolved - trace.eye_resolved).normalized();
@@ -829,7 +829,7 @@ protected:
   }
 
   static auto settled_trace(const CommanderCameraInputs& inputs)
-      -> App::Core::CommanderCameraTrace {
+      -> Game::Commander::CommanderCameraTrace {
     CommanderCameraRig rig;
     Render::GL::Camera camera;
     for (int frame = 0; frame < 120; ++frame) {

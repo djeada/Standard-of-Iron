@@ -530,6 +530,7 @@ void GameEngine::update_active_runtime_simulation(float dt) {
   if (m_commander_view_model->active()) {
     m_commander_view_model->update_control_mode(dt);
     m_world->update(dt);
+    m_commander_view_model->publish_commander_tick(dt);
     m_commander_view_model->restore_direct_control_if_ready();
   } else {
     m_world->update(dt);
@@ -776,6 +777,9 @@ void GameEngine::publish_presentation_frame() {
   if (frame->has_camera) {
     frame->camera = m_render_camera;
   }
+  if (m_production_manager != nullptr) {
+    frame->construction_previews = m_production_manager->construction_preview_world();
+  }
   frame->selected_ids = m_selected_render_ids;
   frame->attack_targeting = m_targeting->attack_targeting();
   frame->interaction_targeting = m_targeting->interaction_targeting();
@@ -883,7 +887,11 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
       }
     }
   };
-  frame.overlays = [this, &presentation](Render::GL::Renderer&) {
+  frame.overlays = [this, &presentation](Render::GL::Renderer& renderer) {
+    if (presentation->construction_previews != nullptr) {
+      renderer.render_construction_previews_public(
+          presentation->construction_previews.get(), nullptr, false);
+    }
     render_effects_pass(*presentation);
   };
   m_renderer->render_frame(frame);

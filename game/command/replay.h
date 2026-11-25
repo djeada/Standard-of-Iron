@@ -112,6 +112,7 @@ public:
   explicit ReplayPlayer(ReplayFile file);
 
   void feed(std::uint64_t tick, CommandQueue& queue);
+  void resume_after(std::uint64_t tick);
 
   auto check(std::uint64_t tick,
              const Game::Session::SubsystemDigests& digests) -> bool;

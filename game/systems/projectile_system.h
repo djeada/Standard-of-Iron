@@ -15,6 +15,8 @@
 #include "projectile_impact_event.h"
 #include "spent_projectile.h"
 
+class QJsonObject;
+
 namespace Game::Systems {
 
 class ProjectileSystem : public Engine::Core::System {
@@ -65,6 +67,8 @@ public:
   [[nodiscard]] auto spent_projectiles() const -> const std::vector<SpentProjectile>& {
     return m_spent;
   }
+  [[nodiscard]] auto capture_checkpoint() const -> QJsonObject;
+  auto restore_checkpoint(const QJsonObject& state) -> bool;
 
 private:
   struct PendingLaunchCue {

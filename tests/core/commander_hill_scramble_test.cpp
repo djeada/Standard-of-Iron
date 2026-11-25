@@ -5,8 +5,8 @@
 #include <optional>
 
 #include "app/commander/commander_control_controller.h"
-#include "app/commander/commander_locomotion.h"
-#include "app/commander/commander_motor.h"
+#include "game/commander/commander_locomotion.h"
+#include "game/commander/commander_motor.h"
 #include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"

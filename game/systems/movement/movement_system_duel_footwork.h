@@ -12,6 +12,8 @@ public:
                            Engine::Core::AttackComponent& attack) const -> bool;
 
 private:
+  friend class MovementSystem;
+
   float m_clock{0.0F};
 };
 

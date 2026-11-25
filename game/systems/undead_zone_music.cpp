@@ -1,5 +1,6 @@
 #include "undead_zone_music.h"
 
+#include "core/ambient_session.h"
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "core/world_spatial_index.h"
@@ -16,42 +17,28 @@ UndeadZoneMusic::UndeadZoneMusic(const OwnerRegistry& owners)
     : m_owners(owners) {
 }
 
-auto UndeadZoneMusic::local_player_inside(Engine::Core::World& world,
-                                          const UndeadRuntimeZone& zone) const -> bool {
-  const int local_owner = m_owners.get_local_player_id();
-  if (local_owner == 0) {
-    return false;
-  }
-  bool inside = false;
-  world.spatial_index().for_each_in_radius(
-      zone.center_world.x(),
-      zone.center_world.z(),
-      zone.definition.radius,
-      [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
-        if (entry.health > 0 && entry.owner_id == local_owner) {
-          inside = true;
-        }
-      });
-  return inside;
-}
-
-auto UndeadZoneMusic::inside_a_woken_zone(
+auto UndeadZoneMusic::owners_in_woken_zones(
     Engine::Core::World& world,
-    const std::vector<UndeadRuntimeZone>& zones) const -> bool {
+    const std::vector<UndeadRuntimeZone>& zones) const -> std::set<int> {
+  std::set<int> owners;
   for (const auto& zone : zones) {
     const bool cleared = zone.active_spawn_ids.empty() && undead_waves_exhausted(zone);
     if (!zone.awakened || zone.garrison_broken || cleared) {
       continue;
     }
-    const int local_owner = m_owners.get_local_player_id();
-    if (zone.awakened_by_owner_id != 0 && zone.awakened_by_owner_id != local_owner) {
-      continue;
-    }
-    if (local_player_inside(world, zone)) {
-      return true;
-    }
+    world.spatial_index().for_each_in_radius(
+        zone.center_world.x(),
+        zone.center_world.z(),
+        zone.definition.radius,
+        [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+          if (entry.health > 0 && m_owners.is_player(entry.owner_id) &&
+              (zone.awakened_by_owner_id == 0 ||
+               zone.awakened_by_owner_id == entry.owner_id)) {
+            owners.insert(entry.owner_id);
+          }
+        });
   }
-  return false;
+  return owners;
 }
 
 void UndeadZoneMusic::update(Engine::Core::World& world,
@@ -63,17 +50,20 @@ void UndeadZoneMusic::update(Engine::Core::World& world,
   }
   m_poll = 0.0F;
 
-  const bool inside = inside_a_woken_zone(world, zones);
-  if (inside == m_playing) {
-    return;
+  auto inside = owners_in_woken_zones(world, zones);
+  auto& events = *Game::Session::services_for(world).events;
+  for (const int owner : m_playing) {
+    if (!inside.contains(owner)) {
+      events.publish(Engine::Core::MusicStopEvent(owner));
+    }
   }
-  m_playing = inside;
-  if (inside) {
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::MusicTriggerEvent(k_awakening_music));
-  } else {
-    Engine::Core::EventManager::instance().publish(Engine::Core::MusicStopEvent());
+  for (const int owner : inside) {
+    if (!m_playing.contains(owner)) {
+      events.publish(
+          Engine::Core::MusicTriggerEvent(k_awakening_music, 1.0F, true, owner));
+    }
   }
+  m_playing.swap(inside);
 }
 
 } // namespace Game::Systems

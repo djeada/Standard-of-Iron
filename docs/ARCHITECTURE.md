@@ -116,7 +116,7 @@ replay and replicated input ──────────┘
 
 This gives different command producers the same rules. A move issued by the player, an AI move, and a replayed move enter the same simulation path instead of carrying three independent versions of movement legality.
 
-The log assigns each input a tick and sequence number before validation. Live commands and recorded commands pass through the same validator at their assigned tick. Playback and log followers consume completed ticks without running AI decisions.
+The log assigns each input a tick and sequence number before validation. Live commands and recorded commands pass through the same validator at their assigned tick. Playback and log followers consume completed ticks without running AI decisions. The simulation also applies commander handoffs and per-tick direct-control frames in log order. The client supplies input and publishes the camera and HUD.
 
 ## Fixed-step simulation
 
@@ -147,7 +147,7 @@ The main ingredients are:
 - save/replay snapshots that capture authoritative non-entity state for the systems that register a `SessionSnapshot` contributor; and
 - world digests used by replay verification.
 
-Replay format 8 has a build and content header followed by checksummed, length-prefixed records. The records preserve 64-bit seeds, entity IDs, ticks, and sequence numbers as decimal strings. When the file ends in a partial record, playback uses the last complete tick. Older formats require the original simulation build.
+Replay format 8 has a build and content header followed by checksummed, length-prefixed records. The records preserve 64-bit seeds, entity IDs, ticks, and sequence numbers as decimal strings. When the file ends in a partial record, playback uses the last complete tick. Older formats require the original simulation build. Periodic checkpoints preserve simulation state and entity allocation order. Seeking restores the nearest checkpoint at or before the requested tick, then applies the intervening log records.
 
 ### What the replay digest covers
 

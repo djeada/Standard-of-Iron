@@ -7,77 +7,22 @@
 #include "app/commander/commander_control_controller.h"
 #include "app/economy/production_manager.h"
 #include "game/command/command_queue.h"
+#include "game/command/command_system.h"
+#include "game/commander/commander_handoff.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/selection_service.h"
 #include "game/session/session_context.h"
-#include "game/systems/movement/order_service.h"
 
 namespace App::Core {
 namespace {
 
-constexpr int k_rpg_pool_base = 120;
-constexpr int k_rpg_pool_min = 130;
-constexpr int k_rpg_pool_max = 220;
-constexpr int k_rpg_pool_health_divisor = 60;
-
-auto rpg_pool_for_commander(const Engine::Core::UnitComponent* unit) -> int {
-  if (unit == nullptr) {
-    return 150;
-  }
-  const int scaled = k_rpg_pool_base + (unit->max_health / k_rpg_pool_health_divisor);
-  return std::clamp(scaled, k_rpg_pool_min, k_rpg_pool_max);
-}
-
-void settle_body_on_handoff(Engine::Core::CommanderComponent& data) {
-  data.power_strike_active = false;
-  data.just_struck_enemy = false;
-  data.last_strike_combo_step = 0U;
-  data.jump_active = false;
-  data.jump_phase = 0.0F;
-  data.jump_height_offset = 0.0F;
-
-  data.airborne_velocity = 0.0F;
-  data.dive_attack_active = false;
-  data.dodge_active = false;
-  data.dodge_phase = 0.0F;
-}
-
-void clear_target_state(Engine::Core::RpgCommanderTargetComponent& targets) {
-  constexpr auto k_no_slot =
-      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
-  targets.explicit_lock_target_id = 0;
-  targets.explicit_lock_soldier_slot = k_no_slot;
-  targets.aim_candidate_id = 0;
-  targets.aim_candidate_soldier_slot = k_no_slot;
-  targets.aim_candidate_in_range = false;
-  targets.recent_hit_target_id = 0;
-  targets.recent_hit_soldier_slot = k_no_slot;
-  targets.recent_hit_timer = 0.0F;
-}
-
-void clear_idle_action(Engine::Core::RpgCommanderActionComponent& action) {
-  constexpr auto k_no_slot =
-      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
-  action.phase = Engine::Core::RpgCommanderActionPhase::None;
-  action.combat_action_id = 0U;
-  action.melee_attack_sequence = 0;
-  action.active_target_id = 0;
-  action.active_target_soldier_slot = k_no_slot;
-  action.last_hit_target_id = 0;
-  action.last_hit_soldier_slot = k_no_slot;
-  action.hit_target_ids.fill(0U);
-  action.hit_target_soldier_slots.fill(k_no_slot);
-  action.hit_target_count = 0U;
-  action.last_damage = 0;
-  action.normalized_action_time = 0.0F;
-  action.next_event_index = 0U;
-  action.last_event_type = 0U;
-  action.last_event_valid = false;
-  action.action_active = false;
-  action.weapon_trace_active = false;
+auto log_managed(Engine::Core::World* world) -> bool {
+  return world != nullptr &&
+         world->get_system<Game::Command::CommandSystem>() != nullptr &&
+         Game::Session::SessionContext::for_world(*world) != nullptr;
 }
 
 auto seed_barracks_rally_preview_impl(Engine::Core::World* world,
@@ -252,62 +197,12 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
   effects.save_follow_selection_snapshot = true;
   effects.saved_follow_selection_enabled = context.follow_selection_enabled;
 
-  auto const* existing_action =
-      context.commander->get_component<Engine::Core::RpgCommanderActionComponent>();
-  bool const preserve_advanced_action =
-      existing_action != nullptr && existing_action->action_running;
-
-  if (auto* commander_data =
-          context.commander->get_component<Engine::Core::CommanderComponent>()) {
-    commander_data->rally_requested = false;
-    commander_data->rally_requires_manual_trigger = true;
-    commander_data->fpv_controlled = true;
-    if (!preserve_advanced_action) {
-      commander_data->combo_step = 0;
-      settle_body_on_handoff(*commander_data);
-    }
+  if (!log_managed(context.world)) {
+    Game::Commander::begin_control(*context.commander);
   }
-
-  if (auto* stamina =
-          Engine::Core::get_or_add_component<Engine::Core::StaminaComponent>(
-              context.commander)) {
-    constexpr float k_commander_stamina = 180.0F;
-    constexpr float k_commander_stamina_regen = 30.0F;
-
-    if (stamina->max_stamina < k_commander_stamina) {
-      stamina->max_stamina = k_commander_stamina;
-    }
-    stamina->regen_rate = std::max(stamina->regen_rate, k_commander_stamina_regen);
-  }
-
-  if (auto* transform =
+  if (const auto* transform =
           context.commander->get_component<Engine::Core::TransformComponent>()) {
     effects.commander_view_yaw = transform->rotation.y;
-  }
-
-  if (auto* rpg = Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(
-          context.commander)) {
-    auto* unit = context.commander->get_component<Engine::Core::UnitComponent>();
-    if (!rpg->active) {
-
-      int const pool = std::max(1, rpg_pool_for_commander(unit));
-      int const own_health = unit != nullptr ? std::max(1, unit->max_health) : pool;
-      rpg->incoming_damage_scale =
-          std::min(1.0F, static_cast<float>(own_health) / static_cast<float>(pool));
-    }
-    rpg->active = true;
-  }
-
-  if (auto* rpg_targets =
-          Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
-              context.commander)) {
-    clear_target_state(*rpg_targets);
-  }
-  if (auto* rpg_action =
-          Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
-              context.commander);
-      rpg_action != nullptr && !preserve_advanced_action) {
-    clear_idle_action(*rpg_action);
   }
 
   return effects;
@@ -552,59 +447,18 @@ auto CommanderModeCoordinator::restore_controlled_commander_direct_control_if_re
     return effects;
   }
 
-  commander_data->fpv_controlled = true;
+  if (!log_managed(context.world)) {
+    Game::Commander::resume_control(*commander);
+  }
   effects.reset_commander_input = true;
   return effects;
 }
 
 void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     Engine::Core::World* world, Engine::Core::EntityID controlled_commander_id) const {
-  if (world == nullptr || controlled_commander_id == 0) {
-    return;
+  if (!log_managed(world)) {
+    Game::Commander::end_control(world, controlled_commander_id);
   }
-
-  auto* commander = world->get_entity(controlled_commander_id);
-  if (commander == nullptr) {
-    return;
-  }
-
-  auto const* existing_action =
-      commander->get_component<Engine::Core::RpgCommanderActionComponent>();
-  bool const preserve_advanced_action =
-      existing_action != nullptr && existing_action->action_running;
-
-  if (auto* commander_data =
-          commander->get_component<Engine::Core::CommanderComponent>()) {
-    commander_data->rally_requested = false;
-    commander_data->rally_requires_manual_trigger = true;
-    commander_data->fpv_controlled = false;
-    if (!preserve_advanced_action) {
-      settle_body_on_handoff(*commander_data);
-    }
-  }
-  if (auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>()) {
-
-    guard->active = false;
-    guard->perfect_guard_remaining = 0.0F;
-    guard->rearm_requires_release = false;
-  }
-  if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
-    rpg->active = false;
-    rpg->dodge_grace_remaining = 0.0F;
-  }
-  if (auto* rpg_targets =
-          commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
-    clear_target_state(*rpg_targets);
-  }
-
-  world->remove<Engine::Core::CommanderPresentationSampleComponent>(
-      controlled_commander_id);
-  if (auto* rpg_action =
-          commander->get_component<Engine::Core::RpgCommanderActionComponent>();
-      rpg_action != nullptr && !preserve_advanced_action) {
-    clear_idle_action(*rpg_action);
-  }
-  Game::Systems::OrderService::reset_movement(commander);
 }
 
 auto CommanderModeCoordinator::active_commander(const CommanderRallyContext& context)

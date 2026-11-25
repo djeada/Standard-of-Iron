@@ -142,6 +142,8 @@ public:
 
   void ensure_render_snapshot();
 
+  [[nodiscard]] static auto make_render_world() -> std::shared_ptr<World>;
+
   [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
 
   [[nodiscard]] auto
