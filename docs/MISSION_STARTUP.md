@@ -275,6 +275,37 @@ immediately. The interactive error offers a Quit action if graphics failed or
 the engine could not safely clear the stalled match. Direct mission and replay
 launches log the error and return a failure exit code.
 
+If the renderer disappears between scheduling a load and completing it,
+`complete_match_load` takes the same failed-load cleanup, so the loading flag, the
+overlay and its 60-second timer are all cleared with the attempt.
+
+## Windows graphics startup supervision
+
+A default Windows launch (no `QT_OPENGL`, no `--force-software`/`--quality=none`,
+no `SOI_NO_STARTUP_SUPERVISOR=1`) runs the game as a child of a small supervisor
+process (`app/bootstrap/startup_supervisor.*`). The child tries the graphics
+driver first. It reports its progress through a status file: `native_probe`,
+`qt_application`, `qml_load`, `scene_graph`, `gameplay_renderer`, and finally
+`ready` when `GLView::renderer_ready` fires, which is the gameplay renderer's own
+first-frame milestone.
+
+If an attempt does not become ready, the supervisor gives it at most one fresh
+attempt with the bundled Mesa runtime (`QT_OPENGL=software`, which needs the
+adjacent `opengl32sw.dll`). A failed attempt is one of: the native probe was
+rejected (exit 20), the process crashed (including a driver crash inside the
+probe), Qt or the gameplay renderer failed before readiness (exit 3 or 21), or
+the attempt did not become ready within 90 seconds, in which case it is killed.
+A launch that reached readiness is never retried; the supervisor passes through
+the child's exit code. If Mesa is missing or fails too, one dialog names each
+attempt's failure stage and the startup log, and the launch exits.
+
+`%LOCALAPPDATA%\standard_of_iron\startup.log` (or the file named by
+`SOI_STARTUP_LOG_PATH`) is rewritten on every supervised launch. It records the
+backend and outcome of each attempt and the child's log up to readiness,
+including the OpenGL vendor, renderer, version and profile. `LAUNCH.bat` waits
+for the launch and reports its exit code instead of looking for a process by
+name. Explicit overrides (`QT_OPENGL`, the debug scripts) skip the supervisor.
+
 ## Minimum display time
 
 The loading flow also respects its minimum display timing before reveal.

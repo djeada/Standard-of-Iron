@@ -569,6 +569,51 @@ jobs:
 
           Write-Host "All required dependencies are present"
 
+      - name: Verify default launch reaches a gameplay frame
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # The packaged default entry point: no QT_OPENGL, no flags. The hosted
+          # runner has no GPU, so the native probe is rejected and the
+          # supervisor has to recover through the bundled Mesa runtime. A
+          # launch reports success only through its own readiness result.
+          Remove-Item Env:QT_OPENGL -ErrorAction SilentlyContinue
+          Remove-Item Env:GALLIUM_DRIVER -ErrorAction SilentlyContinue
+          $env:QT_QPA_PLATFORM = 'windows'
+          $startupLog = Join-Path $env:RUNNER_TEMP "default_launch_startup.log"
+          $env:SOI_STARTUP_LOG_PATH = $startupLog
+          $stdoutLog = Join-Path $env:RUNNER_TEMP "default_launch_out.log"
+          $stderrLog = Join-Path $env:RUNNER_TEMP "default_launch_err.log"
+
+          Push-Location "$env:APP_DIR"
+          try {
+            $process = Start-Process -FilePath ".\$env:APP_NAME.exe" `
+              -ArgumentList "--release-self-test" `
+              -RedirectStandardOutput $stdoutLog `
+              -RedirectStandardError $stderrLog `
+              -PassThru -NoNewWindow
+            if (-not $process.WaitForExit(300000)) {
+              $process.Kill()
+              $process.WaitForExit()
+              Write-Error "Default launch timed out"
+            }
+            $process.WaitForExit()
+          } finally {
+            Pop-Location
+          }
+
+          if (Test-Path $startupLog) { Get-Content $startupLog | Write-Host }
+          if ($process.ExitCode -ne 0) {
+            Write-Error "Default launch failed with exit code $($process.ExitCode)"
+          }
+          $log = Get-Content $startupLog -Raw
+          if ($log -notmatch "backend=(native|mesa) ready") {
+            Write-Error "The startup log has no readiness result for any attempt"
+          }
+          if (Get-Process -Name $env:APP_NAME -ErrorAction SilentlyContinue) {
+            Write-Error "A failed startup attempt left a game process behind"
+          }
+
       - name: Verify packaged gameplay renderer (software OpenGL)
         shell: pwsh
         run: |

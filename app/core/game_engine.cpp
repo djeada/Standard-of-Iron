@@ -1412,8 +1412,16 @@ void GameEngine::fail_loading(const QString& error) {
 
 void GameEngine::complete_match_load(const QString& map_path,
                                      const QVariantList& player_configs) {
-  if (!m_runtime.loading || renderer_has_failed()) {
-    m_runtime.loading = false;
+  if (renderer_has_failed()) {
+    // The renderer went away between scheduling and completing the load. Take
+    // the failed-load cleanup so neither the loading flag nor the overlay (and
+    // the first-frame deadline it holds) outlives the attempt.
+    if (m_runtime.loading || m_loading_overlay.active()) {
+      end_match_after_failed_load();
+    }
+    return;
+  }
+  if (!m_runtime.loading) {
     return;
   }
   if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {

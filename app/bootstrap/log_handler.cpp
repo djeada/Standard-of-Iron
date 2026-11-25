@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "app/bootstrap/startup_supervisor.h"
+
 namespace App::Bootstrap {
 
 namespace {
@@ -14,6 +16,9 @@ namespace {
 void log_message_handler(QtMsgType type,
                          const QMessageLogContext& context,
                          const QString& msg) {
+  // A supervised launch keeps what the child logged until it reports ready, so
+  // a failed attempt's startup log shows the GL vendor, renderer and profile.
+  App::Bootstrap::tee_startup_log(msg);
   QByteArray const local_msg = msg.toLocal8Bit();
   const char* file = (context.file != nullptr) ? context.file : "";
   const char* function = (context.function != nullptr) ? context.function : "";

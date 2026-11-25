@@ -1,3 +1,4 @@
+#include <QElapsedTimer>
 #include <QEventLoop>
 #include <QStringList>
 #include <QThread>
@@ -79,6 +80,89 @@ TEST(LoadingOverlayTest, MissingFramesTimeOutWithoutRenderCallbacks) {
   EXPECT_FALSE(overlay.active());
   EXPECT_FALSE(overlay.waiting_for_first_frame());
   EXPECT_FALSE(overlay.poll(stalled_load, ready).released);
+}
+
+TEST(LoadingOverlayTest, RepeatedUnreadyPollsDoNotPostponeTheDeadline) {
+  LoadingOverlay overlay(std::chrono::milliseconds(80));
+  QEventLoop event_loop;
+  bool timed_out = false;
+  QObject::connect(
+      &overlay, &LoadingOverlay::first_frames_timed_out, &event_loop, [&]() {
+        timed_out = true;
+        event_loop.quit();
+      });
+  QTimer::singleShot(std::chrono::seconds(2), &event_loop, &QEventLoop::quit);
+
+  overlay.begin();
+  overlay.arm_after_load();
+  // A renderer that never reaches the load keeps reporting load 0 (the engine
+  // passes the armed load only once gameplay rendering runs).
+  QTimer unready_polls;
+  unready_polls.setInterval(5);
+  QObject::connect(&unready_polls, &QTimer::timeout, &event_loop, [&]() {
+    EXPECT_FALSE(overlay.poll(0, ready).released);
+  });
+  unready_polls.start();
+  event_loop.exec();
+
+  EXPECT_TRUE(timed_out);
+  EXPECT_FALSE(overlay.active());
+}
+
+TEST(LoadingOverlayTest, BlockedStartupComponentsStillTimeOutWithoutFrames) {
+  LoadingOverlay overlay(std::chrono::milliseconds(80));
+  QEventLoop event_loop;
+  bool timed_out = false;
+  QObject::connect(
+      &overlay, &LoadingOverlay::first_frames_timed_out, &event_loop, [&]() {
+        timed_out = true;
+        event_loop.quit();
+      });
+  QTimer::singleShot(std::chrono::seconds(2), &event_loop, &QEventLoop::quit);
+
+  overlay.begin();
+  overlay.arm_after_load();
+  const auto load = overlay.armed_load();
+  // Frames arrive but startup readiness never completes, then they stop.
+  int frames = 0;
+  QTimer frame_timer;
+  frame_timer.setInterval(5);
+  QObject::connect(&frame_timer, &QTimer::timeout, &event_loop, [&]() {
+    if (++frames <= 3) {
+      EXPECT_FALSE(overlay.poll(load, blocked).released);
+    }
+  });
+  frame_timer.start();
+  event_loop.exec();
+
+  EXPECT_TRUE(timed_out);
+  EXPECT_FALSE(overlay.active());
+}
+
+TEST(LoadingOverlayTest, SlowSuccessfulLoadReleasesBeforeTheDeadline) {
+  LoadingOverlay overlay(std::chrono::seconds(30));
+  overlay.begin();
+  overlay.arm_after_load();
+  const auto load = overlay.armed_load();
+  QElapsedTimer waited;
+  waited.start();
+  bool released = false;
+  bool components_ready = false;
+  while (!released && waited.elapsed() < 5000) {
+    QThread::msleep(20);
+    components_ready = waited.elapsed() > 1200;
+    released = overlay
+                   .poll(load,
+                         [&]() {
+                           return components_ready
+                                      ? QStringList{}
+                                      : QStringList{QStringLiteral("unit templates")};
+                         })
+                   .released;
+  }
+  EXPECT_TRUE(released);
+  EXPECT_TRUE(components_ready);
+  EXPECT_FALSE(overlay.active());
 }
 
 TEST(LoadingOverlayTest, AbortCancelsTheFirstFrameDeadline) {
