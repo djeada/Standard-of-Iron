@@ -449,6 +449,23 @@ initial per-target precompiled header (`cmake/soi_pch.h`, applied by
 - Release links use LTO; re-linking one small tool costs ~160 CPU-seconds because
   whole-program optimisation reruns over every static library.
 
+Targets no longer each build their own copy. With GCC, 36 targets reuse one of
+three owners (`soi_pch_plain`, `soi_pch_qt`, `soi_pch_qt_test`, see
+`cmake/PrecompiledHeaders.cmake`), so a Debug build writes about 430 MB of
+precompiled headers instead of roughly 150 MB per target, and the CI compiler
+cache stops spending about half of its 2 GB on identical copies (it sat at
+100 % with a 27 % hit rate on the last main build). GCC only accepts a `.gch`
+whose macros, `-fPIC` and floating point flags match, so the owners link
+`Qt6::Core` to inherit Qt's `-fPIC`/`QT_NO_DEBUG`, and a target with flags of its
+own (`render_gl`) or created before `DEFAULT_LANG` was defined (`animation_core`)
+keeps a private PCH. A mismatch is never an error, only a slower build, so
+`scripts/check-shared-pch.py` compiles one unit per target with `-Winvalid-pch`
+and the pull-request lane runs it. The test PCH also holds `<gtest/gtest.h>`
+(about half of a test unit's non-PCH parsing: 0.43 s to 0.34 s to parse
+`camera_bounds_test.cpp`), and the common PCH gained `<any>`, `<condition_variable>`,
+`<deque>`, `<filesystem>`, `<set>`, `<shared_mutex>` and `<thread>`. Clang and MSVC
+keep one PCH per target.
+
 Targets with only one or two C++ sources now compile without a PCH. In a Linux
 Debug configuration this reduces PCH generation from 55 targets to 29. A clean
 build of `audio_master_preview` (including `soi_audio_mastering`) and `scene_core`

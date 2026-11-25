@@ -34,6 +34,10 @@ public:
              std::uint64_t tick,
              const RecordHandler& handle_record = {}) -> std::size_t;
 
+  // Runs every order submitted but not yet sealed, without advancing the log's
+  // tick. For a paused match, whose orders take effect now.
+  auto drain_stopped(Engine::Core::World& world) -> std::size_t;
+
   [[nodiscard]] auto pending() const -> std::size_t;
 
   void clear(std::uint64_t completed_tick = 0);
@@ -56,6 +60,10 @@ public:
   [[nodiscard]] auto rejected_count() const -> std::uint64_t { return m_rejected; }
 
 private:
+  auto execute(Engine::Core::World& world,
+               const CommandLog::Entries& entries,
+               const RecordHandler& handle_record) -> std::size_t;
+
   CommandLog m_log;
   Observer m_observer;
   RejectionObserver m_rejection_observer;

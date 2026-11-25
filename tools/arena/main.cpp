@@ -145,6 +145,11 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("map-preview-content")},
       QStringLiteral("Include biome scatter, world props, authored buildings, and "
                      "walls in map previews."));
+  QCommandLineOption const terrain_only_option(
+      QStringList{QStringLiteral("terrain-only")},
+      QStringLiteral("With an interactive --terrain-map, show the bare terrain "
+                     "review (no buildings, props, fog or wildlife) instead of the "
+                     "live map."));
   QCommandLineOption const duration_option(
       QStringList{QStringLiteral("duration")},
       QStringLiteral("Override scenario duration in simulated seconds."),
@@ -308,6 +313,7 @@ auto main(int argc, char** argv) -> int {
                      terrain_map_option,
                      campaign_terrain_option,
                      map_preview_content_option,
+                     terrain_only_option,
                      duration_option,
                      fps_option,
                      seed_option,
@@ -639,6 +645,9 @@ auto main(int argc, char** argv) -> int {
     }
     if (parser.isSet(terrain_map_option)) {
       const QString map_path = parser.value(terrain_map_option).trimmed();
+      // Looking at a map by hand should show the map as the game plays it:
+      // rivers flowing, trees swaying, buildings working, fog drifting.
+      window.viewport()->set_terrain_review_live(!parser.isSet(terrain_only_option));
       QTimer::singleShot(
           0,
           window.viewport(),

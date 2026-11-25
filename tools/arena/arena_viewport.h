@@ -179,6 +179,10 @@ public slots:
   [[nodiscard]] auto environment_snapshot() const -> Arena::ArenaEnvironmentSnapshot;
 
   void set_terrain_review_content_enabled(bool enabled);
+  // A map opened for interactive viewing plays like the game: authored
+  // content, fog, ambient wildlife and the overlays stay on. Batch reviews keep
+  // their terrain-only default.
+  void set_terrain_review_live(bool live);
 
   void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
 
@@ -406,6 +410,7 @@ private:
   void sync_selection_summary();
   auto build_selection_summary() const -> QString;
   void update_hover(const QPoint& pos);
+  void drag_pan_ground(const QPoint& from, const QPoint& to);
   void select_entity(Engine::Core::EntityID entity_id, bool additive = false);
   void select_entities_in_rect(const QRect& selection_rect, bool additive);
   void select_all_local_units();
@@ -625,6 +630,11 @@ private:
   bool m_attack_scrub_enabled = false;
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
+  QImage m_controls_overlay_image;
+  QString m_controls_overlay_key;
+  QImage m_stats_overlay_image;
+  QElapsedTimer m_stats_overlay_clock;
+  bool m_stats_overlay_paused = false;
 
   bool m_force_full_creature_lod = true;
   bool m_force_animation_diagnostics = false;
@@ -632,6 +642,7 @@ private:
   float m_visibility_accumulator = 0.0F;
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
+  bool m_terrain_review_live = false;
   bool m_terrain_from_map = false;
   float m_scenario_distance_scale = 1.0F;
   std::optional<float> m_scenario_tilt_override;
@@ -686,7 +697,13 @@ private:
   bool m_pan_down_pressed = false;
   bool m_pan_left_pressed = false;
   bool m_pan_right_pressed = false;
+  bool m_yaw_left_pressed = false;
+  bool m_yaw_right_pressed = false;
+  bool m_tilt_up_pressed = false;
+  bool m_tilt_down_pressed = false;
   QString m_last_selection_summary;
+  std::vector<Engine::Core::EntityID> m_last_selection_ids;
+  QElapsedTimer m_selection_summary_clock;
   float m_default_unit_speed = 2.2F;
   float m_fps = 0.0F;
   float m_attack_scrub_phase = 0.5F;

@@ -428,6 +428,31 @@ TEST(SessionDigestTest, EveryBuiltInSnapshotContributorIsHashed) {
 
 } // namespace
 
+TEST(SessionContextTest, ServicingAStoppedClockDoesNotPushLaterOrdersIntoTheFuture) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  auto& world = session.world();
+  session.clock().set_paused(true);
+
+  int handled = 0;
+  session.commands().set_observer([&](const Game::Command::Command&) { ++handled; });
+  session.commands().set_rejection_observer(
+      [&](const Game::Command::Command&, Game::Command::Rejection) { ++handled; });
+  for (int frame = 0; frame < 40; ++frame) {
+    Game::Command::submit(
+        world, Game::Command::Source::LocalPlayer, 1, Game::Command::Stop{});
+    session.service_stopped_clock();
+  }
+  EXPECT_EQ(handled, 40);
+
+  session.clock().set_paused(false);
+  Game::Command::submit(
+      world, Game::Command::Source::LocalPlayer, 1, Game::Command::Stop{});
+  session.commands().drain(world, session.clock().tick() + 1);
+  EXPECT_EQ(handled, 41)
+      << "every paused frame used up a tick number, so this order waited for them";
+}
+
 TEST(SessionContextTest, AStoppedClockStillAppliesOrdersAndPublishesTheWorld) {
   Game::Session::SessionContext session;
   const Game::Session::ScopedSession scope(session);

@@ -283,6 +283,54 @@ TEST(CameraMotion, EasedZoomRespectsTheMapCap) {
   EXPECT_NEAR(camera.get_distance(), camera.max_distance(), 0.05F);
 }
 
+TEST(CameraMotion, EasedZoomWithLimitsGoesPastTheGameBand) {
+  Camera camera = rts_camera();
+  camera.set_rts_view(QVector3D(0, 0, 0), 20.0F, 45.0F, 0.0F);
+  for (int i = 0; i < 80; ++i) {
+    camera.zoom_distance_eased(-1.0F, 1.0F, 900.0F);
+  }
+  for (int i = 0; i < 400; ++i) {
+    camera.update(1.0F / 60.0F);
+  }
+  EXPECT_GT(camera.get_distance(), camera.max_distance());
+  EXPECT_NEAR(camera.get_distance(), 900.0F, 0.5F);
+
+  for (int i = 0; i < 120; ++i) {
+    camera.zoom_distance_eased(1.0F, 1.0F, 900.0F);
+  }
+  for (int i = 0; i < 400; ++i) {
+    camera.update(1.0F / 60.0F);
+  }
+  EXPECT_NEAR(camera.get_distance(), 1.0F, 0.05F);
+}
+
+TEST(CameraMotion, TheDefaultEasedZoomDropsEarlierCustomLimits) {
+  Camera camera = rts_camera();
+  camera.set_rts_view(QVector3D(0, 0, 0), 20.0F, 45.0F, 0.0F);
+  camera.zoom_distance_eased(1.0F, 1.0F, 900.0F);
+  camera.zoom_distance_eased(-50.0F);
+  for (int i = 0; i < 400; ++i) {
+    camera.update(1.0F / 60.0F);
+  }
+  EXPECT_LE(camera.get_distance(), camera.max_distance() + 0.05F);
+}
+
+TEST(CameraMotion, CancellingEasedMotionStopsAZoomInFlight) {
+  Camera camera = rts_camera();
+  camera.set_rts_view(QVector3D(0, 0, 0), 20.0F, 45.0F, 0.0F);
+  camera.zoom_distance_eased(3.0F);
+  camera.set_zoom_anchor(0.25F, 0.3F);
+  camera.pan_eased(5.0F, 5.0F);
+  ASSERT_TRUE(camera.has_pending_motion());
+  camera.cancel_eased_motion();
+  EXPECT_FALSE(camera.has_pending_motion());
+  camera.set_rts_view(QVector3D(0, 0, 0), 30.0F, 45.0F, 0.0F);
+  for (int i = 0; i < 60; ++i) {
+    camera.update(1.0F / 60.0F);
+  }
+  EXPECT_NEAR(camera.get_distance(), 30.0F, 0.01F);
+}
+
 } // namespace
 
 namespace {
