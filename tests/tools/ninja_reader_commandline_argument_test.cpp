@@ -227,4 +227,39 @@ TEST_F(VectorParserTest, ArgumentIntegralValue) {
   CREATE_ARGUMENT_VALUE_TEST_BODY(input_elements, is_integer, integer);
 }
 
+TEST(GetArgumentValue, SuccessfullyFoundArgumentValue) {
+  std::vector<Argument::Argument> args = {
+      Argument::Argument("name", Argument::ArgumentValue::from("dywoq")),
+      Argument::Argument("id", Argument::ArgumentValue::from(1234)),
+      Argument::Argument("ok", Argument::ArgumentValue::from(true))};
+  auto& expected = args.at(1);
+  auto value = Argument::get_argument_value(args, expected.name());
+  ASSERT_NE(value, std::nullopt);
+  ASSERT_EQ(expected.value().is_integer(), value.value().is_integer());
+  ASSERT_EQ(expected.value().integer(), value.value().integer());
+}
+
+TEST(GetArgumentValue, FailedToGetArgumentValue) {
+  std::vector<Argument::Argument> args = {
+      Argument::Argument("name", Argument::ArgumentValue::from("dywoq")),
+      Argument::Argument("id", Argument::ArgumentValue::from(1234)),
+      Argument::Argument("ok", Argument::ArgumentValue::from(true))};
+  auto value = Argument::get_argument_value(args, "names");
+  EXPECT_EQ(value, std::nullopt);
+}
+
+TEST(GetArgumentValue, ExceptionArgumentNameEmpty) {
+  std::vector<Argument::Argument> args = {
+      Argument::Argument("dummy", Argument::ArgumentValue::from(0)),
+  };
+  EXPECT_THROW(
+      { auto _ = Argument::get_argument_value(args, ""); }, std::runtime_error);
+}
+
+TEST(GetArgumentValue, ExceptionParsedAgumentsEmpty) {
+  std::vector<Argument::Argument> args = {};
+  EXPECT_THROW(
+      { auto _ = Argument::get_argument_value(args, "command"); }, std::runtime_error);
+}
+
 } // namespace
