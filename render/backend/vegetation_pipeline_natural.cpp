@@ -435,11 +435,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
       return crown + dir * (length * t) + side * sweep + QVector3D(0.0F, lift, 0.0F);
     };
     auto vertex = [&](const QVector3D& pos, float t, float across) {
-      vertices.push_back({pos,
-                          {frond_u,
-                           v_base + t * v_span,
-                           material + across * k_frond_edge_material},
-                          {}});
+      const float edge_material = material + across * k_frond_edge_material;
+      vertices.push_back({pos, {frond_u, v_base + t * v_span, edge_material}, {}});
     };
     const auto rib = static_cast<std::uint16_t>(vertices.size());
     for (int station = 0; station < k_frond_stations; ++station) {
