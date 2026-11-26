@@ -28,6 +28,9 @@
 # Each of these runs a real world forward for thousands of ticks.
 
 # ai_tests
+# A four-unit column raids an AI camp over up to 40 s of simulated time.
+# The full battle took 11.4 s on a pull-request runner in Debug.
+DefenderEngagementTest.AnAiCampRaidedByAColumnFightsWithEveryMan
 AiTownPlanTest.*
 AiEstateEconomyTest.*
 AiDuelMatchTest.*
@@ -73,6 +76,9 @@ EnclosureEntryTest.*
 BattleScriptDeterminismTest.CannaePlaysThroughItsPhasesIdenticallyTwice
 
 # app_tests
+# Loads Iron Sepulcher Watch and simulates up to 60 s of fighting at the
+# shrine. This approach took 10.8 s on a pull-request runner in Debug.
+ZonesAndApproaches/IronSepulcherWatchDefenceTest.NoGuardianStandsIdleWhileItsZoneIsStormed/shrine_sentinels_first_approach
 AudioBattleLoadTest.*
 CampaignWaveAssaultTest.*
 # Plays every Barcid Road mission to its end, up to 25 game minutes each.
