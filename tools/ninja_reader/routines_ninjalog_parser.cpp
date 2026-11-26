@@ -191,7 +191,9 @@ NinjaLog NinjaLogParser::parse(const std::filesystem::path& log_path) const {
     } catch (const Exception& e) {
       throw e;
     } catch (const std::exception& ex) {
-      throw Exception(std::format("Encoutered an unknown error: {}", ex.what()));
+      throw Exception(std::format("Encoutered an unknown error when {}: {}",
+                                  element_parsing_stage_string(element_parsing_stage),
+                                  ex.what()));
     }
 
     line_number++;
