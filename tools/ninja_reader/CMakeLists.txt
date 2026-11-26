@@ -4,7 +4,8 @@
 cmake_minimum_required(VERSION 3.21.0)
 project(ninja_reader LANGUAGES CXX)
 
-add_executable(ninja_reader
+add_executable(
+    ninja_reader
     main.cpp
     commandline_argument.cpp
     routines_ninjalog_parser.cpp
