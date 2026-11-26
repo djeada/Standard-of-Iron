@@ -1,8 +1,7 @@
 #version 330 core
-#include "noise.glsl"
 
 layout(location = 0) in vec3 a_pos;
-layout(location = 1) in vec2 a_tex_coord;
+layout(location = 1) in vec3 a_tex_coord;
 layout(location = 2) in vec3 a_normal;
 layout(location = 3) in vec4 a_pos_scale;
 layout(location = 4) in vec4 a_color_sway;
@@ -20,8 +19,7 @@ out vec2 v_tex_coord;
 out float v_foliage_mask;
 out float v_leaf_seed;
 out float v_bark_seed;
-flat out float v_branch_id;
-out vec2 v_local_pos_xz;
+out float v_leaf_tone;
 out vec3 v_local_pos;
 
 void main() {
@@ -37,22 +35,7 @@ void main() {
 
   vec3 model_pos = a_pos;
 
-  float trunk_mask = 1.0 - smoothstep(0.12, 0.20, a_tex_coord.y);
   float foliage_mask = smoothstep(0.45, 0.55, a_tex_coord.y);
-
-  float angle = a_tex_coord.x * TWO_PI;
-  float branch_id = floor(angle / TWO_PI * 4.0 + silhouette_seed * 4.0);
-
-  if (trunk_mask > 0.0) {
-    float twist = sin(a_tex_coord.y * 22.0 + bark_seed * TWO_PI) * 0.034;
-    float writhe = sin(a_tex_coord.y * 9.0 - bark_seed * TWO_PI * 1.7) * 0.022;
-    model_pos.x += (twist + writhe * 0.6) * trunk_mask;
-    model_pos.z += (twist * 0.7 - writhe) * trunk_mask;
-    float ang_t = a_tex_coord.x * TWO_PI;
-    float bulge = 1.0 + sin(ang_t * 3.0 + a_tex_coord.y * 14.0 + bark_seed * TWO_PI) *
-                            0.10 * trunk_mask;
-    model_pos.xz *= bulge;
-  }
 
   float height_norm = clamp(a_pos.y / 1.10, 0.0, 1.0);
   float lean_angle = (silhouette_seed - 0.5) * 0.22;
@@ -66,13 +49,6 @@ void main() {
   model_pos.xz *= spread;
   vec3 local_normal = normalize(a_normal / vec3(spread, stretch, spread));
 
-  if (foliage_mask > 0.1) {
-    vec3 lobe_seed = vec3(leaf_seed * 23.0, silhouette_seed * 17.0, leaf_seed * 41.0);
-    float tuft = soi_noise3(model_pos * 14.0 + lobe_seed) - 0.5;
-
-    model_pos += a_normal * tuft * 0.016 * foliage_mask;
-  }
-
   vec3 local_pos = model_pos * scale;
 
   float height_factor = clamp(a_pos.y / 1.10, 0.0, 1.0);
@@ -82,19 +58,16 @@ void main() {
   float sway = sin(wind_time + sway_phase) * u_wind_strength * gust * bend;
   float sway2 = sin(wind_time * 1.7 + sway_phase * 2.3) * u_wind_strength * 0.38 * bend;
 
-  float sway_amount = mix(0.05, 0.20, foliage_mask) * scale;
+  float sway_amount = 0.16 * scale;
   vec2 wind_dir = normalize(vec2(0.78, 0.62));
   vec2 cross_dir = vec2(-wind_dir.y, wind_dir.x);
   vec2 wind_offset = (wind_dir * sway + cross_dir * sway2) * sway_amount;
-  float canopy_edge = smoothstep(0.12, 0.40, length(model_pos.xz));
-  float leaf_flutter =
-      sin(wind_time * 3.15 + branch_id * 1.73 + leaf_seed * TWO_PI + angle * 1.4) *
-      sin(wind_time * 1.21 + sway_phase * 0.83 + silhouette_seed * TWO_PI);
-  float flutter_flex = foliage_mask * mix(0.42, 1.0, canopy_edge);
-  wind_offset +=
-      cross_dir * leaf_flutter * flutter_flex * gust * u_wind_strength * 0.022 * scale;
-  local_pos.y += leaf_flutter * flutter_flex * u_wind_strength * 0.006 * scale;
-  local_pos.y -= abs(sway) * 0.012 * foliage_mask * scale;
+  // Sample one continuous wind field across wood, twig and blade attachments.
+  float reach = smoothstep(0.10, 0.54, length(model_pos.xz)) * bend;
+  float ripple = sin(wind_time * 2.6 + dot(model_pos.xz, vec2(8.2, 5.6)) +
+                     sway_phase + leaf_seed * TWO_PI);
+  wind_offset += cross_dir * ripple * reach * gust * u_wind_strength * 0.019 * scale;
+  local_pos.y += (ripple * reach * u_wind_strength * 0.008 - abs(sway) * 0.010) * scale;
 
   float cos_r = cos(rotation);
   float sin_r = sin(rotation);
@@ -110,12 +83,11 @@ void main() {
   v_world_pos = local_pos + world_pos;
   v_normal = final_normal;
   v_color = a_color_sway.rgb;
-  v_tex_coord = a_tex_coord;
+  v_tex_coord = a_tex_coord.xy;
   v_foliage_mask = foliage_mask;
   v_leaf_seed = leaf_seed;
   v_bark_seed = bark_seed;
-  v_branch_id = branch_id;
-  v_local_pos_xz = model_pos.xz;
+  v_leaf_tone = a_tex_coord.z;
   v_local_pos = model_pos;
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
