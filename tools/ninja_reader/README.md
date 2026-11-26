@@ -13,6 +13,7 @@ source files taking the longest to compile.
 ### `read`
 
 **Synopsis**:
+
 ```
 ninja_reader read
 ```
@@ -22,6 +23,7 @@ of the `.ninja_log` file, printing the total/average compilation time and top
 slowest source files.
 
 **Options**:
+
 - `--top` (`number`, default: 20): This flag constraints the count of printed
   top slowest source files.
 
@@ -29,6 +31,7 @@ slowest source files.
   `.ninja_log` is located. It is required.
 
 **Failure Cases**:
+
 - The `.ninja_log` file does not exist in the specified build directory, or
   the build directory does not exist itself.
 
@@ -38,6 +41,7 @@ slowest source files.
 ### `help`
 
 **Synopsis**:
+
 ```
 ninja_reader help
 ```
