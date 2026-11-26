@@ -236,6 +236,43 @@ TEST_F(VectorParserTest, ArgumentIntegralValue) {
   CREATE_ARGUMENT_VALUE_TEST_BODY(input_elements, is_integer, integer);
 }
 
+TEST_F(VectorParserTest, ArgumentNoValueException) {
+  try {
+    std::string argument_str = "--name";
+    std::vector<char*> args = {argument_str.data()};
+
+    auto _ = argument_vector_parser.parse_vector(args);
+
+    FAIL() << "Expected VectorParser::Exception";
+  } catch (const Argument::VectorParser::Exception& ex) {
+    EXPECT_EQ(ex.code(), Argument::VectorParser::Exception::Code::ARGUMENT_NO_VALUE);
+  }
+}
+
+TEST_F(VectorParserTest, MultipleArguments) {
+  std::string arg1 = "--name";
+  std::string value1 = "dywoq";
+  std::string arg2 = "--id";
+  std::string value2 = "1234";
+
+  std::vector<char*> args = {
+      arg1.data(),
+      value1.data(),
+      arg2.data(),
+      value2.data(),
+  };
+
+  auto parsed_arguments = argument_vector_parser.parse_vector(args);
+
+  ASSERT_EQ(parsed_arguments.size(), 2);
+
+  EXPECT_EQ(parsed_arguments.at(0).name(), "name");
+  EXPECT_EQ(parsed_arguments.at(0).value().string(), "dywoq");
+
+  EXPECT_EQ(parsed_arguments.at(1).name(), "id");
+  EXPECT_EQ(parsed_arguments.at(1).value().integer(), 1234);
+}
+
 TEST(GetArgumentValue, SuccessfullyFoundArgumentValue) {
   std::vector<Argument::Argument> args = {
       Argument::Argument("name", Argument::ArgumentValue::from("dywoq")),
