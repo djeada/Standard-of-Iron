@@ -69,6 +69,7 @@ boundaries between `game/`, `render/`, `app/`, `ui/`, `tools/` and `tests/`.
 - [PROMO_CAPTURE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/PROMO_CAPTURE.md), [TRAILER.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/TRAILER.md) — promo and trailer capture
 - [DOCUMENTARY.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/DOCUMENTARY.md) — documentary post-production: narration, series graphics, 4K delivery, reels, score plan
 - [CAMPAIGN_MAP_FILM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/CAMPAIGN_MAP_FILM.md) — filming the campaign map: camera keys, the route drawing in, regions, markers, exported army counters
+- [SUPPORT_BUNDLE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SUPPORT_BUNDLE.md) — the diagnostics zip a bug report attaches: what it holds, what it redacts, its limits
 
 ## Save and replay
 

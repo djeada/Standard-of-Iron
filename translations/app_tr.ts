@@ -13439,6 +13439,42 @@ Right-click to cancel.</source>
         <translation>Dil değişiklikleri anında uygulanır</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>Tanılama</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>Destek paketi; bu derlemeyi, grafik bağdaştırıcısını, kayıtlı tercihleri ve konsol günlüğünün sonunu içeren tek bir zip dosyasıdır. Yollar, adresler ve kimlik bilgisine benzeyen her şey yazılmadan önce değiştirilir ve hiçbir şey yüklenmez: dosyayı hata bildirimine kendiniz eklersiniz.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>Pakette</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>Neler içerdiğini görmek için bir dosya seçin.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>Pencerenin ekran görüntüsünü ekle</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>Kayıt yeri</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>Destek paketi yolu</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>Destek paketi yolu</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>Destek paketini dışa aktar</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>Hakkında</translation>
     </message>

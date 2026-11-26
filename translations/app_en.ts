@@ -13301,6 +13301,42 @@ Right-click to cancel.</translation>
         <translation>These settings apply to the campaign, skirmish and editor tools alike.</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>Diagnostics</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>In the bundle</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>Select a file to see what it will contain.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>Include a screenshot of the window</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>Save to</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>Path for the support bundle</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>Support bundle path</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>Export support bundle</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>About</translation>
     </message>

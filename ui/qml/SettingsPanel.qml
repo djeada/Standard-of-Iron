@@ -1403,6 +1403,205 @@ Item {
                         }
                     }
 
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Label {
+                            text: qsTr("Diagnostics")
+                            color: Theme.textMain
+                            font.family: Design.Typography.displayFamily
+                            font.pixelSize: Design.Typography.subheading
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            text: qsTr("A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.")
+                            color: Theme.textSub
+                            font.pixelSize: Design.Typography.body
+                            wrapMode: Text.WordWrap
+                        }
+
+                        ColumnLayout {
+                            id: support_entries
+
+                            Layout.fillWidth: true
+                            spacing: Design.Metrics.space4
+                            property string selected_name: ""
+
+                            function show_preview(name) {
+                                selected_name = name;
+                                support_preview.text = support_bundle.preview(name, 4000);
+                            }
+
+                            // The readme is the file a maintainer opens first, so it is
+                            // what the panel shows before anything is clicked.
+                            Component.onCompleted: {
+                                if (support_bundle.entries.length > 0)
+                                    show_preview(support_bundle.entries[0].name);
+                            }
+
+                            Connections {
+                                target: support_bundle
+
+                                function onEntriesChanged() {
+                                    const names = support_bundle.entries.map(entry => entry.name);
+                                    if (names.indexOf(support_entries.selected_name) < 0)
+                                        support_entries.show_preview(names.length > 0 ? names[0] : "");
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("In the bundle")
+                                color: Theme.textMain
+                                font.pixelSize: Design.Typography.bodyLarge
+                                font.bold: true
+                            }
+
+                            Repeater {
+                                model: support_bundle.entries
+
+                                delegate: Rectangle {
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+                                    implicitHeight: support_entry_name.implicitHeight + Design.Metrics.space8
+                                    radius: Design.Metrics.radiusSmall
+                                    color: support_entries.selected_name === modelData.name ? Qt.rgba(Design.Theme.accent.r, Design.Theme.accent.g, Design.Theme.accent.b, 0.16) : "transparent"
+
+                                    Rectangle {
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        width: Design.Metrics.borderFocus
+                                        visible: support_entries.selected_name === modelData.name
+                                        color: Design.Theme.accent
+                                    }
+
+                                    Text {
+                                        id: support_entry_name
+
+                                        anchors.left: parent.left
+                                        anchors.right: support_entry_size.left
+                                        anchors.leftMargin: Design.Metrics.space8
+                                        anchors.rightMargin: Design.Metrics.space8
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: modelData.name
+                                        color: Theme.textMain
+                                        font.family: Design.Typography.family
+                                        font.pixelSize: Design.Typography.body
+                                        elide: Text.ElideMiddle
+                                    }
+
+                                    Text {
+                                        id: support_entry_size
+
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: Design.Metrics.space8
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: Math.max(1, Math.round(modelData.bytes / 1024)) + " KiB"
+                                        color: Theme.textSub
+                                        font.family: Design.Typography.family
+                                        font.pixelSize: Design.Typography.caption
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: support_entries.show_preview(modelData.name)
+                                    }
+                                }
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                text: qsTr("Select a file to see what it will contain.")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.caption
+                                visible: support_entries.selected_name.length === 0
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Design.A11y.scaled(180)
+                            radius: Design.Metrics.radiusMedium
+                            color: Design.Theme.backgroundDeep
+                            border.width: Design.Metrics.borderThin
+                            border.color: Design.Theme.borderSubtle
+                            visible: support_entries.selected_name.length > 0
+
+                            ScrollView {
+                                anchors.fill: parent
+                                anchors.margins: Design.Metrics.space8
+                                clip: true
+                                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+                                TextArea {
+                                    id: support_preview
+
+                                    readOnly: true
+                                    selectByMouse: true
+                                    wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                                    color: Theme.textSub
+                                    font.family: Design.Typography.family
+                                    font.pixelSize: Design.Typography.caption
+                                    background: null
+                                }
+                            }
+                        }
+
+                        Design.IronCheckBox {
+                            text: qsTr("Include a screenshot of the window")
+                            checked: support_bundle.include_screenshot
+                            onToggled: support_bundle.include_screenshot = checked
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            text: qsTr("Save to")
+                            color: Theme.textSub
+                            font.pixelSize: Design.Typography.body
+                        }
+
+                        Design.IronSearchField {
+                            id: support_path
+
+                            Layout.fillWidth: true
+                            text: support_bundle.default_path
+                            placeholderText: qsTr("Path for the support bundle")
+                            Accessible.name: qsTr("Support bundle path")
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingMedium
+
+                            StyledButton {
+                                text: qsTr("Export support bundle")
+                                button_style: "primary"
+                                onClicked: support_bundle.export_to(support_path.text)
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                text: support_bundle.message
+                                color: support_bundle.export_succeeded ? Design.Theme.success : Design.Theme.warning
+                                font.pixelSize: Design.Typography.caption
+                                wrapMode: Text.WrapAnywhere
+                                visible: support_bundle.message.length > 0
+                            }
+                        }
+                    }
+
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1

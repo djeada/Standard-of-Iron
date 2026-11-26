@@ -13301,6 +13301,42 @@ Clique com o botão direito para cancelar.</translation>
         <translation>Estas configurações se aplicam à campanha, à escaramuça e às ferramentas do editor.</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>Diagnóstico</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>Um pacote de suporte é um único zip com esta compilação, o adaptador gráfico, as preferências salvas e o fim do log do console. Caminhos, endereços e qualquer coisa que pareça uma credencial são substituídos antes de ele ser gravado, e nada é enviado: você anexa o arquivo ao relatório de bug.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>No pacote</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>Selecione um arquivo para ver o que ele conterá.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>Incluir uma captura da janela</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>Salvar em</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>Caminho do pacote de suporte</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>Caminho do pacote de suporte</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>Exportar pacote de suporte</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>Sobre</translation>
     </message>

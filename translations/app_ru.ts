@@ -13451,6 +13451,42 @@ Right-click to cancel.</source>
         <translation>Смена языка действует сразу</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>Диагностика</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>Пакет поддержки - это один zip-файл со сборкой, графическим адаптером, сохранёнными настройками и концом журнала консоли. Пути, адреса и всё, что похоже на учётные данные, заменяются перед записью, и ничего не отправляется: вы сами прикрепляете файл к отчёту об ошибке.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>В пакете</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>Выберите файл, чтобы увидеть, что в нём будет.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>Приложить снимок окна</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>Сохранить в</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>Путь к пакету поддержки</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>Путь к пакету поддержки</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>Экспортировать пакет поддержки</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>Об игре</translation>
     </message>

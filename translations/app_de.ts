@@ -13301,6 +13301,42 @@ Rechtsklick zum Abbrechen.</translation>
         <translation>Diese Einstellungen gelten gleichermaßen für Feldzug, Scharmützel und Editorwerkzeuge.</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>Diagnose</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>Ein Support-Paket ist eine einzelne Zip-Datei mit diesem Build, dem Grafikadapter, den gespeicherten Einstellungen und dem Ende des Konsolenprotokolls. Pfade, Adressen und alles, was nach einem Zugangsdatum aussieht, werden vor dem Schreiben ersetzt, und nichts wird hochgeladen: Sie hängen die Datei selbst an den Fehlerbericht an.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>Im Paket</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>Wählen Sie eine Datei, um zu sehen, was sie enthält.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>Screenshot des Fensters beifügen</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>Speichern unter</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>Pfad für das Support-Paket</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>Pfad des Support-Pakets</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>Support-Paket exportieren</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>Über</translation>
     </message>

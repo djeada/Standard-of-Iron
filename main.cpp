@@ -63,6 +63,7 @@
 #include "app/core/game_speed.h"
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
+#include "app/diagnostics/support_bundle_service.h"
 #include "app/models/graphics_settings_proxy.h"
 #include "app/models/loading_tips.h"
 #include "app/models/map_preview_image_provider.h"
@@ -357,6 +358,15 @@ auto main(int argc, char* argv[]) -> int {
   auto audio_hud = std::make_unique<App::Audio::AudioStatusHud>();
   engine->rootContext()->setContextProperty("audio_hud", audio_hud.get());
 
+  // The support bundle the Settings panel builds. Its version strings come from
+  // the executable, so the service can live in app_core and the tests can hand it
+  // their own.
+  auto support_bundle = std::make_unique<App::Diagnostics::SupportBundleService>();
+  const auto build_details = App::Bootstrap::current_version_details();
+  support_bundle->set_build_info(
+      build_details.version, build_details.commit, build_details.build_type);
+  engine->rootContext()->setContextProperty("support_bundle", support_bundle.get());
+
   auto* minimap_view_model = qobject_cast<App::ViewModels::MinimapViewModel*>(
       game_engine->minimap_view_model());
   QObject::connect(
@@ -449,6 +459,7 @@ auto main(int argc, char* argv[]) -> int {
     return -2;
   }
   qInfo() << "QQuickWindow found";
+  support_bundle->set_screenshot_provider([window] { return window->grabWindow(); });
   App::Bootstrap::report_startup_stage(QStringLiteral("scene_graph"));
   if (supervised_attempt) {
     QTimer::singleShot(0, &app, [root_obj, game_engine_ptr = game_engine.get()] {
