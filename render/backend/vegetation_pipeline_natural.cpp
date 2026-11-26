@@ -258,7 +258,8 @@ void upload_tree_mesh(QOpenGLFunctions_3_3_Core& gl,
       {k_foliage_normal_location, vec3, offsetof(RingVertex, normal)},
   }};
   static_assert(offsetof(RingVertex, v) == offsetof(RingVertex, u) + sizeof(float));
-  static_assert(offsetof(RingVertex, weight) == offsetof(RingVertex, v) + sizeof(float));
+  static_assert(offsetof(RingVertex, weight) ==
+                offsetof(RingVertex, v) + sizeof(float));
   upload_static_instanced_mesh(gl,
                                target,
                                tree.vertices.data(),
@@ -400,7 +401,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
   }
 
   std::vector<PalmVertex> vertices;
-  constexpr int k_vertices_per_frond = 2 * k_frond_stations + 8 * (k_frond_stations - 1);
+  constexpr int k_vertices_per_frond =
+      2 * k_frond_stations + 8 * (k_frond_stations - 1);
   vertices.reserve(loft.vertices().size() +
                    (k_frond_count + k_dead_frond_count) * k_vertices_per_frond);
   for (const auto& vertex : loft.vertices()) {
@@ -433,8 +435,11 @@ void VegetationPipeline::initialize_palm_pipeline() {
       return crown + dir * (length * t) + side * sweep + QVector3D(0.0F, lift, 0.0F);
     };
     auto vertex = [&](const QVector3D& pos, float t, float across) {
-      vertices.push_back({pos, {frond_u, v_base + t * v_span,
-                                material + across * k_frond_edge_material}, {}});
+      vertices.push_back({pos,
+                          {frond_u,
+                           v_base + t * v_span,
+                           material + across * k_frond_edge_material},
+                          {}});
     };
     const auto rib = static_cast<std::uint16_t>(vertices.size());
     for (int station = 0; station < k_frond_stations; ++station) {
@@ -444,8 +449,13 @@ void VegetationPipeline::initialize_palm_pipeline() {
       vertex(spine(t) - side * half_rib, t, 0.10F);
       if (station > 0) {
         const auto a = static_cast<std::uint16_t>(rib + 2 * (station - 1));
-        indices.insert(indices.end(), {a, std::uint16_t(a + 2), std::uint16_t(a + 3),
-                                       a, std::uint16_t(a + 3), std::uint16_t(a + 1)});
+        indices.insert(indices.end(),
+                       {a,
+                        std::uint16_t(a + 2),
+                        std::uint16_t(a + 3),
+                        a,
+                        std::uint16_t(a + 3),
+                        std::uint16_t(a + 1)});
       }
     }
     // Each pair sweeps forward from the rib. Air shows through the tips,
@@ -468,8 +478,8 @@ void VegetationPipeline::initialize_palm_pipeline() {
         vertex(shoulder + half_blade, t + 0.08F, 0.47F);
         const auto left = static_cast<std::uint16_t>(a + (hand > 0 ? 1 : 3));
         const auto right = static_cast<std::uint16_t>(a + (hand > 0 ? 3 : 1));
-        indices.insert(indices.end(), {a, left, std::uint16_t(a + 2),
-                                       a, std::uint16_t(a + 2), right});
+        indices.insert(indices.end(),
+                       {a, left, std::uint16_t(a + 2), a, std::uint16_t(a + 2), right});
       }
     }
   };

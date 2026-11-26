@@ -222,8 +222,7 @@ void main() {
   albedo *= 1.0 - scorch * 0.55;
 
   float needle_fire = needle * (1.0 - smoothstep(0.90, 1.30, lp.y));
-  float lick =
-      fbm(vec3(lp.xz * 8.0, lp.y * 7.0 - u_time * 2.6) + v_seed * 4.0);
+  float lick = fbm(vec3(lp.xz * 8.0, lp.y * 7.0 - u_time * 2.6) + v_seed * 4.0);
   float flame_reach = 0.95 + lick * 0.42;
   float flames = needle * (1.0 - smoothstep(flame_reach - 0.10, flame_reach, lp.y)) *
                  step(0.9, lp.y);

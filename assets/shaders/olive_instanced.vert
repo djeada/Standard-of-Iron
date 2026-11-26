@@ -64,8 +64,8 @@ void main() {
   vec2 wind_offset = (wind_dir * sway + cross_dir * sway2) * sway_amount;
   // Sample one continuous wind field across wood, twig and blade attachments.
   float reach = smoothstep(0.10, 0.54, length(model_pos.xz)) * bend;
-  float ripple = sin(wind_time * 2.6 + dot(model_pos.xz, vec2(8.2, 5.6)) +
-                     sway_phase + leaf_seed * TWO_PI);
+  float ripple = sin(wind_time * 2.6 + dot(model_pos.xz, vec2(8.2, 5.6)) + sway_phase +
+                     leaf_seed * TWO_PI);
   wind_offset += cross_dir * ripple * reach * gust * u_wind_strength * 0.019 * scale;
   local_pos.y += (ripple * reach * u_wind_strength * 0.008 - abs(sway) * 0.010) * scale;
 

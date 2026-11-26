@@ -155,7 +155,8 @@ void append_shard(Facets& out, const RockShard& shard, ShardShape shape) {
       float const facet = 0.74F + 0.44F * hash01(shard.seed, i, 19);
       float const r = shard.radius * taper * facet;
       // Tilt the terminal shoulder to give each tip a distinct chipped edge.
-      float const chip = si == k_shard_stations - 1 ? 0.10F * length * std::cos(angle) : 0.0F;
+      float const chip =
+          si == k_shard_stations - 1 ? 0.10F * length * std::cos(angle) : 0.0F;
       points.push_back(centre + wide * (std::cos(angle) * r) +
                        thin * (std::sin(angle) * r * thickness) + axis * chip);
     }

@@ -111,7 +111,9 @@ public:
         }
         mesh.vertices.push_back({position,
                                  (radial + axis * 0.10F).normalized(),
-                                 uv, 0.06F + std::max(0.0F, center.y()) * 0.16F, 0.0F});
+                                 uv,
+                                 0.06F + std::max(0.0F, center.y()) * 0.16F,
+                                 0.0F});
         if (ring > 0) {
           const unsigned v = start + ring * k_sides + i;
           const unsigned next = start + ring * k_sides + (i + 1U) % k_sides;
@@ -161,7 +163,10 @@ public:
         const float t = station * 0.5F;
         for (int hand : {-1, 1}) {
           mesh.vertices.push_back({spine(t) + side * (hand * (0.006F - 0.003F * t)),
-                                   {0.0F, 1.0F, 0.0F}, yaw / k_tau, 0.82F, -1.0F});
+                                   {0.0F, 1.0F, 0.0F},
+                                   yaw / k_tau,
+                                   0.82F,
+                                   -1.0F});
         }
         if (station > 0) {
           const unsigned v = rib + station * 2U;
@@ -183,8 +188,13 @@ public:
                      false);
         }
       }
-      olive_leaf(spine(0.83F), dir, level * 0.48F - 0.47F,
-                 0.103F, tone, (tone - 0.5F) * 1.35F, true);
+      olive_leaf(spine(0.83F),
+                 dir,
+                 level * 0.48F - 0.47F,
+                 0.103F,
+                 tone,
+                 (tone - 0.5F) * 1.35F,
+                 true);
     }
   }
 
@@ -203,8 +213,11 @@ public:
     const QVector3D up = QVector3D::crossProduct(side, axis);
     const auto start = static_cast<unsigned>(mesh.vertices.size());
     auto vertex = [&](const QVector3D& p, const QVector3D& n, float weight) {
-      mesh.vertices.push_back({p, n, std::atan2(p.z(), p.x()) / k_tau + 0.5F,
-                               0.44F + p.y() * 0.40F, weight});
+      mesh.vertices.push_back({p,
+                               n,
+                               std::atan2(p.z(), p.x()) / k_tau + 0.5F,
+                               0.44F + p.y() * 0.40F,
+                               weight});
     };
     vertex(base, -axis, 0.15F);
     for (unsigned ring = 0; ring < 2; ++ring) {
@@ -219,7 +232,8 @@ public:
         const QVector3D p =
             center + (side * (width * x) + up * (thickness * y)) * radius;
         const QVector3D n = (side * (thickness * x) + up * (width * y) +
-                             axis * (ring == 0 ? -0.018F : 0.028F)).normalized();
+                             axis * (ring == 0 ? -0.018F : 0.028F))
+                                .normalized();
         vertex(p, n, t);
       }
     }
@@ -245,21 +259,25 @@ public:
     direction.normalize();
     const QVector3D along = (direction + QVector3D(0.0F, lift, 0.0F)).normalized();
     const QVector3D side(-direction.z(), 0.0F, direction.x());
-    const QVector3D across = side * std::cos(roll) +
-                             QVector3D::crossProduct(side, along) * std::sin(roll);
+    const QVector3D across =
+        side * std::cos(roll) + QVector3D::crossProduct(side, along) * std::sin(roll);
     const QVector3D up = QVector3D::crossProduct(across, along).normalized();
     const QVector3D shoulder = base + along * (length * 0.42F) - up * (length * 0.053F);
     const auto start = static_cast<unsigned>(mesh.vertices.size());
     const auto blade_vertex = [&](const QVector3D& p, const QVector3D& normal) {
-      mesh.vertices.push_back({p, normal, std::atan2(base.z(), base.x()) / k_tau + 0.5F,
-                               0.58F + p.y() * 0.30F, tone});
+      mesh.vertices.push_back({p,
+                               normal,
+                               std::atan2(base.z(), base.x()) / k_tau + 0.5F,
+                               0.58F + p.y() * 0.30F,
+                               tone});
     };
     const QVector3D left = (up + across * 0.34F).normalized();
     const QVector3D right = (up - across * 0.34F).normalized();
     blade_vertex(base, up);
     blade_vertex(shoulder + across * (length * 0.17F), left);
     blade_vertex(base + along * length, (up + along * 0.22F).normalized());
-    blade_vertex(shoulder - across * (length * 0.15F) - along * (length * 0.06F), right);
+    blade_vertex(shoulder - across * (length * 0.15F) - along * (length * 0.06F),
+                 right);
     if (terminal) {
       // The exposed end of the shoot has a longer, recurved blade.
       const QVector3D neck = base + along * (length * 0.72F) + up * (length * 0.02F);
@@ -303,22 +321,19 @@ auto build_pine_tree_mesh() -> TreeMesh {
           continue;
         }
         const QVector3D fork = base + dir * (span * 0.25F);
-        const QVector3D end = tip - dir * (span * 0.16F) +
-                              side * (span * hand * 0.35F);
+        const QVector3D end = tip - dir * (span * 0.16F) + side * (span * hand * 0.35F);
         tree.spray(fork, end, bend, span * 0.20F, span * 0.115F, seed + 5U);
       }
     }
   }
-  tree.spray({0.0F, 1.17F, 0.0F}, {0.025F, 1.42F, 0.0F}, {},
-             0.073F, 0.077F, 61U);
+  tree.spray({0.0F, 1.17F, 0.0F}, {0.025F, 1.42F, 0.0F}, {}, 0.073F, 0.077F, 61U);
   return std::move(tree.mesh);
 }
 
 auto build_cypress_tree_mesh() -> TreeMesh {
   TreeBuilder tree;
   tree.stem({0.0F, -0.018F, 0.0F}, {0.016F, 0.58F, 0.0F}, 0.062F, 0.032F, 17U);
-  tree.spray({0.016F, 0.20F, 0.0F}, {0.035F, 1.64F, -0.020F}, {},
-             0.161F, 0.146F, 31U);
+  tree.spray({0.016F, 0.20F, 0.0F}, {0.035F, 1.64F, -0.020F}, {}, 0.161F, 0.146F, 31U);
   // Upright lateral sprays nest against the leader, with daylight between
   // their tips instead of a single continuous outline.
   for (unsigned i = 0; i < 16; ++i) {
@@ -363,9 +378,9 @@ auto build_olive_tree_mesh() -> TreeMesh {
       const QVector3D junction = (base + elbow * 2.0F + tip) * 0.25F;
       tree.olive_limb(junction, end - dir * 0.082F, end, 0.032F, 0.006F, seed + 11U);
       tree.olive_crown(end,
-                      QVector3D(0.185F, 0.097F, 0.145F),
-                      angle + twig * 0.6F,
-                      seed + (twig < 0 ? 19U : 29U));
+                       QVector3D(0.185F, 0.097F, 0.145F),
+                       angle + twig * 0.6F,
+                       seed + (twig < 0 ? 19U : 29U));
     }
   }
   return std::move(tree.mesh);

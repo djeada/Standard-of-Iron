@@ -23,7 +23,10 @@ struct RockShard {
 };
 
 void append_rock_mass(PropMeshData& out, const RockMass& rock);
-enum class ShardShape { Blade, Crystal };
+enum class ShardShape {
+  Blade,
+  Crystal
+};
 
 void append_rock_shard(PropMeshData& out, const RockShard& shard, ShardShape shape);
 

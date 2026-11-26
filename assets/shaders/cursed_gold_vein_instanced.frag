@@ -54,11 +54,13 @@ void main() {
   rock_color = mix(rock_color, soot, rock_large * 0.26);
 
   float side_face = 1.0 - abs(N.y);
-  vec2 fracture_phase = vec2(v_local_pos.y * 3.4, (v_local_pos.x + v_local_pos.z) * 2.1);
+  vec2 fracture_phase =
+      vec2(v_local_pos.y * 3.4, (v_local_pos.x + v_local_pos.z) * 2.1);
   fracture_phase += vec2(rock_large * 0.65, rust * 0.42 + v_seed);
   vec2 seam_distance = abs(fract(fracture_phase) - 0.5);
   vec2 seam_detail = 1.0 - smoothstep(vec2(0.04), vec2(0.20), fwidth(fracture_phase));
-  vec2 fractures = (1.0 - smoothstep(vec2(0.0), vec2(0.05), seam_distance)) * seam_detail;
+  vec2 fractures =
+      (1.0 - smoothstep(vec2(0.0), vec2(0.05), seam_distance)) * seam_detail;
   float cracks = max(fractures.x, fractures.y) * side_face;
   rock_color *= 1.0 - cracks * 0.22;
 

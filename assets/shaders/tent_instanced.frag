@@ -112,7 +112,8 @@ void main() {
   body = mix(body, dye, trimmed * trim);
 
   vec2 weave_phase = uv * vec2(310.0, 300.0);
-  vec2 thread_detail = (1.0 - smoothstep(vec2(1.0), vec2(3.14), fwidth(weave_phase))) * detail;
+  vec2 thread_detail =
+      (1.0 - smoothstep(vec2(1.0), vec2(3.14), fwidth(weave_phase))) * detail;
   vec2 threads = 0.5 + 0.5 * sin(weave_phase) * thread_detail;
   float weave = threads.x * threads.y;
   float mottle = soi_fbm_23e5ab(uv * 7.0 + v_anchor * 0.31);

@@ -81,13 +81,14 @@ void main() {
     float knot = soi_noise3(v_local_pos * 6.0 + seed);
     grain_pos.xz += vec2(2.1, -1.4) * knot;
     float grain = soi_noise3(grain_pos + seed);
-    float detail = 1.0 - smoothstep(0.006, 0.025,
-                                     max(max(footprint.x, footprint.y), footprint.z));
+    float detail =
+        1.0 - smoothstep(0.006, 0.025, max(max(footprint.x, footprint.y), footprint.z));
     float fiber = mix(0.5, soi_noise3(grain_pos * 2.8 + seed), detail);
-    bark_color = mix(vec3(0.25, 0.195, 0.14), vec3(0.57, 0.47, 0.36),
+    bark_color = mix(vec3(0.25, 0.195, 0.14),
+                     vec3(0.57, 0.47, 0.36),
                      smoothstep(0.18, 0.83, grain * 0.7 + fiber * 0.3));
-    bark_color = mix(bark_color, vec3(0.40, 0.405, 0.31),
-                     smoothstep(0.48, 0.78, knot) * 0.34);
+    bark_color =
+        mix(bark_color, vec3(0.40, 0.405, 0.31), smoothstep(0.48, 0.78, knot) * 0.34);
   }
 
   vec3 base_color = mix(bark_color, leaf_color, v_foliage_mask);
@@ -109,8 +110,7 @@ void main() {
               mix(0.055, 0.045, v_foliage_mask);
   color += sun * leaf_spec;
 
-  color +=
-      mix(sky, reverse_color * dot(sky, vec3(0.333)) * 1.6, v_foliage_mask) * rim;
+  color += mix(sky, reverse_color * dot(sky, vec3(0.333)) * 1.6, v_foliage_mask) * rim;
 
   if (v_tex_coord.y < k_trunk_base_cut)
     discard;

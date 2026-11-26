@@ -211,8 +211,8 @@ auto build_dead_tree_mesh() -> PropMeshData {
   V3 const elbow(0.30F, 0.29F, -0.24F);
   append_prop_limb(verts, idx, {0.04F, 0.16F, -0.08F}, elbow, 0.091F, 0.048F, 7);
   append_prop_limb(verts, idx, elbow, {0.49F, 0.39F, -0.32F}, 0.050F, 0.022F, 6);
-  append_prop_limb(verts, idx, {0.62F, 0.14F, 0.08F}, {0.92F, 0.28F, 0.27F},
-                   0.076F, 0.035F, 6);
+  append_prop_limb(
+      verts, idx, {0.62F, 0.14F, 0.08F}, {0.92F, 0.28F, 0.27F}, 0.076F, 0.035F, 6);
 
   return mesh;
 }

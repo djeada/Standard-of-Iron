@@ -95,7 +95,8 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
     auto const crown = centre + radial * 0.035F + QVector3D(0.0F, height * 1.2F, 0.0F);
     auto rim = [&](int side, bool upper) {
       float const a = MathConstants::k_two_pi * side / k_stone_sides + 0.17F * stone;
-      auto const offset = tangent * (0.25F * std::cos(a)) + radial * (0.16F * std::sin(a));
+      auto const offset =
+          tangent * (0.25F * std::cos(a)) + radial * (0.16F * std::sin(a));
       return centre + offset * (upper ? 0.73F : 1.0F) +
              QVector3D(0.0F, upper ? height : -0.038F, 0.0F);
     };
@@ -103,7 +104,8 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
       auto const normal = QVector3D::crossProduct(b - a, c - a).normalized();
       for (auto const& point : {a, b, c}) {
         indices.push_back(static_cast<unsigned short>(vertices.size()));
-        vertices.push_back({{0.0F, point.y(), k_stone_part}, {point.x(), point.z()}, normal});
+        vertices.push_back(
+            {{0.0F, point.y(), k_stone_part}, {point.x(), point.z()}, normal});
       }
     };
     for (int side = 0; side < k_stone_sides; ++side) {
@@ -296,8 +298,8 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   // Bow the fabric between supports and let the hem droop at each end.
   constexpr int k_panels = 12;
   auto cover_point = [](float angle, float z, float sag) {
-    return QVector3D(-std::cos(angle) * 0.612F,
-                     0.96F + std::sin(angle) * (0.425F - sag), z);
+    return QVector3D(
+        -std::cos(angle) * 0.612F, 0.96F + std::sin(angle) * (0.425F - sag), z);
   };
   constexpr std::array<float, 5> k_cover_z{-0.14F, -0.09F, 0.175F, 0.44F, 0.50F};
   constexpr std::array<float, 5> k_cover_sag{0.014F, 0.0F, 0.035F, 0.0F, 0.016F};
@@ -313,7 +315,12 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
       // Half-length normals select the existing canvas material on both sides.
       append_quad(verts, idx, p0, p1, p2, p3, normal * 0.5F);
       QVector3D const lining(0.0F, 0.008F, 0.0F);
-      append_quad(verts, idx, p3 - lining, p2 - lining, p1 - lining, p0 - lining,
+      append_quad(verts,
+                  idx,
+                  p3 - lining,
+                  p2 - lining,
+                  p1 - lining,
+                  p0 - lining,
                   normal * -0.5F);
     }
   }
