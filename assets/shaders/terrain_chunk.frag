@@ -1158,8 +1158,8 @@ void main() {
   soil_mix = max(soil_mix, mud_hollow * biome_forest * u_moisture_level * 0.82);
   if (u_ground_type == k_soil_fertile) {
     float phase = dot(world_coord, vec2(0.94, 0.36)) * 1.8 + meadow_field * 9.0;
-    float furrow = smoothstep(0.20, 0.86, cos(phase)) *
-                   band_limit(coord_footprint, 0.30);
+    float furrow =
+        smoothstep(0.20, 0.86, cos(phase)) * band_limit(coord_footprint, 0.30);
     float loam = smoothstep(0.44, 0.60, soil_field + worn_breakup * 0.10) *
                  (1.0 - smoothstep(0.06, 0.18, slope));
     soil_mix = max(soil_mix, loam * (0.24 + 0.48 * furrow));
@@ -1190,7 +1190,8 @@ void main() {
   soil_mix = max(soil_mix, slope_soil);
   soil_mix = max(soil_mix, talus_apron * (0.30 + 0.25 * talus_breakup));
   soil_mix = clamp(soil_mix, 0.0, 0.78);
-  float dry_soil_share = level_ground * (0.30 - 0.22 * max(biome_fertile, biome_forest));
+  float dry_soil_share =
+      level_ground * (0.30 - 0.22 * max(biome_fertile, biome_forest));
   vec3 ground_soil = mix(u_soil_color, u_grass_dry, dry_soil_share);
   vec3 varied_soil =
       ground_soil * (1.0 + surface_detail * 0.055 + surface_grain * 0.070 +
