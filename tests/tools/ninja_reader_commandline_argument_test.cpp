@@ -33,6 +33,13 @@ TEST_F(ArgumentValidatorTest, ValidArgument) {
   }
 }
 
+TEST_F(ArgumentValidatorTest, WhitespaceArgument) {
+  EXPECT_TRUE(argument_validator.is_argument("  --name  "));
+  EXPECT_TRUE(argument_validator.is_argument("\t--name\t"));
+  EXPECT_FALSE(argument_validator.is_argument("  --  "));
+  EXPECT_FALSE(argument_validator.is_argument("   "));
+}
+
 TEST_F(ArgumentValidatorTest, InvalidArgument) {
   std::array<const char*, 8> inputs = {
       // Empty name
