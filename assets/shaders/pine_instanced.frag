@@ -35,9 +35,9 @@ const vec3 k_needle_sun = vec3(0.305, 0.420, 0.190);
 #else
 const vec3 k_needle_grain = vec3(30.0, 13.0, 30.0);
 const vec3 k_needle_clump = vec3(11.0);
-const vec3 k_needle_deep = vec3(0.038, 0.096, 0.058);
-const vec3 k_needle_mid = vec3(0.112, 0.226, 0.122);
-const vec3 k_needle_light = vec3(0.252, 0.398, 0.190);
+const vec3 k_needle_deep = vec3(0.050, 0.112, 0.087);
+const vec3 k_needle_mid = vec3(0.140, 0.254, 0.174);
+const vec3 k_needle_light = vec3(0.285, 0.420, 0.258);
 const vec3 k_needle_sun = vec3(0.345, 0.505, 0.252);
 #endif
 
@@ -61,7 +61,8 @@ void main() {
   vec3 needle_seed_offset =
       vec3(v_needle_seed * 41.0, v_needle_seed * 17.0, v_needle_seed * 63.0);
 
-  float footprint = max(fwidth(v_local_pos.x), fwidth(v_local_pos.z));
+  vec3 pixel_span = fwidth(v_local_pos);
+  float footprint = max(max(pixel_span.x, pixel_span.z), pixel_span.y);
   float fine_detail = 1.0 - smoothstep(0.006, 0.026, footprint);
   float mid_detail = 1.0 - smoothstep(0.016, 0.055, footprint);
 
@@ -83,7 +84,8 @@ void main() {
   needle_color =
       mix(needle_color, needle_light, smoothstep(0.48, 0.92, needle_tuft) * 0.45);
 
-  needle_color = mix(needle_color, v_color, 0.42);
+  needle_color = mix(needle_color, v_color, 0.32);
+  needle_color *= mix(vec3(0.94, 1.0, 1.07), vec3(1.06, 1.01, 0.92), v_needle_seed);
 
   float bump_height = needle_clump + needle_tuft * 0.55;
   vec3 n = mix(geometric_normal,

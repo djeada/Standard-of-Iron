@@ -7,6 +7,7 @@ in float intensity_val;
 in float flame_phase;
 in float flame_height;
 flat in int v_part;
+flat in vec3 v_ground_normal;
 
 uniform sampler2D fire_texture;
 uniform float u_time;
@@ -33,10 +34,9 @@ vec4 shade_hearth() {
   float edge_noise = fbm(uv * 2.6 + vec2(flame_phase * 1.7, 3.1));
   float ash_mask = 1.0 - smoothstep(0.70, 1.0, r + (edge_noise - 0.5) * 0.34);
 
-  vec3 up = vec3(0.0, 1.0, 0.0);
-  vec3 lit = environment_lighting(up, 0.2);
+  vec3 lit = environment_lighting(v_ground_normal, 0.2);
   vec3 ash_albedo =
-      mix(vec3(0.11, 0.10, 0.092), vec3(0.04, 0.034, 0.03), smoothstep(0.95, 0.35, r));
+      mix(vec3(0.04, 0.034, 0.03), vec3(0.11, 0.10, 0.092), smoothstep(0.35, 0.95, r));
   ash_albedo *= mix(0.8, 1.15, fbm(uv * 7.0 + flame_phase));
   vec3 colour = ash_albedo * lit;
 
@@ -107,7 +107,11 @@ vec4 shade_flame() {
 
 void main() {
   vec4 result;
-  if (v_part == 1) {
+  if (v_part == 3) {
+    float grain = soi_noise_95f501(tex_coord * 8.0 + flame_phase);
+    vec3 stone = mix(vec3(0.19, 0.17, 0.15), vec3(0.38, 0.34, 0.28), grain);
+    result = vec4(stone * environment_lighting(v_ground_normal, 0.2), 1.0);
+  } else if (v_part == 1) {
     result = shade_hearth();
   } else if (v_part == 2) {
     result = shade_smoke();

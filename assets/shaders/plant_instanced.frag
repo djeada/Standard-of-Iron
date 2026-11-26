@@ -197,7 +197,7 @@ void main() {
   albedo *= mix(0.95, 1.0, inner);
 
   float leaf_angle = atan(uv2.y, uv2.x);
-  float vein_count = mix(5.0, 9.0, h11(v_seed * 8.1));
+  float vein_count = floor(mix(5.0, 9.999, h11(v_seed * 8.1)));
   float leaf_wave = sin(leaf_angle * vein_count + v_seed * 6.0);
   float radial = smoothstep(0.08, 0.80, sqrt(r2));
   float lobe_shade = (0.5 - 0.5 * cos(leaf_angle * vein_count + v_seed * 6.0)) * radial;
@@ -205,8 +205,8 @@ void main() {
   albedo *= mix(1.0, 0.88, lobe_shade);
   albedo *= mix(1.0, 0.66, crease * 0.55);
 
-  float blemish = h11(floor(v_world_pos.x * 19.0 + v_world_pos.z * 23.0) +
-                      floor(v_tex_coord.y * 17.0) + v_seed * 31.0);
+  vec2 spot_cell = floor(v_tex_coord * vec2(13.0, 17.0));
+  float blemish = h11(dot(spot_cell, vec2(23.0, 37.0)) + v_seed * 31.0);
   float leaf_spot = smoothstep(0.965, 0.995, blemish) * (1.0 - rim);
   albedo = mix(albedo, albedo * vec3(0.48, 0.42, 0.30), leaf_spot * 0.55);
 

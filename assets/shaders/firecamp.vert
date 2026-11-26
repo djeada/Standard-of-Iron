@@ -2,6 +2,7 @@
 #include "noise.glsl"
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec2 a_tex_coord;
+layout(location = 2) in vec3 a_normal;
 
 layout(location = 3) in vec4 i_pos_intensity;
 layout(location = 4) in vec4 i_radius_phase;
@@ -19,16 +20,19 @@ out float intensity_val;
 out float flame_phase;
 out float flame_height;
 flat out int v_part;
+flat out vec3 v_ground_normal;
 
 const int k_part_flame = 0;
 const int k_part_hearth = 1;
 const int k_part_smoke = 2;
+const int k_part_stone = 3;
 
 void main() {
   vec3 camp_pos = i_pos_intensity.xyz;
   float intensity = clamp(i_pos_intensity.w, 0.6, 1.6);
   float phase = i_radius_phase.y;
   vec2 ground_slope = i_ground.xy;
+  v_ground_normal = normalize(vec3(-ground_slope.x, 1.0, -ground_slope.y));
   float hearth_radius = max(i_ground.z, 0.2);
 
   vec3 right_flat = vec3(u_camera_right.x, 0.0, u_camera_right.z);
@@ -50,13 +54,19 @@ void main() {
   float gust = soi_noise_95f501(vec2(phase * 0.37, u_time * 0.31));
   vec3 pos;
 
-  if (part_id > 2.5 && part_id < 3.5) {
+  if (part_id == 3.0 || part_id == 5.0) {
     vec2 disc = a_tex_coord;
     vec2 offset = disc * hearth_radius * 0.86;
     float slope = length(ground_slope);
     float lift = 0.022 + 0.06 * min(slope, 1.5) + i_ground.w;
     pos = camp_pos + vec3(offset.x, dot(ground_slope, offset) + lift, offset.y);
     v_part = k_part_hearth;
+    if (part_id == 5.0) {
+      pos.y += a_pos.y * hearth_radius * 0.86;
+      vec2 normal_xz = a_normal.xz - a_normal.y * ground_slope;
+      v_ground_normal = normalize(vec3(normal_xz.x, a_normal.y, normal_xz.y));
+      v_part = k_part_stone;
+    }
     flame_height = 0.0;
   } else if (part_id > 3.5) {
     float h = clamp(a_tex_coord.y, 0.0, 1.0);

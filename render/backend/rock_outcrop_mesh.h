@@ -23,6 +23,11 @@ struct RockShard {
 };
 
 void append_rock_mass(PropMeshData& out, const RockMass& rock);
-void append_rock_shard(PropMeshData& out, const RockShard& shard);
+enum class ShardShape {
+  Blade,
+  Crystal
+};
+
+void append_rock_shard(PropMeshData& out, const RockShard& shard, ShardShape shape);
 
 } // namespace Render::GL::BackendPipelines

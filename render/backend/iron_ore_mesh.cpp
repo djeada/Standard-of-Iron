@@ -47,7 +47,7 @@ auto build_iron_ore_mesh() -> PropMeshData {
     append_rock_mass(mesh, rock);
   }
   for (const auto& blade : k_blades) {
-    append_rock_shard(mesh, blade);
+    append_rock_shard(mesh, blade, ShardShape::Blade);
   }
   return mesh;
 }

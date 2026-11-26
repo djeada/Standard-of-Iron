@@ -12,6 +12,7 @@ namespace {
 using Render::GL::BackendPipelines::PropMeshData;
 using Render::GL::BackendPipelines::RockMass;
 using Render::GL::BackendPipelines::RockShard;
+using Render::GL::BackendPipelines::ShardShape;
 using V3 = QVector3D;
 
 constexpr float k_tau = 6.28318530F;
@@ -114,13 +115,14 @@ void append_rock(Facets& out, const RockMass& rock) {
   }
 }
 
-constexpr int k_shard_stations = 5;
-constexpr std::array<float, k_shard_stations> k_shard_station{
-    -0.20F, 0.06F, 0.36F, 0.66F, 0.88F};
-constexpr std::array<float, k_shard_stations> k_shard_taper{
-    1.02F, 1.00F, 0.80F, 0.52F, 0.26F};
+// A bladed seam has thin, chisel-like plates. Gold grows in thick prisms
+// with parallel faces and a short terminal crown.
+constexpr int k_shard_stations = 3;
+constexpr std::array<float, k_shard_stations> k_shard_station{-0.20F, 0.18F, 0.76F};
+constexpr std::array<float, k_shard_stations> k_blade_width{1.05F, 1.42F, 1.10F};
+constexpr std::array<float, k_shard_stations> k_crystal_width{0.98F, 1.16F, 1.06F};
 
-void append_shard(Facets& out, const RockShard& shard) {
+void append_shard(Facets& out, const RockShard& shard, ShardShape shape) {
   V3 axis = shard.tip - shard.root;
   float const length = axis.length();
   if (length < 1.0e-4F) {
@@ -133,25 +135,30 @@ void append_shard(Facets& out, const RockShard& shard) {
   V3 side = QVector3D::crossProduct(axis, guide).normalized();
   V3 const up = QVector3D::crossProduct(side, axis).normalized();
 
-  V3 const bend =
-      (side * signed01(shard.seed, 0, 11) + up * signed01(shard.seed, 0, 13)) * length *
-      0.055F;
   float const roll = hash01(shard.seed, 0, 17) * k_tau;
+  V3 const wide = side * std::cos(roll) + up * std::sin(roll);
+  V3 const thin = up * std::cos(roll) - side * std::sin(roll);
+  bool const blade = shape == ShardShape::Blade;
+  auto const& widths = blade ? k_blade_width : k_crystal_width;
+  float const thickness = blade ? 0.40F : 0.90F;
 
   std::vector<std::vector<V3>> ring(k_shard_stations);
   for (int si = 0; si < k_shard_stations; ++si) {
     float const t = k_shard_station[static_cast<std::size_t>(si)];
-    float const taper = k_shard_taper[static_cast<std::size_t>(si)];
-    V3 const centre = shard.root + axis * (length * t) +
-                      bend * std::sin(std::max(t, 0.0F) * 3.14159265F);
+    float const taper = widths[static_cast<std::size_t>(si)];
+    V3 const centre = shard.root + axis * (length * t);
     auto& points = ring[static_cast<std::size_t>(si)];
     points.reserve(static_cast<std::size_t>(shard.sides));
     for (int i = 0; i < shard.sides; ++i) {
       float const angle =
-          roll + k_tau * static_cast<float>(i) / static_cast<float>(shard.sides);
+          k_tau * static_cast<float>(i) / static_cast<float>(shard.sides);
       float const facet = 0.74F + 0.44F * hash01(shard.seed, i, 19);
       float const r = shard.radius * taper * facet;
-      points.push_back(centre + (side * std::cos(angle) + up * std::sin(angle)) * r);
+      // Tilt the terminal shoulder to give each tip a distinct chipped edge.
+      float const chip =
+          si == k_shard_stations - 1 ? 0.10F * length * std::cos(angle) : 0.0F;
+      points.push_back(centre + wide * (std::cos(angle) * r) +
+                       thin * (std::sin(angle) * r * thickness) + axis * chip);
     }
   }
 
@@ -168,7 +175,7 @@ void append_shard(Facets& out, const RockShard& shard) {
   V3 const apex = shard.tip + (side * signed01(shard.seed, 0, 23) +
                                up * signed01(shard.seed, 0, 29)) *
                                   shard.radius * 0.22F;
-  V3 const floor = shard.root + axis * (length * k_shard_station[0]);
+  V3 const floor = shard.root + axis * (length * k_shard_station.front());
   for (int i = 0; i < shard.sides; ++i) {
     int const next = (i + 1) % shard.sides;
     out.tri(ring[k_shard_stations - 1][static_cast<std::size_t>(i)],
@@ -190,9 +197,9 @@ void append_rock_mass(PropMeshData& out, const RockMass& rock) {
   out = std::move(facets.mesh);
 }
 
-void append_rock_shard(PropMeshData& out, const RockShard& shard) {
+void append_rock_shard(PropMeshData& out, const RockShard& shard, ShardShape shape) {
   Facets facets{std::move(out)};
-  append_shard(facets, shard);
+  append_shard(facets, shard, shape);
   out = std::move(facets.mesh);
 }
 

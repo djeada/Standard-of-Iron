@@ -22,10 +22,6 @@ out float v_bark_seed;
 out vec3 v_local_pos;
 out float v_bough;
 
-float hash11(float n) {
-  return fract(sin(n * 78.233) * 43758.5453123);
-}
-
 void main() {
   const float TWO_PI = 6.2831853;
 
@@ -53,39 +49,11 @@ void main() {
   model_pos.xz *= mix(1.0, aspect_w, foliage_mask);
   model_pos.y *= mix(1.0, aspect_h, foliage_mask);
 
-  float irregular_base = sin(angle * 3.0 + silhouette_seed * TWO_PI);
-  float irregular_mid = sin(angle * 5.0 + silhouette_seed * TWO_PI * 2.3 + 1.1);
-  float irregular_fine = sin(angle * 7.0 + silhouette_seed * TWO_PI * 3.7 + 2.3);
-  float tier_wave = sin(a_tex_coord.y * 24.0 + silhouette_seed * TWO_PI * 1.6);
-  float irregular =
-      (irregular_base * 0.22 + irregular_mid * 0.10 + irregular_fine * 0.05) *
-      foliage_mask * (1.0 - tip_mask * 0.35);
-  float scallop =
-      tier_wave * 0.035 * foliage_mask * smoothstep(0.18, 0.52, source_radius);
-
-  float spoke = floor(a_tex_coord.x * 20.0 + 0.5);
-  float spoke_jitter = hash11(spoke * 1.7 + silhouette_seed * 13.0) - 0.5;
-#ifdef SOI_CYPRESS
-  float spoke_reach =
-      foliage_mask * smoothstep(0.04, 0.13, source_radius) * (1.0 - tip_mask * 0.4);
-  float serration = spoke_jitter * 0.24 * spoke_reach;
-  float flame = sin(a_tex_coord.y * 46.0 + angle * 2.0 + silhouette_seed * TWO_PI) *
-                sin(angle * 9.0 + a_tex_coord.y * 7.0 + needle_seed * TWO_PI);
-  scallop = flame * 0.07 * foliage_mask * (1.0 - tip_mask * 0.5);
-#else
-  float spoke_reach =
-      foliage_mask * smoothstep(0.14, 0.42, source_radius) * (1.0 - tip_mask * 0.5);
-  float serration = spoke_jitter * 0.34 * spoke_reach;
-#endif
-
-  model_pos.xz *= (1.0 + irregular + scallop + serration);
-
-  model_pos.y -= max(serration, 0.0) * 0.14;
-
-  float skirt_mask =
-      foliage_mask * (1.0 - tip_mask) * smoothstep(0.18, 0.55, source_radius);
-  float droop = skirt_mask * mix(0.10, 0.04, clamp(a_tex_coord.y, 0.0, 1.0));
-  model_pos.y -= droop;
+  // Change the azimuth gradually up the crown. Branch whorls keep their
+  // individual shapes while neighbouring instances expose different gaps.
+  float twist = (silhouette_seed - 0.5) * a_pos.y * 0.85;
+  mat2 crown_turn = mat2(cos(twist), -sin(twist), sin(twist), cos(twist));
+  model_pos.xz = crown_turn * model_pos.xz;
 
   float lean_norm = clamp(a_pos.y / 1.30, 0.0, 1.0);
   float lean_angle = (silhouette_seed - 0.5) * 0.18;
@@ -116,14 +84,10 @@ void main() {
       cross_dir * branch_flutter * branch_flex * gust * u_wind_strength * 0.018 * scale;
   local_pos.y -= abs(sway) * 0.012 * foliage_mask * scale;
 
-  vec3 local_normal = a_normal;
-  if (foliage_mask > 0.0) {
-    float normal_scale = 1.0 + irregular + scallop * 0.6 + serration * 0.8;
-    local_normal =
-        normalize(vec3(local_normal.x * normal_scale,
-                       local_normal.y + foliage_mask * 0.18 + skirt_mask * 0.10,
-                       local_normal.z * normal_scale));
-  }
+  vec3 local_normal =
+      a_normal / mix(vec3(1.0), vec3(aspect_w, aspect_h, aspect_w), foliage_mask);
+  local_normal.xz = crown_turn * local_normal.xz;
+  local_normal = normalize(local_normal);
 
   float cos_r = cos(rotation);
   float sin_r = sin(rotation);

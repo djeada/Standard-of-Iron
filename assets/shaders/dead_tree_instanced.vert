@@ -32,13 +32,16 @@ void main() {
   vec3 stretch =
       vec3(mix(0.80, 1.24, seed_b), mix(0.84, 1.20, seed), mix(0.80, 1.24, seed_c));
   vec3 shaped = a_pos * stretch;
-  float twist = (seed_c - 0.5) * k_dead_tree_twist * shaped.y;
+  float twist_rate = (seed_c - 0.5) * k_dead_tree_twist;
+  float twist = twist_rate * shaped.y;
   float twist_c = cos(twist);
   float twist_s = sin(twist);
-  shaped.xz = mat2(twist_c, -twist_s, twist_s, twist_c) * shaped.xz;
+  mat2 twist_rot = mat2(twist_c, -twist_s, twist_s, twist_c);
+  shaped.xz = twist_rot * shaped.xz;
   float lean_angle = seed_b * 6.2831853;
-  shaped.xz +=
-      vec2(cos(lean_angle), sin(lean_angle)) * shaped.y * (k_dead_tree_lean * seed);
+  vec2 lean = vec2(cos(lean_angle), sin(lean_angle)) * (k_dead_tree_lean * seed);
+  vec2 bend_slope = lean + twist_rate * vec2(shaped.z, -shaped.x);
+  shaped.xz += lean * shaped.y;
 
   vec3 local_pos = shaped * scale;
   vec2 rotated_xz = rot * local_pos.xz;
@@ -46,7 +49,10 @@ void main() {
 
   v_world_pos = local_pos + world_pos;
 
-  vec3 shaped_normal = normalize(a_normal / stretch);
+  // Inverse transpose of the stretch, height-dependent twist and lean.
+  vec3 shaped_normal = a_normal / stretch;
+  shaped_normal.xz = twist_rot * shaped_normal.xz;
+  shaped_normal.y -= dot(shaped_normal.xz, bend_slope);
   vec2 rotated_normal_xz = rot * shaped_normal.xz;
   v_normal = normalize(vec3(rotated_normal_xz.x, shaped_normal.y, rotated_normal_xz.y));
 

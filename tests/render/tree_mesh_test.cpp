@@ -11,7 +11,8 @@ namespace {
 using namespace Render::GL::BackendPipelines;
 
 TEST(TreeMesh, BranchesAndCrownsHaveFiniteOutwardFacesWithinInstanceBudget) {
-  for (const auto& mesh : {build_olive_tree_mesh()}) {
+  for (const auto& mesh :
+       {build_pine_tree_mesh(), build_cypress_tree_mesh(), build_olive_tree_mesh()}) {
     ASSERT_FALSE(mesh.vertices.empty());
     ASSERT_EQ(mesh.indices.size() % 3U, 0U);
 

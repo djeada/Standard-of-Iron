@@ -50,7 +50,7 @@ auto build_cursed_gold_vein_mesh() -> PropMeshData {
     append_rock_mass(mesh, rock);
   }
   for (const auto& shard : k_shards) {
-    append_rock_shard(mesh, shard);
+    append_rock_shard(mesh, shard, ShardShape::Crystal);
   }
   return mesh;
 }

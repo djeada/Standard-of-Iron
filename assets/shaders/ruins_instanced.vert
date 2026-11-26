@@ -11,6 +11,7 @@ out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
+flat out float v_timber;
 
 void main() {
   float scale = a_pos_scale.w;
@@ -30,6 +31,8 @@ void main() {
   vec2 rotated_normal_xz = rot * a_normal.xz;
   v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
+  // Abandoned-home timbers carry half-length normals in this shared mesh layout.
+  v_timber = float(dot(a_normal, a_normal) < 0.5);
   v_color = a_color_rot.rgb;
   v_local_pos = a_pos;
 

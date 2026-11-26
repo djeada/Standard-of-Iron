@@ -74,7 +74,8 @@ void main() {
   v_normal = normalize(orient * (normal_shape * a_normal));
   v_color = a_color_rot.rgb;
   v_local_pos = a_pos;
-  v_ground_height = world_pos.y - world_origin.y;
+  // Measure the weathering band from the fitted terrain plane on slopes.
+  v_ground_height = dot(local_pos - vec3(0.0, sink, 0.0), ground_normal);
   v_scale = scale;
   v_seed = seed;
 

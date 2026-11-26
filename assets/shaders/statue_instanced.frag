@@ -10,6 +10,7 @@ in vec3 v_world_pos;
 in vec3 v_normal;
 in vec3 v_color;
 in vec3 v_local_pos;
+flat in vec2 v_quarry_offset;
 
 uniform vec3 u_camera_pos;
 
@@ -33,6 +34,7 @@ void main() {
       soi_noise21_b0e82b(v_local_pos.xz * 8.5 + vec2(height * 5.1, height * 3.3));
   vec2 vein_uv =
       vec2(v_local_pos.x * 6.4 + height * 2.6, v_local_pos.z * 6.4 - height * 1.8);
+  vein_uv += v_quarry_offset;
   float vein_field =
       soi_noise21_b0e82b(vein_uv) * 0.62 + soi_noise21_b0e82b(vein_uv * 2.9) * 0.38;
   float vein = 1.0 - smoothstep(0.0, 0.085, abs(vein_field - 0.5));
