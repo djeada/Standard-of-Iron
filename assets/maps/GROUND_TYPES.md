@@ -12,6 +12,16 @@ The ground type system allows designers to quickly select from predefined ground
 | `alpine_mix`    | Alpine Rock + Snow Mix             | Hardy grass with snow patches and lichen-covered rocks |
 | `soil_fertile`  | Dark Fertile Farmland Soil         | Thick healthy grass with rich dark soil, high moisture |
 
+## Ground at gameplay zoom
+
+![Before and after terrain shader renders for Blackpine Hollow, Battle of Zama, Copper Canyons, Crossing the Alps and Amber Delta](../../docs/screenshots/terrain-materials.webp)
+
+These terrain-only renders use the five maps’ biome settings on the same level
+surface under the same daylight and camera, about 45 tiles from the ground.
+Look for irregular dark mud in Blackpine Hollow, broad straw patches at Zama,
+broken copper-colored stone in Copper Canyons, pale snow drifts in the Alps,
+and short runs of dark furrows in Amber Delta.
+
 ## Distinct Features Per Ground Type
 
 Each ground type configures multiple distinct visual features:

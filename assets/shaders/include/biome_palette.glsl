@@ -13,13 +13,15 @@ struct BiomeGrassPalette {
 
 BiomeGrassPalette biome_grass_palette(int ground_type) {
   if (ground_type == k_forest_mud)
-    return BiomeGrassPalette(vec3(0.90, 1.03, 0.92), vec3(1.12, 1.05, 0.80));
+    return BiomeGrassPalette(vec3(0.84, 0.96, 1.05), vec3(1.01, 0.94, 0.84));
   if (ground_type == k_grass_dry)
-    return BiomeGrassPalette(vec3(0.96, 1.06, 0.90), vec3(1.22, 1.10, 0.74));
+    return BiomeGrassPalette(vec3(1.12, 0.99, 0.79), vec3(1.23, 1.06, 0.77));
   if (ground_type == k_soil_rocky)
-    return BiomeGrassPalette(vec3(0.98, 1.03, 0.93), vec3(1.12, 1.05, 0.86));
+    return BiomeGrassPalette(vec3(1.01, 0.96, 1.03), vec3(1.10, 1.01, 0.97));
+  if (ground_type == k_alpine_mix)
+    return BiomeGrassPalette(vec3(0.91, 0.98, 1.10), vec3(0.99, 1.02, 1.11));
   if (ground_type == k_soil_fertile)
-    return BiomeGrassPalette(vec3(0.93, 1.08, 0.92), vec3(1.22, 1.11, 0.76));
+    return BiomeGrassPalette(vec3(1.00, 1.08, 0.85), vec3(1.14, 1.05, 0.84));
 
   return BiomeGrassPalette(vec3(1.0), vec3(1.0));
 }

@@ -1152,10 +1152,18 @@ void main() {
 
   float soil_mix = bare_patch * 0.70;
   soil_mix = max(soil_mix, sparse_cover * (0.24 + biome_dry * 0.18));
-  soil_mix = max(soil_mix, worn_patch * 0.28);
-  soil_mix = max(soil_mix,
-                 worn_patch * (biome_dry * 0.14 + biome_rocky * 0.10 +
-                               biome_forest * 0.06 + biome_fertile * 0.04));
+  soil_mix = max(soil_mix, worn_patch * (0.28 + biome_dry * 0.26));
+  // On wet forest floors, exposed mud follows the drainage pattern.
+  float mud_hollow = smoothstep(0.46, 0.61, moisture_field + understory_patch * 0.17);
+  soil_mix = max(soil_mix, mud_hollow * biome_forest * u_moisture_level * 0.82);
+  if (u_ground_type == k_soil_fertile) {
+    float phase = dot(world_coord, vec2(0.94, 0.36)) * 1.8 + meadow_field * 9.0;
+    float furrow = smoothstep(0.20, 0.86, cos(phase)) *
+                   band_limit(coord_footprint, 0.30);
+    float loam = smoothstep(0.44, 0.60, soil_field + worn_breakup * 0.10) *
+                 (1.0 - smoothstep(0.06, 0.18, slope));
+    soil_mix = max(soil_mix, loam * (0.24 + 0.48 * furrow));
+  }
   soil_mix = max(soil_mix, damp_patch * (0.22 + 0.14 * u_moisture_level));
   soil_mix = max(soil_mix, lowland_soil * (0.08 + 0.15 * u_moisture_level));
   float deposited_soil = gully_mask * (1.0 - smoothstep(0.08, 0.32, slope)) *
@@ -1182,7 +1190,8 @@ void main() {
   soil_mix = max(soil_mix, slope_soil);
   soil_mix = max(soil_mix, talus_apron * (0.30 + 0.25 * talus_breakup));
   soil_mix = clamp(soil_mix, 0.0, 0.78);
-  vec3 ground_soil = mix(u_soil_color, u_grass_dry, level_ground * 0.30);
+  float dry_soil_share = level_ground * (0.30 - 0.22 * max(biome_fertile, biome_forest));
+  vec3 ground_soil = mix(u_soil_color, u_grass_dry, dry_soil_share);
   vec3 varied_soil =
       ground_soil * (1.0 + surface_detail * 0.055 + surface_grain * 0.070 +
                      granular * 0.055 + speckle * 0.030);
@@ -1222,10 +1231,7 @@ void main() {
                     0.0,
                     1.0);
   float weathered_exposure = smoothstep(0.34, 0.70, rock_breakup + ridge_mask * 0.10);
-  rock_mask = clamp(rock_mask + biome_rocky * weathered_exposure * 0.12 +
-                        biome_alpine * weathered_exposure * 0.09,
-                    0.0,
-                    1.0);
+  rock_mask = clamp(rock_mask + biome_alpine * weathered_exposure * 0.09, 0.0, 1.0);
   float hill_outcrop = hill_body * weathered_exposure *
                        (hill_crown * 0.18 + hill_shoulder * 0.10) *
                        smoothstep(0.035, 0.18, slope);
@@ -1257,6 +1263,9 @@ void main() {
   rock_mask *= mix(weathered_exposure, 1.0, smoothstep(0.10, 0.34, slope));
   rock_mask *= (1.0 - 0.55 * entry_shelter) * (1.0 - 0.30 * foot_shelter);
   rock_mask *= smoothstep(0.010, 0.050, slope);
+  // Loose stone also breaks through on level rocky ground.
+  float scree_patch = smoothstep(0.44, 0.60, rock_breakup + talus_breakup * 0.32);
+  rock_mask = max(rock_mask, biome_rocky * scree_patch * u_rock_exposure);
   float mountain_outcrop =
       mountain_surface * smoothstep(1.5, 7.0, v_world_pos.y) *
       smoothstep(0.62, 0.76, rock_breakup + ridge_mask * 0.18 + mountain_upland * 0.12);
@@ -1456,7 +1465,7 @@ void main() {
                               gully_mask * 0.08 + alpine_height_bias * 0.05 -
                               low_ground * 0.06 - ridge_mask * 0.06;
     float alpine_cover = clamp(u_snow_coverage, 0.0, 1.0);
-    float alpine_snow_shift = alpine_cover * alpine_cover * 0.40;
+    float alpine_snow_shift = alpine_cover * mix(0.28, 0.40, alpine_cover);
     float alpine_snow_core = smoothstep(
         0.66 - alpine_snow_shift, 0.72 - alpine_snow_shift, alpine_snow_field);
     float alpine_snow_thin = smoothstep(
@@ -1467,7 +1476,7 @@ void main() {
     float alpine_snow_slope_retention =
         1.0 - smoothstep(0.16 + alpine_cover * 0.10, 0.42 + alpine_cover * 0.10, slope);
     float alpine_snow_shelter = 0.86 + terrain_cavity * 0.20;
-    float alpine_snow_depth = mix(alpine_cover, 1.0, alpine_cover * alpine_cover);
+    float alpine_snow_depth = mix(alpine_cover, 1.0, alpine_cover);
     float alpine_snow_mask = clamp(
         alpine_snow_accumulation * alpine_snow_depth *
             mix(mix(0.68, 1.0, alpine_cover * alpine_cover), 1.38, alpine_height_bias) *
@@ -1590,7 +1599,8 @@ void main() {
   float worn_ground = smoothstep(0.22, 0.56, earth_field) * (1.0 - rock_mask) *
                       (1.0 - u_snow_coverage) * clamp(1.0 - slope * 1.5, 0.0, 1.0);
   worn_ground *= 0.40 + 0.80 * smoothstep(-0.22, 0.22, worn_breakup);
-  worn_ground *= mix(0.60, 1.0, clearing_dryness) * (1.0 - terrain_cavity * 0.25);
+  worn_ground *= (1.0 - snow_cover) * mix(0.60, 1.0, clearing_dryness) *
+                 (1.0 - terrain_cavity * 0.25);
 
   float grass_cover = (1.0 - rock_mask) * (1.0 - soil_mix) * (1.0 - snow_cover);
   float cured =
@@ -1598,7 +1608,7 @@ void main() {
 
   float mosaic_ragged =
       (thatch_field - 0.5) * k_soi_mosaic_ragged + worn_breakup * 0.05;
-  float mosaic_dry_bias = biome_dry * 0.012 + biome_rocky * 0.012 +
+  float mosaic_dry_bias = biome_dry * 0.048 + biome_rocky * 0.012 +
                           biome_alpine * 0.010 - biome_forest * 0.025 -
                           (u_moisture_level - 0.5) * 0.024;
   float straw_field = meadow_field * 0.58 + regional_field * 0.24 +
