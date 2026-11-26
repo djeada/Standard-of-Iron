@@ -9,7 +9,9 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace NinjaReader::Routines {
 

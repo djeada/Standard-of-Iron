@@ -2,8 +2,10 @@
 // https://github.com/djeada/Standard-of-Iron
 
 #include <array>
+#include <exception>
 #include <gtest/gtest.h>
-#include <span>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 

@@ -5,13 +5,18 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <format>
 #include <limits>
+#include <optional>
 #include <ranges>
+#include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace NinjaReader::CommandLine::Argument {
 
