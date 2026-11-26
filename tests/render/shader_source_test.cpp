@@ -482,14 +482,20 @@ TEST(ShaderSource, WorldSurfacesShareTheSunBounceAndCanopyScatter) {
   EXPECT_LT(common.find("vec3 soi_canopy_scatter(vec3 normal)"),
             common.find("vec3 soi_surface_lighting_scaled("));
 
-  for (const auto* name : {"olive_instanced.frag", "pine_instanced.frag"}) {
-    const auto source = read_text(root / "assets" / "shaders" / name);
-    ASSERT_FALSE(source.empty()) << name;
-    EXPECT_NE(collapse_whitespace(source).find(
-                  "soi_canopy_scatter(geometric_normal) * v_foliage_mask"),
-              std::string::npos)
-        << name << " lights its crown as a shell, so the shaded side reads black";
-  }
+  const auto pine = read_text(root / "assets" / "shaders" / "pine_instanced.frag");
+  ASSERT_FALSE(pine.empty());
+  EXPECT_NE(collapse_whitespace(pine).find(
+                "soi_canopy_scatter(geometric_normal) * v_foliage_mask"),
+            std::string::npos)
+      << "pine lights its crown as a shell, so the shaded side reads black";
+
+  const auto olive = read_text(root / "assets" / "shaders" / "olive_instanced.frag");
+  ASSERT_FALSE(olive.empty());
+  const auto flat_olive = collapse_whitespace(olive);
+  // Folded olive leaves use a foliage-biased normal for their lighting.
+  EXPECT_NE(flat_olive.find("soi_canopy_scatter(shading_normal) * v_foliage_mask"),
+            std::string::npos)
+      << "olive must retain canopy scatter on the shaded side";
 }
 
 TEST(ShaderSource, MergedBuildingsDarkenTheirFootAndPartsDoNot) {
@@ -634,8 +640,13 @@ TEST(ShaderSource, TreeCrownsCarrySecondaryWindMotion) {
 
   EXPECT_NE(flat_pine.find("float branch_flutter ="), std::string::npos);
   EXPECT_NE(flat_pine.find("branch_flutter * branch_flex * gust"), std::string::npos);
-  EXPECT_NE(flat_olive.find("float leaf_flutter ="), std::string::npos);
-  EXPECT_NE(flat_olive.find("leaf_flutter * flutter_flex * gust"), std::string::npos);
+  // Olive twigs and blades sample the same spatial wind field at their joints.
+  EXPECT_NE(flat_olive.find("dot(model_pos.xz, vec2(8.2, 5.6))"), std::string::npos);
+  EXPECT_NE(flat_olive.find("float ripple = sin(wind_time"), std::string::npos);
+  EXPECT_NE(flat_olive.find("wind_offset += cross_dir * ripple * reach * gust"),
+            std::string::npos);
+  EXPECT_NE(flat_olive.find("local_pos.y += (ripple * reach * u_wind_strength"),
+            std::string::npos);
   const auto palm = read_text(root / "assets" / "shaders" / "palm_instanced.vert");
   ASSERT_FALSE(palm.empty());
   const auto flat_palm = collapse_whitespace(palm);
