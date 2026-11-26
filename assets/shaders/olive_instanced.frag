@@ -76,11 +76,11 @@ void main() {
 
   float silhouette = 1.0 - abs(dot(geometric_normal, view_dir));
 
-  vec3 leaf_dark_green = vec3(0.046, 0.088, 0.040);
-  vec3 leaf_mid_green = vec3(0.110, 0.195, 0.082);
-  vec3 leaf_light_green = vec3(0.225, 0.335, 0.145);
+  vec3 leaf_dark_green = vec3(0.080, 0.127, 0.086);
+  vec3 leaf_mid_green = vec3(0.205, 0.285, 0.178);
+  vec3 leaf_light_green = vec3(0.365, 0.425, 0.288);
   vec3 leaf_silver = vec3(0.560, 0.610, 0.540);
-  vec3 leaf_sun = vec3(0.330, 0.470, 0.170);
+  vec3 leaf_sun = vec3(0.430, 0.495, 0.303);
 
   float color_choice =
       clamp(leaf_clump * 0.90 + (leaf_fine - 0.5) * 0.26 + 0.10, 0.0, 1.0);
@@ -126,7 +126,7 @@ void main() {
   silver_show = max(silver_show, turned_leaves);
   leaf_color = mix(leaf_color,
                    leaf_silver,
-                   clamp(silver_show, 0.0, 1.0) * mix(0.05, 0.12, canopy_height));
+                   clamp(silver_show, 0.0, 1.0) * mix(0.14, 0.30, canopy_height));
 
   float leaf_gap = 1.0 - smoothstep(0.26, 0.56, leaf_sprig);
   leaf_color = mix(leaf_color, leaf_dark_green, leaf_gap * 0.32 * v_foliage_mask);

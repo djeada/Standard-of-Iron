@@ -58,15 +58,15 @@ void main() {
   float midrib = (1.0 - smoothstep(0.0, 0.16, across)) * fine_detail;
 
   vec3 frond_dark = vec3(0.080, 0.130, 0.058);
-  vec3 frond_mid = vec3(0.180, 0.262, 0.105);
-  vec3 frond_light = vec3(0.320, 0.400, 0.170);
+  vec3 frond_mid = vec3(0.160, 0.292, 0.137);
+  vec3 frond_light = vec3(0.325, 0.452, 0.214);
   vec3 frond_sun = vec3(0.520, 0.580, 0.250);
   vec3 frond_rib = vec3(0.560, 0.540, 0.300);
 
   vec3 leaf_color = mix(frond_mid, frond_light, frond_hue * 0.45 + along * 0.25);
   leaf_color = mix(leaf_color, v_color * 1.25, 0.30);
   leaf_color *= mix(vec3(0.84, 0.90, 1.0), vec3(1.06, 1.0, 0.86), tree_hue);
-  leaf_color = mix(leaf_color, frond_dark, leaflet_gap * 0.55);
+  leaf_color = mix(leaf_color, frond_dark, leaflet_gap * 0.23);
   leaf_color = mix(leaf_color, frond_dark, (1.0 - along) * 0.35);
   leaf_color = mix(leaf_color, frond_rib, midrib * 0.45);
   float tip_burn =
