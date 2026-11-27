@@ -13451,6 +13451,42 @@ Prawy przycisk anuluje.</translation>
         <translation>Zmiana języka działa natychmiast</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>Diagnostyka</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>Pakiet pomocy to jeden plik zip z tą kompilacją, kartą graficzną, zapisanymi ustawieniami i końcem dziennika konsoli. Ścieżki, adresy i wszystko, co wygląda na dane logowania, są zastępowane przed zapisaniem, a nic nie jest wysyłane: plik dołączasz do zgłoszenia błędu sam.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>W pakiecie</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>Wybierz plik, aby zobaczyć, co będzie zawierał.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>Dołącz zrzut ekranu okna</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>Zapisz w</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>Ścieżka pakietu pomocy</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>Ścieżka pakietu pomocy</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>Eksportuj pakiet pomocy</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>O grze</translation>
     </message>

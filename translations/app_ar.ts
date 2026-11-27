@@ -13325,6 +13325,42 @@ Right-click to cancel.</source>
         <translation>تنطبق هذه الإعدادات على الحملة والمناوشة وأدوات المحرر سواءً بسواء.</translation>
     </message>
     <message>
+        <source>Diagnostics</source>
+        <translation>التشخيص</translation>
+    </message>
+    <message>
+        <source>A support bundle is one zip with this build, the graphics adapter, the saved preferences and the end of the console log. Paths, addresses and anything that looks like a credential are replaced before it is written, and nothing is uploaded: you attach the file to the bug report yourself.</source>
+        <translation>حزمة الدعم هي ملف zip واحد يحتوي على هذا الإصدار ومهايئ الرسوميات والتفضيلات المحفوظة ونهاية سجل وحدة التحكم. تُستبدل المسارات والعناوين وأي شيء يشبه بيانات الاعتماد قبل كتابتها، ولا يتم رفع أي شيء: أنت ترفق الملف بتقرير الخطأ بنفسك.</translation>
+    </message>
+    <message>
+        <source>In the bundle</source>
+        <translation>في الحزمة</translation>
+    </message>
+    <message>
+        <source>Select a file to see what it will contain.</source>
+        <translation>اختر ملفًا لترى ما سيحتويه.</translation>
+    </message>
+    <message>
+        <source>Include a screenshot of the window</source>
+        <translation>إرفاق لقطة شاشة للنافذة</translation>
+    </message>
+    <message>
+        <source>Save to</source>
+        <translation>حفظ في</translation>
+    </message>
+    <message>
+        <source>Path for the support bundle</source>
+        <translation>مسار حزمة الدعم</translation>
+    </message>
+    <message>
+        <source>Support bundle path</source>
+        <translation>مسار حزمة الدعم</translation>
+    </message>
+    <message>
+        <source>Export support bundle</source>
+        <translation>تصدير حزمة الدعم</translation>
+    </message>
+    <message>
         <source>About</source>
         <translation>عن اللعبة</translation>
     </message>
