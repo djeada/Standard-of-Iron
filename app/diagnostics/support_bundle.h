@@ -61,8 +61,9 @@ inline constexpr char k_placeholder_secret[] = "<secret>";
                                 const RedactionTargets& targets) -> QByteArray;
 
 // Applies the limits above and reports what happened: entries are dropped once
-// the count or the byte budget is spent, and every entry over the per-file cap
-// is cut on a line boundary with a marker appended.
+// the count or the byte budget is spent, and every text entry over the per-file
+// cap is cut on a line boundary with a marker appended. A binary entry (a PNG)
+// is never cut - a truncated image does not decode - so it is dropped whole.
 [[nodiscard]] auto apply_limits(const QList<BundleEntry>& entries,
                                 const BundleLimits& limits,
                                 QList<BundleEntry>& out) -> bool;
@@ -98,6 +99,7 @@ struct BundleWriteResult {
 // The text a reader opens first: what this is, what is in it, what was left out.
 [[nodiscard]] auto bundle_readme(const QList<BundleEntry>& entries,
                                  const QDateTime& timestamp,
-                                 const QString& version) -> QByteArray;
+                                 const QString& version,
+                                 const QStringList& omitted = {}) -> QByteArray;
 
 } // namespace App::Diagnostics

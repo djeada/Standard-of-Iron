@@ -157,10 +157,12 @@ auto secret_patterns() -> const QList<SecretPattern>& {
       return QString::fromLatin1(text);
     };
     QList<SecretPattern> built;
-    // An HTTP header first: the value after "Bearer" is the credential, and the
-    // generic key=value rule below would only eat the scheme name.
-    built.append({QRegularExpression(QStringLiteral(
-                      "(?i)\\bauthorization\\b\\s*[:=]\\s*(?:bearer\\s+)?\\S+")),
+    // An HTTP header first: the whole value is the credential, whatever scheme
+    // precedes it. Matching only the first word after the colon would leave the
+    // base64 that follows "Basic" in the bundle, so the rule runs to the end of
+    // the line and replaces everything there.
+    built.append({QRegularExpression(
+                      QStringLiteral("(?i)\\bauthorization\\b\\s*[:=]\\s*[^\\r\\n]+")),
                   QStringLiteral("authorization=<secret>")});
     built.append(
         {QRegularExpression(QStringLiteral("\\bgh[pousr]_[A-Za-z0-9]{20,}\\b")),
@@ -255,6 +257,12 @@ auto apply_limits(const QList<BundleEntry>& entries,
         std::min(limits.max_entry_bytes, limits.max_total_bytes - total);
     if (kept.content.size() > budget) {
       everything_fit = false;
+      // A screenshot is bytes, not lines: cutting its tail leaves a PNG that no
+      // decoder accepts while the export still reports success. It is dropped
+      // whole instead, and the collector says so in the readme.
+      if (kept.name.endsWith(QStringLiteral(".png"))) {
+        continue;
+      }
       // The tail, not the head: what a bundle exists to show is the end of a
       // log, the frame that failed last. The marker goes on top so a reader
       // knows the first lines are missing, and it is counted against the budget
@@ -443,7 +451,8 @@ auto default_archive_name(const QDateTime& timestamp,
 
 auto bundle_readme(const QList<BundleEntry>& entries,
                    const QDateTime& timestamp,
-                   const QString& version) -> QByteArray {
+                   const QString& version,
+                   const QStringList& omitted) -> QByteArray {
   QStringList lines;
   lines << QStringLiteral("Standard of Iron %1 support bundle").arg(version);
   lines << QStringLiteral("Created: %1").arg(timestamp.toUTC().toString(Qt::ISODate));
@@ -462,6 +471,13 @@ auto bundle_readme(const QList<BundleEntry>& entries,
     }
   }
   lines << QString();
+  if (!omitted.isEmpty()) {
+    lines << QStringLiteral("Left out at the size limit:");
+    for (const QString& note : omitted) {
+      lines << QStringLiteral("  - %1").arg(note);
+    }
+    lines << QString();
+  }
   lines << QStringLiteral(
       "What was left out on purpose: saved games, replay files, account identifiers "
       "and anything that could be used to reach this machine. Paths appear as "

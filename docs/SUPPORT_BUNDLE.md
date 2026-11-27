@@ -11,14 +11,14 @@ themselves.
 
 ## What is in it
 
-| File                 | What it holds                                                                             |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| `README.txt`         | What the bundle is, what is inside, and what was deliberately left out                    |
-| `system.txt`         | Build, operating system, CPU and memory, graphics adapter and tier, display, storage state |
-| `settings.ini`       | The saved preferences, sorted, without paths or account identifiers                       |
-| `logs/recent.log`    | The last 800 lines this run wrote to the console                                          |
-| `logs/startup.log`   | Only when the startup supervisor wrote one, tail first                                    |
-| `screenshot.png`     | Only when the reporter ticks the box; the window as it looked when they exported          |
+| File               | What it holds                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `README.txt`       | What the bundle is, what is inside, and what was deliberately left out                     |
+| `system.txt`       | Build, operating system, CPU and memory, graphics adapter and tier, display, storage state |
+| `settings.ini`     | The saved preferences, sorted, without paths or account identifiers                        |
+| `logs/recent.log`  | The last 800 lines this run wrote to the console                                           |
+| `logs/startup.log` | Only when the startup supervisor wrote one, tail first                                     |
+| `screenshot.png`   | Only when the reporter ticks the box; the window as it looked when they exported           |
 
 Saved games, replay files and anything that names a person are never included.
 
@@ -31,7 +31,8 @@ Every text file goes through one pass before it is written (`redact_text` in
   become `<path>`, with the most specific prefix shortened first;
 - the account name and the machine name become `<user>` and `<host>`;
 - GitHub, AWS, OpenAI-style, Slack and JWT tokens become `<secret>`, as does the
-  value of `authorization:`, `token=`, `password=` and `api_key=`;
+  whole value of an `authorization` header, whatever scheme follows it, and the
+  value of `token=`, `password=` and `api_key=`;
 - e-mail addresses become `<email>`, and IPv4/IPv6 addresses become `<ip>`,
   except loopback and the unspecified address, which say nothing about the
   reporter and explain a local-server bug.
@@ -44,21 +45,24 @@ number makes the bundle useless.
 ## Limits
 
 A bundle has to be attachable to an issue, so the archive is capped: 128 KiB per
-file, 4 MiB in total, 32 files. An oversized file keeps its **tail** - the end of
-a log is what matters - and says so on its first line, with the number of bytes
-dropped. Entries are stored, not compressed: every unzipper reads a stored
-archive without a compression library, which is worth more here than the bytes.
+file, 4 MiB in total, 32 files. An oversized text file keeps its **tail** - the
+end of a log is what matters - and says so on its first line, with the number of
+bytes dropped. A screenshot is never cut: it is scaled down until it fits the
+per-file cap, and dropped whole - with a line saying so in `README.txt` - when
+even that is not enough, because a truncated PNG does not decode. Entries are
+stored, not compressed: every unzipper reads a stored archive without a
+compression library, which is worth more here than the bytes.
 
 ## Where it lives
 
-| Piece                 | Path                                              |
-| --------------------- | ------------------------------------------------- |
-| Redaction and archive | `app/diagnostics/support_bundle.{h,cpp}`          |
-| Report and settings   | `app/diagnostics/support_report.{h,cpp}`          |
-| QML-facing service    | `app/diagnostics/support_bundle_service.{h,cpp}`  |
-| Recent log ring       | `app/bootstrap/log_handler.{h,cpp}`               |
+| Piece                 | Path                                                    |
+| --------------------- | ------------------------------------------------------- |
+| Redaction and archive | `app/diagnostics/support_bundle.{h,cpp}`                |
+| Report and settings   | `app/diagnostics/support_report.{h,cpp}`                |
+| QML-facing service    | `app/diagnostics/support_bundle_service.{h,cpp}`        |
+| Recent log ring       | `app/bootstrap/log_handler.{h,cpp}`                     |
 | Panel                 | the `Diagnostics` section of `ui/qml/SettingsPanel.qml` |
-| Tests                 | `tests/app/support_bundle_test.cpp`               |
+| Tests                 | `tests/app/support_bundle_test.cpp`                     |
 
 The service takes the executable's version strings through `set_build_info` and
 the window through `set_screenshot_provider`; both are wired in `main.cpp`. That

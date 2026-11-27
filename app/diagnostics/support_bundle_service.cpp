@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 
 #if defined(Q_OS_WIN)
 #include <windows.h>
@@ -72,6 +73,16 @@ auto physical_memory_mb() -> qint64 {
 #else
   return 0;
 #endif
+}
+
+auto encoded_png(const QImage& image) -> QByteArray {
+  QByteArray png;
+  QBuffer buffer(&png);
+  buffer.open(QIODevice::WriteOnly);
+  if (!image.save(&buffer, "PNG")) {
+    return {};
+  }
+  return png;
 }
 
 auto tail_lines(const QString& text, int max_lines) -> QString {
@@ -391,19 +402,41 @@ auto SupportBundleService::collect() const -> QList<BundleEntry> {
                               tail_lines(startup, k_startup_log_lines_in_bundle)));
   }
 
+  QStringList omitted;
+
   if (m_include_screenshot && m_screenshot_provider) {
     const QImage shot = m_screenshot_provider();
     if (!shot.isNull()) {
-      BundleEntry entry;
-      entry.name = QStringLiteral("screenshot.png");
-      entry.description = QStringLiteral("The window as it looked when the bundle "
-                                         "was written");
-      QByteArray png;
-      QBuffer buffer(&png);
-      buffer.open(QIODevice::WriteOnly);
-      if (shot.save(&buffer, "PNG")) {
+      // A PNG is bytes, not lines: a tail cut leaves a file no viewer opens.
+      // The image is scaled down until it fits the per-file cap instead, and
+      // dropped whole when even that is not enough.
+      const qint64 cap = BundleLimits{}.max_entry_bytes;
+      QImage scaled = shot;
+      QByteArray png = encoded_png(scaled);
+      while (!png.isEmpty() && png.size() > cap && scaled.width() > 16 &&
+             scaled.height() > 16) {
+        scaled = scaled.scaled(
+            scaled.size() / 2, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        png = encoded_png(scaled);
+      }
+      if (!png.isEmpty() && png.size() <= cap) {
+        BundleEntry entry;
+        entry.name = QStringLiteral("screenshot.png");
+        entry.description =
+            scaled.size() == shot.size()
+                ? QStringLiteral("The window as it looked when the bundle was written")
+                : QStringLiteral("The window as it looked when the bundle was written, "
+                                 "scaled down from %1x%2 to fit the per-file limit")
+                      .arg(shot.width())
+                      .arg(shot.height());
         entry.content = png;
         entries.append(entry);
+      } else {
+        omitted << QStringLiteral("screenshot.png (the window image was still %1 KiB "
+                                  "after scaling down, "
+                                  "above the %2 KiB per-file limit)")
+                       .arg((png.size() + 1023) / 1024)
+                       .arg(cap / 1024);
       }
     }
   }
@@ -412,7 +445,7 @@ auto SupportBundleService::collect() const -> QList<BundleEntry> {
     BundleEntry readme;
     readme.name = QStringLiteral("README.txt");
     readme.description = QStringLiteral("What this bundle is and what was left out");
-    readme.content = bundle_readme(entries, now, m_version);
+    readme.content = bundle_readme(entries, now, m_version, omitted);
     entries.prepend(readme);
   }
   return entries;

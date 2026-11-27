@@ -129,9 +129,10 @@ TEST(SupportRedaction, HomeAndDataPathsBecomePlaceholders) {
 }
 
 TEST(SupportRedaction, NamesAndKnownSecretsAreScrubbed) {
-  const QString line = QStringLiteral(
-      "user andy on Studio-Mac.local used ghp_1234567890abcdefghijABCDEFG and "
-      "authorization: Bearer abcdef123456 for andy@example.com");
+  const QString line =
+      QStringLiteral("user andy (andy@example.com) on Studio-Mac.local used "
+                     "ghp_1234567890abcdefghijABCDEFG and "
+                     "authorization: Bearer abcdef123456");
 
   const QString redacted = redact_text(line, sample_targets());
 
@@ -143,6 +144,21 @@ TEST(SupportRedaction, NamesAndKnownSecretsAreScrubbed) {
   EXPECT_TRUE(redacted.contains(QStringLiteral("<email>")));
   EXPECT_TRUE(redacted.contains(QStringLiteral("<host>")));
   EXPECT_TRUE(redacted.contains(QStringLiteral("<user>")));
+}
+
+TEST(SupportRedaction, TheWholeAuthorizationValueIsScrubbedForAnyScheme) {
+  // "Bearer" is not the only scheme a log carries: a Basic credential is a
+  // base64 blurb that matches none of the token patterns, so a rule that stops
+  // at the scheme name would export it verbatim.
+  const QString line = QStringLiteral(
+      "request failed: authorization: Basic dXNlcjpwYXNzd29yZA== (retrying)");
+
+  const QString redacted = redact_text(line, sample_targets());
+
+  EXPECT_FALSE(redacted.contains(QStringLiteral("dXNlcjpwYXNzd29yZA==")));
+  EXPECT_TRUE(redacted.contains(QStringLiteral("authorization=<secret>")));
+  EXPECT_TRUE(redacted.contains(QStringLiteral("request failed")))
+      << "the rule owns the header value, not the line around it";
 }
 
 TEST(SupportRedaction, AddressesGoButLoopbackStays) {
@@ -206,6 +222,31 @@ TEST(SupportLimits, EntryCountAndTotalBudgetAreEnforced) {
 
   ASSERT_EQ(limited.size(), 2);
   EXPECT_EQ(limited.at(0).content.size() + limited.at(1).content.size(), 10);
+}
+
+TEST(SupportLimits, AnOversizedScreenshotIsDroppedWholeInsteadOfCut) {
+  BundleLimits limits;
+  limits.max_entry_bytes = 100;
+  limits.max_total_bytes = 4096;
+
+  QList<BundleEntry> limited;
+  const bool everything_fit = apply_limits(
+      {entry(QStringLiteral("screenshot.png"), QByteArray(400, 'p'))}, limits, limited);
+
+  EXPECT_TRUE(limited.isEmpty())
+      << "a PNG cut on a byte boundary does not decode, so it cannot be kept";
+  EXPECT_FALSE(everything_fit);
+}
+
+TEST(SupportArchive, TheReadmeNamesWhatTheSizeLimitLeftOut) {
+  const QByteArray readme =
+      bundle_readme({entry(QStringLiteral("system.txt"), QByteArray("build"))},
+                    QDateTime(QDate(2026, 11, 26), QTime(12, 0, 0)),
+                    QStringLiteral("0.3.0"),
+                    {QStringLiteral("screenshot.png (over the per-file limit)")});
+  const QString text = QString::fromUtf8(readme);
+  EXPECT_TRUE(text.contains(QStringLiteral("Left out at the size limit")));
+  EXPECT_TRUE(text.contains(QStringLiteral("screenshot.png")));
 }
 
 TEST(SupportArchive, RoundTripsThroughASecondReader) {
@@ -450,6 +491,52 @@ TEST(SupportService, ExportWritesAZipTheReaderCanOpen) {
   ASSERT_TRUE(error.isEmpty()) << error.toStdString();
   EXPECT_GE(parsed.size(), 3);
   EXPECT_EQ(parsed.first().name, QStringLiteral("README.txt"));
+}
+
+TEST(SupportService, ALargeScreenshotIsScaledToFitAndStillDecodes) {
+  QTemporaryDir directory;
+  ASSERT_TRUE(directory.isValid());
+  SupportBundleService service;
+  service.set_build_info(
+      QStringLiteral("0.3.0"), QStringLiteral("a1b2c3d"), QStringLiteral("Debug"));
+  service.set_screenshot_provider([] {
+    QImage image(900, 700, QImage::Format_RGB32);
+    quint32 seed = 2463534242U;
+    for (int y = 0; y < image.height(); ++y) {
+      for (int x = 0; x < image.width(); ++x) {
+        seed ^= seed << 13U;
+        seed ^= seed >> 17U;
+        seed ^= seed << 5U;
+        image.setPixel(
+            x, y, qRgb(seed & 0xff, (seed >> 8) & 0xff, (seed >> 16) & 0xff));
+      }
+    }
+    return image;
+  });
+  service.set_include_screenshot(true);
+
+  const QString target = QDir(directory.path()).filePath(QStringLiteral("bundle"));
+  ASSERT_TRUE(service.export_to(target));
+
+  QFile file(QDir(directory.path()).filePath(QStringLiteral("bundle.zip")));
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  QString error;
+  const auto parsed = read_archive(file.readAll(), error);
+  ASSERT_TRUE(error.isEmpty()) << error.toStdString();
+
+  int shot = -1;
+  for (int index = 0; index < parsed.size(); ++index) {
+    if (parsed.at(index).name == QStringLiteral("screenshot.png")) {
+      shot = index;
+    }
+  }
+  ASSERT_GE(shot, 0) << "the image fits once scaled, so it has to be in the bundle";
+  const QByteArray png = parsed.at(shot).data;
+  EXPECT_LE(png.size(), BundleLimits{}.max_entry_bytes);
+  QImage decoded;
+  ASSERT_TRUE(decoded.loadFromData(png, "PNG"))
+      << "a PNG in a bundle has to decode; a byte cut would not";
+  EXPECT_GT(decoded.width(), 16);
 }
 
 TEST(SupportService, ExportToAnUnwritablePlaceReportsWhyItFailed) {
