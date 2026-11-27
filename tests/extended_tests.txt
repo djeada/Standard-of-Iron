@@ -77,8 +77,9 @@ BattleScriptDeterminismTest.CannaePlaysThroughItsPhasesIdenticallyTwice
 
 # app_tests
 # Loads Iron Sepulcher Watch and simulates up to 60 s of fighting at the
-# shrine. This approach took 10.8 s on a pull-request runner in Debug.
+# shrine. The two approaches took 10.8 s and 11.8 s in the fast Debug lane.
 ZonesAndApproaches/IronSepulcherWatchDefenceTest.NoGuardianStandsIdleWhileItsZoneIsStormed/shrine_sentinels_first_approach
+ZonesAndApproaches/IronSepulcherWatchDefenceTest.NoGuardianStandsIdleWhileItsZoneIsStormed/shrine_sentinels_second_approach
 AudioBattleLoadTest.*
 CampaignWaveAssaultTest.*
 # Plays every Barcid Road mission to its end, up to 25 game minutes each.
