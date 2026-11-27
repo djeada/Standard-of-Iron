@@ -22,14 +22,23 @@ namespace {
 // a session is reproducible by starting the game again.
 constexpr int k_max_recent_lines = 2000;
 
-QMutex g_recent_mutex;
-QStringList g_recent_lines;
+struct RecentLog {
+  QMutex mutex;
+  QStringList lines;
+};
+
+auto recent_log() -> RecentLog& {
+  // Qt can call the installed message handler during static destruction.
+  static auto* const log = new RecentLog;
+  return *log;
+}
 
 void record_recent_line(const QString& line) {
-  QMutexLocker const lock(&g_recent_mutex);
-  g_recent_lines.append(line);
-  if (g_recent_lines.size() > k_max_recent_lines) {
-    g_recent_lines.remove(0, g_recent_lines.size() - k_max_recent_lines);
+  auto& log = recent_log();
+  QMutexLocker const lock(&log.mutex);
+  log.lines.append(line);
+  if (log.lines.size() > k_max_recent_lines) {
+    log.lines.remove(0, log.lines.size() - k_max_recent_lines);
   }
 }
 
@@ -146,14 +155,16 @@ auto recent_log_lines(int max_lines) -> QStringList {
   if (max_lines <= 0) {
     return {};
   }
-  QMutexLocker const lock(&g_recent_mutex);
-  const int first = std::max(0, static_cast<int>(g_recent_lines.size()) - max_lines);
-  return g_recent_lines.mid(first);
+  auto& log = recent_log();
+  QMutexLocker const lock(&log.mutex);
+  const int first = std::max(0, static_cast<int>(log.lines.size()) - max_lines);
+  return log.lines.mid(first);
 }
 
 void clear_recent_log_lines() {
-  QMutexLocker const lock(&g_recent_mutex);
-  g_recent_lines.clear();
+  auto& log = recent_log();
+  QMutexLocker const lock(&log.mutex);
+  log.lines.clear();
 }
 
 } // namespace App::Bootstrap
