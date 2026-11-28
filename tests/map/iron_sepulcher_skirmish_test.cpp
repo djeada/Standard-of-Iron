@@ -307,8 +307,10 @@ TEST_F(IronSepulcherSkirmishTest, WakingTheSepulcherAnnouncesItselfWithSoundAndM
   }
   audio.set_master_volume(1.0F);
   audio.set_sound_volume(1.0F);
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Startup);
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  // Only the cue under test: decoding the whole library takes over half a
+  // minute on a shared runner.
+  ASSERT_TRUE(AudioResourceLoader::ensure_audio_resource_loaded(
+      QStringLiteral("sfx.undead.skeletons_rise")));
   AudioResourceLoader::load_audio_cues();
 
   Game::Audio::AudioEventHandler handler(&world);
