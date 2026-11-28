@@ -85,6 +85,7 @@
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/environment_lighting.h"
 #include "game/map/map_catalog.h"
 #include "game/map/map_context.h"
 #include "game/mission/campaign_manager.h"
@@ -104,6 +105,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/persistence/save_load_service.h"
 #include "game/systems/player_resource_registry.h"
+#include "game/systems/rain_manager.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
 #include "game/units/spawn_type.h"
@@ -266,7 +268,22 @@ void GameEngine::sync_render_camera() {
   }
   m_render_camera = *m_camera;
 
-  const QVector3D listener_position = m_camera->get_target();
+  QVector3D listener_position = m_camera->get_target();
+  if (m_commander_view_model->active()) {
+    const auto commander_id = m_commander_view_model->controlled_commander_id();
+    if (m_world != nullptr && commander_id != 0) {
+      if (const auto* transform =
+              m_world->try_get<Engine::Core::TransformComponent>(commander_id)) {
+        listener_position = QVector3D(transform->position.x,
+                                      transform->position.y + 1.65F,
+                                      transform->position.z);
+      } else {
+        listener_position = m_camera->get_position();
+      }
+    } else {
+      listener_position = m_camera->get_position();
+    }
+  }
   Game::Audio::CueTrace::instance().set_listener(
       {.x = listener_position.x(),
        .y = listener_position.y(),
@@ -702,6 +719,25 @@ void GameEngine::update_presentation(float dt) {
     m_minimap_events->publish_overlays(dt);
     m_mission->flush_announcements(dt);
     sync_render_camera();
+    if (!m_runtime.loading && !m_runtime.paused && m_world != nullptr &&
+        m_audio != nullptr) {
+      float darkness = 0.0F;
+      if (m_environment != nullptr && m_environment->clock() != nullptr) {
+        Game::Map::WeatherLightingInput weather;
+        if (const auto* rain = m_environment->rain_manager();
+            rain != nullptr && rain->is_enabled()) {
+          const float intensity = rain->get_intensity();
+          if (rain->get_weather_type() == Game::Map::WeatherType::Snow) {
+            weather.snow = intensity;
+          } else {
+            weather.rain = intensity;
+            weather.storm = std::clamp((intensity - 0.65F) / 0.35F, 0.0F, 1.0F);
+          }
+        }
+        darkness = m_environment->clock()->lighting(weather).darkness_amount();
+      }
+      m_audio->coordinator().update_mission_ambience(dt, m_world, darkness);
+    }
     capture_render_selection();
     sync_scatter_world_props();
     sync_selected_player_state();

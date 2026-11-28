@@ -6,6 +6,105 @@
         "width": 801
     },
     "name": "Carthage",
+    "ambience_zones": [
+        {
+            "bed": "ambient.quay_work",
+            "fade": 14,
+            "id": "merchant_harbour",
+            "night_bed": "ambient.mediterranean_harbor",
+            "radius": 44,
+            "x": 187.51,
+            "z": 196
+        },
+        {
+            "bed": "ambient.quay_work",
+            "fade": 14,
+            "id": "cothon_harbour",
+            "night_bed": "ambient.mediterranean_harbor",
+            "radius": 42,
+            "x": 105.01,
+            "z": 196
+        },
+        {
+            "bed": "ambient.city_square_crowd",
+            "fade": 12,
+            "id": "carthage_agora",
+            "night_bed": "ambient.camp_fire_night",
+            "radius": 36,
+            "x": 109.01,
+            "z": 122
+        },
+        {
+            "bed": "ambient.livestock_market",
+            "fade": 10,
+            "id": "carthage_bazaar",
+            "night_bed": "ambient.city_street_night",
+            "radius": 26,
+            "x": 74,
+            "z": 88
+        },
+        {
+            "bed": "ambient.carthage_war_camp_01",
+            "fade": 9,
+            "id": "elephant_yard",
+            "night_bed": "ambient.carthage_war_camp_02",
+            "radius": 22,
+            "x": 108,
+            "z": 76
+        },
+        {
+            "bed": "ambient.temple_precinct",
+            "fade": 14,
+            "id": "byrsa_precinct",
+            "radius": 38,
+            "x": -70,
+            "z": 30
+        },
+        {
+            "bed": "ambient.temple_precinct",
+            "fade": 10,
+            "id": "tophet_precinct",
+            "radius": 28,
+            "x": 45.01,
+            "z": 285.76
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "megara_oasis",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 24,
+            "x": 70,
+            "z": -148
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "garden_of_tanit",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 20,
+            "x": -96,
+            "z": -152
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "megara_water_gardens",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 42,
+            "x": -90,
+            "z": -240
+        },
+        {
+            "bed": "ambient.drill_field",
+            "fade": 16,
+            "id": "isthmus_garrison",
+            "night_bed": "ambient.carthage_war_camp_02",
+            "radius": 50,
+            "x": -220,
+            "z": 10
+        }
+    ],
     "biome": {
         "ground_type": "grass_dry",
         "height_noise": [
@@ -19390,8 +19489,8 @@
     ],
     "starting_resources": {
         "food": 500,
-        "gold": 500,
-        "iron": 200,
+        "gold": 600,
+        "iron": 150,
         "stone": 300,
         "wood": 400
     },

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <numbers>
 #include <optional>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -699,6 +700,17 @@ struct ScoutedArea {
   float radius = 0.0F;
 };
 
+struct AmbienceZone {
+  QString id;
+  QString bed;
+  QString night_bed;
+  float x = 0.0F;
+  float z = 0.0F;
+  float radius = 25.0F;
+  float fade = 10.0F;
+  std::vector<std::pair<float, float>> polygon;
+};
+
 struct MapDefinition {
   QString name;
   GridDefinition grid;
@@ -720,6 +732,7 @@ struct MapDefinition {
   bool hill_rockfall_caches = true;
   std::vector<Forest> forests;
   std::vector<FogZone> fog_zones;
+  std::vector<AmbienceZone> ambience_zones;
   std::vector<ScoutedArea> scouted_areas;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;

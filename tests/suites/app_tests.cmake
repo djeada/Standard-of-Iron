@@ -26,6 +26,7 @@ add_executable(
     core/loop_seam_test.cpp
     core/resampler_test.cpp
     core/ambience_assets_test.cpp
+    core/city_soundscape_test.cpp
     core/weather_audio_test.cpp
     core/audio_command_ring_test.cpp
     core/audio_backend_test.cpp

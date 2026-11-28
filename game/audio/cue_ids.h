@@ -104,10 +104,22 @@ inline constexpr const char* k_combat_vanguard_rush = "combat.vanguard_rush";
 inline constexpr const char* k_combat_second_wind = "combat.second_wind";
 inline constexpr const char* k_combat_ability_refused = "combat.ability_refused";
 inline constexpr const char* k_combat_lock_on = "combat.lock_on";
+inline constexpr const char* k_combat_melee_swing = "combat.melee_swing";
 
 inline constexpr const char* k_move_footstep = "move.footstep";
 inline constexpr const char* k_move_footstep_hard = "move.footstep_hard";
 inline constexpr const char* k_move_footstep_run = "move.footstep_run";
+inline constexpr const char* k_move_footstep_gravel = "move.footstep_gravel";
+inline constexpr const char* k_move_footstep_stone_interior =
+    "move.footstep_stone_interior";
+
+inline constexpr const char* k_city_hawker_call = "city.hawker_call";
+inline constexpr const char* k_city_dog_bark_distant = "city.dog_bark_distant";
+inline constexpr const char* k_city_door_close = "city.door_close";
+inline constexpr const char* k_city_cart_wheels = "city.cart_wheels";
+inline constexpr const char* k_city_forge_hammer = "city.forge_hammer";
+inline constexpr const char* k_city_temple_bell = "city.temple_bell";
+inline constexpr const char* k_city_water_splash = "city.water_splash";
 
 inline constexpr const char* k_alert_undead_awakening = "alert.undead_awakening";
 inline constexpr const char* k_build_building_burning = "build.building_burning";
@@ -120,6 +132,14 @@ inline constexpr const char* k_wildlife_wolf_hunt = "wildlife.wolf_hunt";
 inline constexpr const char* k_wildlife_wolf_bite = "wildlife.wolf_bite";
 inline constexpr const char* k_wildlife_sheep_alarm = "wildlife.sheep_alarm";
 inline constexpr const char* k_wildlife_birds_flush = "wildlife.birds_flush";
+inline constexpr const char* k_wildlife_sheep_bleat_calm = "wildlife.sheep_bleat_calm";
+inline constexpr const char* k_wildlife_lamb_bleat = "wildlife.lamb_bleat";
+inline constexpr const char* k_wildlife_cattle_low = "wildlife.cattle_low";
+inline constexpr const char* k_wildlife_elephant_rumble = "wildlife.elephant_rumble";
+inline constexpr const char* k_wildlife_elephant_trunk = "wildlife.elephant_trunk";
+inline constexpr const char* k_wildlife_gull = "wildlife.gull";
+inline constexpr const char* k_wildlife_pigeon_flutter = "wildlife.pigeon_flutter";
+inline constexpr const char* k_wildlife_cricket = "wildlife.cricket";
 
 inline constexpr const char* k_state_victory = "state.victory";
 inline constexpr const char* k_state_defeat = "state.defeat";
@@ -129,7 +149,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 109> k_all = {
+inline constexpr std::array<const char*, 127> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -239,6 +259,24 @@ inline constexpr std::array<const char*, 109> k_all = {
     k_state_load_complete,
     k_state_commander_enter,
     k_state_commander_exit,
+    k_combat_melee_swing,
+    k_move_footstep_gravel,
+    k_move_footstep_stone_interior,
+    k_city_hawker_call,
+    k_city_dog_bark_distant,
+    k_city_door_close,
+    k_city_cart_wheels,
+    k_city_forge_hammer,
+    k_city_temple_bell,
+    k_city_water_splash,
+    k_wildlife_sheep_bleat_calm,
+    k_wildlife_lamb_bleat,
+    k_wildlife_cattle_low,
+    k_wildlife_elephant_rumble,
+    k_wildlife_elephant_trunk,
+    k_wildlife_gull,
+    k_wildlife_pigeon_flutter,
+    k_wildlife_cricket,
 };
 
 struct SelectionMounts {

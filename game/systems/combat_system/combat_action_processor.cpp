@@ -193,6 +193,13 @@ void handle_action_events(Engine::Core::World& world,
     bool const advanced_rts_melee = is_advanced_rts_commander_melee(entity, definition);
     if (event.type == CA::CombatActionEventType::WeaponTraceStart) {
       record_swing_for_weapon_trace_start(world, entity, definition, action_id);
+      if (auto const* commander =
+              world.try_get<Engine::Core::CommanderComponent>(entity.get_id());
+          commander != nullptr && commander->fpv_controlled &&
+          !is_rts_attack_action(action_id)) {
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_melee_swing));
+      }
     }
     if (event.type == contact_event &&
         (is_rts_melee_action(action_id) || advanced_rts_melee) &&

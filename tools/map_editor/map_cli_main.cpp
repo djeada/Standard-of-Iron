@@ -71,6 +71,9 @@ auto usage() -> int {
          "long legs\n"
          "  {\"op\":\"gate\",\"at\":[x,z],\"id\":S}   cut a gate into the wall "
          "run under the point\n"
+         "  {\"op\":\"ambience_zone\",\"bed\":S,\"x\":X,\"z\":Z,\"radius\":R,"
+         "\"fade\":F,\"night_bed\":S}\n"
+         "     or \"polygon\":[[x,z],...] in place of x/z/radius\n"
          "An index refers to the map as it stands when that step runs.\n";
   return 2;
 }

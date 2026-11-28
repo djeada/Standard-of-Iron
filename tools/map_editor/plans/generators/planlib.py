@@ -142,6 +142,33 @@ class Plan:
     def root(self, key, value):
         self.ops.append({"op": "root", "key": key, "value": value})
 
+    def ambience_zone(
+        self,
+        bed,
+        *,
+        x=None,
+        z=None,
+        radius=None,
+        polygon=None,
+        fade=10.0,
+        night_bed=None,
+        zone_id=None,
+    ):
+        op = {"op": "ambience_zone", "bed": bed, "fade": round(float(fade), 2)}
+        if zone_id:
+            op["id"] = zone_id
+        if night_bed:
+            op["night_bed"] = night_bed
+        if polygon is not None:
+            op["polygon"] = [
+                [round(float(px), 2), round(float(pz), 2)] for px, pz in polygon
+            ]
+        else:
+            op["x"] = round(float(x), 2)
+            op["z"] = round(float(z), 2)
+            op["radius"] = round(float(radius), 2)
+        self.ops.append(op)
+
     def lake(self, x, z, width, depth, rotation=0, height=None, shape=None, calm=False):
         j = dict(type="lake", x=x, z=z, width=width, depth=depth, rotation=rotation)
         if calm:

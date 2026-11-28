@@ -1066,6 +1066,137 @@ p.root(
 p.root(
     "theme", "A day in Rome: the river port, the market, the Forum and the Colosseum."
 )
+
+p.ambience_zone(
+    "ambient.quay_work",
+    zone_id="emporium_quay",
+    x=bank + 4.0,
+    z=(EZ0 + EZ1) * 0.5,
+    radius=34.0,
+    fade=12.0,
+    night_bed="ambient.river_crossing",
+)
+p.ambience_zone(
+    "ambient.stone_tunnel",
+    zone_id="porta_navalis_vault",
+    x=-112.0,
+    z=96.0,
+    radius=8.0,
+    fade=5.0,
+)
+p.ambience_zone(
+    "ambient.livestock_market",
+    zone_id="forum_boarium",
+    x=-86.0,
+    z=74.0,
+    radius=24.0,
+    fade=10.0,
+    night_bed="ambient.city_street_night",
+)
+p.ambience_zone(
+    "ambient.city_square_crowd",
+    zone_id="forum_romanum",
+    x=FORUM[0],
+    z=FORUM[1],
+    radius=40.0,
+    fade=14.0,
+    night_bed="ambient.camp_fire_night",
+)
+p.ambience_zone(
+    "ambient.city_square_crowd",
+    zone_id="imperial_fora",
+    x=-28.0,
+    z=-76.0,
+    radius=36.0,
+    fade=13.0,
+    night_bed="ambient.camp_fire_night",
+)
+for tid, tx, tz in (
+    ("colosseum_west_tunnel", CX - CRX, CZ),
+    ("colosseum_east_tunnel", CX + CRX, CZ),
+    ("colosseum_north_tunnel", CX, CZ - CRZ),
+    ("colosseum_south_tunnel", CX, CZ + CRZ),
+):
+    p.ambience_zone(
+        "ambient.stone_tunnel",
+        zone_id=tid,
+        x=tx,
+        z=tz,
+        radius=9.0,
+        fade=5.0,
+    )
+p.ambience_zone(
+    "ambient.arena_interior",
+    zone_id="colosseum_bowl",
+    polygon=[
+        (
+            CX + 26.0 * math.cos(math.radians(a)),
+            CZ + 20.0 * math.sin(math.radians(a)),
+        )
+        for a in range(0, 360, 20)
+    ],
+    fade=7.0,
+)
+p.ambience_zone(
+    "ambient.temple_precinct",
+    zone_id="capitoline_precinct",
+    x=-100.0,
+    z=-48.0,
+    radius=32.0,
+    fade=12.0,
+)
+p.ambience_zone(
+    "ambient.drill_field",
+    zone_id="circus_drill",
+    x=CIRC_C[0],
+    z=CIRC_C[1],
+    radius=46.0,
+    fade=15.0,
+    night_bed="ambient.roman_army_camp_01",
+)
+p.ambience_zone(
+    "ambient.drill_field",
+    zone_id="legion_camp",
+    x=276.0,
+    z=0.0,
+    radius=44.0,
+    fade=15.0,
+    night_bed="ambient.roman_army_camp_02",
+)
+p.ambience_zone(
+    "ambient.drill_field",
+    zone_id="castra_garrison",
+    x=144.0,
+    z=130.0,
+    radius=38.0,
+    fade=14.0,
+    night_bed="ambient.roman_army_camp_01",
+)
+for gid, gx, gz, gr in (
+    ("sallust_garden", 120.0, -296.0, 26.0),
+    ("maecenas_garden", 160.0, -76.0, 24.0),
+    ("lucullus_garden", -16.0, -306.0, 22.0),
+    ("palatine_garden", -14.0, 92.0, 18.0),
+    ("caesar_garden", -262.0, 226.0, 22.0),
+):
+    p.ambience_zone(
+        "ambient.city_garden_day",
+        zone_id=gid,
+        x=gx,
+        z=gz,
+        radius=gr,
+        fade=10.0,
+        night_bed="ambient.city_garden_dusk",
+    )
+p.ambience_zone(
+    "ambient.quay_work",
+    zone_id="ostia_portus",
+    x=HCX,
+    z=HCZ,
+    radius=52.0,
+    fade=16.0,
+    night_bed="ambient.mediterranean_harbor",
+)
 t.building(
     "punic_siege_camp",
     "barracks",

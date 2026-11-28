@@ -117,6 +117,9 @@ void AudioRecorder::advance(float seconds, bool record) {
   if (!m_running || seconds <= 0.0F) {
     return;
   }
+  if (m_coordinator != nullptr) {
+    m_coordinator->update_mission_ambience(seconds, m_world, m_darkness_amount);
+  }
   update_ambient_state(seconds);
   rotate_score(seconds);
 

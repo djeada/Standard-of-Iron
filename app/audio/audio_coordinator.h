@@ -2,6 +2,10 @@
 
 #include <QString>
 
+namespace Engine::Core {
+class World;
+}
+
 namespace Game::Audio {
 class AudioEventHandler;
 }
@@ -32,6 +36,9 @@ public:
   void apply_mission_ambience(const Game::Mission::MissionDefinition* mission,
                               const QString& map_path,
                               int local_owner_id);
+  void update_mission_ambience(float dt,
+                               const Engine::Core::World* world,
+                               float darkness_amount);
   void stop_mission_ambience();
 
 private:

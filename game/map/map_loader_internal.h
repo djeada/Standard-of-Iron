@@ -24,6 +24,7 @@ void read_map_clock_and_resources(const QJsonObject& root, MapDefinition& out_ma
                                   QString* out_error) -> bool;
 void read_map_scenery(const QJsonObject& root, MapDefinition& out_map);
 void read_map_fog(const QJsonObject& root, MapDefinition& out_map);
+void read_map_ambience_zones(const QJsonObject& root, MapDefinition& out_map);
 [[nodiscard]] auto read_map_wildlife(const QJsonObject& root,
                                      MapDefinition& out_map) -> bool;
 void finish_map_wildlife(MapDefinition& out_map, bool wildlife_authored);

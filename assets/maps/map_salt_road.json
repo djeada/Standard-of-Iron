@@ -4,8 +4,24 @@
   "coord_system": "grid",
   "skirmish_hidden": true,
   "max_troops_per_player": 300,
-  "grid": { "width": 112, "height": 82, "tile_size": 1.0 },
-  "camera": { "center": [-32, 0, 10], "distance": 28, "tilt_deg": 53, "yaw": 225, "fov_y": 46, "near": 0.3, "far": 260 },
+  "grid": {
+    "width": 112,
+    "height": 82,
+    "tile_size": 1.0
+  },
+  "camera": {
+    "center": [
+      -32,
+      0,
+      10
+    ],
+    "distance": 28,
+    "tilt_deg": 53,
+    "yaw": 225,
+    "fov_y": 46,
+    "near": 0.3,
+    "far": 260
+  },
   "time_of_day": "afternoon",
   "environment": {
     "start_time": 16.6,
@@ -26,43 +42,249 @@
     "procedural_boulders_enabled": false
   },
   "terrain": [
-    { "id": "western_shelf", "type": "hill", "x": 15, "z": 32, "width": 33, "depth": 20, "height": 3.6, "shape": "corridor", "rotation": 7, "thickness": 15, "taper": 0.45 },
-    { "id": "quarry_spur", "type": "hill", "x": 36, "z": 67, "width": 31, "depth": 15, "height": 3.7, "shape": "corridor", "rotation": 24, "thickness": 16, "taper": 0.4 },
-    { "id": "terrace_ridge", "type": "hill", "x": 54, "z": 25, "width": 40, "depth": 19, "height": 3.9, "shape": "corridor", "rotation": -10, "thickness": 15, "taper": 0.55 },
-    { "id": "southern_bluffs", "type": "hill", "x": 82, "z": 67, "width": 39, "depth": 16, "height": 4.8, "shape": "corridor", "rotation": -11, "thickness": 15, "taper": 0.48 },
-    { "id": "ridge_above_beacon", "type": "hill", "x": 97, "z": 14, "width": 29, "depth": 16, "height": 4.5, "shape": "corridor", "rotation": 10, "thickness": 16, "taper": 0.55 }
+    {
+      "id": "western_shelf",
+      "type": "hill",
+      "x": 15,
+      "z": 32,
+      "width": 33,
+      "depth": 20,
+      "height": 3.6,
+      "shape": "corridor",
+      "rotation": 7,
+      "thickness": 15,
+      "taper": 0.45
+    },
+    {
+      "id": "quarry_spur",
+      "type": "hill",
+      "x": 36,
+      "z": 67,
+      "width": 31,
+      "depth": 15,
+      "height": 3.7,
+      "shape": "corridor",
+      "rotation": 24,
+      "thickness": 16,
+      "taper": 0.4
+    },
+    {
+      "id": "terrace_ridge",
+      "type": "hill",
+      "x": 54,
+      "z": 25,
+      "width": 40,
+      "depth": 19,
+      "height": 3.9,
+      "shape": "corridor",
+      "rotation": -10,
+      "thickness": 15,
+      "taper": 0.55
+    },
+    {
+      "id": "southern_bluffs",
+      "type": "hill",
+      "x": 82,
+      "z": 67,
+      "width": 39,
+      "depth": 16,
+      "height": 4.8,
+      "shape": "corridor",
+      "rotation": -11,
+      "thickness": 15,
+      "taper": 0.48
+    },
+    {
+      "id": "ridge_above_beacon",
+      "type": "hill",
+      "x": 97,
+      "z": 14,
+      "width": 29,
+      "depth": 16,
+      "height": 4.5,
+      "shape": "corridor",
+      "rotation": 10,
+      "thickness": 16,
+      "taper": 0.55
+    }
   ],
   "forests": [
-    { "id": "western_pine", "x": 9, "z": 30, "radius": 8 },
-    { "id": "quarry_pine", "x": 37, "z": 71, "radius": 9 },
-    { "id": "terrace_ridge_pine", "x": 53, "z": 18, "radius": 7 },
-    { "id": "south_pines", "x": 82, "z": 68, "radius": 9 },
-    { "id": "beacon_pines", "x": 99, "z": 11, "radius": 8 }
+    {
+      "id": "western_pine",
+      "x": 9,
+      "z": 30,
+      "radius": 8
+    },
+    {
+      "id": "quarry_pine",
+      "x": 37,
+      "z": 71,
+      "radius": 9
+    },
+    {
+      "id": "terrace_ridge_pine",
+      "x": 53,
+      "z": 18,
+      "radius": 7
+    },
+    {
+      "id": "south_pines",
+      "x": 82,
+      "z": 68,
+      "radius": 9
+    },
+    {
+      "id": "beacon_pines",
+      "x": 99,
+      "z": 11,
+      "radius": 8
+    }
   ],
   "roads": [
     {
       "id": "salt_road",
-      "start": [4, 53],
-      "end": [107, 35],
+      "start": [
+        4,
+        53
+      ],
+      "end": [
+        107,
+        35
+      ],
       "style": "default",
       "width": 4.6,
-      "waypoints": [[4, 53], [8, 53], [18, 53], [25, 51], [32, 46], [37, 43], [43, 42], [50, 44], [57, 48], [62, 48], [69, 44], [76, 38], [82, 35], [86, 35], [93, 35], [101, 35], [107, 35]]
+      "waypoints": [
+        [
+          4,
+          53
+        ],
+        [
+          8,
+          53
+        ],
+        [
+          18,
+          53
+        ],
+        [
+          25,
+          51
+        ],
+        [
+          32,
+          46
+        ],
+        [
+          37,
+          43
+        ],
+        [
+          43,
+          42
+        ],
+        [
+          50,
+          44
+        ],
+        [
+          57,
+          48
+        ],
+        [
+          62,
+          48
+        ],
+        [
+          69,
+          44
+        ],
+        [
+          76,
+          38
+        ],
+        [
+          82,
+          35
+        ],
+        [
+          86,
+          35
+        ],
+        [
+          93,
+          35
+        ],
+        [
+          101,
+          35
+        ],
+        [
+          107,
+          35
+        ]
+      ]
     },
     {
       "id": "quarry_path",
-      "start": [35, 23],
-      "end": [37, 43],
+      "start": [
+        35,
+        23
+      ],
+      "end": [
+        37,
+        43
+      ],
       "style": "default",
       "width": 2.0,
-      "waypoints": [[35, 23], [37, 30], [35, 36], [37, 43]]
+      "waypoints": [
+        [
+          35,
+          23
+        ],
+        [
+          37,
+          30
+        ],
+        [
+          35,
+          36
+        ],
+        [
+          37,
+          43
+        ]
+      ]
     },
     {
       "id": "olive_track",
-      "start": [65, 69],
-      "end": [62, 48],
+      "start": [
+        65,
+        69
+      ],
+      "end": [
+        62,
+        48
+      ],
       "style": "default",
       "width": 2.2,
-      "waypoints": [[65, 69], [64, 61], [63, 53], [62, 48]]
+      "waypoints": [
+        [
+          65,
+          69
+        ],
+        [
+          64,
+          61
+        ],
+        [
+          63,
+          53
+        ],
+        [
+          62,
+          48
+        ]
+      ]
     }
   ],
   "spawns": [
@@ -78,38 +300,202 @@
     }
   ],
   "structures": [
-    { "id": "beacon_storehouse", "type": "home", "x": 103, "z": 25, "rotation": 180, "player_id": 1, "team_id": 1, "nation": "roman_republic" }
+    {
+      "id": "beacon_storehouse",
+      "type": "home",
+      "x": 103,
+      "z": 25,
+      "rotation": 180,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    }
   ],
   "firecamps": [
-    { "id": "bivouac_embers", "x": 9, "z": 61, "intensity": 0.85, "radius": 2.6 },
-    { "id": "north_beacon", "x": 96, "z": 29, "intensity": 2.0, "radius": 4.0 },
-    { "id": "south_beacon", "x": 96, "z": 41, "intensity": 1.8, "radius": 3.8 }
+    {
+      "id": "bivouac_embers",
+      "x": 9,
+      "z": 61,
+      "intensity": 0.85,
+      "radius": 2.6
+    },
+    {
+      "id": "north_beacon",
+      "x": 96,
+      "z": 29,
+      "intensity": 2.0,
+      "radius": 4.0
+    },
+    {
+      "id": "south_beacon",
+      "x": 96,
+      "z": 41,
+      "intensity": 1.8,
+      "radius": 3.8
+    }
   ],
   "victory": {
     "type": "elimination",
-    "key_structures": ["barracks"],
-    "defeat_conditions": ["no_commander", "only_commander_remaining"]
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ]
   },
   "world_props": [
-    { "id": "bivouac_north", "type": "tent", "x": 7, "z": 43, "rotation": 18, "scale": 1.08 },
-    { "id": "bivouac_south", "type": "tent", "x": 6, "z": 64, "rotation": 139 },
-    { "id": "arch_foot_north", "type": "ruins", "x": 33, "z": 37, "rotation": 68, "scale": 1.15 },
-    { "id": "arch_foot_south", "type": "ruins", "x": 39, "z": 53, "rotation": 138, "scale": 0.9 },
-    { "id": "quarry_marker", "type": "statue", "x": 42, "z": 37, "rotation": 215, "scale": 0.8 },
-    { "id": "quarry_rock", "type": "boulder", "x": 28, "z": 38, "scale": 1.16 },
-    { "id": "terrace_olive_1", "type": "olive_tree", "x": 48, "z": 53, "scale": 1.21 },
-    { "id": "terrace_olive_2", "type": "olive_tree", "x": 54, "z": 57, "scale": 0.91 },
-    { "id": "terrace_olive_3", "type": "olive_tree", "x": 58, "z": 55, "scale": 1.23 },
-    { "id": "terrace_olive_4", "type": "olive_tree", "x": 63, "z": 56, "scale": 1.12 },
-    { "id": "terrace_olive_5", "type": "olive_tree", "x": 72, "z": 50, "scale": 1.1 },
-    { "id": "terrace_olive_6", "type": "olive_tree", "x": 66, "z": 40, "scale": 1.04 },
-    { "id": "terrace_olive_7", "type": "olive_tree", "x": 60, "z": 39, "scale": 0.98 },
-    { "id": "terrace_wall", "type": "ruins", "x": 52, "z": 50, "rotation": 32, "scale": 0.74 },
-    { "id": "rise_cypress_1", "type": "cypress_tree", "x": 82, "z": 29, "scale": 1.13 },
-    { "id": "rise_cypress_2", "type": "cypress_tree", "x": 86, "z": 41, "scale": 0.98 },
-    { "id": "rise_cypress_3", "type": "cypress_tree", "x": 91, "z": 28, "scale": 1.31 },
-    { "id": "post_supply", "type": "supply_cart", "x": 107, "z": 28, "rotation": 73 },
-    { "id": "post_quarters", "type": "tent", "x": 102, "z": 44, "rotation": 110, "scale": 1.17 },
-    { "id": "post_stores", "type": "tent", "x": 107, "z": 43, "rotation": 203, "scale": 1.02 }
-  ]
+    {
+      "id": "bivouac_north",
+      "type": "tent",
+      "x": 7,
+      "z": 43,
+      "rotation": 18,
+      "scale": 1.08
+    },
+    {
+      "id": "bivouac_south",
+      "type": "tent",
+      "x": 6,
+      "z": 64,
+      "rotation": 139
+    },
+    {
+      "id": "arch_foot_north",
+      "type": "ruins",
+      "x": 33,
+      "z": 37,
+      "rotation": 68,
+      "scale": 1.15
+    },
+    {
+      "id": "arch_foot_south",
+      "type": "ruins",
+      "x": 39,
+      "z": 53,
+      "rotation": 138,
+      "scale": 0.9
+    },
+    {
+      "id": "quarry_marker",
+      "type": "statue",
+      "x": 42,
+      "z": 37,
+      "rotation": 215,
+      "scale": 0.8
+    },
+    {
+      "id": "quarry_rock",
+      "type": "boulder",
+      "x": 28,
+      "z": 38,
+      "scale": 1.16
+    },
+    {
+      "id": "terrace_olive_1",
+      "type": "olive_tree",
+      "x": 48,
+      "z": 53,
+      "scale": 1.21
+    },
+    {
+      "id": "terrace_olive_2",
+      "type": "olive_tree",
+      "x": 54,
+      "z": 57,
+      "scale": 0.91
+    },
+    {
+      "id": "terrace_olive_3",
+      "type": "olive_tree",
+      "x": 58,
+      "z": 55,
+      "scale": 1.23
+    },
+    {
+      "id": "terrace_olive_4",
+      "type": "olive_tree",
+      "x": 63,
+      "z": 56,
+      "scale": 1.12
+    },
+    {
+      "id": "terrace_olive_5",
+      "type": "olive_tree",
+      "x": 72,
+      "z": 50,
+      "scale": 1.1
+    },
+    {
+      "id": "terrace_olive_6",
+      "type": "olive_tree",
+      "x": 66,
+      "z": 40,
+      "scale": 1.04
+    },
+    {
+      "id": "terrace_olive_7",
+      "type": "olive_tree",
+      "x": 60,
+      "z": 39,
+      "scale": 0.98
+    },
+    {
+      "id": "terrace_wall",
+      "type": "ruins",
+      "x": 52,
+      "z": 50,
+      "rotation": 32,
+      "scale": 0.74
+    },
+    {
+      "id": "rise_cypress_1",
+      "type": "cypress_tree",
+      "x": 82,
+      "z": 29,
+      "scale": 1.13
+    },
+    {
+      "id": "rise_cypress_2",
+      "type": "cypress_tree",
+      "x": 86,
+      "z": 41,
+      "scale": 0.98
+    },
+    {
+      "id": "rise_cypress_3",
+      "type": "cypress_tree",
+      "x": 91,
+      "z": 28,
+      "scale": 1.31
+    },
+    {
+      "id": "post_supply",
+      "type": "supply_cart",
+      "x": 107,
+      "z": 28,
+      "rotation": 73
+    },
+    {
+      "id": "post_quarters",
+      "type": "tent",
+      "x": 102,
+      "z": 44,
+      "rotation": 110,
+      "scale": 1.17
+    },
+    {
+      "id": "post_stores",
+      "type": "tent",
+      "x": 107,
+      "z": 43,
+      "rotation": 203,
+      "scale": 1.02
+    }
+  ],
+  "rain": {
+    "enabled": false,
+    "intensity": 0,
+    "type": "rain"
+  }
 }

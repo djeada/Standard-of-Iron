@@ -173,6 +173,7 @@ inline constexpr const char* WILDLIFE_WAVE_LABEL = "label";
 
 inline constexpr const char* WORLD_PROPS = "world_props";
 inline constexpr const char* FOG_ZONES = "fog_zones";
+inline constexpr const char* AMBIENCE_ZONES = "ambience_zones";
 inline constexpr const char* SCOUTED_AREAS = "scouted_areas";
 inline constexpr const char* PERSISTENT = "persistent";
 inline constexpr const char* TIME_OF_DAY = "time_of_day";

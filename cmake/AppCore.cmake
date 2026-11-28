@@ -141,6 +141,7 @@ add_library(
     app/audio/audio_resource_loader.cpp
     app/audio/audio_status_hud.cpp
     app/audio/audio_system_proxy.cpp
+    app/audio/city_soundscape.cpp
     app/audio/weather_audio.cpp
     # app/viewmodels -- the QML API, one coherent slice per model.
     app/viewmodels/activity_view_model.cpp

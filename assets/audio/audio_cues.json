@@ -1050,7 +1050,7 @@
     },
     {
       "id": "combat.heal_bind",
-      "description": "A Roman medicus binds a soldier\u2019s wound.",
+      "description": "A Roman medicus binds a soldier’s wound.",
       "category": "sfx",
       "importance": "optional",
       "volume": 0.76,
@@ -1494,6 +1494,285 @@
         "sfx.economy.gather_success"
       ],
       "wanted": "A short, warm phrase that rewards gathering without nagging."
+    },
+    {
+      "id": "combat.melee_swing",
+      "description": "The controlled commander swings a melee weapon in RPG view.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.42,
+      "priority": 3,
+      "cooldown_ms": 110,
+      "resources": [
+        "sfx.combat.melee_swing_01",
+        "sfx.combat.melee_swing_02",
+        "sfx.combat.melee_swing_03"
+      ]
+    },
+    {
+      "id": "move.footstep_gravel",
+      "description": "The controlled commander plants a foot on gravel, sand or garden paths.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.38,
+      "priority": 2,
+      "cooldown_ms": 90,
+      "resources": [
+        "sfx.movement.footstep_gravel_01",
+        "sfx.movement.footstep_gravel_02",
+        "sfx.movement.footstep_gravel_03",
+        "sfx.movement.footstep_gravel_04"
+      ]
+    },
+    {
+      "id": "move.footstep_stone_interior",
+      "description": "The controlled commander plants a foot inside a stone vault, gatehouse or amphitheatre passage.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.4,
+      "priority": 2,
+      "cooldown_ms": 90,
+      "resources": [
+        "sfx.movement.footstep_stone_interior_01",
+        "sfx.movement.footstep_stone_interior_02",
+        "sfx.movement.footstep_stone_interior_03",
+        "sfx.movement.footstep_stone_interior_04"
+      ]
+    },
+    {
+      "id": "city.hawker_call",
+      "description": "A market vendor calls out near a bazaar or forum stall.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.3,
+      "priority": 2,
+      "cooldown_ms": 4500,
+      "resources": [
+        "sfx.city.hawker_call_01",
+        "sfx.city.hawker_call_02",
+        "sfx.city.hawker_call_03",
+        "sfx.city.hawker_call_04",
+        "sfx.city.hawker_call_05",
+        "sfx.city.hawker_call_06"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "city.dog_bark_distant",
+      "description": "A dog barks one or two streets over in a residential quarter.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.24,
+      "priority": 2,
+      "cooldown_ms": 8000,
+      "resources": [
+        "sfx.city.dog_bark_distant_01",
+        "sfx.city.dog_bark_distant_02",
+        "sfx.city.dog_bark_distant_03",
+        "sfx.city.dog_bark_distant_04"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "city.door_close",
+      "description": "A wooden house or shop door shuts along a street.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.28,
+      "priority": 2,
+      "cooldown_ms": 5000,
+      "resources": [
+        "sfx.city.door_close_01",
+        "sfx.city.door_close_02",
+        "sfx.city.door_close_03",
+        "sfx.city.door_close_04"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "city.cart_wheels",
+      "description": "Wooden cart wheels roll past on a paved street or quay.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.28,
+      "priority": 2,
+      "cooldown_ms": 9000,
+      "resources": [
+        "sfx.city.cart_wheels_01",
+        "sfx.city.cart_wheels_02",
+        "sfx.city.cart_wheels_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "city.forge_hammer",
+      "description": "An armorer hammers iron at a barracks or smithy.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.32,
+      "priority": 2,
+      "cooldown_ms": 4500,
+      "resources": [
+        "sfx.city.forge_hammer_01",
+        "sfx.city.forge_hammer_02",
+        "sfx.city.forge_hammer_03",
+        "sfx.city.forge_hammer_04"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "city.temple_bell",
+      "description": "A bronze bell or gong sounds in a temple precinct.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.28,
+      "priority": 2,
+      "cooldown_ms": 18000,
+      "resources": [
+        "sfx.city.temple_bell_01",
+        "sfx.city.temple_bell_02"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "city.water_splash",
+      "description": "Water splashes against an oar, bucket or fountain basin.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.26,
+      "priority": 2,
+      "cooldown_ms": 5500,
+      "resources": [
+        "sfx.city.water_splash_01",
+        "sfx.city.water_splash_02",
+        "sfx.city.water_splash_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.sheep_bleat_calm",
+      "description": "Grazing sheep bleat calmly in a pasture or livestock market.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.28,
+      "priority": 2,
+      "cooldown_ms": 4000,
+      "resources": [
+        "sfx.wildlife.sheep_bleat_calm_01",
+        "sfx.wildlife.sheep_bleat_calm_02",
+        "sfx.wildlife.sheep_bleat_calm_03",
+        "sfx.wildlife.sheep_bleat_calm_04",
+        "sfx.wildlife.sheep_bleat_calm_05",
+        "sfx.wildlife.sheep_bleat_calm_06"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.lamb_bleat",
+      "description": "A lamb bleats among grazing sheep.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.25,
+      "priority": 2,
+      "cooldown_ms": 5000,
+      "resources": [
+        "sfx.wildlife.lamb_bleat_01",
+        "sfx.wildlife.lamb_bleat_02",
+        "sfx.wildlife.lamb_bleat_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.cattle_low",
+      "description": "Cattle low in a livestock market or rural pen.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.3,
+      "priority": 2,
+      "cooldown_ms": 7000,
+      "resources": [
+        "sfx.wildlife.cattle_low_01",
+        "sfx.wildlife.cattle_low_02",
+        "sfx.wildlife.cattle_low_03",
+        "sfx.wildlife.cattle_low_04"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.elephant_rumble",
+      "description": "An idle war elephant rumbles low in its yard or column.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.34,
+      "priority": 2,
+      "cooldown_ms": 6000,
+      "resources": [
+        "sfx.wildlife.elephant_rumble_01",
+        "sfx.wildlife.elephant_rumble_02",
+        "sfx.wildlife.elephant_rumble_03",
+        "sfx.wildlife.elephant_rumble_04"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.elephant_trunk",
+      "description": "An idle war elephant snorts softly through its trunk.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.28,
+      "priority": 2,
+      "cooldown_ms": 7500,
+      "resources": [
+        "sfx.wildlife.elephant_trunk_01",
+        "sfx.wildlife.elephant_trunk_02",
+        "sfx.wildlife.elephant_trunk_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.gull",
+      "description": "A gull cries above a harbour, river quay or coast.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.26,
+      "priority": 2,
+      "cooldown_ms": 5500,
+      "resources": [
+        "sfx.wildlife.gull_01",
+        "sfx.wildlife.gull_02",
+        "sfx.wildlife.gull_03",
+        "sfx.wildlife.gull_04"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.pigeon_flutter",
+      "description": "Pigeons lift off with a flutter of wings in a square or arena.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.28,
+      "priority": 2,
+      "cooldown_ms": 5500,
+      "resources": [
+        "sfx.wildlife.pigeon_flutter_01",
+        "sfx.wildlife.pigeon_flutter_02",
+        "sfx.wildlife.pigeon_flutter_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "wildlife.cricket",
+      "description": "Crickets chirp softly in gardens and grass at dusk and night.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.22,
+      "priority": 2,
+      "cooldown_ms": 6000,
+      "resources": [
+        "sfx.wildlife.cricket_01",
+        "sfx.wildlife.cricket_02"
+      ],
+      "spatial": true
     }
   ]
 }

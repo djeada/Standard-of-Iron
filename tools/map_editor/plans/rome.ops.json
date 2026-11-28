@@ -32368,6 +32368,216 @@
     "value": "A day in Rome: the river port, the market, the Forum and the Colosseum."
   },
   {
+    "op": "ambience_zone",
+    "bed": "ambient.quay_work",
+    "fade": 12.0,
+    "id": "emporium_quay",
+    "night_bed": "ambient.river_crossing",
+    "x": -146.74,
+    "z": 122.0,
+    "radius": 34.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.stone_tunnel",
+    "fade": 5.0,
+    "id": "porta_navalis_vault",
+    "x": -112.0,
+    "z": 96.0,
+    "radius": 8.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.livestock_market",
+    "fade": 10.0,
+    "id": "forum_boarium",
+    "night_bed": "ambient.city_street_night",
+    "x": -86.0,
+    "z": 74.0,
+    "radius": 24.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_square_crowd",
+    "fade": 14.0,
+    "id": "forum_romanum",
+    "night_bed": "ambient.camp_fire_night",
+    "x": -50.0,
+    "z": 2.0,
+    "radius": 40.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_square_crowd",
+    "fade": 13.0,
+    "id": "imperial_fora",
+    "night_bed": "ambient.camp_fire_night",
+    "x": -28.0,
+    "z": -76.0,
+    "radius": 36.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.stone_tunnel",
+    "fade": 5.0,
+    "id": "colosseum_west_tunnel",
+    "x": 14.0,
+    "z": 30.0,
+    "radius": 9.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.stone_tunnel",
+    "fade": 5.0,
+    "id": "colosseum_east_tunnel",
+    "x": 78.0,
+    "z": 30.0,
+    "radius": 9.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.stone_tunnel",
+    "fade": 5.0,
+    "id": "colosseum_north_tunnel",
+    "x": 46.0,
+    "z": 4.0,
+    "radius": 9.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.stone_tunnel",
+    "fade": 5.0,
+    "id": "colosseum_south_tunnel",
+    "x": 46.0,
+    "z": 56.0,
+    "radius": 9.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.arena_interior",
+    "fade": 7.0,
+    "id": "colosseum_bowl",
+    "polygon": [
+      [72.0, 30.0],
+      [70.43, 36.84],
+      [65.92, 42.86],
+      [59.0, 47.32],
+      [50.51, 49.7],
+      [41.49, 49.7],
+      [33.0, 47.32],
+      [26.08, 42.86],
+      [21.57, 36.84],
+      [20.0, 30.0],
+      [21.57, 23.16],
+      [26.08, 17.14],
+      [33.0, 12.68],
+      [41.49, 10.3],
+      [50.51, 10.3],
+      [59.0, 12.68],
+      [65.92, 17.14],
+      [70.43, 23.16]
+    ]
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.temple_precinct",
+    "fade": 12.0,
+    "id": "capitoline_precinct",
+    "x": -100.0,
+    "z": -48.0,
+    "radius": 32.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.drill_field",
+    "fade": 15.0,
+    "id": "circus_drill",
+    "night_bed": "ambient.roman_army_camp_01",
+    "x": -48.0,
+    "z": 122.0,
+    "radius": 46.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.drill_field",
+    "fade": 15.0,
+    "id": "legion_camp",
+    "night_bed": "ambient.roman_army_camp_02",
+    "x": 276.0,
+    "z": 0.0,
+    "radius": 44.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.drill_field",
+    "fade": 14.0,
+    "id": "castra_garrison",
+    "night_bed": "ambient.roman_army_camp_01",
+    "x": 144.0,
+    "z": 130.0,
+    "radius": 38.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "sallust_garden",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": 120.0,
+    "z": -296.0,
+    "radius": 26.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "maecenas_garden",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": 160.0,
+    "z": -76.0,
+    "radius": 24.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "lucullus_garden",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": -16.0,
+    "z": -306.0,
+    "radius": 22.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "palatine_garden",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": -14.0,
+    "z": 92.0,
+    "radius": 18.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "caesar_garden",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": -262.0,
+    "z": 226.0,
+    "radius": 22.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.quay_work",
+    "fade": 16.0,
+    "id": "ostia_portus",
+    "night_bed": "ambient.mediterranean_harbor",
+    "x": -90.0,
+    "z": 328.36,
+    "radius": 52.0
+  },
+  {
     "op": "add",
     "kind": "structure",
     "json": {

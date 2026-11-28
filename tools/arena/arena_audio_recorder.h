@@ -38,6 +38,7 @@ public:
                            const QString& map_path = {}) -> bool;
 
   void advance(float seconds, bool record);
+  void set_darkness_amount(float darkness) noexcept { m_darkness_amount = darkness; }
 
   void play_music_bed(const QString& track_id, float volume);
 
@@ -75,6 +76,7 @@ private:
   Engine::Core::AmbientState m_ambient_state{Engine::Core::AmbientState::PEACEFUL};
   float m_ambient_timer{0.0F};
   float m_score_timer{0.0F};
+  float m_darkness_amount{0.0F};
   bool m_scored_bed{false};
   double m_sample_carry{0.0};
   std::vector<float> m_scratch;

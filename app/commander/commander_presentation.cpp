@@ -5,6 +5,7 @@
 #include <numbers>
 #include <optional>
 
+#include "app/audio/city_soundscape.h"
 #include "game/audio/audio_cues.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -251,16 +252,30 @@ void play_footstep_if_stride_landed(const CommanderCameraRig& rig,
 
   const auto* terrain =
       world.try_get<Engine::Core::TerrainContextComponent>(commander_id);
-  bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
-  if (!hard_ground) {
-    if (const auto* transform =
-            world.try_get<Engine::Core::TransformComponent>(commander_id)) {
-      hard_ground = Game::Session::session_for(world).terrain().is_point_on_road(
-          transform->position.x, transform->position.z);
+  if (terrain != nullptr && terrain->is_on_bridge) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_move_footstep_hard);
+    return;
+  }
+
+  if (const auto* transform =
+          world.try_get<Engine::Core::TransformComponent>(commander_id)) {
+    using Surface = Game::Audio::FootstepSurface;
+    switch (Game::Audio::CitySoundscape::classify_footstep_surface(
+        world, transform->position.x, transform->position.z)) {
+    case Surface::StoneInterior:
+      Game::Audio::play_cue(Game::Audio::Cue::k_move_footstep_stone_interior);
+      return;
+    case Surface::Stone:
+      Game::Audio::play_cue(Game::Audio::Cue::k_move_footstep_hard);
+      return;
+    case Surface::Gravel:
+      Game::Audio::play_cue(Game::Audio::Cue::k_move_footstep_gravel);
+      return;
+    case Surface::Grass:
+      break;
     }
   }
-  Game::Audio::play_cue(hard_ground ? Game::Audio::Cue::k_move_footstep_hard
-                                    : Game::Audio::Cue::k_move_footstep);
+  Game::Audio::play_cue(Game::Audio::Cue::k_move_footstep);
 }
 
 } // namespace App::Core

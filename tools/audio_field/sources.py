@@ -248,6 +248,102 @@ CAPE_CLEAR_HARBOUR_ORIGIN = (
     "radio aporee ::: maps, Oileán Chléire, Ireland, 'North Harbour, Cape Clear Island'"
 )
 
+COURTYARD_BUCHAREST = (
+    f"{ARCHIVE}/aporee_24820_28800/Courtyardambiencefromwindow17914.flac"
+)
+COURTYARD_BUCHAREST_ORIGIN = (
+    "radio aporee ::: maps, Strada Bucur, Bucharest, Romania, "
+    "'Parada Foundation Courtyard'"
+)
+
+NIGHT_QUIET_AIR = (
+    f"{ARCHIVE}/Designers-Choice-Collection-Ambiences/"
+    "AMBIENCES%2FAIR%2FAMBAir-Samsung%20Galaxy%20Smartphone%2C%20"
+    "MCU_Quiet%2C%20Nighttime_The%20Designer%27s%20Choice_GNRL2.wav"
+)
+NIGHT_QUIET_AIR_ORIGIN = (
+    "The Designer's Choice UCS Collection - AMBIENCES, "
+    "'AMBAir-Samsung Galaxy Smartphone, MCU_Quiet, Nighttime', by Nicholas A. Judy"
+)
+
+BORSUKI_CRICKETS = (
+    f"{ARCHIVE}/aporee_54442_62367/"
+    "835aABBORSUKImidnightcricketssnoringandunknownpitchMixPre353.flac"
+)
+BORSUKI_CRICKETS_ORIGIN = (
+    "radio aporee ::: maps, Pod Lipą, Borsuki, Poland, '(835a AB) midnight crickets'"
+)
+
+THESSALONIKI_PIAZZA = f"{ARCHIVE}/aporee_24390_28312/piazza.ogg"
+THESSALONIKI_PIAZZA_ORIGIN = (
+    "radio aporee ::: maps, Aristotelous Square, Thessaloniki, Greece, 'piazza'"
+)
+
+VILLARS_SQUARE = f"{ARCHIVE}/aporee_31082_35727/Relaxedvillagesquare.mp3"
+VILLARS_SQUARE_ORIGIN = (
+    "radio aporee ::: maps, Villars-sur-Var, France, 'Relaxed weekend café ambience'"
+)
+
+FRANKFURT_FOUNTAIN = f"{ARCHIVE}/aporee_18976_22012/FrankfurtMAKBrunnenimPark.ogg"
+FRANKFURT_FOUNTAIN_ORIGIN = (
+    "radio aporee ::: maps, Metzler Park, Frankfurt am Main, Germany, 'fountain'"
+)
+
+TOLMIN_BIRDS = f"{ARCHIVE}/aporee_57134_65382/Ptikipriizviru.mp3"
+TOLMIN_BIRDS_ORIGIN = (
+    "radio aporee ::: maps, Planina Razor, Tolmin, Slovenia, 'Birds in forest'"
+)
+
+APOREE_PIGEONS = f"{ARCHIVE}/aporee_56822_64997/PIGEONS14522.mp3"
+APOREE_PIGEONS_ORIGIN = "radio aporee ::: maps, 'Pigeons and Others'"
+
+BERLIN_TUNNEL = f"{ARCHIVE}/aporee_24357_28270/TunnelSiegessule.ogg"
+BERLIN_TUNNEL_ORIGIN = (
+    "radio aporee ::: maps, Tiergarten, Berlin, Germany, "
+    "'In the Tunnels of the Victory Column in Berlin'"
+)
+
+TOMAR_DRAIN = f"{ARCHIVE}/aporee_18065_20993/phasingwaterdrain.ogg"
+TOMAR_DRAIN_ORIGIN = "radio aporee ::: maps, Tomar, Portugal, 'phasing water drain'"
+
+ARTASHAT_CATTLE = f"{ARCHIVE}/aporee_50451_57541/cattlemarket1.mp3"
+ARTASHAT_CATTLE_ORIGIN = (
+    "radio aporee ::: maps, Artashat, Armenia, 'Cattle Market near Artashat, Armenia'"
+)
+
+CRETE_SHEEP = f"{ARCHIVE}/aporee_15277_17812/graz.ogg"
+CRETE_SHEEP_ORIGIN = (
+    "radio aporee ::: maps, Samaria Gorge, Crete, Greece, 'sheep afternoon'"
+)
+
+STATEN_PONTOON = (
+    f"{ARCHIVE}/aporee_66537_76937/2406292112StatenIslandHafenQuietschen.mp3"
+)
+STATEN_PONTOON_ORIGIN = (
+    "radio aporee ::: maps, St. George, Staten Island, USA, "
+    "'Waves, ships, and pontoons'"
+)
+
+TDC_CROWD = (
+    f"{ARCHIVE}/Designers-Choice-Collection-Crowds/"
+    "CROWDS%2FAPPLAUSE%2FCRWDApls-CU_Crowd%20Applause%2C%20Cheering%2C%20"
+    "Yelling%2C%20Whooping_Nicholas%20Judy_TDC.wav"
+)
+TDC_CROWD_ORIGIN = (
+    "The Designer's Choice UCS Collection - CROWDS, "
+    "'CRWDApls-CU_Crowd Applause, Cheering, Yelling, Whooping', by Nicholas A. Judy"
+)
+
+TDC_CHAINS = (
+    f"{ARCHIVE}/Designers-Choice-Collection-Chains/"
+    "CHAINS%2FMOVEMENT%2FCHAINMvmt-Blue%20Snowball%20Microphone%2C%20"
+    "MCU_Chains%2C%20Rattling%2C%20Rustling_The%20Designer%27s%20Choice_GNRL2.wav"
+)
+TDC_CHAINS_ORIGIN = (
+    "The Designer's Choice UCS Collection - CHAINS, "
+    "'CHAINMvmt-…MCU_Chains, Rattling, Rustling', by Nicholas A. Judy"
+)
+
 PD_MARK = "CC Public Domain Mark 1.0"
 CC0 = "CC0 1.0"
 PD = "Public domain"
@@ -827,6 +923,423 @@ BEDS: dict[str, Bed] = {
                 highpass=100.0,
                 lowpass=3000.0,
                 shelf_db=-6.0,
+            ),
+        ],
+    ),
+    "city_street_day": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="Quiet residential lane: distant voices in a car-free medina, a "
+        "courtyard behind walls, and occasional distant footsteps with no market roar.",
+        layers=[
+            Source(
+                url=FES_MEDINA,
+                origin=FES_MEDINA_ORIGIN,
+                licence=PD_MARK,
+                start=12.0,
+                gain=0.85,
+                highpass=85.0,
+                lowpass=2000.0,
+                shelf_db=-7.0,
+                loop_source=True,
+            ),
+            Source(
+                url=COURTYARD_BUCHAREST,
+                origin=COURTYARD_BUCHAREST_ORIGIN,
+                licence=PD_MARK,
+                start=14.0,
+                gain=0.50,
+                highpass=95.0,
+                lowpass=2100.0,
+                shelf_db=-8.0,
+                loop_source=True,
+            ),
+            Source(
+                url=WALK_FEET,
+                origin=WALK_FEET_ORIGIN,
+                licence=CC0,
+                start=2.5,
+                gain=0.20,
+                highpass=100.0,
+                lowpass=1450.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "city_street_night": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="Near-silent town after dark: quiet night air, light wind in the "
+        "eaves, and crickets pulled very low.",
+        layers=[
+            Source(
+                url=NIGHT_QUIET_AIR,
+                origin=NIGHT_QUIET_AIR_ORIGIN,
+                licence=CC0,
+                start=2.0,
+                gain=0.90,
+                highpass=70.0,
+                lowpass=1800.0,
+                shelf_db=-8.0,
+                loop_source=True,
+            ),
+            Source(
+                url=DRY_HILLSIDE,
+                origin=DRY_HILLSIDE_ORIGIN,
+                licence=PD_MARK,
+                start=140.0,
+                gain=0.70,
+                highpass=70.0,
+                lowpass=1100.0,
+                loop_source=True,
+            ),
+            Source(
+                url=BORSUKI_CRICKETS,
+                origin=BORSUKI_CRICKETS_ORIGIN,
+                licence=PD_MARK,
+                start=20.0,
+                gain=0.16,
+                highpass=120.0,
+                lowpass=3200.0,
+                shelf_db=-14.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "city_square_crowd": Bed(
+        seconds=64.0,
+        fade=2.0,
+        notes="Large open-air stone square crowd murmur without hawkers, "
+        "reverberant off colonnades.",
+        layers=[
+            Source(
+                url=THESSALONIKI_PIAZZA,
+                origin=THESSALONIKI_PIAZZA_ORIGIN,
+                licence=PD_MARK,
+                start=8.0,
+                gain=0.95,
+                highpass=80.0,
+                lowpass=2300.0,
+                shelf_db=-7.0,
+                loop_source=True,
+            ),
+            Source(
+                url=VILLARS_SQUARE,
+                origin=VILLARS_SQUARE_ORIGIN,
+                licence=PD_MARK,
+                start=28.0,
+                gain=0.60,
+                highpass=90.0,
+                lowpass=2000.0,
+                shelf_db=-8.0,
+                loop_source=True,
+            ),
+            Source(
+                url=FES_MEDINA,
+                origin=FES_MEDINA_ORIGIN,
+                licence=PD_MARK,
+                start=185.0,
+                gain=0.45,
+                highpass=90.0,
+                lowpass=1700.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "city_garden_day": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="Stone fountain basin trickle under sheltered birdsong, minimal wind.",
+        layers=[
+            Source(
+                url=FRANKFURT_FOUNTAIN,
+                origin=FRANKFURT_FOUNTAIN_ORIGIN,
+                licence=PD_MARK,
+                start=15.0,
+                gain=0.95,
+                highpass=75.0,
+                lowpass=2400.0,
+                shelf_db=-10.0,
+                loop_source=True,
+            ),
+            Source(
+                url=TOLMIN_BIRDS,
+                origin=TOLMIN_BIRDS_ORIGIN,
+                licence=PD_MARK,
+                start=120.0,
+                gain=0.48,
+                highpass=90.0,
+                lowpass=3000.0,
+                shelf_db=-14.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "city_garden_dusk": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="Basin trickle after golden hour with late birds and early crickets.",
+        layers=[
+            Source(
+                url=FRANKFURT_FOUNTAIN,
+                origin=FRANKFURT_FOUNTAIN_ORIGIN,
+                licence=PD_MARK,
+                start=72.0,
+                gain=0.90,
+                highpass=75.0,
+                lowpass=2200.0,
+                shelf_db=-11.0,
+                loop_source=True,
+            ),
+            Source(
+                url=BORSUKI_CRICKETS,
+                origin=BORSUKI_CRICKETS_ORIGIN,
+                licence=PD_MARK,
+                start=145.0,
+                gain=0.28,
+                highpass=100.0,
+                lowpass=3200.0,
+                shelf_db=-14.0,
+                loop_source=True,
+            ),
+            Source(
+                url=TOLMIN_BIRDS,
+                origin=TOLMIN_BIRDS_ORIGIN,
+                licence=PD_MARK,
+                start=210.0,
+                gain=0.24,
+                highpass=100.0,
+                lowpass=2400.0,
+                shelf_db=-14.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "arena_interior": Bed(
+        seconds=64.0,
+        fade=2.0,
+        notes="Big open stone bowl: wind across the top, distant city murmur "
+        "through thick masonry, and pigeons under the vaults.",
+        layers=[
+            Source(
+                url=CANIGOU,
+                origin=CANIGOU_ORIGIN,
+                licence=PD_MARK,
+                start=175.0,
+                gain=0.95,
+                highpass=65.0,
+                lowpass=1150.0,
+                loop_source=True,
+            ),
+            Source(
+                url=THESSALONIKI_PIAZZA,
+                origin=THESSALONIKI_PIAZZA_ORIGIN,
+                licence=PD_MARK,
+                start=24.0,
+                gain=0.50,
+                highpass=90.0,
+                lowpass=680.0,
+                loop_source=True,
+            ),
+            Source(
+                url=APOREE_PIGEONS,
+                origin=APOREE_PIGEONS_ORIGIN,
+                licence=PD_MARK,
+                start=25.0,
+                gain=0.45,
+                highpass=110.0,
+                lowpass=2400.0,
+                shelf_db=-10.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "stone_tunnel": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="Close vaulted stone room tone, slow water drips and low resonance.",
+        layers=[
+            Source(
+                url=BERLIN_TUNNEL,
+                origin=BERLIN_TUNNEL_ORIGIN,
+                licence=PD_MARK,
+                start=12.0,
+                gain=1.0,
+                highpass=60.0,
+                lowpass=1800.0,
+                shelf_db=-8.0,
+                loop_source=True,
+            ),
+            Source(
+                url=TOMAR_DRAIN,
+                origin=TOMAR_DRAIN_ORIGIN,
+                licence=PD_MARK,
+                start=20.0,
+                gain=0.42,
+                highpass=90.0,
+                lowpass=2100.0,
+                shelf_db=-10.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "livestock_market": Bed(
+        seconds=64.0,
+        fade=2.0,
+        notes="Cattle and sheep pens: lowing, grazing bleats, hooves and distant herders.",
+        layers=[
+            Source(
+                url=ARTASHAT_CATTLE,
+                origin=ARTASHAT_CATTLE_ORIGIN,
+                licence=PD_MARK,
+                start=35.0,
+                gain=0.95,
+                highpass=75.0,
+                lowpass=2300.0,
+                shelf_db=-9.0,
+                loop_source=True,
+            ),
+            Source(
+                url=CRETE_SHEEP,
+                origin=CRETE_SHEEP_ORIGIN,
+                licence=PD_MARK,
+                start=40.0,
+                gain=0.50,
+                highpass=85.0,
+                lowpass=2100.0,
+                shelf_db=-9.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "temple_precinct": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="High stone precinct hush: steady breeze, the city muted far below, "
+        "and occasional high corvids.",
+        layers=[
+            Source(
+                url=DRY_HILLSIDE,
+                origin=DRY_HILLSIDE_ORIGIN,
+                licence=PD_MARK,
+                start=60.0,
+                gain=0.95,
+                highpass=65.0,
+                lowpass=1350.0,
+                loop_source=True,
+            ),
+            Source(
+                url=FES_MEDINA,
+                origin=FES_MEDINA_ORIGIN,
+                licence=PD_MARK,
+                start=210.0,
+                gain=0.35,
+                highpass=90.0,
+                lowpass=650.0,
+                loop_source=True,
+            ),
+            Source(
+                url=TYNEHAM_CROWS,
+                origin=TYNEHAM_CROWS_ORIGIN,
+                licence=PD_MARK,
+                start=45.0,
+                gain=0.22,
+                highpass=150.0,
+                lowpass=2100.0,
+                shelf_db=-11.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "quay_work": Bed(
+        seconds=64.0,
+        fade=2.0,
+        notes="Water slap against stone quays, creaking timber hulls and lines, "
+        "and harbour gulls.",
+        layers=[
+            Source(
+                url=CAPE_CLEAR_HARBOUR,
+                origin=CAPE_CLEAR_HARBOUR_ORIGIN,
+                licence=PD_MARK,
+                start=40.0,
+                gain=1.0,
+                highpass=65.0,
+                lowpass=2200.0,
+                shelf_db=-7.0,
+                loop_source=True,
+            ),
+            Source(
+                url=STATEN_PONTOON,
+                origin=STATEN_PONTOON_ORIGIN,
+                licence=PD_MARK,
+                start=10.0,
+                gain=0.55,
+                highpass=75.0,
+                lowpass=1900.0,
+                shelf_db=-8.0,
+                loop_source=True,
+            ),
+            Source(
+                url=ROVINJ_GULLS,
+                origin=ROVINJ_GULLS_ORIGIN,
+                licence=PD_MARK,
+                start=60.0,
+                gain=0.40,
+                highpass=90.0,
+                lowpass=2200.0,
+                shelf_db=-10.0,
+                loop_source=True,
+            ),
+        ],
+    ),
+    "drill_field": Bed(
+        seconds=62.0,
+        fade=2.0,
+        notes="Distant shouted drill orders, a column marching in step, and light "
+        "mail rattle with no battle.",
+        layers=[
+            Source(
+                url=WALK_FEET,
+                origin=WALK_FEET_ORIGIN,
+                licence=CC0,
+                start=0.5,
+                gain=0.78,
+                highpass=80.0,
+                lowpass=2200.0,
+                ranks=COLUMN_OFFSETS,
+                loop_source=True,
+            ),
+            Source(
+                url=DRY_HILLSIDE,
+                origin=DRY_HILLSIDE_ORIGIN,
+                licence=PD_MARK,
+                start=180.0,
+                gain=0.68,
+                highpass=70.0,
+                lowpass=1250.0,
+                loop_source=True,
+            ),
+            Source(
+                url=TDC_CROWD,
+                origin=TDC_CROWD_ORIGIN,
+                licence=CC0,
+                start=18.0,
+                gain=0.25,
+                highpass=180.0,
+                lowpass=1100.0,
+                shelf_db=-9.0,
+                loop_source=True,
+            ),
+            Source(
+                url=TDC_CHAINS,
+                origin=TDC_CHAINS_ORIGIN,
+                licence=CC0,
+                start=1.0,
+                gain=0.12,
+                highpass=240.0,
+                lowpass=2200.0,
+                shelf_db=-11.0,
+                loop_source=True,
             ),
         ],
     ),
