@@ -53,8 +53,14 @@ private slots:
   void notify_renderer_ready();
 
 private:
+  static constexpr int k_interface_wait_limit_ms = 1000;
+
+  void release_renderer_creation();
+
   QPointer<GameEngine> m_engine;
   bool m_renderer_ready = false;
+  bool m_interface_presented = false;
+  QMetaObject::Connection m_frame_counter;
 
   class GLRenderer : public QQuickFramebufferObject::Renderer {
   public:

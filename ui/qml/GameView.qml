@@ -10,6 +10,7 @@ Item {
 
     property bool is_paused: false
     readonly property bool commander_pointer_owned: commanderLayer.pointer_owned
+    readonly property bool renderer_ready: renderArea.rendererReady
     property real game_speed: 1
     property string cursor_mode: "normal"
     property bool is_placing_formation: false
@@ -678,7 +679,7 @@ Item {
         id: commanderLayer
 
         anchors.fill: parent
-        active: game_view.visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && !game_view.is_rally_placement()
+        active: game_view.visible && typeof game !== 'undefined' && !game.is_loading && game.commander.mode_state === "active" && !game_view.is_rally_placement()
         commander: typeof game !== 'undefined' ? game.commander : null
         gameView: game_view
         mainWindowRef: mainWindow

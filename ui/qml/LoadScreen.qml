@@ -24,6 +24,15 @@ Rectangle {
     anchors.fill: parent
     color: "#0B0806"
     visible: is_loading
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: true
+        onWheel: function (wheel) {
+            wheel.accepted = true;
+        }
+    }
     onIs_loadingChanged: {
         if (is_loading) {
             bg_index = (bg_index + 1) % StyleGuide.backdrops.length;

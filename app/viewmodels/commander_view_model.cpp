@@ -160,7 +160,16 @@ void CommanderViewModel::toggle_mode() {
 void CommanderViewModel::enter_mission_mode() {
   const auto frame_lock = m_host.lock_frame();
   m_skip_entry_dive = true;
+  // The view switches while the load screen is up. Left to the logged order it
+  // waits for the first tick, which the briefing holds back, so the commander
+  // view would first be drawn, and its shaders compiled, once play begins.
+  const bool was_applying = std::exchange(m_applying_logged_action, true);
   enter_mode();
+  m_applying_logged_action = was_applying;
+  // The simulation still takes control through the log.
+  if (active()) {
+    static_cast<void>(queue_action(Game::Command::CommanderAction::EnterControl));
+  }
 }
 
 auto CommanderViewModel::capture_view_state() const -> QJsonObject {

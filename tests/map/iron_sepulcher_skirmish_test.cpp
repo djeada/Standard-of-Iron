@@ -314,6 +314,13 @@ TEST_F(IronSepulcherSkirmishTest, WakingTheSepulcherAnnouncesItselfWithSoundAndM
   Game::Audio::AudioEventHandler handler(&world);
   ASSERT_TRUE(handler.initialize());
 
+  // A one-shot asked for mid-decode is dropped, so wait as the loading screen
+  // does before a battle can raise it.
+  for (int wait = 0; wait < 3000 && audio.has_pending_mission_decodes(); ++wait) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  ASSERT_FALSE(audio.has_pending_mission_decodes());
+
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent("alert.undead_awakening"));
 

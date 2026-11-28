@@ -13,9 +13,13 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/navigation/nav_grid.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/runtime_system_registry.h"
 #include "scene/camera.h"
 
 namespace {
@@ -66,7 +70,13 @@ protected:
   }
 
   auto spawn_commander(float x, float z) -> Engine::Core::Entity* {
-    auto* entity = m_world.create_entity();
+    return spawn_commander(m_world, x, z);
+  }
+
+  static auto spawn_commander(Engine::Core::World& world,
+                              float x,
+                              float z) -> Engine::Core::Entity* {
+    auto* entity = world.create_entity();
     if (entity == nullptr) {
       return nullptr;
     }
@@ -130,6 +140,42 @@ TEST_F(CommanderViewModelInputTest, EnteringCommanderModeTakesControlOfTheComman
   EXPECT_TRUE(m_commander->active());
   EXPECT_EQ(m_commander->controlled_commander_id(), commander->get_id());
   EXPECT_GT(m_host.initialize_calls, 0);
+}
+
+TEST_F(CommanderViewModelInputTest,
+       MissionEntryShowsTheViewAtOnceAndTakesControlOnTheFirstTick) {
+  Game::Session::SessionContext session;
+  const Game::Session::ScopedSession scope(session);
+  Engine::Core::World& world = session.world();
+  Game::Systems::register_runtime_systems(world);
+  session.owners().register_owner_with_id(1, Game::Systems::OwnerType::Player);
+  m_context.world = &world;
+
+  auto* commander = spawn_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  commander->get_component<Engine::Core::TransformComponent>()->rotation.y = 110.0F;
+  auto const* data = commander->get_component<Engine::Core::CommanderComponent>();
+
+  m_commander->enter_mission_mode();
+
+  EXPECT_TRUE(m_commander->active())
+      << "the commander view must be up while the load screen still covers it";
+  EXPECT_FALSE(data->fpv_controlled) << "no tick has run yet";
+
+  for (int tick = 0; tick < 8 && !data->fpv_controlled; ++tick) {
+    session.advance(session.clock().tick_seconds(),
+                    1,
+                    Game::Session::SessionContext::OverloadPolicy::DiscardBacklog,
+                    [&](float seconds) {
+                      m_commander->apply_logged_actions();
+                      world.update(seconds);
+                    });
+  }
+
+  EXPECT_TRUE(data->fpv_controlled)
+      << "the logged order must still hand the commander to the player";
+  EXPECT_TRUE(m_commander->active());
+  m_context.world = &m_world;
 }
 
 TEST_F(CommanderViewModelInputTest, APressAloneDoesNotReachTheWorld) {

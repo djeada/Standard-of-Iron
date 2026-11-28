@@ -132,6 +132,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/CursorLayer.qml
             ui/qml/PlayerFeedbackLayer.qml
             ui/qml/LoadScreen.qml
+            ui/qml/BootScreen.qml
         RESOURCES
             ui/qml/ui_audio.js
         assets/shaders/include/environment_lighting.glsl

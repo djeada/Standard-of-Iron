@@ -524,7 +524,7 @@ ApplicationWindow {
         id: load_screen
 
         anchors.fill: parent
-        z: 15
+        z: 45
         is_loading: (typeof game !== 'undefined') ? game.is_loading : false
         progress: (typeof game !== 'undefined') ? game.loading_progress : 0
         stage_text: (typeof game !== 'undefined') ? game.loading_stage_text : qsTr("Loading...")
@@ -1035,6 +1035,12 @@ ApplicationWindow {
         }
     }
 
+    BootScreen {
+        anchors.fill: parent
+        z: 50
+        visible: !gameViewItem.renderer_ready && !error_dialog.visible
+    }
+
     Design.IronDialog {
         id: abandon_battle_dialog
 
@@ -1050,6 +1056,7 @@ ApplicationWindow {
         onPrimaryActivated: {
             var launch = mainWindow.pending_launch;
             mainWindow.pending_launch = null;
+            abandon_battle_dialog.close();
             if (launch)
                 launch();
         }

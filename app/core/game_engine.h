@@ -462,6 +462,7 @@ private:
                                bool set_skirmish_context);
   void reset_match_outcome();
   [[nodiscard]] auto begin_match_loading(const QString& map_path) -> quint64;
+  void preload_mission_audio();
   void complete_match_load(const QString& map_path, const QVariantList& player_configs);
   [[nodiscard]] auto load_match_world(const QString& map_path,
                                       const QVariantList& player_configs)

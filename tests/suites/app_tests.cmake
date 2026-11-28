@@ -76,6 +76,7 @@ add_executable(
     core/iron_sepulcher_watch_mission_test.cpp
     core/match_setup_difficulty_test.cpp
     core/mission_startup_test.cpp
+    ui/startup_screens_test.cpp
     core/production_manager_test.cpp
     core/placement_state_test.cpp
     core/economy_overview_test.cpp

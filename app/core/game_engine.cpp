@@ -1384,10 +1384,26 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
 
   const quint64 load = begin_match_loading(map_path);
   QTimer::singleShot(50, this, [this, map_path, player_configs, load, world_freeze]() {
-    if (load == m_loading_overlay.current_load()) {
-      complete_match_load(map_path, player_configs);
+    if (load != m_loading_overlay.current_load()) {
+      return;
     }
+    preload_mission_audio();
+    complete_match_load(map_path, player_configs);
   });
+}
+
+void GameEngine::preload_mission_audio() {
+  if (renderer_has_failed()) {
+    return;
+  }
+  if (m_release_self_test_mode) {
+
+    qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
+               "validation";
+    return;
+  }
+  const Engine::Core::ScopedStartupPhase phase("audio.mission_preload");
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
 }
 
 void GameEngine::reset_match_outcome() {
@@ -1421,17 +1437,6 @@ auto GameEngine::begin_match_loading(const QString& map_path) -> quint64 {
   Game::Map::MapContextStore::reset_statistics();
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
-  if (renderer_has_failed() || load != m_loading_overlay.current_load()) {
-    return load;
-  }
-  if (m_release_self_test_mode) {
-
-    qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
-               "validation";
-  } else {
-    const Engine::Core::ScopedStartupPhase phase("audio.mission_preload");
-    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
-  }
   return load;
 }
 
