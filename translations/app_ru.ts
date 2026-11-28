@@ -3120,6 +3120,53 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>ConvoyTracker</name>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Обоз снабжения</translation>
+    </message>
+    <message>
+        <source>Convoy</source>
+        <translation>Обоз</translation>
+    </message>
+    <message>
+        <source>%1 delivered</source>
+        <translation>Доставлено: %1</translation>
+    </message>
+    <message>
+        <source>Ambush at %1</source>
+        <translation>Засада: %1</translation>
+    </message>
+    <message>
+        <source>Onward to %1</source>
+        <translation>Путь дальше: %1</translation>
+    </message>
+    <message>
+        <source>Safe</source>
+        <translation>Цела</translation>
+    </message>
+    <message>
+        <source>Lost</source>
+        <translation>Потеряна</translation>
+    </message>
+    <message>
+        <source>Hit</source>
+        <translation>Под ударом</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
+    </message>
+    <message>
+        <source>%1 in %2 s</source>
+        <translation>%1 через %2 с</translation>
+    </message>
+    <message>
+        <source>Ambush %1 of %2</source>
+        <translation>Засада %1 из %2</translation>
+    </message>
+</context>
+<context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
@@ -5913,6 +5960,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Return to Menu</source>
         <translation>Вернуться в меню</translation>
     </message>
+    <message>
+        <source>Every wagon reached the outpost.</source>
+        <translation>Все повозки добрались до заставы.</translation>
+    </message>
+    <message>
+        <source>%1 of %2 wagons reached the outpost.</source>
+        <translation>До заставы добралось повозок: %1 из %2.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -6696,6 +6751,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Loading...</source>
         <translation>Загрузка...</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>
@@ -8113,6 +8172,14 @@ to see preview</source>
         <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
         <translation>Город семи холмов на Тибре: Форум у подножия Капитолия, императорские форумы, Колизей и Большой цирк, скотный рынок у реки, многолюдная Субура, сады Саллюстия, Мецената и Лукулла с водоёмами, Марсово поле в излучине реки, Трастевере у подножия Яникула, виллы в оливковых рощах, легион, выстроившийся за Сервиевой стеной, и Остия, где Тибр впадает в море.</translation>
     </message>
+    <message>
+        <source>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</source>
+        <translation>Старая дорога вьётся между гребнями каменоломен и оливковыми террасами, а затем поднимается к огням Сигнального поста.</translation>
+    </message>
+    <message>
+        <source>Salt Road</source>
+        <translation>Соляная дорога</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -8541,6 +8608,10 @@ to see preview</source>
     <message>
         <source>Assault phase %1/%2: %3 from the %4 (%5 units)</source>
         <translation>Фаза приступа %1/%2: %3 с %4 (отрядов: %5)</translation>
+    </message>
+    <message>
+        <source>%1 joined the escort.</source>
+        <translation>Отряд «%1» присоединился к эскорту.</translation>
     </message>
 </context>
 <context>
@@ -10440,6 +10511,102 @@ to see preview</source>
     <message>
         <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
         <translation>Вы нашли моих разведчиков. Двоих послали пересчитать ваши шатры, а вы отвечаете всем лагерем. Что ж, но я захочу знать, кто их убил.</translation>
+    </message>
+    <message>
+        <source>Arch raiders</source>
+        <translation>Налётчики у арки</translation>
+    </message>
+    <message>
+        <source>Beacon Post</source>
+        <translation>Сигнальный пост</translation>
+    </message>
+    <message>
+        <source>Beacon Post reserve</source>
+        <translation>Резерв Сигнального поста</translation>
+    </message>
+    <message>
+        <source>Beacon Rise</source>
+        <translation>Сигнальный подъём</translation>
+    </message>
+    <message>
+        <source>Deliver all three wagons.</source>
+        <translation>Доставьте все три повозки.</translation>
+    </message>
+    <message>
+        <source>Deliver at least two supply wagons to Beacon Post.</source>
+        <translation>Доведите хотя бы две повозки с припасами до Сигнального поста.</translation>
+    </message>
+    <message>
+        <source>Get the survivors off the road. Send a runner to the post.</source>
+        <translation>Уведите выживших с дороги. Отправьте гонца на пост.</translation>
+    </message>
+    <message>
+        <source>Grain</source>
+        <translation>Зерно</translation>
+    </message>
+    <message>
+        <source>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</source>
+        <translation>Зерно, лекарства и инструменты. На Сигнальном посту не хватает всего этого. Эскорт пойдёт вровень с повозками. Я пойду по дороге впереди.</translation>
+    </message>
+    <message>
+        <source>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</source>
+        <translation>Придержать упряжки. Налётчики у арки. Дозор подходит следом за нами.</translation>
+    </message>
+    <message>
+        <source>I can see the beacon. Break this last party and get the wagons over the rise.</source>
+        <translation>Я вижу сигнальный огонь. Разбейте этот последний отряд и переведите повозки через подъём.</translation>
+    </message>
+    <message>
+        <source>Iberian riders</source>
+        <translation>Иберийские всадники</translation>
+    </message>
+    <message>
+        <source>Marcellus fell on the Salt Road.</source>
+        <translation>Марцелл пал на Соляной дороге.</translation>
+    </message>
+    <message>
+        <source>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</source>
+        <translation>Марцелл выступает с тремя повозками припасов и небольшим эскортом. Прорвите засады между старой аркой и Сигнальным постом. На марше к вам присоединятся два отряда подкрепления.</translation>
+    </message>
+    <message>
+        <source>Medicine</source>
+        <translation>Лекарства</translation>
+    </message>
+    <message>
+        <source>Olive Terraces</source>
+        <translation>Оливковые террасы</translation>
+    </message>
+    <message>
+        <source>Open the storehouse. Get the medicine to the sick first.</source>
+        <translation>Откройте склад. Лекарства — сначала больным.</translation>
+    </message>
+    <message>
+        <source>Road patrol</source>
+        <translation>Дорожный дозор</translation>
+    </message>
+    <message>
+        <source>Terrace skirmishers</source>
+        <translation>Застрельщики с террас</translation>
+    </message>
+    <message>
+        <source>The Broken Arch</source>
+        <translation>Разрушенная арка</translation>
+    </message>
+    <message>
+        <source>The Salt Road</source>
+        <translation>Соляная дорога</translation>
+    </message>
+    <message>
+        <source>The last raiding party</source>
+        <translation>Последний отряд налётчиков</translation>
+    </message>
+    <message>
+        <source>Tools</source>
+        <translation>Инструменты</translation>
+    </message>
+    <message>
+        <source>Two supply wagons were lost. Beacon Post cannot be resupplied.</source>
+        <translation>Потеряны две повозки с припасами. Снабдить Сигнальный пост невозможно.</translation>
     </message>
 </context>
 <context>
@@ -12559,6 +12726,10 @@ Right-click to cancel.</source>
         <source>Enemy</source>
         <translation>Враг</translation>
     </message>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Обоз снабжения</translation>
+    </message>
 </context>
 <context>
     <name>RpgFinaleOverlay</name>
@@ -12642,24 +12813,8 @@ Right-click to cancel.</source>
         <translation>Уклон</translation>
     </message>
     <message>
-        <source>Lock on</source>
-        <translation>Захват</translation>
-    </message>
-    <message>
-        <source>Sprint</source>
-        <translation>Рывок</translation>
-    </message>
-    <message>
-        <source>Camera</source>
-        <translation>Камера</translation>
-    </message>
-    <message>
         <source>Army view</source>
         <translation>Вид армии</translation>
-    </message>
-    <message>
-        <source>WINDED</source>
-        <translation>ВЫДОХСЯ</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -12708,6 +12863,30 @@ Right-click to cancel.</source>
     <message>
         <source>NO TARGET IN REACH</source>
         <translation>НЕТ ЦЕЛИ В ДОСЯГАЕМОСТИ</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Движение</translation>
+    </message>
+    <message>
+        <source>Draw, release to shoot</source>
+        <translation>Натяните и отпустите для выстрела</translation>
+    </message>
+    <message>
+        <source>Swap weapon</source>
+        <translation>Сменить оружие</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Пауза</translation>
+    </message>
+    <message>
+        <source>Winded</source>
+        <translation>Одышка</translation>
+    </message>
+    <message>
+        <source>Stamina</source>
+        <translation>Выносливость</translation>
     </message>
 </context>
 <context>
@@ -12905,6 +13084,10 @@ Right-click to cancel.</source>
     <message>
         <source>Autosave</source>
         <translation>Автосохранение</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>Быстрое сохранение</translation>
     </message>
 </context>
 <context>

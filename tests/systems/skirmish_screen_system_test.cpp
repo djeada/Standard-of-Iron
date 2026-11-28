@@ -91,6 +91,21 @@ TEST_F(SkirmishScreenSystemTest, KeepsFiringFromBehindTheScreen) {
   EXPECT_FALSE(slingers->get_component<MovementComponent>()->get_has_target());
 }
 
+TEST_F(SkirmishScreenSystemTest, FallsBehindTheLineBeforeChargingFrontRanksMeet) {
+  auto* slingers = spawn(SpawnType::Slinger, 1, 20.0F, 20.0F, false);
+  spawn(SpawnType::Swordsman, 1, 20.0F, 18.0F, true);
+  auto* threat = spawn(SpawnType::Spearman, 2, 20.0F, 25.3F, true);
+  threat->add_component<AttackTargetComponent>()->target_id = slingers->get_id();
+
+  system->update(world.get(), 0.1F);
+
+  auto const* movement = slingers->get_component<MovementComponent>();
+  ASSERT_TRUE(movement->get_has_target());
+  EXPECT_NEAR(movement->get_requested_goal_z(),
+              18.0F - SkirmishScreenSystem::k_behind_line_distance,
+              0.01F);
+}
+
 TEST_F(SkirmishScreenSystemTest, IgnoresMeleeAlreadyEngagedWithAnotherCompany) {
   auto* slingers = spawn(SpawnType::Slinger, 1, 20.0F, 20.0F, false);
   auto* ally = spawn(SpawnType::Swordsman, 1, 21.5F, 24.0F, true);

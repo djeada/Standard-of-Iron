@@ -21,6 +21,7 @@ add_library(
     app/core/order_feedback_presenter.cpp
     app/core/film_action_dispatch.cpp
     app/core/film_recorder.cpp
+    app/core/commander_overlay_pass.cpp
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
     app/core/game_engine_composition.cpp

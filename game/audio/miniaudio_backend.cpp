@@ -459,7 +459,8 @@ void begin_effect_fade(auto& effect, float target, unsigned fade_samples) {
     return;
   }
   effect.fade_samples = fade_samples;
-  effect.volume_step = (effect.target_volume - effect.volume) / float(effect.fade_samples);
+  effect.volume_step =
+      (effect.target_volume - effect.volume) / float(effect.fade_samples);
 }
 
 } // namespace
@@ -535,7 +536,9 @@ void MiniaudioBackend::apply_stop(const Game::Audio::AudioCommand& command) {
     remember_resume_point(*channel);
   }
   begin_channel_fade(*channel, MIN_VOLUME, command.fade_samples);
-  channel->looping = false;
+  if (command.fade_samples <= 1U) {
+    channel->looping = false;
+  }
 }
 
 void MiniaudioBackend::apply_stop_all(const Game::Audio::AudioCommand& command) {
@@ -668,8 +671,10 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
     apply_set_sound_volume(command);
     return;
   case Type::StopSound: {
-    static constexpr int k_stop_fade_ms = 3;
-    const unsigned fade = fade_samples_for(k_stop_fade_ms);
+    // Keep the de-click fade short enough that a 256-frame block flushes both
+    // the fade and the 3 ms BusLimiter lookahead buffer.
+    static constexpr unsigned k_max_stop_fade_samples = 64U;
+    const unsigned fade = std::min(fade_samples_for(2), k_max_stop_fade_samples);
     for (SoundEffect& effect : m_sound_effects) {
       if (!effect.active || effect.track != command.track || effect.stopping) {
         continue;
@@ -771,12 +776,12 @@ void MiniaudioBackend::render_music_run(Channel& channel,
       --channel.fade_samples;
       const float t = 1.0F - (static_cast<float>(channel.fade_samples) /
                               static_cast<float>(channel.fade_total_samples));
-      const float shape = std::clamp(
-          (channel.target_volume >= channel.fade_start_volume)
-              ? std::sin(t * half_pi)
-              : (1.0F - std::cos(t * half_pi)),
-          0.0F,
-          1.0F);
+      const float shape =
+          std::clamp((channel.target_volume >= channel.fade_start_volume)
+                         ? std::sin(t * half_pi)
+                         : (1.0F - std::cos(t * half_pi)),
+                     0.0F,
+                     1.0F);
       channel.current_volume =
           channel.fade_start_volume +
           ((channel.target_volume - channel.fade_start_volume) * shape);
@@ -860,7 +865,7 @@ void MiniaudioBackend::mix_music_channels(float* output,
       continue;
     }
     if (channel.fade_samples == 0 && channel.current_volume <= MIN_VOLUME &&
-        channel.target_volume <= MIN_VOLUME && !channel.looping) {
+        channel.target_volume <= MIN_VOLUME) {
       channel = Channel{};
     }
   }

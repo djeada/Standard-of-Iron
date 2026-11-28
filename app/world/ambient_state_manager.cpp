@@ -69,6 +69,61 @@ void AmbientStateManager::note_sample(Engine::Core::AmbientState observed,
   }
 }
 
+auto AmbientStateManager::is_threat_nearby(Engine::Core::World* world,
+                                           int local_owner_id) const -> bool {
+  if (world == nullptr) {
+    return false;
+  }
+
+  constexpr float k_unit_threat_radius = 60.0F;
+  constexpr float k_structure_threat_radius = 85.0F;
+  constexpr float k_unit_threat_sq = k_unit_threat_radius * k_unit_threat_radius;
+  constexpr float k_structure_threat_sq =
+      k_structure_threat_radius * k_structure_threat_radius;
+
+  const auto* session = Game::Session::SessionContext::for_world(*world);
+  const auto is_enemy = [&](int owner_id) {
+    if (owner_id == local_owner_id || Game::Core::is_neutral_owner(owner_id)) {
+      return false;
+    }
+    return session == nullptr ||
+           session->owners().are_enemies(local_owner_id, owner_id);
+  };
+
+  auto units = world->view<const Engine::Core::UnitComponent,
+                           const Engine::Core::TransformComponent>();
+  struct Point2D {
+    float x;
+    float z;
+  };
+  std::vector<Point2D> local_positions;
+  for (auto [id, unit, transform] : units) {
+    if (unit.health > 0 && unit.owner_id == local_owner_id) {
+      local_positions.push_back({transform.position.x, transform.position.z});
+    }
+  }
+  if (local_positions.empty()) {
+    return false;
+  }
+
+  for (auto [id, unit, transform] : units) {
+    if (unit.health <= 0 || !is_enemy(unit.owner_id)) {
+      continue;
+    }
+    const float limit_sq = Game::Units::is_building_spawn(unit.spawn_type)
+                               ? k_structure_threat_sq
+                               : k_unit_threat_sq;
+    for (const auto& pos : local_positions) {
+      const float dx = transform.position.x - pos.x;
+      const float dz = transform.position.z - pos.z;
+      if ((dx * dx + dz * dz) <= limit_sq) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 auto AmbientStateManager::observe_state(Engine::Core::World* world,
                                         int local_owner_id,
                                         const EntityCache& entity_cache,
@@ -86,7 +141,11 @@ auto AmbientStateManager::observe_state(Engine::Core::World* world,
       is_assault_on_the_field(world, local_owner_id)) {
     return Engine::Core::AmbientState::COMBAT;
   }
-  if (entity_cache.enemy_barracks_alive && entity_cache.player_barracks_alive) {
+  if (is_threat_nearby(world, local_owner_id)) {
+    return Engine::Core::AmbientState::TENSE;
+  }
+  if (world == nullptr && entity_cache.enemy_barracks_alive &&
+      entity_cache.player_barracks_alive) {
     return Engine::Core::AmbientState::TENSE;
   }
   return Engine::Core::AmbientState::PEACEFUL;

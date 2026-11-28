@@ -84,10 +84,10 @@ void MissionConvoy::spawn_wagons() {
     auto* entity = m_world->create_entity();
     wagon.id = entity->get_id();
     wagon.last_health = m_max_health;
-    entity->add_component<TransformComponent>();
-    entity->add_component<RenderableComponent>()->renderer_id = "supply_wagon";
-    auto* unit =
-        entity->add_component<UnitComponent>(m_max_health, m_max_health, 0.0F, 12.0F);
+    m_world->emplace<TransformComponent>(wagon.id);
+    m_world->emplace<RenderableComponent>(wagon.id)->renderer_id = "supply_wagon";
+    auto* unit = m_world->emplace<UnitComponent>(
+        wagon.id, m_max_health, m_max_health, 0.0F, 12.0F);
     unit->owner_id = m_owner_id;
     unit->nation_id = nation;
     unit->spawn_type = Game::Units::SpawnType::SupplyWagon;

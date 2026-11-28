@@ -81,6 +81,7 @@
 #include "game/command/command_log.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
+#include "game/core/render_phase.h"
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
@@ -810,6 +811,17 @@ void GameEngine::publish_presentation_frame() {
   frame->target_focus = m_focus->markers();
   frame->objective_marker = m_mission->stages().active_target();
   frame->commander_rally_preview_pos = m_commander_view_model->rally_preview_position();
+  frame->commander_overlay = m_commander_view_model->overlay_frame();
+  frame->formation_placement =
+      App::Core::FrameUiCoordinator::capture_formation_placement(
+          m_command_controller.get(), m_session.get(), m_runtime.local_owner_id);
+  if (m_command_controller != nullptr &&
+      m_command_controller->has_patrol_first_waypoint()) {
+    frame->patrol_preview_waypoint = m_command_controller->get_patrol_first_waypoint();
+  }
+  if (m_hover_tracker != nullptr) {
+    frame->hovered_entity_id = m_hover_tracker->get_last_hovered_entity();
+  }
   frame->local_owner_id = m_runtime.local_owner_id;
   frame->spectator_mode = m_level.is_spectator_mode;
 
@@ -858,6 +870,7 @@ void GameEngine::update(float dt) {
 }
 
 auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
+  const Engine::Core::RenderPhase::Scope render_phase;
   if (!m_renderer || !m_world || !renderer_initialized() || m_runtime.loading) {
     return 0;
   }
@@ -884,9 +897,7 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
   if (m_loading_overlay.active()) {
     prewarm_overlay_gpu_resources();
   }
-  if (m_hover_tracker) {
-    m_renderer->set_hovered_entity_id(m_hover_tracker->get_last_hovered_entity());
-  }
+  m_renderer->set_hovered_entity_id(presentation->hovered_entity_id);
   m_renderer->set_local_owner_id(presentation->local_owner_id);
   m_renderer->set_order_marker_spectator_mode(presentation->spectator_mode);
 
@@ -1010,9 +1021,12 @@ void GameEngine::render_effects_pass(const App::Core::PresentationFrame& present
   }
   App::Core::FrameUiCoordinator::render_effects(
       {.renderer = m_renderer.get(),
-       .command_controller = m_command_controller.get(),
        .local_owner_id = presentation.local_owner_id,
        .commander_rally_preview_pos = presentation.commander_rally_preview_pos,
+       .patrol_preview_waypoint = presentation.patrol_preview_waypoint,
+       .formation_placement = presentation.formation_placement.has_value()
+                                  ? &*presentation.formation_placement
+                                  : nullptr,
        .attack_targeting = &presentation.attack_targeting,
        .attack_range_rings = &presentation.attack_range_rings,
        .order_markers = &presentation.order_markers,
@@ -1020,9 +1034,13 @@ void GameEngine::render_effects_pass(const App::Core::PresentationFrame& present
        .interaction_targeting = &presentation.interaction_targeting,
        .objective_marker = presentation.objective_marker,
        .effects = &effects_snapshot->render_effects_frame(),
-       .snapshot = effects_snapshot.get(),
-       .session = m_session.get()},
-      [this]() { m_commander_view_model->render_effects(); });
+       .snapshot = effects_snapshot.get()},
+      [this, &presentation, &effects_snapshot]() {
+        m_commander_overlay_pass.render(presentation.commander_overlay,
+                                        *effects_snapshot,
+                                        *m_renderer,
+                                        m_renderer->get_animation_time());
+      });
 }
 
 void GameEngine::set_input_viewport_size(qreal width, qreal height) {

@@ -20,6 +20,7 @@
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/cue_trace.h"
 #include "game/audio/spatial.h"
+#include "game/core/component_commander.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/entity.h"
 #include "game/core/local_audience.h"
@@ -31,6 +32,7 @@
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/damage_application.h"
+#include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/default_content.h"
 #include "game/systems/economy/production_service.h"
@@ -949,6 +951,76 @@ TEST_F(AudioGameplayScenarioTest, EveryScenarioCueReachedTheMixerFromRealGamepla
   }
   EXPECT_TRUE(silent.empty()) << "gameplay asked for cues the player never heard: "
                               << joined;
+}
+
+TEST_F(AudioGameplayScenarioTest, FpvCommanderHitsAreNeverSilencedByNearbyAiMelees) {
+  auto* ai_attacker =
+      add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 4.0F);
+  auto* ai_target = add_soldier(k_local_owner, Game::Units::SpawnType::Spearman, 5.0F);
+  auto* commander = add_soldier(k_local_owner, Game::Units::SpawnType::Swordsman, 0.0F);
+  auto* commander_comp = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_comp, nullptr);
+  commander_comp->fpv_controlled = true;
+  auto* rpg_foe = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 1.5F);
+
+  struct RenderedClock {
+    RenderedClock() { Game::Audio::Clock::use_rendered_time(true); }
+    ~RenderedClock() { Game::Audio::Clock::use_rendered_time(false); }
+    RenderedClock(const RenderedClock&) = delete;
+    auto operator=(const RenderedClock&) -> RenderedClock& = delete;
+  } const rendered_clock;
+
+  // Trigger an AI clash to prime m_next_clash_at well ahead of `now`.
+  Game::Systems::Combat::apply_unit_damage(
+      &m_world, ai_target, 5, ai_attacker->get_id());
+  // Advance past combat.hit.sword's own 90 ms anti-double-trigger window while
+  // staying strictly inside m_next_clash_at (140-420 ms).
+  Game::Audio::Clock::advance_rendered(0.095);
+
+  const auto before_accepted =
+      CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_sword).accepted;
+  const auto before_cooldown =
+      CueTrace::instance()
+          .record_for(Game::Audio::Cue::k_combat_hit_sword)
+          .outcomes.at(static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown));
+
+  // Both the FPV commander's strike and a blow landing on the commander must play.
+  Game::Systems::Combat::apply_unit_damage(&m_world, rpg_foe, 10, commander->get_id());
+  Game::Audio::Clock::advance_rendered(0.10);
+  Game::Systems::Combat::apply_unit_damage(&m_world, commander, 5, rpg_foe->get_id());
+
+  let_the_trace_catch_up(Game::Audio::Cue::k_combat_hit_sword, before_accepted + 2);
+  const auto record =
+      CueTrace::instance().record_for(Game::Audio::Cue::k_combat_hit_sword);
+  EXPECT_GE(record.accepted, before_accepted + 2);
+  EXPECT_EQ(record.outcomes.at(
+                static_cast<std::size_t>(Game::Audio::CueOutcome::CueCooldown)),
+            before_cooldown);
+}
+
+TEST_F(AudioGameplayScenarioTest,
+       BurningBuildingEmitsASpatialBurnCueAtTheStructurePosition) {
+  auto* attacker = add_soldier(k_enemy_owner, Game::Units::SpawnType::Swordsman, 0.0F);
+  auto* barracks = add_barracks(k_local_owner, 6.0F);
+
+  bool saw_event = false;
+  bool was_positioned = false;
+  float pos_x = 0.0F;
+  Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent> sub(
+      [&](const Engine::Core::AudioCueEvent& event) {
+        if (event.cue_id == "build.building_burning") {
+          saw_event = true;
+          was_positioned = event.positioned;
+          pos_x = event.x;
+        }
+      });
+
+  ASSERT_TRUE(Game::Systems::Combat::apply_structure_incendiary_damage(
+      *barracks, 1000, attacker->get_id()));
+  EXPECT_TRUE(saw_event);
+  EXPECT_TRUE(was_positioned);
+  EXPECT_FLOAT_EQ(pos_x, 6.0F);
+  EXPECT_TRUE(heard("build.building_burning"));
 }
 
 } // namespace

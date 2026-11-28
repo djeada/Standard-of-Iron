@@ -3119,6 +3119,53 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>ConvoyTracker</name>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Supply convoy</translation>
+    </message>
+    <message>
+        <source>Convoy</source>
+        <translation>Convoy</translation>
+    </message>
+    <message>
+        <source>%1 delivered</source>
+        <translation>%1 delivered</translation>
+    </message>
+    <message>
+        <source>Ambush at %1</source>
+        <translation>Ambush at %1</translation>
+    </message>
+    <message>
+        <source>Onward to %1</source>
+        <translation>Onward to %1</translation>
+    </message>
+    <message>
+        <source>Safe</source>
+        <translation>Safe</translation>
+    </message>
+    <message>
+        <source>Lost</source>
+        <translation>Lost</translation>
+    </message>
+    <message>
+        <source>Hit</source>
+        <translation>Hit</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
+    </message>
+    <message>
+        <source>%1 in %2 s</source>
+        <translation>%1 in %2 s</translation>
+    </message>
+    <message>
+        <source>Ambush %1 of %2</source>
+        <translation>Ambush %1 of %2</translation>
+    </message>
+</context>
+<context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
@@ -5910,6 +5957,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Return to Menu</source>
         <translation>Return to Menu</translation>
     </message>
+    <message>
+        <source>Every wagon reached the outpost.</source>
+        <translation>Every wagon reached the outpost.</translation>
+    </message>
+    <message>
+        <source>%1 of %2 wagons reached the outpost.</source>
+        <translation>%1 of %2 wagons reached the outpost.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -6691,6 +6746,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Loading...</source>
         <translation>Loading...</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>
@@ -8108,6 +8167,14 @@ to see preview</translation>
         <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
         <translation>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</translation>
     </message>
+    <message>
+        <source>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</source>
+        <translation>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</translation>
+    </message>
+    <message>
+        <source>Salt Road</source>
+        <translation>Salt Road</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -8536,6 +8603,10 @@ to see preview</translation>
     <message>
         <source>The assault is broken. Nothing else is coming.</source>
         <translation>The assault is broken. Nothing else is coming.</translation>
+    </message>
+    <message>
+        <source>%1 joined the escort.</source>
+        <translation>%1 joined the escort.</translation>
     </message>
 </context>
 <context>
@@ -10435,6 +10506,102 @@ to see preview</translation>
     <message>
         <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
         <translation>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</translation>
+    </message>
+    <message>
+        <source>Arch raiders</source>
+        <translation>Arch raiders</translation>
+    </message>
+    <message>
+        <source>Beacon Post</source>
+        <translation>Beacon Post</translation>
+    </message>
+    <message>
+        <source>Beacon Post reserve</source>
+        <translation>Beacon Post reserve</translation>
+    </message>
+    <message>
+        <source>Beacon Rise</source>
+        <translation>Beacon Rise</translation>
+    </message>
+    <message>
+        <source>Deliver all three wagons.</source>
+        <translation>Deliver all three wagons.</translation>
+    </message>
+    <message>
+        <source>Deliver at least two supply wagons to Beacon Post.</source>
+        <translation>Deliver at least two supply wagons to Beacon Post.</translation>
+    </message>
+    <message>
+        <source>Get the survivors off the road. Send a runner to the post.</source>
+        <translation>Get the survivors off the road. Send a runner to the post.</translation>
+    </message>
+    <message>
+        <source>Grain</source>
+        <translation>Grain</translation>
+    </message>
+    <message>
+        <source>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</source>
+        <translation>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</translation>
+    </message>
+    <message>
+        <source>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</source>
+        <translation>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</translation>
+    </message>
+    <message>
+        <source>I can see the beacon. Break this last party and get the wagons over the rise.</source>
+        <translation>I can see the beacon. Break this last party and get the wagons over the rise.</translation>
+    </message>
+    <message>
+        <source>Iberian riders</source>
+        <translation>Iberian riders</translation>
+    </message>
+    <message>
+        <source>Marcellus fell on the Salt Road.</source>
+        <translation>Marcellus fell on the Salt Road.</translation>
+    </message>
+    <message>
+        <source>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</source>
+        <translation>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</translation>
+    </message>
+    <message>
+        <source>Medicine</source>
+        <translation>Medicine</translation>
+    </message>
+    <message>
+        <source>Olive Terraces</source>
+        <translation>Olive Terraces</translation>
+    </message>
+    <message>
+        <source>Open the storehouse. Get the medicine to the sick first.</source>
+        <translation>Open the storehouse. Get the medicine to the sick first.</translation>
+    </message>
+    <message>
+        <source>Road patrol</source>
+        <translation>Road patrol</translation>
+    </message>
+    <message>
+        <source>Terrace skirmishers</source>
+        <translation>Terrace skirmishers</translation>
+    </message>
+    <message>
+        <source>The Broken Arch</source>
+        <translation>The Broken Arch</translation>
+    </message>
+    <message>
+        <source>The Salt Road</source>
+        <translation>The Salt Road</translation>
+    </message>
+    <message>
+        <source>The last raiding party</source>
+        <translation>The last raiding party</translation>
+    </message>
+    <message>
+        <source>Tools</source>
+        <translation>Tools</translation>
+    </message>
+    <message>
+        <source>Two supply wagons were lost. Beacon Post cannot be resupplied.</source>
+        <translation>Two supply wagons were lost. Beacon Post cannot be resupplied.</translation>
     </message>
 </context>
 <context>
@@ -12554,6 +12721,10 @@ Right-click to cancel.</translation>
         <source>Enemy</source>
         <translation>Enemy</translation>
     </message>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Supply convoy</translation>
+    </message>
 </context>
 <context>
     <name>RpgFinaleOverlay</name>
@@ -12637,24 +12808,8 @@ Right-click to cancel.</translation>
         <translation>Dodge</translation>
     </message>
     <message>
-        <source>Lock on</source>
-        <translation>Lock on</translation>
-    </message>
-    <message>
-        <source>Sprint</source>
-        <translation>Sprint</translation>
-    </message>
-    <message>
-        <source>Camera</source>
-        <translation>Camera</translation>
-    </message>
-    <message>
         <source>Army view</source>
         <translation>Army view</translation>
-    </message>
-    <message>
-        <source>WINDED</source>
-        <translation>WINDED</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -12703,6 +12858,30 @@ Right-click to cancel.</translation>
     <message>
         <source>NO TARGET IN REACH</source>
         <translation>NO TARGET IN REACH</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Move</translation>
+    </message>
+    <message>
+        <source>Draw, release to shoot</source>
+        <translation>Draw, release to shoot</translation>
+    </message>
+    <message>
+        <source>Swap weapon</source>
+        <translation>Swap weapon</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pause</translation>
+    </message>
+    <message>
+        <source>Winded</source>
+        <translation>Winded</translation>
+    </message>
+    <message>
+        <source>Stamina</source>
+        <translation>Stamina</translation>
     </message>
 </context>
 <context>
@@ -12899,6 +13078,10 @@ Right-click to cancel.</translation>
     <message>
         <source>Autosave</source>
         <translation>Autosave</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>Quicksave</translation>
     </message>
 </context>
 <context>

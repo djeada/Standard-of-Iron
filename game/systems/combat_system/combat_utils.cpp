@@ -214,7 +214,8 @@ auto guard_post_of(const Engine::Core::Entity* entity) -> std::optional<QVector3
       post = QVector3D(guarded->position.x, 0.0F, guarded->position.z);
       const auto* target =
           registry->try_get<Engine::Core::UnitComponent>(guard->guarded_entity_id);
-      const auto* escort = entity->get_component<Engine::Core::TransformComponent>();
+      const auto* escort =
+          registry->try_get<Engine::Core::TransformComponent>(entity->get_id());
       if (target != nullptr &&
           target->spawn_type == Game::Units::SpawnType::SupplyWagon &&
           escort != nullptr) {

@@ -242,8 +242,7 @@ auto MusicPlayer::play(
         Qt::BlockingQueuedConnection);
     return result;
   }
-  int const ch = channel < 0 ? channel
-                             : std::min(channel, m_channel_count - 1);
+  int const ch = channel < 0 ? channel : std::min(channel, m_channel_count - 1);
   play_gui(id, vol, loop, ch, fade_ms);
   return ch;
 }

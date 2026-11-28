@@ -5,7 +5,7 @@
       "description": "Pointer enters a menu button, list row or combo box entry.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 1.0,
+      "volume": 0.55,
       "priority": 4,
       "cooldown_ms": 60,
       "resources": [
@@ -31,7 +31,7 @@
       "description": "Player leaves a screen or cancels a dialog.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 1.0,
+      "volume": 0.72,
       "priority": 5,
       "cooldown_ms": 40,
       "resources": [
@@ -44,7 +44,7 @@
       "description": "Player switches between tabs or side panels.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.9,
+      "volume": 0.78,
       "priority": 4,
       "cooldown_ms": 60,
       "resources": [
@@ -58,7 +58,7 @@
       "description": "A panel, settings sheet or overlay opens.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.9,
+      "volume": 0.8,
       "priority": 4,
       "cooldown_ms": 80,
       "resources": [
@@ -71,7 +71,7 @@
       "description": "A panel, settings sheet or overlay closes.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.9,
+      "volume": 0.78,
       "priority": 4,
       "cooldown_ms": 80,
       "resources": [
@@ -84,7 +84,7 @@
       "description": "A checkbox, switch or mode toggle changes state.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.9,
+      "volume": 0.8,
       "priority": 4,
       "cooldown_ms": 40,
       "resources": [
@@ -97,7 +97,7 @@
       "description": "The UI refuses an action (disabled control, invalid input).",
       "category": "sfx",
       "importance": "required",
-      "volume": 0.85,
+      "volume": 0.9,
       "priority": 6,
       "cooldown_ms": 400,
       "resources": [
@@ -165,7 +165,7 @@
       "description": "A dialog, settings sheet or destructive choice is confirmed.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.85,
+      "volume": 0.95,
       "priority": 5,
       "cooldown_ms": 80,
       "resources": [
@@ -416,7 +416,7 @@
       "description": "A builder begins work on a construction site.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.8,
+      "volume": 0.9,
       "priority": 4,
       "cooldown_ms": 500,
       "resources": [
@@ -523,7 +523,7 @@
       "description": "Troop limit reached, production refused.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.38,
+      "volume": 0.55,
       "priority": 8,
       "cooldown_ms": 6000,
       "resources": [
@@ -535,7 +535,7 @@
       "description": "A building owned by the local player is taking damage.",
       "category": "sfx",
       "importance": "required",
-      "volume": 0.38,
+      "volume": 0.62,
       "priority": 7,
       "cooldown_ms": 15000,
       "resources": [
@@ -762,7 +762,7 @@
       "description": "Fighting the player cannot hear individually, because it is too far away, carried as one distant mass instead.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.35,
+      "volume": 0.85,
       "priority": 2,
       "cooldown_ms": 9000,
       "resources": [
@@ -803,7 +803,7 @@
       "description": "A commander starts drawing his bow.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.56,
+      "volume": 0.78,
       "priority": 3,
       "cooldown_ms": 240,
       "resources": [
@@ -816,7 +816,7 @@
       "description": "A commander's draw reaches full and the string holds there.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.45,
+      "volume": 0.72,
       "priority": 3,
       "cooldown_ms": 200,
       "resources": [
@@ -829,7 +829,7 @@
       "description": "A commander has held full draw long enough that the arm starts to go.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.63,
+      "volume": 0.92,
       "priority": 3,
       "cooldown_ms": 900,
       "resources": [
@@ -959,7 +959,9 @@
       "volume": 0.48,
       "priority": 2,
       "cooldown_ms": 150,
-      "resources": ["sfx.combat.javelin_throw_whoosh"],
+      "resources": [
+        "sfx.combat.javelin_throw_whoosh"
+      ],
       "spatial": true
     },
     {
@@ -970,7 +972,9 @@
       "volume": 0.32,
       "priority": 1,
       "cooldown_ms": 150,
-      "resources": ["sfx.combat.arrow_impact_01"],
+      "resources": [
+        "sfx.combat.arrow_impact_01"
+      ],
       "spatial": true
     },
     {
@@ -1046,7 +1050,7 @@
     },
     {
       "id": "combat.heal_bind",
-      "description": "A Roman medicus binds a soldier’s wound.",
+      "description": "A Roman medicus binds a soldier\u2019s wound.",
       "category": "sfx",
       "importance": "optional",
       "volume": 0.76,
@@ -1222,7 +1226,7 @@
       "description": "The controlled commander plants a foot on open ground.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.13,
+      "volume": 0.42,
       "priority": 2,
       "cooldown_ms": 90,
       "resources": [
@@ -1237,7 +1241,7 @@
       "description": "The same step on a bridge or other hard surface.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.11,
+      "volume": 0.38,
       "priority": 2,
       "cooldown_ms": 90,
       "resources": [
@@ -1252,7 +1256,7 @@
       "description": "The controlled commander plants a foot at a run.",
       "category": "sfx",
       "importance": "ambient",
-      "volume": 0.16,
+      "volume": 0.46,
       "priority": 2,
       "cooldown_ms": 70,
       "resources": [
@@ -1470,7 +1474,7 @@
       "description": "Resources are delivered to the stockpile.",
       "category": "sfx",
       "importance": "optional",
-      "volume": 0.6,
+      "volume": 0.78,
       "priority": 3,
       "cooldown_ms": 1500,
       "resources": [

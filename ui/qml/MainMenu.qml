@@ -146,6 +146,8 @@ Item {
         while (next >= 0 && next < menuModel.count) {
             if (entry_available(menuModel.get(next))) {
                 commandList.currentIndex = next;
+                if (typeof game !== "undefined")
+                    UiAudio.play_hover(game.audio_system);
                 return;
             }
             next += direction;
@@ -160,10 +162,14 @@ Item {
             move_selection(-1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            if (typeof game !== "undefined")
+                UiAudio.play_click(game.audio_system);
             trigger_selection(commandList.currentIndex);
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape) {
             if (root.game_started) {
+                if (typeof game !== "undefined")
+                    UiAudio.play_back(game.audio_system);
                 root.resume_requested();
                 event.accepted = true;
             }

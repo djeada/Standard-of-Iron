@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <source_location>
 
 #include "game/systems/combat_actions/combat_action_definition.h"
@@ -34,6 +35,10 @@ struct CommanderHandles {
 
 void cancel_current_attack(Engine::Core::Entity& commander);
 void cancel_held_bow_draw(Engine::Core::Entity& commander);
+void restore_view_preferences(Engine::Core::World& world,
+                              Engine::Core::EntityID commander_id,
+                              std::optional<bool> close_camera,
+                              std::optional<bool> bow_stance);
 void publish_cue(
     int owner,
     const char* cue,

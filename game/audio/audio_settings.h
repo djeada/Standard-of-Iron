@@ -22,11 +22,11 @@ inline constexpr char k_music_volume_key[] = "audio/music_volume";
 inline constexpr char k_voice_volume_key[] = "audio/voice_volume";
 inline constexpr char k_ambience_volume_key[] = "audio/ambience_volume";
 
-inline constexpr float k_first_run_master_volume = 0.7F;
+inline constexpr float k_first_run_master_volume = 0.85F;
 inline constexpr float k_first_run_sound_volume = 1.0F;
-inline constexpr float k_first_run_music_volume = 0.45F;
+inline constexpr float k_first_run_music_volume = 0.68F;
 inline constexpr float k_first_run_voice_volume = 1.0F;
-inline constexpr float k_first_run_ambience_volume = 0.3F;
+inline constexpr float k_first_run_ambience_volume = 0.54F;
 
 struct Volumes {
   float master{k_first_run_master_volume};

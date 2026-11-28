@@ -3119,6 +3119,53 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>ConvoyTracker</name>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Versorgungszug</translation>
+    </message>
+    <message>
+        <source>Convoy</source>
+        <translation>Wagenzug</translation>
+    </message>
+    <message>
+        <source>%1 delivered</source>
+        <translation>%1 geliefert</translation>
+    </message>
+    <message>
+        <source>Ambush at %1</source>
+        <translation>Hinterhalt bei %1</translation>
+    </message>
+    <message>
+        <source>Onward to %1</source>
+        <translation>Weiter nach %1</translation>
+    </message>
+    <message>
+        <source>Safe</source>
+        <translation>Sicher</translation>
+    </message>
+    <message>
+        <source>Lost</source>
+        <translation>Verloren</translation>
+    </message>
+    <message>
+        <source>Hit</source>
+        <translation>Getroffen</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1 %</translation>
+    </message>
+    <message>
+        <source>%1 in %2 s</source>
+        <translation>%1 in %2 s</translation>
+    </message>
+    <message>
+        <source>Ambush %1 of %2</source>
+        <translation>Hinterhalt %1 von %2</translation>
+    </message>
+</context>
+<context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
@@ -5910,6 +5957,14 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
         <source>Return to Menu</source>
         <translation>Zurück zum Menü</translation>
     </message>
+    <message>
+        <source>Every wagon reached the outpost.</source>
+        <translation>Alle Wagen haben den Außenposten erreicht.</translation>
+    </message>
+    <message>
+        <source>%1 of %2 wagons reached the outpost.</source>
+        <translation>%1 von %2 Wagen haben den Außenposten erreicht.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -6691,6 +6746,10 @@ Jede Rekrutierung kostet die Männer ihrer Einheit; die Reserve einer Kaserne he
     <message>
         <source>Loading...</source>
         <translation>Wird geladen …</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1 %</translation>
     </message>
 </context>
 <context>
@@ -8108,6 +8167,14 @@ um die Vorschau zu sehen</translation>
         <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
         <translation>Die Stadt der sieben Hügel am Tiber: das Forum unterhalb des Kapitols, die Kaiserforen, das Kolosseum und der Circus Maximus, der Viehmarkt am Fluss, die belebte Subura, die Gärten von Sallust, Maecenas und Lucullus mit ihren Wasserbecken, das Marsfeld in der Flussbiegung, Trastevere unterhalb des Gianicolo, Villen in Olivenhainen, eine vor der Servianischen Mauer aufgestellte Legion und Ostia an der Tibermündung.</translation>
     </message>
+    <message>
+        <source>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</source>
+        <translation>Eine alte Straße führt zwischen Steinbruchkämmen und Olivenhainen hinauf zu den Feuern des Leuchtfeuerpostens.</translation>
+    </message>
+    <message>
+        <source>Salt Road</source>
+        <translation>Salzstraße</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -8536,6 +8603,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>The assault is broken. Nothing else is coming.</source>
         <translation>Der Angriff ist gebrochen. Es kommt nichts mehr.</translation>
+    </message>
+    <message>
+        <source>%1 joined the escort.</source>
+        <translation>%1 hat sich der Eskorte angeschlossen.</translation>
     </message>
 </context>
 <context>
@@ -10435,6 +10506,102 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
         <translation>Du hast meine Späher gefunden. Zwei Männer, um deine Zelte zu zählen, und du antwortest mit dem ganzen Lager. Nur zu – aber ich will wissen, wer sie getötet hat.</translation>
+    </message>
+    <message>
+        <source>Arch raiders</source>
+        <translation>Räuber am Bogen</translation>
+    </message>
+    <message>
+        <source>Beacon Post</source>
+        <translation>Leuchtfeuerposten</translation>
+    </message>
+    <message>
+        <source>Beacon Post reserve</source>
+        <translation>Reserve des Leuchtfeuerpostens</translation>
+    </message>
+    <message>
+        <source>Beacon Rise</source>
+        <translation>Leuchtfeuerhöhe</translation>
+    </message>
+    <message>
+        <source>Deliver all three wagons.</source>
+        <translation>Liefere alle drei Wagen ab.</translation>
+    </message>
+    <message>
+        <source>Deliver at least two supply wagons to Beacon Post.</source>
+        <translation>Bringe mindestens zwei Versorgungswagen zum Leuchtfeuerposten.</translation>
+    </message>
+    <message>
+        <source>Get the survivors off the road. Send a runner to the post.</source>
+        <translation>Schafft die Überlebenden von der Straße. Schickt einen Boten zum Posten.</translation>
+    </message>
+    <message>
+        <source>Grain</source>
+        <translation>Getreide</translation>
+    </message>
+    <message>
+        <source>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</source>
+        <translation>Getreide, Arznei und Werkzeug. Dem Leuchtfeuerposten fehlt es an allen dreien. Die Eskorte hält mit den Wagen Schritt. Ich übernehme die Straße voraus.</translation>
+    </message>
+    <message>
+        <source>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</source>
+        <translation>Haltet die Gespanne. Räuber am Bogen. Die Streife schließt hinter uns auf.</translation>
+    </message>
+    <message>
+        <source>I can see the beacon. Break this last party and get the wagons over the rise.</source>
+        <translation>Ich sehe das Leuchtfeuer. Schlagt diesen letzten Trupp und bringt die Wagen über die Anhöhe.</translation>
+    </message>
+    <message>
+        <source>Iberian riders</source>
+        <translation>Iberische Reiter</translation>
+    </message>
+    <message>
+        <source>Marcellus fell on the Salt Road.</source>
+        <translation>Marcellus fiel auf der Salzstraße.</translation>
+    </message>
+    <message>
+        <source>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</source>
+        <translation>Marcellus zieht mit drei Versorgungswagen und schwacher Eskorte auf die Straße. Durchbrich die Hinterhalte zwischen dem alten Bogen und dem Leuchtfeuerposten. Unterwegs stoßen zwei Entsatztrupps zu dir.</translation>
+    </message>
+    <message>
+        <source>Medicine</source>
+        <translation>Arznei</translation>
+    </message>
+    <message>
+        <source>Olive Terraces</source>
+        <translation>Olivenhaine</translation>
+    </message>
+    <message>
+        <source>Open the storehouse. Get the medicine to the sick first.</source>
+        <translation>Öffnet das Lagerhaus. Bringt die Arznei zuerst zu den Kranken.</translation>
+    </message>
+    <message>
+        <source>Road patrol</source>
+        <translation>Straßenstreife</translation>
+    </message>
+    <message>
+        <source>Terrace skirmishers</source>
+        <translation>Plänkler der Terrassen</translation>
+    </message>
+    <message>
+        <source>The Broken Arch</source>
+        <translation>Der zerbrochene Bogen</translation>
+    </message>
+    <message>
+        <source>The Salt Road</source>
+        <translation>Die Salzstraße</translation>
+    </message>
+    <message>
+        <source>The last raiding party</source>
+        <translation>Der letzte Räubertrupp</translation>
+    </message>
+    <message>
+        <source>Tools</source>
+        <translation>Werkzeug</translation>
+    </message>
+    <message>
+        <source>Two supply wagons were lost. Beacon Post cannot be resupplied.</source>
+        <translation>Zwei Versorgungswagen gingen verloren. Der Leuchtfeuerposten kann nicht versorgt werden.</translation>
     </message>
 </context>
 <context>
@@ -12554,6 +12721,10 @@ Rechtsklick zum Abbrechen.</translation>
         <source>Enemy</source>
         <translation>Feind</translation>
     </message>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Versorgungszug</translation>
+    </message>
 </context>
 <context>
     <name>RpgFinaleOverlay</name>
@@ -12637,24 +12808,8 @@ Rechtsklick zum Abbrechen.</translation>
         <translation>Ausweichen</translation>
     </message>
     <message>
-        <source>Lock on</source>
-        <translation>Anvisieren</translation>
-    </message>
-    <message>
-        <source>Sprint</source>
-        <translation>Sprinten</translation>
-    </message>
-    <message>
-        <source>Camera</source>
-        <translation>Kamera</translation>
-    </message>
-    <message>
         <source>Army view</source>
         <translation>Heeresansicht</translation>
-    </message>
-    <message>
-        <source>WINDED</source>
-        <translation>AUSSER ATEM</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -12703,6 +12858,30 @@ Rechtsklick zum Abbrechen.</translation>
     <message>
         <source>NO TARGET IN REACH</source>
         <translation>KEIN ZIEL IN REICHWEITE</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Bewegen</translation>
+    </message>
+    <message>
+        <source>Draw, release to shoot</source>
+        <translation>Spannen, zum Schießen loslassen</translation>
+    </message>
+    <message>
+        <source>Swap weapon</source>
+        <translation>Waffe wechseln</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pause</translation>
+    </message>
+    <message>
+        <source>Winded</source>
+        <translation>Außer Atem</translation>
+    </message>
+    <message>
+        <source>Stamina</source>
+        <translation>Ausdauer</translation>
     </message>
 </context>
 <context>
@@ -12899,6 +13078,10 @@ Rechtsklick zum Abbrechen.</translation>
     <message>
         <source>Autosave</source>
         <translation>Autospeicherung</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>Schnellspeichern</translation>
     </message>
 </context>
 <context>

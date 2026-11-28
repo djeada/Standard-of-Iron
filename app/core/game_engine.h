@@ -17,6 +17,7 @@
 
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
+#include "app/core/commander_overlay_pass.h"
 #include "app/core/deferred_presentation_queue.h"
 #include "app/core/entity_cache.h"
 #include "app/core/runtime_frame_orchestrator.h"
@@ -551,6 +552,7 @@ private:
   Render::GL::Camera* m_camera = nullptr;
   Render::GL::Camera m_render_camera;
   std::shared_ptr<const App::Core::PresentationFrame> m_presentation_frame;
+  App::Core::CommanderOverlayPass m_commander_overlay_pass;
   std::vector<Engine::Core::EntityID> m_drawn_selected_ids;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;

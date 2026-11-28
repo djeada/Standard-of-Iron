@@ -138,6 +138,8 @@ void AudioSystem::shutdown() {
   resource_aliases.clear();
   resource_last_played_at.clear();
   active_resources.clear();
+  m_current_music_id.clear();
+  m_current_music_requested_volume.store(AudioConstants::DEFAULT_VOLUME);
 
   {
     std::lock_guard<std::mutex> const lock(active_sounds_mutex);
@@ -688,6 +690,8 @@ void AudioSystem::process_event(const AudioEvent& event) {
   }
   case AudioEventType::STOP_MUSIC: {
     std::lock_guard<std::mutex> const lock(resource_mutex);
+    m_current_music_id.clear();
+    m_current_music_requested_volume.store(AudioConstants::DEFAULT_VOLUME);
     if (m_music_player != nullptr) {
       m_music_player->stop_all(AudioConstants::NO_FADE_MS);
     }
@@ -722,6 +726,10 @@ void AudioSystem::process_event(const AudioEvent& event) {
     }
 
     if (config.category == AudioCategory::MUSIC && m_music_player != nullptr) {
+      if (m_current_music_id == resource_id) {
+        m_current_music_id.clear();
+        m_current_music_requested_volume.store(AudioConstants::DEFAULT_VOLUME);
+      }
       m_music_player->stop_all(AudioConstants::NO_FADE_MS);
       m_music_player->unregister_track(resource_id);
     }
@@ -851,7 +859,12 @@ auto AudioSystem::make_room_in_category_locked(AudioCategory category,
       return false;
     }
     sound_id_to_stop = lowest_it->id;
-    active_sounds.erase(lowest_it);
+    active_sounds.erase(std::remove_if(active_sounds.begin(),
+                                       active_sounds.end(),
+                                       [&](const ActiveSound& as) {
+                                         return as.id == sound_id_to_stop;
+                                       }),
+                        active_sounds.end());
   }
 
   if (!sound_id_to_stop.empty()) {
@@ -883,7 +896,12 @@ void AudioSystem::evict_lowest_priority_sound_locked() {
 
     if (lowest_it != active_sounds.end()) {
       sound_id_to_stop = lowest_it->id;
-      active_sounds.erase(lowest_it);
+      active_sounds.erase(std::remove_if(active_sounds.begin(),
+                                         active_sounds.end(),
+                                         [&](const ActiveSound& as) {
+                                           return as.id == sound_id_to_stop;
+                                         }),
+                          active_sounds.end());
     }
   }
 

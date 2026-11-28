@@ -44,9 +44,7 @@ auto filter_subjects(Engine::Core::World& world,
 
 auto building_owner(Engine::Core::World& world,
                     Engine::Core::EntityID id) -> const Engine::Core::UnitComponent* {
-  auto* entity = world.get_entity(id);
-  return entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+  return world.try_get<Engine::Core::UnitComponent>(id);
 }
 
 auto is_committed_skirmisher_move(Engine::Core::Entity* entity, Source source) -> bool {

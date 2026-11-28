@@ -18,8 +18,8 @@
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "app/core/frame_snapshot.h"
+#include "app/core/presentation_frame.h"
 #include "game/command/commander_input.h"
-#include "render/entity/rpg_telegraph_renderer.h"
 
 namespace Engine::Core {
 class Entity;
@@ -151,7 +151,8 @@ public:
   void apply_logged_actions();
   void leave_commander_mode();
   [[nodiscard]] auto follows_replay() const -> bool;
-  void render_effects();
+  [[nodiscard]] auto
+  overlay_frame() const -> std::optional<App::Core::CommanderOverlayFrame>;
   [[nodiscard]] auto time_effect_scale(float scaled_dt, bool paused) -> float;
 
   enum class HitRouting : std::uint8_t {
@@ -224,7 +225,7 @@ private:
 
   CommanderControlController m_control;
   std::unique_ptr<App::Core::CommanderModeCoordinator> m_mode;
-  Render::GL::RpgTelegraphRenderer m_telegraphs;
+  std::uint64_t m_overlay_session{1};
 
   PlayerControlMode m_control_mode = PlayerControlMode::Rts;
   GameMode m_game_mode = GameMode::Rts;

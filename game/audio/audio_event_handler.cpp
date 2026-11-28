@@ -10,6 +10,7 @@
 #include <string_view>
 #include <utility>
 
+#include "../core/component_commander.h"
 #include "../core/component_core.h"
 #include "../core/component_gameplay.h"
 #include "../core/entity.h"
@@ -766,7 +767,18 @@ void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event)
     return;
   }
 
-  float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
+  const auto is_fpv_commander = [this](Engine::Core::EntityID id) {
+    if (m_world == nullptr || id == 0) {
+      return false;
+    }
+    const auto* commander = m_world->try_get<Engine::Core::CommanderComponent>(id);
+    return commander != nullptr && commander->fpv_controlled;
+  };
+  const bool commander_personal_hit =
+      is_fpv_commander(event.attacker_id) || is_fpv_commander(event.target_id);
+  float const base_volume = COMBAT_HIT_VOLUME * get_volume_variation();
+  float const volume =
+      commander_personal_hit ? std::max(base_volume, 0.90F) : base_volume;
   const char* const impact =
       impact_cue_for(event.attacker_type, event.target_is_structure);
 
@@ -776,7 +788,7 @@ void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event)
     note_distant_impact(where);
   }
 
-  const bool clash = shares_the_clash_clock(impact);
+  const bool clash = !commander_personal_hit && shares_the_clash_clock(impact);
   const auto now = Game::Audio::Clock::now();
   if (clash && now < m_next_clash_at &&
       (!located ||

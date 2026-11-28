@@ -93,29 +93,32 @@ auto wolf_pelt() -> const RenderArchetype& {
 auto slinger_headband() -> const RenderArchetype& {
   static const auto value = [] {
     std::vector<GeneratedEquipmentPrimitive> p{
-        generated_ellipsoid({0.0F, 0.40F, -0.06F}, {0.77F, 0.49F, 0.83F}, Dark),
-        generated_ellipsoid({0.0F, -0.14F, -0.51F}, {0.65F, 0.57F, 0.39F}, Dark),
-        generated_ellipsoid({-0.29F, 0.49F, 0.29F}, {0.41F, 0.36F, 0.51F}, Dark),
+        generated_ellipsoid({0.0F, 0.57F, -0.07F}, {0.88F, 0.60F, 0.96F}, Dark),
+        generated_ellipsoid({0.0F, -0.02F, -0.58F}, {0.74F, 0.70F, 0.44F}, Dark),
+        generated_ellipsoid({-0.25F, 0.61F, 0.39F}, {0.46F, 0.38F, 0.57F}, Dark),
     };
 
     auto const brow = [](float angle) -> QVector3D {
-      return {0.78F * std::sin(angle),
-              0.27F + 0.09F * std::cos(angle),
-              0.89F * std::cos(angle)};
+      return {0.89F * std::sin(angle),
+              0.55F + 0.055F * std::cos(angle),
+              0.99F * std::cos(angle)};
     };
     for (int i = 0; i < 20; ++i) {
       constexpr float k_segment = std::numbers::pi_v<float> / 10.0F;
-      p.push_back(generated_cylinder(brow(static_cast<float>(i) * k_segment),
-                                     brow(static_cast<float>(i + 1) * k_segment),
-                                     0.075F,
-                                     Crimson));
+      QVector3D const a = brow(static_cast<float>(i) * k_segment);
+      QVector3D const b = brow(static_cast<float>(i + 1) * k_segment);
+      p.push_back(generated_cylinder(a, b, 0.10F, Crimson));
+      p.push_back(generated_cylinder(a + QVector3D(0.0F, 0.086F, 0.0F),
+                                     b + QVector3D(0.0F, 0.086F, 0.0F),
+                                     0.047F,
+                                     Linen));
     }
     p.push_back(
-        generated_ellipsoid({0.0F, 0.18F, -0.89F}, {0.16F, 0.11F, 0.12F}, Crimson));
+        generated_ellipsoid({0.0F, 0.50F, -1.00F}, {0.16F, 0.11F, 0.12F}, Crimson));
     p.push_back(generated_cylinder(
-        {-0.07F, 0.17F, -0.91F}, {-0.22F, -0.30F, -0.99F}, 0.039F, Crimson));
+        {-0.07F, 0.48F, -1.01F}, {-0.22F, -0.24F, -1.04F}, 0.047F, Crimson));
     p.push_back(generated_cylinder(
-        {0.06F, 0.17F, -0.91F}, {0.17F, -0.20F, -0.98F}, 0.033F, Linen));
+        {0.06F, 0.48F, -1.01F}, {0.17F, -0.14F, -1.03F}, 0.036F, Linen));
     return build_generated_equipment_archetype("slinger/headband", p);
   }();
   return value;
@@ -330,7 +333,7 @@ auto make_spec(bool velites) -> Render::Creature::Pipeline::UnitVisualSpec {
   auto const& bind = Render::Humanoid::humanoid_bind_body_frames();
   QMatrix4x4 head = attachment_frame_transform(bind.head);
 
-  head.scale(velites ? 0.168F : 0.119F);
+  head.scale(0.168F);
   std::vector<StaticAttachmentSpec> attachments{
       gear_attachment(
           velites ? wolf_pelt() : slinger_headband(), HumanoidBone::Head, head),

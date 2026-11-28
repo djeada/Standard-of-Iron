@@ -193,10 +193,8 @@ TestCase {
     function test_a_panel_can_pass_wheel_input_without_passing_clicks() {
         var host = createTemporaryObject(panelHostComponent, testCase);
         verify(host !== null);
-
         mouseWheel(host, 50, 50, 0, -120);
         compare(host.wheelEvents, 0);
-
         host.panel.shieldsWheel = false;
         mouseWheel(host, 50, 50, 0, -120);
         compare(host.wheelEvents, 1);

@@ -10,6 +10,7 @@ add_executable(
     app/session_timeline_test.cpp
     app/support_bundle_test.cpp
     app/version_info_test.cpp
+    app/render_thread_isolation_test.cpp
     app/startup_supervisor_test.cpp
     app/language_override_test.cpp
     core/audio_system_test.cpp

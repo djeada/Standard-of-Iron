@@ -20,8 +20,10 @@ namespace {
 
 using Index = Engine::Core::WorldSpatialIndex;
 constexpr float k_immediate_threat = 2.5F;
+constexpr float k_advancing_threat_radius = 5.6F;
 constexpr float k_screen_half_width = 2.6F;
 constexpr float k_minimum_gain = 1.25F;
+constexpr float k_max_screen_step = 7.2F;
 
 [[nodiscard]] auto living_unit(const Index::Entry& entry) -> bool {
   return entry.is(Index::k_alive) && entry.health > 0 && !entry.is(Index::k_building) &&
@@ -91,23 +93,32 @@ void SkirmishScreenSystem::run(Engine::Core::SystemContext& context) {
 
     float threat_dist_sq = std::numeric_limits<float>::max();
     QVector3D threat;
-    index.for_each_in_radius(x, z, k_threat_radius, [&](const Index::Entry& entry) {
-      if (!living_unit(entry) || !m_owners.are_enemies(owner, entry.owner_id) ||
-          !closes_to_melee(world, entry.id)) {
-        return;
-      }
-      float const dx = entry.x - x;
-      float const dz = entry.z - z;
-      float const distance_sq = dx * dx + dz * dz;
-      if (distance_sq > k_immediate_threat * k_immediate_threat &&
-          is_tied_up_elsewhere(world, entry.id, id)) {
-        return;
-      }
-      if (distance_sq < threat_dist_sq) {
-        threat_dist_sq = distance_sq;
-        threat = QVector3D(entry.x, 0.0F, entry.z);
-      }
-    });
+    bool is_being_pressed = false;
+    index.for_each_in_radius(
+        x, z, k_advancing_threat_radius, [&](const Index::Entry& entry) {
+          if (!living_unit(entry) || !m_owners.are_enemies(owner, entry.owner_id) ||
+              !closes_to_melee(world, entry.id)) {
+            return;
+          }
+          float const dx = entry.x - x;
+          float const dz = entry.z - z;
+          float const distance_sq = dx * dx + dz * dz;
+          auto const* pursuit =
+              world.try_get<Engine::Core::AttackTargetComponent>(entry.id);
+          bool const is_pressing = pursuit != nullptr && pursuit->target_id == id;
+          if (!is_pressing && distance_sq > k_threat_radius * k_threat_radius) {
+            return;
+          }
+          if (distance_sq > k_immediate_threat * k_immediate_threat &&
+              is_tied_up_elsewhere(world, entry.id, id)) {
+            return;
+          }
+          if (distance_sq < threat_dist_sq) {
+            threat_dist_sq = distance_sq;
+            threat = QVector3D(entry.x, 0.0F, entry.z);
+            is_being_pressed = is_pressing;
+          }
+        });
     if (threat_dist_sq == std::numeric_limits<float>::max() || threat_dist_sq < 1e-4F) {
       continue;
     }
@@ -141,11 +152,13 @@ void SkirmishScreenSystem::run(Engine::Core::SystemContext& context) {
           QVector3D const step = candidate - here;
           float const separation = (candidate - threat).length();
           float const step_sq = step.lengthSquared();
-          // A screen is useful only if reaching it opens space and leaves the
-          // skirmishers near their firing line.
+          // Stay near throwing range unless the enemy is closing directly and
+          // reaching friendly cover needs a longer withdrawal.
           if (QVector3D::dotProduct(step, away) >= k_minimum_gain &&
               separation >= k_threat_radius + k_minimum_gain &&
-              separation <= k_firing_distance + 1.1F && step_sq < best_screen_step_sq) {
+              (is_being_pressed || separation <= k_firing_distance + 1.1F) &&
+              step_sq <= k_max_screen_step * k_max_screen_step &&
+              step_sq < best_screen_step_sq) {
             best_screen_step_sq = step_sq;
             goal = candidate;
           }
