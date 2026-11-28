@@ -14,6 +14,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "scene/camera.h"
 
@@ -146,6 +147,75 @@ TEST_F(CommanderViewModelInputTest, APressAloneDoesNotReachTheWorld) {
   EXPECT_EQ(m_commander->input_edges().primary_consumed_sequence, 0U);
   EXPECT_FALSE(attack_is_running(*commander))
       << "the GUI layer records an input edge; simulation is the sole consumer";
+}
+
+TEST_F(CommanderViewModelInputTest, MissionEntryHandsOffToArmyViewAtTheCommander) {
+  Render::GL::Camera army_camera;
+  const QVector3D original_target(-8.0F, 0.0F, 4.0F);
+  const QVector3D offset(0.0F, 12.0F, -6.0F);
+  army_camera.look_at(original_target + offset, original_target, {0.0F, 1.0F, 0.0F});
+  m_context.rts_camera = &army_camera;
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mission_mode();
+  ASSERT_TRUE(m_commander->active());
+  auto* body = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(body, nullptr);
+  body->position.x = 5.0F;
+  body->position.z = 7.0F;
+  m_commander->exit_mode();
+
+  const QVector3D commander_position(5.0F, 0.0F, 7.0F);
+  EXPECT_EQ(army_camera.get_target(), commander_position);
+  EXPECT_EQ(army_camera.get_position(), commander_position + offset);
+}
+
+TEST_F(CommanderViewModelInputTest, SavedDirectControlRestoresViewAndClearsButtons) {
+  ASSERT_NE(spawn_commander(0.0F, 0.0F), nullptr);
+  const QJsonObject saved{{"active", true},
+                          {"yaw", 117.0},
+                          {"pitch", -17.0},
+                          {"close_camera", true},
+                          {"bow", false}};
+  m_commander->restore_view_state(saved);
+  ASSERT_TRUE(m_commander->active());
+  EXPECT_EQ(m_commander->capture_view_state(), saved);
+  m_commander->primary_action_down();
+  EXPECT_EQ(m_commander->capture_view_state(), saved);
+
+  m_commander->exit_mode();
+  m_commander->restore_view_state({{"active", false}});
+  EXPECT_FALSE(m_commander->active());
+  m_commander->restore_view_state(saved);
+  EXPECT_TRUE(m_commander->active());
+  EXPECT_EQ(m_commander->capture_view_state(), saved);
+  m_commander->update_control_mode(k_tick);
+  EXPECT_FALSE(
+      attack_is_running(*m_world.get_entity(m_commander->controlled_commander_id())));
+}
+
+TEST_F(CommanderViewModelInputTest, FocusLossCancelsAHeldDrawWithoutLoosingAnArrow) {
+  using namespace Engine::Core;
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+  auto* aim = commander->add_component<RpgCommanderAimComponent>();
+  aim->stance = FpvWeaponStance::Bow;
+  aim->stance_resolved = true;
+  aim->draw_stage = BowDrawStage::FullDraw;
+  aim->draw_held = true;
+  auto* action = commander->get_component<RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  action->action_running = true;
+  action->combat_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::RpgBowShot);
+
+  m_commander->release_input();
+  EXPECT_EQ(aim->draw_stage, BowDrawStage::FullDraw);
+  m_commander->update_control_mode(k_tick);
+  EXPECT_EQ(aim->draw_stage, BowDrawStage::None);
+  EXPECT_FALSE(action->action_running);
 }
 
 TEST_F(CommanderViewModelInputTest,

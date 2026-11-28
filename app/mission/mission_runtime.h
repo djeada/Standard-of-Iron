@@ -109,6 +109,7 @@ public:
   void flush_announcements(float dt);
 
 private:
+  void publish_convoy(const MissionBinding& binding);
   void publish_optional_objectives(const MissionBinding& binding);
   void publish_victory_objectives(const MissionBinding& binding);
   [[nodiscard]] auto
@@ -123,6 +124,7 @@ private:
   Game::Mission::MissionStageTracker m_stages;
   Game::Mission::MissionWaveRuntime m_waves;
   float m_stage_poll_accumulator = 0.0F;
+  float m_convoy_poll_accumulator = 0.0F;
   QStringList m_pending_announcements;
   float m_announcement_cooldown = 0.0F;
 };

@@ -1560,6 +1560,15 @@ void GameEngine::finalize_match_load() {
     m_session->submit_clock_change({.speed = m_runtime.time_scale});
   }
   m_tutorial->activate_if_configured(m_campaign_manager.get());
+  apply_mission_starting_control();
+}
+
+void GameEngine::apply_mission_starting_control() {
+  const auto* mission = authored_mission_definition();
+  if (mission != nullptr && mission->start_in_commander_mode &&
+      m_runtime.victory_state.isEmpty()) {
+    m_commander_view_model->enter_mission_mode();
+  }
 }
 
 auto GameEngine::current_mission_definition() const
@@ -1646,7 +1655,8 @@ auto GameEngine::mission_startup_pending_components() const -> QStringList {
   if (AudioSystem::get_instance().has_pending_mission_decodes()) {
     pending << QStringLiteral("mission audio");
   }
-  if (m_world != nullptr && m_session != nullptr && !m_session->log_follower()) {
+  if (m_loading_overlay.awaits_initial_ai() && m_world != nullptr &&
+      m_session != nullptr && !m_session->log_follower()) {
     if (const auto* ai_system = m_world->get_system<Game::Systems::AISystem>();
         ai_system != nullptr && !ai_system->initial_decisions_ready()) {
       pending << QStringLiteral("AI initial decisions");
@@ -1835,7 +1845,7 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
   return m_save_load_coordinator->begin_save_to_slot(
       {.world = *m_world,
        .save_load_service = *m_save_load_service,
-       .camera = m_camera,
+       .camera = m_rts_camera.get(),
        .level = level_snapshot,
        .runtime_snapshot = runtime_snapshot,
        .slot = slot_name,
@@ -1847,9 +1857,10 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
        .kind = kind,
        .play_time_seconds = m_mission->waves().elapsed(),
        .autosave_retention = autosave_retention,
-       .mission_wave_state = m_mission->waves().director().serialize(),
+       .mission_wave_state = m_mission->waves().serialize(),
        .mission_stage_state = m_mission->serialize_stages(),
        .commander_message_state = m_commander_messages->serialize(),
+       .commander_view_state = m_commander_view_model->capture_view_state(),
        .tutorial_state = m_tutorial->serialize(),
        .battle_stats = m_battle_stats->serialize(m_session.get())});
 }
@@ -1971,6 +1982,10 @@ void GameEngine::finish_successful_load(const QString& slot_name,
     emit m_save_slots_view_model->save_completed(slot_name, false, effects.warning);
   }
   restore_environment_after_load();
+  m_commander_view_model->restore_view_state(effects.commander_view_state);
+  if (!effects.commander_view_state.value("active").isBool()) {
+    apply_mission_starting_control();
+  }
   emit victory_state_changed();
   release_loading_overlay_after_load();
 
@@ -2045,7 +2060,9 @@ void GameEngine::release_loading_overlay_after_load() {
   m_runtime.loading = false;
   m_loading_progress_tracker->set_stage(
       LoadingProgressTracker::LoadingStage::FINALIZING);
-  m_loading_overlay.arm_after_load();
+  // Restored battles already have live AI state. New-match preparation runs
+  // before the simulation starts and is only required for a fresh match.
+  m_loading_overlay.arm_after_load(/*wait_for_initial_ai=*/false);
   emit is_loading_changed();
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
   Game::Audio::play_cue(Game::Audio::Cue::k_state_load_complete);

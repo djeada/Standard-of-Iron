@@ -27,7 +27,8 @@ struct CommanderBearing {
     Enemy,
 
     Army,
-    RallyFlag
+    RallyFlag,
+    Convoy
   };
 
   Kind kind{Kind::Enemy};

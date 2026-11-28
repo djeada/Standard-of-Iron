@@ -58,8 +58,11 @@ inline auto spatialize(const AudioListener& listener,
 
 inline auto pan_gains(float pan) -> std::pair<float, float> {
   const float clamped = std::clamp(pan, -1.0F, 1.0F);
-  const float left = clamped <= 0.0F ? 1.0F : 1.0F - clamped;
-  const float right = clamped >= 0.0F ? 1.0F : 1.0F + clamped;
+  constexpr float half_pi = 1.57079632679489661923F;
+  const float left =
+      clamped <= 0.0F ? 1.0F : std::max(0.0F, std::cos(clamped * half_pi));
+  const float right =
+      clamped >= 0.0F ? 1.0F : std::max(0.0F, std::cos((-clamped) * half_pi));
   return {left, right};
 }
 

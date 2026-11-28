@@ -34,6 +34,7 @@ constexpr float k_min_bypass_standoff = 0.75F;
 constexpr float k_bypass_clearance_margin = 0.75F;
 
 constexpr float k_walk_around_arrival_slack = 1.5F;
+constexpr float k_wagon_guard_shoulder = 4.6F;
 
 constexpr float k_max_answer_fire_margin = 12.0F;
 
@@ -211,6 +212,25 @@ auto guard_post_of(const Engine::Core::Entity* entity) -> std::optional<QVector3
     if (auto const* guarded = registry->try_get<Engine::Core::TransformComponent>(
             guard->guarded_entity_id)) {
       post = QVector3D(guarded->position.x, 0.0F, guarded->position.z);
+      const auto* target =
+          registry->try_get<Engine::Core::UnitComponent>(guard->guarded_entity_id);
+      const auto* escort = entity->get_component<Engine::Core::TransformComponent>();
+      if (target != nullptr &&
+          target->spawn_type == Game::Units::SpawnType::SupplyWagon &&
+          escort != nullptr) {
+        const float yaw = guarded->rotation.y * (std::numbers::pi_v<float> / 180.0F);
+        const QVector3D shoulder(std::cos(yaw), 0.0F, -std::sin(yaw));
+        const QVector3D relative(
+            escort->position.x - post.x(), 0.0F, escort->position.z - post.z());
+        const QVector3D previous_post(
+            guard->guard_position_x, 0.0F, guard->guard_position_z);
+        const float held_side = QVector3D::dotProduct(previous_post - post, shoulder);
+        const float offset = std::abs(held_side) > 0.8F
+                                 ? held_side
+                                 : QVector3D::dotProduct(relative, shoulder);
+        const float side = offset < 0.0F ? -1.0F : 1.0F;
+        post += shoulder * (side * k_wagon_guard_shoulder);
+      }
     }
   }
   return post;

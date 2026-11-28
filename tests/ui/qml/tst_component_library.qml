@@ -190,6 +190,47 @@ TestCase {
         button.destroy();
     }
 
+    function test_a_panel_can_pass_wheel_input_without_passing_clicks() {
+        var host = createTemporaryObject(panelHostComponent, testCase);
+        verify(host !== null);
+
+        mouseWheel(host, 50, 50, 0, -120);
+        compare(host.wheelEvents, 0);
+
+        host.panel.shieldsWheel = false;
+        mouseWheel(host, 50, 50, 0, -120);
+        compare(host.wheelEvents, 1);
+        mouseClick(host, 50, 50);
+        compare(host.clicks, 0);
+    }
+
+    Component {
+        id: panelHostComponent
+
+        Item {
+            id: host
+
+            property alias panel: panel
+            property int wheelEvents: 0
+            property int clicks: 0
+
+            width: 120
+            height: 120
+
+            MouseArea {
+                anchors.fill: parent
+                onWheel: host.wheelEvents++
+                onClicked: host.clicks++
+            }
+
+            IronPanel {
+                id: panel
+
+                anchors.fill: parent
+            }
+        }
+    }
+
     Component {
         id: buttonComponent
 

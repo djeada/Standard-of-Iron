@@ -15,8 +15,9 @@ Item {
     property int bottom_panel_height: bottomPanel.height
 
     readonly property int bottom_reserved_height: rpgFpvOverlay.visible ? Math.max(bottomPanel.height, Math.ceil(rpgFpvOverlay.reservedBottom)) : bottomPanel.height
+    readonly property real top_reserved_height: rpgFpvOverlay.visible ? rpgFpvOverlay.reservedTop : Math.max(topPanel.height, hudTop.barHeight)
 
-    readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
+    readonly property int left_stack_bottom: convoyTracker.visible ? convoyTracker.y + convoyTracker.height : (waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height)
 
     readonly property int right_stack_bottom: hudTop.minimapZone.height > 0 ? Math.round(hudTop.minimapZone.y + hudTop.minimapZone.height + Design.Metrics.space8) : topPanel.height + Design.Metrics.space8
 
@@ -31,6 +32,7 @@ Item {
     property bool objectives_visible: false
 
     readonly property bool tutorial_active: typeof game !== 'undefined' && !!game.tutorial && game.tutorial.active
+    readonly property var convoy: (typeof game !== 'undefined' && game && game.mission && game.mission.convoy) ? game.mission.convoy : ({})
 
     readonly property bool modal_panel_open: unitInspectPanel.visible || economyHelpPanel.visible
 
@@ -112,7 +114,7 @@ Item {
         }
         if (hud.blocks_edge_scroll(x, y))
             return true;
-        var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach, allyAppeals, objectivesCard, hudVictory.strip];
+        var floating = [cameraLegendDock, commanderMessage, convoyTracker, waveTracker, economyCoach, allyAppeals, objectivesCard, hudVictory.strip];
         for (var i = 0; i < floating.length; ++i) {
             if (hud.item_covers_pointer(floating[i], x, y))
                 return true;
@@ -362,7 +364,7 @@ Item {
         implicitHeight: objectiveCardContent.implicitHeight + Design.Metrics.space16
         raised: true
 
-        visible: !hudTop.objectiveShownInline && hudTop.primaryObjectiveText !== "" && !hud.commander_finale && !(typeof game !== 'undefined' && game.is_spectator_mode)
+        visible: !convoyTracker.active && !hudTop.objectiveShownInline && hudTop.primaryObjectiveText !== "" && !hud.commander_finale && !(typeof game !== 'undefined' && game.is_spectator_mode)
 
         RowLayout {
             id: objectiveCardContent
@@ -430,6 +432,20 @@ Item {
         }
     }
 
+    ConvoyTracker {
+        id: convoyTracker
+
+        anchors.top: topPanel.bottom
+        anchors.topMargin: Math.max(0, hudTop.barHeight - topPanel.height) + Design.Metrics.space8
+        anchors.left: parent.left
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        width: Math.min(implicitWidth, Math.max(Design.A11y.scaled(190), hud.width * 0.31))
+        convoy: hud.convoy
+        engagedPhase: (typeof game !== 'undefined' && game && game.waves) ? game.waves.current_phase : 0
+        totalPhases: (typeof game !== 'undefined' && game && game.waves) ? game.waves.total_phases : 0
+        visible: active && !hud.commander_finale && (typeof game === 'undefined' || game.victory_state === "")
+    }
+
     WaveTracker {
         id: waveTracker
 
@@ -438,7 +454,7 @@ Item {
         anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0)
         anchors.leftMargin: Design.Metrics.hudZoneMargin
 
-        visible: has_waves && !hud.commander_finale && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
+        visible: has_waves && !convoyTracker.active && !hud.commander_finale && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
     }
 
     MissionDeadline {
@@ -461,7 +477,7 @@ Item {
         anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0)
 
         economy: hud.economy
-        gate: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
+        gate: !convoyTracker.active && !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
         onHelp_requested: economyHelpPanel.visible = true
     }
 
@@ -476,18 +492,49 @@ Item {
         gate: !hud.commander_rpg_mode
     }
 
-    CameraLegend {
-        id: cameraLegend
+    Flickable {
+        id: cameraLegendDock
+        objectName: "cameraLegendDock"
 
-        anchors.right: parent.right
-        anchors.rightMargin: Design.Metrics.hudZoneMargin
-        anchors.bottom: bottomPanel.top
-        anchors.bottomMargin: Design.Metrics.space12
+        anchors.top: parent.top
+        anchors.topMargin: Math.max(hud.top_reserved_height, hud.left_stack_bottom, activeObjectiveCard.visible ? activeObjectiveCard.y + activeObjectiveCard.height : 0, missionDeadline.visible ? missionDeadline.y + missionDeadline.height : 0, economyCoach.visible ? economyCoach.y + economyCoach.height : 0) + Design.Metrics.space8
+        anchors.left: parent.left
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
 
-        gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active && !commanderMessage.showing && !(typeof game !== 'undefined' && game.victory_state !== "")
-        onOpen_settings_requested: {
-            cameraLegend.dismiss();
-            hud.camera_settings_requested();
+        readonly property real rightLimit: hudTop.minimapZone.width > 0 ? hudTop.minimapZone.x : hud.width
+        width: Math.min(cameraLegend.implicitWidth, Math.max(0, rightLimit - anchors.leftMargin - Design.Metrics.space8))
+        height: Math.min(cameraLegend.implicitHeight, Math.max(0, bottomPanel.y - y - Design.Metrics.space12))
+        contentWidth: width
+        contentHeight: cameraLegend.height
+        visible: cameraLegend.armed && cameraLegend.gate && height >= Design.Metrics.space24 * 3
+        clip: true
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
+        interactive: contentHeight > height
+
+        ScrollBar.vertical: Design.IronScrollBar {
+        }
+
+        WheelHandler {
+            target: null
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onWheel: function (event) {
+                var distance = event.pixelDelta.y || event.angleDelta.y * Design.Metrics.space24 / 120;
+                var bottom = cameraLegendDock.contentHeight - cameraLegendDock.height;
+                cameraLegendDock.contentY = Math.max(0, Math.min(bottom, cameraLegendDock.contentY - distance));
+            }
+        }
+
+        CameraLegend {
+            id: cameraLegend
+
+            width: cameraLegendDock.width
+            shieldsWheel: !cameraLegendDock.interactive
+            gate: !hud.commander_rpg_mode && !hud.overlay_active && !hud.tutorial_active && !commanderMessage.showing && !(typeof game !== 'undefined' && game.victory_state !== "")
+            onOpen_settings_requested: {
+                cameraLegend.dismiss();
+                hud.camera_settings_requested();
+            }
         }
     }
 
@@ -617,7 +664,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.left: parent.left
         anchors.leftMargin: Design.Metrics.hudZoneMargin
-        anchors.topMargin: Design.Metrics.space8 + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0) + (economyCoach.visible ? economyCoach.height + Design.Metrics.space8 : 0)
+        anchors.topMargin: Design.Metrics.space8 + (convoyTracker.visible ? convoyTracker.height + Design.Metrics.space8 : 0) + (activeObjectiveCard.visible ? activeObjectiveCard.height + Design.Metrics.space8 : 0) + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0) + (economyCoach.visible ? economyCoach.height + Design.Metrics.space8 : 0)
         width: Math.max(Design.Metrics.space24 * 10, Math.min(Design.A11y.scaled(380), Math.round(hud.width * 0.36)))
         height: Math.min(objectivesCard.max_height, objectivesCard.natural_height)
         visible: hud.objectives_visible && !hud.commander_rpg_mode && !formationPanel.placing && !hud.tutorial_active && !(typeof game !== 'undefined' && game.is_spectator_mode)
@@ -699,8 +746,8 @@ Item {
 
         anchors.fill: parent
         camera: typeof game !== 'undefined' ? game.camera : null
-        topInset: topPanel.height
-        bottomInset: bottomPanel.height
+        topInset: rpgFpvOverlay.visible ? hud.top_reserved_height : topPanel.height
+        bottomInset: hud.bottom_reserved_height
         active: floatingNumbers.visible || rpgFpvOverlay.visible || tutorialFocusOverlay.visible
     }
 
@@ -708,7 +755,13 @@ Item {
         id: rpgFpvOverlay
         anchors.fill: parent
         bottomInset: bottomPanel.height
-        topInset: topPanel.height
+        topInset: convoyTracker.visible ? Math.max(topPanel.height, hudTop.barHeight) : topPanel.height
+        topSideInset: {
+            if (!convoyTracker.visible)
+                return 0;
+            var minimapInset = hudTop.minimapZone.width > 0 ? hud.width - hudTop.minimapZone.x : 0;
+            return Math.max(convoyTracker.x + convoyTracker.width, minimapInset) + Design.Metrics.space8;
+        }
         status: hud.commander_status
         projector: worldProjector
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && !hud.commander_finale

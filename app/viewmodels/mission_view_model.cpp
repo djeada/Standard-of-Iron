@@ -95,6 +95,7 @@ void MissionViewModel::set_optional(const QVariantList& optional) {
 
 void MissionViewModel::clear() {
   set_optional({});
+  set_convoy({});
   if (m_stages.isEmpty() && m_markers.isEmpty() && m_active_index < 0) {
     return;
   }
@@ -104,6 +105,13 @@ void MissionViewModel::clear() {
   m_stages_mirror_victory_conditions = false;
   emit stages_changed();
   set_seconds_until_deadline(-1.0);
+}
+
+void MissionViewModel::set_convoy(const QVariantMap& convoy) {
+  if (m_convoy != convoy) {
+    m_convoy = convoy;
+    emit convoy_changed();
+  }
 }
 
 auto MissionViewModel::active_stage() const -> QVariantMap {

@@ -9,6 +9,7 @@
 #include "../../core/world.h"
 #include "../../map/terrain_service.h"
 #include "../building_line_of_sight.h"
+#include "../camera_obstruction.h"
 #include "../combat_system/combat_utils.h"
 #include "../combat_system/target_rules.h"
 #include "rpg_bow_draw.h"
@@ -294,7 +295,9 @@ auto raycast_enemy_bodies(Engine::Core::World& world,
         continue;
       }
       QVector3D const point = ray.origin + (ray.direction * *distance);
-      if (!has_clear_building_los(buildings, ray.origin, point)) {
+      if (!has_clear_building_los(buildings, ray.origin, point) ||
+          first_wagon_intersection_fraction(
+              &world, ray.origin, point, 0.0F, target.entity_id) < 1.0F) {
         continue;
       }
       best = AimHit{.entity_id = target.entity_id,
@@ -341,6 +344,7 @@ auto resolve_bow_shot(Engine::Core::World& world,
   max_range = std::max(1.0F, max_range);
 
   constexpr float k_shot_forgiveness = 0.04F;
+  const auto& buildings = *Game::Session::services_for(world).building_collision;
   float travel = max_range;
   if (auto const hit = raycast_enemy_bodies(
           world, commander, sight, max_range, k_shot_forgiveness)) {
@@ -351,16 +355,26 @@ auto resolve_bow_shot(Engine::Core::World& world,
     if (auto const ground = terrain_distance_along(world, sight, max_range)) {
       travel = std::min(travel, *ground);
     }
-    float const wall_fraction = first_building_intersection_fraction(
-        *Game::Session::services_for(world).building_collision,
-        sight.origin,
-        sight.origin + (sight.direction * travel));
-    travel *= std::clamp(wall_fraction, 0.0F, 1.0F);
+    const auto end = sight.origin + sight.direction * travel;
+    const float wall =
+        first_building_intersection_fraction(buildings, sight.origin, end);
+    const float wagon =
+        first_wagon_intersection_fraction(&world, sight.origin, end, 0.0F);
+    travel *= std::min(wall, wagon);
   }
 
   shot.impact = sight.origin + (sight.direction * std::max(travel, 0.25F));
 
   shot.start = bow_muzzle(commander, aim);
+  const float muzzle_clear =
+      std::min(first_building_intersection_fraction(buildings, shot.start, shot.impact),
+               first_wagon_intersection_fraction(
+                   &world, shot.start, shot.impact, 0.0F, shot.hit.entity_id));
+  if (muzzle_clear < 1.0F) {
+    shot.impact = shot.start + (shot.impact - shot.start) * muzzle_clear;
+    shot.hit_body = false;
+    shot.hit = {};
+  }
   shot.end = shot.impact;
   return shot;
 }

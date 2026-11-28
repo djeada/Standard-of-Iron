@@ -847,6 +847,7 @@ add_library(
     mission/commander_speaker_roster.cpp
     mission/commander_voice_observer.cpp
     mission/difficulty_forces.cpp
+    mission/mission_convoy.cpp
     mission/mission_setup_coordinator.cpp
     mission/mission_wave_director.cpp
     mission/mission_wave_runtime.cpp

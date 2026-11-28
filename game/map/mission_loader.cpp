@@ -8,9 +8,14 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QSet>
+
+#include <cmath>
+#include <utility>
 
 #include "../systems/resource_json.h"
 #include "commander_message_grammar.h"
+#include "game/units/spawn_type.h"
 
 namespace Game::Mission {
 
@@ -180,6 +185,7 @@ auto MissionLoader::parse_wave(const QJsonObject& obj) -> Wave {
   wave.archetype = obj["archetype"].toString().trimmed().toLower();
   wave.strength = static_cast<float>(obj["strength"].toDouble(1.0));
   wave.label = obj["label"].toString();
+  wave.convoy_checkpoint = obj["convoy_checkpoint"].toString().trimmed();
   if (obj.contains("clear_reward")) {
     wave.clear_reward = parse_resources(obj["clear_reward"].toObject());
   }
@@ -397,6 +403,101 @@ auto resolve_mission_relative_path(const QString& map_path,
 
 } // namespace
 
+auto MissionLoader::parse_convoy(const QJsonObject& authored,
+                                 const MissionDefinition& mission,
+                                 QString* error_msg)
+    -> std::optional<ConvoyDefinition> {
+  ConvoyDefinition convoy;
+  convoy.speed = static_cast<float>(authored["speed"].toDouble(convoy.speed));
+  convoy.wagon_spacing =
+      static_cast<float>(authored["wagon_spacing"].toDouble(convoy.wagon_spacing));
+  convoy.wagon_health = authored["wagon_health"].toInt(convoy.wagon_health);
+  const auto invalid =
+      [error_msg](const QString& message) -> std::optional<ConvoyDefinition> {
+    if (error_msg != nullptr) {
+      *error_msg = QStringLiteral("Invalid convoy: %1").arg(message);
+    }
+    return std::nullopt;
+  };
+  for (const auto value : authored["wagons"].toArray()) {
+    const QString name = value.toString().trimmed();
+    if (name.isEmpty() || convoy.wagons.contains(name)) {
+      return invalid(QStringLiteral("wagons need unique names"));
+    }
+    convoy.wagons.append(name);
+  }
+  QSet<QString> checkpoints;
+  for (const auto value : authored["route"].toArray()) {
+    const auto point = value.toObject();
+    const QString id = point["id"].toString().trimmed();
+    const auto position = parse_position(point);
+    if (!point["x"].isDouble() || !point["z"].isDouble() ||
+        !std::isfinite(position.x) || !std::isfinite(position.z) ||
+        (!id.isEmpty() && checkpoints.contains(id))) {
+      return invalid(QStringLiteral("route points need coordinates and unique IDs"));
+    }
+    if (!id.isEmpty()) {
+      checkpoints.insert(id);
+    }
+    convoy.route.push_back(
+        {.position = position, .id = id, .name = point["name"].toString().trimmed()});
+  }
+  if (convoy.wagons.isEmpty() || convoy.route.size() < 2 ||
+      !std::isfinite(convoy.speed) || !(convoy.speed > 0.0F) ||
+      !std::isfinite(convoy.wagon_spacing) || !(convoy.wagon_spacing > 0.0F) ||
+      convoy.wagon_health < 1) {
+    return invalid(QStringLiteral("provide wagons, a route and positive wagon stats"));
+  }
+  for (std::size_t i = 1; i < convoy.route.size(); ++i) {
+    const auto& from = convoy.route[i - 1].position;
+    const auto& to = convoy.route[i].position;
+    if (from.x == to.x && from.z == to.z) {
+      return invalid(QStringLiteral("consecutive route points must be distinct"));
+    }
+  }
+  const auto wave_at_checkpoint = [&checkpoints](const Wave& wave) {
+    return checkpoints.contains(wave.convoy_checkpoint) &&
+           wave.trigger == WaveTriggerMode::Time;
+  };
+  for (const auto& ai : mission.ai_setups) {
+    for (const auto& wave : ai.waves) {
+      if (!wave.convoy_checkpoint.isEmpty() && !wave_at_checkpoint(wave)) {
+        return invalid(QStringLiteral("an assault references an unknown checkpoint "
+                                      "or combines checkpoint and clear triggers"));
+      }
+    }
+  }
+  for (const auto value : authored["reinforcements"].toArray()) {
+    const auto entry = value.toObject();
+    auto wave = parse_wave(entry);
+    if (!wave_at_checkpoint(wave) || wave.label.isEmpty() || wave.composition.empty() ||
+        !(entry.contains("entry_point") || !wave.entry_points.empty())) {
+      return invalid(QStringLiteral("relief waves need a checkpoint, label, entry "
+                                    "point and composition"));
+    }
+    for (const auto& comp : wave.composition) {
+      Game::Units::SpawnType spawn{};
+      if (!Game::Units::try_parse_spawn_type(comp.type, spawn) ||
+          !Game::Units::is_troop_spawn(spawn) || comp.count < 1) {
+        return invalid(QStringLiteral("relief waves must contain valid troops"));
+      }
+    }
+    convoy.reinforcements.push_back(std::move(wave));
+  }
+  for (const auto* conditions : {&mission.victory_conditions,
+                                 &mission.defeat_conditions,
+                                 &mission.optional_objectives}) {
+    for (const auto& condition : *conditions) {
+      if ((condition.type == "escort_convoy" || condition.type == "lose_convoy") &&
+          (condition.min_count.value_or(0) < 1 ||
+           condition.min_count.value_or(0) > convoy.wagons.size())) {
+        return invalid(QStringLiteral("objective counts must fit the wagon roster"));
+      }
+    }
+  }
+  return convoy;
+}
+
 auto MissionLoader::load_from_json_file(const QString& file_path,
                                         MissionDefinition& out_mission,
                                         QString* error_msg) -> bool {
@@ -511,6 +612,15 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
   if (root.contains("commander_voices")) {
     out_mission.commander_voices =
         parse_commander_voices_policy(root["commander_voices"].toObject());
+  }
+
+  out_mission.start_in_commander_mode = root["start_in_commander_mode"].toBool();
+  if (root.contains("convoy")) {
+    out_mission.convoy =
+        parse_convoy(root["convoy"].toObject(), out_mission, error_msg);
+    if (!out_mission.convoy.has_value()) {
+      return false;
+    }
   }
 
   out_mission.include_ambient_undead =

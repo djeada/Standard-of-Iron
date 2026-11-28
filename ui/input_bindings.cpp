@@ -175,6 +175,13 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   {},
                   QStringLiteral("Space"),
                   false});
+  catalog.append({QStringLiteral("commander.pause"),
+                  commander,
+                  system,
+                  QObject::tr("Pause"),
+                  {},
+                  QStringLiteral("P"),
+                  false});
   catalog.append({QStringLiteral("rts.speed_up"),
                   rts,
                   system,

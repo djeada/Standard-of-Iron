@@ -23,6 +23,7 @@
 #include "game/command/command_queue.h"
 #include "game/command/command_system.h"
 #include "game/commander/commander_handoff.h"
+#include "game/core/component_combat.h"
 #include "game/core/component_commander.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -143,13 +144,58 @@ void CommanderViewModel::toggle_mode() {
     return;
   }
   const auto frame_lock = m_host.lock_frame();
-  if (queue_action(Game::Command::CommanderAction::ToggleControl)) {
+  const auto action = active() ? Game::Command::CommanderAction::ExitControl
+                               : Game::Command::CommanderAction::EnterControl;
+  if (queue_action(action)) {
     return;
   }
   if (active()) {
     leave_commander_mode();
   } else {
     enter_mode();
+  }
+}
+
+void CommanderViewModel::enter_mission_mode() {
+  const auto frame_lock = m_host.lock_frame();
+  m_skip_entry_dive = true;
+  enter_mode();
+}
+
+auto CommanderViewModel::capture_view_state() const -> QJsonObject {
+  const auto* entity = active() ? controlled_commander_entity() : nullptr;
+  const auto* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  if (unit == nullptr || unit->health <= 0 || finale_active()) {
+    return {{"active", false}};
+  }
+  QJsonObject view{{"active", true},
+                   {"yaw", m_control.view_yaw()},
+                   {"pitch", m_control.view_pitch()}};
+  if (m_center_first_army_view) {
+    view["center_first_army_view"] = true;
+  }
+  if (const auto* data = entity->get_component<Engine::Core::CommanderComponent>()) {
+    view["close_camera"] = data->close_camera_mode;
+  }
+  if (const auto* aim = entity->get_component<Engine::Core::RpgCommanderAimComponent>();
+      aim != nullptr && aim->stance_resolved) {
+    view["bow"] = aim->stance == Engine::Core::FpvWeaponStance::Bow;
+  }
+  return view;
+}
+
+void CommanderViewModel::restore_view_state(const QJsonObject& state) {
+  const auto frame_lock = m_host.lock_frame();
+  const auto* commander = find_local_commander();
+  if (commander == nullptr) {
+    return;
+  }
+  Game::Commander::end_control(m_context.world, commander->get_id());
+  if (state.value("active").toBool()) {
+    m_restored_view = state;
+    enter_mission_mode();
   }
 }
 
@@ -203,10 +249,24 @@ void CommanderViewModel::enter_mode() {
   if (auto* system = m_context.world->get_system<Game::Command::CommandSystem>()) {
     m_control.bind_runtime(system->commander_runtime(m_context.local_owner_id));
   }
-  if (effects.commander_view_yaw.has_value()) {
-    m_control.set_view_yaw(*effects.commander_view_yaw);
+  const QJsonObject restored_view = std::exchange(m_restored_view, {});
+  m_control.set_view_yaw(static_cast<float>(restored_view.value("yaw").toDouble(
+      effects.commander_view_yaw.value_or(m_control.view_yaw()))));
+  m_control.set_view_pitch(static_cast<float>(
+      restored_view.value("pitch").toDouble(k_commander_rest_view_pitch_degrees)));
+  if (restored_view.value("close_camera").isBool()) {
+    commander->get_component<Engine::Core::CommanderComponent>()->close_camera_mode =
+        restored_view.value("close_camera").toBool();
   }
-  m_control.set_view_pitch(k_commander_rest_view_pitch_degrees);
+  if (restored_view.value("bow").isBool()) {
+    auto* aim =
+        Engine::Core::get_or_add_component<Engine::Core::RpgCommanderAimComponent>(
+            commander);
+    aim->stance = restored_view.value("bow").toBool()
+                      ? Engine::Core::FpvWeaponStance::Bow
+                      : Engine::Core::FpvWeaponStance::Melee;
+    aim->stance_resolved = true;
+  }
   reset_input();
   emit active_camera_requested(commander_camera);
 
@@ -216,7 +276,11 @@ void CommanderViewModel::enter_mode() {
     m_control.update_camera_presentation(
         *world, m_controlled_commander_id, *commander_camera, 0.0F);
   }
-  if (m_context.rts_camera != nullptr && m_rts_camera_bookmark.valid &&
+  const bool animate_entry = !std::exchange(m_skip_entry_dive, false);
+  m_center_first_army_view =
+      restored_view.isEmpty() ? !animate_entry
+                              : restored_view.value("center_first_army_view").toBool();
+  if (animate_entry && m_context.rts_camera != nullptr && m_rts_camera_bookmark.valid &&
       !Game::Accessibility::MotionSettings::reduced_motion()) {
     m_entry_dive.begin(m_context.rts_camera->get_position(),
                        m_context.rts_camera->get_target());
@@ -249,6 +313,21 @@ void CommanderViewModel::exit_mode() {
 void CommanderViewModel::leave_commander_mode() {
   const auto frame_lock = m_host.lock_frame();
   const bool was_active = active();
+  if (std::exchange(m_center_first_army_view, false) && was_active &&
+      m_rts_camera_bookmark.valid) {
+    const auto* commander = controlled_commander_entity();
+    if (commander != nullptr) {
+      const auto* unit = commander->get_component<Engine::Core::UnitComponent>();
+      const auto* transform =
+          commander->get_component<Engine::Core::TransformComponent>();
+      if (unit != nullptr && unit->health > 0 && transform != nullptr) {
+        const QVector3D target(
+            transform->position.x, transform->position.y, transform->position.z);
+        m_rts_camera_bookmark.position += target - m_rts_camera_bookmark.target;
+        m_rts_camera_bookmark.target = target;
+      }
+    }
+  }
   clear_finale();
   m_entry_dive.end();
   const auto signals_before = capture_mode_signals();
@@ -1239,6 +1318,9 @@ void CommanderViewModel::render_effects() {
 }
 
 void CommanderViewModel::reset_for_new_match() {
+  m_skip_entry_dive = false;
+  m_center_first_army_view = false;
+  m_restored_view = {};
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
       [this, signals_before]() { emit_mode_signal_changes(signals_before); });

@@ -215,7 +215,7 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
 
   if (m_traits.has_time_based_victory || m_traits.has_undead_zone_rules ||
       m_traits.has_resource_victory || m_traits.has_wave_victory ||
-      m_traits.has_time_limit_defeat) {
+      m_traits.has_time_limit_defeat || m_traits.has_convoy_rules) {
     evaluate_polled_rules();
   }
 }
@@ -572,6 +572,13 @@ auto VictoryService::counted_progress(const VictoryRule& rule) const
                                 : 0,
                 .required = std::max(1, wave_rule.required_wave_count)};
           },
+          [this](const EscortConvoyVictoryRule& convoy_rule)
+              -> std::optional<CountedProgress> {
+            return CountedProgress{.progress = m_convoy_query != nullptr
+                                                   ? m_convoy_query->delivered_wagons()
+                                                   : 0,
+                                   .required = convoy_rule.required_wagons};
+          },
           [this](const ControlStructuresVictoryRule& control_rule)
               -> std::optional<CountedProgress> {
             return CountedProgress{
@@ -708,6 +715,14 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
                    m_mission_wave_query->cleared_wave_count() >=
                        std::max(1, wave_rule.required_wave_count);
           },
+          [this, &summary](const EscortConvoyVictoryRule& convoy_rule) {
+            if (m_convoy_query == nullptr || summary.local_commander_count == 0) {
+              return false;
+            }
+            const int delivered = m_convoy_query->delivered_wagons();
+            return delivered >= convoy_rule.required_wagons &&
+                   delivered == m_convoy_query->available_wagons();
+          },
           [this](const AccumulateResourcesVictoryRule& resource_rule) {
             return m_economy.has_harvested_at_least(m_objective_owner,
                                                     resource_rule.required);
@@ -758,6 +773,10 @@ auto VictoryService::check_defeat_rule(const DefeatRule& rule,
           },
           [this](const TimeLimitDefeatRule& time_limit_rule) {
             return m_elapsed_time >= static_cast<double>(time_limit_rule.duration);
+          },
+          [this](const LoseConvoyDefeatRule& convoy_rule) {
+            return m_convoy_query != nullptr &&
+                   m_convoy_query->available_wagons() < convoy_rule.required_wagons;
           }},
       rule);
 }

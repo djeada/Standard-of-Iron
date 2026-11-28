@@ -54,11 +54,12 @@ enum class SpawnType : std::uint8_t {
   MercenaryCamp,
   ElephantStables,
   Fabrica,
-  Castra
+  Castra,
+  SupplyWagon
 };
 
 inline constexpr std::size_t k_spawn_type_count =
-    static_cast<std::size_t>(SpawnType::Castra) + 1U;
+    static_cast<std::size_t>(SpawnType::SupplyWagon) + 1U;
 
 constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
   switch (type) {
@@ -66,6 +67,8 @@ constexpr auto spawn_type_name(SpawnType type) -> std::string_view {
     return "slinger";
   case SpawnType::Velites:
     return "velites";
+  case SpawnType::SupplyWagon:
+    return "supply_wagon";
   case SpawnType::Archer:
     return "archer";
   case SpawnType::Swordsman:
@@ -152,6 +155,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("slinger");
   case SpawnType::Velites:
     return QStringLiteral("velites");
+  case SpawnType::SupplyWagon:
+    return QStringLiteral("supply_wagon");
   case SpawnType::Archer:
     return QStringLiteral("archer");
   case SpawnType::Swordsman:
@@ -244,6 +249,10 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
   }
   if (lowered == QStringLiteral("velites")) {
     out = SpawnType::Velites;
+    return true;
+  }
+  if (lowered == QStringLiteral("supply_wagon")) {
+    out = SpawnType::SupplyWagon;
     return true;
   }
   if (lowered == QStringLiteral("archer")) {
@@ -412,6 +421,9 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "velites") {
     return SpawnType::Velites;
   }
+  if (str == "supply_wagon") {
+    return SpawnType::SupplyWagon;
+  }
   if (str == "archer") {
     return SpawnType::Archer;
   }
@@ -567,7 +579,8 @@ inline auto is_building_spawn(SpawnType type) -> bool {
 }
 
 inline auto is_troop_spawn(SpawnType type) -> bool {
-  return !is_building_spawn(type) && !is_wildlife_spawn(type);
+  return !is_building_spawn(type) && !is_wildlife_spawn(type) &&
+         type != SpawnType::SupplyWagon;
 }
 
 [[nodiscard]] inline auto is_recruitment_building(SpawnType type) noexcept -> bool {
@@ -705,7 +718,7 @@ turn_in_place_speed_degrees(SpawnType type) noexcept -> float {
 
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
-         !is_building_spawn(type) && !is_wildlife_spawn(type);
+         is_troop_spawn(type);
 }
 
 [[nodiscard]] inline auto is_combatant_spawn(SpawnType type) -> bool {
@@ -713,7 +726,7 @@ inline auto can_use_attack_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_guard_mode(SpawnType type) -> bool {
-  return !is_building_spawn(type) && !is_wildlife_spawn(type);
+  return is_troop_spawn(type);
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
@@ -721,7 +734,7 @@ inline auto can_use_hold_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
-  return !is_building_spawn(type) && !is_wildlife_spawn(type);
+  return is_troop_spawn(type);
 }
 
 [[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
@@ -760,6 +773,7 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Temple:
   case SpawnType::Farm:
   case SpawnType::WallLadder:
+  case SpawnType::SupplyWagon:
   case SpawnType::Sheep:
   case SpawnType::Wolf:
   case SpawnType::Elephant:
@@ -845,6 +859,7 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   case SpawnType::ElephantStables:
   case SpawnType::Fabrica:
   case SpawnType::Castra:
+  case SpawnType::SupplyWagon:
     return std::nullopt;
   case SpawnType::Sheep:
     return TroopType::Sheep;

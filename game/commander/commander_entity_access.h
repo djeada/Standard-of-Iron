@@ -33,6 +33,7 @@ struct CommanderHandles {
     -> Game::Systems::CombatActions::MeleeInterruption;
 
 void cancel_current_attack(Engine::Core::Entity& commander);
+void cancel_held_bow_draw(Engine::Core::Entity& commander);
 void publish_cue(
     int owner,
     const char* cue,

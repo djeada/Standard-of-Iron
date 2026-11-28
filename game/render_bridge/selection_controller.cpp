@@ -205,6 +205,7 @@ void SelectionController::select_all_player_units_of_type(const QString& unit_ty
   m_selection_system->clear_selection();
   for (auto [id, unit] : m_world->view<const Engine::Core::UnitComponent>()) {
     if (unit.owner_id != local_owner_id || unit.health <= 0 ||
+        unit.spawn_type == Game::Units::SpawnType::SupplyWagon ||
         m_world->has<Engine::Core::BuildingComponent>(id)) {
       continue;
     }
@@ -238,7 +239,8 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
       continue;
     }
 
-    if (unit->spawn_type == Game::Units::SpawnType::Builder ||
+    if (unit->spawn_type == Game::Units::SpawnType::SupplyWagon ||
+        unit->spawn_type == Game::Units::SpawnType::Builder ||
         unit->spawn_type == Game::Units::SpawnType::Civilian) {
       continue;
     }
@@ -293,7 +295,8 @@ void SelectionController::select_single_unit(Engine::Core::EntityID id,
   }
 
   auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  if ((unit == nullptr) || (unit->health <= 0) || (unit->owner_id != local_owner_id)) {
+  if (unit == nullptr || unit->health <= 0 || unit->owner_id != local_owner_id ||
+      unit->spawn_type == Game::Units::SpawnType::SupplyWagon) {
     return;
   }
 

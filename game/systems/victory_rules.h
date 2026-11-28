@@ -49,6 +49,10 @@ struct SurviveWavesVictoryRule {
   int required_wave_count = 1;
 };
 
+struct EscortConvoyVictoryRule {
+  int required_wagons = 1;
+};
+
 struct AccumulateResourcesVictoryRule {
   ResourceAmounts required;
 };
@@ -63,6 +67,7 @@ using VictoryRule = std::variant<EliminationVictoryRule,
                                  PurifyShrineVictoryRule,
                                  SurviveUndeadWaveVictoryRule,
                                  SurviveWavesVictoryRule,
+                                 EscortConvoyVictoryRule,
                                  AccumulateResourcesVictoryRule,
                                  EliminateCommandersVictoryRule>;
 
@@ -82,11 +87,16 @@ struct TimeLimitDefeatRule {
   float duration = 0.0F;
 };
 
+struct LoseConvoyDefeatRule {
+  int required_wagons = 1;
+};
+
 using DefeatRule = std::variant<NoUnitsDefeatRule,
                                 NoKeyStructuresDefeatRule,
                                 NoCommanderDefeatRule,
                                 OnlyCommanderRemainingDefeatRule,
-                                TimeLimitDefeatRule>;
+                                TimeLimitDefeatRule,
+                                LoseConvoyDefeatRule>;
 
 struct VictoryObjective {
   VictoryObjective() = default;

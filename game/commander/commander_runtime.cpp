@@ -139,6 +139,7 @@ void CommanderRuntime::release_all_input() {
   m_input_port.release_all();
   m_locomotion.release_input();
   m_strike.release_input();
+  m_cancel_held_draw = true;
 }
 
 void CommanderRuntime::reset() {
@@ -750,6 +751,9 @@ auto CommanderRuntime::advance(Engine::Core::World& world,
     return false;
   }
 
+  if (std::exchange(m_cancel_held_draw, false)) {
+    cancel_held_bow_draw(*commander);
+  }
   set_view(frame.view_yaw, frame.view_pitch);
   m_camera_fov = frame.camera_fov;
   m_input_port.apply_snapshot(CommanderInputSnapshot::from_record(frame));

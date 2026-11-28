@@ -269,7 +269,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: Design.Numerals.percent(Math.floor(load_screen.display_progress * 100))
+                text: qsTr("%1%").arg(Math.floor(load_screen.display_progress * 100))
                 color: Theme.textMain
                 font.pixelSize: Design.Typography.label
                 font.bold: true

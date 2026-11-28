@@ -114,8 +114,9 @@ private:
     int track = -1;
     unsigned frame_pos = 0;
     float current_volume = 0.0F;
+    float fade_start_volume = 0.0F;
     float target_volume = DEFAULT_VOLUME;
-    float volume_step = 0.0F;
+    unsigned fade_total_samples = 0;
     unsigned fade_samples = 0;
     bool looping = false;
     bool paused = false;
@@ -141,7 +142,9 @@ private:
     float gain_left = DEFAULT_VOLUME;
     float gain_right = DEFAULT_VOLUME;
     unsigned fade_samples = 0;
+    std::uint64_t play_order = 0;
     bool looping = false;
+    bool stopping = false;
     bool active = false;
   };
 
@@ -205,6 +208,7 @@ private:
 
   std::vector<Channel> m_channels;
   std::vector<SoundEffect> m_sound_effects;
+  std::uint64_t m_next_sfx_order{0};
   float m_master_volume{DEFAULT_VOLUME};
   Game::Audio::BusLimiter m_bus_limiter;
   Game::Audio::GameplayMix m_gameplay_mix;

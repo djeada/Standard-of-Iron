@@ -95,6 +95,7 @@ struct Wave {
   QString archetype;
   float strength = 1.0F;
   QString label;
+  QString convoy_checkpoint;
   Resources clear_reward;
 
   [[nodiscard]] auto resolved_entry_points() const -> std::vector<Position> {
@@ -103,6 +104,21 @@ struct Wave {
     }
     return {entry_point};
   }
+};
+
+struct ConvoyWaypoint {
+  Position position;
+  QString id;
+  QString name;
+};
+
+struct ConvoyDefinition {
+  QStringList wagons;
+  std::vector<ConvoyWaypoint> route;
+  std::vector<Wave> reinforcements;
+  float speed = 1.15F;
+  float wagon_spacing = 5.0F;
+  int wagon_health = 1400;
 };
 
 struct AISetup {
@@ -345,6 +361,8 @@ struct MissionDefinition {
   std::optional<QString> historical_context;
   std::optional<QString> terrain_type;
   PlayerSetup player_setup;
+  std::optional<ConvoyDefinition> convoy;
+  bool start_in_commander_mode = false;
   std::vector<AISetup> ai_setups;
   QString victory_mode = QStringLiteral("any");
   std::vector<Condition> victory_conditions;

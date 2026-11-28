@@ -80,6 +80,7 @@ struct EntityFrame {
   Pathfinding::Passability passability{Pathfinding::Passability::Light};
   bool mounted{false};
   const std::vector<SolidBody>* solid_bodies{nullptr};
+  bool has_wagon_obstacles{false};
   const Game::Map::WorldPropClearanceIndex* props{nullptr};
   float frame_sign{1.0F};
   float delta_time{0.0F};

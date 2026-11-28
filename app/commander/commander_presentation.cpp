@@ -223,6 +223,7 @@ auto build_camera_inputs(Engine::Core::World& world,
   inputs.terrain = &camera_session.terrain();
   inputs.buildings = &camera_session.building_collision();
   inputs.shut_gates = Game::Systems::GateService::blockers();
+  inputs.world = &world;
   return inputs;
 }
 

@@ -49,7 +49,8 @@ public:
     return active() ? m_load_sequence : 0;
   }
   void abort();
-  void arm_after_load();
+  void arm_after_load(bool wait_for_initial_ai = true);
+  [[nodiscard]] auto awaits_initial_ai() const -> bool { return m_wait_for_initial_ai; }
   void set_window_minimized(bool minimized);
   void set_show_objectives_after_loading(bool show) { m_show_objectives = show; }
 
@@ -71,6 +72,7 @@ private:
   bool m_window_minimized = false;
   bool m_finalize_progress = false;
   bool m_show_objectives = false;
+  bool m_wait_for_initial_ai = false;
 };
 
 } // namespace App::Session

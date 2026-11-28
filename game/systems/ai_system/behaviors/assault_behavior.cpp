@@ -122,6 +122,16 @@ auto is_commander_contact(const ContactSnapshot& contact) -> bool {
   return troop.has_value() && Game::Units::is_commander_troop(*troop);
 }
 
+auto raid_target_score(const ContactSnapshot& contact,
+                       float from_x,
+                       float from_z) -> float {
+  const float distance =
+      distance_squared(contact.pos_x, 0.0F, contact.pos_z, from_x, 0.0F, from_z);
+  // Raiders favor reachable cargo, but will fight an escort that intercepts them.
+  return contact.spawn_type == Game::Units::SpawnType::SupplyWagon ? distance * 0.45F
+                                                                   : distance;
+}
+
 struct Engagement {
   Engine::Core::EntityID target_id = 0;
   std::vector<Engine::Core::EntityID> units;
@@ -192,12 +202,8 @@ auto spread_engagements(const std::vector<const EntitySnapshot*>& engaging,
       if (engagements[index].units.size() >= cap_for(*quarries[index])) {
         continue;
       }
-      const float distance = distance_squared(unit->pos_x,
-                                              0.0F,
-                                              unit->pos_z,
-                                              quarries[index]->pos_x,
-                                              0.0F,
-                                              quarries[index]->pos_z);
+      const float distance =
+          raid_target_score(*quarries[index], unit->pos_x, unit->pos_z);
       if (distance < best_distance) {
         best_distance = distance;
         best = index;
@@ -242,8 +248,7 @@ auto select_assault_target(const AISnapshot& snapshot,
     if (skip_barriers && is_barrier(candidate)) {
       continue;
     }
-    const float score = distance_squared(
-        candidate.pos_x, 0.0F, candidate.pos_z, reference_x, 0.0F, reference_z);
+    const float score = raid_target_score(candidate, reference_x, reference_z);
     if (score < best_score) {
       best_score = score;
       best = &candidate;
@@ -261,8 +266,7 @@ auto select_assault_target(const AISnapshot& snapshot,
     if (skip_barriers && is_barrier(objective)) {
       continue;
     }
-    const float score = distance_squared(
-        objective.pos_x, 0.0F, objective.pos_z, reference_x, 0.0F, reference_z);
+    const float score = raid_target_score(objective, reference_x, reference_z);
     if (score < best_score) {
       best_score = score;
       best = &objective;

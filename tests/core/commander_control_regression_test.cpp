@@ -171,8 +171,8 @@ TEST(CommanderControlRegressionTest, CommanderInputLayerReleasesEveryHeldInputAt
   ASSERT_FALSE(view_model_source.empty());
 
   EXPECT_TRUE(contains(source, "root.commander.release_input();"));
-  EXPECT_TRUE(contains(source, "onActiveChanged"));
-  EXPECT_TRUE(contains(source, "onMenu_visibleChanged"));
+  EXPECT_TRUE(contains(source, "onPointer_ownedChanged"));
+  EXPECT_TRUE(contains(source, "!root.mainWindowRef.simulation_suspended"));
   EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::release_input()"));
   EXPECT_TRUE(contains(view_model_source, "m_control.release_all_input();"));
   EXPECT_FALSE(contains(view_model_source, "m_control.primary_action("));
@@ -193,8 +193,9 @@ TEST(CommanderControlRegressionTest, GameViewRestoresInputFocusAcrossModes) {
   EXPECT_TRUE(contains(source, "function is_commander_mode()"));
   EXPECT_TRUE(contains(source, "function input_context()"));
 
-  EXPECT_TRUE(contains(source, "game.commander.key_down(canonical, event.modifiers)"));
-  EXPECT_TRUE(contains(source, "InputBindings.canonical_key_for(actionId)"));
+  EXPECT_TRUE(contains(source, "commanderLayer.perform_action(actionId, event)"));
+  EXPECT_TRUE(contains(source, "commanderLayer.handle_key_released(event)"));
+  EXPECT_TRUE(contains(commander_source, "InputBindings.canonical_key_for(actionId)"));
   EXPECT_TRUE(contains(source, "game.commander.toggle_mode()"));
   EXPECT_TRUE(contains(source, "function onControl_mode_changed()"));
   EXPECT_TRUE(contains(source, "game_view.forceActiveFocus();"));
@@ -458,7 +459,7 @@ TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMo
   EXPECT_TRUE(contains(hud_source, "game.commander.begin_barracks_rally();"));
 }
 
-TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
+TEST(CommanderControlRegressionTest, SaveAndLoadKeepThePlayersControlMode) {
   const auto root = find_repo_root();
   const auto engine_source = app_source(root, "game_engine.cpp");
   ASSERT_FALSE(engine_source.empty());
@@ -470,17 +471,12 @@ TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
                        "  reset_preload_interaction_state();"));
   const auto save_controller_source =
       read_text(root / "app" / "persistence" / "save_slot_controller.cpp");
-  const auto wiring_source = app_source(root, "game_engine_wiring.cpp");
   ASSERT_FALSE(save_controller_source.empty());
-  ASSERT_FALSE(wiring_source.empty());
-  EXPECT_TRUE(contains(save_controller_source,
-                       "m_hooks.leave_commander_mode();\n\n"
-                       "  m_progress_slot = slot_name;"));
-  EXPECT_TRUE(
-      contains(wiring_source,
-               "if (m_commander_view_model->active()) {\n"
-               "                  m_commander_view_model->leave_commander_mode();\n"
-               "                }"));
+  EXPECT_FALSE(contains(save_controller_source, "leave_commander_mode"));
+  EXPECT_TRUE(contains(engine_source, "m_commander_view_model->capture_view_state()"));
+  EXPECT_TRUE(contains(
+      engine_source,
+      "m_commander_view_model->restore_view_state(effects.commander_view_state)"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -686,8 +682,8 @@ TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGame
   EXPECT_TRUE(contains(main_qml, "id: commanderCursorOverlay"));
   EXPECT_TRUE(contains(main_qml, "acceptedButtons: Qt.NoButton"));
   EXPECT_TRUE(contains(main_qml, "cursorShape: Qt.BlankCursor"));
-  EXPECT_TRUE(contains(main_qml, "game.commander.mode_state === \"active\" &&"));
-  EXPECT_TRUE(contains(main_qml, "!save_game_panel.visible &&"));
+  EXPECT_TRUE(contains(main_qml, "visible: gameViewItem.commander_pointer_owned"));
+  EXPECT_TRUE(contains(main_qml, "quickload_dialog.visible || error_dialog.visible"));
 }
 
 TEST(CommanderControlRegressionTest, FpvMovementSetsHasTargetForAnimationSystem) {
@@ -837,8 +833,8 @@ TEST(CommanderControlRegressionTest, CommanderJumpKeyReachesTheController) {
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.jump\":"));
   EXPECT_TRUE(contains(layer_source, "root.commander.jump()"));
-  EXPECT_TRUE(contains(game_view_source, "case \"commander.jump\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander.jump()"));
+  EXPECT_TRUE(
+      contains(game_view_source, "commanderLayer.perform_action(actionId, event)"));
   EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void jump();"));
   EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::jump()"));
   EXPECT_TRUE(contains(controller_header, "void request_jump();"));
@@ -863,8 +859,8 @@ TEST(CommanderControlRegressionTest, CommanderCameraToggleReachesTheController) 
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.toggle_camera_mode\":"));
   EXPECT_TRUE(contains(layer_source, "root.commander.toggle_camera_mode()"));
-  EXPECT_TRUE(contains(game_view_source, "case \"commander.toggle_camera_mode\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander.toggle_camera_mode()"));
+  EXPECT_TRUE(
+      contains(game_view_source, "commanderLayer.perform_action(actionId, event)"));
   EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void toggle_camera_mode();"));
   EXPECT_TRUE(
       contains(view_model_source, "void CommanderViewModel::toggle_camera_mode()"));
@@ -893,10 +889,8 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitReachesTheController) {
   EXPECT_TRUE(contains(layer_source, "root.commander.vanguard_rush()"));
   EXPECT_TRUE(contains(layer_source, "case \"commander.ability_second_wind\":"));
   EXPECT_TRUE(contains(layer_source, "root.commander.second_wind()"));
-  EXPECT_TRUE(contains(game_view_source, "case \"commander.ability_vanguard_rush\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander.vanguard_rush()"));
-  EXPECT_TRUE(contains(game_view_source, "case \"commander.ability_second_wind\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander.second_wind()"));
+  EXPECT_TRUE(
+      contains(game_view_source, "commanderLayer.perform_action(actionId, event)"));
   EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"1\""));
   EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"2\""));
   EXPECT_TRUE(contains(commander_hud_source, "game.commander.status"));

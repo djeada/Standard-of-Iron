@@ -71,7 +71,7 @@ void MissionWaveDirector::reset() {
 void MissionWaveDirector::stand_down_leaderless_waves() {
   std::set<int> checked;
   for (auto& wave : *m_waves) {
-    if (wave.spawned || !checked.insert(wave.owner_id).second) {
+    if (wave.reinforcement || wave.spawned || !checked.insert(wave.owner_id).second) {
       continue;
     }
     if (Game::Systems::NationCollapse::has_living_commander(*m_world, wave.owner_id)) {
@@ -79,7 +79,8 @@ void MissionWaveDirector::stand_down_leaderless_waves() {
     }
   }
   for (auto& wave : *m_waves) {
-    if (wave.spawned || !m_commanded_owners.contains(wave.owner_id) ||
+    if (wave.reinforcement || wave.spawned ||
+        !m_commanded_owners.contains(wave.owner_id) ||
         Game::Systems::NationCollapse::has_living_commander(*m_world, wave.owner_id)) {
       continue;
     }
@@ -126,7 +127,9 @@ auto MissionWaveDirector::phase_indices() const -> std::vector<int> {
   }
   std::set<int> unique;
   for (const auto& wave : *m_waves) {
-    unique.insert(wave.phase_index);
+    if (!wave.reinforcement) {
+      unique.insert(wave.phase_index);
+    }
   }
   phases.assign(unique.begin(), unique.end());
   return phases;
@@ -138,7 +141,7 @@ auto MissionWaveDirector::is_phase_cleared(int phase_index) const -> bool {
   }
   bool any = false;
   for (const auto& wave : *m_waves) {
-    if (wave.phase_index != phase_index) {
+    if (wave.reinforcement || wave.phase_index != phase_index) {
       continue;
     }
     any = true;
@@ -155,7 +158,7 @@ auto MissionWaveDirector::is_phase_spawned(int phase_index) const -> bool {
   }
   bool any = false;
   for (const auto& wave : *m_waves) {
-    if (wave.phase_index != phase_index) {
+    if (wave.reinforcement || wave.phase_index != phase_index) {
       continue;
     }
     any = true;
@@ -172,7 +175,7 @@ auto MissionWaveDirector::live_units_in_phase(int phase_index) const -> int {
   }
   int live = 0;
   for (const auto& wave : *m_waves) {
-    if (wave.phase_index != phase_index || !wave.spawned) {
+    if (wave.reinforcement || wave.phase_index != phase_index || !wave.spawned) {
       continue;
     }
     for (const auto entity_id : wave.spawned_entity_ids) {
@@ -186,6 +189,11 @@ auto MissionWaveDirector::live_units_in_phase(int phase_index) const -> int {
 
 auto MissionWaveDirector::ready_time_for(std::size_t index) const -> float {
   const auto& wave = (*m_waves)[index];
+  if (!wave.convoy_checkpoint.isEmpty()) {
+    return wave.checkpoint_reached_at >= 0.0F
+               ? wave.checkpoint_reached_at + wave.trigger_time
+               : -1.0F;
+  }
   if (wave.trigger == Game::Mission::WaveTriggerMode::Time) {
     return wave.trigger_time;
   }
@@ -229,7 +237,7 @@ auto MissionWaveDirector::advance() -> Effects {
   stand_down_leaderless_waves();
 
   for (auto& wave : *m_waves) {
-    if (wave.cleared || !wave.spawned) {
+    if (wave.reinforcement || wave.cleared || !wave.spawned) {
       continue;
     }
     if (wave_is_cleared(wave)) {
@@ -245,7 +253,8 @@ auto MissionWaveDirector::advance() -> Effects {
     if (wave.spawned || wave.ready_at < 0.0F) {
       continue;
     }
-    if (!wave.warned && m_elapsed >= wave.ready_at - wave.warning_seconds) {
+    if (!wave.reinforcement && !wave.warned &&
+        m_elapsed >= wave.ready_at - wave.warning_seconds) {
       wave.warned = true;
       effects.announcements.append(wave_incoming_announcement(wave));
       effects.incoming_waves.push_back({.owner_id = wave.owner_id,
@@ -275,7 +284,7 @@ auto MissionWaveDirector::advance() -> Effects {
 
     const PendingMissionWave* representative = nullptr;
     for (const auto& wave : *m_waves) {
-      if (wave.phase_index != phase) {
+      if (wave.reinforcement || wave.phase_index != phase) {
         continue;
       }
       representative = &wave;
@@ -301,7 +310,11 @@ auto MissionWaveDirector::advance() -> Effects {
   if (all_cleared && !m_announced_all_cleared) {
     m_announced_all_cleared = true;
     effects.all_cleared = true;
-    effects.announcements.append(all_waves_cleared_announcement(m_waves->back()));
+    const auto last =
+        std::find_if(m_waves->rbegin(), m_waves->rend(), [](const auto& wave) {
+          return !wave.reinforcement;
+        });
+    effects.announcements.append(all_waves_cleared_announcement(*last));
     effects.status_changed = true;
   }
 
@@ -362,7 +375,7 @@ auto MissionWaveDirector::status() const -> QVariantMap {
   int pending_phase = 0;
   QVariantList alerts;
   for (const auto& wave : *m_waves) {
-    if (wave.spawned) {
+    if (wave.reinforcement || wave.spawned) {
       continue;
     }
     if (wave.ready_at < 0.0F) {
@@ -390,7 +403,7 @@ auto MissionWaveDirector::status() const -> QVariantMap {
   const bool warning =
       seconds_until_next >= 0.0F &&
       std::any_of(m_waves->begin(), m_waves->end(), [](const PendingMissionWave& wave) {
-        return wave.warned && !wave.spawned;
+        return !wave.reinforcement && wave.warned && !wave.spawned;
       });
 
   const int current_phase = engaged_phase > 0

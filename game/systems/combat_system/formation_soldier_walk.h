@@ -12,6 +12,10 @@ namespace Game::Map {
 class WorldPropClearanceIndex;
 }
 
+namespace Engine::Core {
+class World;
+}
+
 namespace Game::Systems::Combat {
 
 inline constexpr float k_soldier_prop_awareness = 4.0F;
@@ -46,6 +50,7 @@ struct SlotWalk {
   bool walking_to_work_posts{false};
   bool worker{false};
   const std::vector<SolidBody>* solid_bodies{nullptr};
+  const Engine::Core::World* wagon_world{nullptr};
   const Game::Map::WorldPropClearanceIndex* props{nullptr};
   Pathfinding::Passability passability{Pathfinding::Passability::Light};
   float delta_time{0.0F};

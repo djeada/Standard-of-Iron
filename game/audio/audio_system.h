@@ -32,6 +32,7 @@ enum class AudioEventType {
   STOP_SOUND,
   STOP_ALL_SOUNDS,
   SET_SOUND_LEVEL,
+  REFRESH_VOLUMES,
   STOP_MUSIC,
   SHUTDOWN,
   UNLOAD_RESOURCE
@@ -206,6 +207,9 @@ private:
   std::atomic<float> voice_volume;
   std::atomic<float> ambience_volume;
 
+  std::string m_current_music_id;
+  std::atomic<float> m_current_music_requested_volume{AudioConstants::DEFAULT_VOLUME};
+
   static constexpr size_t max_channels = AudioConstants::DEFAULT_MAX_CHANNELS;
 
   Game::Audio::AudioListener m_listener;
@@ -219,6 +223,8 @@ private:
     bool loop;
     AudioCategory category;
     std::chrono::steady_clock::time_point start_time;
+    float requested_volume{AudioConstants::DEFAULT_VOLUME};
+    float spatial_scale{1.0F};
   };
   std::vector<ActiveSound> active_sounds;
   mutable std::mutex active_sounds_mutex;

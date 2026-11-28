@@ -46,12 +46,14 @@ void LoadingOverlay::abort() {
   m_active.store(false, std::memory_order_release);
   m_finalize_progress = false;
   m_show_objectives = false;
+  m_wait_for_initial_ai = false;
 }
 
-void LoadingOverlay::arm_after_load() {
+void LoadingOverlay::arm_after_load(bool wait_for_initial_ai) {
   m_frames_remaining = k_frames_before_release;
   m_timer.restart();
   m_finalize_progress = true;
+  m_wait_for_initial_ai = wait_for_initial_ai;
   m_armed_load.store(m_load_sequence, std::memory_order_release);
   m_first_frames_remaining = m_first_frames_timeout;
   if (!m_window_minimized) {

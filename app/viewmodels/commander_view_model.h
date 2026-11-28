@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <QVariantList>
@@ -55,6 +56,9 @@ public:
 
   Q_INVOKABLE void toggle_mode();
   Q_INVOKABLE void enter_mode();
+  void enter_mission_mode();
+  [[nodiscard]] auto capture_view_state() const -> QJsonObject;
+  void restore_view_state(const QJsonObject& state);
   Q_INVOKABLE void exit_mode();
   [[nodiscard]] auto control_mode() const -> QString;
   [[nodiscard]] auto game_mode() const -> QString;
@@ -239,6 +243,9 @@ private:
   std::atomic<int> m_finale_kind{0};
   bool m_finale_body_live = false;
   App::Core::CommanderEntryDive m_entry_dive;
+  bool m_skip_entry_dive = false;
+  bool m_center_first_army_view = false;
+  QJsonObject m_restored_view;
 
   void show_entry_dive();
 };

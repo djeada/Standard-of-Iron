@@ -469,6 +469,7 @@ private:
                               const QVariantList& player_configs,
                               const QVariantList& resolved_player_configs);
   void finalize_match_load();
+  void apply_mission_starting_control();
   void fail_loading(const QString& error);
   void handle_first_frames_timeout();
   void apply_mission_setup();

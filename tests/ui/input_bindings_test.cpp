@@ -172,6 +172,8 @@ TEST_F(InputBindingsTest, CommandsInSeparateContextsMayShareAChord) {
             QStringLiteral("Space"));
   EXPECT_EQ(bindings->shortcut_for(QStringLiteral("commander.dodge")),
             QStringLiteral("Space"));
+  EXPECT_EQ(bindings->shortcut_for(QStringLiteral("commander.pause")),
+            QStringLiteral("P"));
   EXPECT_TRUE(
       bindings->conflicts_for(QStringLiteral("rts.pause"), QStringLiteral("Space"))
           .isEmpty());

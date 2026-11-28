@@ -139,6 +139,9 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   if (!context.commander_message_state.isEmpty()) {
     metadata["commander_messages"] = context.commander_message_state;
   }
+  if (!context.commander_view_state.isEmpty()) {
+    metadata["commander_view"] = context.commander_view_state;
+  }
   if (!context.tutorial_state.isEmpty()) {
     metadata["tutorial"] = context.tutorial_state;
   }
@@ -227,6 +230,7 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   const QJsonObject metadata = record.metadata;
   LoadFromSlotEffects effects;
   effects.match_difficulty = restore_mission_context(record, context.campaign_manager);
+  effects.commander_view_state = metadata.value("commander_view").toObject();
 
   Game::Systems::GameStateSerializer::restore_player_nations_from_metadata(
       Game::Session::session_for(context.world).nations(), metadata);

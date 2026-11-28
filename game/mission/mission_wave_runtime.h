@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "game/mission/mission_convoy.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
@@ -52,6 +53,11 @@ public:
     return m_director;
   }
   [[nodiscard]] auto status() const -> QVariantMap { return m_director.status(); }
+  [[nodiscard]] auto convoy_status() const -> QVariantMap {
+    return m_convoy.status(elapsed(), m_waves);
+  }
+  [[nodiscard]] auto has_convoy() const -> bool { return m_convoy.active(); }
+  [[nodiscard]] auto serialize() const -> QJsonObject;
   [[nodiscard]] auto has_waves() const -> bool { return !m_waves.empty(); }
   [[nodiscard]] auto owner_has_unspawned_waves(int owner_id) const -> bool;
 
@@ -75,6 +81,7 @@ private:
   std::vector<Game::Mission::PendingMissionEvent> m_events;
   Game::Mission::MissionWaveDirector m_director;
   Game::Mission::MissionWaves m_spawner;
+  Game::Mission::MissionConvoy m_convoy;
 };
 
 } // namespace Game::Mission

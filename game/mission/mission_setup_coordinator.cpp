@@ -632,7 +632,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
          .mission_difficulty = ctx.campaign.current_mission_context().difficulty,
          .level = ctx.level,
          .nations = nation_registry,
-         .defense_reference_world_position = defense_reference_world_position});
+         .defense_reference_world_position = defense_reference_world_position,
+         .local_owner_id = local_owner_id});
     ctx.pending_waves.insert(ctx.pending_waves.end(),
                              std::make_move_iterator(built.begin()),
                              std::make_move_iterator(built.end()));

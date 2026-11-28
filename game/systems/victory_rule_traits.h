@@ -18,6 +18,7 @@ struct VictoryRuleTraits {
   bool has_world_based_rules = false;
   bool has_resource_victory = false;
   bool has_wave_victory = false;
+  bool has_convoy_rules = false;
   bool has_time_limit_defeat = false;
   bool requires_captured_structure_tracking = false;
   bool has_only_commander_defeat_rule = false;

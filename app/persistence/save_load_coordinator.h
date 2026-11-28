@@ -79,6 +79,7 @@ struct SaveToSlotContext {
   QJsonObject mission_wave_state;
   QJsonObject mission_stage_state;
   QJsonObject commander_message_state;
+  QJsonObject commander_view_state;
   QJsonObject tutorial_state;
   QJsonObject battle_stats;
 };
@@ -118,6 +119,7 @@ struct LoadFromSlotEffects {
   bool success = false;
 
   Game::Mission::MatchDifficulty match_difficulty;
+  QJsonObject commander_view_state;
 
   bool emit_selected_units_changed = false;
   bool emit_owner_info_changed = false;

@@ -83,4 +83,12 @@ void cancel_current_attack(Engine::Core::Entity& commander) {
   }
 }
 
+void cancel_held_bow_draw(Engine::Core::Entity& commander) {
+  if (const auto* aim =
+          commander.get_component<Engine::Core::RpgCommanderAimComponent>();
+      aim != nullptr && aim->is_drawing()) {
+    cancel_current_attack(commander);
+  }
+}
+
 } // namespace Game::Commander

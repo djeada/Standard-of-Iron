@@ -272,4 +272,16 @@ TEST(LoadingOverlayTest, DescribeNamesTheStateForTheSelfTestReport) {
   EXPECT_TRUE(text.contains(QStringLiteral("frames remaining 5")));
 }
 
+TEST(LoadingOverlayTest, OnlyANewBattleWaitsForInitialAi) {
+  LoadingOverlay overlay;
+  overlay.begin();
+  overlay.arm_after_load();
+  EXPECT_TRUE(overlay.awaits_initial_ai());
+
+  overlay.begin();
+  overlay.arm_after_load(/*wait_for_initial_ai=*/false);
+  EXPECT_TRUE(overlay.waiting_for_first_frame());
+  EXPECT_FALSE(overlay.awaits_initial_ai());
+}
+
 } // namespace

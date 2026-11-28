@@ -25,6 +25,7 @@ namespace App::Mission {
 namespace {
 
 constexpr float k_stage_poll_seconds = 0.25F;
+constexpr float k_convoy_poll_seconds = 0.1F;
 constexpr float k_announcement_spacing_seconds = 4.5F;
 
 auto treasury_anchor(Engine::Core::World& world,
@@ -83,6 +84,9 @@ void MissionRuntime::reset() {
   m_waves.reset();
   m_stages.clear();
   m_stage_poll_accumulator = 0.0F;
+  m_convoy_poll_accumulator = 0.0F;
+  m_pending_announcements.clear();
+  m_announcement_cooldown = 0.0F;
   if (m_wave_view_model != nullptr) {
     m_wave_view_model->clear();
   }
@@ -209,6 +213,11 @@ auto MissionRuntime::advance_waves(const MissionBinding& binding,
   }
   if (effects.wave_status_changed) {
     publish_wave_status(binding);
+  } else if (m_waves.has_convoy()) {
+    m_convoy_poll_accumulator += dt;
+    if (m_convoy_poll_accumulator >= k_convoy_poll_seconds) {
+      publish_convoy(binding);
+    }
   }
   result.owner_info_changed = effects.owner_info_changed;
   return result;
@@ -356,6 +365,7 @@ void MissionRuntime::publish_victory_objectives(const MissionBinding& binding) {
 }
 
 void MissionRuntime::publish_wave_status(const MissionBinding& binding) {
+  publish_convoy(binding);
   if (m_wave_view_model == nullptr) {
     return;
   }
@@ -378,6 +388,44 @@ void MissionRuntime::publish_wave_status(const MissionBinding& binding) {
   }
 
   m_wave_view_model->set_status(status);
+}
+
+void MissionRuntime::publish_convoy(const MissionBinding& binding) {
+  m_convoy_poll_accumulator = 0.0F;
+  if (m_mission_view_model == nullptr || !m_waves.has_convoy()) {
+    return;
+  }
+  auto status = m_waves.convoy_status();
+  if (has_minimap(binding)) {
+    QVariantList pins;
+    const auto add_pin = [&](float x, float z, const QString& title, bool checkpoint) {
+      float nx = 0.0F;
+      float ny = 0.0F;
+      if (binding.minimap->world_to_normalized(x, z, nx, ny)) {
+        pins.append(QVariantMap{{"nx", std::clamp(nx, 0.0F, 1.0F)},
+                                {"ny", std::clamp(ny, 0.0F, 1.0F)},
+                                {"title", title},
+                                {"active", checkpoint},
+                                {"wagon", !checkpoint}});
+      }
+    };
+    const auto wagons = status.value("wagons").toList();
+    for (const auto& value : wagons) {
+      const auto wagon = value.toMap();
+      if (wagon.contains("world_x")) {
+        add_pin(wagon.value("world_x").toFloat(),
+                wagon.value("world_z").toFloat(),
+                wagon.value("name").toString(),
+                false);
+      }
+    }
+    add_pin(status.value("target_x").toFloat(),
+            status.value("target_z").toFloat(),
+            status.value("destination").toString(),
+            true);
+    status.insert("pins", pins);
+  }
+  m_mission_view_model->set_convoy(status);
 }
 
 void MissionRuntime::queue_announcement(const QString& text) {

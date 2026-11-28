@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QVariantList>
+#include <QVariantMap>
 
 namespace App::Core {
 struct ClientContext;
@@ -31,6 +32,7 @@ class MissionViewModel : public QObject {
   Q_PROPERTY(bool active_has_target READ active_has_target NOTIFY stages_changed)
   Q_PROPERTY(int completed_count READ completed_count NOTIFY stages_changed)
   Q_PROPERTY(QVariantList markers READ markers NOTIFY stages_changed)
+  Q_PROPERTY(QVariantMap convoy READ convoy NOTIFY convoy_changed)
   Q_PROPERTY(bool stages_mirror_victory_conditions READ stages_mirror_victory_conditions
                  NOTIFY stages_changed)
   Q_PROPERTY(
@@ -46,6 +48,7 @@ public:
   void set_seconds_until_deadline(qreal seconds);
 
   void set_optional(const QVariantList& optional);
+  void set_convoy(const QVariantMap& convoy);
   void clear();
 
   [[nodiscard]] auto staged() const -> bool { return !m_stages.isEmpty(); }
@@ -62,6 +65,7 @@ public:
   [[nodiscard]] auto active_has_target() const -> bool;
   [[nodiscard]] auto completed_count() const -> int;
   [[nodiscard]] auto markers() const -> QVariantList { return m_markers; }
+  [[nodiscard]] auto convoy() const -> QVariantMap { return m_convoy; }
   [[nodiscard]] auto stages_mirror_victory_conditions() const -> bool {
     return m_stages_mirror_victory_conditions;
   }
@@ -76,6 +80,7 @@ signals:
   void stages_changed();
   void deadline_changed();
   void optional_changed();
+  void convoy_changed();
 
 private:
   [[nodiscard]] auto active_stage() const -> QVariantMap;
@@ -87,6 +92,7 @@ private:
   QVariantList m_stages;
   QVariantList m_markers;
   QVariantList m_optional;
+  QVariantMap m_convoy;
   int m_active_index = -1;
   bool m_stages_mirror_victory_conditions = false;
   qreal m_seconds_until_deadline = -1.0;

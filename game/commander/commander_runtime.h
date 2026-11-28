@@ -200,6 +200,7 @@ private:
   float m_rally_view_yaw = 0.0F;
   float m_rally_look_idle = 0.0F;
   bool m_rally_view_valid = false;
+  bool m_cancel_held_draw = false;
 
   CommanderInputPort m_input_port;
   std::optional<std::pair<QVector3D, QVector3D>> m_tick_aim_ray;

@@ -10,6 +10,7 @@
 
 #include "../../map/scatter/world_prop_clearance_index.h"
 #include "../../util/planar_math.h"
+#include "../camera_obstruction.h"
 #include "../navigation/nav_grid.h"
 #include "formation_local_frame.h"
 #include "formation_terrain_constraint.h"
@@ -958,6 +959,21 @@ void land_step(const SlotWalk& walk,
   if (stop_step_at_buildings(walk, soldier, plan.x, plan.z)) {
     soldier.relocation_blocked = true;
   }
+  if (walk.wagon_world != nullptr) {
+    const QVector3D from(soldier.world_x, walk.actor.position.y, soldier.world_z);
+    const auto wanted = from + QVector3D(plan.x, 0.0F, plan.z);
+    const auto safe = slide_along_wagon_bodies(
+        walk.wagon_world, from, wanted, prop_clearance_of(walk));
+    if (safe != wanted) {
+      const bool standable =
+          pathfinder == nullptr ||
+          pathfinder->is_world_position_walkable(safe, walk.passability);
+      plan.x = standable ? safe.x() - from.x() : 0.0F;
+      plan.z = standable ? safe.z() - from.z() : 0.0F;
+      plan.settled = false;
+      soldier.relocation_blocked = true;
+    }
+  }
   soldier.world_x += plan.x;
   soldier.world_z += plan.z;
   if (dt > 0.0F) {
@@ -1031,6 +1047,14 @@ void walk_formation_slot(const SlotWalk& walk,
   keep_out_of_buildings(walk, destination);
   WalkTiming const timing = measure_timing(walk, previous, soldier);
   if (timing.reset || (walk.external_reform && !walk.worker)) {
+    if (walk.wagon_world != nullptr) {
+      const auto clear = depenetrate_wagon_bodies(
+          walk.wagon_world, destination, prop_clearance_of(walk));
+      if (pathfinder == nullptr ||
+          pathfinder->is_world_position_walkable(clear, walk.passability)) {
+        destination = clear;
+      }
+    }
     snap_to_slot(walk, previous, soldier, destination, timing);
     return;
   }

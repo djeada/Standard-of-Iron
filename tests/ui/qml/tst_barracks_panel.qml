@@ -204,7 +204,8 @@ TestCase {
         panel.selection_tick = 1;
         tryCompare(panel, "has_barracks_selection", true);
         verify(waitForRendering(panel), "the production panel did not finish its first frame");
-        verify(waitForPolish(panel.Window.window), "the production panel layouts did not settle");
+        if (typeof waitForPolish === "function")
+            verify(waitForPolish(panel.Window.window), "the production panel layouts did not settle");
         return panel;
     }
 
