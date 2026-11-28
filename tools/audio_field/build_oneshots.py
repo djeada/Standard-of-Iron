@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import math
 import shutil
 import struct
 import subprocess
@@ -43,6 +44,9 @@ def decode(path: Path, take: oneshots.Take) -> list[float]:
     with rumble under 80 Hz reads as permanently open otherwise.
     """
     chain = [f"aresample={oneshots.RATE}", "aformat=channel_layouts=mono"]
+    if take.speed != 1.0:
+        chain.append(f"asetrate={oneshots.RATE * take.speed:g}")
+        chain.append(f"aresample={oneshots.RATE}")
     if take.highpass:
         chain.append(f"highpass=f={take.highpass:g}:poles=2")
     if take.lowpass:
@@ -166,6 +170,112 @@ def encode(samples: list[float], out_path: Path, ceiling_db: float = -1.0) -> No
         trim *= 10.0 ** ((ceiling_db - peak_db - 0.4) / 20.0)
 
 
+def apply_stone_room_echo(samples: list[float], target_len: int) -> list[float]:
+    """Convolve a dry stone footstep with vaulted masonry reflections and decay."""
+    taps = (
+        (0.011, 0.34),
+        (0.019, -0.26),
+        (0.031, 0.21),
+        (0.047, -0.16),
+        (0.071, 0.13),
+        (0.103, -0.10),
+        (0.149, 0.075),
+        (0.211, -0.052),
+        (0.289, 0.034),
+        (0.373, -0.020),
+    )
+    out = [0.0] * target_len
+    for i in range(min(len(samples), target_len)):
+        out[i] += samples[i]
+    lp = 0.0
+    for delay_s, gain in taps:
+        offset = int(round(delay_s * oneshots.RATE))
+        lp = 0.0
+        for i, x in enumerate(samples):
+            dst = i + offset
+            if dst >= target_len:
+                break
+            lp = lp + 0.28 * (x - lp)
+            out[dst] += lp * gain
+    fade_out = min(int(0.11 * oneshots.RATE), target_len // 3)
+    for k in range(fade_out):
+        t = 0.5 * (1.0 + math.cos(math.pi * (k + 1) / fade_out))
+        out[target_len - fade_out + k] *= t
+    return out
+
+
+def window_slice(
+    samples: list[float], start_s: float, take: oneshots.Take
+) -> list[float]:
+    length = int(oneshots.RATE * take.length_ms / 1000.0)
+    if not samples or length <= 0:
+        return []
+    begin = int(round(start_s * oneshots.RATE)) % max(1, len(samples))
+    out: list[float] = []
+    while len(out) < length:
+        chunk = samples[begin : begin + (length - len(out))]
+        if not chunk:
+            begin = 0
+            continue
+        out.extend(chunk)
+        begin = 0
+    fade_in = min(int(oneshots.RATE * take.fade_in_ms / 1000.0), len(out) // 4)
+    fade_out = min(int(oneshots.RATE * take.fade_out_ms / 1000.0), len(out) // 3)
+    for i in range(fade_in):
+        out[i] *= 0.5 * (1.0 - math.cos(math.pi * i / max(1, fade_in)))
+    for i in range(fade_out):
+        out[len(out) - fade_out + i] *= 0.5 * (
+            1.0 + math.cos(math.pi * (i + 1) / max(1, fade_out))
+        )
+    return out
+
+
+def trim_leading_quiet(samples: list[float], fade_in_ms: float) -> list[float]:
+    if not samples:
+        return samples
+    peak = max(abs(s) for s in samples)
+    if peak <= 1e-6:
+        return samples
+    thresh = max(0.0055, peak * 0.04)
+    first = 0
+    for idx, val in enumerate(samples):
+        if abs(val) > thresh:
+            first = idx
+            break
+    preroll = int(0.008 * oneshots.RATE)
+    start = max(0, first - preroll)
+    if start == 0:
+        return samples
+    out = list(samples[start:])
+    fade_in = min(int(oneshots.RATE * max(3.0, fade_in_ms) / 1000.0), len(out) // 4)
+    for i in range(fade_in):
+        out[i] *= 0.5 * (1.0 - math.cos(math.pi * i / max(1, fade_in)))
+    return out
+
+
+def trim_trailing_quiet(samples: list[float], fade_out_ms: float) -> list[float]:
+    if not samples:
+        return samples
+    peak = max(abs(s) for s in samples)
+    if peak <= 1e-6:
+        return samples
+    floor = peak * (10.0 ** (-54.0 / 20.0))
+    last = len(samples) - 1
+    while last > 0 and abs(samples[last]) <= floor:
+        last -= 1
+    tail_pad = int(0.11 * oneshots.RATE)
+    end = min(len(samples), last + 1 + tail_pad)
+    if end >= len(samples):
+        return samples
+    out = list(samples[: max(end, int(0.08 * oneshots.RATE))])
+    fade_out = min(int(oneshots.RATE * max(25.0, fade_out_ms) / 1000.0), len(out) // 3)
+    for i in range(fade_out):
+        out[len(out) - fade_out + i] *= 0.5 * (
+            1.0 + math.cos(math.pi * (i + 1) / max(1, fade_out))
+        )
+    return out
+
+
 def build(name: str, take: oneshots.Take, cache: Path, dry_run: bool) -> str:
     """Cut one take's variants, drawing across its sources in order.
 
@@ -175,22 +285,46 @@ def build(name: str, take: oneshots.Take, cache: Path, dry_run: bool) -> str:
     """
     cuts: list[list[float]] = []
     found: list[str] = []
-    for url, _origin in take.sources:
-        if len(cuts) >= take.count:
-            break
-        samples = decode(download(url, cache), take)
-        wanted = take.count - len(cuts)
-        for hit in chosen_hits(samples, take)[:wanted]:
-            cut = slicer.cut(
-                samples,
-                hit,
-                oneshots.RATE,
-                lead_ms=take.lead_ms,
-                length_ms=take.length_ms,
-                fade_out_ms=take.fade_out_ms,
+    decoded_sources = [
+        decode(download(url, cache), take) for url, _origin in take.sources
+    ]
+
+    if take.windows:
+        for index, win_start in enumerate(take.windows[: take.count]):
+            src_samples = decoded_sources[index % len(decoded_sources)]
+            cut = trim_leading_quiet(
+                window_slice(src_samples, win_start, take), take.fade_in_ms
             )
+            if take.room_echo:
+                cut = apply_stone_room_echo(
+                    cut, int(oneshots.RATE * take.length_ms / 1000.0)
+                )
+            else:
+                cut = trim_trailing_quiet(cut, take.fade_out_ms)
             cuts.append(slicer.normalise(cut, take.peak))
-            found.append(f"{hit.start / oneshots.RATE:.2f}s")
+            found.append(f"{win_start:.2f}s")
+    else:
+        for samples in decoded_sources:
+            if len(cuts) >= take.count:
+                break
+            wanted = take.count - len(cuts)
+            for hit in chosen_hits(samples, take)[:wanted]:
+                cut = slicer.cut(
+                    samples,
+                    hit,
+                    oneshots.RATE,
+                    lead_ms=take.lead_ms,
+                    length_ms=take.length_ms,
+                    fade_out_ms=take.fade_out_ms,
+                    fade_in_ms=take.fade_in_ms,
+                )
+                cut = trim_leading_quiet(cut, take.fade_in_ms)
+                if take.room_echo:
+                    cut = apply_stone_room_echo(
+                        cut, int(oneshots.RATE * take.length_ms / 1000.0)
+                    )
+                cuts.append(slicer.normalise(cut, take.peak))
+                found.append(f"{hit.start / oneshots.RATE:.2f}s")
 
     if len(cuts) < take.count:
         return (

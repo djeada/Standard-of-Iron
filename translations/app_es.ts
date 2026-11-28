@@ -3119,6 +3119,53 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>ConvoyTracker</name>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Convoy de suministros</translation>
+    </message>
+    <message>
+        <source>Convoy</source>
+        <translation>Convoy</translation>
+    </message>
+    <message>
+        <source>%1 delivered</source>
+        <translation>%1 entregados</translation>
+    </message>
+    <message>
+        <source>Ambush at %1</source>
+        <translation>Emboscada en %1</translation>
+    </message>
+    <message>
+        <source>Onward to %1</source>
+        <translation>Rumbo a %1</translation>
+    </message>
+    <message>
+        <source>Safe</source>
+        <translation>A salvo</translation>
+    </message>
+    <message>
+        <source>Lost</source>
+        <translation>Perdido</translation>
+    </message>
+    <message>
+        <source>Hit</source>
+        <translation>Atacado</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1 %</translation>
+    </message>
+    <message>
+        <source>%1 in %2 s</source>
+        <translation>%1 en %2 s</translation>
+    </message>
+    <message>
+        <source>Ambush %1 of %2</source>
+        <translation>Emboscada %1 de %2</translation>
+    </message>
+</context>
+<context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
@@ -5910,6 +5957,14 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
         <source>Return to Menu</source>
         <translation>Volver al menú</translation>
     </message>
+    <message>
+        <source>Every wagon reached the outpost.</source>
+        <translation>Todos los carros llegaron al puesto avanzado.</translation>
+    </message>
+    <message>
+        <source>%1 of %2 wagons reached the outpost.</source>
+        <translation>%1 de %2 carros llegaron al puesto avanzado.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -6691,6 +6746,10 @@ Cada recluta cuesta los hombres de su escuadra; la reserva de un cuartel eleva e
     <message>
         <source>Loading...</source>
         <translation>Cargando...</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1 %</translation>
     </message>
 </context>
 <context>
@@ -8108,6 +8167,14 @@ para ver la vista previa</translation>
         <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
         <translation>La ciudad de las siete colinas a orillas del Tíber: el Foro a los pies del Capitolio, los foros imperiales, el Coliseo y el Circo Máximo, el mercado de ganado junto al río, la concurrida Subura, los jardines de Salustio, Mecenas y Lúculo con sus estanques, el Campo de Marte en el meandro, el Trastévere a los pies del Janículo, las villas entre olivares, una legión desplegada fuera de la muralla Serviana y Ostia, donde el Tíber desemboca en el mar.</translation>
     </message>
+    <message>
+        <source>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</source>
+        <translation>Un antiguo camino se abre paso entre crestas de cantera y terrazas de olivos antes de subir hacia las hogueras del Puesto de la Almenara.</translation>
+    </message>
+    <message>
+        <source>Salt Road</source>
+        <translation>Camino de la Sal</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -8536,6 +8603,10 @@ para ver la vista previa</translation>
     <message>
         <source>The assault is broken. Nothing else is coming.</source>
         <translation>El asalto está roto. No viene nada más.</translation>
+    </message>
+    <message>
+        <source>%1 joined the escort.</source>
+        <translation>%1 se ha unido a la escolta.</translation>
     </message>
 </context>
 <context>
@@ -10435,6 +10506,102 @@ para ver la vista previa</translation>
     <message>
         <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
         <translation>Encontraste a mis exploradores. Dos hombres enviados a contar tus tiendas, y respondes con todo el campamento. Adelante, pues, pero querré saber quién los mató.</translation>
+    </message>
+    <message>
+        <source>Arch raiders</source>
+        <translation>Saqueadores del arco</translation>
+    </message>
+    <message>
+        <source>Beacon Post</source>
+        <translation>Puesto de la Almenara</translation>
+    </message>
+    <message>
+        <source>Beacon Post reserve</source>
+        <translation>Reserva del Puesto de la Almenara</translation>
+    </message>
+    <message>
+        <source>Beacon Rise</source>
+        <translation>Cuesta de la Almenara</translation>
+    </message>
+    <message>
+        <source>Deliver all three wagons.</source>
+        <translation>Entrega los tres carros.</translation>
+    </message>
+    <message>
+        <source>Deliver at least two supply wagons to Beacon Post.</source>
+        <translation>Lleva al menos dos carros de suministros al Puesto de la Almenara.</translation>
+    </message>
+    <message>
+        <source>Get the survivors off the road. Send a runner to the post.</source>
+        <translation>Sacad a los supervivientes del camino. Enviad un mensajero al puesto.</translation>
+    </message>
+    <message>
+        <source>Grain</source>
+        <translation>Grano</translation>
+    </message>
+    <message>
+        <source>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</source>
+        <translation>Grano, medicinas y herramientas. Al Puesto de la Almenara le faltan las tres cosas. La escolta avanzará al ritmo de los carros. Yo iré delante.</translation>
+    </message>
+    <message>
+        <source>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</source>
+        <translation>Detened las yuntas. Saqueadores en el arco. La patrulla viene detrás de nosotros.</translation>
+    </message>
+    <message>
+        <source>I can see the beacon. Break this last party and get the wagons over the rise.</source>
+        <translation>Ya veo la almenara. Deshaced esta última partida y pasad los carros por la cuesta.</translation>
+    </message>
+    <message>
+        <source>Iberian riders</source>
+        <translation>Jinetes íberos</translation>
+    </message>
+    <message>
+        <source>Marcellus fell on the Salt Road.</source>
+        <translation>Marcelo cayó en el Camino de la Sal.</translation>
+    </message>
+    <message>
+        <source>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</source>
+        <translation>Marcelo emprende el camino con tres carros de suministros y una escolta escasa. Rompe las emboscadas entre el arco antiguo y el Puesto de la Almenara. Dos destacamentos de relevo se unirán a ti durante la marcha.</translation>
+    </message>
+    <message>
+        <source>Medicine</source>
+        <translation>Medicinas</translation>
+    </message>
+    <message>
+        <source>Olive Terraces</source>
+        <translation>Terrazas de olivos</translation>
+    </message>
+    <message>
+        <source>Open the storehouse. Get the medicine to the sick first.</source>
+        <translation>Abrid el almacén. Llevad primero las medicinas a los enfermos.</translation>
+    </message>
+    <message>
+        <source>Road patrol</source>
+        <translation>Patrulla del camino</translation>
+    </message>
+    <message>
+        <source>Terrace skirmishers</source>
+        <translation>Hostigadores de las terrazas</translation>
+    </message>
+    <message>
+        <source>The Broken Arch</source>
+        <translation>El Arco Roto</translation>
+    </message>
+    <message>
+        <source>The Salt Road</source>
+        <translation>El Camino de la Sal</translation>
+    </message>
+    <message>
+        <source>The last raiding party</source>
+        <translation>La última partida de saqueadores</translation>
+    </message>
+    <message>
+        <source>Tools</source>
+        <translation>Herramientas</translation>
+    </message>
+    <message>
+        <source>Two supply wagons were lost. Beacon Post cannot be resupplied.</source>
+        <translation>Se perdieron dos carros de suministros. No es posible abastecer el Puesto de la Almenara.</translation>
     </message>
 </context>
 <context>
@@ -12554,6 +12721,10 @@ Clic derecho para cancelar.</translation>
         <source>Enemy</source>
         <translation>Enemigo</translation>
     </message>
+    <message>
+        <source>Supply convoy</source>
+        <translation>Convoy de suministros</translation>
+    </message>
 </context>
 <context>
     <name>RpgFinaleOverlay</name>
@@ -12637,24 +12808,8 @@ Clic derecho para cancelar.</translation>
         <translation>Esquivar</translation>
     </message>
     <message>
-        <source>Lock on</source>
-        <translation>Fijar</translation>
-    </message>
-    <message>
-        <source>Sprint</source>
-        <translation>Esprintar</translation>
-    </message>
-    <message>
-        <source>Camera</source>
-        <translation>Cámara</translation>
-    </message>
-    <message>
         <source>Army view</source>
         <translation>Vista del ejército</translation>
-    </message>
-    <message>
-        <source>WINDED</source>
-        <translation>SIN ALIENTO</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -12703,6 +12858,30 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>NO TARGET IN REACH</source>
         <translation>NINGÚN OBJETIVO AL ALCANCE</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Moverse</translation>
+    </message>
+    <message>
+        <source>Draw, release to shoot</source>
+        <translation>Tensar y soltar para disparar</translation>
+    </message>
+    <message>
+        <source>Swap weapon</source>
+        <translation>Cambiar arma</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pausa</translation>
+    </message>
+    <message>
+        <source>Winded</source>
+        <translation>Sin aliento</translation>
+    </message>
+    <message>
+        <source>Stamina</source>
+        <translation>Aguante</translation>
     </message>
 </context>
 <context>
@@ -12899,6 +13078,10 @@ Clic derecho para cancelar.</translation>
     <message>
         <source>Autosave</source>
         <translation>Guardado automático</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>Guardado rápido</translation>
     </message>
 </context>
 <context>

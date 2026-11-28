@@ -94,6 +94,7 @@ auto MiniaudioBackend::initialize(int device_rate,
   m_channels.assign(static_cast<std::size_t>(std::max(1, music_channels)), Channel{});
   m_sound_effects.assign(static_cast<std::size_t>(DEFAULT_SOUND_EFFECT_SLOTS),
                          SoundEffect{});
+  m_next_sfx_order = 0;
   for (auto& slot : m_active_sfx_tracks) {
     slot.store(-1, std::memory_order_relaxed);
   }
@@ -435,12 +436,31 @@ auto MiniaudioBackend::is_sound_active(const QString& id) const -> bool {
 
 namespace {
 
-template <typename Fader>
-void begin_channel_fade(Fader& channel, float target, unsigned fade_samples) {
+void begin_channel_fade(auto& channel, float target, unsigned fade_samples) {
   channel.target_volume = target;
-  channel.fade_samples = std::max(1U, fade_samples);
-  channel.volume_step =
-      (channel.target_volume - channel.current_volume) / float(channel.fade_samples);
+  if (fade_samples <= 1U) {
+    channel.current_volume = target;
+    channel.fade_start_volume = target;
+    channel.fade_total_samples = 0;
+    channel.fade_samples = 0;
+    return;
+  }
+  channel.fade_start_volume = channel.current_volume;
+  channel.fade_total_samples = fade_samples;
+  channel.fade_samples = fade_samples;
+}
+
+void begin_effect_fade(auto& effect, float target, unsigned fade_samples) {
+  effect.target_volume = target;
+  if (fade_samples <= 1U) {
+    effect.volume = target;
+    effect.fade_samples = 0;
+    effect.volume_step = 0.0F;
+    return;
+  }
+  effect.fade_samples = fade_samples;
+  effect.volume_step =
+      (effect.target_volume - effect.volume) / float(effect.fade_samples);
 }
 
 } // namespace
@@ -516,7 +536,9 @@ void MiniaudioBackend::apply_stop(const Game::Audio::AudioCommand& command) {
     remember_resume_point(*channel);
   }
   begin_channel_fade(*channel, MIN_VOLUME, command.fade_samples);
-  channel->looping = false;
+  if (command.fade_samples <= 1U) {
+    channel->looping = false;
+  }
 }
 
 void MiniaudioBackend::apply_stop_all(const Game::Audio::AudioCommand& command) {
@@ -530,37 +552,63 @@ void MiniaudioBackend::apply_stop_all(const Game::Audio::AudioCommand& command) 
 }
 
 void MiniaudioBackend::apply_play_sound(const Game::Audio::AudioCommand& command) {
+  SoundEffect* target = nullptr;
   for (SoundEffect& effect : m_sound_effects) {
-    if (effect.active) {
-      continue;
+    if (!effect.active) {
+      target = &effect;
+      break;
     }
-    effect.mix_bus = command.mix_bus;
-    effect.priority = command.priority;
-    effect.track = command.track;
-    effect.frame_pos = 0;
-    effect.volume = command.volume;
-    effect.target_volume = command.volume;
-    effect.volume_step = 0.0F;
-    const auto gains = Game::Audio::pan_gains(command.pan);
-    effect.gain_left = gains.first;
-    effect.gain_right = gains.second;
-    effect.fade_samples = 0;
-    effect.looping = command.loop;
-    effect.active = true;
+  }
+  if (target == nullptr) {
+    for (SoundEffect& effect : m_sound_effects) {
+      if (!effect.stopping) {
+        continue;
+      }
+      if (target == nullptr || effect.volume < target->volume) {
+        target = &effect;
+      }
+    }
+  }
+  if (target == nullptr) {
+    for (SoundEffect& effect : m_sound_effects) {
+      if (effect.priority >= command.priority) {
+        continue;
+      }
+      if (target == nullptr || effect.priority < target->priority ||
+          (effect.priority == target->priority &&
+           effect.play_order < target->play_order)) {
+        target = &effect;
+      }
+    }
+  }
+  if (target == nullptr) {
     return;
   }
+
+  target->mix_bus = command.mix_bus;
+  target->priority = command.priority;
+  target->track = command.track;
+  target->frame_pos = 0;
+  target->volume = command.volume;
+  target->target_volume = command.volume;
+  target->volume_step = 0.0F;
+  const auto gains = Game::Audio::pan_gains(command.pan);
+  target->gain_left = gains.first;
+  target->gain_right = gains.second;
+  target->fade_samples = 0;
+  target->play_order = ++m_next_sfx_order;
+  target->looping = command.loop;
+  target->stopping = false;
+  target->active = true;
 }
 
 void MiniaudioBackend::apply_set_sound_volume(
     const Game::Audio::AudioCommand& command) {
   for (SoundEffect& effect : m_sound_effects) {
-    if (!effect.active || effect.track != command.track) {
+    if (!effect.active || effect.stopping || effect.track != command.track) {
       continue;
     }
-    effect.target_volume = command.volume;
-    effect.fade_samples = std::max(1U, command.fade_samples);
-    effect.volume_step =
-        (effect.target_volume - effect.volume) / float(effect.fade_samples);
+    begin_effect_fade(effect, command.volume, std::max(1U, command.fade_samples));
   }
 }
 
@@ -597,6 +645,14 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
     }
     return;
   case Type::SetVolume:
+    if (command.channel < 0) {
+      for (Channel& channel : m_channels) {
+        if (channel.active && channel.target_volume > MIN_VOLUME) {
+          begin_channel_fade(channel, command.volume, command.fade_samples);
+        }
+      }
+      return;
+    }
     if (Channel* channel = channel_for(command);
         channel != nullptr && channel->active) {
       begin_channel_fade(*channel, command.volume, command.fade_samples);
@@ -614,13 +670,21 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
   case Type::SetSoundVolume:
     apply_set_sound_volume(command);
     return;
-  case Type::StopSound:
+  case Type::StopSound: {
+    // Keep the de-click fade short enough that a 256-frame block flushes both
+    // the fade and the 3 ms BusLimiter lookahead buffer.
+    static constexpr unsigned k_max_stop_fade_samples = 64U;
+    const unsigned fade = std::min(fade_samples_for(2), k_max_stop_fade_samples);
     for (SoundEffect& effect : m_sound_effects) {
-      if (effect.active && effect.track == command.track) {
-        effect = SoundEffect{};
+      if (!effect.active || effect.track != command.track || effect.stopping) {
+        continue;
       }
+      effect.stopping = true;
+      effect.looping = false;
+      begin_effect_fade(effect, MIN_VOLUME, fade);
     }
     return;
+  }
   case Type::ReleaseTrack:
     apply_release_track(command);
     return;
@@ -679,7 +743,7 @@ struct MiniaudioBackend::EffectLoad {
 auto MiniaudioBackend::measure_effect_load(float master) const -> EffectLoad {
   EffectLoad load;
   for (const SoundEffect& effect : m_sound_effects) {
-    if (!effect.active || effect.volume * master <= 0.001F) {
+    if (!effect.active || effect.stopping || effect.volume * master <= 0.001F) {
       continue;
     }
     const auto* track = effect.track < 0
@@ -706,7 +770,25 @@ void MiniaudioBackend::render_music_run(Channel& channel,
                                         float master,
                                         const BlockGains& gains) {
   const unsigned fading = std::min(run, channel.fade_samples);
+  constexpr float half_pi = 1.57079632679489661923F;
   for (unsigned i = 0; i < fading; ++i) {
+    if (channel.fade_total_samples > 0) {
+      --channel.fade_samples;
+      const float t = 1.0F - (static_cast<float>(channel.fade_samples) /
+                              static_cast<float>(channel.fade_total_samples));
+      const float shape =
+          std::clamp((channel.target_volume >= channel.fade_start_volume)
+                         ? std::sin(t * half_pi)
+                         : (1.0F - std::cos(t * half_pi)),
+                     0.0F,
+                     1.0F);
+      channel.current_volume =
+          channel.fade_start_volume +
+          ((channel.target_volume - channel.fade_start_volume) * shape);
+    } else {
+      channel.fade_samples = 0;
+      channel.current_volume = channel.target_volume;
+    }
     const float volume = channel.current_volume * master * k_pcm_scale_down *
                          gains.at(destination, Game::Audio::MixBus::Music);
     const float left = static_cast<float>(source[0]) * volume;
@@ -714,8 +796,7 @@ void MiniaudioBackend::render_music_run(Channel& channel,
     destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
     destination += STEREO_CHANNELS;
     source += stride;
-    channel.current_volume += channel.volume_step;
-    if (--channel.fade_samples == 0) {
+    if (channel.fade_samples == 0) {
       channel.current_volume = channel.target_volume;
     }
   }
@@ -784,7 +865,7 @@ void MiniaudioBackend::mix_music_channels(float* output,
       continue;
     }
     if (channel.fade_samples == 0 && channel.current_volume <= MIN_VOLUME &&
-        channel.target_volume <= MIN_VOLUME && !channel.looping) {
+        channel.target_volume <= MIN_VOLUME) {
       channel = Channel{};
     }
   }
@@ -810,6 +891,10 @@ void MiniaudioBackend::render_effect_run(SoundEffect& effect,
     effect.volume += effect.volume_step;
     if (--effect.fade_samples == 0) {
       effect.volume = effect.target_volume;
+      if (effect.stopping) {
+        effect.active = false;
+        return;
+      }
     }
   }
   const unsigned steady = run - fading;
@@ -870,6 +955,9 @@ void MiniaudioBackend::mix_sound_effects(float* output,
       render_effect_run(effect, source, stride, run, destination, master, gains);
       position += run;
       frames_left -= run;
+      if (!effect.active) {
+        break;
+      }
     }
 
     effect.frame_pos = position;

@@ -98,6 +98,9 @@ void GameEngine::on_match_outcome(const QString& state) {
   m_runtime.victory_state = state;
   m_runtime.defeat_reason =
       state == "defeat" ? m_victory_service->get_defeat_description() : QString();
+  if (m_mission->waves().has_convoy()) {
+    publish_wave_status();
+  }
   emit victory_state_changed();
 
   if (!state.isEmpty() && m_commander_view_model->active() &&
@@ -160,34 +163,14 @@ void GameEngine::wire_loading_and_saves() {
               },
           .lock_frame = [this]() { return lock_frame(); },
           .report_error = [this](const QString& message) { set_error(message); },
-          .leave_commander_mode =
-              [this]() {
-                if (m_commander_view_model->active()) {
-                  m_commander_view_model->leave_commander_mode();
-                }
-              },
           .autosave_allowed =
               [this]() {
                 return !renderer_has_failed() && m_runtime.initialized &&
                        !m_runtime.loading && !m_level.map_path.isEmpty() &&
                        m_runtime.victory_state.isEmpty();
-              },
-          .commander_mode_active =
-              [this]() {
-                return m_commander_view_model->active();
               }},
       this);
   m_saves->connect_view_model();
-  connect(
-      m_commander_view_model.get(),
-      &App::ViewModels::CommanderViewModel::control_mode_changed,
-      this,
-      [this]() {
-        if (m_saves != nullptr && !m_commander_view_model->active()) {
-          m_saves->commander_mode_left();
-        }
-      },
-      Qt::QueuedConnection);
   connect(m_save_slots_view_model.get(),
           &App::ViewModels::SaveSlotsViewModel::load_requested,
           this,

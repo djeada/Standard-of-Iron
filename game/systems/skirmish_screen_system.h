@@ -15,10 +15,10 @@ class OwnerRegistry;
 
 class SkirmishScreenSystem : public Engine::Core::System {
 public:
-  static constexpr float k_threat_radius = 7.5F;
-  static constexpr float k_line_search_radius = 30.0F;
-  static constexpr float k_behind_line_distance = 4.5F;
-  static constexpr float k_open_ground_retreat = 7.0F;
+  static constexpr float k_threat_radius = 4.6F;
+  static constexpr float k_line_search_radius = 12.0F;
+  static constexpr float k_behind_line_distance = 2.4F;
+  static constexpr float k_firing_distance = 6.8F;
   static constexpr float k_withdraw_cooldown = 3.0F;
 
   struct Services {

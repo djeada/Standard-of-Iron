@@ -9,10 +9,13 @@ Item {
 
     property real bottomInset: 0
     property real topInset: 0
+    property real topSideInset: 0
     property var status: ({})
     property var projector: null
 
     readonly property real reservedBottom: hudBand.height + hudBand.anchors.bottomMargin + root.scaled(12)
+    readonly property real reservedTop: controlsStrip.visible ? controlsStrip.y + controlsStrip.height : bearingStrip.y + bearingStrip.height + root.scaled(35)
+    readonly property real topWidth: Math.max(0, width - 2 * topSideInset)
 
     readonly property real resolutionScale: Math.max(0.75, Math.min(2.0, height / 1080))
     readonly property real uiScale: Math.max(0.75, Math.min(4.0, root.resolutionScale * Design.A11y.uiScale))
@@ -927,13 +930,13 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: root.topInset + root.scaled(26)
-        width: Math.min(root.width * 0.46, root.scaled(760))
+        width: Math.min(root.topWidth, root.width * 0.46, root.scaled(760))
         height: root.scaled(36)
         unit: root.uiScale
         fontPixels: root.fontSize(Design.Typography.caption)
         bearings: root.status_value("bearings", [])
         viewYaw: Number(root.status_value("view_yaw", 0))
-        visible: root.status_value("has_commander", false) === true
+        visible: width >= root.scaled(120) && root.status_value("has_commander", false) === true
     }
 
     Item {
@@ -943,12 +946,19 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bearingStrip.bottom
         anchors.topMargin: root.scaled(40)
-        width: controlsFlow.childrenRect.width + root.scaled(24)
+        width: Math.min(root.topWidth, controlsFlow.childrenRect.width + root.scaled(24))
         height: controlsFlow.childrenRect.height + root.scaled(12)
         opacity: 0.0
-        visible: opacity > 0.0
+        visible: opacity > 0.0 && root.topWidth >= root.scaled(144)
 
-        readonly property var entries: [[root.key_for("commander.primary_action"), qsTr("Strike")], [root.key_for("commander.heavy_action"), qsTr("Heavy")], [root.key_for("commander.secondary_action"), qsTr("Guard")], [root.key_for("commander.dodge"), qsTr("Dodge")], [root.key_for("commander.cycle_lock_on"), qsTr("Lock on")], [root.key_for("commander.sprint"), qsTr("Sprint")], [root.key_for("commander.toggle_camera_mode"), qsTr("Camera")], [root.key_for("global.toggle_control_mode"), qsTr("Army view")]]
+        readonly property var entries: {
+            var movement = [root.key_for("commander.move_forward"), root.key_for("commander.strafe_left"), root.key_for("commander.move_back"), root.key_for("commander.strafe_right")].join(" / ");
+            var controls = [[movement, qsTr("Move")], [root.key_for("commander.primary_action"), root.bowStance ? qsTr("Draw, release to shoot") : qsTr("Strike")], [root.key_for("commander.secondary_action"), qsTr("Guard")]];
+            if (!root.bowStance)
+                controls.push([root.key_for("commander.heavy_action"), qsTr("Heavy")]);
+            controls.push([root.key_for("commander.dodge"), qsTr("Dodge")], [root.key_for("commander.toggle_weapon"), qsTr("Swap weapon")], [root.key_for("global.toggle_control_mode"), qsTr("Army view")], [root.key_for("commander.pause"), qsTr("Pause")]);
+            return controls;
+        }
 
         function reveal() {
             controlsStripFade.restart();
@@ -969,7 +979,7 @@ Item {
             anchors.top: parent.top
             anchors.leftMargin: root.scaled(12)
             anchors.topMargin: root.scaled(6)
-            width: Math.max(root.scaled(120), root.width - root.scaled(56))
+            width: Math.max(root.scaled(120), root.topWidth - root.scaled(56))
             spacing: root.scaled(14)
 
             Repeater {
@@ -1194,9 +1204,8 @@ Item {
                     Text {
                         objectName: "rpgStaminaDenied"
 
-                        text: qsTr("WINDED")
-                        color: root.ember
-                        opacity: root.staminaDenied
+                        text: root.staminaDenied > 0.0 ? qsTr("Winded") : qsTr("Stamina")
+                        color: root.staminaDenied > 0.0 ? root.ember : root.shade(root.bone, 0.7)
                         elide: Text.ElideRight
                         font.family: Design.Typography.family
                         font.pixelSize: root.fontSize(Design.Typography.caption)

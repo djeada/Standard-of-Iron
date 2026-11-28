@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <limits>
 #include <mutex>
+#include <numbers>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -14,8 +15,10 @@
 #include "building_line_of_sight.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/wall_walk_geometry.h"
+#include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/units/spawn_type.h"
 #include "game/util/planar_math.h"
 
 namespace Game::Systems {
@@ -224,6 +227,57 @@ auto overlaps(const PropOccluder& occluder,
          std::abs(local.z) < occluder.half_z + radius;
 }
 
+template <typename Visit>
+void for_each_wagon(const Engine::Core::World* world,
+                    const QVector3D& start,
+                    const QVector3D& end,
+                    float radius,
+                    Visit&& visit,
+                    Engine::Core::EntityID ignore = 0) {
+  if (world == nullptr) {
+    return;
+  }
+  // The box spans the cargo bed, wheels and the draught horse.
+  constexpr float k_half_width = 0.82F;
+  constexpr float k_half_length = 2.23F;
+  constexpr float k_center_ahead = 0.78F;
+  constexpr float k_height = 1.72F;
+  constexpr float k_query_padding = 3.4F;
+  const QVector3D center = (start + end) * 0.5F;
+  const float reach = std::hypot(end.x() - start.x(), end.z() - start.z()) * 0.5F +
+                      k_query_padding + radius;
+  world->spatial_index().for_each_in_radius(
+      center.x(),
+      center.z(),
+      reach,
+      [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        if (entry.id == ignore) {
+          return;
+        }
+        const auto* unit = world->try_get<Engine::Core::UnitComponent>(entry.id);
+        if (unit == nullptr || unit->health <= 0 ||
+            unit->spawn_type != Game::Units::SpawnType::SupplyWagon ||
+            world->has<Engine::Core::PendingRemovalComponent>(entry.id)) {
+          return;
+        }
+        const auto* transform =
+            world->try_get<Engine::Core::TransformComponent>(entry.id);
+        if (transform == nullptr) {
+          return;
+        }
+        const float yaw = transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
+        const float cosine = std::cos(yaw);
+        const float sine = std::sin(yaw);
+        visit(PropOccluder{.x = transform->position.x + sine * k_center_ahead,
+                           .z = transform->position.z + cosine * k_center_ahead,
+                           .cosine = cosine,
+                           .sine = -sine,
+                           .half_x = k_half_width,
+                           .half_z = k_half_length,
+                           .top_y = transform->position.y + k_height});
+      });
+}
+
 auto wall_crest_occluder(const BuildingFootprint& wall,
                          const Game::Map::TerrainService& terrain) -> PropOccluder {
   PropOccluder occluder;
@@ -317,6 +371,75 @@ auto walls_are_crest_limited(const CameraObstructionField& field) -> bool {
 
 } // namespace
 
+auto first_wagon_intersection_fraction(const Engine::Core::World* world,
+                                       const QVector3D& start,
+                                       const QVector3D& end,
+                                       float radius,
+                                       Engine::Core::EntityID ignore) -> float {
+  float clear = 1.0F;
+  for_each_wagon(
+      world,
+      start,
+      end,
+      radius,
+      [&](const PropOccluder& wagon) {
+        clear = std::min(clear, prop_entry_fraction(wagon, start, end, radius));
+      },
+      ignore);
+  return clear;
+}
+
+auto depenetrate_wagon_bodies(const Engine::Core::World* world,
+                              const QVector3D& point,
+                              float radius) -> QVector3D {
+  return camera_depenetrated_point({.radius = radius, .world = world}, point);
+}
+
+auto slide_along_wagon_bodies(const Engine::Core::World* world,
+                              const QVector3D& from,
+                              const QVector3D& to,
+                              float radius) -> QVector3D {
+  if (world == nullptr) {
+    return to;
+  }
+  constexpr float k_skin = 0.015F;
+  const auto clear_from = depenetrate_wagon_bodies(world, from, radius + k_skin);
+  if (clear_from != from) {
+    return clear_from;
+  }
+  const QVector3D motion = to - from;
+  const float distance = std::hypot(motion.x(), motion.z());
+  if (distance <= 1.0e-5F) {
+    return to;
+  }
+
+  float hit = 1.0F;
+  QVector3D normal;
+  for_each_wagon(world, from, to, radius, [&](const PropOccluder& wagon) {
+    const float entry = prop_entry_fraction(wagon, from, to, radius);
+    if (entry >= hit) {
+      return;
+    }
+    hit = entry;
+    const auto contact = to_local(wagon, from + motion * hit);
+    const float side_gap = std::abs(std::abs(contact.x) - wagon.half_x - radius);
+    const float end_gap = std::abs(std::abs(contact.z) - wagon.half_z - radius);
+    normal = side_gap <= end_gap ? QVector3D(wagon.cosine, 0.0F, wagon.sine)
+                                 : QVector3D(-wagon.sine, 0.0F, wagon.cosine);
+  });
+  if (hit >= 1.0F) {
+    return to;
+  }
+
+  const auto near = from + motion * std::max(0.0F, hit - k_skin / distance);
+  const auto tangent = motion - normal * QVector3D::dotProduct(motion, normal);
+  const auto along = near + tangent * (1.0F - hit);
+  if (first_wagon_intersection_fraction(world, near, along, radius) >= 1.0F) {
+    return along;
+  }
+  return near;
+}
+
 auto camera_boom_clear_fraction(const CameraObstructionField& field,
                                 const QVector3D& pivot,
                                 const QVector3D& eye) -> float {
@@ -326,6 +449,8 @@ auto camera_boom_clear_fraction(const CameraObstructionField& field,
     clear = first_building_body_intersection_fraction(
         *field.buildings, pivot, eye, field.radius, 0, crest_limited);
   }
+  clear = std::min(
+      clear, first_wagon_intersection_fraction(field.world, pivot, eye, field.radius));
   if (clear <= 0.0F) {
     return 0.0F;
   }
@@ -365,9 +490,6 @@ auto camera_body_clearance(const CameraObstructionField& field,
   if (field.buildings != nullptr) {
     clearance = nearest_building_body_clearance(*field.buildings, point, crest_limited);
   }
-  if (!crest_limited) {
-    return clearance;
-  }
 
   auto measure = [&](const PropOccluder& occluder) {
     if (point.y() > occluder.top_y) {
@@ -384,9 +506,12 @@ auto camera_body_clearance(const CameraObstructionField& field,
     }
     clearance = std::min(clearance, distance);
   };
-  for_each_wall_crest(field, point.x(), point.x(), point.z(), point.z(), measure);
-  auto const& index = prop_occluders(*field.terrain);
-  index.for_each_near(point.x(), point.x(), point.z(), point.z(), measure);
+  for_each_wagon(field.world, point, point, field.radius, measure);
+  if (crest_limited) {
+    for_each_wall_crest(field, point.x(), point.x(), point.z(), point.z(), measure);
+    auto const& index = prop_occluders(*field.terrain);
+    index.for_each_near(point.x(), point.x(), point.z(), point.z(), measure);
+  }
   return clearance;
 }
 
@@ -428,6 +553,8 @@ auto camera_depenetrated_point(const CameraObstructionField& field,
       prop_occluders(*field.terrain)
           .for_each_near(probe.x(), probe.x(), probe.z(), probe.z(), push_out);
     }
+    const QVector3D probe = resolved;
+    for_each_wagon(field.world, probe, probe, field.radius, push_out);
 
     if ((resolved - before).lengthSquared() <= 1.0e-8F) {
       break;

@@ -62,8 +62,14 @@ private:
   explicit MusicPlayer();
   ~MusicPlayer() override;
 
+  static constexpr int k_crossfade_in_ms = 1200;
+  static constexpr int k_crossfade_out_ms = 1200;
+  static constexpr int k_stop_fade_ms = 500;
+  static constexpr int k_volume_fade_ms = 50;
+
   static void ensure_on_gui_thread(const char* where);
 
+  auto crossfade_gui(const std::string& track_id, float volume, bool loop) -> int;
   void play_gui(
       const std::string& track_id, float volume, bool loop, int channel, int fade_ms);
   void stop_gui(int channel, int fade_ms);

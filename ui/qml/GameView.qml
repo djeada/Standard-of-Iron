@@ -9,6 +9,8 @@ Item {
     id: game_view
 
     property bool is_paused: false
+    readonly property bool commander_pointer_owned: commanderLayer.pointer_owned
+    readonly property bool renderer_ready: renderArea.rendererReady
     property real game_speed: 1
     property string cursor_mode: "normal"
     property bool is_placing_formation: false
@@ -184,6 +186,8 @@ Item {
     }
 
     function perform_global_action(actionId, event) {
+        if (event.isAutoRepeat)
+            return true;
         switch (actionId) {
         case "global.toggle_control_mode":
             reset_rts_pan_keys();
@@ -215,7 +219,8 @@ Item {
         case "rts.pause":
             if (typeof mainWindow === 'undefined')
                 return false;
-            mainWindow.game_paused = !mainWindow.game_paused;
+            if (!event.isAutoRepeat)
+                mainWindow.game_paused = !mainWindow.game_paused;
             return true;
         case "rts.order_stop":
             if (!game.has_units_selected)
@@ -334,71 +339,9 @@ Item {
     }
 
     function perform_commander_action(actionId, event) {
-        var canonical = InputBindings.canonical_key_for(actionId);
-        if ((actionId === "commander.turn_left" || actionId === "commander.turn_right") && pressed_keys[event.key] === undefined && game.commander.lock_active && game.commander.lock_active()) {
-            if (!event.isAutoRepeat)
-                game.commander.switch_lock_target(actionId === "commander.turn_left" ? -1 : 1);
-            return true;
-        }
-        if (canonical !== 0 && game.commander.key_down) {
-            switch (actionId) {
-            case "commander.move_forward":
-            case "commander.move_back":
-            case "commander.strafe_left":
-            case "commander.strafe_right":
-            case "commander.turn_left":
-            case "commander.turn_right":
-            case "commander.sprint":
-                pressed_keys[event.key] = actionId;
-                game.commander.key_down(canonical, event.modifiers);
-                return true;
-            }
-        }
-        if (event.isAutoRepeat && actionId !== "commander.dodge")
-            return true;
-        switch (actionId) {
-        case "commander.dodge":
-            if (game.commander.dodge)
-                game.commander.dodge();
-            return true;
-        case "commander.jump":
-            if (game.commander.jump)
-                game.commander.jump();
-            return true;
-        case "commander.cycle_lock_on":
-            if (game.commander.toggle_lock_on)
-                game.commander.toggle_lock_on();
-            return true;
-        case "commander.ability_vanguard_rush":
-            if (game.commander.vanguard_rush)
-                game.commander.vanguard_rush();
-            return true;
-        case "commander.ability_second_wind":
-            if (game.commander.second_wind)
-                game.commander.second_wind();
-            return true;
-        case "commander.ability_aura":
-            if (game.commander.trigger_aura)
-                game.commander.trigger_aura();
-            return true;
-        case "commander.special_action":
-            if (game.commander.special_action)
-                game.commander.special_action();
-            return true;
-        case "commander.rally":
-            if (game.commander.trigger_rally)
-                game.commander.trigger_rally();
-            return true;
-        case "commander.toggle_weapon":
-            if (game.commander && game.commander.toggle_weapon_stance)
-                game.commander.toggle_weapon_stance();
-            return true;
-        case "commander.toggle_camera_mode":
-            if (game.commander.toggle_camera_mode)
-                game.commander.toggle_camera_mode();
-            return true;
-        }
-        return false;
+        if (actionId === "commander.pause")
+            return perform_rts_action("rts.pause", event);
+        return commanderLayer.perform_action(actionId, event);
     }
 
     function dispatch_key_action(actionId, event) {
@@ -412,13 +355,8 @@ Item {
     objectName: "GameView"
     focus: true
     Keys.onPressed: function (event) {
-        if (typeof game === 'undefined')
+        if (typeof game === 'undefined' || (typeof mainWindow !== 'undefined' && mainWindow.overlay_active))
             return;
-        if (typeof mainWindow !== 'undefined' && mainWindow.game_paused && !event.isAutoRepeat && InputBindings.actions_for_key(event.key, event.modifiers, "rts").indexOf("rts.pause") !== -1) {
-            mainWindow.game_paused = false;
-            event.accepted = true;
-            return;
-        }
         var digit_key = InputBindings.digit_row_key(event.key, event.nativeScanCode);
         if (game.placement.is_placing_formation && digit_key >= Qt.Key_0 && digit_key <= Qt.Key_9) {
             game_view.select_formation_intent_slot(digit_key === Qt.Key_0 ? 9 : digit_key - Qt.Key_1);
@@ -443,20 +381,18 @@ Item {
     Keys.onReleased: function (event) {
         if (typeof game === 'undefined')
             return;
+        if (commanderLayer.handle_key_released(event)) {
+            event.accepted = true;
+            return;
+        }
         var actionId = pressed_keys[event.key];
         if (actionId === undefined)
             return;
-        delete pressed_keys[event.key];
-        if (actionId.indexOf("rts.camera_pan_") === 0) {
+        if (!event.isAutoRepeat) {
+            delete pressed_keys[event.key];
             end_pan_action(actionId);
-            event.accepted = true;
-            return;
         }
-        var canonical = InputBindings.canonical_key_for(actionId);
-        if (canonical !== 0 && game.commander.key_up) {
-            game.commander.key_up(canonical, event.modifiers);
-            event.accepted = true;
-        }
+        event.accepted = true;
     }
 
     GLView {
@@ -489,12 +425,11 @@ Item {
                     selectionBox.visible = false;
                     if (game_view.cursor_mode === "place_barracks_rally" && game.commander.cancel_barracks_rally)
                         game.commander.cancel_barracks_rally();
-                    game_view.forceActiveFocus();
-                    commanderLayer.center_mouse();
                 } else {
                     renderArea.mouse_pan_active = false;
-                    game_view.forceActiveFocus();
                 }
+                if (typeof mainWindow === 'undefined' || !mainWindow.overlay_active)
+                    game_view.forceActiveFocus();
             }
 
             target: game
@@ -744,7 +679,7 @@ Item {
         id: commanderLayer
 
         anchors.fill: parent
-        active: game_view.visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && !game_view.is_rally_placement()
+        active: game_view.visible && typeof game !== 'undefined' && !game.is_loading && game.commander.mode_state === "active" && !game_view.is_rally_placement()
         commander: typeof game !== 'undefined' ? game.commander : null
         gameView: game_view
         mainWindowRef: mainWindow

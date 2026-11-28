@@ -36,6 +36,40 @@ void advance(AmbientStateManager& manager,
 
 } // namespace
 
+TEST(AmbientStateHysteresisTest,
+     SettlementRelaxesToPeacefulWhenEnemyBaseAndTroopsAreFarAway) {
+  Engine::Core::World world;
+  EntityCache cache;
+  cache.player_barracks_alive = true;
+  cache.enemy_barracks_alive = true;
+
+  add_unit(world, k_local_owner, 0.0F);
+  auto* enemy = add_unit(world, k_enemy_owner, 200.0F);
+  auto* enemy_transform = enemy->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(enemy_transform, nullptr);
+
+  const auto advance_samples = [&](AmbientStateManager& mgr, int count) {
+    for (int i = 0; i < count; ++i) {
+      mgr.update(2.0F, &world, k_local_owner, cache, QString{});
+    }
+  };
+
+  AmbientStateManager manager;
+  advance_samples(manager, 6);
+  EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::PEACEFUL)
+      << "a distant enemy base with no troops nearby should let the settlement rest";
+
+  enemy_transform->position.x = 45.0F;
+  advance_samples(manager, 6);
+  EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::TENSE)
+      << "approaching enemy scouts should raise tension";
+
+  enemy_transform->position.x = 200.0F;
+  advance_samples(manager, 6);
+  EXPECT_EQ(manager.current_state(), Engine::Core::AmbientState::PEACEFUL)
+      << "clearing nearby threats should relax tension back to peaceful";
+}
+
 TEST(AmbientStateHysteresisTest, ContactRaisesCombatOnTheNextSample) {
   Engine::Core::World world;
   EntityCache cache;

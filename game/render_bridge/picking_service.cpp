@@ -346,7 +346,8 @@ auto PickingService::pick_nearest(float sx,
     auto* t = e->get_component<Engine::Core::TransformComponent>();
     auto* u = e->get_component<Engine::Core::UnitComponent>();
 
-    if (owner_filter != 0 && u->owner_id != owner_filter) {
+    if (owner_filter != 0 && (u->owner_id != owner_filter ||
+                              u->spawn_type == Game::Units::SpawnType::SupplyWagon)) {
       continue;
     }
 
@@ -526,7 +527,8 @@ auto PickingService::pick_in_rect(float x1,
       continue;
     }
     auto* u = e->get_component<Engine::Core::UnitComponent>();
-    if ((u == nullptr) || u->owner_id != owner_filter) {
+    if (u == nullptr || u->owner_id != owner_filter ||
+        u->spawn_type == Game::Units::SpawnType::SupplyWagon) {
       continue;
     }
     auto* t = e->get_component<Engine::Core::TransformComponent>();

@@ -2,10 +2,9 @@
 """QML entry points must not read simulation state directly.
 
 Three threads share the world: the Qt GUI thread runs QML, a simulation thread
-runs `GameEngine::simulate`, and the scene-graph render thread runs
-`GameEngine::update_presentation` and `GameEngine::render`. The simulation and
-render threads both take `GameEngine::m_frame_mutex`, so they never see each
-other's half-written state. QML has no such guarantee: a `Q_INVOKABLE` or a
+runs `GameEngine::simulate` and `GameEngine::update_presentation` under
+`GameEngine::m_frame_mutex`, and the scene-graph render thread runs
+`GameEngine::render`. QML has no lock of its own: a `Q_INVOKABLE` or a
 `Q_PROPERTY READ` runs on the GUI thread the moment a binding re-evaluates or a
 Timer fires, right in the middle of a render-thread frame.
 
@@ -45,6 +44,15 @@ point reachable from a Timer handler (directly, or through the QML functions it
 calls) must therefore use `try_lock_frame()` and skip the work when the
 simulation is mid-tick. Mark a genuinely safe body
 `// frame-lock-timer-exempt: <reason>`.
+
+The render thread is held to a stricter rule, because `GameEngine::render` runs
+*without* the frame lock, alongside the simulation tick. It may read only the
+render snapshot, the immutable `PresentationFrame`, and state it owns. Reading
+anything else is a use-after-free waiting for the simulation to resize a vector:
+the commander telegraph overlay walked the live world and segfaulted mid-mission.
+So every engine member named in a render-thread function must appear in
+`RENDER_THREAD_MEMBERS` with the reason it is safe, `m_world` may only hand over
+the snapshot.
 
 To exempt a body that is genuinely safe, put a reason on it:
 
@@ -266,8 +274,84 @@ def check_timer_paths(root: Path) -> list[str]:
     return findings
 
 
+RENDER_THREAD_SOURCE = "app/core/game_engine.cpp"
+
+RENDER_THREAD_FUNCTIONS = (
+    "render",
+    "render_effects_pass",
+    "apply_presentation_camera",
+    "prewarm_overlay_gpu_resources",
+)
+
+RENDER_THREAD_MEMBERS = {
+    "m_renderer": "owned by the render thread",
+    "m_render_camera": "render-thread copy of the published camera",
+    "m_drawn_selected_ids": "owned by the render thread",
+    "m_commander_overlay_pass": "owned by the render thread",
+    "m_presentation_frame": "atomic shared_ptr to an immutable frame",
+    "m_world": "checked separately: only hands over the render snapshot",
+    "m_session": "binds the WorldView; add no new service to it without synchronising it",
+    "m_terrain_scene": "terrain submission, rebuilt only while loading",
+    "m_scatter": "guards itself with its own mutex",
+    "m_surface": "terrain meshes, rebuilt only while loading",
+    "m_features": "terrain meshes, rebuilt only while loading",
+    "m_loading_overlay": "load handshake designed for both threads",
+    "m_viewport": "pixel size written by the render thread",
+    "m_runtime": "loading flag, stable while frames are drawn",
+}
+
+ENGINE_MEMBER = re.compile(r"\bm_\w+")
+WORLD_USE = re.compile(
+    r"\bm_world\b(?!\s*(?:->\s*acquire_render_snapshot\b|\)|;|\|\|))"
+)
+
+
+def check_render_thread(root: Path) -> list[str]:
+    source = root / RENDER_THREAD_SOURCE
+    if not source.is_file():
+        return []
+    text = source.read_text(errors="ignore")
+    findings: list[str] = []
+    for name in RENDER_THREAD_FUNCTIONS:
+        found = list(definitions(text, "GameEngine::" + name))
+        if not found:
+            found = [
+                item
+                for item in definitions(text, name)
+                if f"GameEngine::{name}(" in text
+            ]
+        if not found:
+            findings.append(
+                f"{RENDER_THREAD_SOURCE}: render-thread function {name}() not found; "
+                "update RENDER_THREAD_FUNCTIONS"
+            )
+        for body, line in found:
+            for member in sorted(set(ENGINE_MEMBER.findall(body))):
+                if member not in RENDER_THREAD_MEMBERS:
+                    findings.append(
+                        f"{RENDER_THREAD_SOURCE}:{line}: {name}() reaches {member} on "
+                        "the render thread; publish the value in PresentationFrame"
+                    )
+            if WORLD_USE.search(body):
+                findings.append(
+                    f"{RENDER_THREAD_SOURCE}:{line}: {name}() uses the live m_world on "
+                    "the render thread; draw from the render snapshot"
+                )
+    return findings
+
+
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    render_findings = check_render_thread(root)
+    if render_findings:
+        print("Render thread reading unsynchronised state:\n")
+        for finding in render_findings:
+            print(f"  {finding}")
+        print(
+            f"\n{len(render_findings)} unsafe render-thread read(s). The render "
+            "thread holds no frame lock."
+        )
+        return 1
     timer_findings = check_timer_paths(root)
     if timer_findings:
         print("QML Timers reaching a blocking frame lock:\n")
@@ -291,6 +375,9 @@ def main() -> int:
         )
         return 1
     print("✓ Every QML entry point that touches simulation state holds the frame lock")
+    print(
+        "✓ The render thread reads only snapshots, published frames and its own state"
+    )
     return 0
 
 

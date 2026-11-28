@@ -78,6 +78,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/EconomyCoach.qml
             ui/qml/EconomyHelpPanel.qml
             ui/qml/WaveTracker.qml
+            ui/qml/ConvoyTracker.qml
             ui/qml/MissionDeadline.qml
             ui/qml/HUDBottom.qml
             ui/qml/HudConsolePlate.qml
@@ -131,6 +132,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/CursorLayer.qml
             ui/qml/PlayerFeedbackLayer.qml
             ui/qml/LoadScreen.qml
+            ui/qml/BootScreen.qml
         RESOURCES
             ui/qml/ui_audio.js
         assets/shaders/include/environment_lighting.glsl

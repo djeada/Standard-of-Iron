@@ -1,12 +1,20 @@
+#include <QByteArray>
 #include <QCoreApplication>
+#include <QDataStream>
+#include <QFile>
+#include <QTemporaryDir>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <future>
 #include <gtest/gtest.h>
+#include <numbers>
 #include <thread>
+#include <vector>
 
 #define private public
 #include "game/audio/audio_system.h"
@@ -104,6 +112,101 @@ TEST_F(AudioSystemMusicDispatchTest, ShutdownDuringAMusicChangeReturns) {
   watchdog.join();
 
   EXPECT_FALSE(audio.is_running.load());
+}
+
+TEST_F(AudioSystemMusicDispatchTest, LiveSlidersUpdatePlayingAmbienceAndMusic) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  const QString wav_path = dir.filePath("tone.wav");
+  {
+    constexpr int rate = 48000;
+    constexpr int frames = rate / 4;
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream.setByteOrder(QDataStream::LittleEndian);
+    const std::uint32_t payload = frames * 2 * 2;
+    stream.writeRawData("RIFF", 4);
+    stream << std::uint32_t(36 + payload);
+    stream.writeRawData("WAVEfmt ", 8);
+    stream << std::uint32_t(16) << std::uint16_t(1) << std::uint16_t(2)
+           << std::uint32_t(rate) << std::uint32_t(rate * 4) << std::uint16_t(4)
+           << std::uint16_t(16);
+    stream.writeRawData("data", 4);
+    stream << payload;
+    for (int f = 0; f < frames; ++f) {
+      const double phase = 2.0 * std::numbers::pi * 330.0 * f / rate;
+      const auto sample = static_cast<std::int16_t>(0.4 * std::sin(phase) * 32000.0);
+      stream << sample << sample;
+    }
+    QFile file(wav_path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    ASSERT_EQ(file.write(data), data.size());
+  }
+
+  auto& audio = AudioSystem::get_instance();
+  const float saved_master = audio.get_master_volume();
+  const float saved_ambience = audio.get_ambience_volume();
+  const float saved_music = audio.get_music_volume();
+
+  audio.set_master_volume(1.0F);
+  audio.set_ambience_volume(1.0F);
+  audio.set_music_volume(1.0F);
+
+  AudioResourceConfig bed_cfg;
+  bed_cfg.category = AudioCategory::AMBIENCE;
+  bed_cfg.volume = 1.0F;
+  ASSERT_TRUE(audio.load_sound("test.bed.live", wav_path.toStdString(), bed_cfg));
+
+  AudioResourceConfig music_cfg;
+  music_cfg.category = AudioCategory::MUSIC;
+  music_cfg.volume = 0.5F;
+  ASSERT_TRUE(audio.load_music("test.music.live", wav_path.toStdString(), music_cfg));
+
+  audio.play_sound("test.bed.live", 1.0F, true, 1, AudioCategory::AMBIENCE);
+  std::this_thread::sleep_for(std::chrono::milliseconds(40));
+
+  auto measure_peak = [&audio]() {
+    std::vector<float> buf(48000 * 2, 0.0F);
+    audio.render_offline(buf.data(), 48000);
+    float pk = 0.0F;
+    for (std::size_t i = buf.size() / 2; i < buf.size(); ++i) {
+      pk = std::max(pk, std::abs(buf[i]));
+    }
+    return pk;
+  };
+
+  const float loud_bed_peak = measure_peak();
+  ASSERT_GT(loud_bed_peak, 0.05F);
+
+  audio.set_ambience_volume(0.1F);
+  std::this_thread::sleep_for(std::chrono::milliseconds(40));
+  const float quiet_bed_peak = measure_peak();
+  EXPECT_LT(quiet_bed_peak, loud_bed_peak * 0.25F);
+
+  audio.stop_sound("test.bed.live");
+  std::this_thread::sleep_for(std::chrono::milliseconds(40));
+  (void)measure_peak();
+
+  audio.play_music("test.music.live", 1.0F, Game::Audio::MusicTransition::Immediate);
+  for (int i = 0; i < 20; ++i) {
+    QCoreApplication::processEvents();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+  const float music_half_peak = measure_peak();
+  ASSERT_GT(music_half_peak, 0.02F);
+
+  audio.set_music_volume(0.2F);
+  for (int i = 0; i < 20; ++i) {
+    QCoreApplication::processEvents();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+  const float music_lower_peak = measure_peak();
+  EXPECT_LT(music_lower_peak, music_half_peak * 0.35F);
+
+  audio.stop_music();
+  audio.set_master_volume(saved_master);
+  audio.set_ambience_volume(saved_ambience);
+  audio.set_music_volume(saved_music);
 }
 
 } // namespace

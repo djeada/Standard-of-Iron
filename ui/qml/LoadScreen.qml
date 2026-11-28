@@ -24,6 +24,15 @@ Rectangle {
     anchors.fill: parent
     color: "#0B0806"
     visible: is_loading
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: true
+        onWheel: function (wheel) {
+            wheel.accepted = true;
+        }
+    }
     onIs_loadingChanged: {
         if (is_loading) {
             bg_index = (bg_index + 1) % StyleGuide.backdrops.length;
@@ -269,7 +278,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: Design.Numerals.percent(Math.floor(load_screen.display_progress * 100))
+                text: qsTr("%1%").arg(Math.floor(load_screen.display_progress * 100))
                 color: Theme.textMain
                 font.pixelSize: Design.Typography.label
                 font.bold: true

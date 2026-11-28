@@ -17,6 +17,7 @@
 #include <QQuickWindow>
 #include <QStringList>
 #include <QSurfaceFormat>
+#include <QTimer>
 #include <qglobal.h>
 #include <qobject.h>
 #include <qopenglcontext.h>
@@ -97,6 +98,11 @@ auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNod
   if (!m_engine || m_engine->renderer_has_failed()) {
     return node;
   }
+  // Creating the battlefield renderer blocks the render thread for seconds, so
+  // it waits until the interface is on screen.
+  if (!m_interface_presented && !m_engine->renderer_initialized()) {
+    return node;
+  }
 
   const auto* context = QOpenGLContext::currentContext();
   if (context == nullptr || !context->isValid()) {
@@ -116,10 +122,33 @@ auto GLView::updatePaintNode(QSGNode* node, UpdatePaintNodeData* data) -> QSGNod
 
 void GLView::itemChange(ItemChange change, const ItemChangeData& value) {
   QQuickFramebufferObject::itemChange(change, value);
+  if (change == ItemSceneChange) {
+    disconnect(m_frame_counter);
+    if (value.window != nullptr && !m_interface_presented) {
+      m_frame_counter = connect(value.window,
+                                &QQuickWindow::frameSwapped,
+                                this,
+                                &GLView::release_renderer_creation,
+                                Qt::QueuedConnection);
+      // A window that never reports a frame must not keep the game on its boot
+      // screen.
+      QTimer::singleShot(
+          k_interface_wait_limit_ms, this, &GLView::release_renderer_creation);
+    }
+  }
   if (change == ItemVisibleHasChanged && value.boolValue) {
 
     update();
   }
+}
+
+void GLView::release_renderer_creation() {
+  if (m_interface_presented) {
+    return;
+  }
+  m_interface_presented = true;
+  disconnect(m_frame_counter);
+  update();
 }
 
 auto GLView::engine() const -> QObject* {

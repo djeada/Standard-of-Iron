@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "game/commander/commander_entity_access.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/movement/order_service.h"
@@ -159,6 +160,7 @@ void end_control(Engine::Core::World* world,
     return;
   }
 
+  cancel_held_bow_draw(*commander);
   auto const* existing_action =
       commander->get_component<Engine::Core::RpgCommanderActionComponent>();
   bool const preserve_advanced_action =

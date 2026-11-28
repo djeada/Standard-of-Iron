@@ -11,7 +11,8 @@
 
 namespace Engine::Core {
 enum class FightContext : std::uint8_t;
-}
+class World;
+} // namespace Engine::Core
 
 namespace Game::Map {
 class TerrainService;
@@ -63,6 +64,7 @@ struct CommanderCameraInputs {
   const Game::Map::TerrainService* terrain{nullptr};
   const Game::Systems::BuildingCollisionRegistry* buildings{nullptr};
   std::span<const Game::Systems::GateBlocker> shut_gates{};
+  const Engine::Core::World* world{nullptr};
 };
 
 class CommanderCameraRig {

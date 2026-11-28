@@ -60,7 +60,7 @@ Item {
     }
 
     readonly property string subtitle: {
-        if (root.outcomeKind === "defeat" && root.outcomeReason !== "")
+        if ((root.outcomeKind === "defeat" || root.outcomeKind === "victory") && root.outcomeReason !== "")
             return root.outcomeReason;
         switch (root.outcomeKind) {
         case "spectator":

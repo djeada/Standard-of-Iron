@@ -36,8 +36,9 @@ TestCase {
 
     function test_a_map_without_an_authored_thumbnail_gets_a_rendered_one() {
         var thumbs = makeThumbnails();
-        var source = thumbs.source_for("", "assets/maps/map_rivers.json");
-        compare(source, "image://mappreview/maplist:assets/maps/map_rivers.json");
+        compare(thumbs.source_for("", "assets/maps/map_rivers.json"), "");
+        tryCompare(thumbs, "revision", 1);
+        compare(thumbs.source_for("", "assets/maps/map_rivers.json"), "image://mappreview/maplist:assets/maps/map_rivers.json");
         compare(generatedCount, 1, "the preview was not rendered");
         compare(storedIds.length, 1);
         thumbs.destroy();
@@ -57,6 +58,9 @@ TestCase {
         thumbs.source_for("", "assets/maps/map_rivers.json");
         thumbs.source_for("", "assets/maps/map_spanish_grove.json");
         thumbs.source_for("", "assets/maps/map_rivers.json");
+        tryCompare(thumbs, "revision", 2);
+        thumbs.source_for("", "assets/maps/map_rivers.json");
+        compare(thumbs.queue.length, 0);
         compare(generatedCount, 2, "a recycled row re-rendered a map it had already drawn");
         thumbs.destroy();
     }

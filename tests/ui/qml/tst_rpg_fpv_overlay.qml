@@ -95,7 +95,8 @@ TestCase {
         verify(overlay !== null, "overlay was not created");
         host.overlay = overlay;
         verify(waitForRendering(overlay), "the overlay did not finish its first frame");
-        verify(waitForPolish(overlay.Window.window), "the overlay layouts did not settle");
+        if (typeof waitForPolish === "function")
+            verify(waitForPolish(overlay.Window.window), "the overlay layouts did not settle");
         return host;
     }
 
@@ -365,13 +366,13 @@ TestCase {
         var overlay = host.overlay;
         var label = findChild(overlay, "rpgStaminaDenied");
         verify(label !== null, "stamina refusal label is missing");
-        compare(label.opacity, 0.0, "an old refusal must not flash");
+        compare(label.text, qsTr("Stamina"), "an old refusal must clear");
         var refused = quietStatus();
         refused["last_input_outcome"] = 2;
         refused["last_input_outcome_age"] = 0.0;
         overlay.status = refused;
         wait(30);
-        verify(label.opacity > 0.0, "a fresh stamina refusal gave no feedback");
+        compare(label.text, qsTr("Winded"), "a fresh stamina refusal gave no feedback");
         host.destroy();
     }
 
@@ -458,6 +459,24 @@ TestCase {
         var r = rectIn(overlay, strip);
         verify(r.left >= 0 && r.right <= overlay.width, "the controls strip overflows the viewport");
         verify(strip.width > 100, "the controls strip collapsed");
+        var singleRowHeight = strip.height;
+        overlay.topSideInset = 350;
+        tryVerify(function () {
+                var betweenPanels = rectIn(overlay, strip);
+                return betweenPanels.left >= 350 && betweenPanels.right <= overlay.width - 350 && strip.height > singleRowHeight;
+            }, 1000, "the controls should wrap between the side panels");
+        host.destroy();
+    }
+
+    function test_combat_hints_follow_the_equipped_weapon() {
+        var status = quietStatus();
+        status.weapon_stance = "bow";
+        var host = makeOverlay(1280, 720, status);
+        var strip = findChild(host.overlay, "rpgControlsStrip");
+        compare(strip.entries[1][1], qsTr("Draw, release to shoot"));
+        status.weapon_stance = "melee";
+        host.overlay.status = status;
+        compare(strip.entries[1][1], qsTr("Strike"));
         host.destroy();
     }
 
@@ -537,6 +556,11 @@ TestCase {
         var marks = [];
         collectNamed(strip, "rpgBearingMark", marks);
         compare(marks.length, 3, "every bearing gets one mark");
+        tryVerify(function () {
+                return marks.some(function (mark) {
+                        return Math.abs(mark.x + mark.width * 0.5 - strip.width * 0.5) < 2;
+                    });
+            }, 1000, "the forward mark should settle under the centre");
         var centres = [];
         for (var i = 0; i < marks.length; ++i) {
             var centre = marks[i].x + marks[i].width * 0.5;

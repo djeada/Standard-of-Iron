@@ -473,6 +473,7 @@ void World::ensure_render_snapshot() {
   if (m_render_publish_revision.load(std::memory_order_acquire) != 0) {
     return;
   }
+  const RenderPhase::SnapshotHandoff handoff;
   const EntityLock lock(*this);
   if (m_render_publish_revision.load(std::memory_order_acquire) == 0) {
     publish_render_snapshot();

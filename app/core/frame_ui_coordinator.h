@@ -14,6 +14,7 @@
 #include "game/systems/interaction_targeting.h"
 #include "game/systems/render_effects_frame.h"
 #include "game/systems/target_focus.h"
+#include "render/overlay/formation_arrow.h"
 
 class CursorManager;
 class ProductionManager;
@@ -38,9 +39,10 @@ namespace App::Core::FrameUiCoordinator {
 
 struct RenderEffectsContext {
   Render::GL::Renderer* renderer = nullptr;
-  App::Controllers::CommandController* command_controller = nullptr;
   int local_owner_id = 0;
   std::optional<QVector3D> commander_rally_preview_pos;
+  std::optional<QVector3D> patrol_preview_waypoint;
+  const Render::GL::FormationPlacementInfo* formation_placement = nullptr;
 
   const Game::Systems::AttackTargetingHighlights* attack_targeting = nullptr;
   const std::vector<Game::Systems::AttackRangeRing>* attack_range_rings = nullptr;
@@ -53,8 +55,12 @@ struct RenderEffectsContext {
   const Game::Systems::RenderEffectsFrame* effects = nullptr;
 
   Engine::Core::World* snapshot = nullptr;
-  Game::Session::SessionContext* session = nullptr;
 };
+
+[[nodiscard]] auto capture_formation_placement(
+    App::Controllers::CommandController* command_controller,
+    Game::Session::SessionContext* session,
+    int local_owner_id) -> std::optional<Render::GL::FormationPlacementInfo>;
 
 void render_effects(const RenderEffectsContext& context,
                     const std::function<void()>& render_runtime_mode_effects);

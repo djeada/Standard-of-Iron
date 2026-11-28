@@ -80,6 +80,7 @@ auto MapLoader::load_from_json_file(const QString& path,
   read_map_scenery(root, out_map);
   read_map_terrain(root, out_map);
   read_map_fog(root, out_map);
+  read_map_ambience_zones(root, out_map);
   read_map_appearance(root, out_map);
   const bool wildlife_authored = read_map_wildlife(root, out_map);
   read_map_clock_and_resources(root, out_map);

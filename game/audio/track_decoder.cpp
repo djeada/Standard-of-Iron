@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <miniaudio.h>
 #include <optional>
 #include <utility>
@@ -110,9 +111,21 @@ auto quantize(std::vector<float>& pcm,
     track->channels = k_channels;
   }
   track->pcm.resize(pcm.size());
+  std::uint32_t rng_state = 0x9E3779B9U ^ static_cast<std::uint32_t>(frame_count);
+  const auto next_unit = [&rng_state]() -> float {
+    rng_state ^= rng_state << 13U;
+    rng_state ^= rng_state >> 17U;
+    rng_state ^= rng_state << 5U;
+    return static_cast<float>(rng_state & 0xFFFFU) / 65535.0F;
+  };
   for (std::size_t i = 0; i < pcm.size(); ++i) {
-    const float clamped = std::clamp(pcm[i], -1.0F, 1.0F);
-    track->pcm[i] = static_cast<std::int16_t>(std::lrintf(clamped * k_pcm_scale_up));
+    const float raw_sample = std::clamp(pcm[i], -1.0F, 1.0F);
+    float scaled = raw_sample * k_pcm_scale_up;
+    if (std::abs(raw_sample) > 1.0e-6F) {
+      scaled += (next_unit() - next_unit());
+    }
+    const float clamped = std::clamp(scaled, -k_pcm_scale_up, k_pcm_scale_up);
+    track->pcm[i] = static_cast<std::int16_t>(std::lrintf(clamped));
   }
   pcm.clear();
   pcm.shrink_to_fit();

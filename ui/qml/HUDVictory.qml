@@ -32,7 +32,17 @@ Design.IronOutcomeOverlay {
 
     held: victoryOverlay.game_ready() && ((game.commander_message && game.commander_message.holds_outcome) || (game.commander && game.commander.finale !== undefined && game.commander.finale !== ""))
     victoryState: victoryOverlay.victory_state()
-    outcomeReason: victoryOverlay.game_ready() ? game.defeat_reason : ""
+    outcomeReason: {
+        if (!victoryOverlay.game_ready())
+            return "";
+        var convoy = game.mission ? game.mission.convoy : null;
+        if (victoryOverlay.victory_state() === "victory" && convoy && convoy.wagons) {
+            if (convoy.delivered === convoy.wagons.length)
+                return qsTr("Every wagon reached the outpost.");
+            return qsTr("%1 of %2 wagons reached the outpost.").arg(convoy.delivered).arg(convoy.wagons.length);
+        }
+        return game.defeat_reason;
+    }
     isTutorial: victoryOverlay.game_ready() && !!game.tutorial && game.tutorial.finished
     isCampaignMission: victoryOverlay.game_ready() && game.setup.is_mission_match
     campaignCompleted: victoryOverlay.game_ready() && game.setup.campaign_completed === true

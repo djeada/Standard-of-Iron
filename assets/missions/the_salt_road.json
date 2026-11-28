@@ -1,0 +1,176 @@
+{
+  "id": "the_salt_road",
+  "menu_order": 8,
+  "title": "The Salt Road",
+  "summary": "Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.",
+  "terrain_type": "hills",
+  "map_path": ":/assets/maps/map_salt_road.json",
+  "start_in_commander_mode": true,
+  "player_setup": {
+    "nation": "roman_republic",
+    "color": "red",
+    "team_id": 1,
+    "starting_units": [
+      { "type": "swordsman", "position": { "x": 24, "z": 46 }, "facing": 110 },
+      { "type": "spearman", "position": { "x": 17, "z": 59 }, "facing": 110 },
+      { "type": "archer", "position": { "x": 11, "z": 47 }, "facing": 110 }
+    ],
+    "starting_resources": { "gold": 0, "food": 0, "wood": 0, "stone": 0, "iron": 0 }
+  },
+  "convoy": {
+    "wagons": ["Grain", "Medicine", "Tools"],
+    "speed": 1.2,
+    "wagon_spacing": 5.6,
+    "wagon_health": 1300,
+    "route": [
+      { "x": 8, "z": 53 },
+      { "x": 18, "z": 53 },
+      { "x": 25, "z": 51 },
+      { "x": 32, "z": 46 },
+      { "x": 37, "z": 43, "id": "arch", "name": "The Broken Arch" },
+      { "x": 43, "z": 42 },
+      { "x": 50, "z": 44 },
+      { "x": 57, "z": 48 },
+      { "x": 62, "z": 48, "id": "terraces", "name": "Olive Terraces" },
+      { "x": 69, "z": 44 },
+      { "x": 76, "z": 38 },
+      { "x": 82, "z": 35 },
+      { "x": 86, "z": 35, "id": "approach", "name": "Beacon Rise" },
+      { "x": 93, "z": 35 },
+      { "x": 101, "z": 35, "name": "Beacon Post" }
+    ],
+    "reinforcements": [
+      {
+        "label": "Road patrol",
+        "convoy_checkpoint": "arch",
+        "timing": 14,
+        "entry_point": { "x": 27, "z": 53 },
+        "composition": [{ "type": "swordsman" }, { "type": "healer" }]
+      },
+      {
+        "label": "Beacon Post reserve",
+        "convoy_checkpoint": "terraces",
+        "timing": 17,
+        "entry_point": { "x": 76, "z": 44 },
+        "composition": [{ "type": "spearman" }, { "type": "archer" }]
+      }
+    ]
+  },
+  "ai_setups": [
+    {
+      "id": "salt_road_raiders",
+      "nation": "iberians",
+      "color": "blue",
+      "team_id": 2,
+      "difficulty": "medium",
+      "strategy": "aggressive",
+      "posture": "garrison",
+      "waves": [
+        {
+          "phase": 1,
+          "label": "Arch raiders",
+          "convoy_checkpoint": "arch",
+          "timing": 4,
+          "warning_seconds": 4,
+          "entry_points": [{ "x": 38, "z": 30 }, { "x": 48, "z": 38 }],
+          "composition": [{ "type": "swordsman" }, { "type": "slinger" }]
+        },
+        {
+          "phase": 2,
+          "label": "Terrace skirmishers",
+          "convoy_checkpoint": "terraces",
+          "timing": 4,
+          "warning_seconds": 4,
+          "entry_point": { "x": 63, "z": 32 },
+          "composition": [{ "type": "slinger" }, { "type": "swordsman" }]
+        },
+        {
+          "phase": 2,
+          "label": "Iberian riders",
+          "convoy_checkpoint": "terraces",
+          "timing": 7,
+          "warning_seconds": 4,
+          "entry_point": { "x": 66, "z": 62 },
+          "composition": [{ "type": "horse_swordsman" }]
+        },
+        {
+          "phase": 3,
+          "label": "The last raiding party",
+          "convoy_checkpoint": "approach",
+          "timing": 4,
+          "warning_seconds": 4,
+          "entry_points": [{ "x": 88, "z": 23 }, { "x": 82, "z": 48 }],
+          "composition": [
+            { "type": "swordsman", "count": 2 },
+            { "type": "horse_swordsman" },
+            { "type": "slinger" }
+          ]
+        }
+      ]
+    }
+  ],
+  "victory_mode": "all",
+  "victory_conditions": [
+    { "type": "escort_convoy", "min_count": 2, "description": "Deliver at least two supply wagons to Beacon Post." }
+  ],
+  "optional_objectives": [
+    { "type": "escort_convoy", "min_count": 3, "description": "Deliver all three wagons." }
+  ],
+  "defeat_conditions": [
+    { "type": "lose_commander", "description": "Marcellus fell on the Salt Road." },
+    { "type": "lose_convoy", "min_count": 2, "description": "Two supply wagons were lost. Beacon Post cannot be resupplied." }
+  ],
+  "commander_voices": { "generic": false },
+  "commander_messages": [
+    {
+      "id": "salt_road_departure",
+      "speaker": "roman_field_commander",
+      "pose": "neutral",
+      "trigger": { "type": "mission_start", "delay": 1.5 },
+      "text": "Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I'll take the road ahead.",
+      "voice_cue": "alert.commander_message",
+      "duration": 8,
+      "priority": 100
+    },
+    {
+      "id": "salt_road_first_ambush",
+      "speaker": "roman_field_commander",
+      "pose": "neutral",
+      "trigger": { "type": "wave_incoming", "owner_id": 2, "final_wave": false },
+      "text": "Hold the teams. Raiders at the arch. The patrol is coming up behind us.",
+      "voice_cue": "alert.commander_message",
+      "duration": 5,
+      "priority": 105
+    },
+    {
+      "id": "salt_road_final_ambush",
+      "speaker": "roman_field_commander",
+      "pose": "neutral",
+      "trigger": { "type": "wave_incoming", "owner_id": 2, "final_wave": true },
+      "text": "I can see the beacon. Break this last party and get the wagons over the rise.",
+      "voice_cue": "alert.commander_message",
+      "duration": 5,
+      "priority": 105
+    },
+    {
+      "id": "salt_road_arrival",
+      "speaker": "roman_field_commander",
+      "pose": "neutral",
+      "trigger": { "type": "mission_victory" },
+      "text": "Open the storehouse. Get the medicine to the sick first.",
+      "voice_cue": "alert.commander_message",
+      "duration": 4,
+      "priority": 120
+    },
+    {
+      "id": "salt_road_withdrawal",
+      "speaker": "roman_field_commander",
+      "pose": "neutral",
+      "trigger": { "type": "mission_defeat" },
+      "text": "Get the survivors off the road. Send a runner to the post.",
+      "voice_cue": "alert.commander_message",
+      "duration": 4,
+      "priority": 120
+    }
+  ]
+}

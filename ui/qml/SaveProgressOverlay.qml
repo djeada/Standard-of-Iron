@@ -18,7 +18,9 @@ Item {
     readonly property bool saving: root.saves ? root.saves.save_in_progress : false
 
     function display_name(slot_name) {
-        return /^(autosave|quicksave)([_ -]?\d+)?$/i.test(slot_name || "") ? qsTr("Autosave") : slot_name;
+        if (/^quicksave([_ -]?\d+)?$/i.test(slot_name || ""))
+            return qsTr("Quicksave");
+        return /^autosave([_ -]?\d+)?$/i.test(slot_name || "") ? qsTr("Autosave") : slot_name;
     }
 
     function show_notice(text, bad) {

@@ -6,6 +6,252 @@
         "width": 801
     },
     "name": "Rome",
+    "ambience_zones": [
+        {
+            "bed": "ambient.quay_work",
+            "fade": 12,
+            "id": "emporium_quay",
+            "night_bed": "ambient.river_crossing",
+            "radius": 34,
+            "x": -146.74,
+            "z": 122
+        },
+        {
+            "bed": "ambient.stone_tunnel",
+            "fade": 5,
+            "id": "porta_navalis_vault",
+            "radius": 8,
+            "x": -112,
+            "z": 96
+        },
+        {
+            "bed": "ambient.livestock_market",
+            "fade": 10,
+            "id": "forum_boarium",
+            "night_bed": "ambient.city_street_night",
+            "radius": 24,
+            "x": -86,
+            "z": 74
+        },
+        {
+            "bed": "ambient.city_square_crowd",
+            "fade": 14,
+            "id": "forum_romanum",
+            "night_bed": "ambient.camp_fire_night",
+            "radius": 40,
+            "x": -50,
+            "z": 2
+        },
+        {
+            "bed": "ambient.city_square_crowd",
+            "fade": 13,
+            "id": "imperial_fora",
+            "night_bed": "ambient.camp_fire_night",
+            "radius": 36,
+            "x": -28,
+            "z": -76
+        },
+        {
+            "bed": "ambient.stone_tunnel",
+            "fade": 5,
+            "id": "colosseum_west_tunnel",
+            "radius": 9,
+            "x": 14,
+            "z": 30
+        },
+        {
+            "bed": "ambient.stone_tunnel",
+            "fade": 5,
+            "id": "colosseum_east_tunnel",
+            "radius": 9,
+            "x": 78,
+            "z": 30
+        },
+        {
+            "bed": "ambient.stone_tunnel",
+            "fade": 5,
+            "id": "colosseum_north_tunnel",
+            "radius": 9,
+            "x": 46,
+            "z": 4
+        },
+        {
+            "bed": "ambient.stone_tunnel",
+            "fade": 5,
+            "id": "colosseum_south_tunnel",
+            "radius": 9,
+            "x": 46,
+            "z": 56
+        },
+        {
+            "bed": "ambient.arena_interior",
+            "fade": 7,
+            "id": "colosseum_bowl",
+            "polygon": [
+                [
+                    72,
+                    30
+                ],
+                [
+                    70.43,
+                    36.84
+                ],
+                [
+                    65.92,
+                    42.86
+                ],
+                [
+                    59,
+                    47.32
+                ],
+                [
+                    50.51,
+                    49.7
+                ],
+                [
+                    41.49,
+                    49.7
+                ],
+                [
+                    33,
+                    47.32
+                ],
+                [
+                    26.08,
+                    42.86
+                ],
+                [
+                    21.57,
+                    36.84
+                ],
+                [
+                    20,
+                    30
+                ],
+                [
+                    21.57,
+                    23.16
+                ],
+                [
+                    26.08,
+                    17.14
+                ],
+                [
+                    33,
+                    12.68
+                ],
+                [
+                    41.49,
+                    10.3
+                ],
+                [
+                    50.51,
+                    10.3
+                ],
+                [
+                    59,
+                    12.68
+                ],
+                [
+                    65.92,
+                    17.14
+                ],
+                [
+                    70.43,
+                    23.16
+                ]
+            ]
+        },
+        {
+            "bed": "ambient.temple_precinct",
+            "fade": 12,
+            "id": "capitoline_precinct",
+            "radius": 32,
+            "x": -100,
+            "z": -48
+        },
+        {
+            "bed": "ambient.drill_field",
+            "fade": 15,
+            "id": "circus_drill",
+            "night_bed": "ambient.roman_army_camp_01",
+            "radius": 46,
+            "x": -48,
+            "z": 122
+        },
+        {
+            "bed": "ambient.drill_field",
+            "fade": 15,
+            "id": "legion_camp",
+            "night_bed": "ambient.roman_army_camp_02",
+            "radius": 44,
+            "x": 276,
+            "z": 0
+        },
+        {
+            "bed": "ambient.drill_field",
+            "fade": 14,
+            "id": "castra_garrison",
+            "night_bed": "ambient.roman_army_camp_01",
+            "radius": 38,
+            "x": 144,
+            "z": 130
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "sallust_garden",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 26,
+            "x": 120,
+            "z": -296
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "maecenas_garden",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 24,
+            "x": 160,
+            "z": -76
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "lucullus_garden",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 22,
+            "x": -16,
+            "z": -306
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "palatine_garden",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 18,
+            "x": -14,
+            "z": 92
+        },
+        {
+            "bed": "ambient.city_garden_day",
+            "fade": 10,
+            "id": "caesar_garden",
+            "night_bed": "ambient.city_garden_dusk",
+            "radius": 22,
+            "x": -262,
+            "z": 226
+        },
+        {
+            "bed": "ambient.quay_work",
+            "fade": 16,
+            "id": "ostia_portus",
+            "night_bed": "ambient.mediterranean_harbor",
+            "radius": 52,
+            "x": -90,
+            "z": 328.36
+        }
+    ],
     "biome": {
         "ground_type": "grass_dry",
         "height_noise": [
@@ -23613,8 +23859,8 @@
     ],
     "starting_resources": {
         "food": 500,
-        "gold": 500,
-        "iron": 200,
+        "gold": 600,
+        "iron": 150,
         "stone": 300,
         "wood": 400
     },

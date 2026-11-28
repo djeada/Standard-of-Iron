@@ -3123,6 +3123,53 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>ConvoyTracker</name>
+    <message>
+        <source>Supply convoy</source>
+        <translation>قافلة الإمداد</translation>
+    </message>
+    <message>
+        <source>Convoy</source>
+        <translation>القافلة</translation>
+    </message>
+    <message>
+        <source>%1 delivered</source>
+        <translation>وصل منها: %1</translation>
+    </message>
+    <message>
+        <source>Ambush at %1</source>
+        <translation>كمين عند %1</translation>
+    </message>
+    <message>
+        <source>Onward to %1</source>
+        <translation>التقدم نحو %1</translation>
+    </message>
+    <message>
+        <source>Safe</source>
+        <translation>سالمة</translation>
+    </message>
+    <message>
+        <source>Lost</source>
+        <translation>مفقودة</translation>
+    </message>
+    <message>
+        <source>Hit</source>
+        <translation>تتعرض للهجوم</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
+    </message>
+    <message>
+        <source>%1 in %2 s</source>
+        <translation>%1 خلال %2 ث</translation>
+    </message>
+    <message>
+        <source>Ambush %1 of %2</source>
+        <translation>الكمين %1 من %2</translation>
+    </message>
+</context>
+<context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
@@ -5922,6 +5969,14 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
         <source>Return to Menu</source>
         <translation>العودة إلى القائمة</translation>
     </message>
+    <message>
+        <source>Every wagon reached the outpost.</source>
+        <translation>وصلت جميع العربات إلى المخفر.</translation>
+    </message>
+    <message>
+        <source>%1 of %2 wagons reached the outpost.</source>
+        <translation>وصل إلى المخفر %1 من %2 من العربات.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -6711,6 +6766,10 @@ Every recruit costs the men in its squad; reserve held at a barracks raises the 
     <message>
         <source>Loading...</source>
         <translation>جارٍ التحميل...</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>
@@ -8128,6 +8187,14 @@ to see preview</source>
         <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
         <translation>مدينة التلال السبعة على نهر التيبر: الفوروم عند سفح الكابيتول، والمنتديات الإمبراطورية، والكولوسيوم والسيرك العظيم، وسوق الماشية بجوار النهر، وحي سوبورا المزدحم، وحدائق سالوست ومايكيناس ولوكولوس بأحواضها، وحقل مارس عند منعطف النهر، وتراستيفيري عند سفح جانيكولوم، والفيلات وسط بساتين الزيتون، وفيلق مصطفّ خارج السور السيرفي، وأوستيا عند مصب التيبر في البحر.</translation>
     </message>
+    <message>
+        <source>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</source>
+        <translation>طريق قديم يشق مرتفعات المحاجر ومدرجات الزيتون ثم يصعد نحو نيران مخفر المنارة.</translation>
+    </message>
+    <message>
+        <source>Salt Road</source>
+        <translation>طريق الملح</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -8556,6 +8623,10 @@ to see preview</source>
     <message>
         <source>The assault is broken. Nothing else is coming.</source>
         <translation>انكسر الهجوم. لن يأتي شيء آخر.</translation>
+    </message>
+    <message>
+        <source>%1 joined the escort.</source>
+        <translation>انضم %1 إلى الحرس.</translation>
     </message>
 </context>
 <context>
@@ -10455,6 +10526,102 @@ to see preview</source>
     <message>
         <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
         <translation>وجدت كشّافيّ. رجلان أُرسلا ليعدّا خيامك، فترد بالمعسكر كله. هيا إذن، لكنني سأريد أن أعرف من قتلهما.</translation>
+    </message>
+    <message>
+        <source>Arch raiders</source>
+        <translation>مغيرو القوس</translation>
+    </message>
+    <message>
+        <source>Beacon Post</source>
+        <translation>مخفر المنارة</translation>
+    </message>
+    <message>
+        <source>Beacon Post reserve</source>
+        <translation>احتياطي مخفر المنارة</translation>
+    </message>
+    <message>
+        <source>Beacon Rise</source>
+        <translation>مرتفع المنارة</translation>
+    </message>
+    <message>
+        <source>Deliver all three wagons.</source>
+        <translation>أوصل العربات الثلاث كلها.</translation>
+    </message>
+    <message>
+        <source>Deliver at least two supply wagons to Beacon Post.</source>
+        <translation>أوصل عربتي إمداد على الأقل إلى مخفر المنارة.</translation>
+    </message>
+    <message>
+        <source>Get the survivors off the road. Send a runner to the post.</source>
+        <translation>أبعدوا الناجين عن الطريق. أرسلوا رسولاً إلى المخفر.</translation>
+    </message>
+    <message>
+        <source>Grain</source>
+        <translation>حبوب</translation>
+    </message>
+    <message>
+        <source>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</source>
+        <translation>حبوب ودواء وأدوات. مخفر المنارة ينقصه الثلاثة. سيساير الحرس العربات، وسأتقدم أنا على الطريق.</translation>
+    </message>
+    <message>
+        <source>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</source>
+        <translation>أوقفوا الدواب. مغيرون عند القوس. الدورية قادمة من خلفنا.</translation>
+    </message>
+    <message>
+        <source>I can see the beacon. Break this last party and get the wagons over the rise.</source>
+        <translation>أرى المنارة. اهزموا هذه العصبة الأخيرة وأعبروا بالعربات فوق المرتفع.</translation>
+    </message>
+    <message>
+        <source>Iberian riders</source>
+        <translation>فرسان إيبيريون</translation>
+    </message>
+    <message>
+        <source>Marcellus fell on the Salt Road.</source>
+        <translation>سقط مارسيلوس على طريق الملح.</translation>
+    </message>
+    <message>
+        <source>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</source>
+        <translation>يسلك مارسيلوس الطريق بثلاث عربات إمداد وحرس قليل. اكسر الكمائن بين القوس القديم ومخفر المنارة. ستنضم إليك مفرزتا نجدة أثناء المسير.</translation>
+    </message>
+    <message>
+        <source>Medicine</source>
+        <translation>دواء</translation>
+    </message>
+    <message>
+        <source>Olive Terraces</source>
+        <translation>مدرجات الزيتون</translation>
+    </message>
+    <message>
+        <source>Open the storehouse. Get the medicine to the sick first.</source>
+        <translation>افتحوا المخزن. أوصلوا الدواء إلى المرضى أولاً.</translation>
+    </message>
+    <message>
+        <source>Road patrol</source>
+        <translation>دورية الطريق</translation>
+    </message>
+    <message>
+        <source>Terrace skirmishers</source>
+        <translation>مناوشو المدرجات</translation>
+    </message>
+    <message>
+        <source>The Broken Arch</source>
+        <translation>القوس المكسور</translation>
+    </message>
+    <message>
+        <source>The Salt Road</source>
+        <translation>طريق الملح</translation>
+    </message>
+    <message>
+        <source>The last raiding party</source>
+        <translation>آخر عصبة مغيرين</translation>
+    </message>
+    <message>
+        <source>Tools</source>
+        <translation>أدوات</translation>
+    </message>
+    <message>
+        <source>Two supply wagons were lost. Beacon Post cannot be resupplied.</source>
+        <translation>فُقدت عربتا إمداد. لا يمكن تزويد مخفر المنارة.</translation>
     </message>
 </context>
 <context>
@@ -12574,6 +12741,10 @@ Right-click to cancel.</source>
         <source>Enemy</source>
         <translation>عدو</translation>
     </message>
+    <message>
+        <source>Supply convoy</source>
+        <translation>قافلة الإمداد</translation>
+    </message>
 </context>
 <context>
     <name>RpgFinaleOverlay</name>
@@ -12657,24 +12828,8 @@ Right-click to cancel.</source>
         <translation>مراوغة</translation>
     </message>
     <message>
-        <source>Lock on</source>
-        <translation>قفل الهدف</translation>
-    </message>
-    <message>
-        <source>Sprint</source>
-        <translation>عَدْو</translation>
-    </message>
-    <message>
-        <source>Camera</source>
-        <translation>الكاميرا</translation>
-    </message>
-    <message>
         <source>Army view</source>
         <translation>عرض الجيش</translation>
-    </message>
-    <message>
-        <source>WINDED</source>
-        <translation>منقطع النفَس</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -12723,6 +12878,30 @@ Right-click to cancel.</source>
     <message>
         <source>NO TARGET IN REACH</source>
         <translation>لا هدف في المتناول</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>تحرك</translation>
+    </message>
+    <message>
+        <source>Draw, release to shoot</source>
+        <translation>اسحب ثم أفلت للرمي</translation>
+    </message>
+    <message>
+        <source>Swap weapon</source>
+        <translation>تبديل السلاح</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>إيقاف مؤقت</translation>
+    </message>
+    <message>
+        <source>Winded</source>
+        <translation>منقطع النفس</translation>
+    </message>
+    <message>
+        <source>Stamina</source>
+        <translation>التحمل</translation>
     </message>
 </context>
 <context>
@@ -12923,6 +13102,10 @@ Right-click to cancel.</source>
     <message>
         <source>Autosave</source>
         <translation>الحفظ التلقائي</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>حفظ سريع</translation>
     </message>
 </context>
 <context>

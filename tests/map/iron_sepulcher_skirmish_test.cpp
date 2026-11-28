@@ -307,12 +307,21 @@ TEST_F(IronSepulcherSkirmishTest, WakingTheSepulcherAnnouncesItselfWithSoundAndM
   }
   audio.set_master_volume(1.0F);
   audio.set_sound_volume(1.0F);
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Startup);
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  // Only the cue under test: decoding the whole library takes over half a
+  // minute on a shared runner.
+  ASSERT_TRUE(AudioResourceLoader::ensure_audio_resource_loaded(
+      QStringLiteral("sfx.undead.skeletons_rise")));
   AudioResourceLoader::load_audio_cues();
 
   Game::Audio::AudioEventHandler handler(&world);
   ASSERT_TRUE(handler.initialize());
+
+  // A one-shot asked for mid-decode is dropped, so wait as the loading screen
+  // does before a battle can raise it.
+  for (int wait = 0; wait < 3000 && audio.has_pending_mission_decodes(); ++wait) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  ASSERT_FALSE(audio.has_pending_mission_decodes());
 
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent("alert.undead_awakening"));

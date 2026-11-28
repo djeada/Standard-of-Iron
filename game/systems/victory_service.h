@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "game/core/event_manager.h"
+#include "game/systems/convoy_query.h"
 #include "game/systems/mission_wave_query.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/undead_zone_query.h"
@@ -84,6 +85,11 @@ public:
 
   void set_mission_wave_query(const MissionWaveQuery* query) {
     m_mission_wave_query = query;
+    mark_world_dirty();
+  }
+
+  void set_convoy_query(const ConvoyQuery* query) {
+    m_convoy_query = query;
     mark_world_dirty();
   }
 
@@ -204,6 +210,7 @@ private:
   Engine::Core::World* m_world_ptr = nullptr;
   const UndeadZoneQuery* m_undead_zone_query = nullptr;
   const MissionWaveQuery* m_mission_wave_query = nullptr;
+  const ConvoyQuery* m_convoy_query = nullptr;
 
   Game::Systems::GlobalStatsRegistry& m_stats_registry;
   Game::Systems::OwnerRegistry& m_owner_registry;

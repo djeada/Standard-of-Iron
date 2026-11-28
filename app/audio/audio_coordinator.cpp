@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "app/audio/audio_resource_loader.h"
+#include "app/audio/city_soundscape.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/audio_system.h"
 #include "game/map/map_context.h"
@@ -468,10 +469,17 @@ void AudioCoordinator::ensure_result_audio_ready(const QString& state,
 }
 
 void AudioCoordinator::stop_mission_ambience() {
+  Game::Audio::CitySoundscape::instance().stop();
   if (!m_current_ambient_sound_id.isEmpty()) {
     AudioSystem::get_instance().stop_sound(m_current_ambient_sound_id.toStdString());
     m_current_ambient_sound_id.clear();
   }
+}
+
+void AudioCoordinator::update_mission_ambience(float dt,
+                                               const Engine::Core::World* world,
+                                               float darkness_amount) {
+  Game::Audio::CitySoundscape::instance().update(dt, world, darkness_amount);
 }
 
 void AudioCoordinator::apply_mission_ambience(
@@ -506,8 +514,9 @@ void AudioCoordinator::apply_mission_ambience(
     ambience_id = QStringLiteral("ambient.battlefield_dry_wind_distant_march_01");
   }
 
-  AudioResourceLoader::ensure_audio_resource_loaded(ambience_id);
-  AudioSystem::get_instance().play_sound(
-      ambience_id.toStdString(), 1.0F, true, 1, AudioCategory::AMBIENCE);
-  m_current_ambient_sound_id = ambience_id;
+  Game::Audio::CitySoundscape::instance().configure(
+      map_context.definition(), ambience_id, faction_tag);
+  const auto active = Game::Audio::CitySoundscape::instance().active_bed_ids();
+  m_current_ambient_sound_id =
+      active.empty() ? ambience_id : QString::fromStdString(active.front());
 }

@@ -456,3 +456,73 @@ TEST_F(AudioBackendTest, MutedCriticalVoicesDoNotDuckTheBattle) {
   render(SAMPLE_RATE);
   EXPECT_NEAR(looped_peak(), baseline, 0.001F);
 }
+
+TEST_F(AudioBackendTest, StoppingASoundFadesSmoothlyWithoutAClick) {
+  m_backend.set_listening_preset(Game::Audio::ListeningPreset::Headphones);
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("tone"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+
+  m_backend.play_sound(QStringLiteral("tone"), 1.0F, true);
+  const std::vector<float> steady = render(1024);
+  float steady_step = 0.0F;
+  for (std::size_t frame = 128; frame < 1024; ++frame) {
+    steady_step =
+        std::max(steady_step,
+                 std::abs(steady[frame * CHANNELS] - steady[(frame - 1) * CHANNELS]));
+  }
+  ASSERT_GT(steady_step, 0.005F);
+
+  m_backend.stop_sound(QStringLiteral("tone"));
+  const std::vector<float> tail = render(256);
+  float stop_step = 0.0F;
+  for (std::size_t frame = 1; frame < 256; ++frame) {
+    stop_step = std::max(
+        stop_step, std::abs(tail[frame * CHANNELS] - tail[(frame - 1) * CHANNELS]));
+  }
+  EXPECT_LT(stop_step, steady_step * 1.35F);
+  EXPECT_FALSE(m_backend.is_sound_active(QStringLiteral("tone")));
+  EXPECT_LT(peak_of(render(256)), 1e-6F);
+}
+
+TEST_F(AudioBackendTest, MusicCrossfadeUsesEqualPowerCurve) {
+  m_backend.set_listening_preset(Game::Audio::ListeningPreset::Headphones);
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("bed"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+
+  m_backend.play(0, QStringLiteral("bed"), 1.0F, true, 0);
+  render(2048);
+  const float single_peak = looped_peak();
+  ASSERT_GT(single_peak, 0.05F);
+
+  m_backend.stop(0, 1000);
+  m_backend.play(1, QStringLiteral("bed"), 1.0F, true, 1000);
+
+  // Advance to the exact 500 ms midpoint of the 1000 ms crossfade.
+  render(SAMPLE_RATE / 2 - 512);
+  const float mid_peak = peak_of(render(1024));
+  // Equal-power fade yields ~sin(pi/4)+cos(pi/4) = ~1.414x in-phase sum vs ~1.0x
+  // linear.
+  EXPECT_GT(mid_peak, single_peak * 1.25F);
+}
+
+TEST_F(AudioBackendTest, HigherPrioritySoundEvictsLowestPrioritySlotWhenFull) {
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("low"), m_path, Mastering::Material::Effect));
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("high"), m_path, Mastering::Material::Effect));
+  m_backend.wait_for_decodes();
+
+  for (int i = 0; i < MiniaudioBackend::DEFAULT_SOUND_EFFECT_SLOTS; ++i) {
+    m_backend.play_sound(
+        QStringLiteral("low"), 0.5F, true, 0.0F, Game::Audio::MixBus::Combat, 1);
+  }
+  render(256);
+  EXPECT_TRUE(m_backend.is_sound_active(QStringLiteral("low")));
+
+  m_backend.play_sound(
+      QStringLiteral("high"), 0.8F, true, 0.0F, Game::Audio::MixBus::Alert, 9);
+  render(256);
+  EXPECT_TRUE(m_backend.is_sound_active(QStringLiteral("high")));
+}

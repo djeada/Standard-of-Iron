@@ -21,6 +21,7 @@ add_library(
     app/core/order_feedback_presenter.cpp
     app/core/film_action_dispatch.cpp
     app/core/film_recorder.cpp
+    app/core/commander_overlay_pass.cpp
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
     app/core/game_engine_composition.cpp
@@ -140,6 +141,7 @@ add_library(
     app/audio/audio_resource_loader.cpp
     app/audio/audio_status_hud.cpp
     app/audio/audio_system_proxy.cpp
+    app/audio/city_soundscape.cpp
     app/audio/weather_audio.cpp
     # app/viewmodels -- the QML API, one coherent slice per model.
     app/viewmodels/activity_view_model.cpp

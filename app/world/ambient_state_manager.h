@@ -29,6 +29,9 @@ private:
   [[nodiscard]] bool is_assault_on_the_field(Engine::Core::World* world,
                                              int local_owner_id) const;
 
+  [[nodiscard]] bool is_threat_nearby(Engine::Core::World* world,
+                                      int local_owner_id) const;
+
   [[nodiscard]] Engine::Core::AmbientState
   observe_state(Engine::Core::World* world,
                 int local_owner_id,

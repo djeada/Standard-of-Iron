@@ -260,6 +260,12 @@ TEST(AudioSpatialTest, PanningNeverBoostsAChannelAboveUnity) {
   const auto centre = Game::Audio::pan_gains(0.0F);
   EXPECT_FLOAT_EQ(centre.first, 1.0F);
   EXPECT_FLOAT_EQ(centre.second, 1.0F);
+
+  const auto half_right = Game::Audio::pan_gains(0.5F);
+  EXPECT_GT(half_right.first, 0.70F);
+  EXPECT_FLOAT_EQ(half_right.second, 1.0F);
+  EXPECT_FLOAT_EQ(Game::Audio::pan_gains(1.0F).first, 0.0F);
+  EXPECT_FLOAT_EQ(Game::Audio::pan_gains(-1.0F).second, 0.0F);
 }
 
 TEST(AudioSpatialTest, WithoutAListenerNothingIsMoved) {

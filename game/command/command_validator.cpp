@@ -5,6 +5,7 @@
 #include "../core/component_commander.h"
 #include "../core/world.h"
 #include "../session/session_context.h"
+#include "../systems/combat_system/combat_utils.h"
 #include "../systems/combat_system/target_rules.h"
 #include "../systems/economy/marketplace_system.h"
 #include "../systems/owner_registry.h"
@@ -43,13 +44,21 @@ auto filter_subjects(Engine::Core::World& world,
 
 auto building_owner(Engine::Core::World& world,
                     Engine::Core::EntityID id) -> const Engine::Core::UnitComponent* {
-  auto* entity = world.get_entity(id);
-  return entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+  return world.try_get<Engine::Core::UnitComponent>(id);
+}
+
+auto is_committed_skirmisher_move(Engine::Core::Entity* entity, Source source) -> bool {
+  if (source != Source::AI || entity == nullptr) {
+    return false;
+  }
+  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  return unit != nullptr && Game::Units::is_skirmisher_spawn(unit->spawn_type) &&
+         Game::Systems::Combat::suppresses_opportunistic_combat(entity);
 }
 
 auto validate_move(Engine::Core::World& world,
                    int owner_id,
+                   Source source,
                    Move& payload) -> Rejection {
   if (payload.targets.empty()) {
     return Rejection::MalformedPayload;
@@ -62,10 +71,12 @@ auto validate_move(Engine::Core::World& world,
   kept_targets.reserve(payload.units.size());
   kept_facings.reserve(payload.facing_angles.size());
   for (std::size_t i = 0; i < payload.units.size(); ++i) {
-    if (!is_commandable(world, payload.units[i], owner_id)) {
+    auto const id = payload.units[i];
+    if (!is_commandable(world, id, owner_id) ||
+        is_committed_skirmisher_move(world.get_entity(id), source)) {
       continue;
     }
-    kept_units.push_back(payload.units[i]);
+    kept_units.push_back(id);
     kept_targets.push_back(i < payload.targets.size() ? payload.targets[i]
                                                       : payload.targets.back());
     if (i < payload.facing_angles.size()) {
@@ -127,7 +138,8 @@ auto validate_attack(Engine::Core::World& world,
                                ? entity->get_component<Engine::Core::UnitComponent>()
                                : nullptr;
                        return unit == nullptr ||
-                              !Game::Units::can_use_attack_mode(unit->spawn_type);
+                              !Game::Units::can_use_attack_mode(unit->spawn_type) ||
+                              is_committed_skirmisher_move(entity, source);
                      }),
       units.end());
 
@@ -198,7 +210,7 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
         using T = std::decay_t<decltype(payload)>;
 
         if constexpr (std::is_same_v<T, Move>) {
-          return validate_move(world, owner_id, payload);
+          return validate_move(world, owner_id, command.source, payload);
         } else if constexpr (std::is_same_v<T, AttackTarget>) {
           return validate_attack(world, owner_id, command.source, payload);
         } else if constexpr (std::is_same_v<T, SetRallyPoint> ||

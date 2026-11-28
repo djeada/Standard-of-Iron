@@ -401,6 +401,29 @@ TEST(ReplayTest, RoundTripsItsOwnHeader) {
   EXPECT_EQ(loaded->header.content_digest, Game::Command::simulation_content_digest());
 }
 
+TEST(ReplayTest, ReplacingTheWorldClearsThePreviousCommandersControlState) {
+  using namespace Game::Command;
+  Match match;
+  auto& session = match.session;
+  const auto commander_id = match.spawn(1);
+  auto& world = session.world();
+  world.get_entity(commander_id)->add_component<Engine::Core::CommanderComponent>();
+  world.add_system(std::make_unique<CommandSystem>());
+  auto* commands = world.get_system<CommandSystem>();
+  ASSERT_NE(commands, nullptr);
+  ASSERT_TRUE(session.commands().log().submit(
+      Source::LocalPlayer,
+      1,
+      CommanderActionRecord{.action = CommanderAction::EnterControl}));
+  ASSERT_EQ(session.advance(session.clock().tick_seconds(),
+                            1,
+                            Game::Session::SessionContext::OverloadPolicy::KeepBacklog),
+            1);
+  ASSERT_FALSE(commands->capture_checkpoint().isEmpty());
+  world.clear();
+  EXPECT_TRUE(commands->capture_checkpoint().isEmpty());
+}
+
 TEST(ReplayTest, ACheckpointRestoresAWorldAndContinuesWithTheLogTail) {
   using namespace Game::Command;
   using Game::Session::SessionContext;

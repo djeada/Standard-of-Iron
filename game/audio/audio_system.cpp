@@ -138,6 +138,8 @@ void AudioSystem::shutdown() {
   resource_aliases.clear();
   resource_last_played_at.clear();
   active_resources.clear();
+  m_current_music_id.clear();
+  m_current_music_requested_volume.store(AudioConstants::DEFAULT_VOLUME);
 
   {
     std::lock_guard<std::mutex> const lock(active_sounds_mutex);
@@ -255,31 +257,37 @@ void AudioSystem::set_master_volume(float volume) {
   Game::Audio::Settings::save_master_volume(master_volume.load());
 
   if (m_music_player != nullptr) {
-    m_music_player->set_volume(master_volume.load() * music_volume.load());
+    m_music_player->set_volume(get_effective_volume(
+        AudioCategory::MUSIC, m_current_music_requested_volume.load()));
   }
+  enqueue(AudioEvent(AudioEventType::REFRESH_VOLUMES));
 }
 
 void AudioSystem::set_sound_volume(float volume) {
   sound_volume = sanitize_volume(volume);
   Game::Audio::Settings::save_sound_volume(sound_volume.load());
+  enqueue(AudioEvent(AudioEventType::REFRESH_VOLUMES));
 }
 
 void AudioSystem::set_music_volume(float volume) {
   music_volume = sanitize_volume(volume);
   Game::Audio::Settings::save_music_volume(music_volume.load());
   if (m_music_player != nullptr) {
-    m_music_player->set_volume(master_volume.load() * music_volume.load());
+    m_music_player->set_volume(get_effective_volume(
+        AudioCategory::MUSIC, m_current_music_requested_volume.load()));
   }
 }
 
 void AudioSystem::set_voice_volume(float volume) {
   voice_volume = sanitize_volume(volume);
   Game::Audio::Settings::save_voice_volume(voice_volume.load());
+  enqueue(AudioEvent(AudioEventType::REFRESH_VOLUMES));
 }
 
 void AudioSystem::set_ambience_volume(float volume) {
   ambience_volume = sanitize_volume(volume);
   Game::Audio::Settings::save_ambience_volume(ambience_volume.load());
+  enqueue(AudioEvent(AudioEventType::REFRESH_VOLUMES));
 }
 
 void AudioSystem::apply_offline_reference_mix() {
@@ -291,8 +299,10 @@ void AudioSystem::apply_offline_reference_mix() {
   ambience_volume = reference.ambience;
 
   if (m_music_player != nullptr) {
-    m_music_player->set_volume(master_volume.load() * music_volume.load());
+    m_music_player->set_volume(get_effective_volume(
+        AudioCategory::MUSIC, m_current_music_requested_volume.load()));
   }
+  enqueue(AudioEvent(AudioEventType::REFRESH_VOLUMES));
 
   qInfo() << "AudioSystem: offline reference mix, master" << master_volume.load()
           << "music" << music_volume.load() << "ambience" << ambience_volume.load();
@@ -576,8 +586,13 @@ void AudioSystem::process_event(const AudioEvent& event) {
 
       {
         std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
-        active_sounds.push_back(
-            {resource_id, effective_priority, event.loop, category, now});
+        active_sounds.push_back({resource_id,
+                                 effective_priority,
+                                 event.loop,
+                                 category,
+                                 now,
+                                 requested_volume,
+                                 spatial.volume_scale});
       }
     } else {
       trace_cue_result(event.cue_id,
@@ -598,8 +613,10 @@ void AudioSystem::process_event(const AudioEvent& event) {
       std::lock_guard<std::mutex> const lock(resource_mutex);
       resource_id = resolve_resource_id_locked(event.resource_id);
       AudioResourceConfig const config = get_resource_config_locked(resource_id);
-      effective_volume =
-          get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
+      const float requested = event.volume * config.volume;
+      m_current_music_id = resource_id;
+      m_current_music_requested_volume.store(requested);
+      effective_volume = get_effective_volume(AudioCategory::MUSIC, requested);
     }
 
     (void)m_music_player->play(resource_id,
@@ -616,9 +633,33 @@ void AudioSystem::process_event(const AudioEvent& event) {
     auto it = sounds.find(resource_id);
     if (it != sounds.end()) {
       const AudioResourceConfig config = get_resource_config_locked(resource_id);
-      const float effective =
-          get_effective_volume(AudioCategory::AMBIENCE, event.volume * config.volume);
+      const float requested = event.volume * config.volume;
+      const float effective = get_effective_volume(config.category, requested);
       it->second->set_playing_volume(effective, AudioConstants::DEFAULT_FADE_OUT_MS);
+      std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
+      for (ActiveSound& as : active_sounds) {
+        if (as.id == resource_id) {
+          as.requested_volume = requested;
+        }
+      }
+    }
+    break;
+  }
+  case AudioEventType::REFRESH_VOLUMES: {
+    std::lock_guard<std::mutex> const lock(resource_mutex);
+    cleanup_inactive_sounds_locked();
+    std::unordered_map<std::string, float> targets;
+    {
+      std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
+      for (const ActiveSound& as : active_sounds) {
+        targets[as.id] =
+            get_effective_volume(as.category, as.requested_volume) * as.spatial_scale;
+      }
+    }
+    for (const auto& [resource_id, effective] : targets) {
+      if (auto it = sounds.find(resource_id); it != sounds.end()) {
+        it->second->set_playing_volume(effective, AudioConstants::DEFAULT_FADE_OUT_MS);
+      }
     }
     break;
   }
@@ -649,6 +690,8 @@ void AudioSystem::process_event(const AudioEvent& event) {
   }
   case AudioEventType::STOP_MUSIC: {
     std::lock_guard<std::mutex> const lock(resource_mutex);
+    m_current_music_id.clear();
+    m_current_music_requested_volume.store(AudioConstants::DEFAULT_VOLUME);
     if (m_music_player != nullptr) {
       m_music_player->stop_all(AudioConstants::NO_FADE_MS);
     }
@@ -683,6 +726,10 @@ void AudioSystem::process_event(const AudioEvent& event) {
     }
 
     if (config.category == AudioCategory::MUSIC && m_music_player != nullptr) {
+      if (m_current_music_id == resource_id) {
+        m_current_music_id.clear();
+        m_current_music_requested_volume.store(AudioConstants::DEFAULT_VOLUME);
+      }
       m_music_player->stop_all(AudioConstants::NO_FADE_MS);
       m_music_player->unregister_track(resource_id);
     }
@@ -812,7 +859,12 @@ auto AudioSystem::make_room_in_category_locked(AudioCategory category,
       return false;
     }
     sound_id_to_stop = lowest_it->id;
-    active_sounds.erase(lowest_it);
+    active_sounds.erase(std::remove_if(active_sounds.begin(),
+                                       active_sounds.end(),
+                                       [&](const ActiveSound& as) {
+                                         return as.id == sound_id_to_stop;
+                                       }),
+                        active_sounds.end());
   }
 
   if (!sound_id_to_stop.empty()) {
@@ -844,7 +896,12 @@ void AudioSystem::evict_lowest_priority_sound_locked() {
 
     if (lowest_it != active_sounds.end()) {
       sound_id_to_stop = lowest_it->id;
-      active_sounds.erase(lowest_it);
+      active_sounds.erase(std::remove_if(active_sounds.begin(),
+                                         active_sounds.end(),
+                                         [&](const ActiveSound& as) {
+                                           return as.id == sound_id_to_stop;
+                                         }),
+                          active_sounds.end());
     }
   }
 

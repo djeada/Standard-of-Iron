@@ -350,6 +350,53 @@ auto apply(MapData& data, const QJsonArray& operations) -> Report {
       continue;
     }
 
+    if (verb == QLatin1String("ambience_zone")) {
+      const QString bed = op.value(QStringLiteral("bed")).toString().trimmed();
+      if (bed.isEmpty()) {
+        fail(QStringLiteral("ambience_zone needs a non-empty 'bed'"));
+        continue;
+      }
+      const bool has_poly = op.value(QStringLiteral("polygon")).isArray();
+      const bool has_circle = op.value(QStringLiteral("x")).isDouble() &&
+                              op.value(QStringLiteral("z")).isDouble() &&
+                              op.value(QStringLiteral("radius")).isDouble();
+      if (!has_poly && !has_circle) {
+        fail(QStringLiteral(
+            "ambience_zone needs either ('x','z','radius') or 'polygon'"));
+        continue;
+      }
+      QJsonObject zone;
+      zone[QStringLiteral("bed")] = bed;
+      if (const QString id = op.value(QStringLiteral("id")).toString().trimmed();
+          !id.isEmpty()) {
+        zone[QStringLiteral("id")] = id;
+      }
+      if (const QString night =
+              op.value(QStringLiteral("night_bed")).toString().trimmed();
+          !night.isEmpty()) {
+        zone[QStringLiteral("night_bed")] = night;
+      }
+      if (has_poly) {
+        zone[QStringLiteral("polygon")] = op.value(QStringLiteral("polygon")).toArray();
+      } else {
+        zone[QStringLiteral("x")] = op.value(QStringLiteral("x")).toDouble();
+        zone[QStringLiteral("z")] = op.value(QStringLiteral("z")).toDouble();
+        zone[QStringLiteral("radius")] = op.value(QStringLiteral("radius")).toDouble();
+      }
+      zone[QStringLiteral("fade")] = op.value(QStringLiteral("fade")).toDouble(10.0);
+      QJsonObject root_op;
+      root_op[QStringLiteral("key")] = QStringLiteral("ambience_zones");
+      root_op[QStringLiteral("append")] = zone;
+      QString error;
+      if (apply_root_field(data, root_op, error)) {
+        ++report.applied;
+        report.log.append(QStringLiteral("ambience_zone %1 added").arg(bed));
+      } else {
+        fail(error);
+      }
+      continue;
+    }
+
     if (verb == QLatin1String("terrace") || verb == QLatin1String("block")) {
       QVector<StructureElement> houses;
       QString error;

@@ -219,6 +219,71 @@ auto hold_shield_upright(BakeProfile profile, Render::GL::HumanoidPose& pose) ->
   return true;
 }
 
+namespace {
+
+void bake_sling_throw(Render::GL::HumanoidPoseController& ctrl,
+                      float phase,
+                      Render::GL::HumanoidPose& pose) {
+  constexpr float k_pi = std::numbers::pi_v<float>;
+  auto const ramp = [phase](float begin, float end) {
+    float const t = std::clamp((phase - begin) / (end - begin), 0.0F, 1.0F);
+    return t * t * (3.0F - 2.0F * t);
+  };
+  auto const mix = [](const QVector3D& from, const QVector3D& to, float t) {
+    return from * (1.0F - t) + to * t;
+  };
+
+  auto const markers =
+      Animation::authored_humanoid_clip_markers(Animation::k_humanoid_sling_throw_clip);
+  float const release_phase = markers.weapon_release;
+  float const load = ramp(0.0F, 0.13F);
+  float const raise = ramp(0.12F, 0.24F);
+  float const throw_forward = ramp(0.35F, release_phase);
+  float const follow_through = ramp(release_phase, 0.64F);
+  float const reset = ramp(0.65F, 1.0F);
+  float const coil = std::clamp((phase - 0.19F) / (release_phase - 0.19F), 0.0F, 1.0F);
+  float const angle = (coil * 2.0F - 0.72F) * k_pi;
+  QVector3D const upright_hand = pose.hand_r - pose.shoulder_r;
+  QVector3D const upright_offhand = pose.hand_l - pose.shoulder_l;
+  QVector3D const resting_sling = -pose.grip_axis_r;
+
+  // Plant the lead foot before the cast and let the loaded hip drive the
+  // follow-through.
+  float const plant = ramp(0.07F, 0.27F);
+  float const step_back = ramp(0.70F, 0.98F);
+  pose.foot_l +=
+      QVector3D(-0.035F * (plant - step_back),
+                0.035F * (std::sin(k_pi * plant) + std::sin(k_pi * step_back)),
+                0.17F * (plant - step_back));
+  ctrl.crouch((0.040F * load + 0.025F * follow_through) * (1.0F - reset));
+  ctrl.tilt_torso(0.14F * (raise - 2.0F * follow_through) * (1.0F - reset),
+                  (0.22F * throw_forward - 0.13F * raise) * (1.0F - reset));
+
+  QVector3D right = mix(upright_hand, {0.12F, -0.34F, 0.24F}, load);
+  right =
+      mix(right,
+          {0.17F + 0.08F * std::cos(angle), 0.27F, -0.09F + 0.11F * std::sin(angle)},
+          raise);
+  right = mix(right, {0.07F, 0.14F, 0.51F}, throw_forward);
+  right = mix(right, {-0.23F, -0.27F, 0.29F}, follow_through);
+  ctrl.place_hand_at(Render::GL::Side::Right,
+                     pose.shoulder_r + mix(right, upright_hand, reset));
+
+  QVector3D left = mix(upright_offhand, {0.31F, -0.31F, 0.29F}, load);
+  left = mix(left, {-0.14F, -0.13F, 0.36F}, raise);
+  left = mix(left, {-0.20F, -0.30F, 0.13F}, follow_through);
+  ctrl.place_hand_at(Render::GL::Side::Left,
+                     pose.shoulder_l + mix(left, upright_offhand, reset));
+
+  QVector3D direction = mix(resting_sling, {0.10F, -0.94F, 0.26F}, load);
+  direction = mix(direction, {std::cos(angle), 0.13F, std::sin(angle)}, raise);
+  direction = mix(direction, {0.08F, 0.03F, 1.0F}, throw_forward);
+  direction = mix(direction, {-0.38F, -0.90F, 0.21F}, follow_through);
+  pose.grip_axis_r = -mix(direction, resting_sling, reset).normalized();
+}
+
+} // namespace
+
 void bake_humanoid_clip_frame(BakeProfile profile,
                               const HumanoidClipSpec& clip,
                               std::uint32_t frame_index,
@@ -298,18 +363,14 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       }
       break;
     case BakerAttackType::Sling:
+      bake_sling_throw(ctrl, phase, pose);
+      break;
     case BakerAttackType::Javelin: {
-
-      bool const sling = clip.attack_type == BakerAttackType::Sling;
       float const windup = std::clamp(phase / 0.36F, 0.0F, 1.0F);
       float const release = std::clamp((phase - 0.36F) / 0.10F, 0.0F, 1.0F);
       float const recover = std::clamp((phase - 0.60F) / 0.40F, 0.0F, 1.0F);
-      float const angle = windup * 4.0F * std::numbers::pi_v<float>;
       QVector3D const rest(0.10F, -0.30F, 0.18F);
-      QVector3D const loaded = sling ? QVector3D(0.20F + 0.12F * std::cos(angle),
-                                                 0.20F,
-                                                 0.12F * std::sin(angle))
-                                     : QVector3D(0.13F, 0.15F, -0.30F);
+      QVector3D const loaded(0.13F, 0.15F, -0.30F);
       QVector3D const extended(0.02F, 0.02F, 0.48F);
       QVector3D const cocked = rest * (1.0F - windup) + loaded * windup;
       QVector3D const thrown = cocked * (1.0F - release) + extended * release;
@@ -319,9 +380,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
                      QVector3D(0.08F, -0.18F, 0.10F);
       pose.hand_l = pose.shoulder_l + QVector3D(-0.04F, -0.22F, 0.27F);
       pose.elbow_l = pose.shoulder_l + QVector3D(-0.12F, -0.17F, 0.10F);
-      pose.grip_axis_r =
-          sling ? QVector3D(std::cos(angle), 0.12F, std::sin(angle)).normalized()
-                : QVector3D(0.0F, 0.20F - release * 0.15F, 1.0F).normalized();
+      pose.grip_axis_r = QVector3D(0.0F, 0.20F - release * 0.15F, 1.0F).normalized();
       pose.grip_axis_l = QVector3D(0.0F, 1.0F, 0.0F);
       ctrl.tilt_torso(-0.10F * windup * (1.0F - recover),
                       (0.16F * windup - 0.30F * release) * (1.0F - recover));

@@ -31,6 +31,9 @@ struct PendingMissionWave {
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
   QString ai_id;
   QString label;
+  QString convoy_checkpoint;
+  float checkpoint_reached_at = -1.0F;
+  bool reinforcement = false;
   float trigger_time = 0.0F;
   Game::Mission::WaveTriggerMode trigger = Game::Mission::WaveTriggerMode::Time;
   float grace_seconds = Game::Mission::k_default_wave_grace_seconds;
@@ -87,6 +90,7 @@ struct MissionWaveBuildContext {
   const Game::Systems::LevelSnapshot& level;
   const Game::Systems::NationRegistry& nations;
   QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
+  int local_owner_id = 1;
 };
 
 struct MissionSetupApplyContext {

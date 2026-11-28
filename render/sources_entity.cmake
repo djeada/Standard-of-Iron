@@ -136,6 +136,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/rig_dsl/rig_interpreter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/rpg_telegraph_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_assault_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/supply_wagon_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_crew.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/skirmisher_renderer.cpp

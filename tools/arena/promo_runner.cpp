@@ -36,7 +36,10 @@
 #include "arena_typography.h"
 #include "arena_viewport.h"
 #include "game/audio/audio_system.h"
+#include "game/audio/cue_trace.h"
+#include "game/core/component_gameplay.h"
 #include "game/core/event_manager.h"
+#include "game/core/world.h"
 #include "game/session/session_context.h"
 #include "game/visuals/team_colors.h"
 #include "promo_camera_export.h"
@@ -1272,6 +1275,42 @@ private:
     static const bool fast_forward_enabled =
         qEnvironmentVariableIsEmpty("SOI_PROMO_NO_FASTFORWARD");
     m_viewport.set_batch_render_suppressed(fast_forward_enabled && far_from_window);
+    if (m_audio != nullptr) {
+      const auto& cap_cam = m_viewport.capture_camera();
+      QVector3D listener_pos = cap_cam.valid ? cap_cam.target : target;
+      const char* listener_mode = "rts";
+      if (const auto rpg_id = m_viewport.rpg_commander_id();
+          rpg_id != 0 && m_viewport.world() != nullptr) {
+        if (const auto* transform =
+                m_viewport.world()->try_get<Engine::Core::TransformComponent>(rpg_id)) {
+          listener_pos = QVector3D(transform->position.x,
+                                   transform->position.y + 1.65F,
+                                   transform->position.z);
+          listener_mode = "commander";
+        }
+      }
+      float right_x = 1.0F;
+      float right_z = 0.0F;
+      if (cap_cam.valid) {
+        const float fx = cap_cam.target.x() - cap_cam.eye.x();
+        const float fz = cap_cam.target.z() - cap_cam.eye.z();
+        const float len = std::hypot(fx, fz);
+        if (len > 1e-4F) {
+          right_x = -fz / len;
+          right_z = fx / len;
+        }
+      }
+      Game::Audio::CueTrace::instance().set_listener({.x = listener_pos.x(),
+                                                      .y = listener_pos.y(),
+                                                      .z = listener_pos.z(),
+                                                      .mode = listener_mode});
+      AudioSystem::get_instance().set_listener(
+          {.position = {listener_pos.x(), listener_pos.y(), listener_pos.z()},
+           .right_x = right_x,
+           .right_z = right_z,
+           .valid = true});
+      m_audio->set_darkness_amount(m_viewport.active_lighting().darkness_amount());
+    }
     if (in_window && !m_shot_armed) {
       m_shot_armed = true;
       m_viewport.set_batch_fixed_step(m_step_seconds);

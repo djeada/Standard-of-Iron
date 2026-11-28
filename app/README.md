@@ -76,7 +76,7 @@ The `SessionContext` itself is created earlier, in the `GameEngine` constructor 
 Save:
 
 1. QML signals `save_requested`, `quicksave_requested` or `autosave_requested` on the save-slots view model, or the autosave timer fires; `SaveSlotController` handles them (GUI thread).
-2. `app/persistence/save_slot_controller.cpp` `SaveSlotController::begin_save`: rejects concurrent saves, leaves commander mode, queues the capture.
+2. `app/persistence/save_slot_controller.cpp` `SaveSlotController::begin_save`: rejects concurrent saves and queues the capture. The save records the current control mode and commander view.
 3. `app/persistence/save_orchestrator.cpp` `SaveOrchestrator::queue`: holds one pending capture while the simulation runs.
 4. `app/persistence/save_orchestrator.cpp` `SaveOrchestrator::drain` (simulation thread, end of tick): runs the capture callback, then bounces delivery to the GUI thread.
 5. `app/persistence/save_load_coordinator.cpp` `SaveLoadCoordinator::begin_save_to_slot`: builds metadata and the session snapshot, calls `Serialization::serialize_world`, verifies the tick/RNG capture stamp (a mismatch is a torn capture and the save is refused), hands a `SaveRequest` to the service.

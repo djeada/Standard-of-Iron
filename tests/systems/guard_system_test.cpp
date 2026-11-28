@@ -96,6 +96,41 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowSmallMovements) {
   EXPECT_FALSE(guard_movement->get_has_target());
 }
 
+TEST_F(GuardSystemTest, WagonEscortKeepsItsSideAndDoesNotReplanForSmallChanges) {
+  auto* wagon = world->create_entity();
+  auto* wagon_transform = wagon->add_component<TransformComponent>(20.0F, 0.0F, 20.0F);
+  auto* wagon_unit = wagon->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  wagon_unit->spawn_type = Game::Units::SpawnType::SupplyWagon;
+
+  auto* guard = world->create_entity();
+  auto* guard_transform = guard->add_component<TransformComponent>(15.0F, 0.0F, 16.0F);
+  guard->add_component<UnitComponent>(100, 100, 3.5F, 12.0F);
+  auto* movement = guard->add_component<MovementComponent>();
+  auto* mode = guard->add_component<GuardModeComponent>();
+  mode->active = true;
+  mode->guarded_entity_id = wagon->get_id();
+  mode->has_guard_target = true;
+  mode->guard_position_x = 20.0F;
+  mode->guard_position_z = 20.0F;
+
+  guard_system.update(world.get(), 0.1F);
+  ASSERT_TRUE(movement->get_has_target());
+  ASSERT_LT(mode->guard_position_x, wagon_transform->position.x);
+  auto const order = movement->get_order_sequence();
+
+  guard_transform->position.x = 20.1F;
+  wagon_transform->position.z += 0.8F;
+  guard_system.update(world.get(), 0.1F);
+  EXPECT_LT(mode->guard_position_x, wagon_transform->position.x);
+  EXPECT_EQ(movement->get_order_sequence(), order);
+
+  movement->set_manual_velocity(0.3F, 1.2F);
+  wagon_transform->position.z += 1.5F;
+  guard_system.update(world.get(), 0.1F);
+  EXPECT_GT(movement->get_order_sequence(), order);
+  EXPECT_NEAR(movement->get_vz(), 1.2F, 0.01F);
+}
+
 TEST_F(GuardSystemTest, GuardDoesNotFollowWhileAttacking) {
 
   auto* guard = world->create_entity();

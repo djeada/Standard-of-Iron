@@ -24,6 +24,13 @@
 # and fails if a pattern here matches nothing, so a rename cannot quietly retire
 # a gate.
 
+# ---- sweeps over shipped assets ---------------------------------------------
+# app_tests
+# Decodes every startup and mission sound, then walks the shipped Rome and
+# Carthage maps. Whichever test first needs a queued sound waits for the whole
+# decode, 74 s on a pull-request runner, so the fixture moves together.
+CitySoundscapeTest.*
+
 # ---- headless battles, sieges and AI matches --------------------------------
 # Each of these runs a real world forward for thousands of ticks.
 

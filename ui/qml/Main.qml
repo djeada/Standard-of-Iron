@@ -17,7 +17,7 @@ ApplicationWindow {
 
     property bool suppress_modals: false
 
-    readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
+    readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible || abandon_battle_dialog.visible || quickload_dialog.visible || error_dialog.visible
     readonly property bool simulation_suspended: mainWindow.game_started && (mainWindow.game_paused || mainWindow.overlay_active || hud.modal_panel_open)
 
     property bool capture_view_ready: false
@@ -432,7 +432,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 11
-        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && game.cursor_mode !== "place_commander_rally" && game.cursor_mode !== "place_barracks_rally" && !mapSelect.visible && !missions_screen.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
+        visible: gameViewItem.commander_pointer_owned
         enabled: visible
         acceptedButtons: Qt.NoButton
         hoverEnabled: true
@@ -485,7 +485,7 @@ ApplicationWindow {
         objectName: "pauseBanner"
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: hud.center_stack_bottom + Design.Metrics.space8
+        anchors.topMargin: Math.max(hud.center_stack_bottom, hud.top_reserved_height) + Design.Metrics.space8
         z: 10
         visible: mainWindow.game_paused && game_started && !mainWindow.overlay_active && !hud.modal_panel_open
         width: pauseRow.implicitWidth + Design.Metrics.space24 * 2
@@ -513,7 +513,7 @@ ApplicationWindow {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("Press %1 to resume").arg(InputBindings.display_shortcut_for("rts.pause"))
+                text: qsTr("Press %1 to resume").arg(InputBindings.display_shortcut_for(hud.commander_rpg_mode ? "commander.pause" : "rts.pause"))
                 color: Theme.textSubLite
                 font.pixelSize: Design.Typography.caption
             }
@@ -524,7 +524,7 @@ ApplicationWindow {
         id: load_screen
 
         anchors.fill: parent
-        z: 15
+        z: 45
         is_loading: (typeof game !== 'undefined') ? game.is_loading : false
         progress: (typeof game !== 'undefined') ? game.loading_progress : 0
         stage_text: (typeof game !== 'undefined') ? game.loading_stage_text : qsTr("Loading...")
@@ -905,7 +905,7 @@ ApplicationWindow {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: hud.visible ? hud.bottom_panel_height : 0
         top_anchored: hud.visible && hud.commander_rpg_mode
-        top_margin: hud.visible ? hud.top_panel_height : 0
+        top_margin: hud.visible ? hud.top_reserved_height : 0
         z: 30
     }
 
@@ -1035,6 +1035,12 @@ ApplicationWindow {
         }
     }
 
+    BootScreen {
+        anchors.fill: parent
+        z: 50
+        visible: !gameViewItem.renderer_ready && !error_dialog.visible
+    }
+
     Design.IronDialog {
         id: abandon_battle_dialog
 
@@ -1050,6 +1056,7 @@ ApplicationWindow {
         onPrimaryActivated: {
             var launch = mainWindow.pending_launch;
             mainWindow.pending_launch = null;
+            abandon_battle_dialog.close();
             if (launch)
                 launch();
         }
@@ -1067,7 +1074,9 @@ ApplicationWindow {
         message: qsTr("The battle in progress will be replaced by the quicksave. Anything since then is lost.")
         primaryAction: qsTr("Load the quicksave")
         secondaryAction: qsTr("Keep fighting")
-        onPrimaryActivated: mainWindow.start_load("quicksave")
+        onPrimaryActivated: Qt.callLater(function () {
+                mainWindow.start_load("quicksave");
+            })
     }
 
     Connections {

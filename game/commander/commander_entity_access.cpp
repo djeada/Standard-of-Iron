@@ -83,4 +83,38 @@ void cancel_current_attack(Engine::Core::Entity& commander) {
   }
 }
 
+void cancel_held_bow_draw(Engine::Core::Entity& commander) {
+  auto const* registry = commander.registry();
+  if (registry == nullptr) {
+    return;
+  }
+  if (const auto* aim =
+          registry->try_get<Engine::Core::RpgCommanderAimComponent>(commander.get_id());
+      aim != nullptr && aim->is_drawing()) {
+    cancel_current_attack(commander);
+  }
+}
+
+void restore_view_preferences(Engine::Core::World& world,
+                              Engine::Core::EntityID commander_id,
+                              std::optional<bool> close_camera,
+                              std::optional<bool> bow_stance) {
+  if (auto* data = world.try_get<Engine::Core::CommanderComponent>(commander_id);
+      data != nullptr && close_camera.has_value()) {
+    data->close_camera_mode = *close_camera;
+  }
+  if (!bow_stance.has_value()) {
+    return;
+  }
+  auto* aim = world.try_get<Engine::Core::RpgCommanderAimComponent>(commander_id);
+  if (aim == nullptr) {
+    aim = world.emplace<Engine::Core::RpgCommanderAimComponent>(commander_id);
+  }
+  if (aim != nullptr) {
+    aim->stance = *bow_stance ? Engine::Core::FpvWeaponStance::Bow
+                              : Engine::Core::FpvWeaponStance::Melee;
+    aim->stance_resolved = true;
+  }
+}
+
 } // namespace Game::Commander

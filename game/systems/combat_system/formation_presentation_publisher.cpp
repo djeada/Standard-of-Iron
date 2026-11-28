@@ -379,6 +379,7 @@ void publish_entity(Engine::Core::World& world,
                     ForeignFighters& foreign,
                     const SurroundBoard& board,
                     const Game::Map::WorldPropClearanceIndex& props,
+                    bool has_wagon_obstacles,
                     float delta_time) {
   if (!FormationCombat::has_formation_slots(entity)) {
     return;
@@ -435,6 +436,7 @@ void publish_entity(Engine::Core::World& world,
   frame.squad_speed = squad_speed_of(world, id);
   frame.passability = passability_of(world, id);
   frame.mounted = Game::Units::is_cavalry(unit.spawn_type);
+  frame.has_wagon_obstacles = has_wagon_obstacles;
   survey_surroundings(frame, props);
   frame.frame_sign = FormationCombat::layout_frame_sign(
       layout, traversal != nullptr && traversal->about_faced);
@@ -475,10 +477,25 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
   collect_foreign_fighters(world, foreign.grid);
   enlist_surrounders(world, layouts, board);
   auto const props = Game::Map::shared_world_prop_clearance_index();
+  bool has_wagon_obstacles = false;
+  for (auto [id, unit] : world.view<const Engine::Core::UnitComponent>()) {
+    if (unit.spawn_type == Game::Units::SpawnType::SupplyWagon && unit.health > 0 &&
+        !world.has<Engine::Core::PendingRemovalComponent>(id)) {
+      has_wagon_obstacles = true;
+      break;
+    }
+  }
   for (auto [entity_ref, entity_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
-    publish_entity(
-        world, entity_ref, entity_unit, layouts, foreign, board, *props, delta_time);
+    publish_entity(world,
+                   entity_ref,
+                   entity_unit,
+                   layouts,
+                   foreign,
+                   board,
+                   *props,
+                   has_wagon_obstacles,
+                   delta_time);
   }
 }
 

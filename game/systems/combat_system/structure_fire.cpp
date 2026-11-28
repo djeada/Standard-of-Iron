@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "../../core/component_core.h"
 #include "../../core/component_gameplay.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
@@ -101,9 +102,17 @@ auto apply_structure_incendiary_damage(Engine::Core::Entity& structure,
   if (!already_burning) {
     fire->ignition_elapsed = 0.0F;
     fire->tick_accumulator = 0.0F;
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
-                                               "build.building_burning"));
+    auto cue = Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
+                                                      "build.building_burning");
+    auto const* registry = structure.registry();
+    if (const auto* transform =
+            registry != nullptr ? registry->try_get<Engine::Core::TransformComponent>(
+                                      structure.get_id())
+                                : nullptr;
+        transform != nullptr) {
+      cue.at(transform->position.x, transform->position.y, transform->position.z);
+    }
+    Engine::Core::EventManager::instance().publish(std::move(cue));
   }
   return true;
 }

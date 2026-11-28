@@ -23,6 +23,7 @@
 #include "deferred_mutations.h"
 #include "entity.h"
 #include "registry.h"
+#include "render_phase.h"
 #include "system.h"
 #include "system_access_recorder.h"
 #include "system_profiler.h"
@@ -386,8 +387,13 @@ private:
 
 class World::EntityLock {
 public:
-  explicit EntityLock(const World& world)
-      : m_lock(world.m_registry) {}
+  explicit EntityLock(const World& world,
+                      std::source_location accessor = std::source_location::current())
+      : m_lock(world.m_registry) {
+    if (RenderPhase::live_world_forbidden() && !world.m_is_render_snapshot) {
+      RenderPhase::report_violation(accessor.function_name());
+    }
+  }
 
   EntityLock(const EntityLock&) = delete;
   EntityLock(EntityLock&&) = delete;

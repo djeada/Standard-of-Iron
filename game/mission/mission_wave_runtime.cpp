@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "game/audio/cue_ids.h"
 #include "game/core/world.h"
 #include "game/mission/campaign_manager.h"
 #include "game/session/session_context.h"
@@ -26,6 +27,15 @@ void MissionWaveRuntime::reset() {
   m_waves.clear();
   m_events.clear();
   m_director.reset();
+  m_convoy.reset();
+}
+
+auto MissionWaveRuntime::serialize() const -> QJsonObject {
+  auto state = m_director.serialize();
+  if (m_convoy.active()) {
+    state.insert("convoy", m_convoy.serialize());
+  }
+  return state;
 }
 
 void MissionWaveRuntime::bind_after_setup(
@@ -34,18 +44,27 @@ void MissionWaveRuntime::bind_after_setup(
     std::vector<Game::Mission::PendingMissionEvent> events) {
   m_waves = std::move(waves);
   m_events = std::move(events);
+  if (binding.campaign != nullptr && binding.level != nullptr &&
+      binding.world != nullptr) {
+    const auto& mission = binding.campaign->current_mission_definition();
+    if (mission.has_value() && mission->convoy.has_value()) {
+      m_convoy.bind(
+          *mission->convoy, *binding.world, *binding.level, binding.local_owner_id);
+      m_convoy.spawn_wagons();
+      m_convoy.update_wave_checkpoints(m_waves);
+    }
+  }
   m_director.bind(&m_waves, binding.world);
   m_director.set_elapsed(static_cast<float>(m_elapsed));
   if (binding.victory_service != nullptr) {
     binding.victory_service->set_mission_wave_query(&m_director);
+    binding.victory_service->set_convoy_query(m_convoy.active() ? &m_convoy : nullptr);
   }
 }
 
 void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
                                  const QJsonObject& wave_state) {
-  m_waves.clear();
-  m_events.clear();
-  m_director.reset();
+  reset();
   const double saved_play_time =
       std::max(0.0, wave_state.value(QLatin1String(k_play_time_key)).toDouble(0.0));
   m_elapsed = saved_play_time;
@@ -66,9 +85,16 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
        .mission_difficulty = binding.campaign->current_mission_context().difficulty,
        .level = *binding.level,
        .nations = Game::Session::session_for(*binding.world).nations(),
-       .defense_reference_world_position = defense_reference});
+       .defense_reference_world_position = defense_reference,
+       .local_owner_id = binding.local_owner_id});
 
   m_events = Game::Mission::build_pending_mission_events(mission);
+  if (mission.convoy.has_value()) {
+    m_convoy.bind(
+        *mission.convoy, *binding.world, *binding.level, binding.local_owner_id);
+    m_convoy.restore(wave_state.value("convoy").toObject());
+    m_convoy.update_wave_checkpoints(m_waves);
+  }
 
   m_director.bind(&m_waves, binding.world);
   m_director.restore(wave_state);
@@ -80,6 +106,7 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
 
   if (binding.victory_service != nullptr) {
     binding.victory_service->set_mission_wave_query(&m_director);
+    binding.victory_service->set_convoy_query(m_convoy.active() ? &m_convoy : nullptr);
   }
 }
 
@@ -117,6 +144,7 @@ auto MissionWaveRuntime::advance(const MissionWaveBinding& binding,
 
   m_elapsed += static_cast<double>(delta_seconds);
   effects.announcements = fire_due_events(*binding.world);
+  m_convoy.advance(delta_seconds, static_cast<float>(m_elapsed), m_waves);
 
   if (m_waves.empty()) {
     return effects;
@@ -127,9 +155,16 @@ auto MissionWaveRuntime::advance(const MissionWaveBinding& binding,
 
   bool spawned_any = false;
   for (const auto index : director_effects.waves_to_spawn) {
-    const auto spawn_effects =
-        m_spawner.spawn({*binding.world, *binding.level, static_cast<float>(m_elapsed)},
-                        m_waves[index]);
+    const auto& wave = m_waves[index];
+    const auto spawn_effects = m_spawner.spawn(
+        {*binding.world, *binding.level, static_cast<float>(m_elapsed)}, wave);
+    if (wave.reinforcement && !spawn_effects.spawned_entity_ids.empty()) {
+      for (const auto id : spawn_effects.spawned_entity_ids) {
+        m_convoy.assign_escort(id);
+      }
+      effects.audio_cues.append(
+          QString::fromLatin1(Game::Audio::Cue::k_alert_reinforcements));
+    }
     for (const auto& announcement : spawn_effects.mission_announcements) {
       effects.announcements.append(announcement);
     }

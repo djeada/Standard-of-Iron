@@ -69181,6 +69181,114 @@
     "value": "Two harbours, the stepped Byrsa, the gardens of Megara and the wall across the isthmus."
   },
   {
+    "op": "ambience_zone",
+    "bed": "ambient.quay_work",
+    "fade": 14.0,
+    "id": "merchant_harbour",
+    "night_bed": "ambient.mediterranean_harbor",
+    "x": 187.51,
+    "z": 196.0,
+    "radius": 44.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.quay_work",
+    "fade": 14.0,
+    "id": "cothon_harbour",
+    "night_bed": "ambient.mediterranean_harbor",
+    "x": 105.01,
+    "z": 196.0,
+    "radius": 42.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_square_crowd",
+    "fade": 12.0,
+    "id": "carthage_agora",
+    "night_bed": "ambient.camp_fire_night",
+    "x": 109.01,
+    "z": 122.0,
+    "radius": 36.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.livestock_market",
+    "fade": 10.0,
+    "id": "carthage_bazaar",
+    "night_bed": "ambient.city_street_night",
+    "x": 74.0,
+    "z": 88.0,
+    "radius": 26.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.carthage_war_camp_01",
+    "fade": 9.0,
+    "id": "elephant_yard",
+    "night_bed": "ambient.carthage_war_camp_02",
+    "x": 108.0,
+    "z": 76.0,
+    "radius": 22.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.temple_precinct",
+    "fade": 14.0,
+    "id": "byrsa_precinct",
+    "x": -70.0,
+    "z": 30.0,
+    "radius": 38.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.temple_precinct",
+    "fade": 10.0,
+    "id": "tophet_precinct",
+    "x": 45.01,
+    "z": 285.76,
+    "radius": 28.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "megara_oasis",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": 70.0,
+    "z": -148.0,
+    "radius": 24.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "garden_of_tanit",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": -96.0,
+    "z": -152.0,
+    "radius": 20.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.city_garden_day",
+    "fade": 10.0,
+    "id": "megara_water_gardens",
+    "night_bed": "ambient.city_garden_dusk",
+    "x": -90.0,
+    "z": -240.0,
+    "radius": 42.0
+  },
+  {
+    "op": "ambience_zone",
+    "bed": "ambient.drill_field",
+    "fade": 16.0,
+    "id": "isthmus_garrison",
+    "night_bed": "ambient.carthage_war_camp_02",
+    "x": -220.0,
+    "z": 10.0,
+    "radius": 50.0
+  },
+  {
     "op": "add",
     "kind": "structure",
     "json": {

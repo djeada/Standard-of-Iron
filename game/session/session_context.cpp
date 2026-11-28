@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "../command/command_queue.h"
+#include "../command/command_system.h"
 #include "../command/replay.h"
 #include "../core/ambient_session.h"
 #include "../core/event_manager.h"
@@ -91,6 +92,9 @@ SessionContext::SessionContext(const Config& config)
 
   m_state->building_collision.bind_navigation(&m_state->navigation);
   m_state->world.add_world_cleared_observer([state = m_state.get()]() {
+    if (auto* commands = state->world.get_system<Game::Command::CommandSystem>()) {
+      commands->clear_commander_controls();
+    }
     state->alliance.clear();
     state->marketplace.clear_ally_exchange();
     state->simulation_visibility.clear();

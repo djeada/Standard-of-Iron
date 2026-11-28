@@ -217,8 +217,10 @@ Item {
                     text: messageRoot.source ? messageRoot.source.speaker_name : ""
                     color: messageRoot.accent
                     elide: Text.ElideRight
+                    fontSizeMode: messageRoot.compact ? Text.HorizontalFit : Text.FixedSize
+                    minimumPixelSize: Design.Typography.caption
                     font.family: Design.Typography.displayFamily
-                    font.pixelSize: Design.Typography.subheading
+                    font.pixelSize: messageRoot.compact ? Design.Typography.body : Design.Typography.subheading
                     font.weight: Design.Typography.bold
                 }
 
@@ -266,7 +268,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.topMargin: Design.Metrics.space4
                     Layout.preferredHeight: Math.min(lineMetrics.contentHeight, messageRoot.lineRoom)
-                    text: Design.A11y.reducedMotion ? fullText.text : fullText.text.substring(0, messageRoot.revealed)
+                    text: messageRoot.compact || Design.A11y.reducedMotion ? fullText.text : fullText.text.substring(0, messageRoot.revealed)
                     color: Design.Theme.textPrimary
                     wrapMode: Text.WordWrap
                     font.family: Design.Typography.displayFamily

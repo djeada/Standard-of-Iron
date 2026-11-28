@@ -3,6 +3,8 @@
 #include <QJsonObject>
 #include <QString>
 
+#include <optional>
+
 #include "mission_definition.h"
 
 namespace Game::Mission {
@@ -22,6 +24,9 @@ private:
   static auto parse_ai_personality(const QJsonObject& obj) -> AIPersonality;
   static auto parse_wave_composition(const QJsonObject& obj) -> WaveComposition;
   static auto parse_wave(const QJsonObject& obj) -> Wave;
+  static auto parse_convoy(const QJsonObject& authored,
+                           const MissionDefinition& mission,
+                           QString* error_msg) -> std::optional<ConvoyDefinition>;
   static auto parse_ai_setup(const QJsonObject& obj) -> AISetup;
   static auto parse_condition(const QJsonObject& obj) -> Condition;
   static auto parse_stage(const QJsonObject& obj) -> MissionStage;

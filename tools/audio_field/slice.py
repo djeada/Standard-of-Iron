@@ -111,14 +111,17 @@ def cut(
     *,
     lead_ms: float = 8.0,
     length_ms: float = 0.0,
+    fade_in_ms: float = 2.0,
     fade_out_ms: float = 40.0,
 ) -> list[float]:
-    """One hit as its own buffer, with a lead-in and a faded tail.
+    """One hit as its own buffer, with a lead-in, soft entry, and a faded tail.
 
     The lead-in matters: cutting exactly on the onset clips the attack, and the
-    attack is the entire character of an impact. The fade-out matters for the
-    opposite reason -- ending on a non-zero sample is a click, and a click on a
-    cue that fires every 90 ms is what the player will actually hear.
+    attack is the entire character of an impact. A tiny fade-in ensures a cut
+    near the start of a recording cannot click at sample zero. The fade-out
+    matters for the opposite reason -- ending on a non-zero sample is a click,
+    and a click on a cue that fires every 90 ms is what the player will actually
+    hear.
     """
     lead = int(rate * lead_ms / 1000.0)
     start = max(0, hit.start - lead)
@@ -128,6 +131,10 @@ def cut(
         end = min(len(samples), hit.end)
 
     out = samples[start:end]
+    fade_in = min(int(rate * fade_in_ms / 1000.0), len(out))
+    for k in range(fade_in):
+        t = (k / fade_in) * 0.5 * math.pi
+        out[k] *= math.sin(t)
     fade = min(int(rate * fade_out_ms / 1000.0), len(out))
     for k in range(fade):
         t = (k / fade) * 0.5 * math.pi

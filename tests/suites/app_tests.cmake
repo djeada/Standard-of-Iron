@@ -10,6 +10,7 @@ add_executable(
     app/session_timeline_test.cpp
     app/support_bundle_test.cpp
     app/version_info_test.cpp
+    app/render_thread_isolation_test.cpp
     app/startup_supervisor_test.cpp
     app/language_override_test.cpp
     core/audio_system_test.cpp
@@ -25,6 +26,7 @@ add_executable(
     core/loop_seam_test.cpp
     core/resampler_test.cpp
     core/ambience_assets_test.cpp
+    core/city_soundscape_test.cpp
     core/weather_audio_test.cpp
     core/audio_command_ring_test.cpp
     core/audio_backend_test.cpp
@@ -74,6 +76,7 @@ add_executable(
     core/iron_sepulcher_watch_mission_test.cpp
     core/match_setup_difficulty_test.cpp
     core/mission_startup_test.cpp
+    ui/startup_screens_test.cpp
     core/production_manager_test.cpp
     core/placement_state_test.cpp
     core/economy_overview_test.cpp

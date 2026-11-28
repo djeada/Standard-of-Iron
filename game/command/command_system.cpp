@@ -15,6 +15,10 @@
 
 namespace Game::Command {
 
+void CommandSystem::clear_commander_controls() {
+  m_commanders.clear();
+}
+
 auto CommandSystem::capture_checkpoint() const -> QJsonArray {
   QJsonArray state;
   for (const auto& [owner, control] : m_commanders) {

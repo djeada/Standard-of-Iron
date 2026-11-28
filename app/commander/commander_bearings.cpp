@@ -20,6 +20,7 @@ namespace {
 
 constexpr float k_own_army_minimum_distance = 14.0F;
 constexpr float k_rally_flag_minimum_distance = 6.0F;
+constexpr float k_convoy_minimum_distance = 2.5F;
 
 auto bearing_to(float from_x, float from_z, float to_x, float to_z, float view_yaw)
     -> float {
@@ -40,6 +41,8 @@ auto commander_bearing_kind_name(CommanderBearing::Kind kind) -> const char* {
     return "army";
   case CommanderBearing::Kind::RallyFlag:
     return "rally";
+  case CommanderBearing::Kind::Convoy:
+    return "convoy";
   }
   return "enemy";
 }
@@ -72,6 +75,8 @@ auto collect_commander_bearings(const CommanderBearingsInput& input)
   using Index = Engine::Core::WorldSpatialIndex;
   float nearest_enemy_sq = std::numeric_limits<float>::max();
   const Index::Entry* nearest_enemy = nullptr;
+  float nearest_wagon_sq = std::numeric_limits<float>::max();
+  const Index::Entry* nearest_wagon = nullptr;
   double army_x = 0.0;
   double army_z = 0.0;
   int army_count = 0;
@@ -82,6 +87,16 @@ auto collect_commander_bearings(const CommanderBearingsInput& input)
       continue;
     }
     if (entry.owner_id == input.local_owner_id) {
+      if (const auto* unit = world.try_get<Engine::Core::UnitComponent>(entry.id);
+          unit != nullptr && unit->spawn_type == Game::Units::SpawnType::SupplyWagon) {
+        const float distance_sq =
+            ((entry.x - x) * (entry.x - x)) + ((entry.z - z) * (entry.z - z));
+        if (distance_sq < nearest_wagon_sq) {
+          nearest_wagon_sq = distance_sq;
+          nearest_wagon = &entry;
+        }
+        continue;
+      }
       army_x += entry.x;
       army_z += entry.z;
       ++army_count;
@@ -111,6 +126,11 @@ auto collect_commander_bearings(const CommanderBearingsInput& input)
   if (nearest_enemy != nullptr) {
     bearings.push_back(
         mark(CommanderBearing::Kind::Enemy, nearest_enemy->x, nearest_enemy->z));
+  }
+  if (nearest_wagon != nullptr &&
+      nearest_wagon_sq >= k_convoy_minimum_distance * k_convoy_minimum_distance) {
+    bearings.push_back(
+        mark(CommanderBearing::Kind::Convoy, nearest_wagon->x, nearest_wagon->z));
   }
   if (army_count > 0) {
     auto bearing = mark(CommanderBearing::Kind::Army,

@@ -71,8 +71,9 @@ auto prepare_move(Engine::Core::World& world,
   result.movement = movement;
   result.previous_vx = movement->get_vx();
   result.previous_vz = movement->get_vz();
-  result.preserve_velocity =
-      options.kind == MoveOrderKind::AttackChase && movement->get_has_target();
+  result.preserve_velocity = (options.kind == MoveOrderKind::AttackChase ||
+                              options.kind == MoveOrderKind::GuardReturn) &&
+                             movement->get_has_target();
   return result;
 }
 

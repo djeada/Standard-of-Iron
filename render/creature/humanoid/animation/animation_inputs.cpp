@@ -634,6 +634,24 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
         anim.authored_action_phase =
             std::clamp(presentation->authored_action_phase, 0.0F, 1.0F);
+        if (presentation->fpv_controlled &&
+            definition->weapon_family ==
+                Game::Systems::CombatActions::WeaponFamily::Bow) {
+          // The bow pose reaches the string anchor halfway through its clip.
+          constexpr float k_bow_pose_release_phase = 0.5F;
+          const float release = action_event_time(
+              *definition,
+              Game::Systems::CombatActions::CombatActionEventType::ProjectileRelease,
+              k_bow_pose_release_phase);
+          const float phase = anim.authored_action_phase;
+          if (release > 0.0F && release < 1.0F) {
+            anim.authored_action_phase =
+                phase <= release ? k_bow_pose_release_phase * phase / release
+                                 : std::lerp(k_bow_pose_release_phase,
+                                             1.0F,
+                                             (phase - release) / (1.0F - release));
+          }
+        }
         anim.has_authored_action_phase = authored_timeline_is_authoritative;
         if (definition->authored_clip_id != Animation::k_unmapped_clip) {
           anim.has_authored_action_clip = true;

@@ -344,13 +344,8 @@ void render_effects(const RenderEffectsContext& context,
     render_objective_marker(context.renderer, *context.objective_marker);
   }
 
-  std::optional<QVector3D> preview_waypoint;
-  if (context.command_controller != nullptr &&
-      context.command_controller->has_patrol_first_waypoint()) {
-    preview_waypoint = context.command_controller->get_patrol_first_waypoint();
-  }
   Render::GL::render_patrol_flags(
-      context.renderer, res, *context.snapshot, preview_waypoint);
+      context.renderer, res, *context.snapshot, context.patrol_preview_waypoint);
 
   Render::GL::render_commander_rally_flags(context.renderer,
                                            res,
@@ -358,68 +353,73 @@ void render_effects(const RenderEffectsContext& context,
                                            context.local_owner_id,
                                            context.commander_rally_preview_pos);
 
-  if (context.command_controller != nullptr &&
-      context.command_controller->formation().is_placing_formation()) {
-    if (context.session == nullptr) {
-      return;
-    }
-    auto& session = *context.session;
-    Render::GL::FormationPlacementInfo placement;
-    placement.position =
-        context.command_controller->formation().get_formation_placement_position();
-    placement.position.setY(session.terrain().get_terrain_height(
-        placement.position.x(), placement.position.z()));
-    placement.angle_degrees =
-        context.command_controller->formation().get_formation_facing_degrees();
-    placement.aim_distance =
-        context.command_controller->formation().get_formation_aim_distance();
-    placement.active = true;
-
-    const auto* nation =
-        session.nations().get_nation_for_player(context.local_owner_id);
-    if (nation != nullptr) {
-      switch (nation->id) {
-      case Game::Systems::NationID::RomanRepublic:
-        placement.accent_color = QVector3D(0.85F, 0.12F, 0.10F);
-        break;
-      case Game::Systems::NationID::Carthage:
-        placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
-        break;
-      case Game::Systems::NationID::IronSepulcher:
-        placement.accent_color = QVector3D(0.58F, 0.60F, 0.66F);
-        break;
-      default:
-        break;
-      }
-    }
-
-    const auto& preview = context.command_controller->formation().formation_preview();
-    placement.slot_markers.reserve(preview.slot_list.size());
-    for (std::size_t index = 0; index < preview.slot_list.size(); ++index) {
-      const auto& slot = preview.slot_list[index];
-      Render::GL::FormationSlotMarker marker;
-      marker.position = slot.world_position;
-      marker.position.setY(session.terrain().get_terrain_height(
-          slot.world_position.x(), slot.world_position.z()));
-
-      float const half_width = index < preview.slot_half_width.size()
-                                   ? preview.slot_half_width[index]
-                                   : preview.slot_spacing * 0.45F;
-      float const half_depth = index < preview.slot_half_depth.size()
-                                   ? preview.slot_half_depth[index]
-                                   : preview.slot_spacing * 0.45F;
-      marker.radius = std::max(0.6F, half_width);
-      marker.half_width = std::max(0.6F, half_width);
-      marker.half_depth = std::max(0.5F, half_depth);
-      marker.facing_degrees = slot.facing;
-      marker.blocked = slot.status == Game::Formation::SlotStatus::Blocked;
-      marker.adjusted = slot.status == Game::Formation::SlotStatus::Adjusted;
-      placement.slot_markers.push_back(marker);
-    }
-
-    Render::GL::render_formation_slot_preview(context.renderer, res, placement);
-    Render::GL::render_formation_arrow(context.renderer, res, placement);
+  if (context.formation_placement != nullptr) {
+    Render::GL::render_formation_slot_preview(
+        context.renderer, res, *context.formation_placement);
+    Render::GL::render_formation_arrow(
+        context.renderer, res, *context.formation_placement);
   }
+}
+
+auto capture_formation_placement(
+    App::Controllers::CommandController* command_controller,
+    Game::Session::SessionContext* session,
+    int local_owner_id) -> std::optional<Render::GL::FormationPlacementInfo> {
+  if (command_controller == nullptr || session == nullptr ||
+      !command_controller->formation().is_placing_formation()) {
+    return std::nullopt;
+  }
+  auto const& formation = command_controller->formation();
+
+  Render::GL::FormationPlacementInfo placement;
+  placement.position = formation.get_formation_placement_position();
+  placement.position.setY(session->terrain().get_terrain_height(
+      placement.position.x(), placement.position.z()));
+  placement.angle_degrees = formation.get_formation_facing_degrees();
+  placement.aim_distance = formation.get_formation_aim_distance();
+  placement.active = true;
+
+  const auto* nation = session->nations().get_nation_for_player(local_owner_id);
+  if (nation != nullptr) {
+    switch (nation->id) {
+    case Game::Systems::NationID::RomanRepublic:
+      placement.accent_color = QVector3D(0.85F, 0.12F, 0.10F);
+      break;
+    case Game::Systems::NationID::Carthage:
+      placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
+      break;
+    case Game::Systems::NationID::IronSepulcher:
+      placement.accent_color = QVector3D(0.58F, 0.60F, 0.66F);
+      break;
+    default:
+      break;
+    }
+  }
+
+  const auto& preview = formation.formation_preview();
+  placement.slot_markers.reserve(preview.slot_list.size());
+  for (std::size_t index = 0; index < preview.slot_list.size(); ++index) {
+    const auto& slot = preview.slot_list[index];
+    Render::GL::FormationSlotMarker marker;
+    marker.position = slot.world_position;
+    marker.position.setY(session->terrain().get_terrain_height(
+        slot.world_position.x(), slot.world_position.z()));
+
+    float const half_width = index < preview.slot_half_width.size()
+                                 ? preview.slot_half_width[index]
+                                 : preview.slot_spacing * 0.45F;
+    float const half_depth = index < preview.slot_half_depth.size()
+                                 ? preview.slot_half_depth[index]
+                                 : preview.slot_spacing * 0.45F;
+    marker.radius = std::max(0.6F, half_width);
+    marker.half_width = std::max(0.6F, half_width);
+    marker.half_depth = std::max(0.5F, half_depth);
+    marker.facing_degrees = slot.facing;
+    marker.blocked = slot.status == Game::Formation::SlotStatus::Blocked;
+    marker.adjusted = slot.status == Game::Formation::SlotStatus::Adjusted;
+    placement.slot_markers.push_back(marker);
+  }
+  return placement;
 }
 
 auto prune_selection_action_context(const SelectionPruneContext& context)

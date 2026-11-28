@@ -366,11 +366,13 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       .buildings = inputs.buildings,
       .terrain = inputs.terrain,
       .shut_gates = inputs.shut_gates,
-      .radius = k_camera_body_radius};
+      .radius = k_camera_body_radius,
+      .world = inputs.world};
 
   float const shoulder_side =
       m_framing_current.side * (1.0F - (k_crowd_side_tuck * crowd));
-  if (inputs.terrain != nullptr || inputs.buildings != nullptr) {
+  if (inputs.terrain != nullptr || inputs.buildings != nullptr ||
+      inputs.world != nullptr) {
     auto shoulder_clearance = [&](float shoulder) {
       QVector3D const eye = pivot + orbit_back * m_framing_current.back +
                             orbit_up * (m_framing_current.up + crowd_lift) +
@@ -383,7 +385,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       if (held < k_shoulder_swap_below) {
         float best_side = m_shoulder_target;
         float best_clear = held;
-        for (float const candidate : {-m_shoulder_target, 0.0F}) {
+        for (float const candidate : {1.0F, -1.0F, 0.0F}) {
+          if (candidate == m_shoulder_target) {
+            continue;
+          }
           float const clear = shoulder_clearance(candidate);
           if (clear > best_clear + k_shoulder_swap_margin) {
             best_side = candidate;
@@ -544,7 +549,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       QVector3D candidate = pivot + (boom * fraction);
       candidate.setY(candidate.y() + (k_retracted_rise * (1.0F - fraction)));
       if (Game::Systems::camera_body_clearance(obstruction, candidate) >=
-          k_camera_depenetration_margin) {
+          k_camera_body_radius) {
         occlusion_target = fraction;
         break;
       }
@@ -573,12 +578,13 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   }
 
   if (Game::Systems::camera_body_clearance(obstruction, eye_desired) <
-      k_camera_depenetration_margin) {
+      k_camera_body_radius) {
     Game::Systems::CameraObstructionField const escape{
         .buildings = inputs.buildings,
         .terrain = inputs.terrain,
         .shut_gates = inputs.shut_gates,
-        .radius = k_camera_body_radius + k_camera_depenetration_margin};
+        .radius = k_camera_body_radius + k_camera_depenetration_margin,
+        .world = inputs.world};
     QVector3D const pushed =
         Game::Systems::camera_depenetrated_point(escape, eye_desired);
     float const planar_before =
@@ -586,14 +592,18 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     float const push_x = pushed.x() - pivot.x();
     float const push_z = pushed.z() - pivot.z();
     float const planar_after = std::hypot(push_x, push_z);
+    QVector3D resolved = pushed;
     if (planar_after > planar_before && planar_after > 1.0e-4F) {
       float const shrink = planar_before / planar_after;
-      eye_desired.setX(pivot.x() + (push_x * shrink));
-      eye_desired.setZ(pivot.z() + (push_z * shrink));
-    } else {
-      eye_desired.setX(pushed.x());
-      eye_desired.setZ(pushed.z());
+      const QVector3D capped(
+          pivot.x() + push_x * shrink, pushed.y(), pivot.z() + push_z * shrink);
+      if (Game::Systems::camera_body_clearance(obstruction, capped) >=
+              k_camera_body_radius ||
+          Game::Systems::camera_body_clearance(obstruction, pivot) < 0.0F) {
+        resolved = capped;
+      }
     }
+    eye_desired = resolved;
   }
 
   float terrain_lift = 0.0F;

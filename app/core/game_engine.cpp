@@ -81,9 +81,11 @@
 #include "game/command/command_log.h"
 #include "game/core/component_gameplay.h"
 #include "game/core/ownership_constants.h"
+#include "game/core/render_phase.h"
 #include "game/core/startup_profiler.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/map/environment_lighting.h"
 #include "game/map/map_catalog.h"
 #include "game/map/map_context.h"
 #include "game/mission/campaign_manager.h"
@@ -103,6 +105,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/persistence/save_load_service.h"
 #include "game/systems/player_resource_registry.h"
+#include "game/systems/rain_manager.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
 #include "game/units/spawn_type.h"
@@ -265,7 +268,22 @@ void GameEngine::sync_render_camera() {
   }
   m_render_camera = *m_camera;
 
-  const QVector3D listener_position = m_camera->get_target();
+  QVector3D listener_position = m_camera->get_target();
+  if (m_commander_view_model->active()) {
+    const auto commander_id = m_commander_view_model->controlled_commander_id();
+    if (m_world != nullptr && commander_id != 0) {
+      if (const auto* transform =
+              m_world->try_get<Engine::Core::TransformComponent>(commander_id)) {
+        listener_position = QVector3D(transform->position.x,
+                                      transform->position.y + 1.65F,
+                                      transform->position.z);
+      } else {
+        listener_position = m_camera->get_position();
+      }
+    } else {
+      listener_position = m_camera->get_position();
+    }
+  }
   Game::Audio::CueTrace::instance().set_listener(
       {.x = listener_position.x(),
        .y = listener_position.y(),
@@ -701,6 +719,25 @@ void GameEngine::update_presentation(float dt) {
     m_minimap_events->publish_overlays(dt);
     m_mission->flush_announcements(dt);
     sync_render_camera();
+    if (!m_runtime.loading && !m_runtime.paused && m_world != nullptr &&
+        m_audio != nullptr) {
+      float darkness = 0.0F;
+      if (m_environment != nullptr && m_environment->clock() != nullptr) {
+        Game::Map::WeatherLightingInput weather;
+        if (const auto* rain = m_environment->rain_manager();
+            rain != nullptr && rain->is_enabled()) {
+          const float intensity = rain->get_intensity();
+          if (rain->get_weather_type() == Game::Map::WeatherType::Snow) {
+            weather.snow = intensity;
+          } else {
+            weather.rain = intensity;
+            weather.storm = std::clamp((intensity - 0.65F) / 0.35F, 0.0F, 1.0F);
+          }
+        }
+        darkness = m_environment->clock()->lighting(weather).darkness_amount();
+      }
+      m_audio->coordinator().update_mission_ambience(dt, m_world, darkness);
+    }
     capture_render_selection();
     sync_scatter_world_props();
     sync_selected_player_state();
@@ -810,6 +847,17 @@ void GameEngine::publish_presentation_frame() {
   frame->target_focus = m_focus->markers();
   frame->objective_marker = m_mission->stages().active_target();
   frame->commander_rally_preview_pos = m_commander_view_model->rally_preview_position();
+  frame->commander_overlay = m_commander_view_model->overlay_frame();
+  frame->formation_placement =
+      App::Core::FrameUiCoordinator::capture_formation_placement(
+          m_command_controller.get(), m_session.get(), m_runtime.local_owner_id);
+  if (m_command_controller != nullptr &&
+      m_command_controller->has_patrol_first_waypoint()) {
+    frame->patrol_preview_waypoint = m_command_controller->get_patrol_first_waypoint();
+  }
+  if (m_hover_tracker != nullptr) {
+    frame->hovered_entity_id = m_hover_tracker->get_last_hovered_entity();
+  }
   frame->local_owner_id = m_runtime.local_owner_id;
   frame->spectator_mode = m_level.is_spectator_mode;
 
@@ -858,6 +906,7 @@ void GameEngine::update(float dt) {
 }
 
 auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
+  const Engine::Core::RenderPhase::Scope render_phase;
   if (!m_renderer || !m_world || !renderer_initialized() || m_runtime.loading) {
     return 0;
   }
@@ -884,9 +933,7 @@ auto GameEngine::render(int pixel_width, int pixel_height) -> quint64 {
   if (m_loading_overlay.active()) {
     prewarm_overlay_gpu_resources();
   }
-  if (m_hover_tracker) {
-    m_renderer->set_hovered_entity_id(m_hover_tracker->get_last_hovered_entity());
-  }
+  m_renderer->set_hovered_entity_id(presentation->hovered_entity_id);
   m_renderer->set_local_owner_id(presentation->local_owner_id);
   m_renderer->set_order_marker_spectator_mode(presentation->spectator_mode);
 
@@ -1010,9 +1057,12 @@ void GameEngine::render_effects_pass(const App::Core::PresentationFrame& present
   }
   App::Core::FrameUiCoordinator::render_effects(
       {.renderer = m_renderer.get(),
-       .command_controller = m_command_controller.get(),
        .local_owner_id = presentation.local_owner_id,
        .commander_rally_preview_pos = presentation.commander_rally_preview_pos,
+       .patrol_preview_waypoint = presentation.patrol_preview_waypoint,
+       .formation_placement = presentation.formation_placement.has_value()
+                                  ? &*presentation.formation_placement
+                                  : nullptr,
        .attack_targeting = &presentation.attack_targeting,
        .attack_range_rings = &presentation.attack_range_rings,
        .order_markers = &presentation.order_markers,
@@ -1020,9 +1070,13 @@ void GameEngine::render_effects_pass(const App::Core::PresentationFrame& present
        .interaction_targeting = &presentation.interaction_targeting,
        .objective_marker = presentation.objective_marker,
        .effects = &effects_snapshot->render_effects_frame(),
-       .snapshot = effects_snapshot.get(),
-       .session = m_session.get()},
-      [this]() { m_commander_view_model->render_effects(); });
+       .snapshot = effects_snapshot.get()},
+      [this, &presentation, &effects_snapshot]() {
+        m_commander_overlay_pass.render(presentation.commander_overlay,
+                                        *effects_snapshot,
+                                        *m_renderer,
+                                        m_renderer->get_animation_time());
+      });
 }
 
 void GameEngine::set_input_viewport_size(qreal width, qreal height) {
@@ -1330,10 +1384,26 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
 
   const quint64 load = begin_match_loading(map_path);
   QTimer::singleShot(50, this, [this, map_path, player_configs, load, world_freeze]() {
-    if (load == m_loading_overlay.current_load()) {
-      complete_match_load(map_path, player_configs);
+    if (load != m_loading_overlay.current_load()) {
+      return;
     }
+    preload_mission_audio();
+    complete_match_load(map_path, player_configs);
   });
+}
+
+void GameEngine::preload_mission_audio() {
+  if (renderer_has_failed()) {
+    return;
+  }
+  if (m_release_self_test_mode) {
+
+    qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
+               "validation";
+    return;
+  }
+  const Engine::Core::ScopedStartupPhase phase("audio.mission_preload");
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
 }
 
 void GameEngine::reset_match_outcome() {
@@ -1367,17 +1437,6 @@ auto GameEngine::begin_match_loading(const QString& map_path) -> quint64 {
   Game::Map::MapContextStore::reset_statistics();
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
-  if (renderer_has_failed() || load != m_loading_overlay.current_load()) {
-    return load;
-  }
-  if (m_release_self_test_mode) {
-
-    qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
-               "validation";
-  } else {
-    const Engine::Core::ScopedStartupPhase phase("audio.mission_preload");
-    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
-  }
   return load;
 }
 
@@ -1560,6 +1619,15 @@ void GameEngine::finalize_match_load() {
     m_session->submit_clock_change({.speed = m_runtime.time_scale});
   }
   m_tutorial->activate_if_configured(m_campaign_manager.get());
+  apply_mission_starting_control();
+}
+
+void GameEngine::apply_mission_starting_control() {
+  const auto* mission = authored_mission_definition();
+  if (mission != nullptr && mission->start_in_commander_mode &&
+      m_runtime.victory_state.isEmpty()) {
+    m_commander_view_model->enter_mission_mode();
+  }
 }
 
 auto GameEngine::current_mission_definition() const
@@ -1646,7 +1714,8 @@ auto GameEngine::mission_startup_pending_components() const -> QStringList {
   if (AudioSystem::get_instance().has_pending_mission_decodes()) {
     pending << QStringLiteral("mission audio");
   }
-  if (m_world != nullptr && m_session != nullptr && !m_session->log_follower()) {
+  if (m_loading_overlay.awaits_initial_ai() && m_world != nullptr &&
+      m_session != nullptr && !m_session->log_follower()) {
     if (const auto* ai_system = m_world->get_system<Game::Systems::AISystem>();
         ai_system != nullptr && !ai_system->initial_decisions_ready()) {
       pending << QStringLiteral("AI initial decisions");
@@ -1835,7 +1904,7 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
   return m_save_load_coordinator->begin_save_to_slot(
       {.world = *m_world,
        .save_load_service = *m_save_load_service,
-       .camera = m_camera,
+       .camera = m_rts_camera.get(),
        .level = level_snapshot,
        .runtime_snapshot = runtime_snapshot,
        .slot = slot_name,
@@ -1847,9 +1916,10 @@ auto GameEngine::capture_save_to_slot(const QString& slot_name,
        .kind = kind,
        .play_time_seconds = m_mission->waves().elapsed(),
        .autosave_retention = autosave_retention,
-       .mission_wave_state = m_mission->waves().director().serialize(),
+       .mission_wave_state = m_mission->waves().serialize(),
        .mission_stage_state = m_mission->serialize_stages(),
        .commander_message_state = m_commander_messages->serialize(),
+       .commander_view_state = m_commander_view_model->capture_view_state(),
        .tutorial_state = m_tutorial->serialize(),
        .battle_stats = m_battle_stats->serialize(m_session.get())});
 }
@@ -1971,6 +2041,10 @@ void GameEngine::finish_successful_load(const QString& slot_name,
     emit m_save_slots_view_model->save_completed(slot_name, false, effects.warning);
   }
   restore_environment_after_load();
+  m_commander_view_model->restore_view_state(effects.commander_view_state);
+  if (!effects.commander_view_state.value("active").isBool()) {
+    apply_mission_starting_control();
+  }
   emit victory_state_changed();
   release_loading_overlay_after_load();
 
@@ -2045,7 +2119,9 @@ void GameEngine::release_loading_overlay_after_load() {
   m_runtime.loading = false;
   m_loading_progress_tracker->set_stage(
       LoadingProgressTracker::LoadingStage::FINALIZING);
-  m_loading_overlay.arm_after_load();
+  // Restored battles already have live AI state. New-match preparation runs
+  // before the simulation starts and is only required for a fresh match.
+  m_loading_overlay.arm_after_load(/*wait_for_initial_ai=*/false);
   emit is_loading_changed();
   qInfo() << "Game load complete, victory/defeat checks re-enabled";
   Game::Audio::play_cue(Game::Audio::Cue::k_state_load_complete);

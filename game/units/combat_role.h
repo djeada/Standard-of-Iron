@@ -50,6 +50,7 @@ enum class CombatRole : std::uint8_t {
 
   case SpawnType::Civilian:
   case SpawnType::Builder:
+  case SpawnType::SupplyWagon:
     return CombatRole::Noncombatant;
 
   case SpawnType::DefenseTower:

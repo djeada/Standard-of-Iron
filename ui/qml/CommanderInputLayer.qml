@@ -11,6 +11,7 @@ Item {
     property bool active: false
 
     property var held_keys: ({})
+    property var held_buttons: ({})
     readonly property real zoom_step: 0.1
     readonly property bool pointer_owned: root.active && (!root.mainWindowRef || (root.mainWindowRef.active && !root.mainWindowRef.simulation_suspended))
 
@@ -37,11 +38,10 @@ Item {
     }
 
     function release_actions() {
-        if (root.commander === null)
-            return;
-        if (root.commander.release_input)
+        if (root.commander !== null && root.commander.release_input)
             root.commander.release_input();
         root.held_keys = ({});
+        root.held_buttons = ({});
     }
 
     function is_locomotion(actionId) {
@@ -59,22 +59,12 @@ Item {
     }
 
     function perform_action(actionId, event) {
-        if (actionId === "global.menu") {
-            if (typeof root.mainWindowRef === 'undefined')
-                return true;
-            root.mainWindowRef.request_menu_toggle();
-            return true;
-        }
-        if (actionId === "global.toggle_control_mode") {
-            if (root.commander !== null && root.commander.toggle_mode)
-                root.commander.toggle_mode();
-            return true;
-        }
-        if (root.commander === null)
+        if (!root.pointer_owned || root.commander === null)
             return false;
+        if (event.isAutoRepeat)
+            return true;
         if ((actionId === "commander.turn_left" || actionId === "commander.turn_right") && root.held_keys[event.key] === undefined && root.commander.lock_active && root.commander.lock_active()) {
-            if (!event.isAutoRepeat)
-                root.commander.switch_lock_target(actionId === "commander.turn_left" ? -1 : 1);
+            root.commander.switch_lock_target(actionId === "commander.turn_left" ? -1 : 1);
             return true;
         }
         if (is_locomotion(actionId)) {
@@ -86,8 +76,6 @@ Item {
             }
             return false;
         }
-        if (event.isAutoRepeat)
-            return true;
         switch (actionId) {
         case "commander.dodge":
             if (root.commander.dodge)
@@ -133,98 +121,78 @@ Item {
         return false;
     }
 
-    function handle_key_pressed(event) {
-        if (!root.active)
-            return;
-        var candidates = InputBindings.actions_for_key(event.key, event.modifiers, "commander");
-        for (var i = 0; i < candidates.length; ++i) {
-            if (root.perform_action(candidates[i], event)) {
-                event.accepted = true;
-                return;
-            }
-        }
-    }
-
     function handle_key_released(event) {
-        if (!root.active)
-            return;
         var actionId = root.held_keys[event.key];
         if (actionId === undefined)
-            return;
-        delete root.held_keys[event.key];
-        var canonical = InputBindings.canonical_key_for(actionId);
-        if (canonical !== 0 && root.commander !== null && root.commander.key_up)
-            root.commander.key_up(canonical, event.modifiers);
-        event.accepted = true;
+            return false;
+        if (!event.isAutoRepeat) {
+            delete root.held_keys[event.key];
+            var canonical = InputBindings.canonical_key_for(actionId);
+            if (canonical !== 0 && root.commander !== null && root.commander.key_up)
+                root.commander.key_up(canonical, event.modifiers);
+        }
+        return true;
     }
 
     function handle_mouse(button, modifiers, pressed) {
-        if (root.commander === null)
+        if (!root.pointer_owned || root.commander === null)
             return;
+        if (!pressed) {
+            var held = root.held_buttons[button];
+            delete root.held_buttons[button];
+            if (held === "commander.primary_action" && root.commander.primary_action_up)
+                root.commander.primary_action_up();
+            else if (held === "commander.secondary_action" && root.commander.secondary_action_up)
+                root.commander.secondary_action_up();
+            return;
+        }
         var candidates = InputBindings.actions_for_mouse(button, modifiers, "commander");
         for (var i = 0; i < candidates.length; ++i) {
-            if (candidates[i] === "commander.primary_action") {
-                if (pressed && root.commander.primary_action_down)
+            switch (candidates[i]) {
+            case "commander.primary_action":
+                if (root.commander.primary_action_down) {
+                    root.held_buttons[button] = candidates[i];
                     root.commander.primary_action_down();
-                else if (!pressed && root.commander.primary_action_up)
-                    root.commander.primary_action_up();
+                }
                 return;
-            }
-            if (candidates[i] === "commander.heavy_action") {
-                if (pressed && root.commander.heavy_action)
+            case "commander.heavy_action":
+                if (root.commander.heavy_action)
                     root.commander.heavy_action();
                 return;
-            }
-            if (candidates[i] === "commander.secondary_action") {
-                if (pressed && root.commander.secondary_action_down)
+            case "commander.secondary_action":
+                if (root.commander.secondary_action_down) {
+                    root.held_buttons[button] = candidates[i];
                     root.commander.secondary_action_down();
-                else if (!pressed && root.commander.secondary_action_up)
-                    root.commander.secondary_action_up();
+                }
                 return;
             }
         }
     }
 
-    enabled: active
-    visible: active
+    enabled: pointer_owned
+    visible: pointer_owned
     z: 20
-    onPointer_ownedChanged: sync_pointer()
+    onPointer_ownedChanged: {
+        if (!pointer_owned) {
+            root.release_actions();
+        } else {
+            if (root.gameView)
+                root.gameView.forceActiveFocus();
+            root.inputCaptured();
+        }
+        root.sync_pointer();
+    }
     onWidthChanged: center_mouse()
     onHeightChanged: center_mouse()
     Component.onCompleted: {
-        if (active && typeof root.gameView !== 'undefined')
+        if (pointer_owned && root.gameView)
             root.gameView.forceActiveFocus();
-    }
-    onActiveChanged: {
-        if (active) {
-            if (typeof root.gameView !== 'undefined')
-                root.gameView.forceActiveFocus();
-            root.inputCaptured();
-            center_mouse();
-        } else {
-            release_actions();
-        }
-    }
-
-    Connections {
-        function onActiveChanged() {
-            if (root.mainWindowRef && !root.mainWindowRef.active)
-                root.release_actions();
-        }
-
-        function onMenu_visibleChanged() {
-            if (root.mainWindowRef && root.mainWindowRef.menu_visible)
-                root.release_actions();
-        }
-
-        target: root.mainWindowRef
     }
 
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         cursorShape: Qt.BlankCursor
-        enabled: root.active
         hoverEnabled: true
         preventStealing: true
         onEntered: {
@@ -253,15 +221,5 @@ Item {
             mouse.accepted = true;
         }
         onCanceled: root.release_actions()
-    }
-
-    focus: false
-    Keys.enabled: active
-    Keys.onPressed: function (event) {
-        root.handle_key_pressed(event);
-    }
-
-    Keys.onReleased: function (event) {
-        root.handle_key_released(event);
     }
 }

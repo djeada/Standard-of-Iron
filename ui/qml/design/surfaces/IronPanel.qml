@@ -7,6 +7,7 @@ Rectangle {
     property bool raised: false
     property string accessibleName: ""
     property bool shieldsBackground: true
+    property bool shieldsWheel: true
 
     property bool translucent: false
     property bool castsShadow: true
@@ -63,7 +64,7 @@ Rectangle {
         acceptedButtons: Qt.AllButtons
         hoverEnabled: enabled
         onWheel: function (wheel) {
-            wheel.accepted = true;
+            wheel.accepted = root.shieldsWheel;
         }
     }
 

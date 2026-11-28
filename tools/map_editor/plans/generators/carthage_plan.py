@@ -661,6 +661,91 @@ p.root(
     "Two harbours, the stepped Byrsa, the gardens of Megara and the wall across the isthmus.",
 )
 QUAY = (BWEST + 10, HZ - BD / 2 - 6.5)
+
+p.ambience_zone(
+    "ambient.quay_work",
+    zone_id="merchant_harbour",
+    x=BCX,
+    z=HZ,
+    radius=44.0,
+    fade=14.0,
+    night_bed="ambient.mediterranean_harbor",
+)
+p.ambience_zone(
+    "ambient.quay_work",
+    zone_id="cothon_harbour",
+    x=CCX,
+    z=HZ,
+    radius=42.0,
+    fade=14.0,
+    night_bed="ambient.mediterranean_harbor",
+)
+p.ambience_zone(
+    "ambient.city_square_crowd",
+    zone_id="carthage_agora",
+    x=AG[0],
+    z=AG[1],
+    radius=36.0,
+    fade=12.0,
+    night_bed="ambient.camp_fire_night",
+)
+p.ambience_zone(
+    "ambient.livestock_market",
+    zone_id="carthage_bazaar",
+    x=74.0,
+    z=88.0,
+    radius=26.0,
+    fade=10.0,
+    night_bed="ambient.city_street_night",
+)
+p.ambience_zone(
+    "ambient.carthage_war_camp_01",
+    zone_id="elephant_yard",
+    x=108.0,
+    z=76.0,
+    radius=22.0,
+    fade=9.0,
+    night_bed="ambient.carthage_war_camp_02",
+)
+p.ambience_zone(
+    "ambient.temple_precinct",
+    zone_id="byrsa_precinct",
+    x=BX,
+    z=BZ,
+    radius=38.0,
+    fade=14.0,
+)
+p.ambience_zone(
+    "ambient.temple_precinct",
+    zone_id="tophet_precinct",
+    x=TX,
+    z=TZ,
+    radius=28.0,
+    fade=10.0,
+)
+for gid, gx, gz, gr in (
+    ("megara_oasis", 70.0, -148.0, 24.0),
+    ("garden_of_tanit", -96.0, -152.0, 20.0),
+    ("megara_water_gardens", -90.0, -240.0, 42.0),
+):
+    p.ambience_zone(
+        "ambient.city_garden_day",
+        zone_id=gid,
+        x=gx,
+        z=gz,
+        radius=gr,
+        fade=10.0,
+        night_bed="ambient.city_garden_dusk",
+    )
+p.ambience_zone(
+    "ambient.drill_field",
+    zone_id="isthmus_garrison",
+    x=W + 30.0,
+    z=10.0,
+    radius=50.0,
+    fade=16.0,
+    night_bed="ambient.carthage_war_camp_02",
+)
 t.building(
     "roman_siege_camp",
     "barracks",

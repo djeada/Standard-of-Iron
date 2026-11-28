@@ -93,27 +93,32 @@ auto wolf_pelt() -> const RenderArchetype& {
 auto slinger_headband() -> const RenderArchetype& {
   static const auto value = [] {
     std::vector<GeneratedEquipmentPrimitive> p{
-        generated_ellipsoid({0.0F, 0.55F, 0.0F}, {0.87F, 0.66F, 0.94F}, Dark),
-        generated_ellipsoid({0.0F, -0.03F, -0.63F}, {0.72F, 0.70F, 0.35F}, Dark),
+        generated_ellipsoid({0.0F, 0.57F, -0.07F}, {0.88F, 0.60F, 0.96F}, Dark),
+        generated_ellipsoid({0.0F, -0.02F, -0.58F}, {0.74F, 0.70F, 0.44F}, Dark),
+        generated_ellipsoid({-0.25F, 0.61F, 0.39F}, {0.46F, 0.38F, 0.57F}, Dark),
     };
 
-    for (int i = 0; i < 24; ++i) {
-      float const a = static_cast<float>(i) * std::numbers::pi_v<float> / 12.0F;
-      float const b = static_cast<float>(i + 1) * std::numbers::pi_v<float> / 12.0F;
-      for (int row = 0; row < 2; ++row) {
-        float const y = 0.51F + 0.12F * static_cast<float>(row);
-        p.push_back(generated_cylinder({0.81F * std::sin(a), y, 0.90F * std::cos(a)},
-                                       {0.81F * std::sin(b), y, 0.90F * std::cos(b)},
-                                       0.067F,
-                                       row == 0 ? Crimson : Linen));
-      }
+    auto const brow = [](float angle) -> QVector3D {
+      return {0.89F * std::sin(angle),
+              0.55F + 0.055F * std::cos(angle),
+              0.99F * std::cos(angle)};
+    };
+    for (int i = 0; i < 20; ++i) {
+      constexpr float k_segment = std::numbers::pi_v<float> / 10.0F;
+      QVector3D const a = brow(static_cast<float>(i) * k_segment);
+      QVector3D const b = brow(static_cast<float>(i + 1) * k_segment);
+      p.push_back(generated_cylinder(a, b, 0.10F, Crimson));
+      p.push_back(generated_cylinder(a + QVector3D(0.0F, 0.086F, 0.0F),
+                                     b + QVector3D(0.0F, 0.086F, 0.0F),
+                                     0.047F,
+                                     Linen));
     }
     p.push_back(
-        generated_ellipsoid({0.0F, 0.51F, -0.92F}, {0.17F, 0.14F, 0.12F}, Crimson));
+        generated_ellipsoid({0.0F, 0.50F, -1.00F}, {0.16F, 0.11F, 0.12F}, Crimson));
     p.push_back(generated_cylinder(
-        {-0.07F, 0.48F, -0.94F}, {-0.22F, -0.23F, -1.00F}, 0.055F, Crimson));
+        {-0.07F, 0.48F, -1.01F}, {-0.22F, -0.24F, -1.04F}, 0.047F, Crimson));
     p.push_back(generated_cylinder(
-        {0.06F, 0.48F, -0.94F}, {0.19F, -0.05F, -1.04F}, 0.047F, Linen));
+        {0.06F, 0.48F, -1.01F}, {0.17F, -0.14F, -1.03F}, 0.036F, Linen));
     return build_generated_equipment_archetype("slinger/headband", p);
   }();
   return value;
@@ -121,13 +126,17 @@ auto slinger_headband() -> const RenderArchetype& {
 
 auto hand_weapon(bool velites) -> const RenderArchetype& {
   static const auto sling = [] {
-    std::array p{
-        generated_cylinder(
-            {-0.010F, 0.0F, 0.0F}, {-0.040F, 0.46F, 0.0F}, 0.007F, Linen),
-        generated_cylinder({0.010F, 0.0F, 0.0F}, {0.040F, 0.46F, 0.0F}, 0.007F, Linen),
-        generated_ellipsoid({0.0F, 0.48F, 0.0F}, {0.052F, 0.079F, 0.022F}, Leather),
-        generated_ellipsoid({0.0F, 0.48F, 0.018F}, {0.029F, 0.038F, 0.022F}, Ivory),
+    std::vector<GeneratedEquipmentPrimitive> p{
+        generated_ellipsoid({0.0F, -0.48F, 0.018F}, {0.064F, 0.047F, 0.021F}, Leather),
+        generated_ellipsoid({0.0F, -0.48F, 0.035F}, {0.046F, 0.026F, 0.007F}, Dark),
     };
+    for (float side : {-1.0F, 1.0F}) {
+      QVector3D const pinch(side * 0.012F, -0.01F, 0.0F);
+      QVector3D const bend(side * 0.027F, -0.24F, 0.025F);
+      QVector3D const pouch(side * 0.057F, -0.47F, 0.015F);
+      p.push_back(generated_cylinder(pinch, bend, 0.009F, Linen));
+      p.push_back(generated_cylinder(bend, pouch, 0.009F, Linen));
+    }
     return build_generated_equipment_archetype("slinger/sling", p);
   }();
   static const auto javelin = [] {
@@ -152,9 +161,6 @@ auto field_gear(bool velites) -> const RenderArchetype& {
     QVector3D const chest = bind.torso.origin;
     QVector3D const waist = bind.waist.origin;
     std::vector<GeneratedEquipmentPrimitive> p{
-        generated_ellipsoid(waist + QVector3D(0.23F, -0.075F, 0.06F),
-                            {0.100F, 0.120F, 0.065F},
-                            Leather),
         generated_ellipsoid(
             waist + QVector3D(0.23F, -0.018F, 0.105F), {0.095F, 0.051F, 0.028F}, Dark),
         generated_box(waist + QVector3D(0.23F, -0.063F, 0.128F),
@@ -163,6 +169,16 @@ auto field_gear(bool velites) -> const RenderArchetype& {
         generated_sphere(
             waist + QVector3D(0.23F, -0.073F, 0.140F), 0.012F, Metal, 1.0F, 3),
     };
+    if (roman) {
+      p.push_back(generated_ellipsoid(
+          waist + QVector3D(0.23F, -0.075F, 0.06F), {0.100F, 0.120F, 0.065F}, Leather));
+    } else {
+      p.push_back(generated_box(waist + QVector3D(0.215F, -0.080F, 0.054F),
+                                {0.082F, 0.099F, 0.051F},
+                                Leather));
+      p.push_back(generated_box(
+          waist + QVector3D(0.215F, -0.145F, 0.106F), {0.074F, 0.014F, 0.004F}, Dark));
+    }
 
     for (int i = 0; i < 5; ++i) {
       float const x = 0.17F + static_cast<float>(i) * 0.029F;
@@ -299,7 +315,7 @@ auto fill_gear_colors(const void* raw,
        {0.12F, 0.105F, 0.085F},
        {0.88F, 0.84F, 0.68F},
        {0.72F, 0.73F, 0.70F},
-       Velites ? QVector3D(0.60F, 0.12F, 0.09F) : QVector3D(0.46F, 0.23F, 0.12F),
+       Velites ? QVector3D(0.60F, 0.12F, 0.09F) : QVector3D(0.17F, 0.33F, 0.43F),
        {0.48F, 0.30F, 0.15F}}};
   for (auto const& color : colors) {
     out[count++] = color;
@@ -339,7 +355,9 @@ auto make_spec(bool velites) -> Render::Creature::Pipeline::UnitVisualSpec {
   spec.debug_name = velites ? "troops/roman/velites" : "troops/carthage/slinger";
   spec.kind = CreatureKind::Humanoid;
   spec.creature_asset_id = k_humanoid_asset;
-  spec.scaling = Humanoid::k_ranged_infantry_proportion_profile.as_pipeline_scaling();
+  spec.scaling =
+      velites ? Humanoid::k_ranged_infantry_proportion_profile.as_pipeline_scaling()
+              : ProportionScaling{0.86F, 1.11F, 0.79F};
   spec.archetype_id = ArchetypeRegistry::instance().register_unit_archetype(
       spec.debug_name,
       spec.kind,
@@ -361,9 +379,9 @@ public:
                    std::uint32_t seed,
                    HumanoidVariant& v) const override {
     HumanoidRendererBase::get_variant(ctx, seed, v);
-    float const variation = 0.92F + static_cast<float>(seed % 17U) * 0.008F;
+    float const variation = 0.89F + static_cast<float>(seed % 17U) * 0.013F;
     v.palette.cloth =
-        (m_velites ? QVector3D(0.86F, 0.82F, 0.72F) : QVector3D(0.33F, 0.45F, 0.56F)) *
+        (m_velites ? QVector3D(0.86F, 0.82F, 0.72F) : QVector3D(0.27F, 0.36F, 0.39F)) *
         variation;
     v.palette.leather = {0.30F, 0.18F, 0.09F};
     v.palette.leather_dark = {0.20F, 0.13F, 0.08F};
@@ -372,8 +390,8 @@ public:
   void adjust_variation(const DrawContext&,
                         std::uint32_t,
                         VariationParams& v) const override {
-    v.bulk_scale *= m_velites ? 0.96F : 0.90F;
-    v.stance_width *= 1.06F;
+    v.bulk_scale *= m_velites ? 0.96F : 0.92F;
+    v.stance_width *= m_velites ? 1.06F : 0.97F;
   }
 
 private:

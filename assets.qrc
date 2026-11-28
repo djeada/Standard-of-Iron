@@ -167,6 +167,7 @@
         <file>assets/maps/map_iron_sepulcher_watch.json</file>
         <file>assets/maps/map_pinewater_cut.json</file>
         <file>assets/maps/map_sallow_ford.json</file>
+        <file>assets/maps/map_salt_road.json</file>
         <file>assets/maps/map_sepulcher_bridge.json</file>
         <file>assets/maps/map_spanish_grove.json</file>
         <file>assets/maps/map_rivers.json</file>
@@ -197,6 +198,7 @@
         <file>assets/missions/iron_sepulcher_watch.json</file>
         <file>assets/missions/the_timber_levy.json</file>
         <file>assets/missions/hold_the_sallow_ford.json</file>
+        <file>assets/missions/the_salt_road.json</file>
         <file>assets/missions/hold_the_sepulcher_bridge.json</file>
         <file>assets/missions/siege_of_aurelia_magna.json</file>
         <file>assets/missions/storming_of_victumulae.json</file>
@@ -361,6 +363,72 @@
         <file>assets/audio/sfx/wildlife/wolf_howl_near.ogg</file>
         <file>assets/audio/sfx/wildlife/wolf_pack_attack.ogg</file>
         <file>assets/audio/sfx/wildlife/wolf_snarl_bark.ogg</file>
+        <file>assets/audio/sfx/city/cart_wheels_01.ogg</file>
+        <file>assets/audio/sfx/city/cart_wheels_02.ogg</file>
+        <file>assets/audio/sfx/city/cart_wheels_03.ogg</file>
+        <file>assets/audio/sfx/city/dog_bark_distant_01.ogg</file>
+        <file>assets/audio/sfx/city/dog_bark_distant_02.ogg</file>
+        <file>assets/audio/sfx/city/dog_bark_distant_03.ogg</file>
+        <file>assets/audio/sfx/city/dog_bark_distant_04.ogg</file>
+        <file>assets/audio/sfx/city/door_close_01.ogg</file>
+        <file>assets/audio/sfx/city/door_close_02.ogg</file>
+        <file>assets/audio/sfx/city/door_close_03.ogg</file>
+        <file>assets/audio/sfx/city/door_close_04.ogg</file>
+        <file>assets/audio/sfx/city/forge_hammer_01.ogg</file>
+        <file>assets/audio/sfx/city/forge_hammer_02.ogg</file>
+        <file>assets/audio/sfx/city/forge_hammer_03.ogg</file>
+        <file>assets/audio/sfx/city/forge_hammer_04.ogg</file>
+        <file>assets/audio/sfx/city/hawker_call_01.ogg</file>
+        <file>assets/audio/sfx/city/hawker_call_02.ogg</file>
+        <file>assets/audio/sfx/city/hawker_call_03.ogg</file>
+        <file>assets/audio/sfx/city/hawker_call_04.ogg</file>
+        <file>assets/audio/sfx/city/hawker_call_05.ogg</file>
+        <file>assets/audio/sfx/city/hawker_call_06.ogg</file>
+        <file>assets/audio/sfx/city/temple_bell_01.ogg</file>
+        <file>assets/audio/sfx/city/temple_bell_02.ogg</file>
+        <file>assets/audio/sfx/city/water_splash_01.ogg</file>
+        <file>assets/audio/sfx/city/water_splash_02.ogg</file>
+        <file>assets/audio/sfx/city/water_splash_03.ogg</file>
+        <file>assets/audio/sfx/combat/melee_swing_01.ogg</file>
+        <file>assets/audio/sfx/combat/melee_swing_02.ogg</file>
+        <file>assets/audio/sfx/combat/melee_swing_03.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_gravel_01.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_gravel_02.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_gravel_03.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_gravel_04.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_interior_01.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_interior_02.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_interior_03.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_interior_04.ogg</file>
+        <file>assets/audio/sfx/wildlife/cattle_low_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/cattle_low_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/cattle_low_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/cattle_low_04.ogg</file>
+        <file>assets/audio/sfx/wildlife/cricket_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/cricket_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_rumble_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_rumble_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_rumble_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_rumble_04.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_trunk_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_trunk_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/elephant_trunk_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/gull_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/gull_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/gull_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/gull_04.ogg</file>
+        <file>assets/audio/sfx/wildlife/lamb_bleat_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/lamb_bleat_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/lamb_bleat_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/pigeon_flutter_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/pigeon_flutter_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/pigeon_flutter_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat_calm_01.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat_calm_02.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat_calm_03.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat_calm_04.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat_calm_05.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat_calm_06.ogg</file>
         <file>assets/audio/voices/common/builder.ogg</file>
         <file>assets/audio/voices/common/civilian.ogg</file>
         <file>assets/audio/voices/carthage/archer.ogg</file>

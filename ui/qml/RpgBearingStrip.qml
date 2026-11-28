@@ -49,6 +49,8 @@ Item {
             return Design.Icons.defense;
         case "rally":
             return Design.Icons.rally;
+        case "convoy":
+            return Design.Icons.deliver;
         default:
             return Design.Icons.attack;
         }
@@ -60,6 +62,7 @@ Item {
         case "enemy":
             return root.ember;
         case "army":
+        case "convoy":
             return root.bronze;
         default:
             return root.bone;
@@ -75,6 +78,8 @@ Item {
             return qsTr("Your army") + "  ·  " + metres;
         case "rally":
             return qsTr("Rally flag") + "  ·  " + metres;
+        case "convoy":
+            return qsTr("Supply convoy") + "  ·  " + metres;
         default:
             return qsTr("Enemy") + "  ·  " + metres;
         }

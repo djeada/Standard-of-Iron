@@ -49,6 +49,7 @@
 #include "render/entity/nations/roman/swordsman_renderer.h"
 #include "render/entity/siege_assault_renderer.h"
 #include "render/entity/skirmisher_renderer.h"
+#include "render/entity/supply_wagon_renderer.h"
 #include "render/entity/temple_renderer.h"
 #include "render/entity/wall_renderer.h"
 #include "render/entity/wildlife/sheep_renderer.h"
@@ -203,6 +204,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   register_ballista_renderer(registry);
   register_siege_assault_renderers(registry);
+  register_supply_wagon_renderer(registry);
 
   register_barracks_renderer(registry);
   register_cursed_gold_vein_flag_renderer(registry);

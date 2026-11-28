@@ -473,6 +473,9 @@ void CommanderLocomotion::walk(const CommanderHandles& body,
     if (body.movement != nullptr) {
       body.movement->set_manual_velocity(0.0F, 0.0F);
     }
+    const auto position = position_of(transform);
+    (void)motor.advance(
+        body.entity, transform, {.from = position, .to = position, .dt = input.dt});
     return;
   }
 

@@ -3118,6 +3118,53 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
 </context>
 <context>
+    <name>ConvoyTracker</name>
+    <message>
+        <source>Supply convoy</source>
+        <translation>İkmal kafilesi</translation>
+    </message>
+    <message>
+        <source>Convoy</source>
+        <translation>Kafile</translation>
+    </message>
+    <message>
+        <source>%1 delivered</source>
+        <translation>%1 teslim edildi</translation>
+    </message>
+    <message>
+        <source>Ambush at %1</source>
+        <translation>%1 mevkiinde pusu</translation>
+    </message>
+    <message>
+        <source>Onward to %1</source>
+        <translation>%1 yönüne ilerliyor</translation>
+    </message>
+    <message>
+        <source>Safe</source>
+        <translation>Güvende</translation>
+    </message>
+    <message>
+        <source>Lost</source>
+        <translation>Kayıp</translation>
+    </message>
+    <message>
+        <source>Hit</source>
+        <translation>Saldırı altında</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%%1</translation>
+    </message>
+    <message>
+        <source>%1 in %2 s</source>
+        <translation>%1: %2 sn içinde</translation>
+    </message>
+    <message>
+        <source>Ambush %1 of %2</source>
+        <translation>Pusu %1/%2</translation>
+    </message>
+</context>
+<context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
@@ -5907,6 +5954,14 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
         <source>Return to Menu</source>
         <translation>Menüye dön</translation>
     </message>
+    <message>
+        <source>Every wagon reached the outpost.</source>
+        <translation>Bütün arabalar ileri karakola ulaştı.</translation>
+    </message>
+    <message>
+        <source>%1 of %2 wagons reached the outpost.</source>
+        <translation>%2 arabadan %1 tanesi ileri karakola ulaştı.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -6686,6 +6741,10 @@ Her asker mangasındaki adamlara mal olur; kışladaki yedek üst sınırı yük
     <message>
         <source>Loading...</source>
         <translation>Yükleniyor...</translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%%1</translation>
     </message>
 </context>
 <context>
@@ -8103,6 +8162,14 @@ bir harita seç</translation>
         <source>The city of seven hills on the Tiber: the Forum under the Capitol, the imperial fora, the Colosseum and the Circus Maximus, the cattle market by the river, the crowded Subura, the gardens of Sallust, Maecenas and Lucullus with their pools, the Campus Martius in the river bend, Trastevere under the Janiculum, villas in their olive groves, a legion drawn up outside the Servian wall, and Ostia where the Tiber meets the sea.</source>
         <translation>Tiber kıyısındaki yedi tepeli şehir: Capitolium&apos;un eteğindeki Forum, imparatorluk forumları, Kolezyum ve Circus Maximus, nehir kıyısındaki hayvan pazarı, kalabalık Subura, havuzlarıyla Sallustius, Maecenas ve Lucullus&apos;un bahçeleri, nehrin kıvrımındaki Campus Martius, Janiculum&apos;un eteğindeki Trastevere, zeytinlikler içindeki villalar, Servius Surları dışında saf tutmuş bir lejyon ve Tiber&apos;in denize döküldüğü Ostia.</translation>
     </message>
+    <message>
+        <source>An old road cuts between quarried ridges and olive terraces before climbing to the fires of Beacon Post.</source>
+        <translation>Eski bir yol, taş ocağı sırtları ile zeytin taraçaları arasından geçip İşaret Karakolu&apos;nun ateşlerine tırmanıyor.</translation>
+    </message>
+    <message>
+        <source>Salt Road</source>
+        <translation>Tuz Yolu</translation>
+    </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
@@ -8531,6 +8598,10 @@ bir harita seç</translation>
     <message>
         <source>The assault is broken. Nothing else is coming.</source>
         <translation>Saldırı kırıldı. Başka bir şey gelmiyor.</translation>
+    </message>
+    <message>
+        <source>%1 joined the escort.</source>
+        <translation>%1 muhafızlara katıldı.</translation>
     </message>
 </context>
 <context>
@@ -10430,6 +10501,102 @@ bir harita seç</translation>
     <message>
         <source>You found my scouts. Two men sent to count your tents, and you answer with the whole camp. Go on, then - but I will want to know who killed them.</source>
         <translation>Gözcülerimi buldun. Çadırlarını saymaya iki adam yolladım, sen bütün kampla karşılık veriyorsun. Haydi öyleyse, ama onları kimin öldürdüğünü bilmek isteyeceğim.</translation>
+    </message>
+    <message>
+        <source>Arch raiders</source>
+        <translation>Kemer akıncıları</translation>
+    </message>
+    <message>
+        <source>Beacon Post</source>
+        <translation>İşaret Karakolu</translation>
+    </message>
+    <message>
+        <source>Beacon Post reserve</source>
+        <translation>İşaret Karakolu ihtiyatı</translation>
+    </message>
+    <message>
+        <source>Beacon Rise</source>
+        <translation>İşaret Yokuşu</translation>
+    </message>
+    <message>
+        <source>Deliver all three wagons.</source>
+        <translation>Üç arabanın hepsini teslim et.</translation>
+    </message>
+    <message>
+        <source>Deliver at least two supply wagons to Beacon Post.</source>
+        <translation>En az iki ikmal arabasını İşaret Karakolu&apos;na ulaştır.</translation>
+    </message>
+    <message>
+        <source>Get the survivors off the road. Send a runner to the post.</source>
+        <translation>Sağ kalanları yoldan çıkarın. Karakola bir haberci gönderin.</translation>
+    </message>
+    <message>
+        <source>Grain</source>
+        <translation>Tahıl</translation>
+    </message>
+    <message>
+        <source>Grain, medicine and tools. Beacon Post is short of all three. The escort will keep pace with the wagons. I&apos;ll take the road ahead.</source>
+        <translation>Tahıl, ilaç ve alet. İşaret Karakolu&apos;nda üçü de azaldı. Muhafızlar arabalarla birlikte ilerleyecek. Yolun önünü ben tutacağım.</translation>
+    </message>
+    <message>
+        <source>Hold the teams. Raiders at the arch. The patrol is coming up behind us.</source>
+        <translation>Koşumları durdurun. Kemerde akıncılar var. Devriye arkamızdan geliyor.</translation>
+    </message>
+    <message>
+        <source>I can see the beacon. Break this last party and get the wagons over the rise.</source>
+        <translation>İşaret ateşini görüyorum. Bu son çeteyi dağıtın ve arabaları yokuştan aşırın.</translation>
+    </message>
+    <message>
+        <source>Iberian riders</source>
+        <translation>İber atlıları</translation>
+    </message>
+    <message>
+        <source>Marcellus fell on the Salt Road.</source>
+        <translation>Marcellus Tuz Yolu&apos;nda düştü.</translation>
+    </message>
+    <message>
+        <source>Marcellus takes the road with three supply wagons and a thin escort. Break the ambushes between the old arch and Beacon Post. Two relief detachments will meet you on the march.</source>
+        <translation>Marcellus üç ikmal arabası ve zayıf bir muhafız birliğiyle yola çıkıyor. Eski kemer ile İşaret Karakolu arasındaki pusuları kır. Yürüyüş sırasında iki destek müfrezesi sana katılacak.</translation>
+    </message>
+    <message>
+        <source>Medicine</source>
+        <translation>İlaç</translation>
+    </message>
+    <message>
+        <source>Olive Terraces</source>
+        <translation>Zeytin Taraçaları</translation>
+    </message>
+    <message>
+        <source>Open the storehouse. Get the medicine to the sick first.</source>
+        <translation>Ambarı açın. İlacı önce hastalara ulaştırın.</translation>
+    </message>
+    <message>
+        <source>Road patrol</source>
+        <translation>Yol devriyesi</translation>
+    </message>
+    <message>
+        <source>Terrace skirmishers</source>
+        <translation>Taraça avcıları</translation>
+    </message>
+    <message>
+        <source>The Broken Arch</source>
+        <translation>Kırık Kemer</translation>
+    </message>
+    <message>
+        <source>The Salt Road</source>
+        <translation>Tuz Yolu</translation>
+    </message>
+    <message>
+        <source>The last raiding party</source>
+        <translation>Son akıncı çetesi</translation>
+    </message>
+    <message>
+        <source>Tools</source>
+        <translation>Alet</translation>
+    </message>
+    <message>
+        <source>Two supply wagons were lost. Beacon Post cannot be resupplied.</source>
+        <translation>İki ikmal arabası kaybedildi. İşaret Karakolu&apos;na ikmal yapılamıyor.</translation>
     </message>
 </context>
 <context>
@@ -12549,6 +12716,10 @@ Right-click to cancel.</source>
         <source>Enemy</source>
         <translation>Düşman</translation>
     </message>
+    <message>
+        <source>Supply convoy</source>
+        <translation>İkmal kafilesi</translation>
+    </message>
 </context>
 <context>
     <name>RpgFinaleOverlay</name>
@@ -12632,24 +12803,8 @@ Right-click to cancel.</source>
         <translation>Sıyrıl</translation>
     </message>
     <message>
-        <source>Lock on</source>
-        <translation>Kilitlen</translation>
-    </message>
-    <message>
-        <source>Sprint</source>
-        <translation>Koş</translation>
-    </message>
-    <message>
-        <source>Camera</source>
-        <translation>Kamera</translation>
-    </message>
-    <message>
         <source>Army view</source>
         <translation>Ordu görünümü</translation>
-    </message>
-    <message>
-        <source>WINDED</source>
-        <translation>SOLUKSUZ</translation>
     </message>
     <message>
         <source>%1  ·  %2 to swap</source>
@@ -12698,6 +12853,30 @@ Right-click to cancel.</source>
     <message>
         <source>NO TARGET IN REACH</source>
         <translation>MENZİLDE HEDEF YOK</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Hareket</translation>
+    </message>
+    <message>
+        <source>Draw, release to shoot</source>
+        <translation>Ger, atmak için bırak</translation>
+    </message>
+    <message>
+        <source>Swap weapon</source>
+        <translation>Silah değiştir</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Duraklat</translation>
+    </message>
+    <message>
+        <source>Winded</source>
+        <translation>Nefes nefese</translation>
+    </message>
+    <message>
+        <source>Stamina</source>
+        <translation>Dayanıklılık</translation>
     </message>
 </context>
 <context>
@@ -12893,6 +13072,10 @@ Right-click to cancel.</source>
     <message>
         <source>Autosave</source>
         <translation>Otomatik kayıt</translation>
+    </message>
+    <message>
+        <source>Quicksave</source>
+        <translation>Hızlı kayıt</translation>
     </message>
 </context>
 <context>

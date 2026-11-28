@@ -10,6 +10,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/camera_obstruction.h"
 #include "game/systems/ford_system.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
@@ -137,6 +138,48 @@ TEST_F(CommanderMotorTest, DiagonalTravelMatchesStraightTravel) {
   EXPECT_LE(error, 0.01F) << "diagonal settled at " << diagonal.settled_speed
                           << " m/s against " << straight.settled_speed
                           << " m/s straight ahead";
+}
+
+TEST_F(CommanderMotorTest, AConvoyWagonBlocksTheCommanderAndCamera) {
+  using namespace Engine::Core;
+  World world;
+  auto* commander = create_commander(world, 0.0F, -3.0F);
+  ASSERT_NE(commander, nullptr);
+  auto& body = *commander->get_component<TransformComponent>();
+  auto* wagon = world.create_entity();
+  wagon->add_component<TransformComponent>();
+  wagon->add_component<UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::SupplyWagon;
+  world.spatial_index().rebuild(world);
+
+  Game::Commander::CommanderMotor motor;
+  motor.bind_world(&world);
+  const QVector3D start(0.0F, 0.0F, -3.0F);
+  const QVector3D end(0.0F, 0.0F, 3.0F);
+  const auto approach = motor.advance(*commander, body, {.from = start, .to = end});
+  EXPECT_TRUE(approach.blocked || approach.slid);
+  EXPECT_TRUE(approach.position != end);
+
+  const auto eye_height = QVector3D(0.0F, 1.3F, 0.0F);
+  const Game::Systems::CameraObstructionField obstruction{.world = &world};
+  EXPECT_LT(Game::Systems::camera_boom_clear_fraction(
+                obstruction, start + eye_height, end + eye_height),
+            0.5F);
+
+  body.position = {};
+  const auto pushed = motor.advance(*commander, body, {});
+  EXPECT_TRUE(pushed.moved);
+  EXPECT_GT(std::abs(pushed.position.x()), 0.82F);
+
+  const QVector3D along_side(1.3F, 0.0F, -0.8F);
+  const QVector3D diagonal(0.4F, 0.0F, 0.3F);
+  const auto slide =
+      Game::Systems::slide_along_wagon_bodies(&world, along_side, diagonal, 0.23F);
+  EXPECT_GT(slide.x(), 1.05F);
+  EXPECT_GT(slide.z(), 0.25F);
+  EXPECT_EQ(
+      Game::Systems::first_wagon_intersection_fraction(&world, slide, slide, 0.23F),
+      1.0F);
 }
 
 TEST_F(CommanderMotorTest, SettledSpeedMatchesTheConfiguredSpeed) {

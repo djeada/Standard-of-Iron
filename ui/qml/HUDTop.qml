@@ -19,6 +19,7 @@ Item {
     readonly property string tutorialFocusRegion: (topRoot.tutorial && topRoot.tutorial.active) ? topRoot.tutorial.focus_region : ""
     readonly property var tutorialFocusPoints: (topRoot.tutorial && topRoot.tutorial.active) ? topRoot.tutorial.focus_points : []
 
+    readonly property real barHeight: bar.height
     readonly property rect minimapZone: minimap.visible ? Qt.rect(minimap.x, minimap.y, minimap.width, minimap.height + topRoot.minimapLegendHeight) : Qt.rect(0, 0, 0, 0)
 
     readonly property real minimapLegendHeight: fogLegend.visible ? Design.Metrics.space4 + fogLegend.implicitHeight + Design.Metrics.space8 : 0
@@ -51,6 +52,8 @@ Item {
     }
 
     readonly property bool missionStaged: game_ready() && game.mission && game.mission.staged
+    readonly property var convoyStatus: game_ready() && game.mission && game.mission.convoy ? game.mission.convoy : ({})
+    readonly property bool convoyEscort: (convoyStatus.wagons || []).length > 0
     readonly property bool objectiveShownInline: objectiveRow.visible
     readonly property bool objectivesAvailable: game_ready() && !game.is_spectator_mode && (topRoot.missionStaged || (!!game.setup && game.setup.is_mission_match === true))
 
@@ -205,7 +208,7 @@ Item {
 
                         Design.IronIconButton {
                             iconText: topRoot.game_is_paused ? Design.Icons.play : Design.Icons.pause
-                            tooltip: (topRoot.game_is_paused ? qsTr("Resume (%1)") : qsTr("Pause (%1)")).arg(InputBindings.display_shortcut_for("rts.pause"))
+                            tooltip: (topRoot.game_is_paused ? qsTr("Resume (%1)") : qsTr("Pause (%1)")).arg(InputBindings.display_shortcut_for(topRoot.game_ready() && game.commander.mode_state === "active" ? "commander.pause" : "rts.pause"))
                             onClicked: topRoot.pause_toggled()
                         }
 
@@ -534,7 +537,7 @@ Item {
                 Layout.rightMargin: Design.Metrics.space8
 
                 Repeater {
-                    model: topRoot.resource_entries
+                    model: topRoot.convoyEscort ? [] : topRoot.resource_entries
 
                     delegate: Design.IronResourceCounter {
                         required property var modelData
@@ -551,6 +554,7 @@ Item {
 
                 Design.IronIconButton {
                     iconText: Design.Icons.build
+                    visible: !topRoot.convoyEscort
                     tooltip: qsTr("Resource and building guide")
                     onClicked: topRoot.economy_help_requested()
                 }
@@ -558,11 +562,12 @@ Item {
                 Design.IronDivider {
                     vertical: true
                     Layout.fillHeight: true
-                    visible: !topRoot.compact
+                    visible: !topRoot.compact && !topRoot.convoyEscort
                 }
 
                 Design.IronResourceCounter {
                     iconSource: Design.Icons.status("population")
+                    visible: !topRoot.convoyEscort
                     label: qsTr("Manpower")
                     amountText: topRoot.manpower() + " / " + topRoot.manpower_cap()
                     status: topRoot.manpower_status()
@@ -573,11 +578,11 @@ Item {
                 Design.IronDivider {
                     vertical: true
                     Layout.fillHeight: true
-                    visible: !topRoot.compact
+                    visible: !topRoot.compact && !topRoot.convoyEscort
                 }
 
                 RowLayout {
-                    visible: !topRoot.compact
+                    visible: !topRoot.compact && !topRoot.convoyEscort
                     spacing: Design.Metrics.space8
 
                     Design.IronResourceCounter {
@@ -719,7 +724,12 @@ Item {
             Repeater {
                 id: objectivePins
 
-                model: (topRoot.game_ready() && game.mission) ? game.mission.markers : []
+                model: {
+                    if (!topRoot.game_ready() || !game.mission)
+                        return [];
+                    var pins = topRoot.convoyStatus.pins;
+                    return pins || game.mission.markers;
+                }
 
                 delegate: Item {
                     id: objectivePin
@@ -751,7 +761,7 @@ Item {
                     }
 
                     visible: paintedW > 0 && paintedH > 0
-                    opacity: objectivePin.current ? 1 : 0.6
+                    opacity: objectivePin.current || modelData.wagon ? 1 : 0.6
                     x: ((minimapImage.width - paintedW) / 2) + (modelData.nx || 0) * paintedW
                     y: ((minimapImage.height - paintedH) / 2) + (modelData.ny || 0) * paintedH
                     z: objectivePin.current ? 12 : 11
@@ -760,7 +770,8 @@ Item {
                         anchors.centerIn: parent
                         width: objectivePin.current ? Design.Metrics.space12 : Design.Metrics.space8
                         height: width
-                        radius: width / 2
+                        radius: modelData.wagon ? 0 : width / 2
+                        rotation: modelData.wagon ? 45 : 0
                         color: "transparent"
                         border.width: Design.Metrics.borderThin
                         border.color: Design.Theme.accent
@@ -771,7 +782,7 @@ Item {
                         anchors.centerIn: parent
                         width: objectivePin.current ? Design.Metrics.space4 : Design.Metrics.space2
                         height: width
-                        radius: width / 2
+                        radius: modelData.wagon ? 0 : width / 2
                         color: Design.Theme.accent
                     }
                 }

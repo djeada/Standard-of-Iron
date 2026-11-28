@@ -368,6 +368,7 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
       sp.player_id = wave.owner_id;
       sp.spawn_type = spawn_type.value();
       sp.ai_controlled = ai_controlled;
+      sp.is_initial_spawn = wave.convoy_checkpoint.isEmpty();
       sp.nation_id = Game::Systems::authored_nation_or(comp.nation, wave.nation_id);
 
       auto unit = reg->create(sp.spawn_type, ctx.world, sp);
@@ -377,14 +378,17 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
         continue;
       }
 
-      if (i >= baseline_count) {
+      if (i >= baseline_count || !wave.convoy_checkpoint.isEmpty()) {
 
         if (!Game::Mission::place_clear_of_units(
                  ctx.world, unit->id(), pos, Game::Mission::BuildingFootprints::Refuse)
                  .has_value()) {
-          ctx.world.destroy_entity(unit->id());
-          ++extras_unplaced;
-          continue;
+          if (i >= baseline_count) {
+            ctx.world.destroy_entity(unit->id());
+            ++extras_unplaced;
+            continue;
+          }
+          qWarning() << "No clear ground at convoy wave entry" << wave.label << pos;
         }
       }
 
@@ -421,6 +425,14 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
   }
 
   if (spawned_units > 0) {
+    if (wave.reinforcement) {
+      effects.mission_announcements.append(
+          QCoreApplication::translate("MissionSetupCoordinator",
+                                      "%1 joined the escort.")
+              .arg(wave_display_name(wave)));
+      return effects;
+    }
+
     qInfo() << "Mission wave spawned for AI" << wave.ai_id << "(" << wave.owner_id
             << "):" << spawned_units << "units at t=" << ctx.campaign_mission_elapsed;
 
@@ -462,6 +474,24 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
     return parsed.value_or(nation_registry.default_nation_id());
   };
 
+  const auto build_wave = [&](const Wave& wave) {
+    PendingMissionWave pending;
+    pending.label = wave.label;
+    pending.trigger_time = std::max(0.0F, wave.timing);
+    pending.trigger = wave.trigger;
+    pending.grace_seconds = std::max(0.0F, wave.grace_seconds);
+    pending.warning_seconds = std::max(0.0F, wave.warning_seconds);
+    pending.authored_phase = wave.phase;
+    pending.convoy_checkpoint = wave.convoy_checkpoint;
+    pending.defense_reference_world_position = ctx.defense_reference_world_position;
+    pending.clear_reward = wave.clear_reward;
+    for (const auto& entry_point : wave.resolved_entry_points()) {
+      pending.entry_world_positions.push_back(to_world(entry_point));
+    }
+    pending.entry_world_position = pending.entry_world_positions.front();
+    return pending;
+  };
+
   const float player_selected_multiplier =
       Game::Mission::resolve_difficulty(ctx.mission_difficulty).wave_multiplier;
 
@@ -484,27 +514,10 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
 
     int wave_ordinal = 0;
     for (const auto& wave : ai_setup.waves) {
-      PendingMissionWave pending_wave;
+      auto pending_wave = build_wave(wave);
       pending_wave.owner_id = ai_owner_id;
       pending_wave.nation_id = ai_nation_id;
       pending_wave.ai_id = ai_setup.id;
-      pending_wave.label = wave.label;
-      pending_wave.trigger_time = std::max(0.0F, wave.timing);
-      pending_wave.trigger = wave.trigger;
-      pending_wave.grace_seconds = std::max(0.0F, wave.grace_seconds);
-      pending_wave.warning_seconds = std::max(0.0F, wave.warning_seconds);
-      pending_wave.authored_phase = wave.phase;
-      pending_wave.defense_reference_world_position =
-          ctx.defense_reference_world_position;
-      pending_wave.clear_reward = wave.clear_reward;
-
-      for (const auto& entry_point : wave.resolved_entry_points()) {
-        pending_wave.entry_world_positions.push_back(to_world(entry_point));
-      }
-      pending_wave.entry_world_position =
-          pending_wave.entry_world_positions.empty()
-              ? QVector3D(0.0F, 0.0F, 0.0F)
-              : pending_wave.entry_world_positions.front();
 
       const float escalation = 1.0F + (std::max(0.0F, ai_setup.wave_escalation) *
                                        static_cast<float>(wave_ordinal));
@@ -540,6 +553,18 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
   }
 
   assign_wave_phases(waves, 0);
+  if (ctx.mission.convoy.has_value()) {
+    for (const auto& wave : ctx.mission.convoy->reinforcements) {
+      auto pending = build_wave(wave);
+      pending.owner_id = ctx.local_owner_id;
+      pending.nation_id = resolve_nation(ctx.mission.player_setup.nation);
+      pending.ai_id = QStringLiteral("convoy_reinforcements");
+      pending.reinforcement = true;
+      pending.composition = wave.composition;
+      pending.baseline_composition = wave.composition;
+      waves.push_back(std::move(pending));
+    }
+  }
   return waves;
 }
 

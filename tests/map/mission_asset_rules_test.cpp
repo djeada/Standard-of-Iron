@@ -57,17 +57,20 @@ TEST(MissionAssetRulesTest, CurrentMissionsDeclareCommanderDefeatRules) {
     const QJsonArray defeat_conditions = root.value("defeat_conditions").toArray();
 
     bool has_lose_commander = false;
-    bool has_only_commander_remaining = false;
+    bool has_escort_defeat_rule = false;
+    const QString required_defeat = root.value("convoy").isObject()
+                                        ? QStringLiteral("lose_convoy")
+                                        : QStringLiteral("only_commander_remaining");
     for (const auto value : defeat_conditions) {
       const QString type = value.toObject().value("type").toString();
       has_lose_commander =
           has_lose_commander || type == QStringLiteral("lose_commander");
-      has_only_commander_remaining = has_only_commander_remaining ||
-                                     type == QStringLiteral("only_commander_remaining");
+      has_escort_defeat_rule = has_escort_defeat_rule || type == required_defeat;
     }
 
     EXPECT_TRUE(has_lose_commander) << file_name.toStdString();
-    EXPECT_TRUE(has_only_commander_remaining) << file_name.toStdString();
+    EXPECT_TRUE(has_escort_defeat_rule)
+        << file_name.toStdString() << " needs " << required_defeat.toStdString();
   }
 }
 

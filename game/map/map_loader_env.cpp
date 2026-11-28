@@ -517,4 +517,69 @@ void read_map_clock_and_resources(const QJsonObject& root, MapDefinition& out_ma
   }
 }
 
+void read_map_ambience_zones(const QJsonObject& root, MapDefinition& out_map) {
+  out_map.ambience_zones.clear();
+  if (!root.contains(AMBIENCE_ZONES) || !root.value(AMBIENCE_ZONES).isArray()) {
+    return;
+  }
+  const float scale = out_map.coordSystem == CoordSystem::World
+                          ? 1.0F
+                          : std::max(0.0001F, out_map.grid.tile_size);
+  const QJsonArray arr = root.value(AMBIENCE_ZONES).toArray();
+  out_map.ambience_zones.reserve(static_cast<std::size_t>(arr.size()));
+  for (const QJsonValue& val : arr) {
+    if (!val.isObject()) {
+      continue;
+    }
+    const QJsonObject obj = val.toObject();
+    AmbienceZone zone;
+    zone.id = obj.value(ID).toString().trimmed();
+    zone.bed = obj.value(QStringLiteral("bed")).toString().trimmed();
+    zone.night_bed = obj.value(QStringLiteral("night_bed")).toString().trimmed();
+    if (zone.bed.isEmpty()) {
+      continue;
+    }
+    zone.fade = std::max(
+        0.5F,
+        static_cast<float>(obj.value(QStringLiteral("fade")).toDouble(10.0)) * scale);
+    if (obj.contains(QStringLiteral("polygon")) &&
+        obj.value(QStringLiteral("polygon")).isArray()) {
+      const QJsonArray poly = obj.value(QStringLiteral("polygon")).toArray();
+      double cx = 0.0;
+      double cz = 0.0;
+      for (const QJsonValue& pt_val : poly) {
+        const QJsonArray pt = pt_val.toArray();
+        if (pt.size() < 2) {
+          continue;
+        }
+        const QVector3D world_pt =
+            authored_position(static_cast<float>(pt[0].toDouble(0.0)),
+                              static_cast<float>(pt[1].toDouble(0.0)),
+                              out_map.grid,
+                              out_map.coordSystem);
+        zone.polygon.emplace_back(world_pt.x(), world_pt.z());
+        cx += world_pt.x();
+        cz += world_pt.z();
+      }
+      if (zone.polygon.size() < 3U) {
+        continue;
+      }
+      zone.x = static_cast<float>(cx / static_cast<double>(zone.polygon.size()));
+      zone.z = static_cast<float>(cz / static_cast<double>(zone.polygon.size()));
+      zone.radius = 0.0F;
+    } else {
+      const QVector3D center =
+          authored_position(static_cast<float>(obj.value(X).toDouble(0.0)),
+                            static_cast<float>(obj.value(Z).toDouble(0.0)),
+                            out_map.grid,
+                            out_map.coordSystem);
+      zone.x = center.x();
+      zone.z = center.z();
+      zone.radius =
+          std::max(1.0F, static_cast<float>(obj.value(RADIUS).toDouble(25.0)) * scale);
+    }
+    out_map.ambience_zones.push_back(std::move(zone));
+  }
+}
+
 } // namespace Game::Map::loader_detail

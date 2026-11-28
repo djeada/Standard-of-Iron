@@ -52,6 +52,7 @@ auto is_trackable_objective_type(const QString& type) -> bool {
                                    QStringLiteral("purify_shrine"),
                                    QStringLiteral("survive_undead_wave"),
                                    QStringLiteral("survive_waves"),
+                                   QStringLiteral("escort_convoy"),
                                    QStringLiteral("accumulate_resources"),
                                    QStringLiteral("eliminate_commanders")};
   return k_types.contains(type);
@@ -118,6 +119,12 @@ void append_victory_condition(const Condition& condition,
   if (type == "survive_waves") {
     rules.victory_rules.emplace_back(Game::Systems::SurviveWavesVictoryRule{
         std::max(1, condition.wave_count.value_or(1))});
+    return;
+  }
+
+  if (type == "escort_convoy") {
+    rules.victory_rules.emplace_back(Game::Systems::EscortConvoyVictoryRule{
+        std::max(1, condition.min_count.value_or(1))});
     return;
   }
 
@@ -202,6 +209,12 @@ auto build_victory_rules(const MissionDefinition& mission)
 
     if (type == "lose_commander") {
       add_defeat_rule(Game::Systems::NoCommanderDefeatRule{});
+      continue;
+    }
+
+    if (type == "lose_convoy") {
+      add_defeat_rule(Game::Systems::LoseConvoyDefeatRule{
+          std::max(1, condition.min_count.value_or(1))});
       continue;
     }
 

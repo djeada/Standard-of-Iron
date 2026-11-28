@@ -6,18 +6,25 @@
 
 #include <chrono>
 #include <gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 #include "app/session/skirmish_loader.h"
 #include "core/world.h"
 #include "game/core/component.h"
+#include "game/core/component_commander.h"
+#include "game/core/component_gameplay.h"
 #include "game/map/map_context.h"
+#include "game/map/mission_victory_rules.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/mission/campaign_manager.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_definition_view.h"
 #include "game/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_wave_runtime.h"
+#include "game/save/serialization.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
@@ -27,12 +34,14 @@
 #include "game/systems/navigation/walkability.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/systems/victory_service.h"
 #include "render/scene/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace {
 
 constexpr char k_mission_file[] = "assets/missions/hold_the_sallow_ford.json";
+constexpr char k_convoy_mission[] = "assets/missions/the_salt_road.json";
 constexpr int k_local_owner = 1;
 constexpr float k_tick = 1.0F / 60.0F;
 
@@ -46,6 +55,37 @@ protected:
     Game::Systems::GlobalStatsRegistry::instance().clear();
     Game::Map::MapContextStore::clear();
     Game::Map::MapContextStore::reset_statistics();
+  }
+
+  auto start_convoy(Game::Systems::VictoryService& victory)
+      -> Game::Mission::MissionWaveBinding {
+    const Game::Mission::MissionWaveBinding binding{.world = &m_world,
+                                                    .level = &m_level,
+                                                    .campaign = &m_campaign,
+                                                    .victory_service = &victory,
+                                                    .local_owner_id = k_local_owner};
+    m_waves.bind_after_setup(binding, std::move(m_pending_waves), {});
+    const auto& mission = *m_campaign.current_mission_definition();
+    victory.configure(Game::Mission::build_victory_rules(mission), k_local_owner);
+    return binding;
+  }
+
+  auto victory_service() -> Game::Systems::VictoryService {
+    auto& session = Game::Session::session_for(m_world);
+    return Game::Systems::VictoryService({.stats = session.stats(),
+                                          .owners = session.owners(),
+                                          .nations = session.nations(),
+                                          .economy = session.economy()});
+  }
+
+  auto wagon_ids() -> std::vector<Engine::Core::EntityID> {
+    std::vector<Engine::Core::EntityID> ids;
+    for (auto [id, unit] : m_world.view<const Engine::Core::UnitComponent>()) {
+      if (unit.spawn_type == Game::Units::SpawnType::SupplyWagon) {
+        ids.push_back(id);
+      }
+    }
+    return ids;
   }
 
   void TearDown() override {
@@ -102,13 +142,16 @@ protected:
   }
 
   QString m_error;
-  Engine::Core::World m_world;
+  Game::Session::SessionContext m_session;
+  Game::Session::ScopedSession m_session_scope{m_session};
+  Engine::Core::World& m_world = m_session.world();
   Render::GL::Renderer m_renderer{Render::ShaderQuality::None};
   Render::GL::Camera m_camera;
   CampaignManager m_campaign;
   Game::Mission::MissionSetupCoordinator m_coordinator;
   Game::Systems::LevelSnapshot m_level;
   std::vector<Game::Mission::PendingMissionWave> m_pending_waves;
+  Game::Mission::MissionWaveRuntime m_waves;
 };
 
 TEST_F(MissionStartupTest, ParsesTheMissionMapOnce) {
@@ -261,6 +304,147 @@ TEST_F(MissionStartupTest, StartingUnitsCanFieldCarthagesAllies) {
   EXPECT_EQ(gallic_swordsmen, 1);
   EXPECT_EQ(iberian_riders, 1);
   EXPECT_GT(carthaginians, 0) << "the rest of the army keeps the owner's nation";
+}
+
+TEST_F(MissionStartupTest, SaltRoadCheckpointsAndReliefSurviveASaveRoundTrip) {
+  using namespace Engine::Core;
+  ASSERT_TRUE(prepare_mission(k_convoy_mission)) << m_error.toStdString();
+  auto victory = victory_service();
+  const auto binding = start_convoy(victory);
+  const auto& definition = *m_campaign.current_mission_definition();
+  ASSERT_TRUE(definition.start_in_commander_mode);
+  ASSERT_TRUE(definition.convoy.has_value());
+  EXPECT_EQ(wagon_ids().size(), 3U);
+  EXPECT_EQ(m_waves.director().total_wave_count(), 3);
+
+  const auto world_position = Game::Mission::make_mission_position_to_world(m_level);
+  for (std::size_t i = 1; i < definition.convoy->route.size(); ++i) {
+    const auto start = world_position(definition.convoy->route[i - 1].position);
+    const auto end = world_position(definition.convoy->route[i].position);
+    for (int j = 0; j <= 10; ++j) {
+      EXPECT_TRUE(Game::Systems::Walkability::can_stand(
+          start + (end - start) * (static_cast<float>(j) / 10.0F), {}))
+          << "the escort needs walkable ground on route segment " << i;
+    }
+  }
+
+  const auto advance = [&](float seconds) {
+    for (int i = 0; i < static_cast<int>(seconds * 10.0F); ++i) {
+      (void)m_waves.advance(binding, 0.1F, false);
+    }
+  };
+  advance(24.0F);
+  const auto halted = m_waves.convoy_status();
+  EXPECT_TRUE(halted.value("holding").toBool());
+  EXPECT_EQ(halted.value("destination").toString(), "The Broken Arch");
+  EXPECT_EQ(m_waves.status().value("live_enemies").toInt(), 2);
+  ASSERT_GT(halted.value("relief_eta").toInt(), 0);
+
+  const auto original_wagons = wagon_ids();
+  m_world.try_get<UnitComponent>(original_wagons.front())->health -= 160;
+  const QJsonObject mission_state = m_waves.serialize();
+  const QJsonDocument world_state = Serialization::serialize_world(&m_world);
+  m_world.clear();
+  Serialization::deserialize_world(&m_world, world_state);
+  m_waves.restore(binding, mission_state);
+  EXPECT_EQ(wagon_ids().size(), 3U);
+  EXPECT_EQ(m_world.try_get<UnitComponent>(original_wagons.front())->health,
+            definition.convoy->wagon_health - 160);
+  EXPECT_EQ(m_waves.convoy_status().value("fraction"), halted.value("fraction"));
+  EXPECT_EQ(m_waves.convoy_status().value("relief_eta"), halted.value("relief_eta"));
+
+  advance(14.0F);
+  EXPECT_EQ(m_waves.convoy_status().value("fraction"), halted.value("fraction"));
+  EXPECT_FALSE(m_waves.convoy_status().contains("relief_eta"));
+  EXPECT_EQ(m_waves.status().value("live_enemies").toInt(), 2);
+  EXPECT_EQ(m_waves.director().cleared_wave_count(), 0);
+  int escorts = 0;
+  for (auto [id, unit, guard] :
+       m_world.view<const UnitComponent, const GuardModeComponent>()) {
+    if (unit.owner_id == k_local_owner && guard.active) {
+      const auto* wagon = m_world.try_get<UnitComponent>(guard.guarded_entity_id);
+      ASSERT_NE(wagon, nullptr);
+      EXPECT_EQ(wagon->spawn_type, Game::Units::SpawnType::SupplyWagon);
+      ASSERT_NE(m_world.try_get<TransformComponent>(id), nullptr);
+      ++escorts;
+    }
+  }
+  EXPECT_EQ(escorts, 5);
+
+  // A clear leaves the column free to advance. Loss of its lead wagon still
+  // leaves enough cargo for victory and the escort must attach to survivors.
+  m_world.destroy_entity(original_wagons.front());
+  for (int i = 0; i < 1800 && !victory.is_game_over(); ++i) {
+    for (auto [id, unit, assault] :
+         m_world.view<UnitComponent, const AssaultWaveComponent>()) {
+      (void)id;
+      (void)assault;
+      unit.health = 0;
+    }
+    (void)m_waves.advance(binding, 0.1F, false);
+    victory.update(m_world, 0.1F);
+  }
+  EXPECT_EQ(m_waves.director().cleared_wave_count(), 3);
+  EXPECT_EQ(m_waves.convoy_status().value("delivered").toInt(), 2);
+  EXPECT_EQ(victory.get_victory_state(), "victory");
+  ASSERT_EQ(victory.optional_objectives().size(), 1U);
+  EXPECT_FALSE(victory.optional_objectives().front().complete);
+}
+
+TEST_F(MissionStartupTest, SaltRoadIsLostWhenTheRaidersDestroyTwoWagons) {
+  ASSERT_TRUE(prepare_mission(k_convoy_mission)) << m_error.toStdString();
+  auto victory = victory_service();
+  const auto binding = start_convoy(victory);
+  const auto wagons = wagon_ids();
+  ASSERT_EQ(wagons.size(), 3U);
+  m_world.destroy_entity(wagons.front());
+  (void)m_waves.advance(binding, 1.0F, false);
+  victory.update(m_world, 1.0F);
+  EXPECT_FALSE(victory.is_game_over());
+  m_world.destroy_entity(wagons.back());
+  (void)m_waves.advance(binding, 1.0F, false);
+  victory.update(m_world, 1.0F);
+  EXPECT_EQ(victory.get_victory_state(), "defeat");
+  EXPECT_TRUE(victory.get_defeat_description().contains("Two supply wagons"));
+}
+
+TEST_F(MissionStartupTest, SaltRoadRaidersCanDamageAnUnprotectedWagon) {
+  using namespace Engine::Core;
+  ASSERT_TRUE(prepare_mission(k_convoy_mission)) << m_error.toStdString();
+  auto victory = victory_service();
+  const auto binding = start_convoy(victory);
+  std::vector<EntityID> escort;
+  for (auto [id, unit] : m_world.view<const UnitComponent>()) {
+    if (unit.owner_id == k_local_owner &&
+        Game::Units::is_combatant_spawn(unit.spawn_type)) {
+      if (m_world.has<CommanderComponent>(id)) {
+        m_world.try_get<TransformComponent>(id)->position.x -= 14.0F;
+      } else {
+        escort.push_back(id);
+      }
+    }
+  }
+  for (const auto id : escort) {
+    m_world.destroy_entity(id);
+  }
+
+  const auto wagons = wagon_ids();
+  ASSERT_EQ(wagons.size(), 3U);
+  bool cargo_hit = false;
+  for (int i = 0; i < 60 * 62 && !cargo_hit; ++i) {
+    (void)m_session.advance(1.0 / 60.0,
+                            1,
+                            Game::Session::SessionContext::OverloadPolicy::KeepBacklog,
+                            [&](float dt) {
+                              (void)m_waves.advance(binding, dt, false);
+                              m_session.step();
+                            });
+    for (const auto id : wagons) {
+      const auto* unit = m_world.try_get<UnitComponent>(id);
+      cargo_hit |= unit != nullptr && unit->health < unit->max_health;
+    }
+  }
+  EXPECT_TRUE(cargo_hit);
 }
 
 } // namespace

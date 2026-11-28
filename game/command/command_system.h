@@ -20,6 +20,7 @@ struct CommanderInputFrame;
 class CommandSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
+  void clear_commander_controls();
 
   [[nodiscard]] auto
   commander_runtime(int owner) -> std::shared_ptr<Game::Commander::CommanderRuntime>;

@@ -14,6 +14,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
+#include "game/systems/camera_obstruction.h"
 #include "game/systems/movement/body_profile.h"
 #include "game/systems/navigation/nav_grid.h"
 #include "game/systems/navigation/pathfinding.h"
@@ -29,15 +30,6 @@ auto walkable_point(const Game::Systems::BodyProfile& profile,
   return Game::Systems::Walkability::can_stand(QVector3D(x, 0.0F, z), profile);
 }
 
-auto traversable_step(const Game::Systems::BodyProfile& profile,
-                      float from_x,
-                      float from_z,
-                      float to_x,
-                      float to_z) -> bool {
-  return Game::Systems::Walkability::can_traverse(
-      QVector3D(from_x, 0.0F, from_z), QVector3D(to_x, 0.0F, to_z), profile);
-}
-
 struct GroundMove {
   float x{0.0F};
   float z{0.0F};
@@ -45,20 +37,33 @@ struct GroundMove {
 };
 
 auto resolve_ground_step(const Game::Systems::BodyProfile& profile,
-                         float from_x,
-                         float from_z,
-                         float to_x,
-                         float to_z) -> GroundMove {
-  if (traversable_step(profile, from_x, from_z, to_x, to_z)) {
-    return {.x = to_x, .z = to_z, .moved = true};
+                         const Engine::Core::World* world,
+                         const QVector3D& from,
+                         const QVector3D& to) -> GroundMove {
+  const float from_x = from.x();
+  const float from_z = from.z();
+  const float to_x = to.x();
+  const float to_z = to.z();
+  const auto traversable = [&](float x, float z) {
+    const QVector3D candidate(x, to.y(), z);
+    return Game::Systems::Walkability::can_traverse(
+               {from_x, 0.0F, from_z}, {x, 0.0F, z}, profile) &&
+           Game::Systems::first_wagon_intersection_fraction(
+               world, from, candidate, CommanderMotor::body_radius()) >= 1.0F;
+  };
+  const auto wagon_step = Game::Systems::slide_along_wagon_bodies(
+      world, from, to, CommanderMotor::body_radius());
+  if (Game::Systems::Walkability::can_traverse(
+          {from_x, 0.0F, from_z}, {wagon_step.x(), 0.0F, wagon_step.z()}, profile)) {
+    return {.x = wagon_step.x(),
+            .z = wagon_step.z(),
+            .moved = wagon_step.x() != from_x || wagon_step.z() != from_z};
   }
 
   float const delta_x = to_x - from_x;
   float const delta_z = to_z - from_z;
-  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F &&
-                            traversable_step(profile, from_x, from_z, to_x, from_z);
-  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F &&
-                            traversable_step(profile, from_x, from_z, from_x, to_z);
+  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && traversable(to_x, from_z);
+  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && traversable(from_x, to_z);
 
   if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
     return {.x = to_x, .z = from_z, .moved = true};
@@ -73,8 +78,7 @@ auto resolve_ground_step(const Game::Systems::BodyProfile& profile,
     float const sine = std::sin(angle);
     float const deflected_x = ((delta_x * cosine) - (delta_z * sine)) * cosine;
     float const deflected_z = ((delta_x * sine) + (delta_z * cosine)) * cosine;
-    if (traversable_step(
-            profile, from_x, from_z, from_x + deflected_x, from_z + deflected_z)) {
+    if (traversable(from_x + deflected_x, from_z + deflected_z)) {
       return {.x = from_x + deflected_x, .z = from_z + deflected_z, .moved = true};
     }
   }
@@ -113,8 +117,11 @@ auto CommanderMotor::reachable_ground_position(Game::Session::SessionContext& se
     -> QVector3D {
   auto const profile = Game::Systems::motor_profile_for(commander);
   QVector3D candidate = desired;
-  const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
-      session.building_collision(), start, desired, ignore_entity_id);
+  const float blocked_fraction =
+      std::min(Game::Systems::first_building_intersection_fraction(
+                   session.building_collision(), start, desired, ignore_entity_id),
+               Game::Systems::first_wagon_intersection_fraction(
+                   &session.world(), start, desired, body_radius()));
   if (blocked_fraction < 1.0F) {
     const float safe_fraction = std::clamp(blocked_fraction - 0.08F, 0.0F, 1.0F);
     candidate = start + (desired - start) * safe_fraction;
@@ -264,7 +271,9 @@ auto CommanderMotor::advance(const Engine::Core::Entity& commander,
     -> CommanderMotorResult {
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::commander_motor());
-  if (m_world != nullptr) {
+  const bool moving =
+      request.from.x() != request.to.x() || request.from.z() != request.to.z();
+  if (moving && m_world != nullptr) {
     if (auto const on_wall = wall_step(commander, transform, request);
         on_wall.has_value()) {
       m_last = *on_wall;
@@ -273,13 +282,21 @@ auto CommanderMotor::advance(const Engine::Core::Entity& commander,
   }
 
   auto const profile = Game::Systems::motor_profile_for(commander);
-  GroundMove const step = resolve_ground_step(
-      profile, request.from.x(), request.from.z(), request.to.x(), request.to.z());
+  constexpr float k_wagon_clearance_slack = 0.04F;
+  const auto separated = Game::Systems::depenetrate_wagon_bodies(
+      m_world, request.from, body_radius() + k_wagon_clearance_slack);
+  GroundMove step;
+  if (separated != request.from &&
+      walkable_point(profile, separated.x(), separated.z())) {
+    step = {.x = separated.x(), .z = separated.z(), .moved = true};
+  } else if (moving) {
+    step = resolve_ground_step(profile, m_world, request.from, request.to);
+  }
 
   CommanderMotorResult result;
   result.source = request.source;
   result.moved = step.moved;
-  result.blocked = !step.moved;
+  result.blocked = moving && !step.moved;
   result.slid = step.moved && (std::abs(step.x - request.to.x()) > 1.0e-5F ||
                                std::abs(step.z - request.to.z()) > 1.0e-5F);
 

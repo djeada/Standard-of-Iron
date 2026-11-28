@@ -43,6 +43,7 @@ add_library(
     core/world.cpp
     core/world_motion_presentation.cpp
     core/world_creature_presentation.cpp
+    core/render_phase.cpp
     core/world_render_snapshot.cpp
     core/world_spatial_index.cpp
     core/system_profiler.cpp
@@ -847,6 +848,7 @@ add_library(
     mission/commander_speaker_roster.cpp
     mission/commander_voice_observer.cpp
     mission/difficulty_forces.cpp
+    mission/mission_convoy.cpp
     mission/mission_setup_coordinator.cpp
     mission/mission_wave_director.cpp
     mission/mission_wave_runtime.cpp

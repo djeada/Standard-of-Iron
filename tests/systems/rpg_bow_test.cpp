@@ -434,6 +434,32 @@ TEST_F(RpgBowTest, TheAimRayIgnoresBodiesBehindTheCommander) {
                    .has_value());
 }
 
+TEST_F(RpgBowTest, TheBowCannotShootThroughAWagonEvenIfTheCameraCanSeePastIt) {
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(make_enemy(world, 0.0F, 9.0F), nullptr);
+  auto* aim = Game::Systems::RpgCombat::sync_commander_aim(*commander, {});
+  ASSERT_NE(aim, nullptr);
+  const QVector3D camera(3.0F, 1.4F, 0.0F);
+  const QVector3D target(0.0F, 1.1F, 9.0F);
+  const Game::Systems::RpgCombat::AimRay sight{camera, (target - camera).normalized()};
+
+  auto* wagon = world.create_entity();
+  wagon->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 2.0F);
+  auto* cargo = wagon->add_component<Engine::Core::UnitComponent>();
+  cargo->owner_id = commander->get_component<Engine::Core::UnitComponent>()->owner_id;
+  cargo->spawn_type = Game::Units::SpawnType::SupplyWagon;
+  world.spatial_index().rebuild(world);
+
+  ASSERT_TRUE(Game::Systems::RpgCombat::raycast_enemy_bodies(
+                  world, *commander, sight, 26.0F, 0.04F)
+                  .has_value());
+  const auto shot =
+      Game::Systems::RpgCombat::resolve_bow_shot(world, *commander, *aim, sight, 26.0F);
+  EXPECT_FALSE(shot.hit_body);
+  EXPECT_LT(shot.end.z(), 3.0F);
+}
+
 TEST_F(RpgBowTest, TheCameraForwardOverridesRawYawAndPitch) {
   auto* commander = make_archer_commander(world, 0.0F, 0.0F);
   auto* enemy = make_enemy(world, 0.0F, 9.0F);

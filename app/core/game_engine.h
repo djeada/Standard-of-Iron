@@ -17,6 +17,7 @@
 
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
+#include "app/core/commander_overlay_pass.h"
 #include "app/core/deferred_presentation_queue.h"
 #include "app/core/entity_cache.h"
 #include "app/core/runtime_frame_orchestrator.h"
@@ -461,6 +462,7 @@ private:
                                bool set_skirmish_context);
   void reset_match_outcome();
   [[nodiscard]] auto begin_match_loading(const QString& map_path) -> quint64;
+  void preload_mission_audio();
   void complete_match_load(const QString& map_path, const QVariantList& player_configs);
   [[nodiscard]] auto load_match_world(const QString& map_path,
                                       const QVariantList& player_configs)
@@ -469,6 +471,7 @@ private:
                               const QVariantList& player_configs,
                               const QVariantList& resolved_player_configs);
   void finalize_match_load();
+  void apply_mission_starting_control();
   void fail_loading(const QString& error);
   void handle_first_frames_timeout();
   void apply_mission_setup();
@@ -550,6 +553,7 @@ private:
   Render::GL::Camera* m_camera = nullptr;
   Render::GL::Camera m_render_camera;
   std::shared_ptr<const App::Core::PresentationFrame> m_presentation_frame;
+  App::Core::CommanderOverlayPass m_commander_overlay_pass;
   std::vector<Engine::Core::EntityID> m_drawn_selected_ids;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;

@@ -6,6 +6,7 @@ import QtQuick.Window 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import StandardOfIron.Core 1.0
+import "ui_audio.js" as UiAudio
 
 Item {
     id: root
@@ -139,6 +140,8 @@ Item {
     z: 25
     Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
+            if (typeof game !== 'undefined')
+                UiAudio.play_back(game.audio_system);
             root.cancelled();
             event.accepted = true;
         }
@@ -316,6 +319,10 @@ Item {
                                     onValueChanged: {
                                         root.set_audio_volume("master", value);
                                     }
+                                    onPressedChanged: {
+                                        if (!pressed && !root.syncing_audio_sliders && typeof game !== 'undefined')
+                                            UiAudio.play_toggle(game.audio_system);
+                                    }
                                 }
 
                                 Label {
@@ -346,6 +353,10 @@ Item {
                                     stepSize: 1
                                     onValueChanged: {
                                         root.set_audio_volume("music", value);
+                                    }
+                                    onPressedChanged: {
+                                        if (!pressed && !root.syncing_audio_sliders && typeof game !== 'undefined')
+                                            UiAudio.play_toggle(game.audio_system);
                                     }
                                 }
 
@@ -378,6 +389,10 @@ Item {
                                     onValueChanged: {
                                         root.set_audio_volume("sfx", value);
                                     }
+                                    onPressedChanged: {
+                                        if (!pressed && !root.syncing_audio_sliders && typeof game !== 'undefined')
+                                            UiAudio.play_toggle(game.audio_system);
+                                    }
                                 }
 
                                 Label {
@@ -409,6 +424,10 @@ Item {
                                     onValueChanged: {
                                         root.set_audio_volume("voice", value);
                                     }
+                                    onPressedChanged: {
+                                        if (!pressed && !root.syncing_audio_sliders && typeof game !== 'undefined')
+                                            UiAudio.play_toggle(game.audio_system);
+                                    }
                                 }
 
                                 Label {
@@ -439,6 +458,10 @@ Item {
                                     stepSize: 1
                                     onValueChanged: {
                                         root.set_audio_volume("ambience", value);
+                                    }
+                                    onPressedChanged: {
+                                        if (!pressed && !root.syncing_audio_sliders && typeof game !== 'undefined')
+                                            UiAudio.play_toggle(game.audio_system);
                                     }
                                 }
 

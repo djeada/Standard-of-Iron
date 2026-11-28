@@ -37,6 +37,7 @@ HUDBottomCommander 1.0 HUDBottomCommander.qml
 HudConsolePlate 1.0 HudConsolePlate.qml
 HUDBottomSpectator 1.0 HUDBottomSpectator.qml
 RpgBearingStrip 1.0 RpgBearingStrip.qml
+ConvoyTracker 1.0 ConvoyTracker.qml
 RpgFinaleOverlay 1.0 RpgFinaleOverlay.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
 RpgMeter 1.0 RpgMeter.qml

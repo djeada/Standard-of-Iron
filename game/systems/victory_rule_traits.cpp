@@ -61,6 +61,9 @@ void collect_victory_traits(const VictoryRuleSet& rule_set, VictoryRuleTraits& t
             [&traits](const SurviveWavesVictoryRule&) {
               traits.has_wave_victory = true;
             },
+            [&traits](const EscortConvoyVictoryRule&) {
+              traits.has_convoy_rules = true;
+            },
             [&traits](const AccumulateResourcesVictoryRule&) {
               traits.has_resource_victory = true;
             },
@@ -99,6 +102,9 @@ void collect_defeat_traits(const VictoryRuleSet& rule_set, VictoryRuleTraits& tr
             },
             [&traits](const TimeLimitDefeatRule&) {
               traits.has_time_limit_defeat = true;
+            },
+            [&traits](const LoseConvoyDefeatRule&) {
+              traits.has_convoy_rules = true;
             }},
         condition.rule);
   }
